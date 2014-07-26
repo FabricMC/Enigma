@@ -1,0 +1,54 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Jeff Martin.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Jeff Martin - initial API and implementation
+ ******************************************************************************/
+package cuchaz.enigma.gui;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.Shape;
+
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Highlighter;
+import javax.swing.text.JTextComponent;
+
+public class BoxHighlightPainter implements Highlighter.HighlightPainter
+{
+	private static final Color FillColor = new Color( 230, 230, 230 );
+	private static final Color BorderColor = new Color( 100, 100, 100 );
+	
+	@Override
+	public void paint( Graphics g, int start, int end, Shape shape, JTextComponent text )
+	{
+		try
+		{
+			// determine the bounds of the text
+			Rectangle bounds = text.getUI().modelToView( text, start ).union( text.getUI().modelToView( text, end ) );
+			
+			// adjust the box so it looks nice
+			bounds.x -= 2;
+			bounds.width += 2;
+			bounds.y += 1;
+			bounds.height -= 2;
+			
+			// fill the area
+			g.setColor( FillColor );
+			g.fillRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+			
+			// draw a box around the area
+			g.setColor( BorderColor );
+			g.drawRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+		}
+		catch( BadLocationException ex )
+		{
+			throw new Error( ex );
+		}
+	}
+}
