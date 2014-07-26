@@ -152,8 +152,6 @@ class TreeVisitor extends TreeScanner<CompilationUnitTree, SourcedAst>
 	
 	private void indexArgument( VariableTree variableTree, SourcedAst ast, MethodEntry methodEntry, int index )
 	{
-		System.out.println( "\tFound argument: " + variableTree.getName() );
-		
 		// build the entry
 		ArgumentEntry entry = new ArgumentEntry( methodEntry, index, variableTree.getName().toString() );
 		
