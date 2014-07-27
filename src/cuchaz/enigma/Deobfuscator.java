@@ -62,6 +62,11 @@ public class Deobfuscator
 		m_settings.setShowSyntheticMembers( true );
 	}
 	
+	public String getJarName( )
+	{
+		return m_file.getName();
+	}
+	
 	public List<ClassFile> getObfuscatedClasses( )
 	{
 		List<ClassFile> classes = new ArrayList<ClassFile>();

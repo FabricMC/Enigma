@@ -8,11 +8,9 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.mapping;
 
-import cuchaz.enigma.ClassFile;
-
-public interface ClassSelectionHandler
+public interface Entry
 {
-	void classSelected( ClassFile classFile );
+	String getName( );
 }

@@ -13,7 +13,7 @@ package cuchaz.enigma.mapping;
 import java.io.Serializable;
 
 
-public class ClassEntry implements Serializable
+public class ClassEntry implements Entry, Serializable
 {
 	private static final long serialVersionUID = 4235460580973955811L;
 	
@@ -33,6 +33,7 @@ public class ClassEntry implements Serializable
 		m_name = className;
 	}
 	
+	@Override
 	public String getName( )
 	{
 		return m_name;

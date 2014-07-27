@@ -14,7 +14,7 @@ import java.io.Serializable;
 
 import cuchaz.enigma.Util;
 
-public class MethodEntry implements Serializable
+public class MethodEntry implements Entry, Serializable
 {
 	private static final long serialVersionUID = 4770915224467247458L;
 	
@@ -47,6 +47,7 @@ public class MethodEntry implements Serializable
 		return m_classEntry;
 	}
 	
+	@Override
 	public String getName( )
 	{
 		return m_name;

@@ -19,10 +19,12 @@ import jsyntaxpane.Token;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
-public class SourceIndex implements Iterable<Map.Entry<Object,Token>>
+import cuchaz.enigma.mapping.Entry;
+
+public class SourceIndex implements Iterable<Map.Entry<Entry,Token>>
 {
-	private BiMap<Object,Token> m_entryToToken;
-	private BiMap<Token,Object> m_tokenToEntry;
+	private BiMap<Entry,Token> m_entryToToken;
+	private BiMap<Token,Entry> m_tokenToEntry;
 	
 	public SourceIndex( )
 	{
@@ -30,12 +32,12 @@ public class SourceIndex implements Iterable<Map.Entry<Object,Token>>
 		m_tokenToEntry = m_entryToToken.inverse();
 	}
 	
-	public void add( Object entry, Token token )
+	public void add( Entry entry, Token token )
 	{
 		m_entryToToken.put( entry, token );
 	}
 	
-	public Iterator<Map.Entry<Object,Token>> iterator( )
+	public Iterator<Map.Entry<Entry,Token>> iterator( )
 	{
 		return m_entryToToken.entrySet().iterator();
 	}
@@ -45,12 +47,26 @@ public class SourceIndex implements Iterable<Map.Entry<Object,Token>>
 		return m_entryToToken.values();
 	}
 	
-	public Object getEntry( Token token )
+	public Entry getEntry( Token token )
 	{
 		return m_tokenToEntry.get( token );
 	}
 	
-	public Object getToken( Object entry )
+	public Entry getEntry( int pos )
+	{
+		// linear search is fast enough for now
+		for( Map.Entry<Entry,Token> entry : this )
+		{
+			Token token = entry.getValue();
+			if( pos >= token.start && pos <= token.end() )
+			{
+				return entry.getKey();
+			}
+		}
+		return null;
+	}
+	
+	public Token getToken( Entry entry )
 	{
 		return m_entryToToken.get( entry );
 	}

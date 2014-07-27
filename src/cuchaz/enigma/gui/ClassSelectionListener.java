@@ -8,27 +8,11 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma;
+package cuchaz.enigma.gui;
 
-import java.io.File;
+import cuchaz.enigma.ClassFile;
 
-import cuchaz.enigma.gui.Gui;
-
-public class Main
+public interface ClassSelectionListener
 {
-	public static void main( String[] args )
-	throws Exception
-	{
-		startGui();
-	}
-	
-	private static void startGui( )
-	throws Exception
-	{
-		// settings
-		final File jarFile = new File( "/home/jeff/.minecraft/versions/1.7.10/1.7.10.jar" );
-		
-		// start the GUI and tie it to the deobfuscator
-		new Controller( new Deobfuscator( jarFile ), new Gui() );
-	}
+	void classSelected( ClassFile classFile );
 }
