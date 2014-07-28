@@ -8,11 +8,11 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma;
 
-import cuchaz.enigma.mapping.Entry;
 
-public interface RenameListener
+public class Constants
 {
-	void rename( Entry obfEntry, String newName );
+	public static final int MiB = 1024*1024; // 1 mebibyte
+	public static final int KiB = 1024;      // 1 kebibyte
 }

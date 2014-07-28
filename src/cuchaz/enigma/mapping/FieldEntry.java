@@ -36,6 +36,18 @@ public class FieldEntry implements Entry, Serializable
 		m_name = name;
 	}
 	
+	public FieldEntry( FieldEntry other )
+	{
+		m_classEntry = new ClassEntry( other.m_classEntry );
+		m_name = other.m_name;
+	}
+
+	public FieldEntry( FieldEntry other, String newClassName )
+	{
+		m_classEntry = new ClassEntry( newClassName );
+		m_name = other.m_name;
+	}
+	
 	public ClassEntry getClassEntry( )
 	{
 		return m_classEntry;
@@ -45,6 +57,11 @@ public class FieldEntry implements Entry, Serializable
 	public String getName( )
 	{
 		return m_name;
+	}
+	
+	public String getClassName( )
+	{
+		return m_classEntry.getName();
 	}
 	
 	@Override

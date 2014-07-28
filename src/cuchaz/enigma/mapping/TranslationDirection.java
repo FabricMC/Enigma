@@ -8,11 +8,27 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.mapping;
 
-import cuchaz.enigma.mapping.Entry;
 
-public interface RenameListener
+public enum TranslationDirection
 {
-	void rename( Entry obfEntry, String newName );
+	Deobfuscating
+	{
+		@Override
+		public <T> T choose( T deobfChoice, T obfChoice )
+		{
+			return deobfChoice;
+		}
+	},
+	Obfuscating
+	{
+		@Override
+		public <T> T choose( T deobfChoice, T obfChoice )
+		{
+			return obfChoice;
+		}
+	};
+
+	public abstract <T> T choose( T deobfChoice, T obfChoice );
 }

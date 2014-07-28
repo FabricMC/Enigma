@@ -45,7 +45,7 @@ import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 
@@ -69,7 +69,7 @@ public class Gui
 	private RenameListener m_renameListener;
 	
 	private BoxHighlightPainter m_highlightPainter;
-	private Entry m_selectedEntry;
+	private EntryPair m_selectedEntryPair;
 	
 	public Gui( )
 	{
@@ -128,9 +128,9 @@ public class Gui
 			@Override
 			public void actionPerformed( ActionEvent event )
 			{
-				if( m_renameListener != null && m_selectedEntry != null )
+				if( m_renameListener != null && m_selectedEntryPair != null )
 				{
-					m_renameListener.rename( m_selectedEntry, m_nameField.getText() );
+					m_renameListener.rename( m_selectedEntryPair.obf, m_nameField.getText() );
 				}
 			}
 		} );
@@ -142,7 +142,7 @@ public class Gui
 		m_renamePanel.add( m_typeLabel );
 		m_renamePanel.add( m_nameField );
 		m_renamePanel.add( m_renameButton );
-		clearEntry();
+		clearEntryPair();
 		
 		// init editor
 		DefaultSyntaxKit.initKit();
@@ -241,7 +241,7 @@ public class Gui
 		m_editor.addCaretListener( listener );
 	}
 	
-	public void clearEntry( )
+	public void clearEntryPair( )
 	{
 		m_actionPanel.removeAll();
 		JLabel label = new JLabel( "No identifier selected" );
@@ -251,67 +251,72 @@ public class Gui
 		
 		redraw();
 	}
-
-	public void showEntry( Entry entry )
+	
+	public void showEntryPair( EntryPair pair )
 	{
-		if( entry == null )
+		if( pair == null )
 		{
-			clearEntry();
+			clearEntryPair();
 			return;
 		}
+		
+		// TEMP
+		System.out.println( "Pair:\n" + pair.obf + "\n" + pair.deobf );
+		
+		m_selectedEntryPair = pair;
 		
 		// layout the action panel
 		m_actionPanel.removeAll();
 		m_actionPanel.add( m_renamePanel );
-		m_nameField.setText( entry.getName() );
+		m_nameField.setText( pair.deobf.getName() );
 		
 		// layout the dynamic section
 		JPanel dynamicPanel = new JPanel();
 		dynamicPanel.setLayout( new GridLayout( 3, 1, 0, 0 ) );
 		m_actionPanel.add( dynamicPanel );
-		if( entry instanceof ClassEntry )
+		if( pair.deobf instanceof ClassEntry )
 		{
-			showEntry( (ClassEntry)entry, dynamicPanel );
+			showEntry( (ClassEntry)pair.deobf, dynamicPanel );
 		}
-		else if( entry instanceof FieldEntry )
+		else if( pair.deobf instanceof FieldEntry )
 		{
-			showEntry( (FieldEntry)entry, dynamicPanel );
+			showEntry( (FieldEntry)pair.deobf, dynamicPanel );
 		}
-		else if( entry instanceof MethodEntry )
+		else if( pair.deobf instanceof MethodEntry )
 		{
-			showEntry( (MethodEntry)entry, dynamicPanel );
+			showEntry( (MethodEntry)pair.deobf, dynamicPanel );
 		}
-		else if( entry instanceof ArgumentEntry )
+		else if( pair.deobf instanceof ArgumentEntry )
 		{
-			showEntry( (ArgumentEntry)entry, dynamicPanel );
+			showEntry( (ArgumentEntry)pair.deobf, dynamicPanel );
 		}
 		else
 		{
-			throw new Error( "Unknown entry type: " + entry.getClass().getName() );
+			throw new Error( "Unknown entry type: " + pair.deobf.getClass().getName() );
 		}
 		
 		redraw();
 	}
 	
-	public void showEntry( ClassEntry entry, JPanel panel )
+	private void showEntry( ClassEntry entry, JPanel panel )
 	{
 		m_typeLabel.setText( "Class: " );
 	}
 	
-	public void showEntry( FieldEntry entry, JPanel panel )
+	private void showEntry( FieldEntry entry, JPanel panel )
 	{
 		m_typeLabel.setText( "Field: " );
 		addNameValue( panel, "Class", entry.getClassEntry().getName() );
 	}
 	
-	public void showEntry( MethodEntry entry, JPanel panel )
+	private void showEntry( MethodEntry entry, JPanel panel )
 	{
 		m_typeLabel.setText( "Method: " );
 		addNameValue( panel, "Class", entry.getClassEntry().getName() );
 		addNameValue( panel, "Signature", entry.getSignature() );
 	}
 	
-	public void showEntry( ArgumentEntry entry, JPanel panel )
+	private void showEntry( ArgumentEntry entry, JPanel panel )
 	{
 		m_typeLabel.setText( "Argument: " );
 		addNameValue( panel, "Class", entry.getMethodEntry().getClassEntry().getName() );

@@ -42,6 +42,20 @@ public class MethodEntry implements Entry, Serializable
 		m_signature = signature;
 	}
 	
+	public MethodEntry( MethodEntry other )
+	{
+		m_classEntry = new ClassEntry( other.m_classEntry );
+		m_name = other.m_name;
+		m_signature = other.m_signature;
+	}
+	
+	public MethodEntry( MethodEntry other, String newClassName )
+	{
+		m_classEntry = new ClassEntry( newClassName );
+		m_name = other.m_name;
+		m_signature = other.m_signature;
+	}
+	
 	public ClassEntry getClassEntry( )
 	{
 		return m_classEntry;
@@ -56,6 +70,11 @@ public class MethodEntry implements Entry, Serializable
 	public String getSignature( )
 	{
 		return m_signature;
+	}
+	
+	public String getClassName( )
+	{
+		return m_classEntry.getName();
 	}
 	
 	@Override
@@ -84,6 +103,6 @@ public class MethodEntry implements Entry, Serializable
 	@Override
 	public String toString( )
 	{
-		return m_classEntry.getName() + "." + m_name + ":" + m_signature;
+		return m_classEntry.getName() + "." + m_name + m_signature;
 	}
 }

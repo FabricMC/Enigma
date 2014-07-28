@@ -18,19 +18,23 @@ import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.gui.ClassSelectionListener;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.RenameListener;
+import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.EntryPair;
 
 public class Controller implements ClassSelectionListener, CaretListener, RenameListener
 {
 	private Deobfuscator m_deobfuscator;
 	private Gui m_gui;
 	private SourceIndex m_index;
+	private ClassFile m_currentFile;
 	
 	public Controller( Deobfuscator deobfuscator, Gui gui )
 	{
 		m_deobfuscator = deobfuscator;
 		m_gui = gui;
 		m_index = null;
+		m_currentFile = null;
 		
 		// update GUI
 		gui.setTitle( deobfuscator.getJarName() );
@@ -43,7 +47,51 @@ public class Controller implements ClassSelectionListener, CaretListener, Rename
 	}
 	
 	@Override
-	public void classSelected( final ClassFile classFile )
+	public void classSelected( ClassFile classFile )
+	{
+		m_currentFile = classFile;
+		deobfuscate( m_currentFile );
+	}
+	
+	@Override
+	public void caretUpdate( CaretEvent event )
+	{
+		if( m_index != null )
+		{
+			int pos = event.getDot();
+			Entry deobfEntry = m_index.getEntry( pos );
+			if( deobfEntry != null )
+			{
+				m_gui.showEntryPair( new EntryPair( m_deobfuscator.obfuscate( deobfEntry ), deobfEntry ) );
+			}
+			else
+			{
+				m_gui.clearEntryPair();
+			}
+		}
+	}
+	
+	@Override
+	public void rename( Entry obfsEntry, String newName )
+	{
+		m_deobfuscator.rename( obfsEntry, newName );
+		
+		// did we rename the current file?
+		if( obfsEntry instanceof ClassEntry )
+		{
+			ClassEntry classEntry = (ClassEntry)obfsEntry;
+			
+			// update the current file
+			if( classEntry.getName().equals( m_currentFile.getName() ) )
+			{
+				m_currentFile = new ClassFile( newName );
+			}
+		}
+		
+		deobfuscate( m_currentFile );
+	}
+	
+	private void deobfuscate( final ClassFile classFile )
 	{
 		m_gui.setSource( "(deobfuscating...)" );
 		
@@ -62,22 +110,5 @@ public class Controller implements ClassSelectionListener, CaretListener, Rename
 				m_gui.highlightTokens( m_index.tokens() );
 			}
 		}.start();
-	}
-	
-	@Override
-	public void caretUpdate( CaretEvent event )
-	{
-		if( m_index != null )
-		{
-			int pos = event.getDot();
-			m_gui.showEntry( m_index.getEntry( pos ) );
-		}
-	}
-	
-	@Override
-	public void rename( Entry entry, String newName )
-	{
-		// TEMP
-		System.out.println( "Rename " + entry + " to " + newName );
 	}
 }

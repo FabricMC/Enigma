@@ -33,6 +33,11 @@ public class ClassEntry implements Entry, Serializable
 		m_name = className;
 	}
 	
+	public ClassEntry( ClassEntry other )
+	{
+		m_name = other.m_name;
+	}
+
 	@Override
 	public String getName( )
 	{

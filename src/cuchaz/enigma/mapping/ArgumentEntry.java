@@ -42,6 +42,13 @@ public class ArgumentEntry implements Entry, Serializable
 		m_name = name;
 	}
 	
+	public ArgumentEntry( ArgumentEntry other )
+	{
+		m_methodEntry = new MethodEntry( other.m_methodEntry );
+		m_index = other.m_index;
+		m_name = other.m_name;
+	}
+	
 	public MethodEntry getMethodEntry( )
 	{
 		return m_methodEntry;
@@ -56,6 +63,26 @@ public class ArgumentEntry implements Entry, Serializable
 	public String getName( )
 	{
 		return m_name;
+	}
+	
+	public ClassEntry getClassEntry( )
+	{
+		return m_methodEntry.getClassEntry();
+	}
+	
+	public String getClassName( )
+	{
+		return m_methodEntry.getClassName();
+	}
+	
+	public String getMethodName( )
+	{
+		return m_methodEntry.getName();
+	}
+	
+	public String getMethodSignature( )
+	{
+		return m_methodEntry.getSignature();
 	}
 	
 	@Override
