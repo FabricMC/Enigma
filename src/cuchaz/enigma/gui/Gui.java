@@ -30,6 +30,9 @@ import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -42,6 +45,7 @@ import javax.swing.text.BadLocationException;
 import jsyntaxpane.DefaultSyntaxKit;
 import jsyntaxpane.Token;
 import cuchaz.enigma.ClassFile;
+import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -51,8 +55,6 @@ import cuchaz.enigma.mapping.MethodEntry;
 
 public class Gui
 {
-	private static final String Name = "Enigma";
-	
 	// controls
 	private JFrame m_frame;
 	private JList<ClassFile> m_obfClasses;
@@ -74,7 +76,7 @@ public class Gui
 	public Gui( )
 	{
 		// init frame
-		m_frame = new JFrame( Name );
+		m_frame = new JFrame( Constants.Name );
 		final Container pane = m_frame.getContentPane();
 		pane.setLayout( new BorderLayout() );
 		
@@ -160,6 +162,24 @@ public class Gui
 		JSplitPane splitMain = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, splitLeft, rightPanel );
 		pane.add( splitMain, BorderLayout.CENTER );
 		
+		// init menus
+		JMenuBar menuBar = new JMenuBar();
+			JMenu menu = new JMenu( "Help" );
+				menu.setMnemonic( 'h' );
+				JMenuItem item = new JMenuItem( "About" );
+					item.setMnemonic( 'a' );
+					item.addActionListener( new ActionListener( )
+					{
+						@Override
+						public void actionPerformed( ActionEvent event )
+						{
+							AboutDialog.show( m_frame );
+						}
+					} );
+				menu.add( item );
+			menuBar.add( menu );
+		m_frame.setJMenuBar( menuBar );
+		
 		// show the frame
 		pane.doLayout();
 		m_frame.setSize( 800, 600 );
@@ -176,7 +196,7 @@ public class Gui
 	
 	public void setTitle( String title )
 	{
-		m_frame.setTitle( Name + " - " + title );
+		m_frame.setTitle( Constants.Name + " - " + title );
 	}
 	
 	public void setObfClasses( List<ClassFile> classes )

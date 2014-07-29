@@ -10,9 +10,16 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
+import java.awt.Desktop;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.jar.JarFile;
+
+import com.google.common.io.CharStreams;
 
 
 public class Util
@@ -59,6 +66,43 @@ public class Util
 			catch( IOException ex )
 			{
 				// just ignore any further exceptions
+			}
+		}
+	}
+
+	public static String readStreamToString( InputStream in )
+	throws IOException
+	{
+		return CharStreams.toString( new InputStreamReader( in, "UTF-8" ) );
+	}
+	
+	public static String readResourceToString( String path )
+	throws IOException
+	{
+		InputStream in = Util.class.getResourceAsStream( path );
+		if( in == null )
+		{
+			throw new IllegalArgumentException( "Resource not found! " + path );
+		}
+		return readStreamToString( in );
+	}
+	
+	public static void openUrl( String url )
+	{
+		if( Desktop.isDesktopSupported() )
+		{
+			Desktop desktop = Desktop.getDesktop();
+			try
+			{
+				desktop.browse( new URI( url ) );
+			}
+			catch( IOException ex )
+			{
+				throw new Error( ex );
+			}
+			catch( URISyntaxException ex )
+			{
+				throw new IllegalArgumentException( ex );
 			}
 		}
 	}
