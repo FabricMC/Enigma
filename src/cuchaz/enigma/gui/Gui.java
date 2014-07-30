@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -27,6 +28,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -39,6 +41,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
+import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 
@@ -55,6 +58,8 @@ import cuchaz.enigma.mapping.MethodEntry;
 
 public class Gui
 {
+	private GuiController m_controller;
+	
 	// controls
 	private JFrame m_frame;
 	private JList<ClassFile> m_obfClasses;
@@ -65,16 +70,28 @@ public class Gui
 	private JLabel m_typeLabel;
 	private JTextField m_nameField;
 	private JButton m_renameButton;
-	
-	// listeners
-	private ClassSelectionListener m_classSelectionListener;
-	private RenameListener m_renameListener;
-	
 	private BoxHighlightPainter m_highlightPainter;
+	
+	// dynamic menu items
+	private JMenuItem m_closeJarMenu;
+	private JMenuItem m_openMappingsMenu;
+	private JMenuItem m_saveMappingsMenu;
+	private JMenuItem m_saveMappingsAsMenu;
+	private JMenuItem m_closeMappingsMenu;
+	
+	// state
 	private EntryPair m_selectedEntryPair;
+	private JFileChooser m_jarFileChooser;
+	private JFileChooser m_mappingFileChooser;
 	
 	public Gui( )
 	{
+		m_controller = new GuiController( this );
+		
+		// init file choosers
+		m_jarFileChooser = new JFileChooser();
+		m_mappingFileChooser = new JFileChooser();
+		
 		// init frame
 		m_frame = new JFrame( Constants.Name );
 		final Container pane = m_frame.getContentPane();
@@ -91,13 +108,10 @@ public class Gui
 			{
 				if( event.getClickCount() == 2 )
 				{
-					if( m_classSelectionListener != null )
+					ClassFile selected = m_obfClasses.getSelectedValue();
+					if( selected != null )
 					{
-						ClassFile selected = m_obfClasses.getSelectedValue();
-						if( selected != null )
-						{
-							m_classSelectionListener.classSelected( selected );
-						}
+						m_controller.deobfuscateClass( selected );
 					}
 				}
 			}
@@ -130,9 +144,9 @@ public class Gui
 			@Override
 			public void actionPerformed( ActionEvent event )
 			{
-				if( m_renameListener != null && m_selectedEntryPair != null )
+				if( m_selectedEntryPair != null )
 				{
-					m_renameListener.rename( m_selectedEntryPair.obf, m_nameField.getText() );
+					m_controller.rename( m_selectedEntryPair.obf, m_nameField.getText() );
 				}
 			}
 		} );
@@ -148,10 +162,27 @@ public class Gui
 		
 		// init editor
 		DefaultSyntaxKit.initKit();
+		m_highlightPainter = new BoxHighlightPainter();
 		m_editor = new JEditorPane();
 		m_editor.setEditable( false );
 		JScrollPane sourceScroller = new JScrollPane( m_editor );
 		m_editor.setContentType( "text/java" );
+		m_editor.addCaretListener( new CaretListener( )
+		{
+			@Override
+			public void caretUpdate( CaretEvent event )
+			{
+				m_selectedEntryPair = m_controller.getEntryPair( event.getDot() );
+				if( m_selectedEntryPair != null )
+				{
+					showEntryPair( m_selectedEntryPair );
+				}
+				else
+				{
+					clearEntryPair();
+				}
+			}
+		} );
 		
 		// layout controls
 		JSplitPane splitLeft = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
@@ -164,21 +195,147 @@ public class Gui
 		
 		// init menus
 		JMenuBar menuBar = new JMenuBar();
-			JMenu menu = new JMenu( "Help" );
-				menu.setMnemonic( 'h' );
-				JMenuItem item = new JMenuItem( "About" );
-					item.setMnemonic( 'a' );
-					item.addActionListener( new ActionListener( )
-					{
-						@Override
-						public void actionPerformed( ActionEvent event )
-						{
-							AboutDialog.show( m_frame );
-						}
-					} );
-				menu.add( item );
-			menuBar.add( menu );
 		m_frame.setJMenuBar( menuBar );
+		{
+			JMenu menu = new JMenu( "File" );
+			menuBar.add( menu );
+			{
+				JMenuItem item = new JMenuItem( "Open Jar..." );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						if( m_jarFileChooser.showOpenDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						{
+							try
+							{
+								m_controller.openJar( m_jarFileChooser.getSelectedFile() );
+							}
+							catch( IOException ex )
+							{
+								throw new Error( ex );
+							}
+						}
+					}
+				} );
+			}
+			{
+				JMenuItem item = new JMenuItem( "Close Jar" );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						m_controller.closeJar();
+					}
+				} );
+				m_closeJarMenu = item;
+			}
+			menu.addSeparator();
+			{
+				JMenuItem item = new JMenuItem( "Open Mappings..." );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						if( m_mappingFileChooser.showOpenDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						{
+							try
+							{
+								m_controller.openMappings( m_mappingFileChooser.getSelectedFile() );
+								m_saveMappingsMenu.setEnabled( true );
+							}
+							catch( IOException ex )
+							{
+								throw new Error( ex );
+							}
+						}
+					}
+				} );
+				m_openMappingsMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem( "Save Mappings" );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						try
+						{
+							m_controller.saveMappings( m_mappingFileChooser.getSelectedFile() );
+						}
+						catch( IOException ex )
+						{
+							throw new Error( ex );
+						}
+					}
+				} );
+				m_saveMappingsMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem( "Save Mappings As..." );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						if( m_mappingFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						{
+							try
+							{
+								m_controller.saveMappings( m_mappingFileChooser.getSelectedFile() );
+								m_saveMappingsMenu.setEnabled( true );
+							}
+							catch( IOException ex )
+							{
+								throw new Error( ex );
+							}
+						}
+					}
+				} );
+				m_saveMappingsAsMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem( "Close Mapppings" );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						m_controller.closeMappings();
+					}
+				} );
+				m_closeMappingsMenu = item;
+			}
+		}
+		{
+			JMenu menu = new JMenu( "Help" );
+			menuBar.add( menu );
+			{
+				JMenuItem item = new JMenuItem( "About" );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						AboutDialog.show( m_frame );
+					}
+				} );
+			}
+		}
+		
+		// init state
+		onCloseJar();
 		
 		// show the frame
 		pane.doLayout();
@@ -186,22 +343,52 @@ public class Gui
 		m_frame.setMinimumSize( new Dimension( 640, 480 ) );
 		m_frame.setVisible( true );
 		m_frame.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE );
-		
-		// init listeners
-		m_classSelectionListener = null;
-		m_renameListener = null;
-		
-		m_highlightPainter = new BoxHighlightPainter();
 	}
 	
-	public void setTitle( String title )
+	public GuiController getController( )
 	{
-		m_frame.setTitle( Constants.Name + " - " + title );
+		return m_controller;
+	}
+	
+	public void onOpenJar( String jarName )
+	{
+		// update gui
+		m_frame.setTitle( Constants.Name + " - " + jarName );
+		setSource( null );
+		
+		// update menu
+		m_closeJarMenu.setEnabled( true );
+		m_openMappingsMenu.setEnabled( true );
+		m_saveMappingsMenu.setEnabled( false );
+		m_saveMappingsAsMenu.setEnabled( true );
+		m_closeMappingsMenu.setEnabled( true );
+	}
+	
+	public void onCloseJar( )
+	{
+		// update gui
+		m_frame.setTitle( Constants.Name );
+		setObfClasses( null );
+		setSource( null );
+		
+		// update menu
+		m_closeJarMenu.setEnabled( false );
+		m_openMappingsMenu.setEnabled( false );
+		m_saveMappingsMenu.setEnabled( false );
+		m_saveMappingsAsMenu.setEnabled( false );
+		m_closeMappingsMenu.setEnabled( false );
 	}
 	
 	public void setObfClasses( List<ClassFile> classes )
 	{
-		m_obfClasses.setListData( new Vector<ClassFile>( classes ) );
+		if( classes != null )
+		{
+			m_obfClasses.setListData( new Vector<ClassFile>( classes ) );
+		}
+		else
+		{
+			m_obfClasses.setListData( new Vector<ClassFile>() );
+		}
 	}
 	
 	public void setSource( String source )
@@ -212,9 +399,10 @@ public class Gui
 	public void setSource( String source, SourceIndex index )
 	{
 		m_editor.setText( source );
+		setHighlightedTokens( null );
 	}
 	
-	public void highlightTokens( Iterable<Token> tokens )
+	public void setHighlightedTokens( Iterable<Token> tokens )
 	{
 		// remove any old highlighters
 		m_editor.getHighlighter().removeAllHighlights();
@@ -240,28 +428,7 @@ public class Gui
 		redraw();
 	}
 	
-	public void setClassSelectionListener( ClassSelectionListener val )
-	{
-		m_classSelectionListener = val;
-	}
-	
-	public void setRenameListener( RenameListener val )
-	{
-		m_renameListener = val;
-	}
-	
-	public void setCaretListener( CaretListener listener )
-	{
-		// remove any old listeners
-		for( CaretListener oldListener : m_editor.getCaretListeners() )
-		{
-			m_editor.removeCaretListener( oldListener );
-		}
-		
-		m_editor.addCaretListener( listener );
-	}
-	
-	public void clearEntryPair( )
+	private void clearEntryPair( )
 	{
 		m_actionPanel.removeAll();
 		JLabel label = new JLabel( "No identifier selected" );
@@ -272,16 +439,13 @@ public class Gui
 		redraw();
 	}
 	
-	public void showEntryPair( EntryPair pair )
+	private void showEntryPair( EntryPair pair )
 	{
 		if( pair == null )
 		{
 			clearEntryPair();
 			return;
 		}
-		
-		// TEMP
-		System.out.println( "Pair:\n" + pair.obf + "\n" + pair.deobf );
 		
 		m_selectedEntryPair = pair;
 		

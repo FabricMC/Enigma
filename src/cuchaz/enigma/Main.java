@@ -19,16 +19,38 @@ public class Main
 	public static void main( String[] args )
 	throws Exception
 	{
-		startGui();
+		Gui gui = new Gui();
+		
+		// parse command-line args
+		if( args.length >= 1 )
+		{
+			gui.getController().openJar( getFile( args[0] ) );
+		}
+		if( args.length >= 2 )
+		{
+			gui.getController().openMappings( getFile( args[1] ) );
+		}
 	}
 	
-	private static void startGui( )
-	throws Exception
+	private static File getFile( String path )
 	{
-		// settings
-		final File jarFile = new File( "/home/jeff/.minecraft/versions/1.7.10/1.7.10.jar" );
+		// expand ~ to the home dir
+		if( path.startsWith( "~" ) )
+		{
+			// get the home dir
+			File dirHome = new File( System.getProperty( "user.home" ) );
+			
+			// is the path just ~/ or is it ~user/ ?
+			if( path.startsWith( "~/" ) )
+			{
+				return new File( dirHome, path.substring( 2 ) );
+			}
+			else
+			{
+				return new File( dirHome.getParentFile(), path.substring( 1 ) );
+			}
+		}
 		
-		// start the GUI and tie it to the deobfuscator
-		new Controller( new Deobfuscator( jarFile ), new Gui() );
+		return new File( path );
 	}
 }

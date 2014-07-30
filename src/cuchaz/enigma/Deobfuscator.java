@@ -83,23 +83,38 @@ public class Deobfuscator
 			Util.closeQuietly( jarIn );
 		}
 		
-		// init mappings
-		m_mappings = new TranslationMappings( m_ancestries );
-		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();
-		m_settings.setTypeLoader( new TranslatingTypeLoader(
-			m_jar,
-			m_mappings.getTranslator( TranslationDirection.Deobfuscating ),
-			m_mappings.getTranslator( TranslationDirection.Obfuscating )
-		) );
 		m_settings.setForceExplicitImports( true );
 		m_settings.setShowSyntheticMembers( true );
+		
+		// init mappings
+		setMappings( new TranslationMappings( m_ancestries ) );
 	}
 	
 	public String getJarName( )
 	{
 		return m_file.getName();
+	}
+	
+	public TranslationMappings getMappings( )
+	{
+		return m_mappings;
+	}
+	public void setMappings( TranslationMappings val )
+	{
+		if( val == null )
+		{
+			val = new TranslationMappings( m_ancestries );
+		}
+		m_mappings = val;
+		
+		// update decompiler options
+		m_settings.setTypeLoader( new TranslatingTypeLoader(
+			m_jar,
+			m_mappings.getTranslator( TranslationDirection.Deobfuscating ),
+			m_mappings.getTranslator( TranslationDirection.Obfuscating )
+		) );
 	}
 	
 	public List<ClassFile> getObfuscatedClasses( )

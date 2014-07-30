@@ -8,70 +8,95 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma;
+package cuchaz.enigma.gui;
 
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
+import cuchaz.enigma.ClassFile;
+import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.Analyzer;
 import cuchaz.enigma.analysis.SourceIndex;
-import cuchaz.enigma.gui.ClassSelectionListener;
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.RenameListener;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
+import cuchaz.enigma.mapping.TranslationMappings;
 
-public class Controller implements ClassSelectionListener, CaretListener, RenameListener
+public class GuiController
 {
 	private Deobfuscator m_deobfuscator;
 	private Gui m_gui;
 	private SourceIndex m_index;
 	private ClassFile m_currentFile;
 	
-	public Controller( Deobfuscator deobfuscator, Gui gui )
+	public GuiController( Gui gui )
 	{
-		m_deobfuscator = deobfuscator;
 		m_gui = gui;
+		m_deobfuscator = null;
 		m_index = null;
 		m_currentFile = null;
-		
-		// update GUI
-		gui.setTitle( deobfuscator.getJarName() );
-		gui.setObfClasses( deobfuscator.getObfuscatedClasses() );
-		
-		// handle events
-		gui.setClassSelectionListener( this );
-		gui.setCaretListener( this );
-		gui.setRenameListener( this );
 	}
 	
-	@Override
-	public void classSelected( ClassFile classFile )
+	public void openJar( File file )
+	throws IOException
+	{
+		m_deobfuscator = new Deobfuscator( file );
+		m_gui.onOpenJar( m_deobfuscator.getJarName() );
+		m_gui.setObfClasses( m_deobfuscator.getObfuscatedClasses() );
+	}
+	
+	public void closeJar( )
+	{
+		m_deobfuscator = null;
+		m_gui.onCloseJar();
+	}
+	
+	public void openMappings( File file )
+	throws IOException
+	{
+		FileInputStream in = new FileInputStream( file );
+		m_deobfuscator.setMappings( TranslationMappings.newFromStream( in ) );
+		in.close();
+		refreshOpenFiles();
+	}
+
+	public void saveMappings( File file )
+	throws IOException
+	{
+		FileOutputStream out = new FileOutputStream( file );
+		m_deobfuscator.getMappings().write( out );
+		out.close();
+	}
+
+	public void closeMappings( )
+	{
+		m_deobfuscator.setMappings( null );
+		refreshOpenFiles();
+	}
+	
+	public void deobfuscateClass( ClassFile classFile )
 	{
 		m_currentFile = classFile;
 		deobfuscate( m_currentFile );
 	}
 	
-	@Override
-	public void caretUpdate( CaretEvent event )
+	public EntryPair getEntryPair( int pos )
 	{
-		if( m_index != null )
+		if( m_index == null )
 		{
-			int pos = event.getDot();
-			Entry deobfEntry = m_index.getEntry( pos );
-			if( deobfEntry != null )
-			{
-				m_gui.showEntryPair( new EntryPair( m_deobfuscator.obfuscate( deobfEntry ), deobfEntry ) );
-			}
-			else
-			{
-				m_gui.clearEntryPair();
-			}
+			return null;
 		}
+		
+		Entry deobfEntry = m_index.getEntry( pos );
+		if( deobfEntry == null )
+		{
+			return null;
+		}
+		return new EntryPair( m_deobfuscator.obfuscate( deobfEntry ), deobfEntry );
 	}
 	
-	@Override
 	public void rename( Entry obfsEntry, String newName )
 	{
 		m_deobfuscator.rename( obfsEntry, newName );
@@ -88,9 +113,17 @@ public class Controller implements ClassSelectionListener, CaretListener, Rename
 			}
 		}
 		
-		deobfuscate( m_currentFile );
+		refreshOpenFiles();
 	}
 	
+	private void refreshOpenFiles( )
+	{
+		if( m_currentFile != null )
+		{
+			deobfuscate( m_currentFile );
+		}
+	}
+
 	private void deobfuscate( final ClassFile classFile )
 	{
 		m_gui.setSource( "(deobfuscating...)" );
@@ -107,7 +140,7 @@ public class Controller implements ClassSelectionListener, CaretListener, Rename
 				
 				// index the source file
 				m_index = Analyzer.analyze( classFile.getName(), source );
-				m_gui.highlightTokens( m_index.tokens() );
+				m_gui.setHighlightedTokens( m_index.tokens() );
 			}
 		}.start();
 	}
