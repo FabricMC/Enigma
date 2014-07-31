@@ -14,7 +14,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MethodIndex implements Serializable
+public class MethodMapping implements Serializable
 {
 	private static final long serialVersionUID = -4409570216084263978L;
 	
@@ -22,15 +22,16 @@ public class MethodIndex implements Serializable
 	private String m_deobfName;
 	private String m_obfSignature;
 	private String m_deobfSignature;
-	private Map<Integer,ArgumentIndex> m_arguments;
+	private Map<Integer,ArgumentMapping> m_arguments;
 	
-	public MethodIndex( String obfName, String obfSignature, String deobfName, String deobfSignature )
+	// NOTE: this argument order is important for the MethodReader/MethodWriter
+	public MethodMapping( String obfName, String deobfName, String obfSignature, String deobfSignature )
 	{
 		m_obfName = obfName;
 		m_deobfName = deobfName;
 		m_obfSignature = obfSignature;
 		m_deobfSignature = deobfSignature;
-		m_arguments = new TreeMap<Integer,ArgumentIndex>();
+		m_arguments = new TreeMap<Integer,ArgumentMapping>();
 	}
 
 	public String getObfName( )
@@ -61,12 +62,22 @@ public class MethodIndex implements Serializable
 		m_deobfSignature = val;
 	}
 	
+	public Iterable<ArgumentMapping> arguments( )
+	{
+		return m_arguments.values();
+	}
+	
+	protected void addArgumentMapping( ArgumentMapping argumentMapping )
+	{
+		m_arguments.put( argumentMapping.getIndex(), argumentMapping );
+	}
+	
 	public String getObfArgumentName( int index )
 	{
-		ArgumentIndex argumentIndex = m_arguments.get( index );
-		if( argumentIndex != null )
+		ArgumentMapping argumentMapping = m_arguments.get( index );
+		if( argumentMapping != null )
 		{
-			return argumentIndex.getObfName();
+			return argumentMapping.getName();
 		}
 		
 		return null;
@@ -74,26 +85,26 @@ public class MethodIndex implements Serializable
 	
 	public String getDeobfArgumentName( int index )
 	{
-		ArgumentIndex argumentIndex = m_arguments.get( index );
-		if( argumentIndex != null )
+		ArgumentMapping argumentMapping = m_arguments.get( index );
+		if( argumentMapping != null )
 		{
-			return argumentIndex.getDeobfName();
+			return argumentMapping.getName();
 		}
 		
 		return null;
 	}
 	
-	public void setArgumentName( int index, String obfName, String deobfName )
+	public void setArgumentName( int index, String name )
 	{
-		ArgumentIndex argumentIndex = m_arguments.get( index );
-		if( argumentIndex == null )
+		ArgumentMapping argumentMapping = m_arguments.get( index );
+		if( argumentMapping == null )
 		{
-			argumentIndex = new ArgumentIndex( obfName, deobfName );
-			m_arguments.put( index, argumentIndex );
+			argumentMapping = new ArgumentMapping( index, name );
+			m_arguments.put( index, argumentMapping );
 		}
 		else
 		{
-			argumentIndex.setDeobfName( deobfName );
+			argumentMapping.setName( name );
 		}
 	}
 	
@@ -112,12 +123,12 @@ public class MethodIndex implements Serializable
 		buf.append( m_deobfSignature );
 		buf.append( "\n" );
 		buf.append( "\tArguments:\n" );
-		for( ArgumentIndex argumentIndex : m_arguments.values() )
+		for( ArgumentMapping argumentMapping : m_arguments.values() )
 		{
 			buf.append( "\t\t" );
-			buf.append( argumentIndex.getObfName() );
+			buf.append( argumentMapping.getIndex() );
 			buf.append( " <-> " );
-			buf.append( argumentIndex.getDeobfName() );
+			buf.append( argumentMapping.getName() );
 			buf.append( "\n" );
 		}
 		return buf.toString();

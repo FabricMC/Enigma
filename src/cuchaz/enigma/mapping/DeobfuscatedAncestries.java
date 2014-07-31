@@ -17,10 +17,10 @@ public class DeobfuscatedAncestries extends Ancestries
 	private static final long serialVersionUID = 8316248774892618324L;
 	
 	private Ancestries m_ancestries;
-	private Map<String,ClassIndex> m_classesByObf;
-	private Map<String,ClassIndex> m_classesByDeobf;
+	private Map<String,ClassMapping> m_classesByObf;
+	private Map<String,ClassMapping> m_classesByDeobf;
 	
-	protected DeobfuscatedAncestries( Ancestries ancestries, Map<String,ClassIndex> classesByObf, Map<String,ClassIndex> classesByDeobf )
+	protected DeobfuscatedAncestries( Ancestries ancestries, Map<String,ClassMapping> classesByObf, Map<String,ClassMapping> classesByDeobf )
 	{
 		m_ancestries = ancestries;
 		m_classesByObf = classesByObf;
@@ -31,7 +31,7 @@ public class DeobfuscatedAncestries extends Ancestries
 	public String getSuperclassName( String deobfClassName )
 	{
 		// obfuscate the class name
-		ClassIndex classIndex = m_classesByDeobf.get( deobfClassName );
+		ClassMapping classIndex = m_classesByDeobf.get( deobfClassName );
 		if( classIndex == null )
 		{
 			return null;

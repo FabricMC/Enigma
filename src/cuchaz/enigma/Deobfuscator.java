@@ -32,9 +32,10 @@ import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MethodEntry;
+import cuchaz.enigma.mapping.Renamer;
 import cuchaz.enigma.mapping.TranslationDirection;
-import cuchaz.enigma.mapping.TranslationMappings;
 import cuchaz.enigma.mapping.Translator;
 
 public class Deobfuscator
@@ -43,7 +44,8 @@ public class Deobfuscator
 	private JarFile m_jar;
 	private DecompilerSettings m_settings;
 	private Ancestries m_ancestries;
-	private TranslationMappings m_mappings;
+	private Mappings m_mappings;
+	private Renamer m_renamer;
 	
 	private static Comparator<ClassFile> m_obfuscatedClassSorter;
 	
@@ -89,7 +91,7 @@ public class Deobfuscator
 		m_settings.setShowSyntheticMembers( true );
 		
 		// init mappings
-		setMappings( new TranslationMappings( m_ancestries ) );
+		setMappings( new Mappings() );
 	}
 	
 	public String getJarName( )
@@ -97,23 +99,24 @@ public class Deobfuscator
 		return m_file.getName();
 	}
 	
-	public TranslationMappings getMappings( )
+	public Mappings getMappings( )
 	{
 		return m_mappings;
 	}
-	public void setMappings( TranslationMappings val )
+	public void setMappings( Mappings val )
 	{
 		if( val == null )
 		{
-			val = new TranslationMappings( m_ancestries );
+			val = new Mappings();
 		}
 		m_mappings = val;
+		m_renamer = new Renamer( m_ancestries, m_mappings );
 		
 		// update decompiler options
 		m_settings.setTypeLoader( new TranslatingTypeLoader(
 			m_jar,
-			m_mappings.getTranslator( TranslationDirection.Deobfuscating ),
-			m_mappings.getTranslator( TranslationDirection.Obfuscating )
+			m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ),
+			m_mappings.getTranslator( m_ancestries, TranslationDirection.Obfuscating )
 		) );
 	}
 	
@@ -168,19 +171,19 @@ public class Deobfuscator
 	{
 		if( entry instanceof ClassEntry )
 		{
-			m_mappings.setClassName( (ClassEntry)entry, newName );
+			m_renamer.setClassName( (ClassEntry)entry, newName );
 		}
 		else if( entry instanceof FieldEntry )
 		{
-			m_mappings.setFieldName( (FieldEntry)entry, newName );
+			m_renamer.setFieldName( (FieldEntry)entry, newName );
 		}
 		else if( entry instanceof MethodEntry )
 		{
-			m_mappings.setMethodName( (MethodEntry)entry, newName );
+			m_renamer.setMethodName( (MethodEntry)entry, newName );
 		}
 		else if( entry instanceof ArgumentEntry )
 		{
-			m_mappings.setArgumentName( (ArgumentEntry)entry, newName );
+			m_renamer.setArgumentName( (ArgumentEntry)entry, newName );
 		}
 		else
 		{
@@ -190,7 +193,7 @@ public class Deobfuscator
 	
 	public Entry obfuscate( Entry in )
 	{
-		Translator translator = m_mappings.getTranslator( TranslationDirection.Obfuscating );
+		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Obfuscating );
 		if( in instanceof ClassEntry )
 		{
 			return translator.translateEntry( (ClassEntry)in );
@@ -215,7 +218,7 @@ public class Deobfuscator
 	
 	public Entry deobfuscate( Entry in )
 	{
-		Translator translator = m_mappings.getTranslator( TranslationDirection.Deobfuscating );
+		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating );
 		if( in instanceof ClassEntry )
 		{
 			return translator.translateEntry( (ClassEntry)in );

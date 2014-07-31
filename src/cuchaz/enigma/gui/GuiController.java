@@ -11,8 +11,8 @@
 package cuchaz.enigma.gui;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import cuchaz.enigma.ClassFile;
@@ -22,7 +22,8 @@ import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
-import cuchaz.enigma.mapping.TranslationMappings;
+import cuchaz.enigma.mapping.MappingsReader;
+import cuchaz.enigma.mapping.MappingsWriter;
 
 public class GuiController
 {
@@ -56,17 +57,19 @@ public class GuiController
 	public void openMappings( File file )
 	throws IOException
 	{
-		FileInputStream in = new FileInputStream( file );
-		m_deobfuscator.setMappings( TranslationMappings.newFromStream( in ) );
+		FileReader in = new FileReader( file );
+		m_deobfuscator.setMappings( new MappingsReader().read( in ) );
 		in.close();
+		// TEMP
+		System.out.println( m_deobfuscator.getMappings() );
 		refreshOpenFiles();
 	}
 
 	public void saveMappings( File file )
 	throws IOException
 	{
-		FileOutputStream out = new FileOutputStream( file );
-		m_deobfuscator.getMappings().write( out );
+		FileWriter out = new FileWriter( file );
+		new MappingsWriter().write( out, m_deobfuscator.getMappings() );
 		out.close();
 	}
 

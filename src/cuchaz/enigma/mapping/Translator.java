@@ -19,10 +19,10 @@ import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 public class Translator
 {
 	private TranslationDirection m_direction;
-	private Map<String,ClassIndex> m_classes;
+	private Map<String,ClassMapping> m_classes;
 	private Ancestries m_ancestries;
 	
-	protected Translator( TranslationDirection direction, Map<String,ClassIndex> classes, Ancestries ancestries )
+	protected Translator( TranslationDirection direction, Map<String,ClassMapping> classes, Ancestries ancestries )
 	{
 		m_direction = direction;
 		m_classes = classes;
@@ -36,7 +36,7 @@ public class Translator
 	
 	public String translateClass( String in )
 	{
-		ClassIndex classIndex = m_classes.get( in );
+		ClassMapping classIndex = m_classes.get( in );
 		if( classIndex != null )
 		{
 			return m_direction.choose(
@@ -63,7 +63,7 @@ public class Translator
 		for( String className : getSelfAndAncestors( in.getClassName() ) )
 		{
 			// look for the class
-			ClassIndex classIndex = m_classes.get( className );
+			ClassMapping classIndex = m_classes.get( className );
 			if( classIndex != null )
 			{
 				// look for the field
@@ -99,11 +99,11 @@ public class Translator
 		for( String className : getSelfAndAncestors( in.getClassName() ) )
 		{
 			// look for the class
-			ClassIndex classIndex = m_classes.get( className );
+			ClassMapping classIndex = m_classes.get( className );
 			if( classIndex != null )
 			{
 				// look for the method
-				MethodIndex methodIndex = m_direction.choose(
+				MethodMapping methodIndex = m_direction.choose(
 					classIndex.getMethodByObf( in.getName(), in.getSignature() ),
 					classIndex.getMethodByDeobf( in.getName(), in.getSignature() )
 				);
@@ -139,11 +139,11 @@ public class Translator
 		for( String className : getSelfAndAncestors( in.getClassName() ) )
 		{
 			// look for the class
-			ClassIndex classIndex = m_classes.get( className );
+			ClassMapping classIndex = m_classes.get( className );
 			if( classIndex != null )
 			{
 				// look for the method
-				MethodIndex methodIndex = m_direction.choose(
+				MethodMapping methodIndex = m_direction.choose(
 					classIndex.getMethodByObf( in.getMethodName(), in.getMethodSignature() ),
 					classIndex.getMethodByDeobf( in.getMethodName(), in.getMethodSignature() )
 				);

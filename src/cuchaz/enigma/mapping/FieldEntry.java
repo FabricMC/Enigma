@@ -21,6 +21,7 @@ public class FieldEntry implements Entry, Serializable
 	private ClassEntry m_classEntry;
 	private String m_name;
 	
+	// NOTE: this argument order is important for the MethodReader/MethodWriter
 	public FieldEntry( ClassEntry classEntry, String name )
 	{
 		if( classEntry == null )

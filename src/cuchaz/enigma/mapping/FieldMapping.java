@@ -12,14 +12,14 @@ package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
 
-public class ArgumentIndex implements Serializable
+public class FieldMapping implements Serializable
 {
 	private static final long serialVersionUID = 8610742471440861315L;
 	
 	private String m_obfName;
 	private String m_deobfName;
 	
-	public ArgumentIndex( String obfName, String deobfName )
+	public FieldMapping( String obfName, String deobfName )
 	{
 		m_obfName = obfName;
 		m_deobfName = deobfName;
