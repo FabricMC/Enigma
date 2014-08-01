@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Deobfuscator;
@@ -45,7 +47,7 @@ public class GuiController
 	{
 		m_deobfuscator = new Deobfuscator( file );
 		m_gui.onOpenJar( m_deobfuscator.getJarName() );
-		m_gui.setObfClasses( m_deobfuscator.getObfuscatedClasses() );
+		refreshClasses();
 	}
 	
 	public void closeJar( )
@@ -60,8 +62,8 @@ public class GuiController
 		FileReader in = new FileReader( file );
 		m_deobfuscator.setMappings( new MappingsReader().read( in ) );
 		in.close();
-		// TEMP
-		System.out.println( m_deobfuscator.getMappings() );
+		m_gui.setMappingsLoaded( true );
+		refreshClasses();
 		refreshOpenFiles();
 	}
 
@@ -76,6 +78,7 @@ public class GuiController
 	public void closeMappings( )
 	{
 		m_deobfuscator.setMappings( null );
+		m_gui.setMappingsLoaded( false );
 		refreshOpenFiles();
 	}
 	
@@ -117,6 +120,15 @@ public class GuiController
 		}
 		
 		refreshOpenFiles();
+	}
+	
+	private void refreshClasses( )
+	{
+		List<ClassFile> obfClasses = new ArrayList<ClassFile>();
+		List<ClassFile> deobfClasses = new ArrayList<ClassFile>();
+		m_deobfuscator.getSortedClasses( obfClasses, deobfClasses );
+		m_gui.setObfClasses( obfClasses );
+		m_gui.setDeobfClasses( deobfClasses );
 	}
 	
 	private void refreshOpenFiles( )

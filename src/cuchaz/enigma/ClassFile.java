@@ -10,36 +10,42 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import java.util.regex.Pattern;
 
 public class ClassFile
 {
-	private static Pattern m_obfuscatedClassPattern;
+	private String m_obfName;
+	private String m_deobfName;
 	
-	static
+	public ClassFile( String obfName )
 	{
-		m_obfuscatedClassPattern = Pattern.compile( "^[a-z]+$" );
-	}
-	
-	private String m_name;
-	
-	public ClassFile( String name )
-	{
-		m_name = name;
+		m_obfName = obfName;
 	}
 	
 	public String getName( )
 	{
-		return m_name;
+		if( m_deobfName != null )
+		{
+			return m_deobfName;
+		}
+		return m_obfName;
 	}
 	
-	public boolean isObfuscated( )
+	public String getObfName( )
 	{
-		return m_obfuscatedClassPattern.matcher( m_name ).matches();
+		return m_obfName;
 	}
-
+	
+	public String getDeobfName( )
+	{
+		return m_deobfName;
+	}
+	public void setDeobfName( String val )
+	{
+		m_deobfName = val;
+	}
+	
 	public String getPath( )
 	{
-		return m_name.replace( ".", "/" ) + ".class";
+		return m_deobfName.replace( ".", "/" ) + ".class";
 	}
 }

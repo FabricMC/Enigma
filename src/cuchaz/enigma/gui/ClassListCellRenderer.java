@@ -19,11 +19,11 @@ import javax.swing.ListCellRenderer;
 
 import cuchaz.enigma.ClassFile;
 
-public class ObfuscatedClassListCellRenderer implements ListCellRenderer<ClassFile>
+public class ClassListCellRenderer implements ListCellRenderer<ClassFile>
 {
 	private DefaultListCellRenderer m_defaultRenderer;
 	
-	public ObfuscatedClassListCellRenderer( )
+	public ClassListCellRenderer( )
 	{
 		m_defaultRenderer = new DefaultListCellRenderer();
 	}

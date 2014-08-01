@@ -15,9 +15,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -30,10 +27,12 @@ import com.strobel.decompiler.PlainTextOutput;
 import cuchaz.enigma.mapping.Ancestries;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MethodEntry;
+import cuchaz.enigma.mapping.NameValidator;
 import cuchaz.enigma.mapping.Renamer;
 import cuchaz.enigma.mapping.TranslationDirection;
 import cuchaz.enigma.mapping.Translator;
@@ -46,25 +45,6 @@ public class Deobfuscator
 	private Ancestries m_ancestries;
 	private Mappings m_mappings;
 	private Renamer m_renamer;
-	
-	private static Comparator<ClassFile> m_obfuscatedClassSorter;
-	
-	static
-	{
-		m_obfuscatedClassSorter = new Comparator<ClassFile>( )
-		{
-			@Override
-			public int compare( ClassFile a, ClassFile b )
-			{
-				if( a.getName().length() != b.getName().length() )
-				{
-					return a.getName().length() - b.getName().length();
-				}
-				
-				return a.getName().compareTo( b.getName() );
-			}
-		};
-	}
 	
 	public Deobfuscator( File file )
 	throws IOException
@@ -120,48 +100,38 @@ public class Deobfuscator
 		) );
 	}
 	
-	public List<ClassFile> getObfuscatedClasses( )
+	public void getSortedClasses( List<ClassFile> obfClasses, List<ClassFile> deobfClasses )
 	{
-		List<ClassFile> classes = new ArrayList<ClassFile>();
 		Enumeration<JarEntry> entries = m_jar.entries();
 		while( entries.hasMoreElements() )
 		{
 			JarEntry entry = entries.nextElement();
 			
 			// get the class name
-			String className = toClassName( entry.getName() );
-			if( className == null )
+			String obfName = NameValidator.fileNameToClassName( entry.getName() );
+			if( obfName == null )
 			{
 				continue;
 			}
 			
-			ClassFile classFile = new ClassFile( className );
-			if( classFile.isObfuscated() )
+			ClassFile classFile = new ClassFile( obfName );
+			ClassMapping classMapping = m_mappings.getClassByObf( classFile.getName() );
+			if( classMapping != null )
 			{
-				classes.add( classFile );
+				classFile.setDeobfName( classMapping.getDeobfName() );
+				deobfClasses.add( classFile );
+			}
+			else
+			{
+				obfClasses.add( classFile );
 			}
 		}
-		Collections.sort( classes, m_obfuscatedClassSorter );
-		return classes;
-	}
-	
-	// TODO: could go somewhere more generic
-	private static String toClassName( String fileName )
-	{
-		final String suffix = ".class";
-		
-		if( !fileName.endsWith( suffix ) )
-		{
-			return null;
-		}
-		
-		return fileName.substring( 0, fileName.length() - suffix.length() ).replace( "/", "." );
 	}
 	
 	public String getSource( final ClassFile classFile )
 	{
 		StringWriter buf = new StringWriter();
-		Decompiler.decompile( classFile.getName(), new PlainTextOutput( buf ), m_settings );
+		Decompiler.decompile( classFile.getObfName(), new PlainTextOutput( buf ), m_settings );
 		return buf.toString();
 	}
 	

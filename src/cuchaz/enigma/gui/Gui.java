@@ -21,6 +21,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 
@@ -58,6 +60,25 @@ import cuchaz.enigma.mapping.MethodEntry;
 
 public class Gui
 {
+	private static Comparator<ClassFile> m_obfuscatedClassSorter;
+	
+	static
+	{
+		m_obfuscatedClassSorter = new Comparator<ClassFile>( )
+		{
+			@Override
+			public int compare( ClassFile a, ClassFile b )
+			{
+				if( a.getName().length() != b.getName().length() )
+				{
+					return a.getName().length() - b.getName().length();
+				}
+				
+				return a.getName().compareTo( b.getName() );
+			}
+		};
+	}
+	
 	private GuiController m_controller;
 	
 	// controls
@@ -101,7 +122,7 @@ public class Gui
 		m_obfClasses = new JList<ClassFile>();
 		m_obfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 		m_obfClasses.setLayoutOrientation( JList.VERTICAL );
-		m_obfClasses.setCellRenderer( new ObfuscatedClassListCellRenderer() );
+		m_obfClasses.setCellRenderer( new ClassListCellRenderer() );
 		m_obfClasses.addMouseListener( new MouseAdapter()
 		{
 			public void mouseClicked( MouseEvent event )
@@ -124,8 +145,23 @@ public class Gui
 		
 		// init deobfuscated classes list
 		m_deobfClasses = new JList<ClassFile>();
-		m_obfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
-		m_obfClasses.setLayoutOrientation( JList.VERTICAL );
+		m_deobfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
+		m_deobfClasses.setLayoutOrientation( JList.VERTICAL );
+		m_deobfClasses.setCellRenderer( new ClassListCellRenderer() );
+		m_deobfClasses.addMouseListener( new MouseAdapter()
+		{
+			public void mouseClicked( MouseEvent event )
+			{
+				if( event.getClickCount() == 2 )
+				{
+					ClassFile selected = m_deobfClasses.getSelectedValue();
+					if( selected != null )
+					{
+						m_controller.deobfuscateClass( selected );
+					}
+				}
+			}
+		} );
 		JScrollPane deobfScroller = new JScrollPane( m_deobfClasses );
 		JPanel deobfPanel = new JPanel();
 		deobfPanel.setLayout( new BorderLayout() );
@@ -248,7 +284,6 @@ public class Gui
 							try
 							{
 								m_controller.openMappings( m_mappingFileChooser.getSelectedFile() );
-								m_saveMappingsMenu.setEnabled( true );
 							}
 							catch( IOException ex )
 							{
@@ -383,12 +418,31 @@ public class Gui
 	{
 		if( classes != null )
 		{
-			m_obfClasses.setListData( new Vector<ClassFile>( classes ) );
+			Vector<ClassFile> sortedClasses = new Vector<ClassFile>( classes );
+			Collections.sort( sortedClasses, m_obfuscatedClassSorter );
+			m_obfClasses.setListData( sortedClasses );
 		}
 		else
 		{
 			m_obfClasses.setListData( new Vector<ClassFile>() );
 		}
+	}
+	
+	public void setDeobfClasses( List<ClassFile> classes )
+	{
+		if( classes != null )
+		{
+			m_deobfClasses.setListData( new Vector<ClassFile>( classes ) );
+		}
+		else
+		{
+			m_deobfClasses.setListData( new Vector<ClassFile>() );
+		}
+	}
+	
+	public void setMappingsLoaded( boolean isLoaded )
+	{
+		m_saveMappingsMenu.setEnabled( isLoaded );
 	}
 	
 	public void setSource( String source )
