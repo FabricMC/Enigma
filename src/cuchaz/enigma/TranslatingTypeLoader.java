@@ -23,19 +23,20 @@ import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
 
 import cuchaz.enigma.bytecode.ClassTranslator;
+import cuchaz.enigma.bytecode.MethodParameterWriter;
 import cuchaz.enigma.mapping.Translator;
 
 public class TranslatingTypeLoader implements ITypeLoader
 {
 	private JarFile m_jar;
-	private ClassTranslator m_classTranslator;
 	private Translator m_obfuscatingTranslator;
+	private Translator m_deobfuscatingTranslator;
 	
-	public TranslatingTypeLoader( JarFile jar, Translator deobfuscatingTranslator, Translator obfuscatingTranslator )
+	public TranslatingTypeLoader( JarFile jar, Translator obfuscatingTranslator, Translator deobfuscatingTranslator )
 	{
 		m_jar = jar;
-		m_classTranslator = new ClassTranslator( deobfuscatingTranslator );
 		m_obfuscatingTranslator = obfuscatingTranslator;
+		m_deobfuscatingTranslator = deobfuscatingTranslator;
 	}
 	
 	@Override
@@ -69,7 +70,8 @@ public class TranslatingTypeLoader implements ITypeLoader
 			try
 			{
 				CtClass c = classPool.get( name );
-				m_classTranslator.translate( c );
+				new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
+				new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
 				buf = c.toBytecode();
 			}
 			catch( Exception ex )

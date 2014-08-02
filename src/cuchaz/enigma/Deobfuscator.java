@@ -95,8 +95,8 @@ public class Deobfuscator
 		// update decompiler options
 		m_settings.setTypeLoader( new TranslatingTypeLoader(
 			m_jar,
-			m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ),
-			m_mappings.getTranslator( m_ancestries, TranslationDirection.Obfuscating )
+			m_mappings.getTranslator( m_ancestries, TranslationDirection.Obfuscating ),
+			m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating )
 		) );
 	}
 	
