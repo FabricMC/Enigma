@@ -62,7 +62,7 @@ public class GuiController
 		FileReader in = new FileReader( file );
 		m_deobfuscator.setMappings( new MappingsReader().read( in ) );
 		in.close();
-		m_gui.setMappingsLoaded( true );
+		m_gui.setMappingsFile( file );
 		refreshClasses();
 		refreshOpenFiles();
 	}
@@ -78,7 +78,7 @@ public class GuiController
 	public void closeMappings( )
 	{
 		m_deobfuscator.setMappings( null );
-		m_gui.setMappingsLoaded( false );
+		m_gui.setMappingsFile( null );
 		refreshOpenFiles();
 	}
 	
@@ -88,7 +88,7 @@ public class GuiController
 		deobfuscate( m_currentFile );
 	}
 	
-	public EntryPair getEntryPair( int pos )
+	public EntryPair<Entry> getEntryPair( int pos )
 	{
 		if( m_index == null )
 		{
@@ -100,7 +100,7 @@ public class GuiController
 		{
 			return null;
 		}
-		return new EntryPair( m_deobfuscator.obfuscate( deobfEntry ), deobfEntry );
+		return new EntryPair<Entry>( m_deobfuscator.obfuscate( deobfEntry ), deobfEntry );
 	}
 	
 	public void rename( Entry obfsEntry, String newName )

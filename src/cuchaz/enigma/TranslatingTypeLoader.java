@@ -70,8 +70,8 @@ public class TranslatingTypeLoader implements ITypeLoader
 			try
 			{
 				CtClass c = classPool.get( name );
-				new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
 				new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
+				new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
 				buf = c.toBytecode();
 			}
 			catch( Exception ex )

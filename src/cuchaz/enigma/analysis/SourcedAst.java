@@ -13,7 +13,10 @@ package cuchaz.enigma.analysis;
 import java.io.IOException;
 import java.util.HashMap;
 
+import javassist.bytecode.Descriptor;
+
 import com.google.common.collect.Maps;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.Tree;
@@ -34,7 +37,7 @@ public class SourcedAst
 		m_positions = m_trees.getSourcePositions();
 		m_classNameIndex = Maps.newHashMap();
 		
-		// index all the class names
+		// index all the class names from package imports
 		for( ImportTree importTree : m_tree.getImports() )
 		{
 			// ignore static imports for now
@@ -44,15 +47,27 @@ public class SourcedAst
 			}
 			
 			// get the full and simple class names
-			String fullName = importTree.getQualifiedIdentifier().toString();
+			String fullName = Descriptor.toJvmName( importTree.getQualifiedIdentifier().toString() );
 			String simpleName = fullName;
-			String[] parts = fullName.split( "\\." );
+			String[] parts = fullName.split( "/" );
 			if( parts.length > 0 )
 			{
 				simpleName = parts[parts.length - 1];
 			}
 			
 			m_classNameIndex.put( simpleName, fullName );
+		}
+		
+		// index the self class using the package name
+		String packageName = Descriptor.toJvmName( m_tree.getPackageName().toString() );
+		for( Tree typeTree : m_tree.getTypeDecls() )
+		{
+			if( typeTree instanceof ClassTree )
+			{
+				ClassTree classTree = (ClassTree)typeTree;
+				String className = classTree.getSimpleName().toString();
+				m_classNameIndex.put( className, packageName + "/" + className );
+			}
 		}
 	}
 

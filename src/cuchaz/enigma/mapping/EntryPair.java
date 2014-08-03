@@ -10,37 +10,15 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import cuchaz.enigma.Util;
 
-public class EntryPair
+public class EntryPair<T extends Entry>
 {
-	public Entry obf;
-	public Entry deobf;
+	public T obf;
+	public T deobf;
 	
-	public EntryPair( Entry obf, Entry deobf )
+	public EntryPair( T obf, T deobf )
 	{
 		this.obf = obf;
 		this.deobf = deobf;
-	}
-	
-	@Override
-	public int hashCode( )
-	{
-		return Util.combineHashesOrdered( obf, deobf );
-	}
-	
-	@Override
-	public boolean equals( Object other )
-	{
-		if( other instanceof EntryPair )
-		{
-			return equals( (EntryPair)other );
-		}
-		return false;
-	}
-	
-	public boolean equals( EntryPair other )
-	{
-		return obf.equals( other.obf ) && deobf.equals( other.deobf );
 	}
 }

@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -54,6 +55,7 @@ import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -101,9 +103,9 @@ public class Gui
 	private JMenuItem m_closeMappingsMenu;
 	
 	// state
-	private EntryPair m_selectedEntryPair;
+	private EntryPair<Entry> m_selectedEntryPair;
 	private JFileChooser m_jarFileChooser;
-	private JFileChooser m_mappingFileChooser;
+	private JFileChooser m_mappingsFileChooser;
 	
 	public Gui( )
 	{
@@ -111,7 +113,7 @@ public class Gui
 		
 		// init file choosers
 		m_jarFileChooser = new JFileChooser();
-		m_mappingFileChooser = new JFileChooser();
+		m_mappingsFileChooser = new JFileChooser();
 		
 		// init frame
 		m_frame = new JFrame( Constants.Name );
@@ -279,11 +281,11 @@ public class Gui
 					@Override
 					public void actionPerformed( ActionEvent event )
 					{
-						if( m_mappingFileChooser.showOpenDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						if( m_mappingsFileChooser.showOpenDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
 						{
 							try
 							{
-								m_controller.openMappings( m_mappingFileChooser.getSelectedFile() );
+								m_controller.openMappings( m_mappingsFileChooser.getSelectedFile() );
 							}
 							catch( IOException ex )
 							{
@@ -304,7 +306,7 @@ public class Gui
 					{
 						try
 						{
-							m_controller.saveMappings( m_mappingFileChooser.getSelectedFile() );
+							m_controller.saveMappings( m_mappingsFileChooser.getSelectedFile() );
 						}
 						catch( IOException ex )
 						{
@@ -322,11 +324,11 @@ public class Gui
 					@Override
 					public void actionPerformed( ActionEvent event )
 					{
-						if( m_mappingFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						if( m_mappingsFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
 						{
 							try
 							{
-								m_controller.saveMappings( m_mappingFileChooser.getSelectedFile() );
+								m_controller.saveMappings( m_mappingsFileChooser.getSelectedFile() );
 								m_saveMappingsMenu.setEnabled( true );
 							}
 							catch( IOException ex )
@@ -440,9 +442,10 @@ public class Gui
 		}
 	}
 	
-	public void setMappingsLoaded( boolean isLoaded )
+	public void setMappingsFile( File file )
 	{
-		m_saveMappingsMenu.setEnabled( isLoaded );
+		m_mappingsFileChooser.setSelectedFile( file );
+		m_saveMappingsMenu.setEnabled( file != null );
 	}
 	
 	public void setSource( String source )
@@ -493,7 +496,8 @@ public class Gui
 		redraw();
 	}
 	
-	private void showEntryPair( EntryPair pair )
+	@SuppressWarnings( "unchecked" )
+	private void showEntryPair( EntryPair<Entry> pair )
 	{
 		if( pair == null )
 		{
@@ -514,19 +518,19 @@ public class Gui
 		m_actionPanel.add( dynamicPanel );
 		if( pair.deobf instanceof ClassEntry )
 		{
-			showEntry( (ClassEntry)pair.deobf, dynamicPanel );
+			showClassEntryPair( (EntryPair<? extends ClassEntry>)pair, dynamicPanel );
 		}
 		else if( pair.deobf instanceof FieldEntry )
 		{
-			showEntry( (FieldEntry)pair.deobf, dynamicPanel );
+			showFieldEntryPair( (EntryPair<? extends FieldEntry>)pair, dynamicPanel );
 		}
 		else if( pair.deobf instanceof MethodEntry )
 		{
-			showEntry( (MethodEntry)pair.deobf, dynamicPanel );
+			showMethodEntryPair( (EntryPair<? extends MethodEntry>)pair, dynamicPanel );
 		}
 		else if( pair.deobf instanceof ArgumentEntry )
 		{
-			showEntry( (ArgumentEntry)pair.deobf, dynamicPanel );
+			showArgumentEntryPair( (EntryPair<? extends ArgumentEntry>)pair, dynamicPanel );
 		}
 		else
 		{
@@ -536,30 +540,30 @@ public class Gui
 		redraw();
 	}
 	
-	private void showEntry( ClassEntry entry, JPanel panel )
+	private void showClassEntryPair( EntryPair<? extends ClassEntry> pair, JPanel panel )
 	{
 		m_typeLabel.setText( "Class: " );
 	}
 	
-	private void showEntry( FieldEntry entry, JPanel panel )
+	private void showFieldEntryPair( EntryPair<? extends FieldEntry> pair, JPanel panel )
 	{
 		m_typeLabel.setText( "Field: " );
-		addNameValue( panel, "Class", entry.getClassEntry().getName() );
+		addNameValue( panel, "Class", pair.obf.getClassEntry().getName() + " <-> " + pair.deobf.getClassEntry().getName() );
 	}
 	
-	private void showEntry( MethodEntry entry, JPanel panel )
+	private void showMethodEntryPair( EntryPair<? extends MethodEntry> pair, JPanel panel )
 	{
 		m_typeLabel.setText( "Method: " );
-		addNameValue( panel, "Class", entry.getClassEntry().getName() );
-		addNameValue( panel, "Signature", entry.getSignature() );
+		addNameValue( panel, "Class", pair.obf.getClassEntry().getName() + " <-> " + pair.deobf.getClassEntry().getName() );
+		addNameValue( panel, "Signature", pair.obf.getSignature() + " <-> " + pair.deobf.getSignature() );
 	}
 	
-	private void showEntry( ArgumentEntry entry, JPanel panel )
+	private void showArgumentEntryPair( EntryPair<? extends ArgumentEntry> pair, JPanel panel )
 	{
 		m_typeLabel.setText( "Argument: " );
-		addNameValue( panel, "Class", entry.getMethodEntry().getClassEntry().getName() );
-		addNameValue( panel, "Method", entry.getMethodEntry().getName() );
-		addNameValue( panel, "Index", Integer.toString( entry.getIndex() ) );
+		addNameValue( panel, "Class", pair.obf.getClassEntry().getName() + " <-> " + pair.deobf.getClassEntry().getName() );
+		addNameValue( panel, "Method", pair.obf.getMethodEntry().getName() + " <-> " + pair.deobf.getMethodEntry().getName() );
+		addNameValue( panel, "Index", Integer.toString( pair.obf.getIndex() ) );
 	}
 	
 	private void addNameValue( JPanel container, String name, String value )

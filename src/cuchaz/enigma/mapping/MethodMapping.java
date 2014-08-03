@@ -127,7 +127,7 @@ public class MethodMapping implements Serializable
 		{
 			buf.append( "\t\t" );
 			buf.append( argumentMapping.getIndex() );
-			buf.append( " <-> " );
+			buf.append( " -> " );
 			buf.append( argumentMapping.getName() );
 			buf.append( "\n" );
 		}
