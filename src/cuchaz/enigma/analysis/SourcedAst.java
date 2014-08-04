@@ -59,14 +59,17 @@ public class SourcedAst
 		}
 		
 		// index the self class using the package name
-		String packageName = Descriptor.toJvmName( m_tree.getPackageName().toString() );
-		for( Tree typeTree : m_tree.getTypeDecls() )
+		if( m_tree.getPackageName() != null )
 		{
-			if( typeTree instanceof ClassTree )
+			String packageName = Descriptor.toJvmName( m_tree.getPackageName().toString() );
+			for( Tree typeTree : m_tree.getTypeDecls() )
 			{
-				ClassTree classTree = (ClassTree)typeTree;
-				String className = classTree.getSimpleName().toString();
-				m_classNameIndex.put( className, packageName + "/" + className );
+				if( typeTree instanceof ClassTree )
+				{
+					ClassTree classTree = (ClassTree)typeTree;
+					String className = classTree.getSimpleName().toString();
+					m_classNameIndex.put( className, packageName + "/" + className );
+				}
 			}
 		}
 	}

@@ -13,6 +13,9 @@ package cuchaz.enigma.mapping;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class MappingsWriter
 {
@@ -25,7 +28,7 @@ public class MappingsWriter
 	public void write( PrintWriter out, Mappings mappings )
 	throws IOException
 	{
-		for( ClassMapping classMapping : mappings.classes() )
+		for( ClassMapping classMapping : sorted( mappings.classes() ) )
 		{
 			write( out, classMapping );
 		}
@@ -36,12 +39,12 @@ public class MappingsWriter
 	{
 		out.format( "CLASS %s %s\n", classMapping.getObfName(), classMapping.getDeobfName() );
 		
-		for( FieldMapping fieldMapping : classMapping.fields() )
+		for( FieldMapping fieldMapping : sorted( classMapping.fields() ) )
 		{
 			write( out, fieldMapping );
 		}
 		
-		for( MethodMapping methodMapping : classMapping.methods() )
+		for( MethodMapping methodMapping : sorted( classMapping.methods() ) )
 		{
 			write( out, methodMapping );
 		}
@@ -61,7 +64,7 @@ public class MappingsWriter
 			methodMapping.getObfSignature(), methodMapping.getDeobfSignature()
 		);
 		
-		for( ArgumentMapping argumentMapping : methodMapping.arguments() )
+		for( ArgumentMapping argumentMapping : sorted( methodMapping.arguments() ) )
 		{
 			write( out, argumentMapping );
 		}
@@ -71,5 +74,16 @@ public class MappingsWriter
 	throws IOException
 	{
 		out.format( "\t\tARG %d %s\n", argumentMapping.getIndex(), argumentMapping.getName() );
+	}
+	
+	private <T extends Comparable<T>> List<T> sorted( Iterable<T> classes )
+	{
+		List<T> out = new ArrayList<T>();
+		for( T t : classes )
+		{
+			out.add( t );
+		}
+		Collections.sort( out );
+		return out;
 	}
 }

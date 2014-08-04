@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -32,7 +33,6 @@ import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MethodEntry;
-import cuchaz.enigma.mapping.NameValidator;
 import cuchaz.enigma.mapping.Renamer;
 import cuchaz.enigma.mapping.TranslationDirection;
 import cuchaz.enigma.mapping.Translator;
@@ -100,26 +100,28 @@ public class Deobfuscator
 		) );
 	}
 	
-	public void getSortedClasses( List<ClassFile> obfClasses, List<ClassFile> deobfClasses )
+	public void getSeparatedClasses( List<ClassFile> obfClasses, Map<ClassFile,String> deobfClasses )
 	{
 		Enumeration<JarEntry> entries = m_jar.entries();
 		while( entries.hasMoreElements() )
 		{
 			JarEntry entry = entries.nextElement();
 			
-			// get the class name
-			String obfName = NameValidator.fileNameToClassName( entry.getName() );
-			if( obfName == null )
+			// skip everything but class files
+			if( !entry.getName().endsWith( ".class" ) )
 			{
 				continue;
 			}
 			
-			ClassFile classFile = new ClassFile( obfName );
+			// get the class name from the file
+			String className = entry.getName().substring( 0, entry.getName().length() - 6 );
+			ClassFile classFile = new ClassFile( className );
+			
+			// separate the classes
 			ClassMapping classMapping = m_mappings.getClassByObf( classFile.getName() );
 			if( classMapping != null )
 			{
-				classFile.setDeobfName( classMapping.getDeobfName() );
-				deobfClasses.add( classFile );
+				deobfClasses.put( classFile, classMapping.getDeobfName() );
 			}
 			else
 			{
@@ -130,84 +132,123 @@ public class Deobfuscator
 	
 	public String getSource( final ClassFile classFile )
 	{
+		// is this class deobfuscated?
+		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
+		// the decompiler only sees the deobfuscated class, so we need to load it by the deobfuscated name
+		String deobfName = classFile.getName();
+		ClassMapping classMapping = m_mappings.getClassByObf( classFile.getName() );
+		if( classMapping != null )
+		{
+			deobfName = classMapping.getDeobfName();
+		}
+		
+		// decompile it!
 		StringWriter buf = new StringWriter();
-		Decompiler.decompile( classFile.getObfName(), new PlainTextOutput( buf ), m_settings );
+		Decompiler.decompile( deobfName, new PlainTextOutput( buf ), m_settings );
 		return buf.toString();
 	}
 	
 	// NOTE: these methods are a bit messy... oh well
 
-	public void rename( Entry entry, String newName )
+	public void rename( Entry obfEntry, String newName )
 	{
-		if( entry instanceof ClassEntry )
+		if( obfEntry instanceof ClassEntry )
 		{
-			m_renamer.setClassName( (ClassEntry)entry, newName );
+			m_renamer.setClassName( (ClassEntry)obfEntry, newName );
 		}
-		else if( entry instanceof FieldEntry )
+		else if( obfEntry instanceof FieldEntry )
 		{
-			m_renamer.setFieldName( (FieldEntry)entry, newName );
+			m_renamer.setFieldName( (FieldEntry)obfEntry, newName );
 		}
-		else if( entry instanceof MethodEntry )
+		else if( obfEntry instanceof MethodEntry )
 		{
-			m_renamer.setMethodName( (MethodEntry)entry, newName );
+			m_renamer.setMethodName( (MethodEntry)obfEntry, newName );
 		}
-		else if( entry instanceof ArgumentEntry )
+		else if( obfEntry instanceof ArgumentEntry )
 		{
-			m_renamer.setArgumentName( (ArgumentEntry)entry, newName );
+			m_renamer.setArgumentName( (ArgumentEntry)obfEntry, newName );
 		}
 		else
 		{
-			throw new Error( "Unknown entry type: " + entry.getClass().getName() );
+			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
 		}
 	}
 	
-	public Entry obfuscate( Entry in )
+	public Entry obfuscateEntry( Entry deobfEntry )
 	{
 		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Obfuscating );
-		if( in instanceof ClassEntry )
+		if( deobfEntry instanceof ClassEntry )
 		{
-			return translator.translateEntry( (ClassEntry)in );
+			return translator.translateEntry( (ClassEntry)deobfEntry );
 		}
-		else if( in instanceof FieldEntry )
+		else if( deobfEntry instanceof FieldEntry )
 		{
-			return translator.translateEntry( (FieldEntry)in );
+			return translator.translateEntry( (FieldEntry)deobfEntry );
 		}
-		else if( in instanceof MethodEntry )
+		else if( deobfEntry instanceof MethodEntry )
 		{
-			return translator.translateEntry( (MethodEntry)in );
+			return translator.translateEntry( (MethodEntry)deobfEntry );
 		}
-		else if( in instanceof ArgumentEntry )
+		else if( deobfEntry instanceof ArgumentEntry )
 		{
-			return translator.translateEntry( (ArgumentEntry)in );
+			return translator.translateEntry( (ArgumentEntry)deobfEntry );
 		}
 		else
 		{
-			throw new Error( "Unknown entry type: " + in.getClass().getName() );
+			throw new Error( "Unknown entry type: " + deobfEntry.getClass().getName() );
 		}
 	}
 	
-	public Entry deobfuscate( Entry in )
+	public Entry deobfuscateEntry( Entry obfEntry )
 	{
 		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating );
-		if( in instanceof ClassEntry )
+		if( obfEntry instanceof ClassEntry )
 		{
-			return translator.translateEntry( (ClassEntry)in );
+			return translator.translateEntry( (ClassEntry)obfEntry );
 		}
-		else if( in instanceof FieldEntry )
+		else if( obfEntry instanceof FieldEntry )
 		{
-			return translator.translateEntry( (FieldEntry)in );
+			return translator.translateEntry( (FieldEntry)obfEntry );
 		}
-		else if( in instanceof MethodEntry )
+		else if( obfEntry instanceof MethodEntry )
 		{
-			return translator.translateEntry( (MethodEntry)in );
+			return translator.translateEntry( (MethodEntry)obfEntry );
 		}
-		else if( in instanceof ArgumentEntry )
+		else if( obfEntry instanceof ArgumentEntry )
 		{
-			return translator.translateEntry( (ArgumentEntry)in );
+			return translator.translateEntry( (ArgumentEntry)obfEntry );
 		}
 		else
 		{
-			throw new Error( "Unknown entry type: " + in.getClass().getName() );
+			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
+		}
+	}
+	
+	public boolean hasMapping( Entry obfEntry )
+	{
+		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating );
+		if( obfEntry instanceof ClassEntry )
+		{
+			String deobfName = translator.translate( (ClassEntry)obfEntry );
+			return deobfName != null && !deobfName.equals( obfEntry.getName() );
+		}
+		else if( obfEntry instanceof FieldEntry )
+		{
+			String deobfName = translator.translate( (FieldEntry)obfEntry );
+			return deobfName != null && !deobfName.equals( obfEntry.getName() );
+		}
+		else if( obfEntry instanceof MethodEntry )
+		{
+			String deobfName = translator.translate( (MethodEntry)obfEntry );
+			return deobfName != null && !deobfName.equals( obfEntry.getName() );
+		}
+		else if( obfEntry instanceof ArgumentEntry )
+		{
+			return translator.translate( (ArgumentEntry)obfEntry ) != null;
+		}
+		else
+		{
+			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
 		}
 	}
 }

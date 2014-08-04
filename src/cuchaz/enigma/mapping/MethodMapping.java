@@ -14,7 +14,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MethodMapping implements Serializable
+public class MethodMapping implements Serializable, Comparable<MethodMapping>
 {
 	private static final long serialVersionUID = -4409570216084263978L;
 	
@@ -28,7 +28,7 @@ public class MethodMapping implements Serializable
 	public MethodMapping( String obfName, String deobfName, String obfSignature, String deobfSignature )
 	{
 		m_obfName = obfName;
-		m_deobfName = deobfName;
+		m_deobfName = NameValidator.validateMethodName( deobfName );
 		m_obfSignature = obfSignature;
 		m_deobfSignature = deobfSignature;
 		m_arguments = new TreeMap<Integer,ArgumentMapping>();
@@ -45,7 +45,7 @@ public class MethodMapping implements Serializable
 	}
 	public void setDeobfName( String val )
 	{
-		m_deobfName = val;
+		m_deobfName = NameValidator.validateMethodName( val );
 	}
 	
 	public String getObfSignature( )
@@ -132,5 +132,11 @@ public class MethodMapping implements Serializable
 			buf.append( "\n" );
 		}
 		return buf.toString();
+	}
+	
+	@Override
+	public int compareTo( MethodMapping other )
+	{
+		return m_obfName.compareTo( other.m_obfName );
 	}
 }

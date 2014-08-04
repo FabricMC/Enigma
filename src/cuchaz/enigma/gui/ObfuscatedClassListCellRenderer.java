@@ -1,0 +1,42 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Jeff Martin.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Jeff Martin - initial API and implementation
+ ******************************************************************************/
+package cuchaz.enigma.gui;
+
+import java.awt.Component;
+
+import javassist.bytecode.Descriptor;
+
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.ListCellRenderer;
+
+import cuchaz.enigma.ClassFile;
+
+public class ObfuscatedClassListCellRenderer implements ListCellRenderer<ClassFile>
+{
+	private DefaultListCellRenderer m_defaultRenderer;
+	
+	public ObfuscatedClassListCellRenderer( )
+	{
+		m_defaultRenderer = new DefaultListCellRenderer();
+	}
+	
+	@Override
+	public Component getListCellRendererComponent( JList<? extends ClassFile> list, ClassFile classFile, int index, boolean isSelected, boolean hasFocus )
+	{
+		JLabel label = (JLabel)m_defaultRenderer.getListCellRendererComponent( list, classFile, index, isSelected, hasFocus );
+		
+		label.setText( Descriptor.toJavaName( classFile.getName() ) );
+		
+		return label;
+	}
+}

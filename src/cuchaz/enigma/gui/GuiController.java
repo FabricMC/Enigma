@@ -14,14 +14,18 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import jsyntaxpane.Token;
+
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
 
 import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.Analyzer;
 import cuchaz.enigma.analysis.SourceIndex;
-import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.MappingsReader;
@@ -33,6 +37,7 @@ public class GuiController
 	private Gui m_gui;
 	private SourceIndex m_index;
 	private ClassFile m_currentFile;
+	private boolean m_isDirty;
 	
 	public GuiController( Gui gui )
 	{
@@ -40,6 +45,12 @@ public class GuiController
 		m_deobfuscator = null;
 		m_index = null;
 		m_currentFile = null;
+		m_isDirty = false;
+	}
+	
+	public boolean isDirty( )
+	{
+		return m_isDirty;
 	}
 	
 	public void openJar( File file )
@@ -62,6 +73,7 @@ public class GuiController
 		FileReader in = new FileReader( file );
 		m_deobfuscator.setMappings( new MappingsReader().read( in ) );
 		in.close();
+		m_isDirty = false;
 		m_gui.setMappingsFile( file );
 		refreshClasses();
 		refreshOpenFiles();
@@ -73,12 +85,14 @@ public class GuiController
 		FileWriter out = new FileWriter( file );
 		new MappingsWriter().write( out, m_deobfuscator.getMappings() );
 		out.close();
+		m_isDirty = false;
 	}
 
 	public void closeMappings( )
 	{
 		m_deobfuscator.setMappings( null );
 		m_gui.setMappingsFile( null );
+		refreshClasses();
 		refreshOpenFiles();
 	}
 	
@@ -95,51 +109,62 @@ public class GuiController
 			return null;
 		}
 		
-		Entry deobfEntry = m_index.getEntry( pos );
-		if( deobfEntry == null )
+		Map.Entry<Entry,Token> deobfEntryAndToken = m_index.getEntry( pos );
+		if( deobfEntryAndToken == null )
 		{
 			return null;
 		}
-		return new EntryPair<Entry>( m_deobfuscator.obfuscate( deobfEntry ), deobfEntry );
+		Entry deobfEntry = deobfEntryAndToken.getKey();
+		Token token = deobfEntryAndToken.getValue();
+		return new EntryPair<Entry>( m_deobfuscator.obfuscateEntry( deobfEntry ), deobfEntry, token );
 	}
 	
-	public void rename( Entry obfsEntry, String newName )
+	public boolean entryHasMapping( int pos )
+	{
+		EntryPair<Entry> pair = getEntryPair( pos );
+		if( pair == null || pair.obf == null )
+		{
+			return false;
+		}
+		return m_deobfuscator.hasMapping( pair.obf );
+	}
+	
+	public void rename( Entry obfsEntry, String newName, int lineNum )
 	{
 		m_deobfuscator.rename( obfsEntry, newName );
-		
-		// did we rename the current file?
-		if( obfsEntry instanceof ClassEntry )
-		{
-			ClassEntry classEntry = (ClassEntry)obfsEntry;
-			
-			// update the current file
-			if( classEntry.getName().equals( m_currentFile.getName() ) )
-			{
-				m_currentFile = new ClassFile( newName );
-			}
-		}
-		
-		refreshOpenFiles();
+		m_isDirty = true;
+		refreshClasses();
+		refreshOpenFiles( lineNum );
 	}
 	
 	private void refreshClasses( )
 	{
-		List<ClassFile> obfClasses = new ArrayList<ClassFile>();
-		List<ClassFile> deobfClasses = new ArrayList<ClassFile>();
-		m_deobfuscator.getSortedClasses( obfClasses, deobfClasses );
+		List<ClassFile> obfClasses = Lists.newArrayList();
+		Map<ClassFile,String> deobfClasses = Maps.newHashMap();
+		m_deobfuscator.getSeparatedClasses( obfClasses, deobfClasses );
 		m_gui.setObfClasses( obfClasses );
 		m_gui.setDeobfClasses( deobfClasses );
 	}
-	
+
 	private void refreshOpenFiles( )
+	{
+		refreshOpenFiles( 0 );
+	}
+	
+	private void refreshOpenFiles( int lineNum )
 	{
 		if( m_currentFile != null )
 		{
-			deobfuscate( m_currentFile );
+			deobfuscate( m_currentFile, lineNum );
 		}
 	}
 
 	private void deobfuscate( final ClassFile classFile )
+	{
+		deobfuscate( classFile, 0 );
+	}
+	
+	private void deobfuscate( final ClassFile classFile, final int lineNum )
 	{
 		m_gui.setSource( "(deobfuscating...)" );
 		
@@ -149,13 +174,28 @@ public class GuiController
 			@Override
 			public void run( )
 			{
-				// deobfuscate the bytecode
+				// deobfuscate,decompile the bytecode
 				String source = m_deobfuscator.getSource( classFile );
-				m_gui.setSource( source );
+				m_gui.setSource( source, lineNum );
 				
 				// index the source file
 				m_index = Analyzer.analyze( classFile.getName(), source );
-				m_gui.setHighlightedTokens( m_index.tokens() );
+				
+				// set the highlighted tokens
+				List<Token> obfuscatedTokens = Lists.newArrayList();
+				List<Token> deobfuscatedTokens = Lists.newArrayList();
+				for( Token token : m_index.tokens() )
+				{
+					if( entryHasMapping( token.start ) )
+					{
+						deobfuscatedTokens.add( token );
+					}
+					else
+					{
+						obfuscatedTokens.add( token );
+					}
+				}
+				m_gui.setHighlightedTokens( obfuscatedTokens, deobfuscatedTokens );
 			}
 		}.start();
 	}

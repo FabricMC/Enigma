@@ -8,21 +8,15 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.gui;
 
-import jsyntaxpane.Token;
+import java.awt.Color;
 
-
-public class EntryPair<T extends Entry>
+public class ObfuscatedHighlightPainter extends BoxHighlightPainter
 {
-	public T obf;
-	public T deobf;
-	public Token token;
-	
-	public EntryPair( T obf, T deobf, Token token )
+	public ObfuscatedHighlightPainter( )
 	{
-		this.obf = obf;
-		this.deobf = deobf;
-		this.token = token;
+		// red ish
+		super( new Color( 255, 220, 220 ), new Color( 160, 80, 80 ) );
 	}
 }

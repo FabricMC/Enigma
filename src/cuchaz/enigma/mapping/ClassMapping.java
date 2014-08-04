@@ -15,7 +15,7 @@ import java.util.Map;
 
 import com.beust.jcommander.internal.Maps;
 
-public class ClassMapping implements Serializable
+public class ClassMapping implements Serializable, Comparable<ClassMapping>
 {
 	private static final long serialVersionUID = -5148491146902340107L;
 	
@@ -30,7 +30,7 @@ public class ClassMapping implements Serializable
 	public ClassMapping( String obfName, String deobfName )
 	{
 		m_obfName = obfName;
-		m_deobfName = deobfName;
+		m_deobfName = NameValidator.validateClassName( deobfName );
 		m_fieldsByObf = Maps.newHashMap();
 		m_fieldsByDeobf = Maps.newHashMap();
 		m_methodsByObf = Maps.newHashMap();
@@ -48,7 +48,7 @@ public class ClassMapping implements Serializable
 	}
 	public void setDeobfName( String val )
 	{
-		m_deobfName = val;
+		m_deobfName = NameValidator.validateClassName( val );
 	}
 	
 	public Iterable<FieldMapping> fields( )
@@ -97,11 +97,6 @@ public class ClassMapping implements Serializable
 	
 	public void setFieldName( String obfName, String deobfName )
 	{
-		if( deobfName == null )
-		{
-			throw new IllegalArgumentException( "deobf name cannot be null!" );
-		}
-		
 		FieldMapping fieldMapping = m_fieldsByObf.get( obfName );
 		if( fieldMapping == null )
 		{
@@ -140,11 +135,6 @@ public class ClassMapping implements Serializable
 	
 	public void setMethodNameAndSignature( String obfName, String obfSignature, String deobfName, String deobfSignature )
 	{
-		if( deobfName == null )
-		{
-			throw new IllegalArgumentException( "deobf name cannot be null!" );
-		}
-		
 		MethodMapping methodIndex = m_methodsByObf.get( getMethodKey( obfName, obfSignature ) );
 		if( methodIndex == null )
 		{
@@ -167,11 +157,6 @@ public class ClassMapping implements Serializable
 
 	public void setArgumentName( String obfMethodName, String obfMethodSignature, int argumentIndex, String argumentName )
 	{
-		if( argumentName == null )
-		{
-			throw new IllegalArgumentException( "argument name cannot be null!" );
-		}
-		
 		MethodMapping methodIndex = m_methodsByObf.get( getMethodKey( obfMethodName, obfMethodSignature ) );
 		if( methodIndex == null )
 		{
@@ -213,5 +198,11 @@ public class ClassMapping implements Serializable
 			buf.append( "\n" );
 		}
 		return buf.toString();
+	}
+	
+	@Override
+	public int compareTo( ClassMapping other )
+	{
+		return m_obfName.compareTo( other.m_obfName );
 	}
 }

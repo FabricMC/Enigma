@@ -39,10 +39,6 @@ public class Renamer
 		m_mappings.m_classesByDeobf.put( deobfName, classMapping );
 		
 		updateDeobfMethodSignatures();
-		
-		// TEMP
-		String translatedName = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ).translate( obf );
-		assert( translatedName != null && translatedName.equals( deobfName ) );
 	}
 	
 	public void setFieldName( FieldEntry obf, String deobfName )
@@ -54,11 +50,6 @@ public class Renamer
 		}
 		
 		classMapping.setFieldName( obf.getName(), deobfName );
-		
-		// TEMP
-		System.out.println( classMapping );
-		String translatedName = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ).translate( obf );
-		assert( translatedName != null && translatedName.equals( deobfName ) );
 	}
 	
 	public void setMethodName( MethodEntry obf, String deobfName )
@@ -73,11 +64,6 @@ public class Renamer
 		classMapping.setMethodNameAndSignature( obf.getName(), obf.getSignature(), deobfName, deobfSignature );
 		
 		// TODO: update ancestor/descendant methods in other classes in the inheritance hierarchy too
-		
-		// TEMP
-		System.out.println( classMapping );
-		String translatedName = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ).translate( obf );
-		assert( translatedName != null && translatedName.equals( deobfName ) );
 	}
 	
 	public void setArgumentName( ArgumentEntry obf, String deobfName )
@@ -89,11 +75,6 @@ public class Renamer
 		}
 		
 		classMapping.setArgumentName( obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), deobfName );
-		
-		// TEMP
-		System.out.println( classMapping );
-		String translatedName = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ).translate( obf );
-		assert( translatedName != null && translatedName.equals( deobfName ) );
 	}
 	
 	public void write( OutputStream out )

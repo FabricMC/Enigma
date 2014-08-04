@@ -19,10 +19,16 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 
-public class BoxHighlightPainter implements Highlighter.HighlightPainter
+public abstract class BoxHighlightPainter implements Highlighter.HighlightPainter
 {
-	private static final Color FillColor = new Color( 230, 230, 230 );
-	private static final Color BorderColor = new Color( 100, 100, 100 );
+	private Color m_fillColor;
+	private Color m_borderColor;
+	
+	protected BoxHighlightPainter( Color fillColor, Color borderColor )
+	{
+		m_fillColor = fillColor;
+		m_borderColor = borderColor;
+	}
 	
 	@Override
 	public void paint( Graphics g, int start, int end, Shape shape, JTextComponent text )
@@ -39,11 +45,11 @@ public class BoxHighlightPainter implements Highlighter.HighlightPainter
 			bounds.height -= 2;
 			
 			// fill the area
-			g.setColor( FillColor );
+			g.setColor( m_fillColor );
 			g.fillRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
 			
 			// draw a box around the area
-			g.setColor( BorderColor );
+			g.setColor( m_borderColor );
 			g.drawRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
 		}
 		catch( BadLocationException ex )

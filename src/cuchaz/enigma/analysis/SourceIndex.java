@@ -52,7 +52,7 @@ public class SourceIndex implements Iterable<Map.Entry<Entry,Token>>
 		return m_tokenToEntry.get( token );
 	}
 	
-	public Entry getEntry( int pos )
+	public Map.Entry<Entry,Token> getEntry( int pos )
 	{
 		// linear search is fast enough for now
 		for( Map.Entry<Entry,Token> entry : this )
@@ -60,7 +60,7 @@ public class SourceIndex implements Iterable<Map.Entry<Entry,Token>>
 			Token token = entry.getValue();
 			if( pos >= token.start && pos <= token.end() )
 			{
-				return entry.getKey();
+				return entry;
 			}
 		}
 		return null;

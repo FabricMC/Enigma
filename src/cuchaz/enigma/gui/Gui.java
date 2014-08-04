@@ -11,6 +11,7 @@
 package cuchaz.enigma.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -18,18 +19,21 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -38,7 +42,9 @@ import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
@@ -47,17 +53,19 @@ import javax.swing.WindowConstants;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Highlighter;
 
 import jsyntaxpane.DefaultSyntaxKit;
+import jsyntaxpane.SyntaxDocument;
 import jsyntaxpane.Token;
 import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.IllegalNameException;
 import cuchaz.enigma.mapping.MethodEntry;
 
 public class Gui
@@ -86,14 +94,11 @@ public class Gui
 	// controls
 	private JFrame m_frame;
 	private JList<ClassFile> m_obfClasses;
-	private JList<ClassFile> m_deobfClasses;
+	private JList<Map.Entry<ClassFile,String>> m_deobfClasses;
 	private JEditorPane m_editor;
-	private JPanel m_actionPanel;
-	private JPanel m_renamePanel;
-	private JLabel m_typeLabel;
-	private JTextField m_nameField;
-	private JButton m_renameButton;
-	private BoxHighlightPainter m_highlightPainter;
+	private JPanel m_infoPanel;
+	private BoxHighlightPainter m_obfuscatedHighlightPainter;
+	private BoxHighlightPainter m_deobfuscatedHighlightPainter;
 	
 	// dynamic menu items
 	private JMenuItem m_closeJarMenu;
@@ -101,6 +106,7 @@ public class Gui
 	private JMenuItem m_saveMappingsMenu;
 	private JMenuItem m_saveMappingsAsMenu;
 	private JMenuItem m_closeMappingsMenu;
+	private JMenuItem m_renameMenu;
 	
 	// state
 	private EntryPair<Entry> m_selectedEntryPair;
@@ -124,7 +130,7 @@ public class Gui
 		m_obfClasses = new JList<ClassFile>();
 		m_obfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 		m_obfClasses.setLayoutOrientation( JList.VERTICAL );
-		m_obfClasses.setCellRenderer( new ClassListCellRenderer() );
+		m_obfClasses.setCellRenderer( new ObfuscatedClassListCellRenderer() );
 		m_obfClasses.addMouseListener( new MouseAdapter()
 		{
 			public void mouseClicked( MouseEvent event )
@@ -146,20 +152,20 @@ public class Gui
 		obfPanel.add( obfScroller, BorderLayout.CENTER );
 		
 		// init deobfuscated classes list
-		m_deobfClasses = new JList<ClassFile>();
+		m_deobfClasses = new JList<Map.Entry<ClassFile,String>>();
 		m_deobfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 		m_deobfClasses.setLayoutOrientation( JList.VERTICAL );
-		m_deobfClasses.setCellRenderer( new ClassListCellRenderer() );
+		m_deobfClasses.setCellRenderer( new DeobfuscatedClassListCellRenderer() );
 		m_deobfClasses.addMouseListener( new MouseAdapter()
 		{
 			public void mouseClicked( MouseEvent event )
 			{
 				if( event.getClickCount() == 2 )
 				{
-					ClassFile selected = m_deobfClasses.getSelectedValue();
+					Map.Entry<ClassFile,String> selected = m_deobfClasses.getSelectedValue();
 					if( selected != null )
 					{
-						m_controller.deobfuscateClass( selected );
+						m_controller.deobfuscateClass( selected.getKey() );
 					}
 				}
 			}
@@ -170,39 +176,20 @@ public class Gui
 		deobfPanel.add( new JLabel( "De-obfuscated Classes" ), BorderLayout.NORTH );
 		deobfPanel.add( deobfScroller, BorderLayout.CENTER );
 		
-		// init action panel
-		m_actionPanel = new JPanel();
-		m_actionPanel.setLayout( new BoxLayout( m_actionPanel, BoxLayout.Y_AXIS ) );
-		m_actionPanel.setPreferredSize( new Dimension( 0, 120 ) );
-		m_actionPanel.setBorder( BorderFactory.createTitledBorder( "Identifier Info" ) );
-		m_nameField = new JTextField( 26 );
-		m_renameButton = new JButton( "Rename" );
-		m_renameButton.addActionListener( new ActionListener( )
-		{
-			@Override
-			public void actionPerformed( ActionEvent event )
-			{
-				if( m_selectedEntryPair != null )
-				{
-					m_controller.rename( m_selectedEntryPair.obf, m_nameField.getText() );
-				}
-			}
-		} );
-		m_renamePanel = new JPanel();
-		m_renamePanel.setLayout( new FlowLayout( FlowLayout.LEFT, 6, 0 ) );
-		m_typeLabel = new JLabel( "LongName:", JLabel.RIGHT );
-		// NOTE: this looks ridiculous, but it fixes the label size to the size of current text
-		m_typeLabel.setPreferredSize( m_typeLabel.getPreferredSize() );
-		m_renamePanel.add( m_typeLabel );
-		m_renamePanel.add( m_nameField );
-		m_renamePanel.add( m_renameButton );
+		// init info panel
+		m_infoPanel = new JPanel();
+		m_infoPanel.setLayout( new GridLayout( 4, 1, 0, 0 ) );
+		m_infoPanel.setPreferredSize( new Dimension( 0, 100 ) );
+		m_infoPanel.setBorder( BorderFactory.createTitledBorder( "Identifier Info" ) );
 		clearEntryPair();
 		
 		// init editor
 		DefaultSyntaxKit.initKit();
-		m_highlightPainter = new BoxHighlightPainter();
+		m_obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
+		m_deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
 		m_editor = new JEditorPane();
 		m_editor.setEditable( false );
+		m_editor.setCaret( new BrowserCaret() );
 		JScrollPane sourceScroller = new JScrollPane( m_editor );
 		m_editor.setContentType( "text/java" );
 		m_editor.addCaretListener( new CaretListener( )
@@ -214,19 +201,55 @@ public class Gui
 				if( m_selectedEntryPair != null )
 				{
 					showEntryPair( m_selectedEntryPair );
+					m_renameMenu.setEnabled( true );
 				}
 				else
 				{
 					clearEntryPair();
+					m_renameMenu.setEnabled( false );
 				}
 			}
 		} );
+		m_editor.addKeyListener( new KeyAdapter( )
+		{
+			@Override
+			public void keyPressed( KeyEvent event )
+			{
+				switch( event.getKeyCode() )
+				{
+					case KeyEvent.VK_R:
+						startRename();
+					break;
+				}
+			}
+		} );
+		
+		// turn off token highlighting (it's wrong most of the time anyway...)
+		DefaultSyntaxKit kit = (DefaultSyntaxKit)m_editor.getEditorKit();
+		kit.toggleComponent( m_editor, "jsyntaxpane.components.TokenMarker" );
+		
+		// init editor popup menu
+		JPopupMenu popupMenu = new JPopupMenu();
+		m_editor.setComponentPopupMenu( popupMenu );
+		{
+			JMenuItem menu = new JMenuItem( "Rename" );
+			menu.addActionListener( new ActionListener( )
+			{
+				@Override
+				public void actionPerformed( ActionEvent event )
+				{
+					startRename();
+				}
+			} );
+			popupMenu.add( menu );
+			m_renameMenu = menu;
+		}
 		
 		// layout controls
 		JSplitPane splitLeft = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
 		JPanel rightPanel = new JPanel();
 		rightPanel.setLayout( new BorderLayout() );
-		rightPanel.add( m_actionPanel, BorderLayout.NORTH );
+		rightPanel.add( m_infoPanel, BorderLayout.NORTH );
 		rightPanel.add( sourceScroller, BorderLayout.CENTER );
 		JSplitPane splitMain = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, splitLeft, rightPanel );
 		pane.add( splitMain, BorderLayout.CENTER );
@@ -353,6 +376,19 @@ public class Gui
 				} );
 				m_closeMappingsMenu = item;
 			}
+			menu.addSeparator();
+			{
+				JMenuItem item = new JMenuItem( "Exit" );
+				menu.add( item );
+				item.addActionListener( new ActionListener( )
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						close();
+					}
+				} );
+			}
 		}
 		{
 			JMenu menu = new JMenu( "Help" );
@@ -374,12 +410,21 @@ public class Gui
 		// init state
 		onCloseJar();
 		
+		m_frame.addWindowListener( new WindowAdapter( )
+		{
+			@Override
+			public void windowClosing( WindowEvent event )
+			{
+				close();
+			}
+		} );
+		
 		// show the frame
 		pane.doLayout();
 		m_frame.setSize( 800, 600 );
 		m_frame.setMinimumSize( new Dimension( 640, 480 ) );
 		m_frame.setVisible( true );
-		m_frame.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE );
+		m_frame.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
 	}
 	
 	public GuiController getController( )
@@ -430,15 +475,15 @@ public class Gui
 		}
 	}
 	
-	public void setDeobfClasses( List<ClassFile> classes )
+	public void setDeobfClasses( Map<ClassFile,String> deobfClasses )
 	{
-		if( classes != null )
+		if( deobfClasses != null )
 		{
-			m_deobfClasses.setListData( new Vector<ClassFile>( classes ) );
+			m_deobfClasses.setListData( new Vector<Map.Entry<ClassFile,String>>( deobfClasses.entrySet() ) );
 		}
 		else
 		{
-			m_deobfClasses.setListData( new Vector<ClassFile>() );
+			m_deobfClasses.setListData( new Vector<Map.Entry<ClassFile,String>>() );
 		}
 	}
 	
@@ -450,48 +495,77 @@ public class Gui
 	
 	public void setSource( String source )
 	{
-		setSource( source, null );
+		setSource( source, 0 );
 	}
 	
-	public void setSource( String source, SourceIndex index )
-	{
-		m_editor.setText( source );
-		setHighlightedTokens( null );
-	}
-	
-	public void setHighlightedTokens( Iterable<Token> tokens )
+	public void setSource( String source, int lineNum )
 	{
 		// remove any old highlighters
 		m_editor.getHighlighter().removeAllHighlights();
 		
-		if( tokens == null )
+		m_editor.setText( source );
+		
+		// count the offset of the target line
+		String text = m_editor.getText();
+		int pos = 0;
+		int numLines = 0;
+		for( ; pos < text.length(); pos++ )
 		{
-			return;
+			if( numLines == lineNum )
+			{
+				break;
+			}
+			if( text.charAt( pos ) == '\n' )
+			{
+				numLines++;
+			}
 		}
 		
+		// put the caret at the line number
+		m_editor.setCaretPosition( pos );
+		m_editor.grabFocus();
+	}
+	
+	public void setHighlightedTokens( Iterable<Token> obfuscatedTokens, Iterable<Token> deobfuscatedTokens )
+	{
+		// remove any old highlighters
+		m_editor.getHighlighter().removeAllHighlights();
+		
 		// color things based on the index
+		if( obfuscatedTokens != null )
+		{
+			setHighlightedTokens( obfuscatedTokens, m_obfuscatedHighlightPainter );
+		}
+		if( deobfuscatedTokens != null )
+		{
+			setHighlightedTokens( deobfuscatedTokens, m_deobfuscatedHighlightPainter );
+		}
+		
+		redraw();
+	}
+	
+	private void setHighlightedTokens( Iterable<Token> tokens, Highlighter.HighlightPainter painter )
+	{
 		for( Token token : tokens )
 		{
 			try
 			{
-				m_editor.getHighlighter().addHighlight( token.start, token.end(), m_highlightPainter );
+				m_editor.getHighlighter().addHighlight( token.start, token.end(), painter );
 			}
 			catch( BadLocationException ex )
 			{
 				throw new IllegalArgumentException( ex );
 			}
 		}
-		
-		redraw();
 	}
 	
 	private void clearEntryPair( )
 	{
-		m_actionPanel.removeAll();
+		m_infoPanel.removeAll();
 		JLabel label = new JLabel( "No identifier selected" );
 		unboldLabel( label );
 		label.setHorizontalAlignment( JLabel.CENTER );
-		m_actionPanel.add( label );
+		m_infoPanel.add( label );
 		
 		redraw();
 	}
@@ -507,30 +581,22 @@ public class Gui
 		
 		m_selectedEntryPair = pair;
 		
-		// layout the action panel
-		m_actionPanel.removeAll();
-		m_actionPanel.add( m_renamePanel );
-		m_nameField.setText( pair.deobf.getName() );
-		
-		// layout the dynamic section
-		JPanel dynamicPanel = new JPanel();
-		dynamicPanel.setLayout( new GridLayout( 3, 1, 0, 0 ) );
-		m_actionPanel.add( dynamicPanel );
+		m_infoPanel.removeAll();
 		if( pair.deobf instanceof ClassEntry )
 		{
-			showClassEntryPair( (EntryPair<? extends ClassEntry>)pair, dynamicPanel );
+			showClassEntryPair( (EntryPair<? extends ClassEntry>)pair );
 		}
 		else if( pair.deobf instanceof FieldEntry )
 		{
-			showFieldEntryPair( (EntryPair<? extends FieldEntry>)pair, dynamicPanel );
+			showFieldEntryPair( (EntryPair<? extends FieldEntry>)pair );
 		}
 		else if( pair.deobf instanceof MethodEntry )
 		{
-			showMethodEntryPair( (EntryPair<? extends MethodEntry>)pair, dynamicPanel );
+			showMethodEntryPair( (EntryPair<? extends MethodEntry>)pair );
 		}
 		else if( pair.deobf instanceof ArgumentEntry )
 		{
-			showArgumentEntryPair( (EntryPair<? extends ArgumentEntry>)pair, dynamicPanel );
+			showArgumentEntryPair( (EntryPair<? extends ArgumentEntry>)pair );
 		}
 		else
 		{
@@ -540,30 +606,30 @@ public class Gui
 		redraw();
 	}
 	
-	private void showClassEntryPair( EntryPair<? extends ClassEntry> pair, JPanel panel )
+	private void showClassEntryPair( EntryPair<? extends ClassEntry> pair )
 	{
-		m_typeLabel.setText( "Class: " );
+		addNameValue( m_infoPanel, "Class", pair.deobf.getName() );
 	}
 	
-	private void showFieldEntryPair( EntryPair<? extends FieldEntry> pair, JPanel panel )
+	private void showFieldEntryPair( EntryPair<? extends FieldEntry> pair )
 	{
-		m_typeLabel.setText( "Field: " );
-		addNameValue( panel, "Class", pair.obf.getClassEntry().getName() + " <-> " + pair.deobf.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Field", pair.deobf.getName() );
+		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
 	}
 	
-	private void showMethodEntryPair( EntryPair<? extends MethodEntry> pair, JPanel panel )
+	private void showMethodEntryPair( EntryPair<? extends MethodEntry> pair )
 	{
-		m_typeLabel.setText( "Method: " );
-		addNameValue( panel, "Class", pair.obf.getClassEntry().getName() + " <-> " + pair.deobf.getClassEntry().getName() );
-		addNameValue( panel, "Signature", pair.obf.getSignature() + " <-> " + pair.deobf.getSignature() );
+		addNameValue( m_infoPanel, "Method", pair.deobf.getName() );
+		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Signature", pair.deobf.getSignature() );
 	}
 	
-	private void showArgumentEntryPair( EntryPair<? extends ArgumentEntry> pair, JPanel panel )
+	private void showArgumentEntryPair( EntryPair<? extends ArgumentEntry> pair )
 	{
-		m_typeLabel.setText( "Argument: " );
-		addNameValue( panel, "Class", pair.obf.getClassEntry().getName() + " <-> " + pair.deobf.getClassEntry().getName() );
-		addNameValue( panel, "Method", pair.obf.getMethodEntry().getName() + " <-> " + pair.deobf.getMethodEntry().getName() );
-		addNameValue( panel, "Index", Integer.toString( pair.obf.getIndex() ) );
+		addNameValue( m_infoPanel, "Argument", pair.deobf.getName() );
+		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Method", pair.deobf.getMethodEntry().getName() );
+		addNameValue( m_infoPanel, "Index", Integer.toString( pair.deobf.getIndex() ) );
 	}
 	
 	private void addNameValue( JPanel container, String name, String value )
@@ -577,6 +643,120 @@ public class Gui
 		panel.add( label );
 		
 		panel.add( unboldLabel( new JLabel( value, JLabel.LEFT ) ) );
+	}
+	
+	private void startRename( )
+	{
+		// init the text box
+		final JTextField text = new JTextField();
+		text.setText( m_selectedEntryPair.deobf.getName() );
+		text.setPreferredSize( new Dimension( 360, text.getPreferredSize().height ) );
+		text.addKeyListener( new KeyAdapter( )
+		{
+			@Override
+			public void keyPressed( KeyEvent event )
+			{
+				switch( event.getKeyCode() )
+				{
+					case KeyEvent.VK_ENTER:
+						finishRename( text, true );
+					break;
+					
+					case KeyEvent.VK_ESCAPE:
+						finishRename( text, false );
+					break;
+				}
+			}
+		} );
+		
+		// find the label with the name and replace it with the text box
+		JPanel panel = (JPanel)m_infoPanel.getComponent( 0 );
+		panel.remove( panel.getComponentCount() - 1 );
+		panel.add( text );
+		text.grabFocus();
+		text.selectAll();
+		
+		redraw();
+	}
+	
+	private void finishRename( JTextField text, boolean saveName )
+	{
+		String newName = text.getText();
+		if( saveName && newName != null && newName.length() > 0 )
+		{
+			SyntaxDocument doc = (SyntaxDocument)m_editor.getDocument();
+			int lineNum = doc.getLineNumberAt( m_editor.getCaretPosition() );
+			try
+			{
+				m_controller.rename( m_selectedEntryPair.obf, newName, lineNum );
+			}
+			catch( IllegalNameException ex )
+			{
+				text.setBorder( BorderFactory.createLineBorder( Color.red, 1 ) );
+			}
+			return;
+		}
+		
+		// abort the rename
+		JPanel panel = (JPanel)m_infoPanel.getComponent( 0 );
+		panel.remove( panel.getComponentCount() - 1 );
+		panel.add( unboldLabel( new JLabel( m_selectedEntryPair.deobf.getName(), JLabel.LEFT ) ) );
+		
+		m_editor.grabFocus();
+		
+		redraw();
+	}
+	
+	private void close( )
+	{
+		if( !m_controller.isDirty() )
+		{
+			// everything is saved, we can exit safely
+			m_frame.dispose();
+		}
+		else
+		{
+			// ask to save before closing
+			String[] options = {
+				"Save and exit",
+				"Discard changes",
+				"Cancel"
+			};
+			int response = JOptionPane.showOptionDialog(
+				m_frame,
+				"Your mappings have not been saved yet. Do you want to save?",
+				"Save your changes?",
+				JOptionPane.YES_NO_CANCEL_OPTION,
+				JOptionPane.QUESTION_MESSAGE,
+				null,
+				options,
+				options[2]
+			);
+			switch( response )
+			{
+				case JOptionPane.YES_OPTION: // save and exit
+					if( m_mappingsFileChooser.getSelectedFile() != null || m_mappingsFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+					{
+						try
+						{
+							m_controller.saveMappings( m_mappingsFileChooser.getSelectedFile() );
+							m_frame.dispose();
+						}
+						catch( IOException ex )
+						{
+							throw new Error( ex );
+						}
+					}
+				break;
+				
+				case JOptionPane.NO_OPTION:
+					// don't save, exit
+					m_frame.dispose();
+				break;
+				
+				// cancel means do nothing
+			}
+		}
 	}
 
 	private JLabel unboldLabel( JLabel label )

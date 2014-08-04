@@ -13,39 +13,24 @@ package cuchaz.enigma;
 
 public class ClassFile
 {
-	private String m_obfName;
-	private String m_deobfName;
+	private String m_name;
 	
-	public ClassFile( String obfName )
+	public ClassFile( String name )
 	{
-		m_obfName = obfName;
+		if( name.indexOf( '.' ) >= 0 )
+		{
+			throw new IllegalArgumentException( "Class name should be in JVM format!" );
+		}
+		m_name = name;
 	}
 	
 	public String getName( )
 	{
-		if( m_deobfName != null )
-		{
-			return m_deobfName;
-		}
-		return m_obfName;
-	}
-	
-	public String getObfName( )
-	{
-		return m_obfName;
-	}
-	
-	public String getDeobfName( )
-	{
-		return m_deobfName;
-	}
-	public void setDeobfName( String val )
-	{
-		m_deobfName = val;
+		return m_name;
 	}
 	
 	public String getPath( )
 	{
-		return m_deobfName.replace( ".", "/" ) + ".class";
+		return m_name.replace( ".", "/" ) + ".class";
 	}
 }

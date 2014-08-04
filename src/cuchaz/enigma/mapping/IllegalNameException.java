@@ -10,19 +10,20 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import jsyntaxpane.Token;
-
-
-public class EntryPair<T extends Entry>
+public class IllegalNameException extends RuntimeException
 {
-	public T obf;
-	public T deobf;
-	public Token token;
+	private static final long serialVersionUID = -2279910052561114323L;
 	
-	public EntryPair( T obf, T deobf, Token token )
+	private String m_name;
+	
+	public IllegalNameException( String name )
 	{
-		this.obf = obf;
-		this.deobf = deobf;
-		this.token = token;
+		m_name = name;
+	}
+	
+	@Override
+	public String getMessage( )
+	{
+		return "Illegal name: " + m_name;
 	}
 }

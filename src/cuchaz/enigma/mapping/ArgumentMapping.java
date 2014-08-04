@@ -12,7 +12,7 @@ package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
 
-public class ArgumentMapping implements Serializable
+public class ArgumentMapping implements Serializable, Comparable<ArgumentMapping>
 {
 	private static final long serialVersionUID = 8610742471440861315L;
 	
@@ -23,7 +23,7 @@ public class ArgumentMapping implements Serializable
 	public ArgumentMapping( int index, String name )
 	{
 		m_index = index;
-		m_name = name;
+		m_name = NameValidator.validateArgumentName( name );
 	}
 	
 	public int getIndex( )
@@ -37,6 +37,12 @@ public class ArgumentMapping implements Serializable
 	}
 	public void setName( String val )
 	{
-		m_name = val;
+		m_name = NameValidator.validateArgumentName( val );
+	}
+	
+	@Override
+	public int compareTo( ArgumentMapping other )
+	{
+		return Integer.compare( m_index, other.m_index );
 	}
 }
