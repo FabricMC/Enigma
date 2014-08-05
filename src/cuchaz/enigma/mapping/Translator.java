@@ -19,7 +19,7 @@ import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 public class Translator
 {
 	private TranslationDirection m_direction;
-	private Map<String,ClassMapping> m_classes;
+	/* TEMP */ public Map<String,ClassMapping> m_classes;
 	private Ancestries m_ancestries;
 	
 	protected Translator( TranslationDirection direction, Map<String,ClassMapping> classes, Ancestries ancestries )

@@ -451,6 +451,7 @@ public class Gui
 		// update gui
 		m_frame.setTitle( Constants.Name );
 		setObfClasses( null );
+		setDeobfClasses( null );
 		setSource( null );
 		
 		// update menu

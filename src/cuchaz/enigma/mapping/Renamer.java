@@ -28,6 +28,7 @@ public class Renamer
 	
 	public void setClassName( ClassEntry obf, String deobfName )
 	{
+		deobfName = NameValidator.validateClassName( deobfName );
 		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getName() );
 		if( classMapping == null )
 		{
@@ -43,6 +44,7 @@ public class Renamer
 	
 	public void setFieldName( FieldEntry obf, String deobfName )
 	{
+		deobfName = NameValidator.validateFieldName( deobfName );
 		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getClassName() );
 		if( classMapping == null )
 		{
@@ -54,6 +56,7 @@ public class Renamer
 	
 	public void setMethodName( MethodEntry obf, String deobfName )
 	{
+		deobfName = NameValidator.validateMethodName( deobfName );
 		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getClassName() );
 		if( classMapping == null )
 		{
@@ -68,6 +71,7 @@ public class Renamer
 	
 	public void setArgumentName( ArgumentEntry obf, String deobfName )
 	{
+		deobfName = NameValidator.validateArgumentName( deobfName );
 		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getClassName() );
 		if( classMapping == null )
 		{
