@@ -47,6 +47,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
@@ -99,6 +100,7 @@ public class Gui
 	private JPanel m_infoPanel;
 	private BoxHighlightPainter m_obfuscatedHighlightPainter;
 	private BoxHighlightPainter m_deobfuscatedHighlightPainter;
+	private JPanel m_inheritancePanel;
 	
 	// dynamic menu items
 	private JMenuItem m_closeJarMenu;
@@ -107,6 +109,7 @@ public class Gui
 	private JMenuItem m_saveMappingsAsMenu;
 	private JMenuItem m_closeMappingsMenu;
 	private JMenuItem m_renameMenu;
+	private JMenuItem m_inheritanceMenu;
 	
 	// state
 	private EntryPair<Entry> m_selectedEntryPair;
@@ -197,17 +200,7 @@ public class Gui
 			@Override
 			public void caretUpdate( CaretEvent event )
 			{
-				m_selectedEntryPair = m_controller.getEntryPair( event.getDot() );
-				if( m_selectedEntryPair != null )
-				{
-					showEntryPair( m_selectedEntryPair );
-					m_renameMenu.setEnabled( true );
-				}
-				else
-				{
-					clearEntryPair();
-					m_renameMenu.setEnabled( false );
-				}
+				onCaretMove( event.getDot() );
 			}
 		} );
 		m_editor.addKeyListener( new KeyAdapter( )
@@ -244,15 +237,39 @@ public class Gui
 			popupMenu.add( menu );
 			m_renameMenu = menu;
 		}
+		{
+			JMenuItem menu = new JMenuItem( "Show Inheritance" );
+			menu.addActionListener( new ActionListener( )
+			{
+				@Override
+				public void actionPerformed( ActionEvent event )
+				{
+					showInheritance();
+				}
+			} );
+			popupMenu.add( menu );
+			m_inheritanceMenu = menu;
+		}
+		
+		// init inheritance panel
+		m_inheritancePanel = new JPanel();
 		
 		// layout controls
 		JSplitPane splitLeft = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
-		JPanel rightPanel = new JPanel();
-		rightPanel.setLayout( new BorderLayout() );
-		rightPanel.add( m_infoPanel, BorderLayout.NORTH );
-		rightPanel.add( sourceScroller, BorderLayout.CENTER );
-		JSplitPane splitMain = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, splitLeft, rightPanel );
-		pane.add( splitMain, BorderLayout.CENTER );
+		splitLeft.setPreferredSize( new Dimension( 200, 0 ) );
+		JPanel centerPanel = new JPanel();
+		centerPanel.setLayout( new BorderLayout() );
+		centerPanel.add( m_infoPanel, BorderLayout.NORTH );
+		centerPanel.add( sourceScroller, BorderLayout.CENTER );
+		JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.setPreferredSize( new Dimension( 200, 0 ) );
+		tabbedPane.addTab( "Inheritance", m_inheritancePanel );
+		JSplitPane splitRight = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabbedPane );
+		splitRight.setResizeWeight( 1 ); // let the left side take all the slack
+		splitRight.resetToPreferredSizes();
+		JSplitPane splitCenter = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, splitLeft, splitRight );
+		splitCenter.setResizeWeight( 0 ); // let the right side take all the slack
+		pane.add( splitCenter, BorderLayout.CENTER );
 		
 		// init menus
 		JMenuBar menuBar = new JMenuBar();
@@ -421,7 +438,7 @@ public class Gui
 		
 		// show the frame
 		pane.doLayout();
-		m_frame.setSize( 800, 600 );
+		m_frame.setSize( 1024, 576 );
 		m_frame.setMinimumSize( new Dimension( 640, 480 ) );
 		m_frame.setVisible( true );
 		m_frame.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
@@ -646,6 +663,27 @@ public class Gui
 		panel.add( unboldLabel( new JLabel( value, JLabel.LEFT ) ) );
 	}
 	
+	private void onCaretMove( int pos )
+	{
+		m_selectedEntryPair = m_controller.getEntryPair( pos );
+		if( m_selectedEntryPair != null )
+		{
+			showEntryPair( m_selectedEntryPair );
+			
+			boolean isClassEntry = m_selectedEntryPair.obf instanceof ClassEntry;
+			boolean isMethodEntry = m_selectedEntryPair.obf instanceof MethodEntry;
+			
+			m_renameMenu.setEnabled( true );
+			m_inheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
+		}
+		else
+		{
+			clearEntryPair();
+			m_renameMenu.setEnabled( false );
+			m_inheritanceMenu.setEnabled( false );
+		}
+	}
+	
 	private void startRename( )
 	{
 		// init the text box
@@ -704,6 +742,17 @@ public class Gui
 		panel.add( unboldLabel( new JLabel( m_selectedEntryPair.deobf.getName(), JLabel.LEFT ) ) );
 		
 		m_editor.grabFocus();
+		
+		redraw();
+	}
+	
+	private void showInheritance( )
+	{
+		m_inheritancePanel.removeAll();
+		
+		// TEMP
+		m_inheritancePanel.add( new JLabel( m_selectedEntryPair.obf.getName() ) );
+		m_inheritancePanel.add( new JLabel( m_selectedEntryPair.deobf.getName() ) );
 		
 		redraw();
 	}
