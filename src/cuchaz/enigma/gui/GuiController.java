@@ -26,6 +26,7 @@ import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.Analyzer;
 import cuchaz.enigma.analysis.SourceIndex;
+import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.MappingsReader;
@@ -127,6 +128,27 @@ public class GuiController
 			return false;
 		}
 		return m_deobfuscator.hasMapping( pair.obf );
+	}
+	
+	public ClassInheritanceTreeNode getClassInheritance( ClassEntry classEntry )
+	{
+		// create a node for this class
+		ClassInheritanceTreeNode thisNode = new ClassInheritanceTreeNode( classEntry.getName() );
+		
+		// expand all children recursively
+		thisNode.load( m_deobfuscator.getAncestries(), true );
+		
+		// get the ancestors too
+		ClassInheritanceTreeNode node = thisNode;
+		for( String superclassName : m_deobfuscator.getAncestries().getAncestry( classEntry.getName() ) )
+		{
+			// add the parent node
+			ClassInheritanceTreeNode parentNode = new ClassInheritanceTreeNode( superclassName );
+			parentNode.add( node );
+			node = parentNode;
+		}
+		
+		return thisNode;
 	}
 	
 	public void rename( Entry obfsEntry, String newName, int lineNum )

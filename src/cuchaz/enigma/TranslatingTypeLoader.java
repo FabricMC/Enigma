@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.JarEntry;
@@ -59,10 +60,19 @@ public class TranslatingTypeLoader implements ITypeLoader
 		try
 		{
 			// read the class file into a buffer
-			byte[] buf = new byte[(int)entry.getSize()];
+			ByteArrayOutputStream data = new ByteArrayOutputStream();
+			byte[] buf = new byte[1024*1024]; // 1 KiB
 			InputStream in = m_jar.getInputStream( entry );
-			int bytesRead = in.read( buf );
-			assert( bytesRead == buf.length );
+			while( true )
+			{
+				int bytesRead = in.read( buf );
+				if( bytesRead <= 0 )
+				{
+					break;
+				}
+				data.write( buf, 0, bytesRead );
+			}
+			buf = data.toByteArray();
 			
 			// translate the class
 			ClassPool classPool = new ClassPool();

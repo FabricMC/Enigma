@@ -26,6 +26,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.Constants;
@@ -121,9 +122,28 @@ public class Ancestries implements Serializable
 		while( className != null )
 		{
 			className = getSuperclassName( className );
-			ancestors.add( className );
+			if( className != null )
+			{
+				ancestors.add( className );
+			}
 		}
 		return ancestors;
+	}
+	
+	public List<String> getSubclasses( String className )
+	{
+		// linear search is fast enough for now
+		List<String> subclasses = Lists.newArrayList();
+		for( Map.Entry<String,String> entry : m_superclasses.entrySet() )
+		{
+			String subclass = entry.getKey();
+			String superclass = entry.getValue();
+			if( className.equals( superclass ) )
+			{
+				subclasses.add( subclass );
+			}
+		}
+		return subclasses;
 	}
 	
 	private boolean isJre( String className )

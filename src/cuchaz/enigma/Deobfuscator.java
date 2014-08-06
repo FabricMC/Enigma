@@ -79,6 +79,11 @@ public class Deobfuscator
 		return m_file.getName();
 	}
 	
+	public Ancestries getAncestries( )
+	{
+		return m_ancestries;
+	}
+	
 	public Mappings getMappings( )
 	{
 		return m_mappings;

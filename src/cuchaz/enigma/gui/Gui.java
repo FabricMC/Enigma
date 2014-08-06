@@ -49,12 +49,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import com.beust.jcommander.internal.Lists;
 
 import jsyntaxpane.DefaultSyntaxKit;
 import jsyntaxpane.SyntaxDocument;
@@ -100,7 +106,7 @@ public class Gui
 	private JPanel m_infoPanel;
 	private BoxHighlightPainter m_obfuscatedHighlightPainter;
 	private BoxHighlightPainter m_deobfuscatedHighlightPainter;
-	private JPanel m_inheritancePanel;
+	private JTree m_inheritanceTree;
 	
 	// dynamic menu items
 	private JMenuItem m_closeJarMenu;
@@ -136,6 +142,7 @@ public class Gui
 		m_obfClasses.setCellRenderer( new ObfuscatedClassListCellRenderer() );
 		m_obfClasses.addMouseListener( new MouseAdapter()
 		{
+			@Override
 			public void mouseClicked( MouseEvent event )
 			{
 				if( event.getClickCount() == 2 )
@@ -161,6 +168,7 @@ public class Gui
 		m_deobfClasses.setCellRenderer( new DeobfuscatedClassListCellRenderer() );
 		m_deobfClasses.addMouseListener( new MouseAdapter()
 		{
+			@Override
 			public void mouseClicked( MouseEvent event )
 			{
 				if( event.getClickCount() == 2 )
@@ -252,7 +260,26 @@ public class Gui
 		}
 		
 		// init inheritance panel
-		m_inheritancePanel = new JPanel();
+		m_inheritanceTree = new JTree();
+		m_inheritanceTree.setModel( null );
+		m_inheritanceTree.addMouseListener( new MouseAdapter( )
+		{
+			@Override
+			public void mouseClicked( MouseEvent event )
+			{
+				if( event.getClickCount() == 2 )
+				{
+					ClassInheritanceTreeNode node = (ClassInheritanceTreeNode)m_inheritanceTree.getSelectionPath().getLastPathComponent();
+					if( node != null )
+					{
+						m_controller.deobfuscateClass( new ClassFile( node.getClassName() ) );
+					}
+				}
+			}
+		} );
+		JPanel inheritancePanel = new JPanel();
+		inheritancePanel.setLayout( new BorderLayout() );
+		inheritancePanel.add( new JScrollPane( m_inheritanceTree ) );
 		
 		// layout controls
 		JSplitPane splitLeft = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
@@ -263,7 +290,7 @@ public class Gui
 		centerPanel.add( sourceScroller, BorderLayout.CENTER );
 		JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.setPreferredSize( new Dimension( 200, 0 ) );
-		tabbedPane.addTab( "Inheritance", m_inheritancePanel );
+		tabbedPane.addTab( "Inheritance", inheritancePanel );
 		JSplitPane splitRight = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabbedPane );
 		splitRight.setResizeWeight( 1 ); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
@@ -748,12 +775,28 @@ public class Gui
 	
 	private void showInheritance( )
 	{
-		m_inheritancePanel.removeAll();
-		
-		// TEMP
-		m_inheritancePanel.add( new JLabel( m_selectedEntryPair.obf.getName() ) );
-		m_inheritancePanel.add( new JLabel( m_selectedEntryPair.deobf.getName() ) );
-		
+		// get the current class
+		if( m_selectedEntryPair.obf instanceof ClassEntry )
+		{
+			ClassInheritanceTreeNode classNode = m_controller.getClassInheritance( (ClassEntry)m_selectedEntryPair.obf );
+			
+			// build the path from the root to the class node
+			List<TreeNode> nodes = Lists.newArrayList();
+			TreeNode node = classNode;
+			do
+			{
+				nodes.add( node );
+				node = node.getParent();
+			}
+			while( node != null );
+			Collections.reverse( nodes );
+			TreePath path = new TreePath( nodes.toArray() );
+			
+			// show the tree at the root
+			m_inheritanceTree.setModel( new DefaultTreeModel( (TreeNode)path.getPathComponent( 0 ) ) );
+			m_inheritanceTree.expandPath( path );
+			m_inheritanceTree.setSelectionRow( m_inheritanceTree.getRowForPath( path ) );
+		}
 		redraw();
 	}
 	
