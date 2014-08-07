@@ -116,6 +116,7 @@ public class Gui
 	private JMenuItem m_closeMappingsMenu;
 	private JMenuItem m_renameMenu;
 	private JMenuItem m_inheritanceMenu;
+	private JMenuItem m_openEntryMenu;
 	
 	// state
 	private EntryPair<Entry> m_selectedEntryPair;
@@ -257,6 +258,19 @@ public class Gui
 			} );
 			popupMenu.add( menu );
 			m_inheritanceMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem( "Open Class" );
+			menu.addActionListener( new ActionListener( )
+			{
+				@Override
+				public void actionPerformed( ActionEvent event )
+				{
+					openEntry();
+				}
+			} );
+			popupMenu.add( menu );
+			m_openEntryMenu = menu;
 		}
 		
 		// init inheritance panel
@@ -693,22 +707,23 @@ public class Gui
 	private void onCaretMove( int pos )
 	{
 		m_selectedEntryPair = m_controller.getEntryPair( pos );
-		if( m_selectedEntryPair != null )
+		
+		boolean isEntry = m_selectedEntryPair != null;
+		boolean isClassEntry = isEntry && m_selectedEntryPair.obf instanceof ClassEntry;
+		boolean isMethodEntry = isEntry && m_selectedEntryPair.obf instanceof MethodEntry;
+		
+		if( isEntry )
 		{
 			showEntryPair( m_selectedEntryPair );
-			
-			boolean isClassEntry = m_selectedEntryPair.obf instanceof ClassEntry;
-			boolean isMethodEntry = m_selectedEntryPair.obf instanceof MethodEntry;
-			
-			m_renameMenu.setEnabled( true );
-			m_inheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
 		}
 		else
 		{
 			clearEntryPair();
-			m_renameMenu.setEnabled( false );
-			m_inheritanceMenu.setEnabled( false );
 		}
+		
+		m_renameMenu.setEnabled( isEntry );
+		m_inheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
+		m_openEntryMenu.setEnabled( isClassEntry );
 	}
 	
 	private void startRename( )
@@ -775,6 +790,11 @@ public class Gui
 	
 	private void showInheritance( )
 	{
+		if( m_selectedEntryPair == null )
+		{
+			return;
+		}
+		
 		// get the current class
 		if( m_selectedEntryPair.obf instanceof ClassEntry )
 		{
@@ -798,6 +818,20 @@ public class Gui
 			m_inheritanceTree.setSelectionRow( m_inheritanceTree.getRowForPath( path ) );
 		}
 		redraw();
+	}
+	
+	private void openEntry( )
+	{	
+		if( m_selectedEntryPair == null )
+		{
+			return;
+		}
+		
+		// get the current class
+		if( m_selectedEntryPair.obf instanceof ClassEntry )
+		{
+			m_controller.deobfuscateClass( new ClassFile( m_selectedEntryPair.obf.getName() ) );
+		}
 	}
 	
 	private void close( )
