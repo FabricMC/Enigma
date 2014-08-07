@@ -10,46 +10,52 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import jsyntaxpane.Token;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import cuchaz.enigma.mapping.Entry;
 
 public class SourceIndex implements Iterable<Map.Entry<Entry,Token>>
 {
-	private BiMap<Entry,Token> m_entryToToken;
-	private BiMap<Token,Entry> m_tokenToEntry;
+	private Multimap<Entry,Token> m_entryToTokens;
 	
 	public SourceIndex( )
 	{
-		m_entryToToken = HashBiMap.create();
-		m_tokenToEntry = m_entryToToken.inverse();
+		m_entryToTokens = HashMultimap.create();
 	}
 	
 	public void add( Entry entry, Token token )
 	{
-		m_entryToToken.put( entry, token );
+		m_entryToTokens.put( entry, token );
 	}
 	
 	public Iterator<Map.Entry<Entry,Token>> iterator( )
 	{
-		return m_entryToToken.entrySet().iterator();
+		return m_entryToTokens.entries().iterator();
 	}
 	
-	public Set<Token> tokens( )
+	public Collection<Token> tokens( )
 	{
-		return m_entryToToken.values();
+		return m_entryToTokens.values();
 	}
 	
 	public Entry getEntry( Token token )
 	{
-		return m_tokenToEntry.get( token );
+		// linear search is fast enough for now
+		for( Map.Entry<Entry,Token> entry : this )
+		{
+			if( entry.getValue().equals( token ) )
+			{
+				return entry.getKey();
+			}
+		}
+		return null;
 	}
 	
 	public Map.Entry<Entry,Token> getEntry( int pos )
@@ -66,8 +72,8 @@ public class SourceIndex implements Iterable<Map.Entry<Entry,Token>>
 		return null;
 	}
 	
-	public Token getToken( Entry entry )
+	public Collection<Token> getTokens( Entry entry )
 	{
-		return m_entryToToken.get( entry );
+		return m_entryToTokens.get( entry );
 	}
 }

@@ -35,6 +35,7 @@ import com.sun.source.util.Trees;
 
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 
@@ -78,39 +79,31 @@ class TreeVisitor extends TreeScanner<CompilationUnitTree, SourcedAst>
 	
 	private ClassEntry indexClass( ClassTree classTree, SourcedAst ast )
 	{
-		// build the entry
-		ClassEntry entry = new ClassEntry( ast.getFullClassName( classTree.getSimpleName().toString() ) );
+		// index the class name
+		ClassEntry classEntry = indexClassIdentifier( classTree, ast );
+		assert( classEntry != null );
 		
-		// lex the source at this tree node
-		for( Token token : new Lexer( ast.getSource( classTree ).toString() ) )
+		// index the extends clause
+		indexClassIdentifier( classTree.getExtendsClause(), ast );
+		
+		// index the implements clauses
+		for( Tree implementsTree : classTree.getImplementsClause() )
 		{
-			// scan until we get the first identifier
-			if( token.type == TokenType.IDENTIFIER )
-			{
-				m_index.add( entry, offsetToken( token, ast.getStart( classTree ) ) );
-				break;
-			}
+			indexClassIdentifier( implementsTree, ast );
 		}
 		
-		return entry;
+		return classEntry;
 	}
 	
 	private FieldEntry indexField( VariableTree variableTree, SourcedAst ast, ClassEntry classEntry )
 	{
-		// build the entry
+		// index the field name
 		FieldEntry entry = new FieldEntry( classEntry, variableTree.getName().toString() );
+		Token nameToken = new Lexer( ast.getSource( variableTree ) ).getFirstIdentifierMatching( variableTree.getName() );
+		addToken( entry, nameToken, variableTree, ast );
 		
-		// lex the source at this tree node
-		Lexer lexer = new Lexer( ast.getSource( variableTree ).toString() );
-		for( Token token : lexer )
-		{
-			// scan until we find an identifier that matches the field name
-			if( token.type == TokenType.IDENTIFIER && lexer.getText( token ).equals( entry.getName() ) )
-			{
-				m_index.add( entry, offsetToken( token, ast.getStart( variableTree ) ) );
-				break;
-			}
-		}
+		// index the field type
+		indexClassIdentifier( variableTree.getType(), ast );
 		
 		return entry;
 	}
@@ -136,13 +129,13 @@ class TreeVisitor extends TreeScanner<CompilationUnitTree, SourcedAst>
 		MethodEntry entry = new MethodEntry( classEntry, methodTree.getName().toString(), signature.toString() );
 		
 		// lex the source at this tree node
-		Lexer lexer = new Lexer( ast.getSource( methodTree ).toString() );
+		Lexer lexer = new Lexer( ast.getSource( methodTree ) );
 		for( Token token : lexer )
 		{
 			// scan until we find an identifier that matches the method name
 			if( token.type == TokenType.IDENTIFIER && lexer.getText( token ).equals( entry.getName() ) )
 			{
-				m_index.add( entry, offsetToken( token, ast.getStart( methodTree ) ) );
+				addToken( entry, token, methodTree, ast );
 				break;
 			}
 		}
@@ -152,27 +145,47 @@ class TreeVisitor extends TreeScanner<CompilationUnitTree, SourcedAst>
 	
 	private void indexArgument( VariableTree variableTree, SourcedAst ast, MethodEntry methodEntry, int index )
 	{
-		// build the entry
+		// index argument name
 		ArgumentEntry entry = new ArgumentEntry( methodEntry, index, variableTree.getName().toString() );
+		Token token = new Lexer( ast.getSource( variableTree ) ).getLastIdentifier();
+		addToken( entry, token, variableTree, ast );
 		
-		// lex the source at this tree node
-		Lexer lexer = new Lexer( ast.getSource( variableTree ).toString() );
-		for( Token token : lexer )
-		{
-			// scan until we find an identifier that matches the variable name
-			if( token.type == TokenType.IDENTIFIER && lexer.getText( token ).equals( entry.getName() ) )
-			{
-				m_index.add( entry, offsetToken( token, ast.getStart( variableTree ) ) );
-				break;
-			}
-		}
+		// index argument type
+		indexClassIdentifier( variableTree.getType(), ast );
 	}
 	
-	private Token offsetToken( Token in, int offset )
+	private ClassEntry indexClassIdentifier( Tree tree, SourcedAst ast )
 	{
-		return new Token( in.type, in.start + offset, in.length );
+		if( tree == null )
+		{
+			return null;
+		}
+		
+		Lexer lexer = new Lexer( ast.getSource( tree ) );
+		Token token = lexer.getFirstIdentifier();
+		if( token == null )
+		{
+			return null;
+		}
+		
+		ClassEntry classEntry = new ClassEntry( ast.getFullClassName( lexer.getText( token ) ) );
+		addToken( classEntry, token, tree, ast );
+		return classEntry;
 	}
-	
+
+	private void addToken( Entry entry, Token token, Tree tree, SourcedAst ast )
+	{
+		if( token == null )
+		{
+			throw new IllegalArgumentException( "token cannot be null!" );
+		}
+		
+		// offset the token by the tree
+		Token offsetToken = new Token( token.type, token.start + ast.getStart( tree ), token.length );
+		
+		m_index.add( entry, offsetToken );
+	}
+
 	private String toJvmType( Tree tree, SourcedAst ast )
 	{
 		switch( tree.getKind() )

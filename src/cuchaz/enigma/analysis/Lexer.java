@@ -14,6 +14,7 @@ import java.util.Iterator;
 
 import jsyntaxpane.SyntaxDocument;
 import jsyntaxpane.Token;
+import jsyntaxpane.TokenType;
 import jsyntaxpane.lexers.JavaLexer;
 
 public class Lexer implements Iterable<Token>
@@ -21,10 +22,10 @@ public class Lexer implements Iterable<Token>
 	private SyntaxDocument m_doc;
 	private Iterator<Token> m_iter;
 	
-	public Lexer( String source )
+	public Lexer( CharSequence source )
 	{
 		m_doc = new SyntaxDocument( new JavaLexer() );
-		m_doc.append( source );
+		m_doc.append( source.toString() );
 		m_iter = m_doc.getTokens( 0, m_doc.getLength() );
 	}
 	
@@ -37,5 +38,42 @@ public class Lexer implements Iterable<Token>
 	public String getText( Token token )
 	{
 		return token.getString( m_doc );
+	}
+	
+	public Token getFirstIdentifier( )
+	{
+		for( Token token : this )
+		{
+			if( token.type == TokenType.IDENTIFIER )
+			{
+				return token;
+			}
+		}
+		return null;
+	}
+	
+	public Token getFirstIdentifierMatching( CharSequence val )
+	{
+		for( Token token : this )
+		{
+			if( token.type == TokenType.IDENTIFIER && getText( token ).equals( val.toString() ) )
+			{
+				return token;
+			}
+		}
+		return null;
+	}
+	
+	public Token getLastIdentifier( )
+	{
+		Token lastToken = null;
+		for( Token token : this )
+		{
+			if( token.type == TokenType.IDENTIFIER )
+			{
+				lastToken = token;
+			}
+		}
+		return lastToken;
 	}
 }

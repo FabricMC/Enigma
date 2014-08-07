@@ -10,10 +10,12 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import com.beust.jcommander.internal.Lists;
 import com.strobel.decompiler.Decompiler;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
@@ -45,6 +48,7 @@ public class Deobfuscator
 	private Ancestries m_ancestries;
 	private Mappings m_mappings;
 	private Renamer m_renamer;
+	private List<String> m_obfClassNames;
 	
 	public Deobfuscator( File file )
 	throws IOException
@@ -63,6 +67,26 @@ public class Deobfuscator
 		finally
 		{
 			Util.closeQuietly( jarIn );
+		}
+		
+		// get the obf class names
+		m_obfClassNames = Lists.newArrayList();
+		{
+			Enumeration<JarEntry> entries = m_jar.entries();
+			while( entries.hasMoreElements() )
+			{
+				JarEntry entry = entries.nextElement();
+				
+				// skip everything but class files
+				if( !entry.getName().endsWith( ".class" ) )
+				{
+					continue;
+				}
+				
+				// get the class name from the file
+				String className = entry.getName().substring( 0, entry.getName().length() - 6 );
+				m_obfClassNames.add( className );
+			}
 		}
 		
 		// config the decompiler
@@ -112,20 +136,9 @@ public class Deobfuscator
 	
 	public void getSeparatedClasses( List<ClassFile> obfClasses, Map<ClassFile,String> deobfClasses )
 	{
-		Enumeration<JarEntry> entries = m_jar.entries();
-		while( entries.hasMoreElements() )
+		for( String obfClassName : m_obfClassNames )
 		{
-			JarEntry entry = entries.nextElement();
-			
-			// skip everything but class files
-			if( !entry.getName().endsWith( ".class" ) )
-			{
-				continue;
-			}
-			
-			// get the class name from the file
-			String className = entry.getName().substring( 0, entry.getName().length() - 6 );
-			ClassFile classFile = new ClassFile( className );
+			ClassFile classFile = new ClassFile( obfClassName );
 			
 			// separate the classes
 			ClassMapping classMapping = m_mappings.getClassByObf( classFile.getName() );
@@ -159,7 +172,41 @@ public class Deobfuscator
 		// decompile it!
 		StringWriter buf = new StringWriter();
 		Decompiler.decompile( deobfName, new PlainTextOutput( buf ), m_settings );
-		return buf.toString();
+		return fixSource( buf.toString() );
+	}
+	
+	private String fixSource( String source )
+	{
+		// fix the imports from the default package in the source
+		try
+		{
+			StringBuilder buf = new StringBuilder();
+			BufferedReader reader = new BufferedReader( new StringReader( source ) );
+			String line = null;
+			while( ( line = reader.readLine() ) != null )
+			{
+				String[] parts = line.trim().split( " " );
+				if( parts.length == 2 && parts[0].equals( "import" ) )
+				{
+					// is this an (illegal) import from the default package?
+					String className = parts[1];
+					if( className.indexOf( '.' ) < 0 )
+					{
+						// this is an illegal import, replace it
+						line = "import __DEFAULT__." + parts[1];
+					}
+				}
+				
+				buf.append( line );
+				buf.append( "\n" );
+			}
+			return buf.toString();
+		}
+		catch( IOException ex )
+		{
+			// dealing with IOExceptions on StringReaders is silly...
+			throw new Error( ex );
+		}
 	}
 	
 	// NOTE: these methods are a bit messy... oh well
@@ -264,5 +311,17 @@ public class Deobfuscator
 		{
 			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
 		}
+	}
+
+	public boolean entryIsObfuscatedIdenfitier( Entry obfEntry )
+	{
+		if( obfEntry instanceof ClassEntry )
+		{
+			// obf classes must be in the list
+			return m_obfClassNames.contains( obfEntry.getName() );
+		}
+		
+		// assume everything else is an identifier
+		return true;
 	}
 }

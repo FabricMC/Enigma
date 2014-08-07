@@ -132,6 +132,16 @@ public class GuiController
 		return m_deobfuscator.hasMapping( pair.obf );
 	}
 	
+	public boolean entryIsObfuscatedIdenfitier( int pos )
+	{
+		EntryPair<Entry> pair = getEntryPair( pos );
+		if( pair == null || pair.obf == null )
+		{
+			return false;
+		}
+		return m_deobfuscator.entryIsObfuscatedIdenfitier( pair.obf );
+	}
+	
 	public ClassInheritanceTreeNode getClassInheritance( ClassEntry classEntry )
 	{
 		Translator deobfuscatingTranslator = m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating );
@@ -216,7 +226,7 @@ public class GuiController
 					{
 						deobfuscatedTokens.add( token );
 					}
-					else
+					else if( entryIsObfuscatedIdenfitier( token.start ) )
 					{
 						obfuscatedTokens.add( token );
 					}

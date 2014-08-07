@@ -16,7 +16,6 @@ import java.util.HashMap;
 import javassist.bytecode.Descriptor;
 
 import com.google.common.collect.Maps;
-import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.Tree;
@@ -29,6 +28,7 @@ public class SourcedAst
 	private Trees m_trees;
 	private SourcePositions m_positions;
 	private HashMap<String,String> m_classNameIndex;
+	private String m_packageName;
 	
 	public SourcedAst( CompilationUnitTree tree, Trees trees )
 	{
@@ -49,6 +49,13 @@ public class SourcedAst
 			// get the full and simple class names
 			String fullName = Descriptor.toJvmName( importTree.getQualifiedIdentifier().toString() );
 			String simpleName = fullName;
+			
+			if( fullName.startsWith( "__DEFAULT__/" ) )
+			{
+				// remove the default package flag
+				fullName = fullName.substring( 12 );
+			}
+			
 			String[] parts = fullName.split( "/" );
 			if( parts.length > 0 )
 			{
@@ -58,30 +65,26 @@ public class SourcedAst
 			m_classNameIndex.put( simpleName, fullName );
 		}
 		
-		// index the self class using the package name
+		// get the package name
+		m_packageName = null;
 		if( m_tree.getPackageName() != null )
 		{
-			String packageName = Descriptor.toJvmName( m_tree.getPackageName().toString() );
-			for( Tree typeTree : m_tree.getTypeDecls() )
-			{
-				if( typeTree instanceof ClassTree )
-				{
-					ClassTree classTree = (ClassTree)typeTree;
-					String className = classTree.getSimpleName().toString();
-					m_classNameIndex.put( className, packageName + "/" + className );
-				}
-			}
+			m_packageName = Descriptor.toJvmName( m_tree.getPackageName().toString() );
 		}
 	}
 
 	public int getStart( Tree node )
 	{
-		return (int)m_positions.getStartPosition( m_tree, node );
+		int pos = (int)m_positions.getStartPosition( m_tree, node );
+		assert( pos >= 0 );
+		return pos;
 	}
 
 	public int getEnd( Tree node )
 	{
-		return (int)m_positions.getEndPosition( m_tree, node );
+		int pos = (int)m_positions.getEndPosition( m_tree, node );
+		assert( pos >= 0 );
+		return pos;
 	}
 	
 	public int getLine( Tree node )
@@ -121,8 +124,16 @@ public class SourcedAst
 		String fullClassName = m_classNameIndex.get( simpleClassName );
 		if( fullClassName == null )
 		{
-			// no mapping was found, the name is probably already fully-qualified
-			fullClassName = simpleClassName;
+			if( m_packageName != null )
+			{
+				// no mapping was found, assume it's in the package
+				fullClassName = m_packageName + "/" + simpleClassName;
+			}
+			else
+			{
+				// this must be in the default package
+				fullClassName = simpleClassName;
+			}
 		}
 		return fullClassName;
 	}
