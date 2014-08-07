@@ -17,36 +17,49 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import com.beust.jcommander.internal.Lists;
 
 import cuchaz.enigma.mapping.Ancestries;
+import cuchaz.enigma.mapping.Translator;
 
 public class ClassInheritanceTreeNode extends DefaultMutableTreeNode
 {
 	private static final long serialVersionUID = 4432367405826178490L;
 	
-	String m_className;
+	private Translator m_deobfuscatingTranslator;
+	private String m_obfClassName;
 	
-	public ClassInheritanceTreeNode( String className )
+	public ClassInheritanceTreeNode( Translator deobfuscatingTranslator, String obfClassName )
 	{
-		m_className = className;
+		m_deobfuscatingTranslator = deobfuscatingTranslator;
+		m_obfClassName = obfClassName;
 	}
 	
-	public String getClassName( )
+	public String getObfClassName( )
 	{
-		return m_className;
+		return m_obfClassName;
+	}
+	
+	public String getDeobfClassName( )
+	{
+		return m_deobfuscatingTranslator.translateClass( m_obfClassName );
 	}
 	
 	@Override
 	public String toString( )
 	{
-		return m_className;
+		String deobfClassName = getDeobfClassName();
+		if( deobfClassName != null )
+		{
+			return deobfClassName;
+		}
+		return m_obfClassName;
 	}
 	
 	public void load( Ancestries ancestries, boolean recurse )
 	{
 		// get all the child nodes
 		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
-		for( String subclassName : ancestries.getSubclasses( m_className ) )
+		for( String subclassName : ancestries.getSubclasses( m_obfClassName ) )
 		{
-			nodes.add( new ClassInheritanceTreeNode( subclassName ) );
+			nodes.add( new ClassInheritanceTreeNode( m_deobfuscatingTranslator, subclassName ) );
 		}
 		
 		// add then to this node

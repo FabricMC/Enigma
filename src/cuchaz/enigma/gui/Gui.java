@@ -272,7 +272,7 @@ public class Gui
 					ClassInheritanceTreeNode node = (ClassInheritanceTreeNode)m_inheritanceTree.getSelectionPath().getLastPathComponent();
 					if( node != null )
 					{
-						m_controller.deobfuscateClass( new ClassFile( node.getClassName() ) );
+						m_controller.deobfuscateClass( new ClassFile( node.getObfClassName() ) );
 					}
 				}
 			}

@@ -31,6 +31,8 @@ import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
+import cuchaz.enigma.mapping.TranslationDirection;
+import cuchaz.enigma.mapping.Translator;
 
 public class GuiController
 {
@@ -132,8 +134,10 @@ public class GuiController
 	
 	public ClassInheritanceTreeNode getClassInheritance( ClassEntry classEntry )
 	{
+		Translator deobfuscatingTranslator = m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating );
+		
 		// create a node for this class
-		ClassInheritanceTreeNode thisNode = new ClassInheritanceTreeNode( classEntry.getName() );
+		ClassInheritanceTreeNode thisNode = new ClassInheritanceTreeNode( deobfuscatingTranslator, classEntry.getName() );
 		
 		// expand all children recursively
 		thisNode.load( m_deobfuscator.getAncestries(), true );
@@ -143,7 +147,7 @@ public class GuiController
 		for( String superclassName : m_deobfuscator.getAncestries().getAncestry( classEntry.getName() ) )
 		{
 			// add the parent node
-			ClassInheritanceTreeNode parentNode = new ClassInheritanceTreeNode( superclassName );
+			ClassInheritanceTreeNode parentNode = new ClassInheritanceTreeNode( deobfuscatingTranslator, superclassName );
 			parentNode.add( node );
 			node = parentNode;
 		}

@@ -100,9 +100,14 @@ public class Deobfuscator
 		// update decompiler options
 		m_settings.setTypeLoader( new TranslatingTypeLoader(
 			m_jar,
-			m_mappings.getTranslator( m_ancestries, TranslationDirection.Obfuscating ),
-			m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating )
+			getTranslator( TranslationDirection.Obfuscating ),
+			getTranslator( TranslationDirection.Deobfuscating )
 		) );
+	}
+	
+	public Translator getTranslator( TranslationDirection direction )
+	{
+		return m_mappings.getTranslator( m_ancestries, direction );
 	}
 	
 	public void getSeparatedClasses( List<ClassFile> obfClasses, Map<ClassFile,String> deobfClasses )
@@ -181,7 +186,7 @@ public class Deobfuscator
 	
 	public Entry obfuscateEntry( Entry deobfEntry )
 	{
-		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Obfuscating );
+		Translator translator = getTranslator( TranslationDirection.Obfuscating );
 		if( deobfEntry instanceof ClassEntry )
 		{
 			return translator.translateEntry( (ClassEntry)deobfEntry );
@@ -206,7 +211,7 @@ public class Deobfuscator
 	
 	public Entry deobfuscateEntry( Entry obfEntry )
 	{
-		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating );
+		Translator translator = getTranslator( TranslationDirection.Deobfuscating );
 		if( obfEntry instanceof ClassEntry )
 		{
 			return translator.translateEntry( (ClassEntry)obfEntry );
@@ -231,7 +236,7 @@ public class Deobfuscator
 	
 	public boolean hasMapping( Entry obfEntry )
 	{
-		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating );
+		Translator translator = getTranslator( TranslationDirection.Deobfuscating );
 		if( obfEntry instanceof ClassEntry )
 		{
 			String deobfName = translator.translate( (ClassEntry)obfEntry );
