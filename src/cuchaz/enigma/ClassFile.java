@@ -33,4 +33,9 @@ public class ClassFile
 	{
 		return m_name.replace( ".", "/" ) + ".class";
 	}
+	
+	public boolean isInPackage( )
+	{
+		return m_name.indexOf( '/' ) >= 0;
+	}
 }

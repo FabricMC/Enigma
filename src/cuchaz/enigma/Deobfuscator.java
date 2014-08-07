@@ -133,6 +133,10 @@ public class Deobfuscator
 			{
 				deobfClasses.put( classFile, classMapping.getDeobfName() );
 			}
+			else if( classFile.isInPackage() )
+			{
+				deobfClasses.put( classFile, classFile.getName() );
+			}
 			else
 			{
 				obfClasses.add( classFile );

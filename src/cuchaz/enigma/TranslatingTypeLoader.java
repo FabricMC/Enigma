@@ -19,6 +19,7 @@ import java.util.jar.JarFile;
 import javassist.ByteArrayClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.bytecode.Descriptor;
 
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
@@ -75,11 +76,12 @@ public class TranslatingTypeLoader implements ITypeLoader
 			buf = data.toByteArray();
 			
 			// translate the class
+			String javaName = Descriptor.toJavaName( name );
 			ClassPool classPool = new ClassPool();
-			classPool.insertClassPath( new ByteArrayClassPath( name, buf ) );
+			classPool.insertClassPath( new ByteArrayClassPath( javaName, buf ) );
 			try
 			{
-				CtClass c = classPool.get( name );
+				CtClass c = classPool.get( javaName );
 				new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
 				new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
 				buf = c.toBytecode();
