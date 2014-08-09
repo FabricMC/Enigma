@@ -60,11 +60,12 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import com.beust.jcommander.internal.Lists;
-
 import jsyntaxpane.DefaultSyntaxKit;
 import jsyntaxpane.SyntaxDocument;
 import jsyntaxpane.Token;
+
+import com.beust.jcommander.internal.Lists;
+
 import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.mapping.ArgumentEntry;
@@ -78,6 +79,7 @@ import cuchaz.enigma.mapping.MethodEntry;
 public class Gui
 {
 	private static Comparator<ClassFile> m_obfuscatedClassSorter;
+	private static Comparator<Map.Entry<ClassFile,String>> m_deobfuscatedClassSorter;
 	
 	static
 	{
@@ -92,6 +94,36 @@ public class Gui
 				}
 				
 				return a.getName().compareTo( b.getName() );
+			}
+		};
+		
+		m_deobfuscatedClassSorter = new Comparator<Map.Entry<ClassFile,String>>( )
+		{
+			@Override
+			public int compare( Map.Entry<ClassFile,String> a, Map.Entry<ClassFile,String> b )
+			{
+				// I can never keep this rule straight when writing these damn things...
+				// a < b => -1, a == b => 0, a > b => +1
+				
+				String[] aparts = a.getValue().split( "\\." );
+				String[] bparts = b.getValue().split( "\\." );
+				for( int i=0; true; i++ )
+				{
+					if( i >= aparts.length )
+					{
+						return -1;
+					}
+					else if( i >= bparts.length )
+					{
+						return 1;
+					}
+					
+					int result = aparts[i].compareTo( bparts[i] );
+					if( result != 0 )
+					{
+						return result;
+					}
+				}
 			}
 		};
 	}
@@ -520,11 +552,11 @@ public class Gui
 		m_closeMappingsMenu.setEnabled( false );
 	}
 	
-	public void setObfClasses( List<ClassFile> classes )
+	public void setObfClasses( List<ClassFile> obfClasses )
 	{
-		if( classes != null )
+		if( obfClasses != null )
 		{
-			Vector<ClassFile> sortedClasses = new Vector<ClassFile>( classes );
+			Vector<ClassFile> sortedClasses = new Vector<ClassFile>( obfClasses );
 			Collections.sort( sortedClasses, m_obfuscatedClassSorter );
 			m_obfClasses.setListData( sortedClasses );
 		}
@@ -538,7 +570,9 @@ public class Gui
 	{
 		if( deobfClasses != null )
 		{
-			m_deobfClasses.setListData( new Vector<Map.Entry<ClassFile,String>>( deobfClasses.entrySet() ) );
+			Vector<Map.Entry<ClassFile,String>> sortedClasses = new Vector<Map.Entry<ClassFile,String>>( deobfClasses.entrySet() );
+			Collections.sort( sortedClasses, m_deobfuscatedClassSorter );
+			m_deobfClasses.setListData( sortedClasses );
 		}
 		else
 		{
