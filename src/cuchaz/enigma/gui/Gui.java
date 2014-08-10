@@ -19,6 +19,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -50,6 +51,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
 import javax.swing.event.CaretEvent;
@@ -254,6 +256,10 @@ public class Gui
 					case KeyEvent.VK_R:
 						startRename();
 					break;
+					
+					case KeyEvent.VK_O:
+						openEntry();
+					break;
 				}
 			}
 		} );
@@ -275,6 +281,7 @@ public class Gui
 					startRename();
 				}
 			} );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_R, 0 ) );
 			popupMenu.add( menu );
 			m_renameMenu = menu;
 		}
@@ -301,6 +308,7 @@ public class Gui
 					openEntry();
 				}
 			} );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_O, 0 ) );
 			popupMenu.add( menu );
 			m_openEntryMenu = menu;
 		}
@@ -427,6 +435,7 @@ public class Gui
 						}
 					}
 				} );
+				item.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK ) );
 				m_saveMappingsMenu = item;
 			}
 			{
@@ -451,6 +460,7 @@ public class Gui
 						}
 					}
 				} );
+				item.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK ) );
 				m_saveMappingsAsMenu = item;
 			}
 			{
