@@ -22,22 +22,15 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import com.google.common.collect.Lists;
-import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
-import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
 import com.strobel.decompiler.languages.java.JavaOutputVisitor;
 import com.strobel.decompiler.languages.java.ast.AstBuilder;
-import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import com.strobel.decompiler.languages.java.ast.Identifier;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
-import com.strobel.decompiler.languages.java.ast.InvocationExpression;
-import com.strobel.decompiler.languages.java.ast.Keys;
-import com.strobel.decompiler.languages.java.ast.MemberReferenceExpression;
 
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
@@ -203,58 +196,6 @@ public class Deobfuscator
 		return index;
 	}
 	
-	private void dump( AstNode node, int depth )
-	{
-		StringBuilder buf = new StringBuilder();
-		for( int i=0; i<depth; i++ )
-		{
-			buf.append( "\t" );
-		}
-		buf.append( node.getClass().getSimpleName() );
-		
-		MemberReference memberRef = node.getUserData( Keys.MEMBER_REFERENCE );
-		if( memberRef != null )
-		{
-			buf.append( String.format( " (MemberReference: %s.%s -> %s)", memberRef.getDeclaringType(), memberRef.getName(), memberRef.getSignature() ) );
-		}
-		
-		for( Key<?> key : Keys.ALL_KEYS )
-		{
-			if( key == Keys.MEMBER_REFERENCE )
-			{
-				continue;
-			}
-			Object val = node.getUserData( key );
-			if( val != null )
-			{
-				buf.append( String.format( " (%s=%s)", key, val ) );
-			}
-		}
-		
-		
-		if( node instanceof Identifier )
-		{
-			Identifier n = (Identifier)node;
-			buf.append( ": " + n.getName() );
-		}
-		else if( node instanceof MemberReferenceExpression )
-		{
-			MemberReferenceExpression n = (MemberReferenceExpression)node;
-			buf.append( ": " + n.getTarget() + "." + n.getMemberName() );
-		}
-		else if( node instanceof InvocationExpression )
-		{
-			
-		}
-		
-		System.out.println( buf );
-		
-		for( AstNode child : node.getChildren() )
-		{
-			dump( child, depth + 1 );
-		}
-	}
-
 	// NOTE: these methods are a bit messy... oh well
 
 	public void rename( Entry obfEntry, String newName )
@@ -366,8 +307,22 @@ public class Deobfuscator
 			// obf classes must be in the list
 			return m_obfClassNames.contains( obfEntry.getName() );
 		}
+		else if( obfEntry instanceof FieldEntry )
+		{
+			return m_obfClassNames.contains( ((FieldEntry)obfEntry).getClassName() );
+		}
+		else if( obfEntry instanceof MethodEntry )
+		{
+			return m_obfClassNames.contains( ((MethodEntry)obfEntry).getClassName() );
+		}
+		else if( obfEntry instanceof ArgumentEntry )
+		{
+			// arguments only appear in method delcarations
+			// since we only show declrations for obf classes, these are always obfuscated
+			return true;
+		}
 		
-		// assume everything else is an identifier
-		return true;
+		// assume everything else is not obfuscated
+		return false;
 	}
 }
