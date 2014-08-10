@@ -42,7 +42,6 @@ import com.strobel.decompiler.languages.java.ast.ContinueStatement;
 import com.strobel.decompiler.languages.java.ast.DoWhileStatement;
 import com.strobel.decompiler.languages.java.ast.EmptyStatement;
 import com.strobel.decompiler.languages.java.ast.EnumValueDeclaration;
-import com.strobel.decompiler.languages.java.ast.Expression;
 import com.strobel.decompiler.languages.java.ast.ExpressionStatement;
 import com.strobel.decompiler.languages.java.ast.FieldDeclaration;
 import com.strobel.decompiler.languages.java.ast.ForEachStatement;
@@ -101,18 +100,6 @@ import cuchaz.enigma.mapping.MethodEntry;
 public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 {
 	@Override
-	public Void visitComment( Comment node, SourceIndex index )
-	{
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitPatternPlaceholder( AstNode node, Pattern pattern, SourceIndex index )
-	{
-		return recurse( node, index );
-	}
-	
-	@Override
 	public Void visitInvocationExpression( InvocationExpression node, SourceIndex index )
 	{
 		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
@@ -127,18 +114,6 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	}
 	
 	@Override
-	public Void visitTypeReference( TypeReferenceExpression node, SourceIndex index )
-	{
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitJavaTokenNode( JavaTokenNode node, SourceIndex index )
-	{
-		return recurse( node, index );
-	}
-	
-	@Override
 	public Void visitMemberReferenceExpression( MemberReferenceExpression node, SourceIndex index )
 	{
 		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
@@ -149,6 +124,152 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 			index.add( node.getMemberNameToken(), fieldEntry );
 		}
 		
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitSimpleType( SimpleType node, SourceIndex index )
+	{
+		TypeReference ref = node.getUserData( Keys.TYPE_REFERENCE );
+		if( node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY )
+		{
+			index.add( node.getIdentifierToken(), new ClassEntry( ref.getInternalName() ) );
+		}
+		
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitMethodDeclaration( MethodDeclaration node, SourceIndex index )
+	{
+		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
+		
+		// static initializers don't have identifier tokens
+		if( !def.getName().equals( "<clinit>" ) )
+		{
+			ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
+			MethodEntry methodEntry = new MethodEntry( classEntry, def.getName(), def.getSignature() );
+			index.add( node.getNameToken(), methodEntry );
+		}
+		
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitConstructorDeclaration( ConstructorDeclaration node, SourceIndex index )
+	{
+		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
+		index.add( node.getNameToken(), new ClassEntry( def.getDeclaringType().getInternalName() ) );
+		
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitParameterDeclaration( ParameterDeclaration node, SourceIndex index )
+	{
+		ParameterDefinition def = node.getUserData( Keys.PARAMETER_DEFINITION );
+		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
+		MethodDefinition methodDef = (MethodDefinition)def.getMethod();
+		MethodEntry methodEntry = new MethodEntry( classEntry, methodDef.getName(), methodDef.getSignature() );
+		ArgumentEntry argumentEntry = new ArgumentEntry( methodEntry, def.getPosition(), def.getName() );
+		index.add( node.getNameToken(), argumentEntry );
+		
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitFieldDeclaration( FieldDeclaration node, SourceIndex index )
+	{
+		FieldDefinition def = node.getUserData( Keys.FIELD_DEFINITION );
+		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
+		FieldEntry fieldEntry = new FieldEntry( classEntry, def.getName() );
+		assert( node.getVariables().size() == 1 );
+		VariableInitializer variable = node.getVariables().firstOrNullObject();
+		index.add( variable.getNameToken(), fieldEntry );
+		
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitTypeDeclaration( TypeDeclaration node, SourceIndex index )
+	{
+		TypeDefinition def = node.getUserData( Keys.TYPE_DEFINITION );
+		index.add( node.getNameToken(), new ClassEntry( def.getInternalName() ) );
+		
+		return recurse( node, index );
+	}
+	
+	private Void recurse( AstNode node, SourceIndex index )
+	{
+		// TEMP: show the tree
+		System.out.println( getIndent( node ) + node.getClass().getSimpleName() + dumpUserData( node ) + " " + node.getRegion() );
+		
+		for( final AstNode child : node.getChildren() )
+		{
+			child.acceptVisitor( this, index );
+		}
+		return null;
+	}
+	
+	private String dumpUserData( AstNode node )
+	{
+		StringBuilder buf = new StringBuilder();
+		for( Key<?> key : Keys.ALL_KEYS )
+		{
+			Object val = node.getUserData( key );
+			if( val != null )
+			{
+				buf.append( String.format( " [%s=%s]", key, val ) );
+			}
+		}
+		return buf.toString();
+	}
+	
+	private String getIndent( AstNode node )
+	{
+		StringBuilder buf = new StringBuilder();
+		int depth = getDepth( node );
+		for( int i = 0; i < depth; i++ )
+		{
+			buf.append( "\t" );
+		}
+		return buf.toString();
+	}
+	
+	private int getDepth( AstNode node )
+	{
+		int depth = -1;
+		while( node != null )
+		{
+			depth++;
+			node = node.getParent();
+		}
+		return depth;
+	}
+	
+	// OVERRIDES WE DON'T CARE ABOUT
+	
+	@Override
+	public Void visitComment( Comment node, SourceIndex index )
+	{
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitPatternPlaceholder( AstNode node, Pattern pattern, SourceIndex index )
+	{
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitTypeReference( TypeReferenceExpression node, SourceIndex index )
+	{
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitJavaTokenNode( JavaTokenNode node, SourceIndex index )
+	{
 		return recurse( node, index );
 	}
 	
@@ -309,81 +430,14 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	}
 	
 	@Override
-	public Void visitSimpleType( SimpleType node, SourceIndex index )
-	{
-		TypeReference ref = node.getUserData( Keys.TYPE_REFERENCE );
-		if( node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY )
-		{
-			index.add( node.getIdentifierToken(), new ClassEntry( ref.getInternalName() ) );
-		}
-		
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitMethodDeclaration( MethodDeclaration node, SourceIndex index )
-	{
-		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
-		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
-		MethodEntry methodEntry = new MethodEntry( classEntry, def.getName(), def.getSignature() );
-		index.add( node.getNameToken(), methodEntry );
-		
-		return recurse( node, index );
-	}
-	
-	@Override
 	public Void visitInitializerBlock( InstanceInitializer node, SourceIndex index )
 	{
 		return recurse( node, index );
 	}
 	
 	@Override
-	public Void visitConstructorDeclaration( ConstructorDeclaration node, SourceIndex index )
-	{
-		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
-		index.add( node.getNameToken(), new ClassEntry( def.getDeclaringType().getInternalName() ) );
-		
-		return recurse( node, index );
-	}
-	
-	@Override
 	public Void visitTypeParameterDeclaration( TypeParameterDeclaration node, SourceIndex index )
 	{
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitParameterDeclaration( ParameterDeclaration node, SourceIndex index )
-	{
-		ParameterDefinition def = node.getUserData( Keys.PARAMETER_DEFINITION );
-		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
-		MethodDefinition methodDef = (MethodDefinition)def.getMethod();
-		MethodEntry methodEntry = new MethodEntry( classEntry, methodDef.getName(), methodDef.getSignature() );
-		ArgumentEntry argumentEntry = new ArgumentEntry( methodEntry, def.getPosition(), def.getName() );
-		index.add( node.getNameToken(), argumentEntry );
-		
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitFieldDeclaration( FieldDeclaration node, SourceIndex index )
-	{
-		FieldDefinition def = node.getUserData( Keys.FIELD_DEFINITION );
-		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
-		FieldEntry fieldEntry = new FieldEntry( classEntry, def.getName() );
-		assert( node.getVariables().size() == 1 );
-		VariableInitializer variable = node.getVariables().firstOrNullObject();
-		index.add( variable.getNameToken(), fieldEntry );
-		
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitTypeDeclaration( TypeDeclaration node, SourceIndex index )
-	{
-		TypeDefinition def = node.getUserData( Keys.TYPE_DEFINITION );
-		index.add( node.getNameToken(), new ClassEntry( def.getInternalName() ) );
-		
 		return recurse( node, index );
 	}
 	
@@ -450,7 +504,6 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	@Override
 	public Void visitIdentifierExpression( IdentifierExpression node, SourceIndex index )
 	{
-		// TODO
 		return recurse( node, index );
 	}
 	
@@ -566,53 +619,5 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	public Void visitLocalTypeDeclarationStatement( LocalTypeDeclarationStatement node, SourceIndex index )
 	{
 		return recurse( node, index );
-	}
-	
-	private Void recurse( AstNode node, SourceIndex index )
-	{
-		// TEMP: show the tree
-		System.out.println( getIndent( node ) + node.getClass().getSimpleName() + dumpUserData( node ) + " " + node.getRegion() );
-		
-		for( final AstNode child : node.getChildren() )
-		{
-			child.acceptVisitor( this, index );
-		}
-		return null;
-	}
-	
-	private String dumpUserData( AstNode node )
-	{
-		StringBuilder buf = new StringBuilder();
-		for( Key<?> key : Keys.ALL_KEYS )
-		{
-			Object val = node.getUserData( key );
-			if( val != null )
-			{
-				buf.append( String.format( " [%s=%s]", key, val ) );
-			}
-		}
-		return buf.toString();
-	}
-	
-	private String getIndent( AstNode node )
-	{
-		StringBuilder buf = new StringBuilder();
-		int depth = getDepth( node );
-		for( int i = 0; i < depth; i++ )
-		{
-			buf.append( "\t" );
-		}
-		return buf.toString();
-	}
-	
-	private int getDepth( AstNode node )
-	{
-		int depth = -1;
-		while( node != null )
-		{
-			depth++;
-			node = node.getParent();
-		}
-		return depth;
 	}
 }

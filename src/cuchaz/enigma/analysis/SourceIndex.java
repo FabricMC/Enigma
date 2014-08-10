@@ -57,10 +57,24 @@ public class SourceIndex
 		{
 			throw new IllegalArgumentException( "Invalid region: " + region );
 		}
-		return new Token(
+		Token token = new Token(
 			toPos( region.getBeginLine(), region.getBeginColumn() ),
 			toPos( region.getEndLine(), region.getEndColumn() )
 		);
+		
+		// HACKHACK: sometimes node regions are off by one
+		// I think this is a bug in Procyon, but it's easy to work around
+		if( !Character.isJavaIdentifierStart( m_source.charAt( token.start ) ) )
+		{
+			token.start++;
+			token.end++;
+			if( !Character.isJavaIdentifierStart( m_source.charAt( token.start ) ) )
+			{
+				throw new IllegalArgumentException( "Region " + region + " does not describe valid token: '" + m_source.substring( token.start, token.end ) + "'" );
+			}
+		}
+		
+		return token;
 	}
 	
 	public void add( AstNode node, Entry entry )
