@@ -45,6 +45,12 @@ public class ClassEntry implements Entry, Serializable
 	}
 	
 	@Override
+	public String getClassName( )
+	{
+		return m_name;
+	}
+	
+	@Override
 	public int hashCode( )
 	{
 		return m_name.hashCode();

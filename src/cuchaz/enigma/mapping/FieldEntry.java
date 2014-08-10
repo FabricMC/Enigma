@@ -60,6 +60,7 @@ public class FieldEntry implements Entry, Serializable
 		return m_name;
 	}
 	
+	@Override
 	public String getClassName( )
 	{
 		return m_classEntry.getName();

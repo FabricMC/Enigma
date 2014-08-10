@@ -72,6 +72,7 @@ public class MethodEntry implements Entry, Serializable
 		return m_signature;
 	}
 	
+	@Override
 	public String getClassName( )
 	{
 		return m_classEntry.getName();

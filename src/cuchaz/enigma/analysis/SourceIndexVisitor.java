@@ -16,7 +16,6 @@ import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.Annotation;
 import com.strobel.decompiler.languages.java.ast.AnonymousObjectCreationExpression;
@@ -149,7 +148,7 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 		{
 			ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
 			MethodEntry methodEntry = new MethodEntry( classEntry, def.getName(), def.getSignature() );
-			index.add( node.getNameToken(), methodEntry );
+			index.addDeclaration( node.getNameToken(), methodEntry );
 		}
 		
 		return recurse( node, index );
@@ -172,7 +171,7 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 		MethodDefinition methodDef = (MethodDefinition)def.getMethod();
 		MethodEntry methodEntry = new MethodEntry( classEntry, methodDef.getName(), methodDef.getSignature() );
 		ArgumentEntry argumentEntry = new ArgumentEntry( methodEntry, def.getPosition(), def.getName() );
-		index.add( node.getNameToken(), argumentEntry );
+		index.addDeclaration( node.getNameToken(), argumentEntry );
 		
 		return recurse( node, index );
 	}
@@ -185,7 +184,7 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 		FieldEntry fieldEntry = new FieldEntry( classEntry, def.getName() );
 		assert( node.getVariables().size() == 1 );
 		VariableInitializer variable = node.getVariables().firstOrNullObject();
-		index.add( variable.getNameToken(), fieldEntry );
+		index.addDeclaration( variable.getNameToken(), fieldEntry );
 		
 		return recurse( node, index );
 	}
@@ -194,57 +193,18 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	public Void visitTypeDeclaration( TypeDeclaration node, SourceIndex index )
 	{
 		TypeDefinition def = node.getUserData( Keys.TYPE_DEFINITION );
-		index.add( node.getNameToken(), new ClassEntry( def.getInternalName() ) );
+		index.addDeclaration( node.getNameToken(), new ClassEntry( def.getInternalName() ) );
 		
 		return recurse( node, index );
 	}
 	
 	private Void recurse( AstNode node, SourceIndex index )
 	{
-		// TEMP: show the tree
-		System.out.println( getIndent( node ) + node.getClass().getSimpleName() + dumpUserData( node ) + " " + node.getRegion() );
-		
 		for( final AstNode child : node.getChildren() )
 		{
 			child.acceptVisitor( this, index );
 		}
 		return null;
-	}
-	
-	private String dumpUserData( AstNode node )
-	{
-		StringBuilder buf = new StringBuilder();
-		for( Key<?> key : Keys.ALL_KEYS )
-		{
-			Object val = node.getUserData( key );
-			if( val != null )
-			{
-				buf.append( String.format( " [%s=%s]", key, val ) );
-			}
-		}
-		return buf.toString();
-	}
-	
-	private String getIndent( AstNode node )
-	{
-		StringBuilder buf = new StringBuilder();
-		int depth = getDepth( node );
-		for( int i = 0; i < depth; i++ )
-		{
-			buf.append( "\t" );
-		}
-		return buf.toString();
-	}
-	
-	private int getDepth( AstNode node )
-	{
-		int depth = -1;
-		while( node != null )
-		{
-			depth++;
-			node = node.getParent();
-		}
-		return depth;
 	}
 	
 	// OVERRIDES WE DON'T CARE ABOUT

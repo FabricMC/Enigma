@@ -25,12 +25,14 @@ public class SourceIndex
 {
 	private String m_source;
 	private TreeMap<Token,Entry> m_tokens;
+	private Map<Entry,Token> m_declarations;
 	private List<Integer> m_lineOffsets;
 	
 	public SourceIndex( String source )
 	{
 		m_source = source;
 		m_tokens = Maps.newTreeMap();
+		m_declarations = Maps.newHashMap();
 		m_lineOffsets = Lists.newArrayList();
 		
 		// count the lines
@@ -82,9 +84,11 @@ public class SourceIndex
 		m_tokens.put( getToken( node ), entry );
 	}
 	
-	public void add( Token token, Entry entry )
+	public void addDeclaration( AstNode node, Entry entry )
 	{
+		Token token = getToken( node );
 		m_tokens.put( token, entry );
+		m_declarations.put( entry, token );
 	}
 	
 	public Token getToken( int pos )
@@ -114,6 +118,11 @@ public class SourceIndex
 	public Iterable<Token> tokens( )
 	{
 		return m_tokens.keySet();
+	}
+	
+	public Token getDeclarationToken( Entry entry )
+	{
+		return m_declarations.get( entry );
 	}
 	
 	private int toPos( int line, int col )

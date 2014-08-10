@@ -70,6 +70,7 @@ public class ArgumentEntry implements Entry, Serializable
 		return m_methodEntry.getClassEntry();
 	}
 	
+	@Override
 	public String getClassName( )
 	{
 		return m_methodEntry.getClassName();

@@ -63,7 +63,6 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import jsyntaxpane.DefaultSyntaxKit;
-import jsyntaxpane.SyntaxDocument;
 
 import com.google.common.collect.Lists;
 
@@ -257,6 +256,10 @@ public class Gui
 						startRename();
 					break;
 					
+					case KeyEvent.VK_I:
+						showInheritance();
+					break;
+					
 					case KeyEvent.VK_O:
 						openEntry();
 					break;
@@ -296,10 +299,11 @@ public class Gui
 				}
 			} );
 			popupMenu.add( menu );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_I, 0 ) );
 			m_inheritanceMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem( "Open Class" );
+			JMenuItem menu = new JMenuItem( "Go to Declaration" );
 			menu.addActionListener( new ActionListener( )
 			{
 				@Override
@@ -598,34 +602,13 @@ public class Gui
 	
 	public void setSource( String source )
 	{
-		setSource( source, 0 );
+		m_editor.getHighlighter().removeAllHighlights();
+		m_editor.setText( source );
 	}
 	
-	public void setSource( String source, int lineNum )
+	public void showToken( Token token )
 	{
-		// remove any old highlighters
-		m_editor.getHighlighter().removeAllHighlights();
-		
-		m_editor.setText( source );
-		
-		// count the offset of the target line
-		String text = m_editor.getText();
-		int pos = 0;
-		int numLines = 0;
-		for( ; pos < text.length(); pos++ )
-		{
-			if( numLines == lineNum )
-			{
-				break;
-			}
-			if( text.charAt( pos ) == '\n' )
-			{
-				numLines++;
-			}
-		}
-		
-		// put the caret at the line number
-		m_editor.setCaretPosition( pos );
+		m_editor.setCaretPosition( token.start );
 		m_editor.grabFocus();
 	}
 	
@@ -760,12 +743,13 @@ public class Gui
 		
 		m_selectedEntryPair = m_controller.getEntryPair( token );
 		boolean isClassEntry = m_selectedEntryPair.obf instanceof ClassEntry;
+		boolean isFieldEntry = m_selectedEntryPair.obf instanceof FieldEntry;
 		boolean isMethodEntry = m_selectedEntryPair.obf instanceof MethodEntry;
 		
 		showEntryPair( m_selectedEntryPair );
 		
 		m_inheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
-		m_openEntryMenu.setEnabled( isClassEntry );
+		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry );
 	}
 	
 	private void startRename( )
@@ -807,12 +791,9 @@ public class Gui
 		String newName = text.getText();
 		if( saveName && newName != null && newName.length() > 0 )
 		{
-			SyntaxDocument doc = (SyntaxDocument)m_editor.getDocument();
-			int lineNum = doc.getLineNumberAt( m_editor.getCaretPosition() );
 			try
 			{
-				// TODO: give token to the controller so we can put the caret back there
-				m_controller.rename( m_selectedEntryPair.obf, newName, lineNum );
+				m_controller.rename( m_selectedEntryPair.obf, newName );
 			}
 			catch( IllegalNameException ex )
 			{
@@ -869,12 +850,7 @@ public class Gui
 		{
 			return;
 		}
-		
-		// get the current class
-		if( m_selectedEntryPair.obf instanceof ClassEntry )
-		{
-			m_controller.deobfuscateClass( new ClassFile( m_selectedEntryPair.obf.getName() ) );
-		}
+		m_controller.openEntry( m_selectedEntryPair.obf );
 	}
 	
 	private void close( )

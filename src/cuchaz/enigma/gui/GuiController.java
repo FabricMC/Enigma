@@ -77,7 +77,7 @@ public class GuiController
 		m_isDirty = false;
 		m_gui.setMappingsFile( file );
 		refreshClasses();
-		refreshOpenFiles();
+		refreshCurrentClass();
 	}
 
 	public void saveMappings( File file )
@@ -94,7 +94,7 @@ public class GuiController
 		m_deobfuscator.setMappings( null );
 		m_gui.setMappingsFile( null );
 		refreshClasses();
-		refreshOpenFiles();
+		refreshCurrentClass();
 	}
 	
 	public void deobfuscateClass( ClassFile classFile )
@@ -157,12 +157,26 @@ public class GuiController
 		return thisNode;
 	}
 	
-	public void rename( Entry obfsEntry, String newName, int lineNum )
+	public void rename( Entry obfEntry, String newName )
 	{
-		m_deobfuscator.rename( obfsEntry, newName );
+		m_deobfuscator.rename( obfEntry, newName );
 		m_isDirty = true;
 		refreshClasses();
-		refreshOpenFiles( lineNum );
+		refreshCurrentClass( m_deobfuscator.deobfuscateEntry( obfEntry ) );
+	}
+	
+	public void openEntry( Entry obfEntry )
+	{
+		Entry deobfEntry = m_deobfuscator.deobfuscateEntry( obfEntry );
+		if( !m_currentFile.getName().equals( obfEntry.getClassName() ) )
+		{
+			m_currentFile = new ClassFile( obfEntry.getClassName() );
+			deobfuscate( m_currentFile, deobfEntry );
+		}
+		else
+		{
+			m_gui.showToken( m_index.getDeclarationToken( deobfEntry ) );
+		}
 	}
 	
 	private void refreshClasses( )
@@ -173,27 +187,28 @@ public class GuiController
 		m_gui.setObfClasses( obfClasses );
 		m_gui.setDeobfClasses( deobfClasses );
 	}
-
-	private void refreshOpenFiles( )
+	
+	private void refreshCurrentClass( )
 	{
-		refreshOpenFiles( 0 );
+		refreshCurrentClass( null );
 	}
 	
-	private void refreshOpenFiles( int lineNum )
+	private void refreshCurrentClass( Entry entryToShow )
 	{
 		if( m_currentFile != null )
 		{
-			deobfuscate( m_currentFile, lineNum );
+			deobfuscate( m_currentFile, entryToShow );
 		}
 	}
 
 	private void deobfuscate( final ClassFile classFile )
 	{
-		deobfuscate( classFile, 0 );
+		deobfuscate( classFile, null );
 	}
 	
-	private void deobfuscate( final ClassFile classFile, final int lineNum )
+	private void deobfuscate( final ClassFile classFile, final Entry entryToShow )
 	{
+		m_currentFile = classFile;
 		m_gui.setSource( "(deobfuscating...)" );
 		
 		// run the deobfuscator in a separate thread so we don't block the GUI event queue
@@ -202,9 +217,13 @@ public class GuiController
 			@Override
 			public void run( )
 			{
-				// decopmile,deobfuscate the bytecode
+				// decompile,deobfuscate the bytecode
 				m_index = m_deobfuscator.getSource( classFile );
-				m_gui.setSource( m_index.getSource(), lineNum );
+				m_gui.setSource( m_index.getSource() );
+				if( entryToShow != null )
+				{
+					m_gui.showToken( m_index.getDeclarationToken( entryToShow ) );
+				}
 				
 				// set the highlighted tokens
 				List<Token> obfuscatedTokens = Lists.newArrayList();
