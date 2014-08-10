@@ -62,12 +62,12 @@ import javax.swing.tree.TreePath;
 
 import jsyntaxpane.DefaultSyntaxKit;
 import jsyntaxpane.SyntaxDocument;
-import jsyntaxpane.Token;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
@@ -643,7 +643,7 @@ public class Gui
 		{
 			try
 			{
-				m_editor.getHighlighter().addHighlight( token.start, token.end(), painter );
+				m_editor.getHighlighter().addHighlight( token.start, token.end, painter );
 			}
 			catch( BadLocationException ex )
 			{
@@ -740,22 +740,20 @@ public class Gui
 	
 	private void onCaretMove( int pos )
 	{
-		m_selectedEntryPair = m_controller.getEntryPair( pos );
-		
-		boolean isEntry = m_selectedEntryPair != null;
-		boolean isClassEntry = isEntry && m_selectedEntryPair.obf instanceof ClassEntry;
-		boolean isMethodEntry = isEntry && m_selectedEntryPair.obf instanceof MethodEntry;
-		
-		if( isEntry )
-		{
-			showEntryPair( m_selectedEntryPair );
-		}
-		else
+		Token token = m_controller.getToken( pos );
+		m_renameMenu.setEnabled( token != null );
+		if( token == null )
 		{
 			clearEntryPair();
+			return;
 		}
 		
-		m_renameMenu.setEnabled( isEntry );
+		m_selectedEntryPair = m_controller.getEntryPair( token );
+		boolean isClassEntry = m_selectedEntryPair.obf instanceof ClassEntry;
+		boolean isMethodEntry = m_selectedEntryPair.obf instanceof MethodEntry;
+		
+		showEntryPair( m_selectedEntryPair );
+		
 		m_inheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
 		m_openEntryMenu.setEnabled( isClassEntry );
 	}
@@ -803,6 +801,7 @@ public class Gui
 			int lineNum = doc.getLineNumberAt( m_editor.getCaretPosition() );
 			try
 			{
+				// TODO: give token to the controller so we can put the caret back there
 				m_controller.rename( m_selectedEntryPair.obf, newName, lineNum );
 			}
 			catch( IllegalNameException ex )

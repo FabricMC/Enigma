@@ -10,19 +10,16 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import jsyntaxpane.Token;
 
 
 public class EntryPair<T extends Entry>
 {
 	public T obf;
 	public T deobf;
-	public Token token;
 	
-	public EntryPair( T obf, T deobf, Token token )
+	public EntryPair( T obf, T deobf )
 	{
 		this.obf = obf;
 		this.deobf = deobf;
-		this.token = token;
 	}
 }

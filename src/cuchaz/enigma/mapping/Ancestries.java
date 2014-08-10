@@ -26,7 +26,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.Constants;

@@ -10,70 +10,101 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
-import jsyntaxpane.Token;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.strobel.decompiler.languages.Region;
+import com.strobel.decompiler.languages.java.ast.AstNode;
 
 import cuchaz.enigma.mapping.Entry;
 
-public class SourceIndex implements Iterable<Map.Entry<Entry,Token>>
+public class SourceIndex
 {
-	private Multimap<Entry,Token> m_entryToTokens;
+	private String m_source;
+	private TreeMap<Token,Entry> m_tokens;
+	private List<Integer> m_lineOffsets;
 	
-	public SourceIndex( )
+	public SourceIndex( String source )
 	{
-		m_entryToTokens = HashMultimap.create();
+		m_source = source;
+		m_tokens = Maps.newTreeMap();
+		m_lineOffsets = Lists.newArrayList();
+		
+		// count the lines
+		m_lineOffsets.add( 0 );
+		for( int i=0; i<source.length(); i++ )
+		{
+			if( source.charAt( i ) == '\n' )
+			{
+				m_lineOffsets.add( i + 1 );
+			}
+		}
 	}
 	
-	public void add( Entry entry, Token token )
+	public String getSource( )
 	{
-		m_entryToTokens.put( entry, token );
+		return m_source;
 	}
 	
-	public Iterator<Map.Entry<Entry,Token>> iterator( )
+	public Token getToken( AstNode node )
 	{
-		return m_entryToTokens.entries().iterator();
+		// get a token for this node's region
+		Region region = node.getRegion();
+		if( region.getBeginLine() == 0 || region.getEndLine() == 0 )
+		{
+			throw new IllegalArgumentException( "Invalid region: " + region );
+		}
+		return new Token(
+			toPos( region.getBeginLine(), region.getBeginColumn() ),
+			toPos( region.getEndLine(), region.getEndColumn() )
+		);
 	}
 	
-	public Collection<Token> tokens( )
+	public void add( AstNode node, Entry entry )
 	{
-		return m_entryToTokens.values();
+		m_tokens.put( getToken( node ), entry );
+	}
+	
+	public void add( Token token, Entry entry )
+	{
+		m_tokens.put( token, entry );
+	}
+	
+	public Token getToken( int pos )
+	{
+		Map.Entry<Token,Entry> mapEntry = m_tokens.floorEntry( new Token( pos, pos ) );
+		if( mapEntry == null )
+		{
+			return null;
+		}
+		Token token = mapEntry.getKey();
+		if( token.contains( pos ) )
+		{
+			return token;
+		}
+		return null;
 	}
 	
 	public Entry getEntry( Token token )
 	{
-		// linear search is fast enough for now
-		for( Map.Entry<Entry,Token> entry : this )
+		if( token == null )
 		{
-			if( entry.getValue().equals( token ) )
-			{
-				return entry.getKey();
-			}
+			return null;
 		}
-		return null;
+		return m_tokens.get( token );
 	}
 	
-	public Map.Entry<Entry,Token> getEntry( int pos )
+	public Iterable<Token> tokens( )
 	{
-		// linear search is fast enough for now
-		for( Map.Entry<Entry,Token> entry : this )
-		{
-			Token token = entry.getValue();
-			if( pos >= token.start && pos <= token.end() )
-			{
-				return entry;
-			}
-		}
-		return null;
+		return m_tokens.keySet();
 	}
 	
-	public Collection<Token> getTokens( Entry entry )
+	private int toPos( int line, int col )
 	{
-		return m_entryToTokens.get( entry );
+		// line and col are 1-based
+		return m_lineOffsets.get( line - 1 ) + col - 1;
 	}
 }

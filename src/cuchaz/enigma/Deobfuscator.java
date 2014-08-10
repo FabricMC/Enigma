@@ -10,12 +10,10 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.List;
@@ -23,11 +21,26 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import com.beust.jcommander.internal.Lists;
-import com.strobel.decompiler.Decompiler;
+import com.google.common.collect.Lists;
+import com.strobel.assembler.metadata.MemberReference;
+import com.strobel.assembler.metadata.MetadataSystem;
+import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.componentmodel.Key;
+import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
+import com.strobel.decompiler.languages.java.JavaOutputVisitor;
+import com.strobel.decompiler.languages.java.ast.AstBuilder;
+import com.strobel.decompiler.languages.java.ast.AstNode;
+import com.strobel.decompiler.languages.java.ast.CompilationUnit;
+import com.strobel.decompiler.languages.java.ast.Identifier;
+import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
+import com.strobel.decompiler.languages.java.ast.InvocationExpression;
+import com.strobel.decompiler.languages.java.ast.Keys;
+import com.strobel.decompiler.languages.java.ast.MemberReferenceExpression;
 
+import cuchaz.enigma.analysis.SourceIndex;
+import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.mapping.Ancestries;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -91,7 +104,6 @@ public class Deobfuscator
 		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();
-		m_settings.setForceExplicitImports( true );
 		m_settings.setShowSyntheticMembers( true );
 		
 		// init mappings
@@ -157,7 +169,7 @@ public class Deobfuscator
 		}
 	}
 	
-	public String getSource( final ClassFile classFile )
+	public SourceIndex getSource( final ClassFile classFile )
 	{
 		// is this class deobfuscated?
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
@@ -170,45 +182,79 @@ public class Deobfuscator
 		}
 		
 		// decompile it!
+		TypeDefinition resolvedType = new MetadataSystem( m_settings.getTypeLoader() ).lookupType( deobfName ).resolve();
+		DecompilerContext context = new DecompilerContext();
+		context.setCurrentType( resolvedType );
+		context.setSettings( m_settings );
+		AstBuilder builder = new AstBuilder( context );
+		builder.addType( resolvedType );
+		builder.runTransformations( null );
+		CompilationUnit root = builder.getCompilationUnit();
+		
+		// render the AST into source
 		StringWriter buf = new StringWriter();
-		Decompiler.decompile( deobfName, new PlainTextOutput( buf ), m_settings );
-		return fixSource( buf.toString() );
+		root.acceptVisitor( new InsertParenthesesVisitor(), null );
+		root.acceptVisitor( new JavaOutputVisitor( new PlainTextOutput( buf ), m_settings ), null );
+		
+		// build the source index
+		SourceIndex index = new SourceIndex( buf.toString() );
+		root.acceptVisitor( new SourceIndexVisitor(), index );
+		
+		return index;
 	}
 	
-	private String fixSource( String source )
+	private void dump( AstNode node, int depth )
 	{
-		// fix the imports from the default package in the source
-		try
+		StringBuilder buf = new StringBuilder();
+		for( int i=0; i<depth; i++ )
 		{
-			StringBuilder buf = new StringBuilder();
-			BufferedReader reader = new BufferedReader( new StringReader( source ) );
-			String line = null;
-			while( ( line = reader.readLine() ) != null )
-			{
-				String[] parts = line.trim().split( " " );
-				if( parts.length == 2 && parts[0].equals( "import" ) )
-				{
-					// is this an (illegal) import from the default package?
-					String className = parts[1];
-					if( className.indexOf( '.' ) < 0 )
-					{
-						// this is an illegal import, replace it
-						line = "import __DEFAULT__." + parts[1];
-					}
-				}
-				
-				buf.append( line );
-				buf.append( "\n" );
-			}
-			return buf.toString();
+			buf.append( "\t" );
 		}
-		catch( IOException ex )
+		buf.append( node.getClass().getSimpleName() );
+		
+		MemberReference memberRef = node.getUserData( Keys.MEMBER_REFERENCE );
+		if( memberRef != null )
 		{
-			// dealing with IOExceptions on StringReaders is silly...
-			throw new Error( ex );
+			buf.append( String.format( " (MemberReference: %s.%s -> %s)", memberRef.getDeclaringType(), memberRef.getName(), memberRef.getSignature() ) );
+		}
+		
+		for( Key<?> key : Keys.ALL_KEYS )
+		{
+			if( key == Keys.MEMBER_REFERENCE )
+			{
+				continue;
+			}
+			Object val = node.getUserData( key );
+			if( val != null )
+			{
+				buf.append( String.format( " (%s=%s)", key, val ) );
+			}
+		}
+		
+		
+		if( node instanceof Identifier )
+		{
+			Identifier n = (Identifier)node;
+			buf.append( ": " + n.getName() );
+		}
+		else if( node instanceof MemberReferenceExpression )
+		{
+			MemberReferenceExpression n = (MemberReferenceExpression)node;
+			buf.append( ": " + n.getTarget() + "." + n.getMemberName() );
+		}
+		else if( node instanceof InvocationExpression )
+		{
+			
+		}
+		
+		System.out.println( buf );
+		
+		for( AstNode child : node.getChildren() )
+		{
+			dump( child, depth + 1 );
 		}
 	}
-	
+
 	// NOTE: these methods are a bit messy... oh well
 
 	public void rename( Entry obfEntry, String newName )

@@ -17,15 +17,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import jsyntaxpane.Token;
-
-import com.beust.jcommander.internal.Lists;
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Deobfuscator;
-import cuchaz.enigma.analysis.Analyzer;
 import cuchaz.enigma.analysis.SourceIndex;
+import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
@@ -105,41 +103,35 @@ public class GuiController
 		deobfuscate( m_currentFile );
 	}
 	
-	public EntryPair<Entry> getEntryPair( int pos )
+	public Token getToken( int pos )
 	{
 		if( m_index == null )
 		{
 			return null;
 		}
 		
-		Map.Entry<Entry,Token> deobfEntryAndToken = m_index.getEntry( pos );
-		if( deobfEntryAndToken == null )
+		return m_index.getToken( pos );
+	}
+	
+	public EntryPair<Entry> getEntryPair( Token token )
+	{
+		if( m_index == null )
 		{
 			return null;
 		}
-		Entry deobfEntry = deobfEntryAndToken.getKey();
-		Token token = deobfEntryAndToken.getValue();
-		return new EntryPair<Entry>( m_deobfuscator.obfuscateEntry( deobfEntry ), deobfEntry, token );
+		
+		Entry deobfEntry = m_index.getEntry( token );
+		return new EntryPair<Entry>( m_deobfuscator.obfuscateEntry( deobfEntry ), deobfEntry );
 	}
 	
-	public boolean entryHasMapping( int pos )
+	public boolean entryHasMapping( Entry deobfEntry )
 	{
-		EntryPair<Entry> pair = getEntryPair( pos );
-		if( pair == null || pair.obf == null )
-		{
-			return false;
-		}
-		return m_deobfuscator.hasMapping( pair.obf );
+		return m_deobfuscator.hasMapping( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
 	
-	public boolean entryIsObfuscatedIdenfitier( int pos )
+	public boolean entryIsObfuscatedIdenfitier( Entry deobfEntry )
 	{
-		EntryPair<Entry> pair = getEntryPair( pos );
-		if( pair == null || pair.obf == null )
-		{
-			return false;
-		}
-		return m_deobfuscator.entryIsObfuscatedIdenfitier( pair.obf );
+		return m_deobfuscator.entryIsObfuscatedIdenfitier( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
 	
 	public ClassInheritanceTreeNode getClassInheritance( ClassEntry classEntry )
@@ -210,23 +202,21 @@ public class GuiController
 			@Override
 			public void run( )
 			{
-				// deobfuscate,decompile the bytecode
-				String source = m_deobfuscator.getSource( classFile );
-				m_gui.setSource( source, lineNum );
-				
-				// index the source file
-				m_index = Analyzer.analyze( classFile.getName(), source );
+				// decopmile,deobfuscate the bytecode
+				m_index = m_deobfuscator.getSource( classFile );
+				m_gui.setSource( m_index.getSource(), lineNum );
 				
 				// set the highlighted tokens
 				List<Token> obfuscatedTokens = Lists.newArrayList();
 				List<Token> deobfuscatedTokens = Lists.newArrayList();
 				for( Token token : m_index.tokens() )
 				{
-					if( entryHasMapping( token.start ) )
+					Entry entry = m_index.getEntry( token );
+					if( entryHasMapping( entry ) )
 					{
 						deobfuscatedTokens.add( token );
 					}
-					else if( entryIsObfuscatedIdenfitier( token.start ) )
+					else if( entryIsObfuscatedIdenfitier( entry ) )
 					{
 						obfuscatedTokens.add( token );
 					}

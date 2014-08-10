@@ -14,7 +14,7 @@ import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 import cuchaz.enigma.mapping.Ancestries;
 import cuchaz.enigma.mapping.Translator;

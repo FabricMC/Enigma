@@ -17,7 +17,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 
 import cuchaz.enigma.Util;
 

@@ -13,7 +13,7 @@ package cuchaz.enigma.mapping;
 import java.io.Serializable;
 import java.util.Map;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 
 public class ClassMapping implements Serializable, Comparable<ClassMapping>
 {
@@ -135,16 +135,16 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	
 	public void setMethodNameAndSignature( String obfName, String obfSignature, String deobfName, String deobfSignature )
 	{
-		MethodMapping methodIndex = m_methodsByObf.get( getMethodKey( obfName, obfSignature ) );
-		if( methodIndex == null )
+		MethodMapping methodMapping = m_methodsByObf.get( getMethodKey( obfName, obfSignature ) );
+		if( methodMapping == null )
 		{
-			methodIndex = createMethodIndex( obfName, obfSignature );
+			methodMapping = createMethodIndex( obfName, obfSignature );
 		}
 		
-		m_methodsByDeobf.remove( getMethodKey( methodIndex.getDeobfName(), methodIndex.getDeobfSignature() ) );
-		methodIndex.setDeobfName( deobfName );
-		methodIndex.setDeobfSignature( deobfSignature );
-		m_methodsByDeobf.put( getMethodKey( deobfName, deobfSignature ), methodIndex );
+		m_methodsByDeobf.remove( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ) );
+		methodMapping.setDeobfName( deobfName );
+		methodMapping.setDeobfSignature( deobfSignature );
+		m_methodsByDeobf.put( getMethodKey( deobfName, deobfSignature ), methodMapping );
 	}
 	
 	public void updateDeobfMethodSignatures( Translator translator )
@@ -167,11 +167,11 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 
 	private MethodMapping createMethodIndex( String obfName, String obfSignature )
 	{
-		MethodMapping methodIndex = new MethodMapping( obfName, obfName, obfSignature, obfSignature );
+		MethodMapping methodMapping = new MethodMapping( obfName, obfName, obfSignature, obfSignature );
 		String key = getMethodKey( obfName, obfSignature );
-		m_methodsByObf.put( key, methodIndex );
-		m_methodsByDeobf.put( key, methodIndex );
-		return methodIndex;
+		m_methodsByObf.put( key, methodMapping );
+		m_methodsByDeobf.put( key, methodMapping );
+		return methodMapping;
 	}
 
 	@Override
