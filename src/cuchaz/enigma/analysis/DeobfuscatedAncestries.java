@@ -8,9 +8,11 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.analysis;
 
 import java.util.Map;
+
+import cuchaz.enigma.mapping.ClassMapping;
 
 public class DeobfuscatedAncestries extends Ancestries
 {
@@ -20,7 +22,7 @@ public class DeobfuscatedAncestries extends Ancestries
 	private Map<String,ClassMapping> m_classesByObf;
 	private Map<String,ClassMapping> m_classesByDeobf;
 	
-	protected DeobfuscatedAncestries( Ancestries ancestries, Map<String,ClassMapping> classesByObf, Map<String,ClassMapping> classesByDeobf )
+	public DeobfuscatedAncestries( Ancestries ancestries, Map<String,ClassMapping> classesByObf, Map<String,ClassMapping> classesByDeobf )
 	{
 		m_ancestries = ancestries;
 		m_classesByObf = classesByObf;

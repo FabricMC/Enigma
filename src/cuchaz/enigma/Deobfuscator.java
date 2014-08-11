@@ -31,9 +31,9 @@ import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 
+import cuchaz.enigma.analysis.Ancestries;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
-import cuchaz.enigma.mapping.Ancestries;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
@@ -207,7 +207,7 @@ public class Deobfuscator
 		}
 		else if( obfEntry instanceof MethodEntry )
 		{
-			m_renamer.setMethodName( (MethodEntry)obfEntry, newName );
+			m_renamer.setMethodTreeName( (MethodEntry)obfEntry, newName );
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{

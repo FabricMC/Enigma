@@ -8,7 +8,7 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.analysis;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 import com.google.common.collect.Lists;
 
-import cuchaz.enigma.mapping.Ancestries;
+import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Translator;
 
 public class ClassInheritanceTreeNode extends DefaultMutableTreeNode
@@ -75,5 +75,25 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode
 				node.load( ancestries, true );
 			}
 		}
+	}
+
+	public static ClassInheritanceTreeNode findNode( ClassInheritanceTreeNode node, ClassEntry entry )
+	{
+		// is this the node?
+		if( node.getObfClassName().equals( entry.getName() ) )
+		{
+			return node;
+		}
+		
+		// recurse
+		for( int i=0; i<node.getChildCount(); i++ )
+		{
+			ClassInheritanceTreeNode foundNode = findNode( (ClassInheritanceTreeNode)node.getChildAt( i ), entry );
+			if( foundNode != null )
+			{
+				return foundNode;
+			}
+		}
+		return null;
 	}
 }

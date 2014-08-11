@@ -20,6 +20,8 @@ import java.util.Stack;
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -27,8 +29,8 @@ import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
+import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.TranslationDirection;
-import cuchaz.enigma.mapping.Translator;
 
 public class GuiController
 {
@@ -128,27 +130,22 @@ public class GuiController
 		return m_deobfuscator.entryIsObfuscatedIdenfitier( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
 	
-	public ClassInheritanceTreeNode getClassInheritance( ClassEntry classEntry )
+	public ClassInheritanceTreeNode getClassInheritance( ClassEntry obfClassEntry )
 	{
-		Translator deobfuscatingTranslator = m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating );
-		
-		// create a node for this class
-		ClassInheritanceTreeNode thisNode = new ClassInheritanceTreeNode( deobfuscatingTranslator, classEntry.getName() );
-		
-		// expand all children recursively
-		thisNode.load( m_deobfuscator.getAncestries(), true );
-		
-		// get the ancestors too
-		ClassInheritanceTreeNode node = thisNode;
-		for( String superclassName : m_deobfuscator.getAncestries().getAncestry( classEntry.getName() ) )
-		{
-			// add the parent node
-			ClassInheritanceTreeNode parentNode = new ClassInheritanceTreeNode( deobfuscatingTranslator, superclassName );
-			parentNode.add( node );
-			node = parentNode;
-		}
-		
-		return thisNode;
+		ClassInheritanceTreeNode rootNode = m_deobfuscator.getAncestries().getClassInheritance(
+			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+			obfClassEntry
+		);
+		return ClassInheritanceTreeNode.findNode( rootNode, obfClassEntry );
+	}
+	
+	public MethodInheritanceTreeNode getMethodInheritance( MethodEntry obfMethodEntry )
+	{
+		MethodInheritanceTreeNode rootNode = m_deobfuscator.getAncestries().getMethodInheritance(
+			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+			obfMethodEntry
+		);
+		return MethodInheritanceTreeNode.findNode( rootNode, obfMethodEntry );
 	}
 	
 	public void rename( Entry obfEntry, String newName )

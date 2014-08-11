@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import cuchaz.enigma.analysis.Ancestries;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class Translator

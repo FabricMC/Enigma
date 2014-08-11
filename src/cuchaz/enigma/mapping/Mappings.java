@@ -20,6 +20,8 @@ import java.util.zip.GZIPInputStream;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.Util;
+import cuchaz.enigma.analysis.Ancestries;
+import cuchaz.enigma.analysis.DeobfuscatedAncestries;
 
 public class Mappings implements Serializable
 {

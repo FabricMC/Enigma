@@ -8,13 +8,14 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.analysis;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -25,23 +26,32 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.MethodInfo;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.MethodEntry;
+import cuchaz.enigma.mapping.Translator;
 
 public class Ancestries implements Serializable
 {
 	private static final long serialVersionUID = 738687982126844179L;
 	
 	private Map<String,String> m_superclasses;
+	private Multimap<String,String> m_methodImplementations;
 	
 	public Ancestries( )
 	{
 		m_superclasses = Maps.newHashMap();
+		m_methodImplementations = HashMultimap.create();
 	}
 	
+	@SuppressWarnings( "unchecked" )
 	public void readFromJar( InputStream in )
 	throws IOException
 	{
@@ -87,6 +97,7 @@ public class Ancestries implements Serializable
 			{
 				CtClass c = classPool.get( className );
 				addSuperclass( c.getName(), c.getClassFile().getSuperclass() );
+				addMethodImplementations( c.getName(), (List<MethodInfo>)c.getClassFile().getMethods() );
 			}
 			catch( NotFoundException ex )
 			{
@@ -95,6 +106,14 @@ public class Ancestries implements Serializable
 		}
 	}
 	
+	private void addMethodImplementations( String name, List<MethodInfo> methods )
+	{
+		for( MethodInfo method : methods )
+		{
+			m_methodImplementations.put( name, getMethodKey( method.getName(), method.getDescriptor() ) );
+		}
+	}
+
 	public void addSuperclass( String className, String superclassName )
 	{
 		className = Descriptor.toJvmName( className );
@@ -146,9 +165,71 @@ public class Ancestries implements Serializable
 		return subclasses;
 	}
 	
+	public boolean isMethodImplemented( MethodEntry methodEntry )
+	{
+		return isMethodImplemented( methodEntry.getClassName(), methodEntry.getName(), methodEntry.getSignature() );
+	}
+	
+	public boolean isMethodImplemented( String className, String methodName, String methodSignature )
+	{
+		Collection<String> implementations = m_methodImplementations.get( className );
+		if( implementations == null )
+		{
+			return false;
+		}
+		return implementations.contains( getMethodKey( methodName, methodSignature ) );
+	}
+	
+	public ClassInheritanceTreeNode getClassInheritance( Translator deobfuscatingTranslator, ClassEntry obfClassEntry )
+	{
+		// get the root node
+		List<String> ancestry = getAncestry( obfClassEntry.getName() );
+		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode( deobfuscatingTranslator, ancestry.get( ancestry.size() - 1 ) );
+		
+		// expand all children recursively
+		rootNode.load( this, true );
+		
+		return rootNode;
+	}
+	
+	public MethodInheritanceTreeNode getMethodInheritance( Translator deobfuscatingTranslator, MethodEntry obfMethodEntry )
+	{
+		// travel to the ancestor implementation
+		String baseImplementationClassName = obfMethodEntry.getClassName();
+		for( String ancestorClassName : getAncestry( obfMethodEntry.getClassName() ) )
+		{
+			if( isMethodImplemented( ancestorClassName, obfMethodEntry.getName(), obfMethodEntry.getSignature() ) )
+			{
+				baseImplementationClassName = ancestorClassName;
+			}
+		}
+		
+		// make a root node at the base
+		MethodEntry methodEntry = new MethodEntry(
+			new ClassEntry( baseImplementationClassName ),
+			obfMethodEntry.getName(),
+			obfMethodEntry.getSignature()
+		);
+		MethodInheritanceTreeNode rootNode = new MethodInheritanceTreeNode(
+			deobfuscatingTranslator,
+			methodEntry,
+			isMethodImplemented( methodEntry )
+		);
+		
+		// expand the full tree
+		rootNode.load( this, true );
+		
+		return rootNode;
+	}
+	
 	private boolean isJre( String className )
 	{
 		return className.startsWith( "java/" )
 			|| className.startsWith( "javax/" );
+	}
+	
+	private String getMethodKey( String name, String signature )
+	{
+		return name + signature;
 	}
 }

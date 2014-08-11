@@ -66,6 +66,8 @@ import jsyntaxpane.DefaultSyntaxKit;
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -343,10 +345,24 @@ public class Gui
 			{
 				if( event.getClickCount() == 2 )
 				{
-					ClassInheritanceTreeNode node = (ClassInheritanceTreeNode)m_inheritanceTree.getSelectionPath().getLastPathComponent();
-					if( node != null )
+					// get the selected node
+					Object node = m_inheritanceTree.getSelectionPath().getLastPathComponent();
+					if( node == null )
 					{
-						m_controller.openEntry( new ClassEntry( node.getObfClassName() ) );
+						return;
+					}
+					
+					if( node instanceof ClassInheritanceTreeNode )
+					{
+						m_controller.openEntry( new ClassEntry( ((ClassInheritanceTreeNode)node).getObfClassName() ) );
+					}
+					else if( node instanceof MethodInheritanceTreeNode )
+					{
+						MethodInheritanceTreeNode methodNode = (MethodInheritanceTreeNode)node;
+						if( methodNode.isImplemented() )
+						{
+							m_controller.openEntry( methodNode.getMethodEntry() );
+						}
 					}
 				}
 			}
@@ -836,29 +852,44 @@ public class Gui
 			return;
 		}
 		
-		// get the current class
 		if( m_selectedEntryPair.obf instanceof ClassEntry )
 		{
+			// get the class inheritance
 			ClassInheritanceTreeNode classNode = m_controller.getClassInheritance( (ClassEntry)m_selectedEntryPair.obf );
 			
-			// build the path from the root to the class node
-			List<TreeNode> nodes = Lists.newArrayList();
-			TreeNode node = classNode;
-			do
-			{
-				nodes.add( node );
-				node = node.getParent();
-			}
-			while( node != null );
-			Collections.reverse( nodes );
-			TreePath path = new TreePath( nodes.toArray() );
-			
 			// show the tree at the root
+			TreePath path = getPathToRoot( classNode );
 			m_inheritanceTree.setModel( new DefaultTreeModel( (TreeNode)path.getPathComponent( 0 ) ) );
 			m_inheritanceTree.expandPath( path );
 			m_inheritanceTree.setSelectionRow( m_inheritanceTree.getRowForPath( path ) );
 		}
+		else if( m_selectedEntryPair.obf instanceof MethodEntry )
+		{
+			// get the method inheritance
+			MethodInheritanceTreeNode classNode = m_controller.getMethodInheritance( (MethodEntry)m_selectedEntryPair.obf );
+			
+			// show the tree at the root
+			TreePath path = getPathToRoot( classNode );
+			m_inheritanceTree.setModel( new DefaultTreeModel( (TreeNode)path.getPathComponent( 0 ) ) );
+			m_inheritanceTree.expandPath( path );
+			m_inheritanceTree.setSelectionRow( m_inheritanceTree.getRowForPath( path ) );
+		}
+		
 		redraw();
+	}
+	
+	private TreePath getPathToRoot( TreeNode node )
+	{
+		List<TreeNode> nodes = Lists.newArrayList();
+		TreeNode n = node;
+		do
+		{
+			nodes.add( n );
+			n = n.getParent();
+		}
+		while( n != null );
+		Collections.reverse( nodes );
+		return new TreePath( nodes.toArray() );
 	}
 	
 	private void openEntry( )

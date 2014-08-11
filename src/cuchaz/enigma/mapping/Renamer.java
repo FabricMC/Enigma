@@ -15,6 +15,9 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
+import cuchaz.enigma.analysis.Ancestries;
+import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
+
 public class Renamer
 {
 	private Ancestries m_ancestries;
@@ -54,6 +57,30 @@ public class Renamer
 		classMapping.setFieldName( obf.getName(), deobfName );
 	}
 	
+	public void setMethodTreeName( MethodEntry obf, String deobfName )
+	{
+		// get the method tree
+		setMethodTreeName(
+			m_ancestries.getMethodInheritance( m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ), obf ),
+			deobfName
+		);
+	}
+	
+	private void setMethodTreeName( MethodInheritanceTreeNode node, String deobfName )
+	{
+		if( node.isImplemented() )
+		{
+			// apply the name here
+			setMethodName( node.getMethodEntry(), deobfName );
+		}
+		
+		// recurse
+		for( int i=0; i<node.getChildCount(); i++ )
+		{
+			setMethodTreeName( (MethodInheritanceTreeNode)node.getChildAt( i ), deobfName );
+		}
+	}
+
 	public void setMethodName( MethodEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateMethodName( deobfName );
@@ -67,6 +94,7 @@ public class Renamer
 		classMapping.setMethodNameAndSignature( obf.getName(), obf.getSignature(), deobfName, deobfSignature );
 		
 		// TODO: update ancestor/descendant methods in other classes in the inheritance hierarchy too
+		
 	}
 	
 	public void setArgumentName( ArgumentEntry obf, String deobfName )
