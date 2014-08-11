@@ -62,7 +62,7 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode
 			nodes.add( new ClassInheritanceTreeNode( m_deobfuscatingTranslator, subclassName ) );
 		}
 		
-		// add then to this node
+		// add them to this node
 		for( ClassInheritanceTreeNode node : nodes )
 		{
 			this.add( node );

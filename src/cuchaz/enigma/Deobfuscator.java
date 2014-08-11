@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -139,43 +138,41 @@ public class Deobfuscator
 		return m_mappings.getTranslator( m_ancestries, direction );
 	}
 	
-	public void getSeparatedClasses( List<ClassFile> obfClasses, Map<ClassFile,String> deobfClasses )
+	public void getSeparatedClasses( List<String> obfClasses, List<String> deobfClasses )
 	{
 		for( String obfClassName : m_obfClassNames )
 		{
-			ClassFile classFile = new ClassFile( obfClassName );
-			
 			// separate the classes
-			ClassMapping classMapping = m_mappings.getClassByObf( classFile.getName() );
+			ClassMapping classMapping = m_mappings.getClassByObf( obfClassName );
 			if( classMapping != null )
 			{
-				deobfClasses.put( classFile, classMapping.getDeobfName() );
+				deobfClasses.add( classMapping.getDeobfName() );
 			}
-			else if( classFile.isInPackage() )
+			else if( obfClassName.indexOf( '/' ) >= 0 )
 			{
-				deobfClasses.put( classFile, classFile.getName() );
+				// this class is in a package and therefore is not obfuscated
+				deobfClasses.add( obfClassName );
 			}
 			else
 			{
-				obfClasses.add( classFile );
+				obfClasses.add( obfClassName );
 			}
 		}
 	}
 	
-	public SourceIndex getSource( final ClassFile classFile )
+	public SourceIndex getSource( String className )
 	{
 		// is this class deobfuscated?
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
 		// the decompiler only sees the deobfuscated class, so we need to load it by the deobfuscated name
-		String deobfName = classFile.getName();
-		ClassMapping classMapping = m_mappings.getClassByObf( classFile.getName() );
+		ClassMapping classMapping = m_mappings.getClassByObf( className );
 		if( classMapping != null )
 		{
-			deobfName = classMapping.getDeobfName();
+			className = classMapping.getDeobfName();
 		}
 		
 		// decompile it!
-		TypeDefinition resolvedType = new MetadataSystem( m_settings.getTypeLoader() ).lookupType( deobfName ).resolve();
+		TypeDefinition resolvedType = new MetadataSystem( m_settings.getTypeLoader() ).lookupType( className ).resolve();
 		DecompilerContext context = new DecompilerContext();
 		context.setCurrentType( resolvedType );
 		context.setSettings( m_settings );

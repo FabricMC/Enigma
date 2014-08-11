@@ -49,6 +49,7 @@ public class FieldEntry implements Entry, Serializable
 		m_name = other.m_name;
 	}
 	
+	@Override
 	public ClassEntry getClassEntry( )
 	{
 		return m_classEntry;

@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -66,7 +65,6 @@ import jsyntaxpane.DefaultSyntaxKit;
 
 import com.google.common.collect.Lists;
 
-import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
@@ -79,35 +77,34 @@ import cuchaz.enigma.mapping.MethodEntry;
 
 public class Gui
 {
-	private static Comparator<ClassFile> m_obfuscatedClassSorter;
-	private static Comparator<Map.Entry<ClassFile,String>> m_deobfuscatedClassSorter;
+	private static Comparator<String> m_obfClassSorter;
+	private static Comparator<String> m_deobfClassSorter;
 	
 	static
 	{
-		m_obfuscatedClassSorter = new Comparator<ClassFile>( )
+		m_obfClassSorter = new Comparator<String>( )
 		{
 			@Override
-			public int compare( ClassFile a, ClassFile b )
+			public int compare( String a, String b )
 			{
-				if( a.getName().length() != b.getName().length() )
+				if( a.length() != b.length() )
 				{
-					return a.getName().length() - b.getName().length();
+					return a.length() - b.length();
 				}
-				
-				return a.getName().compareTo( b.getName() );
+				return a.compareTo( b );
 			}
 		};
 		
-		m_deobfuscatedClassSorter = new Comparator<Map.Entry<ClassFile,String>>( )
+		m_deobfClassSorter = new Comparator<String>( )
 		{
 			@Override
-			public int compare( Map.Entry<ClassFile,String> a, Map.Entry<ClassFile,String> b )
+			public int compare( String a, String b )
 			{
 				// I can never keep this rule straight when writing these damn things...
 				// a < b => -1, a == b => 0, a > b => +1
 				
-				String[] aparts = a.getValue().split( "\\." );
-				String[] bparts = b.getValue().split( "\\." );
+				String[] aparts = a.split( "\\." );
+				String[] bparts = b.split( "\\." );
 				for( int i=0; true; i++ )
 				{
 					if( i >= aparts.length )
@@ -133,8 +130,8 @@ public class Gui
 	
 	// controls
 	private JFrame m_frame;
-	private JList<ClassFile> m_obfClasses;
-	private JList<Map.Entry<ClassFile,String>> m_deobfClasses;
+	private JList<String> m_obfClasses;
+	private JList<String> m_deobfClasses;
 	private JEditorPane m_editor;
 	private JPanel m_infoPanel;
 	private BoxHighlightPainter m_obfuscatedHighlightPainter;
@@ -170,10 +167,10 @@ public class Gui
 		pane.setLayout( new BorderLayout() );
 		
 		// init obfuscated classes list
-		m_obfClasses = new JList<ClassFile>();
+		m_obfClasses = new JList<String>();
 		m_obfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 		m_obfClasses.setLayoutOrientation( JList.VERTICAL );
-		m_obfClasses.setCellRenderer( new ObfuscatedClassListCellRenderer() );
+		m_obfClasses.setCellRenderer( new ClassListCellRenderer() );
 		m_obfClasses.addMouseListener( new MouseAdapter()
 		{
 			@Override
@@ -181,10 +178,10 @@ public class Gui
 			{
 				if( event.getClickCount() == 2 )
 				{
-					ClassFile selected = m_obfClasses.getSelectedValue();
+					String selected = m_obfClasses.getSelectedValue();
 					if( selected != null )
 					{
-						m_controller.deobfuscateClass( selected );
+						m_controller.openEntry( new ClassEntry( selected ) );
 					}
 				}
 			}
@@ -196,10 +193,10 @@ public class Gui
 		obfPanel.add( obfScroller, BorderLayout.CENTER );
 		
 		// init deobfuscated classes list
-		m_deobfClasses = new JList<Map.Entry<ClassFile,String>>();
+		m_deobfClasses = new JList<String>();
 		m_deobfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
 		m_deobfClasses.setLayoutOrientation( JList.VERTICAL );
-		m_deobfClasses.setCellRenderer( new DeobfuscatedClassListCellRenderer() );
+		m_deobfClasses.setCellRenderer( new ClassListCellRenderer() );
 		m_deobfClasses.addMouseListener( new MouseAdapter()
 		{
 			@Override
@@ -207,10 +204,10 @@ public class Gui
 			{
 				if( event.getClickCount() == 2 )
 				{
-					Map.Entry<ClassFile,String> selected = m_deobfClasses.getSelectedValue();
+					String selected = m_deobfClasses.getSelectedValue();
 					if( selected != null )
 					{
-						m_controller.deobfuscateClass( selected.getKey() );
+						m_controller.openEntry( new ClassEntry( selected ) );
 					}
 				}
 			}
@@ -330,7 +327,7 @@ public class Gui
 					ClassInheritanceTreeNode node = (ClassInheritanceTreeNode)m_inheritanceTree.getSelectionPath().getLastPathComponent();
 					if( node != null )
 					{
-						m_controller.deobfuscateClass( new ClassFile( node.getObfClassName() ) );
+						m_controller.openEntry( new ClassEntry( node.getDeobfClassName() ) );
 					}
 				}
 			}
@@ -566,31 +563,31 @@ public class Gui
 		m_closeMappingsMenu.setEnabled( false );
 	}
 	
-	public void setObfClasses( List<ClassFile> obfClasses )
+	public void setObfClasses( List<String> obfClasses )
 	{
 		if( obfClasses != null )
 		{
-			Vector<ClassFile> sortedClasses = new Vector<ClassFile>( obfClasses );
-			Collections.sort( sortedClasses, m_obfuscatedClassSorter );
+			Vector<String> sortedClasses = new Vector<String>( obfClasses );
+			Collections.sort( sortedClasses, m_obfClassSorter );
 			m_obfClasses.setListData( sortedClasses );
 		}
 		else
 		{
-			m_obfClasses.setListData( new Vector<ClassFile>() );
+			m_obfClasses.setListData( new Vector<String>() );
 		}
 	}
 	
-	public void setDeobfClasses( Map<ClassFile,String> deobfClasses )
+	public void setDeobfClasses( List<String> deobfClasses )
 	{
 		if( deobfClasses != null )
 		{
-			Vector<Map.Entry<ClassFile,String>> sortedClasses = new Vector<Map.Entry<ClassFile,String>>( deobfClasses.entrySet() );
-			Collections.sort( sortedClasses, m_deobfuscatedClassSorter );
+			Vector<String> sortedClasses = new Vector<String>( deobfClasses );
+			Collections.sort( sortedClasses, m_deobfClassSorter );
 			m_deobfClasses.setListData( sortedClasses );
 		}
 		else
 		{
-			m_deobfClasses.setListData( new Vector<Map.Entry<ClassFile,String>>() );
+			m_deobfClasses.setListData( new Vector<String>() );
 		}
 	}
 	

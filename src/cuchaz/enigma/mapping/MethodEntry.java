@@ -56,6 +56,7 @@ public class MethodEntry implements Entry, Serializable
 		m_signature = other.m_signature;
 	}
 	
+	@Override
 	public ClassEntry getClassEntry( )
 	{
 		return m_classEntry;

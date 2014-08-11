@@ -11,7 +11,6 @@
 package cuchaz.enigma.gui;
 
 import java.awt.Component;
-import java.util.Map;
 
 import javassist.bytecode.Descriptor;
 
@@ -20,24 +19,20 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import cuchaz.enigma.ClassFile;
-
-public class DeobfuscatedClassListCellRenderer implements ListCellRenderer<Map.Entry<ClassFile,String>>
+public class ClassListCellRenderer implements ListCellRenderer<String>
 {
 	private DefaultListCellRenderer m_defaultRenderer;
 	
-	public DeobfuscatedClassListCellRenderer( )
+	public ClassListCellRenderer( )
 	{
 		m_defaultRenderer = new DefaultListCellRenderer();
 	}
 	
 	@Override
-	public Component getListCellRendererComponent( JList<? extends Map.Entry<ClassFile,String>> list, Map.Entry<ClassFile,String> entry, int index, boolean isSelected, boolean hasFocus )
+	public Component getListCellRendererComponent( JList<? extends String> list, String className, int index, boolean isSelected, boolean hasFocus )
 	{
-		JLabel label = (JLabel)m_defaultRenderer.getListCellRendererComponent( list, entry, index, isSelected, hasFocus );
-		
-		label.setText( Descriptor.toJavaName( entry.getValue() ) );
-		
+		JLabel label = (JLabel)m_defaultRenderer.getListCellRendererComponent( list, className, index, isSelected, hasFocus );
+		label.setText( Descriptor.toJavaName( className ) );
 		return label;
 	}
 }

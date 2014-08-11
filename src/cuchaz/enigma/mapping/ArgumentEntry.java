@@ -65,6 +65,7 @@ public class ArgumentEntry implements Entry, Serializable
 		return m_name;
 	}
 	
+	@Override
 	public ClassEntry getClassEntry( )
 	{
 		return m_methodEntry.getClassEntry();

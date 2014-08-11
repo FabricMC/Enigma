@@ -15,12 +15,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
-import cuchaz.enigma.ClassFile;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
@@ -37,7 +34,7 @@ public class GuiController
 	private Deobfuscator m_deobfuscator;
 	private Gui m_gui;
 	private SourceIndex m_index;
-	private ClassFile m_currentFile;
+	private ClassEntry m_currentClass;
 	private boolean m_isDirty;
 	
 	public GuiController( Gui gui )
@@ -45,7 +42,7 @@ public class GuiController
 		m_gui = gui;
 		m_deobfuscator = null;
 		m_index = null;
-		m_currentFile = null;
+		m_currentClass = null;
 		m_isDirty = false;
 	}
 	
@@ -95,12 +92,6 @@ public class GuiController
 		m_gui.setMappingsFile( null );
 		refreshClasses();
 		refreshCurrentClass();
-	}
-	
-	public void deobfuscateClass( ClassFile classFile )
-	{
-		m_currentFile = classFile;
-		deobfuscate( m_currentFile );
 	}
 	
 	public Token getToken( int pos )
@@ -168,10 +159,10 @@ public class GuiController
 	public void openEntry( Entry obfEntry )
 	{
 		Entry deobfEntry = m_deobfuscator.deobfuscateEntry( obfEntry );
-		if( !m_currentFile.getName().equals( obfEntry.getClassName() ) )
+		if( m_currentClass == null || !m_currentClass.equals( deobfEntry.getClassEntry() ) )
 		{
-			m_currentFile = new ClassFile( obfEntry.getClassName() );
-			deobfuscate( m_currentFile, deobfEntry );
+			m_currentClass = new ClassEntry( obfEntry.getClassEntry() );
+			deobfuscate( m_currentClass, deobfEntry );
 		}
 		else
 		{
@@ -181,8 +172,8 @@ public class GuiController
 	
 	private void refreshClasses( )
 	{
-		List<ClassFile> obfClasses = Lists.newArrayList();
-		Map<ClassFile,String> deobfClasses = Maps.newHashMap();
+		List<String> obfClasses = Lists.newArrayList();
+		List<String> deobfClasses = Lists.newArrayList();
 		m_deobfuscator.getSeparatedClasses( obfClasses, deobfClasses );
 		m_gui.setObfClasses( obfClasses );
 		m_gui.setDeobfClasses( deobfClasses );
@@ -195,20 +186,14 @@ public class GuiController
 	
 	private void refreshCurrentClass( Entry entryToShow )
 	{
-		if( m_currentFile != null )
+		if( m_currentClass != null )
 		{
-			deobfuscate( m_currentFile, entryToShow );
+			deobfuscate( m_currentClass, entryToShow );
 		}
 	}
-
-	private void deobfuscate( final ClassFile classFile )
-	{
-		deobfuscate( classFile, null );
-	}
 	
-	private void deobfuscate( final ClassFile classFile, final Entry entryToShow )
+	private void deobfuscate( final ClassEntry classEntry, final Entry entryToShow )
 	{
-		m_currentFile = classFile;
 		m_gui.setSource( "(deobfuscating...)" );
 		
 		// run the deobfuscator in a separate thread so we don't block the GUI event queue
@@ -218,7 +203,7 @@ public class GuiController
 			public void run( )
 			{
 				// decompile,deobfuscate the bytecode
-				m_index = m_deobfuscator.getSource( classFile );
+				m_index = m_deobfuscator.getSource( classEntry.getClassName() );
 				m_gui.setSource( m_index.getSource() );
 				if( entryToShow != null )
 				{

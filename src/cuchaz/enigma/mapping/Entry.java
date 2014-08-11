@@ -14,4 +14,5 @@ public interface Entry
 {
 	String getName( );
 	String getClassName( );
+	ClassEntry getClassEntry( );
 }
