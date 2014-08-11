@@ -79,16 +79,16 @@ public class SourceIndex
 		return token;
 	}
 	
-	public void add( AstNode node, Entry entry )
+	public void add( AstNode node, Entry deobfEntry )
 	{
-		m_tokens.put( getToken( node ), entry );
+		m_tokens.put( getToken( node ), deobfEntry );
 	}
 	
-	public void addDeclaration( AstNode node, Entry entry )
+	public void addDeclaration( AstNode node, Entry deobfEntry )
 	{
 		Token token = getToken( node );
-		m_tokens.put( token, entry );
-		m_declarations.put( entry, token );
+		m_tokens.put( token, deobfEntry );
+		m_declarations.put( deobfEntry, token );
 	}
 	
 	public Token getToken( int pos )
@@ -120,9 +120,9 @@ public class SourceIndex
 		return m_tokens.keySet();
 	}
 	
-	public Token getDeclarationToken( Entry entry )
+	public Token getDeclarationToken( Entry deobfEntry )
 	{
-		return m_declarations.get( entry );
+		return m_declarations.get( deobfEntry );
 	}
 	
 	private int toPos( int line, int col )

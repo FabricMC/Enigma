@@ -15,6 +15,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Stack;
 
 import com.google.common.collect.Lists;
 
@@ -36,6 +37,7 @@ public class GuiController
 	private SourceIndex m_index;
 	private ClassEntry m_currentClass;
 	private boolean m_isDirty;
+	private Stack<Entry> m_entryStack;
 	
 	public GuiController( Gui gui )
 	{
@@ -44,6 +46,7 @@ public class GuiController
 		m_index = null;
 		m_currentClass = null;
 		m_isDirty = false;
+		m_entryStack = new Stack<Entry>();
 	}
 	
 	public boolean isDirty( )
@@ -153,21 +156,42 @@ public class GuiController
 		m_deobfuscator.rename( obfEntry, newName );
 		m_isDirty = true;
 		refreshClasses();
-		refreshCurrentClass( m_deobfuscator.deobfuscateEntry( obfEntry ) );
+		refreshCurrentClass( obfEntry );
 	}
 	
-	public void openEntry( Entry obfEntry )
+	public void openEntry( Entry entry )
 	{
-		Entry deobfEntry = m_deobfuscator.deobfuscateEntry( obfEntry );
-		if( m_currentClass == null || !m_currentClass.equals( deobfEntry.getClassEntry() ) )
+		// go to the entry
+		Entry obfEntry = m_deobfuscator.obfuscateEntry( entry );
+		if( m_currentClass == null || !m_currentClass.equals( obfEntry.getClassEntry() ) )
 		{
 			m_currentClass = new ClassEntry( obfEntry.getClassEntry() );
-			deobfuscate( m_currentClass, deobfEntry );
+			deobfuscate( m_currentClass, obfEntry );
 		}
 		else
 		{
-			m_gui.showToken( m_index.getDeclarationToken( deobfEntry ) );
+			m_gui.showToken( m_index.getDeclarationToken( m_deobfuscator.deobfuscateEntry( obfEntry ) ) );
 		}
+		
+		if( m_entryStack.isEmpty() || !m_entryStack.peek().equals( obfEntry ) )
+		{
+			// update the stack
+			m_entryStack.push( obfEntry );
+		}
+	}
+	
+	public void openPreviousEntry( )
+	{
+		if( hasPreviousEntry() )
+		{
+			m_entryStack.pop();
+			openEntry( m_entryStack.peek() );
+		}
+	}
+	
+	public boolean hasPreviousEntry( )
+	{
+		return m_entryStack.size() > 1;
 	}
 	
 	private void refreshClasses( )
@@ -184,15 +208,15 @@ public class GuiController
 		refreshCurrentClass( null );
 	}
 	
-	private void refreshCurrentClass( Entry entryToShow )
+	private void refreshCurrentClass( Entry obfEntryToShow )
 	{
 		if( m_currentClass != null )
 		{
-			deobfuscate( m_currentClass, entryToShow );
+			deobfuscate( m_currentClass, obfEntryToShow );
 		}
 	}
 	
-	private void deobfuscate( final ClassEntry classEntry, final Entry entryToShow )
+	private void deobfuscate( final ClassEntry classEntry, final Entry obfEntryToShow )
 	{
 		m_gui.setSource( "(deobfuscating...)" );
 		
@@ -205,9 +229,9 @@ public class GuiController
 				// decompile,deobfuscate the bytecode
 				m_index = m_deobfuscator.getSource( classEntry.getClassName() );
 				m_gui.setSource( m_index.getSource() );
-				if( entryToShow != null )
+				if( obfEntryToShow != null )
 				{
-					m_gui.showToken( m_index.getDeclarationToken( entryToShow ) );
+					m_gui.showToken( m_index.getDeclarationToken( m_deobfuscator.deobfuscateEntry( obfEntryToShow ) ) );
 				}
 				
 				// set the highlighted tokens

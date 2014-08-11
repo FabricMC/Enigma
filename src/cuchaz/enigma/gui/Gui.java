@@ -147,6 +147,7 @@ public class Gui
 	private JMenuItem m_renameMenu;
 	private JMenuItem m_inheritanceMenu;
 	private JMenuItem m_openEntryMenu;
+	private JMenuItem m_openPreviousMenu;
 	
 	// state
 	private EntryPair<Entry> m_selectedEntryPair;
@@ -282,6 +283,7 @@ public class Gui
 				}
 			} );
 			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_R, 0 ) );
+			menu.setEnabled( false );
 			popupMenu.add( menu );
 			m_renameMenu = menu;
 		}
@@ -295,8 +297,9 @@ public class Gui
 					showInheritance();
 				}
 			} );
-			popupMenu.add( menu );
 			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_I, 0 ) );
+			menu.setEnabled( false );
+			popupMenu.add( menu );
 			m_inheritanceMenu = menu;
 		}
 		{
@@ -309,9 +312,25 @@ public class Gui
 					openEntry();
 				}
 			} );
-			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_O, 0 ) );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_N, 0 ) );
+			menu.setEnabled( false );
 			popupMenu.add( menu );
 			m_openEntryMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem( "Go to previous" );
+			menu.addActionListener( new ActionListener( )
+			{
+				@Override
+				public void actionPerformed( ActionEvent event )
+				{
+					m_controller.openPreviousEntry();
+				}
+			} );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
+			menu.setEnabled( false );
+			popupMenu.add( menu );
+			m_openPreviousMenu = menu;
 		}
 		
 		// init inheritance panel
@@ -327,7 +346,7 @@ public class Gui
 					ClassInheritanceTreeNode node = (ClassInheritanceTreeNode)m_inheritanceTree.getSelectionPath().getLastPathComponent();
 					if( node != null )
 					{
-						m_controller.openEntry( new ClassEntry( node.getDeobfClassName() ) );
+						m_controller.openEntry( new ClassEntry( node.getObfClassName() ) );
 					}
 				}
 			}
@@ -747,6 +766,7 @@ public class Gui
 		
 		m_inheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
 		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry );
+		m_openPreviousMenu.setEnabled( m_controller.hasPreviousEntry() );
 	}
 	
 	private void startRename( )
