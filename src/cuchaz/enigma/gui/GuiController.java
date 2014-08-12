@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.MethodCallsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
@@ -146,6 +147,16 @@ public class GuiController
 			obfMethodEntry
 		);
 		return MethodInheritanceTreeNode.findNode( rootNode, obfMethodEntry );
+	}
+	
+	public MethodCallsTreeNode getMethodCalls( MethodEntry obfMethodEntry )
+	{
+		MethodCallsTreeNode rootNode = new MethodCallsTreeNode(
+			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+			obfMethodEntry
+		);
+		rootNode.load( m_deobfuscator.getJarIndex(), true );
+		return rootNode;
 	}
 	
 	public void rename( Entry obfEntry, String newName )

@@ -67,6 +67,7 @@ import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.MethodCallsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
@@ -139,6 +140,8 @@ public class Gui
 	private BoxHighlightPainter m_obfuscatedHighlightPainter;
 	private BoxHighlightPainter m_deobfuscatedHighlightPainter;
 	private JTree m_inheritanceTree;
+	private JTree m_callsTree;
+	private JTabbedPane m_tabs;
 	
 	// dynamic menu items
 	private JMenuItem m_closeJarMenu;
@@ -147,9 +150,10 @@ public class Gui
 	private JMenuItem m_saveMappingsAsMenu;
 	private JMenuItem m_closeMappingsMenu;
 	private JMenuItem m_renameMenu;
-	private JMenuItem m_inheritanceMenu;
+	private JMenuItem m_showInheritanceMenu;
 	private JMenuItem m_openEntryMenu;
 	private JMenuItem m_openPreviousMenu;
+	private JMenuItem m_showCallsMenu;
 	
 	// state
 	private EntryPair<Entry> m_selectedEntryPair;
@@ -267,6 +271,10 @@ public class Gui
 					case KeyEvent.VK_P:
 						m_controller.openPreviousEntry();
 					break;
+					
+					case KeyEvent.VK_C:
+						showCalls();
+					break;
 				}
 			}
 		} );
@@ -306,7 +314,22 @@ public class Gui
 			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_I, 0 ) );
 			menu.setEnabled( false );
 			popupMenu.add( menu );
-			m_inheritanceMenu = menu;
+			m_showInheritanceMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem( "Show Calls" );
+			menu.addActionListener( new ActionListener( )
+			{
+				@Override
+				public void actionPerformed( ActionEvent event )
+				{
+					showCalls();
+				}
+			} );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_C, 0 ) );
+			menu.setEnabled( false );
+			popupMenu.add( menu );
+			m_showCallsMenu = menu;
 		}
 		{
 			JMenuItem menu = new JMenuItem( "Go to Declaration" );
@@ -350,12 +373,13 @@ public class Gui
 				if( event.getClickCount() == 2 )
 				{
 					// get the selected node
-					Object node = m_inheritanceTree.getSelectionPath().getLastPathComponent();
-					if( node == null )
+					TreePath path = m_inheritanceTree.getSelectionPath();
+					if( path == null )
 					{
 						return;
 					}
 					
+					Object node = path.getLastPathComponent();
 					if( node instanceof ClassInheritanceTreeNode )
 					{
 						m_controller.openEntry( new ClassEntry( ((ClassInheritanceTreeNode)node).getObfClassName() ) );
@@ -375,17 +399,47 @@ public class Gui
 		inheritancePanel.setLayout( new BorderLayout() );
 		inheritancePanel.add( new JScrollPane( m_inheritanceTree ) );
 		
+		// init call panel
+		m_callsTree = new JTree();
+		m_callsTree.setModel( null );
+		m_callsTree.addMouseListener( new MouseAdapter( )
+		{
+			@Override
+			public void mouseClicked( MouseEvent event )
+			{
+				if( event.getClickCount() == 2 )
+				{
+					// get the selected node
+					TreePath path = m_callsTree.getSelectionPath();
+					if( path == null )
+					{
+						return;
+					}
+					
+					Object node = path.getLastPathComponent();
+					if( node instanceof MethodCallsTreeNode )
+					{
+						m_controller.openEntry( ((MethodCallsTreeNode)node).getMethodEntry() );
+					}
+				}
+			}
+		} );
+		JPanel callPanel = new JPanel();
+		callPanel.setLayout( new BorderLayout() );
+		callPanel.add( new JScrollPane( m_callsTree ) );
+		
 		// layout controls
 		JSplitPane splitLeft = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
-		splitLeft.setPreferredSize( new Dimension( 200, 0 ) );
+		splitLeft.setPreferredSize( new Dimension( 250, 0 ) );
 		JPanel centerPanel = new JPanel();
 		centerPanel.setLayout( new BorderLayout() );
 		centerPanel.add( m_infoPanel, BorderLayout.NORTH );
 		centerPanel.add( sourceScroller, BorderLayout.CENTER );
-		JTabbedPane tabbedPane = new JTabbedPane();
-		tabbedPane.setPreferredSize( new Dimension( 200, 0 ) );
-		tabbedPane.addTab( "Inheritance", inheritancePanel );
-		JSplitPane splitRight = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabbedPane );
+		m_tabs = new JTabbedPane();
+		m_tabs.setPreferredSize( new Dimension( 250, 0 ) );
+		m_tabs.addTab( "Inheritance", inheritancePanel );
+		m_tabs.addTab( "Method Calls", callPanel );
+		JSplitPane splitRight = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, m_tabs );
 		splitRight.setResizeWeight( 1 ); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
 		JSplitPane splitCenter = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, splitLeft, splitRight );
@@ -784,7 +838,8 @@ public class Gui
 		
 		showEntryPair( m_selectedEntryPair );
 		
-		m_inheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
+		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
+		m_showCallsMenu.setEnabled( isMethodEntry );
 		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry );
 		m_openPreviousMenu.setEnabled( m_controller.hasPreviousEntry() );
 	}
@@ -879,6 +934,24 @@ public class Gui
 			m_inheritanceTree.setSelectionRow( m_inheritanceTree.getRowForPath( path ) );
 		}
 		
+		m_tabs.setSelectedIndex( 0 );
+		redraw();
+	}
+	
+	private void showCalls( )
+	{
+		if( m_selectedEntryPair == null )
+		{
+			return;
+		}
+		
+		if( m_selectedEntryPair.obf instanceof MethodEntry )
+		{
+			MethodCallsTreeNode node = m_controller.getMethodCalls( (MethodEntry)m_selectedEntryPair.obf );
+			m_callsTree.setModel( new DefaultTreeModel( node ) );
+		}
+		
+		m_tabs.setSelectedIndex( 1 );
 		redraw();
 	}
 	

@@ -14,19 +14,28 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-
 import javassist.ByteArrayClassPath;
+import javassist.CannotCompileException;
 import javassist.ClassPool;
+import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
-import javassist.bytecode.MethodInfo;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -34,16 +43,35 @@ import cuchaz.enigma.mapping.Translator;
 
 public class JarIndex
 {
+	private Set<String> m_obfClassNames;
 	private Ancestries m_ancestries;
-	private Multimap<String,String> m_methodImplementations;
+	private Multimap<String,MethodEntry> m_methodImplementations;
+	private Multimap<MethodEntry,MethodEntry> m_methodCalls;
 	
-	public JarIndex( )
+	public JarIndex( JarFile jar )
 	{
+		m_obfClassNames = Sets.newHashSet();
 		m_ancestries = new Ancestries();
 		m_methodImplementations = HashMultimap.create();
+		m_methodCalls = HashMultimap.create();
+		
+		// read the class names
+		Enumeration<JarEntry> enumeration = jar.entries();
+		while( enumeration.hasMoreElements() )
+		{
+			JarEntry entry = enumeration.nextElement();
+			
+			// filter out non-classes
+			if( entry.isDirectory() || !entry.getName().endsWith( ".class" ) )
+			{
+				continue;
+			}
+			
+			String className = entry.getName().substring( 0, entry.getName().length() - 6 );
+			m_obfClassNames.add( Descriptor.toJvmName( className ) );
+		}
 	}
 	
-	@SuppressWarnings( "unchecked" )
 	public void indexJar( InputStream in )
 	throws IOException
 	{
@@ -89,7 +117,10 @@ public class JarIndex
 			{
 				CtClass c = classPool.get( className );
 				m_ancestries.addSuperclass( c.getName(), c.getClassFile().getSuperclass() );
-				addMethodImplementations( c.getName(), (List<MethodInfo>)c.getClassFile().getMethods() );
+				for( CtBehavior behavior : c.getDeclaredBehaviors() )
+				{
+					indexBehavior( behavior );
+				}
 			}
 			catch( NotFoundException ex )
 			{
@@ -98,12 +129,53 @@ public class JarIndex
 		}
 	}
 	
-	private void addMethodImplementations( String name, List<MethodInfo> methods )
+	private void indexBehavior( CtBehavior behavior )
 	{
-		for( MethodInfo method : methods )
+		// get the method entry
+		String className = Descriptor.toJvmName( behavior.getDeclaringClass().getName() );
+		final MethodEntry methodEntry = new MethodEntry(
+			new ClassEntry( className ),
+			behavior.getName(),
+			behavior.getSignature()
+		);
+		
+		// index implementation
+		m_methodImplementations.put( className, methodEntry );
+		
+		// index method calls
+		try
 		{
-			m_methodImplementations.put( name, getMethodKey( method.getName(), method.getDescriptor() ) );
+			behavior.instrument( new ExprEditor( )
+			{
+				@Override
+				public void edit( MethodCall call )
+				{
+					// is this a jar class?
+					String className = Descriptor.toJvmName( call.getClassName() );
+					if( !m_obfClassNames.contains( className ) )
+					{
+						return;
+					}
+					
+					// make entry for the called method
+					MethodEntry calledMethodEntry = new MethodEntry(
+						new ClassEntry( className ),
+						call.getMethodName(),
+						call.getSignature()
+					);
+					m_methodCalls.put( calledMethodEntry, methodEntry );
+				}
+			} );
 		}
+		catch( CannotCompileException ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	public Set<String> getObfClassNames( )
+	{
+		return m_obfClassNames;
 	}
 	
 	public Ancestries getAncestries( )
@@ -118,7 +190,7 @@ public class JarIndex
 	
 	public boolean isMethodImplemented( String className, String methodName, String methodSignature )
 	{
-		Collection<String> implementations = m_methodImplementations.get( className );
+		Collection<MethodEntry> implementations = m_methodImplementations.get( className );
 		if( implementations == null )
 		{
 			return false;
@@ -167,6 +239,11 @@ public class JarIndex
 		rootNode.load( this, true );
 		
 		return rootNode;
+	}
+	
+	public Collection<MethodEntry> getMethodCallers( MethodEntry methodEntry )
+	{
+		return m_methodCalls.get( methodEntry );
 	}
 	
 	private String getMethodKey( String name, String signature )

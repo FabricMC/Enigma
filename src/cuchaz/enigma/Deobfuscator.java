@@ -15,12 +15,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import com.google.common.collect.Lists;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.DecompilerContext;
@@ -53,7 +50,6 @@ public class Deobfuscator
 	private JarIndex m_jarIndex;
 	private Mappings m_mappings;
 	private Renamer m_renamer;
-	private List<String> m_obfClassNames;
 	
 	public Deobfuscator( File file )
 	throws IOException
@@ -65,33 +61,13 @@ public class Deobfuscator
 		InputStream jarIn = null;
 		try
 		{
-			m_jarIndex = new JarIndex();
+			m_jarIndex = new JarIndex( m_jar );
 			jarIn = new FileInputStream( m_file );
 			m_jarIndex.indexJar( jarIn );
 		}
 		finally
 		{
 			Util.closeQuietly( jarIn );
-		}
-		
-		// get the obf class names
-		m_obfClassNames = Lists.newArrayList();
-		{
-			Enumeration<JarEntry> entries = m_jar.entries();
-			while( entries.hasMoreElements() )
-			{
-				JarEntry entry = entries.nextElement();
-				
-				// skip everything but class files
-				if( !entry.getName().endsWith( ".class" ) )
-				{
-					continue;
-				}
-				
-				// get the class name from the file
-				String className = entry.getName().substring( 0, entry.getName().length() - 6 );
-				m_obfClassNames.add( className );
-			}
 		}
 		
 		// config the decompiler
@@ -140,7 +116,7 @@ public class Deobfuscator
 	
 	public void getSeparatedClasses( List<String> obfClasses, List<String> deobfClasses )
 	{
-		for( String obfClassName : m_obfClassNames )
+		for( String obfClassName : m_jarIndex.getObfClassNames() )
 		{
 			// separate the classes
 			ClassMapping classMapping = m_mappings.getClassByObf( obfClassName );
@@ -302,15 +278,15 @@ public class Deobfuscator
 		if( obfEntry instanceof ClassEntry )
 		{
 			// obf classes must be in the list
-			return m_obfClassNames.contains( obfEntry.getName() );
+			return m_jarIndex.getObfClassNames().contains( obfEntry.getName() );
 		}
 		else if( obfEntry instanceof FieldEntry )
 		{
-			return m_obfClassNames.contains( ((FieldEntry)obfEntry).getClassName() );
+			return m_jarIndex.getObfClassNames().contains( ((FieldEntry)obfEntry).getClassName() );
 		}
 		else if( obfEntry instanceof MethodEntry )
 		{
-			return m_obfClassNames.contains( ((MethodEntry)obfEntry).getClassName() );
+			return m_jarIndex.getObfClassNames().contains( ((MethodEntry)obfEntry).getClassName() );
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
