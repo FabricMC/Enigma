@@ -260,8 +260,12 @@ public class Gui
 						showInheritance();
 					break;
 					
-					case KeyEvent.VK_O:
+					case KeyEvent.VK_N:
 						openEntry();
+					break;
+					
+					case KeyEvent.VK_P:
+						m_controller.openPreviousEntry();
 					break;
 				}
 			}
