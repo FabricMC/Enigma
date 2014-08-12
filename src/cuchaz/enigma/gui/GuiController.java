@@ -132,7 +132,7 @@ public class GuiController
 	
 	public ClassInheritanceTreeNode getClassInheritance( ClassEntry obfClassEntry )
 	{
-		ClassInheritanceTreeNode rootNode = m_deobfuscator.getAncestries().getClassInheritance(
+		ClassInheritanceTreeNode rootNode = m_deobfuscator.getJarIndex().getClassInheritance(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
 			obfClassEntry
 		);
@@ -141,7 +141,7 @@ public class GuiController
 	
 	public MethodInheritanceTreeNode getMethodInheritance( MethodEntry obfMethodEntry )
 	{
-		MethodInheritanceTreeNode rootNode = m_deobfuscator.getAncestries().getMethodInheritance(
+		MethodInheritanceTreeNode rootNode = m_deobfuscator.getJarIndex().getMethodInheritance(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
 			obfMethodEntry
 		);

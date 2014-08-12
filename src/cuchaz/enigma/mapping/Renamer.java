@@ -15,17 +15,17 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import cuchaz.enigma.analysis.Ancestries;
+import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 
 public class Renamer
 {
-	private Ancestries m_ancestries;
+	private JarIndex m_index;
 	private Mappings m_mappings;
 	
-	public Renamer( Ancestries ancestries, Mappings mappings )
+	public Renamer( JarIndex index, Mappings mappings )
 	{
-		m_ancestries = ancestries;
+		m_index = index;
 		m_mappings = mappings;
 	}
 	
@@ -61,7 +61,7 @@ public class Renamer
 	{
 		// get the method tree
 		setMethodTreeName(
-			m_ancestries.getMethodInheritance( m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ), obf ),
+			m_index.getMethodInheritance( m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ), obf ),
 			deobfName
 		);
 	}
@@ -90,7 +90,7 @@ public class Renamer
 			classMapping = createClassMapping( obf.getClassEntry() );
 		}
 		
-		String deobfSignature = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
+		String deobfSignature = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
 		classMapping.setMethodNameAndSignature( obf.getName(), obf.getSignature(), deobfName, deobfSignature );
 		
 		// TODO: update ancestor/descendant methods in other classes in the inheritance hierarchy too
@@ -129,7 +129,7 @@ public class Renamer
 	
 	private void updateDeobfMethodSignatures( )
 	{
-		Translator translator = m_mappings.getTranslator( m_ancestries, TranslationDirection.Deobfuscating );
+		Translator translator = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating );
 		for( ClassMapping classMapping : m_mappings.m_classesByObf.values() )
 		{
 			classMapping.updateDeobfMethodSignatures( translator );

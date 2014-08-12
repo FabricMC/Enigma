@@ -79,11 +79,11 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode
 		}
 	}
 	
-	public void load( Ancestries ancestries, boolean recurse )
+	public void load( JarIndex index, boolean recurse )
 	{
 		// get all the child nodes
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-		for( String subclassName : ancestries.getSubclasses( m_entry.getClassName() ) )
+		for( String subclassName : index.getAncestries().getSubclasses( m_entry.getClassName() ) )
 		{
 			MethodEntry methodEntry = new MethodEntry(
 				new ClassEntry( subclassName ),
@@ -93,7 +93,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode
 			nodes.add( new MethodInheritanceTreeNode(
 				m_deobfuscatingTranslator,
 				methodEntry,
-				ancestries.isMethodImplemented( subclassName, m_entry.getName(), m_entry.getSignature() )
+				index.isMethodImplemented( subclassName, m_entry.getName(), m_entry.getSignature() )
 			) );
 		}
 		
@@ -107,7 +107,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode
 		{
 			for( MethodInheritanceTreeNode node : nodes )
 			{
-				node.load( ancestries, true );
+				node.load( index, true );
 			}
 		}
 	}

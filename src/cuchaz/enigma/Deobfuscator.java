@@ -31,7 +31,7 @@ import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 
-import cuchaz.enigma.analysis.Ancestries;
+import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.mapping.ArgumentEntry;
@@ -50,7 +50,7 @@ public class Deobfuscator
 	private File m_file;
 	private JarFile m_jar;
 	private DecompilerSettings m_settings;
-	private Ancestries m_ancestries;
+	private JarIndex m_jarIndex;
 	private Mappings m_mappings;
 	private Renamer m_renamer;
 	private List<String> m_obfClassNames;
@@ -65,9 +65,9 @@ public class Deobfuscator
 		InputStream jarIn = null;
 		try
 		{
-			m_ancestries = new Ancestries();
+			m_jarIndex = new JarIndex();
 			jarIn = new FileInputStream( m_file );
-			m_ancestries.readFromJar( jarIn );
+			m_jarIndex.indexJar( jarIn );
 		}
 		finally
 		{
@@ -107,9 +107,9 @@ public class Deobfuscator
 		return m_file.getName();
 	}
 	
-	public Ancestries getAncestries( )
+	public JarIndex getJarIndex( )
 	{
-		return m_ancestries;
+		return m_jarIndex;
 	}
 	
 	public Mappings getMappings( )
@@ -123,7 +123,7 @@ public class Deobfuscator
 			val = new Mappings();
 		}
 		m_mappings = val;
-		m_renamer = new Renamer( m_ancestries, m_mappings );
+		m_renamer = new Renamer( m_jarIndex, m_mappings );
 		
 		// update decompiler options
 		m_settings.setTypeLoader( new TranslatingTypeLoader(
@@ -135,7 +135,7 @@ public class Deobfuscator
 	
 	public Translator getTranslator( TranslationDirection direction )
 	{
-		return m_mappings.getTranslator( m_ancestries, direction );
+		return m_mappings.getTranslator( m_jarIndex.getAncestries(), direction );
 	}
 	
 	public void getSeparatedClasses( List<String> obfClasses, List<String> deobfClasses )
