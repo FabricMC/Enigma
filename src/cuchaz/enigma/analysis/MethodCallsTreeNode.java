@@ -10,12 +10,15 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
-import java.util.List;
+import java.util.Set;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
+import cuchaz.enigma.mapping.ConstructorEntry;
+import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
 
@@ -24,72 +27,117 @@ public class MethodCallsTreeNode extends DefaultMutableTreeNode
 	private static final long serialVersionUID = -3658163700783307520L;
 	
 	private Translator m_deobfuscatingTranslator;
-	private MethodEntry m_entry;
+	private MethodEntry m_methodEntry;
+	private ConstructorEntry m_constructorEntry;
 	
 	public MethodCallsTreeNode( Translator deobfuscatingTranslator, MethodEntry entry )
 	{
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
-		m_entry = entry;
+		m_methodEntry = entry;
+		m_constructorEntry = null;
+	}
+	
+	public MethodCallsTreeNode( Translator deobfuscatingTranslator, ConstructorEntry entry )
+	{
+		m_deobfuscatingTranslator = deobfuscatingTranslator;
+		m_methodEntry = null;
+		m_constructorEntry = entry;
 	}
 	
 	public MethodEntry getMethodEntry( )
 	{
-		return m_entry;
+		return m_methodEntry;
 	}
 	
-	public String getDeobfClassName( )
+	public ConstructorEntry getConstructorEntry( )
 	{
-		return m_deobfuscatingTranslator.translateClass( m_entry.getClassName() );
+		return m_constructorEntry;
 	}
 	
-	public String getDeobfMethodName( )
+	public Entry getEntry( )
 	{
-		return m_deobfuscatingTranslator.translate( m_entry );
+		if( m_methodEntry != null )
+		{
+			return m_methodEntry;
+		}
+		else if( m_constructorEntry != null )
+		{
+			return m_constructorEntry;
+		}
+		throw new Error( "Illegal state!" );
 	}
 	
 	@Override
 	public String toString( )
 	{
-		String className = getDeobfClassName();
-		if( className == null )
+		if( m_methodEntry != null )
 		{
-			className = m_entry.getClassName();
+			String className = m_deobfuscatingTranslator.translateClass( m_methodEntry.getClassName() );
+			if( className == null )
+			{
+				className = m_methodEntry.getClassName();
+			}
+			
+			String methodName = m_deobfuscatingTranslator.translate( m_methodEntry );
+			if( methodName == null )
+			{
+				methodName = m_methodEntry.getName();
+			}
+			return className + "." + methodName + "()";
 		}
-		
-		String methodName = getDeobfMethodName();
-		if( methodName == null )
+		else if( m_constructorEntry != null )
 		{
-			methodName = m_entry.getName();
+			String className = m_deobfuscatingTranslator.translateClass( m_constructorEntry.getClassName() );
+			if( className == null )
+			{
+				className = m_constructorEntry.getClassName();
+			}
+			return className + "()";
 		}
-		return className + "." + methodName + "()";
+		throw new Error( "Illegal state!" );
 	}
 	
 	public void load( JarIndex index, boolean recurse )
 	{
 		// get all the child nodes
-		List<MethodCallsTreeNode> nodes = Lists.newArrayList();
-		for( MethodEntry entry : index.getMethodCallers( m_entry ) )
+		for( Entry entry : index.getMethodCallers( getEntry() ) )
 		{
-			nodes.add( new MethodCallsTreeNode( m_deobfuscatingTranslator, entry ) );
-		}
-		
-		// add them to this node
-		for( MethodCallsTreeNode node : nodes )
-		{
-			this.add( node );
-		}
-		
-		if( recurse )
-		{
-			for( MethodCallsTreeNode node : nodes )
+			if( entry instanceof MethodEntry )
 			{
-				// don't recurse into self
-				if( node.getMethodEntry().equals( m_entry ) )
+				add( new MethodCallsTreeNode( m_deobfuscatingTranslator, (MethodEntry)entry ) );
+			}
+			else if( entry instanceof ConstructorEntry )
+			{
+				add( new MethodCallsTreeNode( m_deobfuscatingTranslator, (ConstructorEntry)entry ) );
+			}
+		}
+		
+		if( recurse && children != null )
+		{
+			for( Object child : children )
+			{
+				if( child instanceof MethodCallsTreeNode )
 				{
-					continue;
+					MethodCallsTreeNode node = (MethodCallsTreeNode)child;
+					
+					// don't recurse into ancestor
+					Set<Entry> ancestors = Sets.newHashSet();
+					TreeNode n = (TreeNode)node;
+					while( n.getParent() != null )
+					{
+						n = n.getParent();
+						if( n instanceof MethodCallsTreeNode )
+						{
+							ancestors.add( ((MethodCallsTreeNode)n).getEntry() );
+						}
+					}
+					if( ancestors.contains( node.getEntry() ) )
+					{
+						continue;
+					}
+					
+					node.load( index, true );
 				}
-				
-				node.load( index, true );
 			}
 		}
 	}

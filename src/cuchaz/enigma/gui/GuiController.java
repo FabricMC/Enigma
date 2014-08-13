@@ -21,13 +21,16 @@ import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.FieldCallsTreeNode;
 import cuchaz.enigma.analysis.MethodCallsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
+import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -118,6 +121,10 @@ public class GuiController
 		}
 		
 		Entry deobfEntry = m_index.getEntry( token );
+		if( deobfEntry == null )
+		{
+			return null;
+		}
 		return new EntryPair<Entry>( m_deobfuscator.obfuscateEntry( deobfEntry ), deobfEntry );
 	}
 	
@@ -149,12 +156,37 @@ public class GuiController
 		return MethodInheritanceTreeNode.findNode( rootNode, obfMethodEntry );
 	}
 	
-	public MethodCallsTreeNode getMethodCalls( MethodEntry obfMethodEntry )
+	public FieldCallsTreeNode getFieldCalls( FieldEntry obfFieldEntry )
 	{
-		MethodCallsTreeNode rootNode = new MethodCallsTreeNode(
+		FieldCallsTreeNode rootNode = new FieldCallsTreeNode(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
-			obfMethodEntry
+			obfFieldEntry
 		);
+		rootNode.load( m_deobfuscator.getJarIndex(), true );
+		return rootNode;
+	}
+	
+	public MethodCallsTreeNode getMethodCalls( Entry obfEntry )
+	{
+		MethodCallsTreeNode rootNode;
+		if( obfEntry instanceof MethodEntry )
+		{
+			rootNode = new MethodCallsTreeNode(
+				m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+				(MethodEntry)obfEntry
+			);
+		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			rootNode = new MethodCallsTreeNode(
+				m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+				(ConstructorEntry)obfEntry
+			);
+		}
+		else
+		{
+			throw new IllegalArgumentException( "entry must be a MethodEntry or a ConstructorEntry!" );
+		}
 		rootNode.load( m_deobfuscator.getJarIndex(), true );
 		return rootNode;
 	}

@@ -93,6 +93,7 @@ import com.strobel.decompiler.patterns.Pattern;
 
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 
@@ -158,7 +159,9 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	public Void visitConstructorDeclaration( ConstructorDeclaration node, SourceIndex index )
 	{
 		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
-		index.add( node.getNameToken(), new ClassEntry( def.getDeclaringType().getInternalName() ) );
+		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
+		ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, def.getSignature() );
+		index.addDeclaration( node.getNameToken(), constructorEntry );
 		
 		return recurse( node, index );
 	}

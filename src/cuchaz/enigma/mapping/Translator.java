@@ -135,6 +135,14 @@ public class Translator
 		);
 	}
 	
+	public ConstructorEntry translateEntry( ConstructorEntry in )
+	{
+		return new ConstructorEntry(
+			translateEntry( in.getClassEntry() ),
+			translateSignature( in.getSignature() )
+		);
+	}
+	
 	public String translate( ArgumentEntry in )
 	{
 		for( String className : getSelfAndAncestors( in.getClassName() ) )

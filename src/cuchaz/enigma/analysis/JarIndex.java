@@ -27,17 +27,26 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
+import javassist.expr.ConstructorCall;
 import javassist.expr.ExprEditor;
+import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
+import javassist.expr.NewExpr;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
+import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
 
@@ -46,7 +55,8 @@ public class JarIndex
 	private Set<String> m_obfClassNames;
 	private Ancestries m_ancestries;
 	private Multimap<String,MethodEntry> m_methodImplementations;
-	private Multimap<MethodEntry,MethodEntry> m_methodCalls;
+	private Multimap<Entry,Entry> m_methodCalls;
+	private Multimap<FieldEntry,Entry> m_fieldCalls;
 	
 	public JarIndex( JarFile jar )
 	{
@@ -54,6 +64,7 @@ public class JarIndex
 		m_ancestries = new Ancestries();
 		m_methodImplementations = HashMultimap.create();
 		m_methodCalls = HashMultimap.create();
+		m_fieldCalls = HashMultimap.create();
 		
 		// read the class names
 		Enumeration<JarEntry> enumeration = jar.entries();
@@ -133,14 +144,30 @@ public class JarIndex
 	{
 		// get the method entry
 		String className = Descriptor.toJvmName( behavior.getDeclaringClass().getName() );
-		final MethodEntry methodEntry = new MethodEntry(
-			new ClassEntry( className ),
-			behavior.getName(),
-			behavior.getSignature()
-		);
-		
-		// index implementation
-		m_methodImplementations.put( className, methodEntry );
+		final Entry thisEntry;
+		if( behavior instanceof CtMethod )
+		{
+			MethodEntry methodEntry = new MethodEntry(
+				new ClassEntry( className ),
+				behavior.getName(),
+				behavior.getSignature()
+			);
+			thisEntry = methodEntry;
+			
+			// index implementation
+			m_methodImplementations.put( className, methodEntry );
+		}
+		else if( behavior instanceof CtConstructor )
+		{
+			thisEntry = new ConstructorEntry(
+				new ClassEntry( className ),
+				behavior.getSignature()
+			);
+		}
+		else
+		{
+			throw new IllegalArgumentException( "behavior must be a method or a constructor!" );
+		}
 		
 		// index method calls
 		try
@@ -150,20 +177,53 @@ public class JarIndex
 				@Override
 				public void edit( MethodCall call )
 				{
-					// is this a jar class?
 					String className = Descriptor.toJvmName( call.getClassName() );
-					if( !m_obfClassNames.contains( className ) )
-					{
-						return;
-					}
-					
-					// make entry for the called method
 					MethodEntry calledMethodEntry = new MethodEntry(
 						new ClassEntry( className ),
 						call.getMethodName(),
 						call.getSignature()
 					);
-					m_methodCalls.put( calledMethodEntry, methodEntry );
+					m_methodCalls.put( calledMethodEntry, thisEntry );
+				}
+				
+				@Override
+				public void edit( FieldAccess call )
+				{
+					String className = Descriptor.toJvmName( call.getClassName() );
+					FieldEntry calledFieldEntry = new FieldEntry(
+						new ClassEntry( className ),
+						call.getFieldName()
+					);
+					m_fieldCalls.put( calledFieldEntry, thisEntry );
+				}
+				
+				@Override
+				public void edit( ConstructorCall call )
+				{
+					String className = Descriptor.toJvmName( call.getClassName() );
+					ConstructorEntry calledConstructorEntry = new ConstructorEntry(
+						new ClassEntry( className ),
+						call.getSignature()
+					);
+					m_methodCalls.put( calledConstructorEntry, thisEntry );
+				}
+				
+				@Override
+				public void edit( NewExpr call )
+				{
+					String className = Descriptor.toJvmName( call.getClassName() );
+					ConstructorEntry calledConstructorEntry = new ConstructorEntry(
+						new ClassEntry( className ),
+						call.getSignature()
+					);
+					
+					// TEMP
+					if( className.equals( "bgw" ) )
+					{
+						System.out.println( calledConstructorEntry + " called by " + thisEntry );
+					}
+					
+					m_methodCalls.put( calledConstructorEntry, thisEntry );
 				}
 			} );
 		}
@@ -202,7 +262,9 @@ public class JarIndex
 	public ClassInheritanceTreeNode getClassInheritance( Translator deobfuscatingTranslator, ClassEntry obfClassEntry )
 	{
 		// get the root node
-		List<String> ancestry = m_ancestries.getAncestry( obfClassEntry.getName() );
+		List<String> ancestry = Lists.newArrayList();
+		ancestry.add( obfClassEntry.getName() );
+		ancestry.addAll( m_ancestries.getAncestry( obfClassEntry.getName() ) );
 		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode( deobfuscatingTranslator, ancestry.get( ancestry.size() - 1 ) );
 		
 		// expand all children recursively
@@ -241,9 +303,14 @@ public class JarIndex
 		return rootNode;
 	}
 	
-	public Collection<MethodEntry> getMethodCallers( MethodEntry methodEntry )
+	public Collection<Entry> getFieldCallers( FieldEntry fieldEntry )
 	{
-		return m_methodCalls.get( methodEntry );
+		return m_fieldCalls.get( fieldEntry );
+	}
+	
+	public Collection<Entry> getMethodCallers( Entry entry )
+	{
+		return m_methodCalls.get( entry );
 	}
 	
 	private String getMethodKey( String name, String signature )

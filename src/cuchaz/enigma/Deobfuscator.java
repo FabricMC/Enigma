@@ -34,6 +34,7 @@ import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
+import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Mappings;
@@ -185,6 +186,10 @@ public class Deobfuscator
 		{
 			m_renamer.setMethodTreeName( (MethodEntry)obfEntry, newName );
 		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			m_renamer.setClassName( obfEntry.getClassEntry(), newName );
+		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
 			m_renamer.setArgumentName( (ArgumentEntry)obfEntry, newName );
@@ -210,6 +215,10 @@ public class Deobfuscator
 		{
 			return translator.translateEntry( (MethodEntry)deobfEntry );
 		}
+		else if( deobfEntry instanceof ConstructorEntry )
+		{
+			return translator.translateEntry( (ConstructorEntry)deobfEntry );
+		}
 		else if( deobfEntry instanceof ArgumentEntry )
 		{
 			return translator.translateEntry( (ArgumentEntry)deobfEntry );
@@ -234,6 +243,10 @@ public class Deobfuscator
 		else if( obfEntry instanceof MethodEntry )
 		{
 			return translator.translateEntry( (MethodEntry)obfEntry );
+		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			return translator.translateEntry( (ConstructorEntry)obfEntry );
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
@@ -263,6 +276,11 @@ public class Deobfuscator
 			String deobfName = translator.translate( (MethodEntry)obfEntry );
 			return deobfName != null && !deobfName.equals( obfEntry.getName() );
 		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			String deobfName = translator.translate( obfEntry.getClassEntry() );
+			return deobfName != null && !deobfName.equals( obfEntry.getClassName() );
+		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
 			return translator.translate( (ArgumentEntry)obfEntry ) != null;
@@ -282,16 +300,20 @@ public class Deobfuscator
 		}
 		else if( obfEntry instanceof FieldEntry )
 		{
-			return m_jarIndex.getObfClassNames().contains( ((FieldEntry)obfEntry).getClassName() );
+			return m_jarIndex.getObfClassNames().contains( obfEntry.getClassName() );
 		}
 		else if( obfEntry instanceof MethodEntry )
 		{
-			return m_jarIndex.getObfClassNames().contains( ((MethodEntry)obfEntry).getClassName() );
+			return m_jarIndex.getObfClassNames().contains( obfEntry.getClassName() );
+		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			return m_jarIndex.getObfClassNames().contains( obfEntry.getClassName() );
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
-			// arguments only appear in method delcarations
-			// since we only show declrations for obf classes, these are always obfuscated
+			// arguments only appear in method declarations
+			// since we only show declarations for obf classes, these are always obfuscated
 			return true;
 		}
 		

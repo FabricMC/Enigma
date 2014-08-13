@@ -67,11 +67,13 @@ import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.FieldCallsTreeNode;
 import cuchaz.enigma.analysis.MethodCallsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
@@ -419,7 +421,7 @@ public class Gui
 					Object node = path.getLastPathComponent();
 					if( node instanceof MethodCallsTreeNode )
 					{
-						m_controller.openEntry( ((MethodCallsTreeNode)node).getMethodEntry() );
+						m_controller.openEntry( ((MethodCallsTreeNode)node).getEntry() );
 					}
 				}
 			}
@@ -438,7 +440,7 @@ public class Gui
 		m_tabs = new JTabbedPane();
 		m_tabs.setPreferredSize( new Dimension( 250, 0 ) );
 		m_tabs.addTab( "Inheritance", inheritancePanel );
-		m_tabs.addTab( "Method Calls", callPanel );
+		m_tabs.addTab( "Call Graph", callPanel );
 		JSplitPane splitRight = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, m_tabs );
 		splitRight.setResizeWeight( 1 ); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
@@ -770,6 +772,10 @@ public class Gui
 		{
 			showMethodEntryPair( (EntryPair<? extends MethodEntry>)pair );
 		}
+		else if( pair.deobf instanceof ConstructorEntry )
+		{
+			showConstructorEntryPair( (EntryPair<? extends ConstructorEntry>)pair );
+		}
 		else if( pair.deobf instanceof ArgumentEntry )
 		{
 			showArgumentEntryPair( (EntryPair<? extends ArgumentEntry>)pair );
@@ -800,6 +806,12 @@ public class Gui
 		addNameValue( m_infoPanel, "Signature", pair.deobf.getSignature() );
 	}
 	
+	private void showConstructorEntryPair( EntryPair<? extends ConstructorEntry> pair )
+	{
+		addNameValue( m_infoPanel, "Constructor", pair.deobf.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Signature", pair.deobf.getSignature() );
+	}
+	
 	private void showArgumentEntryPair( EntryPair<? extends ArgumentEntry> pair )
 	{
 		addNameValue( m_infoPanel, "Argument", pair.deobf.getName() );
@@ -815,7 +827,7 @@ public class Gui
 		container.add( panel );
 		
 		JLabel label = new JLabel( name + ":", JLabel.RIGHT );
-		label.setPreferredSize( new Dimension( 80, label.getPreferredSize().height ) );
+		label.setPreferredSize( new Dimension( 100, label.getPreferredSize().height ) );
 		panel.add( label );
 		
 		panel.add( unboldLabel( new JLabel( value, JLabel.LEFT ) ) );
@@ -824,23 +836,27 @@ public class Gui
 	private void onCaretMove( int pos )
 	{
 		Token token = m_controller.getToken( pos );
-		m_renameMenu.setEnabled( token != null );
-		if( token == null )
-		{
-			clearEntryPair();
-			return;
-		}
+		boolean isToken = token != null;
 		
 		m_selectedEntryPair = m_controller.getEntryPair( token );
-		boolean isClassEntry = m_selectedEntryPair.obf instanceof ClassEntry;
-		boolean isFieldEntry = m_selectedEntryPair.obf instanceof FieldEntry;
-		boolean isMethodEntry = m_selectedEntryPair.obf instanceof MethodEntry;
+		boolean isClassEntry = isToken && m_selectedEntryPair.obf instanceof ClassEntry;
+		boolean isFieldEntry = isToken && m_selectedEntryPair.obf instanceof FieldEntry;
+		boolean isMethodEntry = isToken && m_selectedEntryPair.obf instanceof MethodEntry;
+		boolean isConstructorEntry = isToken && m_selectedEntryPair.obf instanceof ConstructorEntry;
 		
-		showEntryPair( m_selectedEntryPair );
+		if( isToken )
+		{
+			showEntryPair( m_selectedEntryPair );
+		}
+		else
+		{
+			clearEntryPair();
+		}
 		
-		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry );
-		m_showCallsMenu.setEnabled( isMethodEntry );
-		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry );
+		m_renameMenu.setEnabled( isToken );
+		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry || isConstructorEntry );
+		m_showCallsMenu.setEnabled( isFieldEntry || isMethodEntry || isConstructorEntry );
+		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openPreviousMenu.setEnabled( m_controller.hasPreviousEntry() );
 	}
 	
@@ -945,9 +961,19 @@ public class Gui
 			return;
 		}
 		
-		if( m_selectedEntryPair.obf instanceof MethodEntry )
+		if( m_selectedEntryPair.obf instanceof FieldEntry )
+		{
+			FieldCallsTreeNode node = m_controller.getFieldCalls( (FieldEntry)m_selectedEntryPair.obf );
+			m_callsTree.setModel( new DefaultTreeModel( node ) );
+		}
+		else if( m_selectedEntryPair.obf instanceof MethodEntry )
 		{
 			MethodCallsTreeNode node = m_controller.getMethodCalls( (MethodEntry)m_selectedEntryPair.obf );
+			m_callsTree.setModel( new DefaultTreeModel( node ) );
+		}
+		else if( m_selectedEntryPair.obf instanceof ConstructorEntry )
+		{
+			MethodCallsTreeNode node = m_controller.getMethodCalls( (ConstructorEntry)m_selectedEntryPair.obf );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
 		
