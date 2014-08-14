@@ -14,7 +14,7 @@ package cuchaz.enigma;
 public class Constants
 {
 	public static final String Name = "Enigma";
-	public static final String Version = "0.1";
+	public static final String Version = "0.1 beta";
 	public static final String Url = "http://www.cuchazinteractive.com/enigma";
 	public static final int MiB = 1024*1024; // 1 mebibyte
 	public static final int KiB = 1024;      // 1 kebibyte
