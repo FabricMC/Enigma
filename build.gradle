@@ -64,6 +64,9 @@ dependencies
 
 fatJar
 {
+	from ".", {
+		include "*.txt"
+	}
 	manifest
 	{
 		attributes(
