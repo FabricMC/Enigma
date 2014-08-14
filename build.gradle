@@ -1,14 +1,25 @@
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2-rc1'
+    }
+}
+
 apply plugin: "java"
 apply plugin: "eclipse"
 apply plugin: "maven"
+apply plugin: "fatjar"
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 group = "com.cuchazinteractive"
 archivesBaseName = "enigma"
-version = "0.1"
+version = "0.1b"
 
 sourceSets
 {
@@ -43,7 +54,6 @@ repositories
 
 dependencies
 {
-	compile files( "${System.properties['java.home']}/../lib/tools.jar" )
 	compile fileTree( dir: "libs", include: "*.jar" )
 	compile "de.sciss:jsyntaxpane:1.0.0"
 	compile "com.google.guava:guava:17.0"
@@ -52,10 +62,15 @@ dependencies
 	testCompile "junit:junit:4.11"
 }
 
-uploadArchives
+fatJar
 {
-	repositories.mavenDeployer
+	manifest
 	{
-		repository( url: "file://${project.projectDir}/../maven" )
+		attributes(
+			"Title": archivesBaseName,
+			"Manifest-Version": "1.0",
+			"Version": version,
+			"Main-Class" : "cuchaz.enigma.Main"
+		)
 	}
 }
