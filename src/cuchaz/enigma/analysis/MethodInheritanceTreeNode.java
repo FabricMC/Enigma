@@ -93,7 +93,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode
 			nodes.add( new MethodInheritanceTreeNode(
 				m_deobfuscatingTranslator,
 				methodEntry,
-				index.isMethodImplemented( subclassName, m_entry.getName(), m_entry.getSignature() )
+				index.isMethodImplemented( methodEntry )
 			) );
 		}
 		

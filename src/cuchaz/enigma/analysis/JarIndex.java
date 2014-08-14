@@ -238,19 +238,13 @@ public class JarIndex
 	
 	public boolean isMethodImplemented( MethodEntry methodEntry )
 	{
-		return isMethodImplemented( methodEntry.getClassName(), methodEntry.getName(), methodEntry.getSignature() );
-	}
-	
-	public boolean isMethodImplemented( String className, String methodName, String methodSignature )
-	{
-		Collection<MethodEntry> implementations = m_methodImplementations.get( className );
+		Collection<MethodEntry> implementations = m_methodImplementations.get( methodEntry.getClassName() );
 		if( implementations == null )
 		{
 			return false;
 		}
-		return implementations.contains( getMethodKey( methodName, methodSignature ) );
+		return implementations.contains( methodEntry );
 	}
-	
 
 	public ClassInheritanceTreeNode getClassInheritance( Translator deobfuscatingTranslator, ClassEntry obfClassEntry )
 	{
@@ -272,7 +266,12 @@ public class JarIndex
 		String baseImplementationClassName = obfMethodEntry.getClassName();
 		for( String ancestorClassName : m_ancestries.getAncestry( obfMethodEntry.getClassName() ) )
 		{
-			if( isMethodImplemented( ancestorClassName, obfMethodEntry.getName(), obfMethodEntry.getSignature() ) )
+			MethodEntry ancestorMethodEntry = new MethodEntry(
+				new ClassEntry( ancestorClassName ),
+				obfMethodEntry.getName(),
+				obfMethodEntry.getSignature()
+			);
+			if( isMethodImplemented( ancestorMethodEntry ) )
 			{
 				baseImplementationClassName = ancestorClassName;
 			}
@@ -304,10 +303,5 @@ public class JarIndex
 	public Collection<Entry> getMethodCallers( Entry entry )
 	{
 		return m_methodCalls.get( entry );
-	}
-	
-	private String getMethodKey( String name, String signature )
-	{
-		return name + signature;
 	}
 }
