@@ -158,7 +158,7 @@ public class Gui
 	private JMenuItem m_showCallsMenu;
 	
 	// state
-	private EntryPair<Entry> m_selectedEntryPair;
+	private EntryPair<? extends Entry> m_selectedEntryPair;
 	private JFileChooser m_jarFileChooser;
 	private JFileChooser m_mappingsFileChooser;
 	
@@ -749,7 +749,7 @@ public class Gui
 	}
 	
 	@SuppressWarnings( "unchecked" )
-	private void showEntryPair( EntryPair<Entry> pair )
+	private void showEntryPair( EntryPair<? extends Entry> pair )
 	{
 		if( pair == null )
 		{
@@ -762,23 +762,23 @@ public class Gui
 		m_infoPanel.removeAll();
 		if( pair.deobf instanceof ClassEntry )
 		{
-			showClassEntryPair( (EntryPair<? extends ClassEntry>)pair );
+			showClassEntryPair( (EntryPair<ClassEntry>)pair );
 		}
 		else if( pair.deobf instanceof FieldEntry )
 		{
-			showFieldEntryPair( (EntryPair<? extends FieldEntry>)pair );
+			showFieldEntryPair( (EntryPair<FieldEntry>)pair );
 		}
 		else if( pair.deobf instanceof MethodEntry )
 		{
-			showMethodEntryPair( (EntryPair<? extends MethodEntry>)pair );
+			showMethodEntryPair( (EntryPair<MethodEntry>)pair );
 		}
 		else if( pair.deobf instanceof ConstructorEntry )
 		{
-			showConstructorEntryPair( (EntryPair<? extends ConstructorEntry>)pair );
+			showConstructorEntryPair( (EntryPair<ConstructorEntry>)pair );
 		}
 		else if( pair.deobf instanceof ArgumentEntry )
 		{
-			showArgumentEntryPair( (EntryPair<? extends ArgumentEntry>)pair );
+			showArgumentEntryPair( (EntryPair<ArgumentEntry>)pair );
 		}
 		else
 		{
@@ -788,31 +788,31 @@ public class Gui
 		redraw();
 	}
 	
-	private void showClassEntryPair( EntryPair<? extends ClassEntry> pair )
+	private void showClassEntryPair( EntryPair<ClassEntry> pair )
 	{
 		addNameValue( m_infoPanel, "Class", pair.deobf.getName() );
 	}
 	
-	private void showFieldEntryPair( EntryPair<? extends FieldEntry> pair )
+	private void showFieldEntryPair( EntryPair<FieldEntry> pair )
 	{
 		addNameValue( m_infoPanel, "Field", pair.deobf.getName() );
 		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
 	}
 	
-	private void showMethodEntryPair( EntryPair<? extends MethodEntry> pair )
+	private void showMethodEntryPair( EntryPair<MethodEntry> pair )
 	{
 		addNameValue( m_infoPanel, "Method", pair.deobf.getName() );
 		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
 		addNameValue( m_infoPanel, "Signature", pair.deobf.getSignature() );
 	}
 	
-	private void showConstructorEntryPair( EntryPair<? extends ConstructorEntry> pair )
+	private void showConstructorEntryPair( EntryPair<ConstructorEntry> pair )
 	{
 		addNameValue( m_infoPanel, "Constructor", pair.deobf.getClassEntry().getName() );
 		addNameValue( m_infoPanel, "Signature", pair.deobf.getSignature() );
 	}
 	
-	private void showArgumentEntryPair( EntryPair<? extends ArgumentEntry> pair )
+	private void showArgumentEntryPair( EntryPair<ArgumentEntry> pair )
 	{
 		addNameValue( m_infoPanel, "Argument", pair.deobf.getName() );
 		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
