@@ -216,13 +216,6 @@ public class JarIndex
 						new ClassEntry( className ),
 						call.getSignature()
 					);
-					
-					// TEMP
-					if( className.equals( "bgw" ) )
-					{
-						System.out.println( calledConstructorEntry + " called by " + thisEntry );
-					}
-					
 					m_methodCalls.put( calledConstructorEntry, thisEntry );
 				}
 			} );
