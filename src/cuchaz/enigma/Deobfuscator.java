@@ -11,9 +11,7 @@
 package cuchaz.enigma;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.jar.JarFile;
@@ -58,18 +56,9 @@ public class Deobfuscator
 		m_file = file;
 		m_jar = new JarFile( m_file );
 		
-		// build the ancestries
-		InputStream jarIn = null;
-		try
-		{
-			m_jarIndex = new JarIndex( m_jar );
-			jarIn = new FileInputStream( m_file );
-			m_jarIndex.indexJar( jarIn );
-		}
-		finally
-		{
-			Util.closeQuietly( jarIn );
-		}
+		// build the jar index
+		m_jarIndex = new JarIndex();
+		m_jarIndex.indexJar( m_jar );
 		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();
@@ -105,6 +94,7 @@ public class Deobfuscator
 		// update decompiler options
 		m_settings.setTypeLoader( new TranslatingTypeLoader(
 			m_jar,
+			m_jarIndex,
 			getTranslator( TranslationDirection.Obfuscating ),
 			getTranslator( TranslationDirection.Deobfuscating )
 		) );

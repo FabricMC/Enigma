@@ -11,3 +11,5 @@ syntax: regexp
 ^libs$
 syntax: regexp
 ^build$
+syntax: regexp
+^data$

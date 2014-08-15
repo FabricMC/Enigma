@@ -10,27 +10,21 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
-import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
-import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
-import javassist.NotFoundException;
+import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.FieldInfo;
 import javassist.expr.ConstructorCall;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
@@ -39,10 +33,10 @@ import javassist.expr.NewExpr;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
-import cuchaz.enigma.Constants;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
@@ -57,89 +51,52 @@ public class JarIndex
 	private Multimap<String,MethodEntry> m_methodImplementations;
 	private Multimap<Entry,Entry> m_methodCalls;
 	private Multimap<FieldEntry,Entry> m_fieldCalls;
+	private Multimap<String,String> m_innerClasses;
+	private Map<String,String> m_outerClasses;
 	
-	public JarIndex( JarFile jar )
+	public JarIndex( )
 	{
 		m_obfClassNames = Sets.newHashSet();
 		m_ancestries = new Ancestries();
 		m_methodImplementations = HashMultimap.create();
 		m_methodCalls = HashMultimap.create();
 		m_fieldCalls = HashMultimap.create();
-		
-		// read the class names
-		Enumeration<JarEntry> enumeration = jar.entries();
-		while( enumeration.hasMoreElements() )
+		m_innerClasses = HashMultimap.create();
+		m_outerClasses = Maps.newHashMap();
+	}
+	
+	public void indexJar( JarFile jar )
+	{
+		// pass 1: read the class names
+		for( JarEntry entry : JarClassIterator.getClassEntries( jar ) )
 		{
-			JarEntry entry = enumeration.nextElement();
-			
-			// filter out non-classes
-			if( entry.isDirectory() || !entry.getName().endsWith( ".class" ) )
-			{
-				continue;
-			}
-			
 			String className = entry.getName().substring( 0, entry.getName().length() - 6 );
 			m_obfClassNames.add( Descriptor.toJvmName( className ) );
 		}
-	}
-	
-	public void indexJar( InputStream in )
-	throws IOException
-	{
-		ClassPool classPool = new ClassPool();
 		
-		ZipInputStream zin = new ZipInputStream( in );
-		ZipEntry entry;
-		while( ( entry = zin.getNextEntry() ) != null )
+		// pass 2: index the types, methods
+		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
-			// filter out non-classes
-			if( entry.isDirectory() || !entry.getName().endsWith( ".class" ) )
+			m_ancestries.addSuperclass( c.getName(), c.getClassFile().getSuperclass() );
+			for( CtBehavior behavior : c.getDeclaredBehaviors() )
 			{
-				continue;
+				indexBehavior( behavior );
 			}
-			
-			// read the class into a buffer
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			byte[] buf = new byte[Constants.KiB];
-			int totalNumBytesRead = 0;
-			while( zin.available() > 0 )
+		}
+		
+		// pass 2: index inner classes
+		for( CtClass c : JarClassIterator.classes( jar ) )
+		{
+			String outerClassName = isInnerClass( c );
+			if( outerClassName != null )
 			{
-				int numBytesRead = zin.read( buf );
-				if( numBytesRead < 0 )
-				{
-					break;
-				}
-				bos.write( buf, 0, numBytesRead );
-				
-				// sanity checking
-				totalNumBytesRead += numBytesRead;
-				if( totalNumBytesRead > Constants.MiB )
-				{
-					throw new Error( "Class file " + entry.getName() + " larger than 1 MiB! Something is wrong!" );
-				}
-			}
-			
-			// determine the class name (ie chop off the ".class")
-			String className = Descriptor.toJavaName( entry.getName().substring( 0, entry.getName().length() - ".class".length() ) );
-			
-			// get a javassist handle for the class
-			classPool.insertClassPath( new ByteArrayClassPath( className, bos.toByteArray() ) );
-			try
-			{
-				CtClass c = classPool.get( className );
-				m_ancestries.addSuperclass( c.getName(), c.getClassFile().getSuperclass() );
-				for( CtBehavior behavior : c.getDeclaredBehaviors() )
-				{
-					indexBehavior( behavior );
-				}
-			}
-			catch( NotFoundException ex )
-			{
-				throw new Error( "Unable to load class: " + className );
+				String innerClassName = Descriptor.toJvmName( c.getName() );
+				m_innerClasses.put( outerClassName, innerClassName );
+				m_outerClasses.put( innerClassName, outerClassName );
 			}
 		}
 	}
-	
+
 	private void indexBehavior( CtBehavior behavior )
 	{
 		// get the method entry
@@ -226,6 +183,78 @@ public class JarIndex
 		}
 	}
 	
+	@SuppressWarnings( "unchecked" )
+	private String isInnerClass( CtClass c )
+	{
+		String innerClassName = Descriptor.toJvmName( c.getName() );
+		
+		// first, is this an anonymous class?
+		// for anonymous classes:
+		//    the outer class is always a synthetic field
+		//    there's at least one constructor with the type of the synthetic field as an argument
+		//    this constructor is called exactly once by the class of the synthetic field
+		
+		for( FieldInfo field : (List<FieldInfo>)c.getClassFile().getFields() )
+		{
+			boolean isSynthetic = (field.getAccessFlags() & AccessFlag.SYNTHETIC) != 0;
+			if( !isSynthetic )
+			{
+				continue;
+			}
+			
+			// skip non-class types
+			if( !field.getDescriptor().startsWith( "L" ) )
+			{
+				continue;
+			}
+			
+			// get the outer class from the field type
+			String outerClassName = Descriptor.toJvmName( Descriptor.toClassName( field.getDescriptor() ) );
+			
+			// look for a constructor where this type is the first parameter
+			CtConstructor targetConstructor = null;
+			for( CtConstructor constructor : c.getDeclaredConstructors() )
+			{
+				String signature = Descriptor.getParamDescriptor( constructor.getMethodInfo().getDescriptor() );
+				if( Descriptor.numOfParameters( signature ) < 1 )
+				{
+					continue;
+				}
+				
+				// match the first parameter to the outer class
+				Descriptor.Iterator iter = new Descriptor.Iterator( signature );
+				int pos = iter.next();
+				if( iter.isParameter() && signature.charAt( pos ) == 'L' )
+				{
+					String argumentDesc = signature.substring( pos, signature.indexOf(';', pos) + 1 );
+					String argumentClassName = Descriptor.toJvmName( Descriptor.toClassName( argumentDesc ) );
+					if( argumentClassName.equals( outerClassName ) )
+					{
+						// is this constructor called exactly once?
+						ConstructorEntry constructorEntry = new ConstructorEntry(
+							new ClassEntry( innerClassName ),
+							constructor.getMethodInfo().getDescriptor()
+						);
+						if( this.getMethodCallers( constructorEntry ).size() == 1 )
+						{
+							targetConstructor = constructor;
+							break;
+						}
+					}
+				}
+			}
+			if( targetConstructor == null )
+			{
+				continue;
+			}
+			
+			// yeah, this is an inner class
+			return outerClassName;
+		}
+		
+		return null;
+	}
+	
 	public Set<String> getObfClassNames( )
 	{
 		return m_obfClassNames;
@@ -303,5 +332,15 @@ public class JarIndex
 	public Collection<Entry> getMethodCallers( Entry entry )
 	{
 		return m_methodCalls.get( entry );
+	}
+
+	public Collection<String> getInnerClasses( String obfOuterClassName )
+	{
+		return m_innerClasses.get( obfOuterClassName );
+	}
+	
+	public String getOuterClass( String obfInnerClassName )
+	{
+		return m_outerClasses.get( obfInnerClassName );
 	}
 }
