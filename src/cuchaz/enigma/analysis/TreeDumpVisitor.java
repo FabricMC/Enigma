@@ -10,6 +10,11 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+
 import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.languages.java.ast.Annotation;
 import com.strobel.decompiler.languages.java.ast.AnonymousObjectCreationExpression;
@@ -87,10 +92,42 @@ import com.strobel.decompiler.patterns.Pattern;
 
 public class TreeDumpVisitor implements IAstVisitor<Void, Void>
 {
+	private File m_file;
+	private Writer m_out;
+	
+	public TreeDumpVisitor( File file )
+	{
+		m_file = file;
+		m_out = null;
+	}
+	
+	@Override
+	public Void visitCompilationUnit( CompilationUnit node, Void ignored )
+	{
+		try
+		{
+			m_out = new FileWriter( m_file );
+			recurse( node, ignored );
+			m_out.close();
+			return null;
+		}
+		catch( IOException ex )
+		{
+			throw new Error( ex );
+		}
+	}
+
 	private Void recurse( AstNode node, Void ignored )
 	{
 		// show the tree
-		System.out.println( getIndent( node ) + node.getClass().getSimpleName() + dumpUserData( node ) + " " + node.getRegion() );
+		try
+		{
+			m_out.write( getIndent( node ) + node.getClass().getSimpleName() + dumpUserData( node ) + " " + node.getRegion() + "\n" );
+		}
+		catch( IOException ex )
+		{
+			throw new Error( ex );
+		}
 		
 		// recurse
 		for( final AstNode child : node.getChildren() )
@@ -374,12 +411,6 @@ public class TreeDumpVisitor implements IAstVisitor<Void, Void>
 	
 	@Override
 	public Void visitTypeParameterDeclaration( TypeParameterDeclaration node, Void ignored )
-	{
-		return recurse( node, ignored );
-	}
-	
-	@Override
-	public Void visitCompilationUnit( CompilationUnit node, Void ignored )
 	{
 		return recurse( node, ignored );
 	}

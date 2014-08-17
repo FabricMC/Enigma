@@ -13,25 +13,27 @@ package cuchaz.enigma.mapping;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Deque;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+import com.google.common.collect.Queues;
 
 import cuchaz.enigma.Util;
 
 public class MappingsReader
 {
 	public Mappings read( Reader in )
-	throws IOException
+	throws IOException, MappingParseException
 	{
 		return read( new BufferedReader( in ) );
 	}
 	
 	public Mappings read( BufferedReader in )
-	throws IOException
+	throws IOException, MappingParseException
 	{
 		Mappings mappings = new Mappings();
-		ClassMapping classMapping = null;
-		MethodMapping methodMapping = null;
+		Deque<Object> mappingStack = Queues.newArrayDeque();
 		
 		int lineNumber = 0;
 		String line = null;
@@ -47,10 +49,26 @@ public class MappingsReader
 			}
 			
 			// skip blank lines
-			line = line.trim();
-			if( line.length() <= 0 )
+			if( line.trim().length() <= 0 )
 			{
 				continue;
+			}
+			
+			// get the indent of this line
+			int indent = 0;
+			for( int i=0; i<line.length(); i++ )
+			{
+				if( line.charAt( i ) != '\t' )
+				{
+					break;
+				}
+				indent++;
+			}
+			
+			// handle stack pops
+			while( indent < mappingStack.size() )
+			{
+				mappingStack.pop();
 			}
 			
 			Scanner scanner = new Scanner( line );
@@ -63,40 +81,58 @@ public class MappingsReader
 					
 					if( token.equalsIgnoreCase( "CLASS" ) )
 					{
-						classMapping = readClass( scanner );
-						mappings.addClassMapping( classMapping );
-						methodMapping = null;
+						ClassMapping classMapping = readClass( scanner );
+						if( indent == 0 )
+						{
+							// outer class
+							mappings.addClassMapping( classMapping );
+						}
+						else if( indent == 1 )
+						{
+							// inner class
+							if( !( mappingStack.getFirst() instanceof ClassMapping ) )
+							{
+								throw new MappingParseException( lineNumber, "Unexpected CLASS entry here!" );
+							}
+							((ClassMapping)mappingStack.getFirst()).addInnerClassMapping( classMapping );
+						}
+						else
+						{
+							throw new MappingParseException( lineNumber, "Unexpected CLASS entry here!" );
+						}
+						mappingStack.push( classMapping );
 					}
 					else if( token.equalsIgnoreCase( "FIELD" ) )
 					{
-						if( classMapping == null )
+						if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof ClassMapping) )
 						{
-							throw new IllegalArgumentException( "Line " + lineNumber + ": Unexpected FIELD entry here!" );
+							throw new MappingParseException( lineNumber, "Unexpected FIELD entry here!" );
 						}
-						classMapping.addFieldMapping( readField( scanner ) );
+						((ClassMapping)mappingStack.getFirst()).addFieldMapping( readField( scanner ) );
 					}
 					else if( token.equalsIgnoreCase( "METHOD" ) )
 					{
-						if( classMapping == null )
+						if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof ClassMapping) )
 						{
-							throw new IllegalArgumentException( "Line " + lineNumber + ": Unexpected METHOD entry here!" );
+							throw new MappingParseException( lineNumber, "Unexpected METHOD entry here!" );
 						}
-						methodMapping = readMethod( scanner );
-						classMapping.addMethodMapping( methodMapping );
+						MethodMapping methodMapping = readMethod( scanner );
+						((ClassMapping)mappingStack.getFirst()).addMethodMapping( methodMapping );
+						mappingStack.push( methodMapping );
 					}
 					else if( token.equalsIgnoreCase( "ARG" ) )
 					{
-						if( classMapping == null || methodMapping == null )
+						if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof MethodMapping) )
 						{
-							throw new IllegalArgumentException( "Line " + lineNumber + ": Unexpected ARG entry here!" );
+							throw new MappingParseException( lineNumber, "Unexpected ARG entry here!" );
 						}
-						methodMapping.addArgumentMapping( readArgument( scanner ) );
+						((MethodMapping)mappingStack.getFirst()).addArgumentMapping( readArgument( scanner ) );
 					}
 				}
 			}
 			catch( NoSuchElementException ex )
 			{
-				throw new IllegalArgumentException( "Line " + lineNumber + ": malformed line!" );
+				throw new MappingParseException( lineNumber, "Malformed line!" );
 			}
 			finally
 			{

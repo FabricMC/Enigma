@@ -82,4 +82,32 @@ public class ClassEntry implements Entry, Serializable
 	{
 		return m_name;
 	}
+	
+	public boolean isInnerClass( )
+	{
+		return m_name.lastIndexOf( '$' ) >= 0;
+	}
+	
+	public String getOuterClassName( )
+	{
+		if( isInnerClass() )
+		{
+			return m_name.substring( 0, m_name.lastIndexOf( '$' ) );
+		}
+		return m_name;
+	}
+	
+	public String getInnerClassName( )
+	{
+		if( !isInnerClass() )
+		{
+			throw new Error( "This is not an inner class!" );
+		}
+		return m_name.substring( m_name.lastIndexOf( '$' ) + 1 );
+	}
+	
+	public ClassEntry getOuterClassEntry( )
+	{
+		return new ClassEntry( getOuterClassName() );
+	}
 }

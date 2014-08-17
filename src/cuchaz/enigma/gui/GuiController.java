@@ -31,6 +31,7 @@ import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -75,7 +76,7 @@ public class GuiController
 	}
 	
 	public void openMappings( File file )
-	throws IOException
+	throws IOException, MappingParseException
 	{
 		FileReader in = new FileReader( file );
 		m_deobfuscator.setMappings( new MappingsReader().read( in ) );
@@ -135,7 +136,7 @@ public class GuiController
 	
 	public boolean entryIsObfuscatedIdenfitier( Entry deobfEntry )
 	{
-		return m_deobfuscator.entryIsObfuscatedIdenfitier( m_deobfuscator.obfuscateEntry( deobfEntry ) );
+		return m_deobfuscator.isObfuscatedIdentifier( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
 	
 	public ClassInheritanceTreeNode getClassInheritance( ClassEntry obfClassEntry )

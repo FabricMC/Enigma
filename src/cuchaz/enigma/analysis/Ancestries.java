@@ -47,6 +47,26 @@ public class Ancestries implements Serializable
 		}
 	}
 	
+	public void renameClasses( Map<String,String> renames )
+	{
+		Map<String,String> newSuperclasses = Maps.newHashMap();
+		for( Map.Entry<String,String> entry : m_superclasses.entrySet() )
+		{
+			String subclass = renames.get( entry.getKey() );
+			if( subclass == null )
+			{
+				subclass = entry.getKey();
+			}
+			String superclass = renames.get( entry.getValue() );
+			if( superclass == null )
+			{
+				superclass = entry.getValue();
+			}
+			newSuperclasses.put( subclass, superclass );
+		}
+		m_superclasses = newSuperclasses;
+	}
+	
 	public String getSuperclassName( String className )
 	{
 		return m_superclasses.get( className );

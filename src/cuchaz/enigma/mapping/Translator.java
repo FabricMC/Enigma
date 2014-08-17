@@ -20,7 +20,7 @@ import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 public class Translator
 {
 	private TranslationDirection m_direction;
-	/* TEMP */ public Map<String,ClassMapping> m_classes;
+	public Map<String,ClassMapping> m_classes;
 	private Ancestries m_ancestries;
 	
 	protected Translator( TranslationDirection direction, Map<String,ClassMapping> classes, Ancestries ancestries )
@@ -30,22 +30,42 @@ public class Translator
 		m_ancestries = ancestries;
 	}
 	
-	public String translate( ClassEntry in )
+	public String translateClass( String className )
 	{
-		return translateClass( in.getName() );
+		return translate( new ClassEntry( className ) );
 	}
 	
-	public String translateClass( String in )
+	public String translate( ClassEntry in )
 	{
-		ClassMapping classIndex = m_classes.get( in );
-		if( classIndex != null )
+		ClassMapping classMapping = m_classes.get( in.getOuterClassName() );
+		if( classMapping != null )
 		{
-			return m_direction.choose(
-				classIndex.getDeobfName(),
-				classIndex.getObfName()
-			);
+			if( in.isInnerClass() )
+			{
+				// look for the inner class
+				String translatedInnerClassName = m_direction.choose(
+					classMapping.getDeobfInnerClassName( in.getInnerClassName() ),
+					classMapping.getObfInnerClassName( in.getInnerClassName() )
+				);
+				if( translatedInnerClassName != null )
+				{
+					// return outer$inner
+					String translatedOuterClassName = m_direction.choose(
+						classMapping.getDeobfName(),
+						classMapping.getObfName()
+					);
+					return translatedOuterClassName + "$" + translatedInnerClassName;
+				}
+			}
+			else
+			{
+				// just return outer
+				return m_direction.choose(
+					classMapping.getDeobfName(),
+					classMapping.getObfName()
+				);
+			}
 		}
-		
 		return null;
 	}
 	
@@ -64,21 +84,20 @@ public class Translator
 		for( String className : getSelfAndAncestors( in.getClassName() ) )
 		{
 			// look for the class
-			ClassMapping classIndex = m_classes.get( className );
-			if( classIndex != null )
+			ClassMapping classMapping = findClassMapping( new ClassEntry( className ) );
+			if( classMapping != null )
 			{
 				// look for the field
-				String deobfName = m_direction.choose(
-					classIndex.getDeobfFieldName( in.getName() ),
-					classIndex.getObfFieldName( in.getName() )
+				String translatedName = m_direction.choose(
+					classMapping.getDeobfFieldName( in.getName() ),
+					classMapping.getObfFieldName( in.getName() )
 				);
-				if( deobfName != null )
+				if( translatedName != null )
 				{
-					return deobfName;
+					return translatedName;
 				}
 			}
 		}
-		
 		return null;
 	}
 	
@@ -99,20 +118,20 @@ public class Translator
 	{
 		for( String className : getSelfAndAncestors( in.getClassName() ) )
 		{
-			// look for the class
-			ClassMapping classIndex = m_classes.get( className );
-			if( classIndex != null )
+			// look for class
+			ClassMapping classMapping = findClassMapping( new ClassEntry( className ) );
+			if( classMapping != null )
 			{
 				// look for the method
-				MethodMapping methodIndex = m_direction.choose(
-					classIndex.getMethodByObf( in.getName(), in.getSignature() ),
-					classIndex.getMethodByDeobf( in.getName(), in.getSignature() )
+				MethodMapping methodMapping = m_direction.choose(
+					classMapping.getMethodByObf( in.getName(), in.getSignature() ),
+					classMapping.getMethodByDeobf( in.getName(), in.getSignature() )
 				);
-				if( methodIndex != null )
+				if( methodMapping != null )
 				{
 					return m_direction.choose(
-						methodIndex.getDeobfName(),
-						methodIndex.getObfName()
+						methodMapping.getDeobfName(),
+						methodMapping.getObfName()
 					);
 				}
 			}
@@ -148,19 +167,19 @@ public class Translator
 		for( String className : getSelfAndAncestors( in.getClassName() ) )
 		{
 			// look for the class
-			ClassMapping classIndex = m_classes.get( className );
-			if( classIndex != null )
+			ClassMapping classMapping = findClassMapping( new ClassEntry( className ) );
+			if( classMapping != null )
 			{
 				// look for the method
-				MethodMapping methodIndex = m_direction.choose(
-					classIndex.getMethodByObf( in.getMethodName(), in.getMethodSignature() ),
-					classIndex.getMethodByDeobf( in.getMethodName(), in.getMethodSignature() )
+				MethodMapping methodMapping = m_direction.choose(
+					classMapping.getMethodByObf( in.getMethodName(), in.getMethodSignature() ),
+					classMapping.getMethodByDeobf( in.getMethodName(), in.getMethodSignature() )
 				);
-				if( methodIndex != null )
+				if( methodMapping != null )
 				{
 					return m_direction.choose(
-						methodIndex.getDeobfArgumentName( in.getIndex() ),
-						methodIndex.getObfArgumentName( in.getIndex() )
+						methodMapping.getDeobfArgumentName( in.getIndex() ),
+						methodMapping.getObfArgumentName( in.getIndex() )
 					);
 				}
 			}
@@ -206,5 +225,18 @@ public class Translator
 		ancestry.add( className );
 		ancestry.addAll( m_ancestries.getAncestry( className ) );
 		return ancestry;
+	}
+	
+	private ClassMapping findClassMapping( ClassEntry classEntry )
+	{
+		ClassMapping classMapping = m_classes.get( classEntry.getOuterClassName() );
+		if( classMapping != null && classEntry.isInnerClass() )
+		{
+			classMapping = m_direction.choose(
+				classMapping.getInnerClassByObf( classEntry.getInnerClassName() ),
+				classMapping.getInnerClassByDeobf( classEntry.getInnerClassName() )
+			);
+		}
+		return classMapping;
 	}
 }

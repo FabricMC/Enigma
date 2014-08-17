@@ -62,7 +62,6 @@ public class Deobfuscator
 		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();
-		m_settings.setShowSyntheticMembers( true );
 		
 		// init mappings
 		setMappings( new Mappings() );
@@ -109,9 +108,15 @@ public class Deobfuscator
 	{
 		for( String obfClassName : m_jarIndex.getObfClassNames() )
 		{
+			// skip inner classes
+			if( m_jarIndex.getOuterClass( obfClassName ) != null )
+			{
+				continue;
+			}
+			
 			// separate the classes
 			ClassMapping classMapping = m_mappings.getClassByObf( obfClassName );
-			if( classMapping != null )
+			if( classMapping != null && !classMapping.getObfName().equals( classMapping.getDeobfName() ) )
 			{
 				deobfClasses.add( classMapping.getDeobfName() );
 			}
@@ -151,6 +156,7 @@ public class Deobfuscator
 		// render the AST into source
 		StringWriter buf = new StringWriter();
 		root.acceptVisitor( new InsertParenthesesVisitor(), null );
+		//root.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
 		root.acceptVisitor( new JavaOutputVisitor( new PlainTextOutput( buf ), m_settings ), null );
 		
 		// build the source index
@@ -281,33 +287,30 @@ public class Deobfuscator
 		}
 	}
 
-	public boolean entryIsObfuscatedIdenfitier( Entry obfEntry )
+	public boolean isObfuscatedIdentifier( Entry obfEntry )
 	{
 		if( obfEntry instanceof ClassEntry )
 		{
-			// obf classes must be in the list
-			return m_jarIndex.getObfClassNames().contains( obfEntry.getName() );
+			if( obfEntry.getName().indexOf( '$' ) >= 0 )
+			{
+				String[] parts = obfEntry.getName().split( "\\$" );
+				assert( parts.length == 2 ); // not supporting recursively-nested classes
+				String outerClassName = parts[0];
+				String innerClassName = parts[1];
+				
+				// both classes must be in the list
+				return m_jarIndex.getObfClassNames().contains( outerClassName )
+					&& m_jarIndex.getObfClassNames().contains( innerClassName );
+			}
+			else
+			{
+				// class must be in the list
+				return m_jarIndex.getObfClassNames().contains( obfEntry.getName() );
+			}
 		}
-		else if( obfEntry instanceof FieldEntry )
+		else
 		{
-			return m_jarIndex.getObfClassNames().contains( obfEntry.getClassName() );
+			return isObfuscatedIdentifier( obfEntry.getClassEntry() );
 		}
-		else if( obfEntry instanceof MethodEntry )
-		{
-			return m_jarIndex.getObfClassNames().contains( obfEntry.getClassName() );
-		}
-		else if( obfEntry instanceof ConstructorEntry )
-		{
-			return m_jarIndex.getObfClassNames().contains( obfEntry.getClassName() );
-		}
-		else if( obfEntry instanceof ArgumentEntry )
-		{
-			// arguments only appear in method declarations
-			// since we only show declarations for obf classes, these are always obfuscated
-			return true;
-		}
-		
-		// assume everything else is not obfuscated
-		return false;
 	}
 }

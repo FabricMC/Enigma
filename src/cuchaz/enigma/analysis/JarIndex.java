@@ -10,7 +10,9 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +39,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
@@ -53,6 +56,7 @@ public class JarIndex
 	private Multimap<FieldEntry,Entry> m_fieldCalls;
 	private Multimap<String,String> m_innerClasses;
 	private Map<String,String> m_outerClasses;
+	private Set<String> m_anonymousClasses;
 	
 	public JarIndex( )
 	{
@@ -63,6 +67,7 @@ public class JarIndex
 		m_fieldCalls = HashMultimap.create();
 		m_innerClasses = HashMultimap.create();
 		m_outerClasses = Maps.newHashMap();
+		m_anonymousClasses = Sets.newHashSet();
 	}
 	
 	public void indexJar( JarFile jar )
@@ -84,7 +89,7 @@ public class JarIndex
 			}
 		}
 		
-		// pass 2: index inner classes
+		// pass 2: index inner classes and anonymous classes
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
 			String outerClassName = isInnerClass( c );
@@ -93,8 +98,21 @@ public class JarIndex
 				String innerClassName = Descriptor.toJvmName( c.getName() );
 				m_innerClasses.put( outerClassName, innerClassName );
 				m_outerClasses.put( innerClassName, outerClassName );
+				
+				if( isAnonymousClass( c, outerClassName ) )
+				{
+					m_anonymousClasses.add( innerClassName );
+				}
 			}
 		}
+		
+		// step 3: update other indicies with inner class info
+		Map<String,String> renames = Maps.newHashMap();
+		for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
+		{
+			renames.put( entry.getKey(), entry.getValue() + "$" + entry.getKey() );
+		}
+		renameClasses( renames );
 	}
 
 	private void indexBehavior( CtBehavior behavior )
@@ -186,14 +204,10 @@ public class JarIndex
 	@SuppressWarnings( "unchecked" )
 	private String isInnerClass( CtClass c )
 	{
-		String innerClassName = Descriptor.toJvmName( c.getName() );
-		
-		// first, is this an anonymous class?
-		// for anonymous classes:
+		// inner classes:
 		//    the outer class is always a synthetic field
 		//    there's at least one constructor with the type of the synthetic field as an argument
-		//    this constructor is called exactly once by the class of the synthetic field
-		
+
 		for( FieldInfo field : (List<FieldInfo>)c.getClassFile().getFields() )
 		{
 			boolean isSynthetic = (field.getAccessFlags() & AccessFlag.SYNTHETIC) != 0;
@@ -230,16 +244,8 @@ public class JarIndex
 					String argumentClassName = Descriptor.toJvmName( Descriptor.toClassName( argumentDesc ) );
 					if( argumentClassName.equals( outerClassName ) )
 					{
-						// is this constructor called exactly once?
-						ConstructorEntry constructorEntry = new ConstructorEntry(
-							new ClassEntry( innerClassName ),
-							constructor.getMethodInfo().getDescriptor()
-						);
-						if( this.getMethodCallers( constructorEntry ).size() == 1 )
-						{
-							targetConstructor = constructor;
-							break;
-						}
+						targetConstructor = constructor;
+						break;
 					}
 				}
 			}
@@ -253,6 +259,30 @@ public class JarIndex
 		}
 		
 		return null;
+	}
+	
+	private boolean isAnonymousClass( CtClass c, String outerClassName )
+	{
+		String innerClassName = Descriptor.toJvmName( c.getName() );
+		
+		// anonymous classes:
+		//    have only one constructor
+		//    it's called exactly once by the outer class
+		//    type of inner class not referenced anywhere in outer class
+		
+		// is there exactly one constructor?
+		if( c.getDeclaredConstructors().length != 1 )
+		{
+			return false;
+		}
+		CtConstructor constructor = c.getDeclaredConstructors()[0];
+		
+		// is this constructor called exactly once?
+		ConstructorEntry constructorEntry = new ConstructorEntry(
+			new ClassEntry( innerClassName ),
+			constructor.getMethodInfo().getDescriptor()
+		);
+		return getMethodCallers( constructorEntry ).size() == 1;
 	}
 	
 	public Set<String> getObfClassNames( )
@@ -342,5 +372,96 @@ public class JarIndex
 	public String getOuterClass( String obfInnerClassName )
 	{
 		return m_outerClasses.get( obfInnerClassName );
+	}
+	
+	public boolean isAnonymousClass( String obfInnerClassName )
+	{
+		return m_anonymousClasses.contains( obfInnerClassName );
+	}
+	
+	private void renameClasses( Map<String,String> renames )
+	{
+		m_ancestries.renameClasses( renames );
+		renameMultimap( renames, m_methodImplementations );
+		renameMultimap( renames, m_methodCalls );
+		renameMultimap( renames, m_fieldCalls );
+	}
+	
+	private <T,U> void renameMultimap( Map<String,String> renames, Multimap<T,U> map )
+	{
+		// for each key/value pair...
+		Set<Map.Entry<T,U>> entriesToAdd = Sets.newHashSet();
+		Iterator<Map.Entry<T,U>> iter = map.entries().iterator();
+		while( iter.hasNext() )
+		{
+			Map.Entry<T,U> entry = iter.next();
+			iter.remove();
+			entriesToAdd.add( new AbstractMap.SimpleEntry<T,U>(
+				renameEntry( renames, entry.getKey() ),
+				renameEntry( renames, entry.getValue() )
+			) );
+		}
+		for( Map.Entry<T,U> entry : entriesToAdd )
+		{
+			map.put( entry.getKey(), entry.getValue() );
+		}
+	}
+	
+	@SuppressWarnings( "unchecked" )
+	private <T> T renameEntry( Map<String,String> renames, T entry )
+	{
+		if( entry instanceof String )
+		{
+			String stringEntry = (String)entry;
+			if( renames.containsKey( stringEntry ) )
+			{
+				return (T)renames.get( stringEntry );
+			}
+		}
+		else if( entry instanceof ClassEntry )
+		{
+			ClassEntry classEntry = (ClassEntry)entry;
+			return (T)new ClassEntry( renameEntry( renames, classEntry.getClassName() ) );
+		}
+		else if( entry instanceof FieldEntry )
+		{
+			FieldEntry fieldEntry = (FieldEntry)entry;
+			return (T)new FieldEntry(
+				renameEntry( renames, fieldEntry.getClassEntry() ),
+				fieldEntry.getName()
+			);
+		}
+		else if( entry instanceof ConstructorEntry )
+		{
+			ConstructorEntry constructorEntry = (ConstructorEntry)entry;
+			return (T)new ConstructorEntry(
+				renameEntry( renames, constructorEntry.getClassEntry() ),
+				constructorEntry.getSignature()
+			);
+		}
+		else if( entry instanceof MethodEntry )
+		{
+			MethodEntry methodEntry = (MethodEntry)entry;
+			return (T)new MethodEntry(
+				renameEntry( renames, methodEntry.getClassEntry() ),
+				methodEntry.getName(),
+				methodEntry.getSignature()
+			);
+		}
+		else if( entry instanceof ArgumentEntry )
+		{
+			ArgumentEntry argumentEntry = (ArgumentEntry)entry;
+			return (T)new ArgumentEntry(
+				renameEntry( renames, argumentEntry.getMethodEntry() ),
+				argumentEntry.getIndex(),
+				argumentEntry.getName()
+			);
+		}
+		else
+		{
+			throw new Error( "Not an entry: " + entry );
+		}
+		
+		return entry;
 	}
 }

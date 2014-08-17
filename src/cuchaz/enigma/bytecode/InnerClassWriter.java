@@ -14,6 +14,7 @@ import java.util.Collection;
 
 import javassist.CtClass;
 import javassist.bytecode.AccessFlag;
+import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.InnerClassesAttribute;
 import cuchaz.enigma.analysis.JarIndex;
@@ -29,21 +30,33 @@ public class InnerClassWriter
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_jarIndex = jarIndex;
 	}
-
-	public void writeInnerClasses( CtClass c )
+	
+	public void write( CtClass c )
 	{
-		// is this an outer class with inner classes?
-		String obfOuterClassName = Descriptor.toJvmName( c.getName() );
-		Collection<String> obfInnerClassNames = m_jarIndex.getInnerClasses( obfOuterClassName );
-		if( obfInnerClassNames != null && !obfInnerClassNames.isEmpty() )
+		// get the outer class name
+		String obfClassName = Descriptor.toJvmName( c.getName() );
+		String obfOuterClassName = m_jarIndex.getOuterClass( obfClassName );
+		if( obfOuterClassName == null )
 		{
-			writeInnerClasses( c, obfInnerClassNames );
+			// this is an outer class
+			obfOuterClassName = obfClassName;
+		}
+		else
+		{
+			// this is an inner class, rename it to outer$inner
+			c.setName( obfOuterClassName + "$" + obfClassName );
+		}
+		
+		// write the inner classes if needed
+		Collection<String> obfInnerClassNames = m_jarIndex.getInnerClasses( obfOuterClassName );
+		if( obfInnerClassNames != null )
+		{
+			writeInnerClasses( c, obfOuterClassName, obfInnerClassNames );
 		}
 	}
-
-	private void writeInnerClasses( CtClass c, Collection<String> obfInnerClassNames )
+	
+	private void writeInnerClasses( CtClass c, String obfOuterClassName, Collection<String> obfInnerClassNames )
 	{
-		String obfOuterClassName = Descriptor.toJvmName( c.getName() );
 		InnerClassesAttribute attr = new InnerClassesAttribute( c.getClassFile().getConstPool() );
 		c.getClassFile().addAttribute( attr );
 		for( String obfInnerClassName : obfInnerClassNames )
@@ -54,26 +67,37 @@ public class InnerClassWriter
 			{
 				deobfOuterClassName = obfOuterClassName;
 			}
-			String deobfInnerClassName = m_deobfuscatingTranslator.translateClass( obfInnerClassName );
-			if( deobfInnerClassName == null )
+			String obfOuterInnerClassName = obfOuterClassName + "$" + obfInnerClassName;
+			String deobfOuterInnerClassName = m_deobfuscatingTranslator.translateClass( obfOuterInnerClassName );
+			if( deobfOuterInnerClassName == null )
 			{
-				deobfInnerClassName = obfInnerClassName;
+				deobfOuterInnerClassName = obfOuterInnerClassName;
+			}
+			String deobfInnerClassName = deobfOuterInnerClassName.substring( deobfOuterInnerClassName.lastIndexOf( '$' ) + 1 );
+
+			// here's what the JVM spec says about the InnerClasses attribute
+			// append( inner, outer of inner if inner is member of outer 0 ow, name after $ if inner not anonymous 0 ow, flags ); 
+			
+			// update the attribute with this inner class
+			ConstPool constPool = c.getClassFile().getConstPool();
+			int innerClassIndex = constPool.addClassInfo( deobfOuterInnerClassName );
+			int outerClassIndex = 0;
+			int innerClassSimpleNameIndex = 0;
+			if( !m_jarIndex.isAnonymousClass( obfInnerClassName ) )
+			{
+				outerClassIndex = constPool.addClassInfo( deobfOuterClassName );
+				innerClassSimpleNameIndex = constPool.addUtf8Info( deobfInnerClassName );
 			}
 			
-			// update the attribute
-			String deobfOuterInnerClassName = deobfOuterClassName + "$" + deobfInnerClassName;
 			attr.append(
-					deobfOuterInnerClassName,
-				deobfOuterClassName,
-				deobfInnerClassName,
+				innerClassIndex,
+				outerClassIndex,
+				innerClassSimpleNameIndex,
 				c.getClassFile().getAccessFlags() & ~AccessFlag.SUPER
 			);
 			
 			// make sure the outer class references only the new inner class names
 			c.replaceClassName( obfInnerClassName, deobfOuterInnerClassName );
-			
-			// TEMP
-			System.out.println( "\tInner " + obfInnerClassName + " -> " + deobfOuterInnerClassName );
 		}
 	}
 }

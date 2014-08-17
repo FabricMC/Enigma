@@ -30,50 +30,56 @@ public class MappingsWriter
 	{
 		for( ClassMapping classMapping : sorted( mappings.classes() ) )
 		{
-			write( out, classMapping );
+			write( out, classMapping, 0 );
 		}
 	}
 	
-	public void write( PrintWriter out, ClassMapping classMapping )
+	private void write( PrintWriter out, ClassMapping classMapping, int depth )
 	throws IOException
 	{
-		out.format( "CLASS %s %s\n", classMapping.getObfName(), classMapping.getDeobfName() );
+		out.format( "%sCLASS %s %s\n", getIndent( depth ), classMapping.getObfName(), classMapping.getDeobfName() );
+		
+		for( ClassMapping innerClassMapping : sorted( classMapping.innerClasses() ) )
+		{
+			write( out, innerClassMapping, depth + 1 );
+		}
 		
 		for( FieldMapping fieldMapping : sorted( classMapping.fields() ) )
 		{
-			write( out, fieldMapping );
+			write( out, fieldMapping, depth + 1 );
 		}
 		
 		for( MethodMapping methodMapping : sorted( classMapping.methods() ) )
 		{
-			write( out, methodMapping );
+			write( out, methodMapping, depth + 1 );
 		}
 	}
 
-	public void write( PrintWriter out, FieldMapping fieldMapping )
+	private void write( PrintWriter out, FieldMapping fieldMapping, int depth )
 	throws IOException
 	{
-		out.format( "\tFIELD %s %s\n", fieldMapping.getObfName(), fieldMapping.getDeobfName() );
+		out.format( "%sFIELD %s %s\n", getIndent( depth ), fieldMapping.getObfName(), fieldMapping.getDeobfName() );
 	}
 	
-	public void write( PrintWriter out, MethodMapping methodMapping )
+	private void write( PrintWriter out, MethodMapping methodMapping, int depth )
 	throws IOException
 	{
-		out.format( "\tMETHOD %s %s %s %s\n",
+		out.format( "%sMETHOD %s %s %s %s\n",
+			getIndent( depth ),
 			methodMapping.getObfName(), methodMapping.getDeobfName(),
 			methodMapping.getObfSignature(), methodMapping.getDeobfSignature()
 		);
 		
 		for( ArgumentMapping argumentMapping : sorted( methodMapping.arguments() ) )
 		{
-			write( out, argumentMapping );
+			write( out, argumentMapping, depth + 1 );
 		}
 	}
 
-	public void write( PrintWriter out, ArgumentMapping argumentMapping )
+	private void write( PrintWriter out, ArgumentMapping argumentMapping, int depth )
 	throws IOException
 	{
-		out.format( "\t\tARG %d %s\n", argumentMapping.getIndex(), argumentMapping.getName() );
+		out.format( "%sARG %d %s\n", getIndent( depth ), argumentMapping.getIndex(), argumentMapping.getName() );
 	}
 	
 	private <T extends Comparable<T>> List<T> sorted( Iterable<T> classes )
@@ -85,5 +91,15 @@ public class MappingsWriter
 		}
 		Collections.sort( out );
 		return out;
+	}
+	
+	private String getIndent( int depth )
+	{
+		StringBuilder buf = new StringBuilder();
+		for( int i=0; i<depth; i++ )
+		{
+			buf.append( "\t" );
+		}
+		return buf.toString();
 	}
 }

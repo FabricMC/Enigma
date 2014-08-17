@@ -78,6 +78,7 @@ import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.IllegalNameException;
+import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.MethodEntry;
 
 public class Gui
@@ -508,6 +509,10 @@ public class Gui
 							{
 								throw new Error( ex );
 							}
+							catch( MappingParseException ex )
+							{
+								JOptionPane.showMessageDialog( m_frame, ex.getMessage() );
+							}
 						}
 					}
 				} );
@@ -862,9 +867,17 @@ public class Gui
 	
 	private void startRename( )
 	{
+		// get the class name
+		String className = m_selectedEntryPair.deobf.getName();
+		int pos = className.lastIndexOf( '$' );
+		if( pos >= 0 )
+		{
+			className = className.substring( pos + 1 );
+		}
+		
 		// init the text box
 		final JTextField text = new JTextField();
-		text.setText( m_selectedEntryPair.deobf.getName() );
+		text.setText( className );
 		text.setPreferredSize( new Dimension( 360, text.getPreferredSize().height ) );
 		text.addKeyListener( new KeyAdapter( )
 		{
@@ -905,6 +918,7 @@ public class Gui
 			}
 			catch( IllegalNameException ex )
 			{
+				ex.printStackTrace( System.err );
 				text.setBorder( BorderFactory.createLineBorder( Color.red, 1 ) );
 			}
 			return;

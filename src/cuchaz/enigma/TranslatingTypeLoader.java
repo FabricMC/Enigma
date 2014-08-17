@@ -26,6 +26,7 @@ import javassist.bytecode.Descriptor;
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
 
+import cuchaz.enigma.analysis.BridgeFixer;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.bytecode.ClassTranslator;
 import cuchaz.enigma.bytecode.InnerClassWriter;
@@ -50,12 +51,6 @@ public class TranslatingTypeLoader implements ITypeLoader
 	@Override
 	public boolean tryLoadType( String deobfClassName, Buffer out )
 	{
-		// TEMP
-		if( !deobfClassName.startsWith( "java" ) && !deobfClassName.startsWith( "org" ) )
-		{
-			System.out.println( "Looking for: " + deobfClassName );
-		}
-		
 		// what class file should we actually load?
 		String obfClassName = m_obfuscatingTranslator.translateClass( deobfClassName );
 		if( obfClassName == null )
@@ -64,26 +59,12 @@ public class TranslatingTypeLoader implements ITypeLoader
 		}
 		String classFileName = obfClassName;
 		
-		// is this a properly-referenced inner class?
-		boolean isInnerClass = deobfClassName.indexOf( '$' ) >= 0;
-		if( isInnerClass )
+		// is this an inner class?
+		if( obfClassName.indexOf( '$' ) >= 0 )
 		{
-			// get just the bare inner class name
-			String[] parts = deobfClassName.split( "\\$" );
-			String deobfClassFileName = parts[parts.length - 1];
-			
-			// make sure the bare inner class name is obfuscated
-			classFileName = m_obfuscatingTranslator.translateClass( deobfClassFileName );
-			if( classFileName == null )
-			{
-				classFileName = deobfClassFileName;
-			}
-		}
-		
-		// TEMP
-		if( !deobfClassName.startsWith( "java" ) && !deobfClassName.startsWith( "org" ) )
-		{
-			System.out.println( "\tLooking at class file: " + classFileName );
+			// the file name is the bare inner class name
+			String[] parts = obfClassName.split( "\\$" );
+			classFileName = parts[parts.length - 1];
 		}
 		
 		// get the jar entry
@@ -118,26 +99,20 @@ public class TranslatingTypeLoader implements ITypeLoader
 			classPool.insertClassPath( new ByteArrayClassPath( javaClassFileName, buf ) );
 			CtClass c = classPool.get( javaClassFileName );
 			
-			if( isInnerClass )
-			{
-				// rename the class to what procyon expects
-				c.setName( deobfClassName );
-			}
-			else
-			{
-				// maybe it's an outer class
-				new InnerClassWriter( m_deobfuscatingTranslator, m_jarIndex ).writeInnerClasses( c );
-			}
-			
+			// do all kinds of deobfuscating transformations on the class
+			new InnerClassWriter( m_deobfuscatingTranslator, m_jarIndex ).write( c );
+			new BridgeFixer().fixBridges( c );
 			new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
 			new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
 			
-			assert( Descriptor.toJvmName( c.getName() ).equals( deobfClassName ) );
-			assert( c.getClassFile().getName().equals( deobfClassName ) );
-			
-			buf = c.toBytecode();
+			// sanity checking
+			assert( Descriptor.toJvmName( c.getName() ).equals( deobfClassName ) )
+				: String.format( "%s is not %s", Descriptor.toJvmName( c.getName() ), deobfClassName );
+			assert( Descriptor.toJvmName( c.getClassFile().getName() ).equals( deobfClassName ) )
+				: String.format( "%s is not %s", Descriptor.toJvmName( c.getClassFile().getName() ), deobfClassName );
 			
 			// pass the transformed class along to the decompiler
+			buf = c.toBytecode();
 			out.reset( buf.length );
 			System.arraycopy( buf, 0, out.array(), out.position(), buf.length );
 			out.position( 0 );
@@ -149,5 +124,4 @@ public class TranslatingTypeLoader implements ITypeLoader
 			throw new Error( ex );
 		}
 	}
-	
 }

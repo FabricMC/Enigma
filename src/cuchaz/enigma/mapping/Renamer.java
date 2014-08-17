@@ -32,15 +32,18 @@ public class Renamer
 	public void setClassName( ClassEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateClassName( deobfName );
-		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getName() );
-		if( classMapping == null )
-		{
-			classMapping = createClassMapping( obf );
-		}
+		ClassMapping classMapping = getOrCreateClassMapping( obf );
 		
-		m_mappings.m_classesByDeobf.remove( classMapping.getDeobfName() );
-		classMapping.setDeobfName( deobfName );
-		m_mappings.m_classesByDeobf.put( deobfName, classMapping );
+		if( obf.isInnerClass() )
+		{
+			classMapping.setInnerClassName( obf.getInnerClassName(), deobfName );
+		}
+		else
+		{
+			m_mappings.m_classesByDeobf.remove( classMapping.getDeobfName() );
+			classMapping.setDeobfName( deobfName );
+			m_mappings.m_classesByDeobf.put( deobfName, classMapping );
+		}
 		
 		updateDeobfMethodSignatures();
 	}
@@ -48,12 +51,7 @@ public class Renamer
 	public void setFieldName( FieldEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateFieldName( deobfName );
-		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getClassName() );
-		if( classMapping == null )
-		{
-			classMapping = createClassMapping( obf.getClassEntry() );
-		}
-		
+		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
 		classMapping.setFieldName( obf.getName(), deobfName );
 	}
 	
@@ -84,28 +82,15 @@ public class Renamer
 	public void setMethodName( MethodEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateMethodName( deobfName );
-		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getClassName() );
-		if( classMapping == null )
-		{
-			classMapping = createClassMapping( obf.getClassEntry() );
-		}
-		
+		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
 		String deobfSignature = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
 		classMapping.setMethodNameAndSignature( obf.getName(), obf.getSignature(), deobfName, deobfSignature );
-		
-		// TODO: update ancestor/descendant methods in other classes in the inheritance hierarchy too
-		
 	}
 	
 	public void setArgumentName( ArgumentEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateArgumentName( deobfName );
-		ClassMapping classMapping = m_mappings.m_classesByObf.get( obf.getClassName() );
-		if( classMapping == null )
-		{
-			classMapping = createClassMapping( obf.getClassEntry() );
-		}
-		
+		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
 		classMapping.setArgumentName( obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), deobfName );
 	}
 	
@@ -119,11 +104,26 @@ public class Renamer
 		gzipout.finish();
 	}
 	
-	private ClassMapping createClassMapping( ClassEntry obf )
+	private ClassMapping getOrCreateClassMapping( ClassEntry obfClassEntry )
 	{
-		ClassMapping classMapping = new ClassMapping( obf.getName(), obf.getName() );
-		m_mappings.m_classesByObf.put( classMapping.getObfName(), classMapping );
-		m_mappings.m_classesByDeobf.put( classMapping.getDeobfName(), classMapping );
+		String obfClassName = obfClassEntry.getOuterClassName();
+		ClassMapping classMapping = m_mappings.m_classesByObf.get( obfClassName );
+		if( classMapping == null )
+		{
+			classMapping = new ClassMapping( obfClassName, obfClassName );
+			m_mappings.m_classesByObf.put( classMapping.getObfName(), classMapping );
+			m_mappings.m_classesByDeobf.put( classMapping.getDeobfName(), classMapping );
+		}
+		return classMapping;
+	}
+	
+	private ClassMapping getOrCreateClassMappingOrInnerClassMapping( ClassEntry obfClassEntry )
+	{
+		ClassMapping classMapping = getOrCreateClassMapping( obfClassEntry );
+		if( obfClassEntry.isInnerClass() )
+		{
+			classMapping = classMapping.getOrCreateInnerClass( obfClassEntry.getInnerClassName() );
+		}
 		return classMapping;
 	}
 	

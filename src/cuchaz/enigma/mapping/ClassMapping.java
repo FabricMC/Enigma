@@ -21,6 +21,8 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	
 	private String m_obfName;
 	private String m_deobfName;
+	private Map<String,ClassMapping> m_innerClassesByObf;
+	private Map<String,ClassMapping> m_innerClassesByDeobf;
 	private Map<String,FieldMapping> m_fieldsByObf;
 	private Map<String,FieldMapping> m_fieldsByDeobf;
 	private Map<String,MethodMapping> m_methodsByObf;
@@ -31,6 +33,8 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	{
 		m_obfName = obfName;
 		m_deobfName = NameValidator.validateClassName( deobfName );
+		m_innerClassesByObf = Maps.newHashMap();
+		m_innerClassesByDeobf = Maps.newHashMap();
 		m_fieldsByObf = Maps.newHashMap();
 		m_fieldsByDeobf = Maps.newHashMap();
 		m_methodsByObf = Maps.newHashMap();
@@ -51,6 +55,72 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		m_deobfName = NameValidator.validateClassName( val );
 	}
 	
+	//// INNER CLASSES ////////
+	
+	public Iterable<ClassMapping> innerClasses( )
+	{
+		assert( m_innerClassesByObf.size() == m_innerClassesByDeobf.size() );
+		return m_innerClassesByObf.values();
+	}
+	
+	protected void addInnerClassMapping( ClassMapping classMapping )
+	{
+		m_innerClassesByObf.put( classMapping.getObfName(), classMapping );
+		m_innerClassesByDeobf.put( classMapping.getDeobfName(), classMapping );
+	}
+	
+	public ClassMapping getOrCreateInnerClass( String obfName )
+	{
+		ClassMapping classMapping = m_innerClassesByObf.get( obfName );
+		if( classMapping == null )
+		{
+			classMapping = new ClassMapping( obfName, obfName );
+			m_innerClassesByObf.put( obfName, classMapping );
+			m_innerClassesByDeobf.put( obfName, classMapping );
+		}
+		return classMapping;
+	}
+	
+	public ClassMapping getInnerClassByObf( String obfName )
+	{
+		return m_innerClassesByObf.get( obfName );
+	}
+	
+	public ClassMapping getInnerClassByDeobf( String deobfName )
+	{
+		return m_innerClassesByDeobf.get( deobfName );
+	}
+	
+	public String getObfInnerClassName( String deobfName )
+	{
+		ClassMapping classMapping = m_innerClassesByDeobf.get( deobfName );
+		if( classMapping != null )
+		{
+			return classMapping.getObfName();
+		}
+		return null;
+	}
+	
+	public String getDeobfInnerClassName( String obfName )
+	{
+		ClassMapping classMapping = m_innerClassesByObf.get( obfName );
+		if( classMapping != null )
+		{
+			return classMapping.getDeobfName();
+		}
+		return null;
+	}
+	
+	public void setInnerClassName( String obfName, String deobfName )
+	{
+		ClassMapping classMapping = getOrCreateInnerClass( obfName );
+		m_innerClassesByDeobf.remove( classMapping.getDeobfName() );
+		classMapping.setDeobfName( deobfName );
+		m_innerClassesByDeobf.put( deobfName, classMapping );
+	}
+	
+	//// FIELDS ////////
+	
 	public Iterable<FieldMapping> fields( )
 	{
 		assert( m_fieldsByObf.size() == m_fieldsByDeobf.size() );
@@ -62,18 +132,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		m_fieldsByObf.put( fieldMapping.getObfName(), fieldMapping );
 		m_fieldsByDeobf.put( fieldMapping.getDeobfName(), fieldMapping );
 	}
-
-	public Iterable<MethodMapping> methods( )
-	{
-		assert( m_methodsByObf.size() == m_methodsByDeobf.size() );
-		return m_methodsByObf.values();
-	}
 	
-	protected void addMethodMapping( MethodMapping methodMapping )
-	{
-		m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping );
-		m_methodsByDeobf.put( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ), methodMapping );
-	}
 
 	public String getObfFieldName( String deobfName )
 	{
@@ -108,6 +167,20 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		m_fieldsByDeobf.remove( fieldMapping.getDeobfName() );
 		fieldMapping.setDeobfName( deobfName );
 		m_fieldsByDeobf.put( deobfName, fieldMapping );
+	}
+	
+	//// METHODS ////////
+	
+	public Iterable<MethodMapping> methods( )
+	{
+		assert( m_methodsByObf.size() == m_methodsByDeobf.size() );
+		return m_methodsByObf.values();
+	}
+	
+	protected void addMethodMapping( MethodMapping methodMapping )
+	{
+		m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping );
+		m_methodsByDeobf.put( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ), methodMapping );
 	}
 	
 	public MethodMapping getMethodByObf( String obfName, String signature )
@@ -155,6 +228,8 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		}
 	}
 
+	//// ARGUMENTS ////////
+	
 	public void setArgumentName( String obfMethodName, String obfMethodSignature, int argumentIndex, String argumentName )
 	{
 		MethodMapping methodIndex = m_methodsByObf.get( getMethodKey( obfMethodName, obfMethodSignature ) );

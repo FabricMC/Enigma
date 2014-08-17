@@ -17,7 +17,7 @@ import java.util.TreeMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.strobel.decompiler.languages.Region;
-import com.strobel.decompiler.languages.java.ast.AstNode;
+import com.strobel.decompiler.languages.java.ast.Identifier;
 
 import cuchaz.enigma.mapping.Entry;
 
@@ -51,18 +51,26 @@ public class SourceIndex
 		return m_source;
 	}
 	
-	public Token getToken( AstNode node )
+	public Token getToken( Identifier node )
 	{
 		// get a token for this node's region
 		Region region = node.getRegion();
 		if( region.getBeginLine() == 0 || region.getEndLine() == 0 )
 		{
-			throw new IllegalArgumentException( "Invalid region: " + region );
+			System.err.println( "WARNING: " + node.getNodeType() + " node has invalid region: " + region );
+			return null;
 		}
 		Token token = new Token(
 			toPos( region.getBeginLine(), region.getBeginColumn() ),
 			toPos( region.getEndLine(), region.getEndColumn() )
 		);
+		
+		// for tokens representing inner classes, make sure we only get the simple name
+		int pos = node.getName().lastIndexOf( '$' );
+		if( pos >= 0 )
+		{
+			token.end -= pos + 1;
+		}
 		
 		// HACKHACK: sometimes node regions are off by one
 		// I think this is a bug in Procyon, but it's easy to work around
@@ -79,16 +87,23 @@ public class SourceIndex
 		return token;
 	}
 	
-	public void add( AstNode node, Entry deobfEntry )
-	{
-		m_tokens.put( getToken( node ), deobfEntry );
-	}
-	
-	public void addDeclaration( AstNode node, Entry deobfEntry )
+	public void add( Identifier node, Entry deobfEntry )
 	{
 		Token token = getToken( node );
-		m_tokens.put( token, deobfEntry );
-		m_declarations.put( deobfEntry, token );
+		if( token != null )
+		{
+			m_tokens.put( token, deobfEntry );
+		}
+	}
+	
+	public void addDeclaration( Identifier node, Entry deobfEntry )
+	{
+		Token token = getToken( node );
+		if( token != null )
+		{
+			m_tokens.put( token, deobfEntry );
+			m_declarations.put( deobfEntry, token );
+		}
 	}
 	
 	public Token getToken( int pos )
