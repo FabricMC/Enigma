@@ -1,5 +1,5 @@
 
-Enigma v0.1 beta
+Enigma v0.2 beta
 A tool for deobfuscation of Java bytecode
 
 Copyright Jeff Martin, 2014
