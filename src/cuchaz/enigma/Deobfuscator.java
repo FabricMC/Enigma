@@ -62,6 +62,8 @@ public class Deobfuscator
 		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();
+		// DEBUG
+		//m_settings.setShowSyntheticMembers( true );
 		
 		// init mappings
 		setMappings( new Mappings() );

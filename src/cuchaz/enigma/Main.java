@@ -13,6 +13,7 @@ package cuchaz.enigma;
 import java.io.File;
 
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.mapping.ClassEntry;
 
 public class Main
 {
@@ -30,6 +31,9 @@ public class Main
 		{
 			gui.getController().openMappings( getFile( args[1] ) );
 		}
+		
+		// DEBUG
+		//gui.getController().openEntry( new ClassEntry( "bah$bag" ) ); // bah,bag
 	}
 	
 	private static File getFile( String path )

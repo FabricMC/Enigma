@@ -72,11 +72,21 @@ public class Translator
 	public ClassEntry translateEntry( ClassEntry in )
 	{
 		String name = translate( in );
-		if( name == null )
+		if( name != null )
 		{
-			return in;
+			return new ClassEntry( name );
 		}
-		return new ClassEntry( name );
+		
+		if( in.isInnerClass() )
+		{
+			// just translate the outer class name
+			String outerClassName = translate( in.getOuterClassEntry() );
+			if( outerClassName != null )
+			{
+				return new ClassEntry( outerClassName + "$" + in.getInnerClassName() );
+			}
+		}
+		return in;
 	}
 	
 	public String translate( FieldEntry in )

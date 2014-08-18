@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,6 +26,7 @@ import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.ExceptionTable;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -265,5 +267,60 @@ public class BytecodeTools
 				src.catchType( i )
 			);
 		}
+	}
+	
+	public static List<String> getParameterTypes( String signature )
+	{
+		List<String> types = Lists.newArrayList();
+		for( int i=0; i<signature.length(); )
+		{
+			char c = signature.charAt( i );
+			
+			// handle parens
+			if( c == '(' )
+			{
+				i++;
+				c = signature.charAt( i );
+			}
+			if( c == ')' )
+			{
+				break;
+			}
+			
+			// find a type
+			String type = null;
+			
+			int arrayDim = 0;
+			while( c == '[' )
+			{
+				// advance to array type
+				arrayDim++;
+				i++;
+				c = signature.charAt( i );
+			}
+			
+			if( c == 'L' )
+			{
+				// read class type
+				int pos = signature.indexOf( ';', i + 1 );
+				String className = signature.substring( i + 1, pos );
+				type = "L" + className + ";";
+				i = pos + 1;
+			}
+			else
+			{
+				// read primitive type
+				type = signature.substring( i, i + 1 );
+				i++;
+			}
+			
+			// was it an array?
+			while( arrayDim-- > 0 )
+			{
+				type = "[" + type;
+			}
+			types.add( type );
+		}
+		return types;
 	}
 }

@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import javassist.ClassMap;
@@ -20,6 +19,10 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.InnerClassesAttribute;
+
+import com.beust.jcommander.internal.Sets;
+
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -133,25 +136,47 @@ public class ClassTranslator
 		
 		// translate all the class names referenced in the code
 		// the above code only changed method/field/reference names and types, but not the class names themselves
-		Set<String> classNames = getAllClassNames( c );
+		Set<ClassEntry> classEntries = getAllClassEntries( c );
 		ClassMap map = new ClassMap();
-		for( String className : classNames )
+		for( ClassEntry obfClassEntry : classEntries )
 		{
-			String translatedName = m_translator.translateClass( className );
-			if( translatedName != null )
-			{
-				map.put( className, translatedName );
-			}
+			map.put( obfClassEntry.getName(), m_translator.translateEntry( obfClassEntry ).getName() );
 		}
-		if( !map.isEmpty() )
+		c.replaceClassName( map );
+		
+		// translate the names in the InnerClasses attribute
+		InnerClassesAttribute attr = (InnerClassesAttribute)c.getClassFile().getAttribute( InnerClassesAttribute.tag );
+		if( attr != null )
 		{
-			c.replaceClassName( map );
+			for( int i=0; i<attr.tableLength(); i++ )
+			{
+				ClassEntry obfClassEntry = new ClassEntry( Descriptor.toJvmName( attr.innerClass( i ) ) );
+				ClassEntry deobfClassEntry = m_translator.translateEntry( obfClassEntry );
+				attr.setInnerClassIndex( i, constants.addClassInfo( deobfClassEntry.getName() ) );
+				if( attr.outerClassIndex( i ) != 0 )
+				{
+					attr.setOuterClassIndex( i, constants.addClassInfo( deobfClassEntry.getOuterClassName() ) );
+				}
+				if( attr.innerNameIndex( i ) != 0 )
+				{
+					attr.setInnerNameIndex( i, constants.addUtf8Info( deobfClassEntry.getInnerClassName() ) );
+				}
+				
+				/* DEBUG
+				System.out.println( String.format( "\tOBF: %s DEOBF: %s-> ATTR: %s,%s,%s",
+					obfClassEntry, deobfClassEntry,
+					attr.outerClass( i ),
+					attr.innerClass( i ),
+					attr.innerName( i )
+				) );
+				*/
+			}
 		}
 	}
 	
-	private Set<String> getAllClassNames( CtClass c )
+	private Set<ClassEntry> getAllClassEntries( CtClass c )
 	{
-		final Set<String> names = new HashSet<String>();
+		final Set<ClassEntry> entries = Sets.newHashSet();
 		ClassMap map = new ClassMap( )
 		{
 			@Override
@@ -159,13 +184,13 @@ public class ClassTranslator
 			{
 				if( obj instanceof String )
 				{
-					names.add( (String)obj );
+					entries.add( new ClassEntry( (String)obj ) );
 				}
 				return null;
 			}
 			private static final long serialVersionUID = -202160293602070641L;
 		};
 		c.replaceClassName( map );
-		return names;
+		return entries;
 	}
 }

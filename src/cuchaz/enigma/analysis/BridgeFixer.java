@@ -41,6 +41,8 @@ public class BridgeFixer
 			{
 				bridgedMethod.setName( method.getName() );
 				method.setModifiers( method.getModifiers() | AccessFlag.BRIDGE );
+				
+				// TODO: rename all references to this method?
 			}
 		}
 	}

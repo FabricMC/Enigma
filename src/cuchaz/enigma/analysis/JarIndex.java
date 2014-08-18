@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Iterator;
@@ -92,8 +93,8 @@ public class JarIndex
 		// pass 2: index inner classes and anonymous classes
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
-			String outerClassName = isInnerClass( c );
-			if( outerClassName != null )
+			String outerClassName = findOuterClass( c );
+			if( outerClassName != null )// /* TEMP */ && false )
 			{
 				String innerClassName = Descriptor.toJvmName( c.getName() );
 				m_innerClasses.put( outerClassName, innerClassName );
@@ -102,6 +103,14 @@ public class JarIndex
 				if( isAnonymousClass( c, outerClassName ) )
 				{
 					m_anonymousClasses.add( innerClassName );
+					
+					// DEBUG
+					System.out.println( "ANONYMOUS: " + outerClassName + "$" + innerClassName );
+				}
+				else
+				{
+					// DEBUG
+					System.out.println( "INNER: " + outerClassName + "$" + innerClassName );
 				}
 			}
 		}
@@ -175,6 +184,10 @@ public class JarIndex
 				@Override
 				public void edit( ConstructorCall call )
 				{
+					boolean isSuper = call.getMethodName().equals( "super" );
+					// TODO: make method reference class, update method calls tree to use Invocation instances
+					// this might end up being a big refactor... =(
+					
 					String className = Descriptor.toJvmName( call.getClassName() );
 					ConstructorEntry calledConstructorEntry = new ConstructorEntry(
 						new ClassEntry( className ),
@@ -201,74 +214,167 @@ public class JarIndex
 		}
 	}
 	
-	@SuppressWarnings( "unchecked" )
-	private String isInnerClass( CtClass c )
+	private String findOuterClass( CtClass c )
 	{
 		// inner classes:
-		//    the outer class is always a synthetic field
-		//    there's at least one constructor with the type of the synthetic field as an argument
-
-		for( FieldInfo field : (List<FieldInfo>)c.getClassFile().getFields() )
+		//    have constructors that can (illegally) set synthetic fields
+		//    the outer class is the only class that calls constructors
+		
+		// use the synthetic fields to find the synthetic constructors
+		for( CtConstructor constructor : c.getDeclaredConstructors() )
 		{
-			boolean isSynthetic = (field.getAccessFlags() & AccessFlag.SYNTHETIC) != 0;
-			if( !isSynthetic )
+			if( !isIllegalConstructor( constructor ) )
 			{
 				continue;
 			}
 			
-			// skip non-class types
-			if( !field.getDescriptor().startsWith( "L" ) )
+			// who calls this constructor?
+			Set<ClassEntry> callerClasses = Sets.newHashSet();
+			ConstructorEntry constructorEntry = new ConstructorEntry(
+				new ClassEntry( Descriptor.toJvmName( c.getName() ) ),
+				constructor.getMethodInfo().getDescriptor()
+			);
+			for( Entry callerEntry : getMethodCallers( constructorEntry ) )
 			{
-				continue;
+				callerClasses.add( callerEntry.getClassEntry() );
 			}
 			
-			// get the outer class from the field type
-			String outerClassName = Descriptor.toJvmName( Descriptor.toClassName( field.getDescriptor() ) );
-			
-			// look for a constructor where this type is the first parameter
-			CtConstructor targetConstructor = null;
-			for( CtConstructor constructor : c.getDeclaredConstructors() )
+			// is this called by exactly one class?
+			if( callerClasses.size() == 1 )
 			{
-				String signature = Descriptor.getParamDescriptor( constructor.getMethodInfo().getDescriptor() );
-				if( Descriptor.numOfParameters( signature ) < 1 )
-				{
-					continue;
-				}
-				
-				// match the first parameter to the outer class
-				Descriptor.Iterator iter = new Descriptor.Iterator( signature );
-				int pos = iter.next();
-				if( iter.isParameter() && signature.charAt( pos ) == 'L' )
-				{
-					String argumentDesc = signature.substring( pos, signature.indexOf(';', pos) + 1 );
-					String argumentClassName = Descriptor.toJvmName( Descriptor.toClassName( argumentDesc ) );
-					if( argumentClassName.equals( outerClassName ) )
-					{
-						targetConstructor = constructor;
-						break;
-					}
-				}
+				return callerClasses.iterator().next().getName();
 			}
-			if( targetConstructor == null )
+			else if( callerClasses.size() > 1 )
 			{
-				continue;
+				// TEMP
+				System.out.println( "WARNING: Illegal class called by more than one class!" + callerClasses );
 			}
-			
-			// yeah, this is an inner class
-			return outerClassName;
 		}
 		
 		return null;
 	}
 	
+	@SuppressWarnings( "unchecked" )
+	private boolean isIllegalConstructor( CtConstructor constructor )
+	{
+		// illegal constructors only set synthetic member fields, then call super()
+		String className = constructor.getDeclaringClass().getName();
+		
+		// collect all the field accesses, constructor calls, and method calls
+		final List<FieldAccess> illegalFieldWrites = Lists.newArrayList();
+		final List<ConstructorCall> constructorCalls = Lists.newArrayList();
+		final List<MethodCall> methodCalls = Lists.newArrayList();
+		try
+		{
+			constructor.instrument( new ExprEditor( )
+			{
+				@Override
+				public void edit( FieldAccess fieldAccess )
+				{
+					if( fieldAccess.isWriter() && constructorCalls.isEmpty() )
+					{
+						illegalFieldWrites.add( fieldAccess );
+					}
+				}
+				
+				@Override
+				public void edit( ConstructorCall constructorCall )
+				{
+					constructorCalls.add( constructorCall );
+				}
+				
+				@Override
+				public void edit( MethodCall methodCall )
+				{
+					methodCalls.add( methodCall );
+				}
+			} );
+		}
+		catch( CannotCompileException ex )
+		{
+			// we're not compiling anything... this is stupid
+			throw new Error( ex );
+		}
+		
+		// method calls are not allowed
+		if( !methodCalls.isEmpty() )
+		{
+			return false;
+		}
+		
+		// is there only one constructor call?
+		if( constructorCalls.size() != 1 )
+		{
+			return false;
+		}
+		
+		// is the call to super?
+		ConstructorCall constructorCall = constructorCalls.get( 0 );
+		if( !constructorCall.getMethodName().equals( "super" ) )
+		{
+			return false;
+		}
+		
+		// are there any illegal field writes?
+		if( illegalFieldWrites.isEmpty() )
+		{
+			return false;
+		}
+		
+		// are all the writes to synthetic fields?
+		for( FieldAccess fieldWrite : illegalFieldWrites )
+		{
+			// all illegal writes have to be to the local class
+			if( !fieldWrite.getClassName().equals( className ) )
+			{
+				System.err.println( String.format( "WARNING: illegal write to non-member field %s.%s", fieldWrite.getClassName(), fieldWrite.getFieldName() ) );
+				return false;
+			}
+			
+			// find the field
+			FieldInfo fieldInfo = null;
+			for( FieldInfo info : (List<FieldInfo>)constructor.getDeclaringClass().getClassFile().getFields() )
+			{
+				if( info.getName().equals( fieldWrite.getFieldName() ) )
+				{
+					fieldInfo = info;
+					break;
+				}
+			}
+			if( fieldInfo == null )
+			{
+				// field is in a superclass or something, can't be a local synthetic member
+				return false;
+			}
+			
+			// is this field synthetic?
+			boolean isSynthetic = (fieldInfo.getAccessFlags() & AccessFlag.SYNTHETIC) != 0;
+			if( !isSynthetic )
+			{
+				System.err.println( String.format( "WARNING: illegal write to non synthetic field %s.%s", className, fieldInfo.getName() ) );
+				return false;
+			}
+		}
+		
+		// we passed all the tests!
+		return true;
+	}
+
 	private boolean isAnonymousClass( CtClass c, String outerClassName )
 	{
 		String innerClassName = Descriptor.toJvmName( c.getName() );
 		
 		// anonymous classes:
+		//    can't be abstract
 		//    have only one constructor
 		//    it's called exactly once by the outer class
 		//    type of inner class not referenced anywhere in outer class
+		
+		// is absract?
+		if( Modifier.isAbstract( c.getModifiers() ) )
+		{
+			return false;
+		}
 		
 		// is there exactly one constructor?
 		if( c.getDeclaredConstructors().length != 1 )
@@ -282,7 +388,16 @@ public class JarIndex
 			new ClassEntry( innerClassName ),
 			constructor.getMethodInfo().getDescriptor()
 		);
-		return getMethodCallers( constructorEntry ).size() == 1;
+		if( getMethodCallers( constructorEntry ).size() != 1 )
+		{
+			return false;
+		}
+		
+		// TODO: check outer class doesn't reference type
+		// except this is hard because we can't just load the outer class now
+		// we'd have to pre-index those references in the JarIndex
+		
+		return true;
 	}
 	
 	public Set<String> getObfClassNames( )

@@ -12,12 +12,18 @@ package cuchaz.enigma;
 
 import java.awt.Desktop;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.jar.JarFile;
+
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.bytecode.Descriptor;
 
 import com.google.common.io.CharStreams;
 
@@ -104,6 +110,20 @@ public class Util
 			{
 				throw new IllegalArgumentException( ex );
 			}
+		}
+	}
+	
+	public static void writeClass( CtClass c )
+	{
+		String name = Descriptor.toJavaName( c.getName() );
+		File file = new File( name + ".class" );
+		try( FileOutputStream out = new FileOutputStream( file ) )
+		{
+			out.write( c.toBytecode() );
+		}
+		catch( IOException | CannotCompileException ex )
+		{
+			throw new Error( ex );
 		}
 	}
 }
