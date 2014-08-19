@@ -29,6 +29,7 @@ import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
+import cuchaz.enigma.analysis.TreeDumpVisitor;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
@@ -49,6 +50,7 @@ public class Deobfuscator
 	private JarIndex m_jarIndex;
 	private Mappings m_mappings;
 	private Renamer m_renamer;
+	private TranslatingTypeLoader m_typeLoader;
 	
 	public Deobfuscator( File file )
 	throws IOException
@@ -93,12 +95,13 @@ public class Deobfuscator
 		m_renamer = new Renamer( m_jarIndex, m_mappings );
 		
 		// update decompiler options
-		m_settings.setTypeLoader( new TranslatingTypeLoader(
+		m_typeLoader = new TranslatingTypeLoader(
 			m_jar,
 			m_jarIndex,
 			getTranslator( TranslationDirection.Obfuscating ),
 			getTranslator( TranslationDirection.Deobfuscating )
-		) );
+		);
+		m_settings.setTypeLoader( m_typeLoader );
 	}
 	
 	public Translator getTranslator( TranslationDirection direction )
@@ -158,7 +161,8 @@ public class Deobfuscator
 		// render the AST into source
 		StringWriter buf = new StringWriter();
 		root.acceptVisitor( new InsertParenthesesVisitor(), null );
-		//root.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
+		// DEBUG
+		root.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
 		root.acceptVisitor( new JavaOutputVisitor( new PlainTextOutput( buf ), m_settings ), null );
 		
 		// build the source index
@@ -196,6 +200,9 @@ public class Deobfuscator
 		{
 			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
 		}
+		
+		// clear the type loader cache
+		m_typeLoader.clearCache();
 	}
 	
 	public Entry obfuscateEntry( Entry deobfEntry )

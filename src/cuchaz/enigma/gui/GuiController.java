@@ -272,7 +272,14 @@ public class GuiController
 				m_gui.setSource( m_index.getSource() );
 				if( obfEntryToShow != null )
 				{
-					m_gui.showToken( m_index.getDeclarationToken( m_deobfuscator.deobfuscateEntry( obfEntryToShow ) ) );
+					Entry deobfEntryToShow = m_deobfuscator.deobfuscateEntry( obfEntryToShow );
+					Token token = m_index.getDeclarationToken( deobfEntryToShow );
+					if( token == null )
+					{
+						// TEMP
+						System.out.println( "WARNING: can't find token for " + obfEntryToShow + " -> " + deobfEntryToShow );
+					}
+					m_gui.showToken( token );
 				}
 				
 				// set the highlighted tokens

@@ -201,6 +201,18 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 		return recurse( node, index );
 	}
 	
+	@Override
+	public Void visitEnumValueDeclaration( EnumValueDeclaration node, SourceIndex index )
+	{
+		// treat enum declarations as field declarations
+		FieldDefinition def = node.getUserData( Keys.FIELD_DEFINITION );
+		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
+		FieldEntry fieldEntry = new FieldEntry( classEntry, def.getName() );
+		index.addDeclaration( node.getNameToken(), fieldEntry );
+		
+		return recurse( node, index );
+	}
+	
 	private Void recurse( AstNode node, SourceIndex index )
 	{
 		for( final AstNode child : node.getChildren() )
@@ -556,12 +568,6 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	
 	@Override
 	public Void visitMethodGroupExpression( MethodGroupExpression node, SourceIndex index )
-	{
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitEnumValueDeclaration( EnumValueDeclaration node, SourceIndex index )
 	{
 		return recurse( node, index );
 	}

@@ -53,6 +53,11 @@ public class TranslatingTypeLoader implements ITypeLoader
 		m_cache = Maps.newHashMap();
 	}
 	
+	public void clearCache( )
+	{
+		m_cache.clear();
+	}
+	
 	@Override
 	public boolean tryLoadType( String deobfClassName, Buffer out )
 	{
