@@ -122,7 +122,7 @@ public class TreeDumpVisitor implements IAstVisitor<Void, Void>
 		// show the tree
 		try
 		{
-			m_out.write( getIndent( node ) + node.getClass().getSimpleName() + dumpUserData( node ) + " " + node.getRegion() + "\n" );
+			m_out.write( getIndent( node ) + node.getClass().getSimpleName() + " " + getText( node ) + " " + dumpUserData( node ) + " " + node.getRegion() + "\n" );
 		}
 		catch( IOException ex )
 		{
@@ -135,6 +135,15 @@ public class TreeDumpVisitor implements IAstVisitor<Void, Void>
 			child.acceptVisitor( this, ignored );
 		}
 		return null;
+	}
+	
+	private String getText( AstNode node )
+	{
+		if( node instanceof Identifier )
+		{
+			return "\"" + node.getText() + "\"";
+		}
+		return "";
 	}
 	
 	private String dumpUserData( AstNode node )

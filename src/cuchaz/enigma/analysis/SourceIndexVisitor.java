@@ -213,6 +213,20 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 		return recurse( node, index );
 	}
 	
+	@Override
+	public Void visitIdentifierExpression( IdentifierExpression node, SourceIndex index )
+	{
+		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
+		if( ref != null )
+		{
+			ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
+			FieldEntry fieldEntry = new FieldEntry( classEntry, ref.getName() );
+			index.add( node.getIdentifierToken(), fieldEntry );
+		}
+		
+		return recurse( node, index );
+	}
+	
 	private Void recurse( AstNode node, SourceIndex index )
 	{
 		for( final AstNode child : node.getChildren() )
@@ -472,12 +486,6 @@ public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void>
 	
 	@Override
 	public Void visitIndexerExpression( IndexerExpression node, SourceIndex index )
-	{
-		return recurse( node, index );
-	}
-	
-	@Override
-	public Void visitIdentifierExpression( IdentifierExpression node, SourceIndex index )
 	{
 		return recurse( node, index );
 	}

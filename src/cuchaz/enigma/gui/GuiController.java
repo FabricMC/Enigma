@@ -20,14 +20,15 @@ import java.util.Stack;
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
-import cuchaz.enigma.analysis.FieldCallsTreeNode;
-import cuchaz.enigma.analysis.MethodCallsTreeNode;
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.FieldReferenceTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
+import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
@@ -44,7 +45,7 @@ public class GuiController
 	private SourceIndex m_index;
 	private ClassEntry m_currentClass;
 	private boolean m_isDirty;
-	private Stack<Entry> m_entryStack;
+	private Stack<Entry> m_locationStack; // TODO: make a location class, can be either Entry or EntryReference
 	
 	public GuiController( Gui gui )
 	{
@@ -53,7 +54,7 @@ public class GuiController
 		m_index = null;
 		m_currentClass = null;
 		m_isDirty = false;
-		m_entryStack = new Stack<Entry>();
+		m_locationStack = new Stack<Entry>();
 	}
 	
 	public boolean isDirty( )
@@ -157,9 +158,9 @@ public class GuiController
 		return MethodInheritanceTreeNode.findNode( rootNode, obfMethodEntry );
 	}
 	
-	public FieldCallsTreeNode getFieldCalls( FieldEntry obfFieldEntry )
+	public FieldReferenceTreeNode getFieldReferences( FieldEntry obfFieldEntry )
 	{
-		FieldCallsTreeNode rootNode = new FieldCallsTreeNode(
+		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
 			obfFieldEntry
 		);
@@ -167,27 +168,12 @@ public class GuiController
 		return rootNode;
 	}
 	
-	public MethodCallsTreeNode getMethodCalls( Entry obfEntry )
+	public BehaviorReferenceTreeNode getMethodReferences( BehaviorEntry obfEntry )
 	{
-		MethodCallsTreeNode rootNode;
-		if( obfEntry instanceof MethodEntry )
-		{
-			rootNode = new MethodCallsTreeNode(
-				m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
-				(MethodEntry)obfEntry
-			);
-		}
-		else if( obfEntry instanceof ConstructorEntry )
-		{
-			rootNode = new MethodCallsTreeNode(
-				m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
-				(ConstructorEntry)obfEntry
-			);
-		}
-		else
-		{
-			throw new IllegalArgumentException( "entry must be a MethodEntry or a ConstructorEntry!" );
-		}
+		BehaviorReferenceTreeNode rootNode = new BehaviorReferenceTreeNode(
+			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+			obfEntry
+		);
 		rootNode.load( m_deobfuscator.getJarIndex(), true );
 		return rootNode;
 	}
@@ -200,7 +186,7 @@ public class GuiController
 		refreshCurrentClass( obfEntry );
 	}
 	
-	public void openEntry( Entry entry )
+	public void openDeclaration( Entry entry )
 	{
 		// go to the entry
 		Entry obfEntry = m_deobfuscator.obfuscateEntry( entry );
@@ -214,25 +200,32 @@ public class GuiController
 			m_gui.showToken( m_index.getDeclarationToken( m_deobfuscator.deobfuscateEntry( obfEntry ) ) );
 		}
 		
-		if( m_entryStack.isEmpty() || !m_entryStack.peek().equals( obfEntry ) )
+		if( m_locationStack.isEmpty() || !m_locationStack.peek().equals( obfEntry ) )
 		{
 			// update the stack
-			m_entryStack.push( obfEntry );
+			m_locationStack.push( obfEntry );
 		}
 	}
 	
-	public void openPreviousEntry( )
+	public void openReference( EntryReference<Entry> reference )
 	{
-		if( hasPreviousEntry() )
+		// TODO: find out how to load the n-th reference in a caller
+		// TEMP: just go to the caller for now
+		openDeclaration( reference.caller );
+	}
+	
+	public void openPreviousLocation( )
+	{
+		if( hasPreviousLocation() )
 		{
-			m_entryStack.pop();
-			openEntry( m_entryStack.peek() );
+			m_locationStack.pop();
+			openDeclaration( m_locationStack.peek() );
 		}
 	}
 	
-	public boolean hasPreviousEntry( )
+	public boolean hasPreviousLocation( )
 	{
-		return m_entryStack.size() > 1;
+		return m_locationStack.size() > 1;
 	}
 	
 	private void refreshClasses( )

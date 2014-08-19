@@ -35,12 +35,15 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
 import cuchaz.enigma.mapping.ArgumentEntry;
+import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
@@ -53,8 +56,8 @@ public class JarIndex
 	private Set<String> m_obfClassNames;
 	private Ancestries m_ancestries;
 	private Multimap<String,MethodEntry> m_methodImplementations;
-	private Multimap<Entry,Entry> m_methodCalls;
-	private Multimap<FieldEntry,Entry> m_fieldCalls;
+	private Multimap<BehaviorEntry,EntryReference<? extends Entry>> m_behaviorReferences;
+	private Multimap<FieldEntry,EntryReference<? extends Entry>> m_fieldReferences;
 	private Multimap<String,String> m_innerClasses;
 	private Map<String,String> m_outerClasses;
 	private Set<String> m_anonymousClasses;
@@ -64,8 +67,8 @@ public class JarIndex
 		m_obfClassNames = Sets.newHashSet();
 		m_ancestries = new Ancestries();
 		m_methodImplementations = HashMultimap.create();
-		m_methodCalls = HashMultimap.create();
-		m_fieldCalls = HashMultimap.create();
+		m_behaviorReferences = HashMultimap.create();
+		m_fieldReferences = HashMultimap.create();
 		m_innerClasses = HashMultimap.create();
 		m_outerClasses = Maps.newHashMap();
 		m_anonymousClasses = Sets.newHashSet();
@@ -128,7 +131,7 @@ public class JarIndex
 	{
 		// get the method entry
 		String className = Descriptor.toJvmName( behavior.getDeclaringClass().getName() );
-		final Entry thisEntry;
+		final BehaviorEntry thisEntry;
 		if( behavior instanceof CtMethod )
 		{
 			MethodEntry methodEntry = new MethodEntry(
@@ -156,6 +159,7 @@ public class JarIndex
 		// index method calls
 		try
 		{
+			final Multiset<Entry> callNumbers = HashMultiset.create();
 			behavior.instrument( new ExprEditor( )
 			{
 				@Override
@@ -167,7 +171,13 @@ public class JarIndex
 						call.getMethodName(),
 						call.getSignature()
 					);
-					m_methodCalls.put( calledMethodEntry, thisEntry );
+					callNumbers.add( calledMethodEntry );
+					EntryReference<MethodEntry> reference = new EntryReference<MethodEntry>(
+						calledMethodEntry,
+						thisEntry,
+						callNumbers.count( calledMethodEntry ) - 1						
+					);
+					m_behaviorReferences.put( calledMethodEntry, reference );
 				}
 				
 				@Override
@@ -178,22 +188,33 @@ public class JarIndex
 						new ClassEntry( className ),
 						call.getFieldName()
 					);
-					m_fieldCalls.put( calledFieldEntry, thisEntry );
+					callNumbers.add( calledFieldEntry );
+					EntryReference<FieldEntry> reference = new EntryReference<FieldEntry>(
+						calledFieldEntry,
+						thisEntry,
+						callNumbers.count( calledFieldEntry ) - 1
+					);
+					m_fieldReferences.put( calledFieldEntry, reference );
 				}
 				
 				@Override
 				public void edit( ConstructorCall call )
 				{
+					// TODO: save isSuper in the reference somehow
 					boolean isSuper = call.getMethodName().equals( "super" );
-					// TODO: make method reference class, update method calls tree to use Invocation instances
-					// this might end up being a big refactor... =(
 					
 					String className = Descriptor.toJvmName( call.getClassName() );
 					ConstructorEntry calledConstructorEntry = new ConstructorEntry(
 						new ClassEntry( className ),
 						call.getSignature()
 					);
-					m_methodCalls.put( calledConstructorEntry, thisEntry );
+					callNumbers.add( calledConstructorEntry );
+					EntryReference<ConstructorEntry> reference = new EntryReference<ConstructorEntry>(
+						calledConstructorEntry,
+						thisEntry,
+						callNumbers.count( calledConstructorEntry ) - 1						
+					);
+					m_behaviorReferences.put( calledConstructorEntry, reference );
 				}
 				
 				@Override
@@ -204,7 +225,13 @@ public class JarIndex
 						new ClassEntry( className ),
 						call.getSignature()
 					);
-					m_methodCalls.put( calledConstructorEntry, thisEntry );
+					callNumbers.add( calledConstructorEntry );
+					EntryReference<ConstructorEntry> reference = new EntryReference<ConstructorEntry>(
+						calledConstructorEntry,
+						thisEntry,
+						callNumbers.count( calledConstructorEntry ) - 1						
+					);
+					m_behaviorReferences.put( calledConstructorEntry, reference );
 				}
 			} );
 		}
@@ -234,9 +261,9 @@ public class JarIndex
 				new ClassEntry( Descriptor.toJvmName( c.getName() ) ),
 				constructor.getMethodInfo().getDescriptor()
 			);
-			for( Entry callerEntry : getMethodCallers( constructorEntry ) )
+			for( EntryReference<BehaviorEntry> reference : getBehaviorReferences( constructorEntry ) )
 			{
-				callerClasses.add( callerEntry.getClassEntry() );
+				callerClasses.add( reference.caller.getClassEntry() );
 			}
 			
 			// is this called by exactly one class?
@@ -388,7 +415,7 @@ public class JarIndex
 			new ClassEntry( innerClassName ),
 			constructor.getMethodInfo().getDescriptor()
 		);
-		if( getMethodCallers( constructorEntry ).size() != 1 )
+		if( getBehaviorReferences( constructorEntry ).size() != 1 )
 		{
 			return false;
 		}
@@ -469,14 +496,26 @@ public class JarIndex
 		return rootNode;
 	}
 	
-	public Collection<Entry> getFieldCallers( FieldEntry fieldEntry )
+	@SuppressWarnings( "unchecked" )
+	public Collection<EntryReference<FieldEntry>> getFieldReferences( FieldEntry fieldEntry )
 	{
-		return m_fieldCalls.get( fieldEntry );
+		List<EntryReference<FieldEntry>> references = Lists.newArrayList();
+		for( EntryReference<? extends Entry> reference : m_fieldReferences.get( fieldEntry ) )
+		{
+			references.add( (EntryReference<FieldEntry>)reference );
+		}
+		return references;
 	}
 	
-	public Collection<Entry> getMethodCallers( Entry entry )
+	@SuppressWarnings( "unchecked" )
+	public Collection<EntryReference<BehaviorEntry>> getBehaviorReferences( BehaviorEntry behaviorEntry )
 	{
-		return m_methodCalls.get( entry );
+		List<EntryReference<BehaviorEntry>> references = Lists.newArrayList();
+		for( EntryReference<? extends Entry> reference : m_behaviorReferences.get( behaviorEntry ) )
+		{
+			references.add( (EntryReference<BehaviorEntry>)reference );
+		}
+		return references;
 	}
 
 	public Collection<String> getInnerClasses( String obfOuterClassName )
@@ -498,85 +537,91 @@ public class JarIndex
 	{
 		m_ancestries.renameClasses( renames );
 		renameMultimap( renames, m_methodImplementations );
-		renameMultimap( renames, m_methodCalls );
-		renameMultimap( renames, m_fieldCalls );
+		renameMultimap( renames, m_behaviorReferences );
+		renameMultimap( renames, m_fieldReferences );
 	}
 	
-	private <T,U> void renameMultimap( Map<String,String> renames, Multimap<T,U> map )
+	private <Key,Val> void renameMultimap( Map<String,String> renames, Multimap<Key,Val> map )
 	{
 		// for each key/value pair...
-		Set<Map.Entry<T,U>> entriesToAdd = Sets.newHashSet();
-		Iterator<Map.Entry<T,U>> iter = map.entries().iterator();
+		Set<Map.Entry<Key,Val>> entriesToAdd = Sets.newHashSet();
+		Iterator<Map.Entry<Key,Val>> iter = map.entries().iterator();
 		while( iter.hasNext() )
 		{
-			Map.Entry<T,U> entry = iter.next();
+			Map.Entry<Key,Val> entry = iter.next();
 			iter.remove();
-			entriesToAdd.add( new AbstractMap.SimpleEntry<T,U>(
-				renameEntry( renames, entry.getKey() ),
-				renameEntry( renames, entry.getValue() )
+			entriesToAdd.add( new AbstractMap.SimpleEntry<Key,Val>(
+				renameThing( renames, entry.getKey() ),
+				renameThing( renames, entry.getValue() )
 			) );
 		}
-		for( Map.Entry<T,U> entry : entriesToAdd )
+		for( Map.Entry<Key,Val> entry : entriesToAdd )
 		{
 			map.put( entry.getKey(), entry.getValue() );
 		}
 	}
 	
 	@SuppressWarnings( "unchecked" )
-	private <T> T renameEntry( Map<String,String> renames, T entry )
+	private <T> T renameThing( Map<String,String> renames, T thing )
 	{
-		if( entry instanceof String )
+		if( thing instanceof String )
 		{
-			String stringEntry = (String)entry;
+			String stringEntry = (String)thing;
 			if( renames.containsKey( stringEntry ) )
 			{
 				return (T)renames.get( stringEntry );
 			}
 		}
-		else if( entry instanceof ClassEntry )
+		else if( thing instanceof ClassEntry )
 		{
-			ClassEntry classEntry = (ClassEntry)entry;
-			return (T)new ClassEntry( renameEntry( renames, classEntry.getClassName() ) );
+			ClassEntry classEntry = (ClassEntry)thing;
+			return (T)new ClassEntry( renameThing( renames, classEntry.getClassName() ) );
 		}
-		else if( entry instanceof FieldEntry )
+		else if( thing instanceof FieldEntry )
 		{
-			FieldEntry fieldEntry = (FieldEntry)entry;
+			FieldEntry fieldEntry = (FieldEntry)thing;
 			return (T)new FieldEntry(
-				renameEntry( renames, fieldEntry.getClassEntry() ),
+				renameThing( renames, fieldEntry.getClassEntry() ),
 				fieldEntry.getName()
 			);
 		}
-		else if( entry instanceof ConstructorEntry )
+		else if( thing instanceof ConstructorEntry )
 		{
-			ConstructorEntry constructorEntry = (ConstructorEntry)entry;
+			ConstructorEntry constructorEntry = (ConstructorEntry)thing;
 			return (T)new ConstructorEntry(
-				renameEntry( renames, constructorEntry.getClassEntry() ),
+				renameThing( renames, constructorEntry.getClassEntry() ),
 				constructorEntry.getSignature()
 			);
 		}
-		else if( entry instanceof MethodEntry )
+		else if( thing instanceof MethodEntry )
 		{
-			MethodEntry methodEntry = (MethodEntry)entry;
+			MethodEntry methodEntry = (MethodEntry)thing;
 			return (T)new MethodEntry(
-				renameEntry( renames, methodEntry.getClassEntry() ),
+				renameThing( renames, methodEntry.getClassEntry() ),
 				methodEntry.getName(),
 				methodEntry.getSignature()
 			);
 		}
-		else if( entry instanceof ArgumentEntry )
+		else if( thing instanceof ArgumentEntry )
 		{
-			ArgumentEntry argumentEntry = (ArgumentEntry)entry;
+			ArgumentEntry argumentEntry = (ArgumentEntry)thing;
 			return (T)new ArgumentEntry(
-				renameEntry( renames, argumentEntry.getMethodEntry() ),
+				renameThing( renames, argumentEntry.getMethodEntry() ),
 				argumentEntry.getIndex(),
 				argumentEntry.getName()
 			);
 		}
+		else if( thing instanceof EntryReference )
+		{
+			EntryReference<Entry> reference = (EntryReference<Entry>)thing;
+			reference.entry = renameThing( renames, reference.entry );
+			return thing;
+		}
 		else
 		{
-			throw new Error( "Not an entry: " + entry );
+			throw new Error( "Not an entry: " + thing );
 		}
 		
-		return entry;
+		return thing;
 	}
 }

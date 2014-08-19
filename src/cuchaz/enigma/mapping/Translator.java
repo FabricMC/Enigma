@@ -172,6 +172,19 @@ public class Translator
 		);
 	}
 	
+	public BehaviorEntry translateEntry( BehaviorEntry in )
+	{
+		if( in instanceof MethodEntry )
+		{
+			return translateEntry( (MethodEntry)in );
+		}
+		else if( in instanceof ConstructorEntry )
+		{
+			return translateEntry( (ConstructorEntry)in );
+		}
+		throw new Error( "Wrong entry type!" );
+	}
+	
 	public String translate( ArgumentEntry in )
 	{
 		for( String className : getSelfAndAncestors( in.getClassName() ) )

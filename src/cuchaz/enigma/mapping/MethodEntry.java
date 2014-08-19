@@ -14,7 +14,7 @@ import java.io.Serializable;
 
 import cuchaz.enigma.Util;
 
-public class MethodEntry implements Entry, Serializable
+public class MethodEntry implements BehaviorEntry, Serializable
 {
 	private static final long serialVersionUID = 4770915224467247458L;
 	
@@ -68,6 +68,7 @@ public class MethodEntry implements Entry, Serializable
 		return m_name;
 	}
 	
+	@Override
 	public String getSignature( )
 	{
 		return m_signature;

@@ -66,10 +66,11 @@ import jsyntaxpane.DefaultSyntaxKit;
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
-import cuchaz.enigma.analysis.FieldCallsTreeNode;
-import cuchaz.enigma.analysis.MethodCallsTreeNode;
+import cuchaz.enigma.analysis.FieldReferenceTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
+import cuchaz.enigma.analysis.ReferenceTreeNode;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -191,7 +192,7 @@ public class Gui
 					String selected = m_obfClasses.getSelectedValue();
 					if( selected != null )
 					{
-						m_controller.openEntry( new ClassEntry( selected ) );
+						m_controller.openDeclaration( new ClassEntry( selected ) );
 					}
 				}
 			}
@@ -217,7 +218,7 @@ public class Gui
 					String selected = m_deobfClasses.getSelectedValue();
 					if( selected != null )
 					{
-						m_controller.openEntry( new ClassEntry( selected ) );
+						m_controller.openDeclaration( new ClassEntry( selected ) );
 					}
 				}
 			}
@@ -268,11 +269,11 @@ public class Gui
 					break;
 					
 					case KeyEvent.VK_N:
-						openEntry();
+						openDeclaration();
 					break;
 					
 					case KeyEvent.VK_P:
-						m_controller.openPreviousEntry();
+						m_controller.openPreviousLocation();
 					break;
 					
 					case KeyEvent.VK_C:
@@ -341,7 +342,7 @@ public class Gui
 				@Override
 				public void actionPerformed( ActionEvent event )
 				{
-					openEntry();
+					openDeclaration();
 				}
 			} );
 			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_N, 0 ) );
@@ -356,7 +357,7 @@ public class Gui
 				@Override
 				public void actionPerformed( ActionEvent event )
 				{
-					m_controller.openPreviousEntry();
+					m_controller.openPreviousLocation();
 				}
 			} );
 			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
@@ -385,14 +386,14 @@ public class Gui
 					Object node = path.getLastPathComponent();
 					if( node instanceof ClassInheritanceTreeNode )
 					{
-						m_controller.openEntry( new ClassEntry( ((ClassInheritanceTreeNode)node).getObfClassName() ) );
+						m_controller.openDeclaration( new ClassEntry( ((ClassInheritanceTreeNode)node).getObfClassName() ) );
 					}
 					else if( node instanceof MethodInheritanceTreeNode )
 					{
 						MethodInheritanceTreeNode methodNode = (MethodInheritanceTreeNode)node;
 						if( methodNode.isImplemented() )
 						{
-							m_controller.openEntry( methodNode.getMethodEntry() );
+							m_controller.openDeclaration( methodNode.getMethodEntry() );
 						}
 					}
 				}
@@ -407,6 +408,7 @@ public class Gui
 		m_callsTree.setModel( null );
 		m_callsTree.addMouseListener( new MouseAdapter( )
 		{
+			@SuppressWarnings( "unchecked" )
 			@Override
 			public void mouseClicked( MouseEvent event )
 			{
@@ -420,9 +422,17 @@ public class Gui
 					}
 					
 					Object node = path.getLastPathComponent();
-					if( node instanceof MethodCallsTreeNode )
+					if( node instanceof ReferenceTreeNode )
 					{
-						m_controller.openEntry( ((MethodCallsTreeNode)node).getEntry() );
+						ReferenceTreeNode<Entry> referenceNode = ((ReferenceTreeNode<Entry>)node);
+						if( referenceNode.getReference() != null )
+						{
+							m_controller.openReference( referenceNode.getReference() );
+						}
+						else
+						{
+							m_controller.openDeclaration( referenceNode.getEntry() );
+						}
 					}
 				}
 			}
@@ -862,7 +872,7 @@ public class Gui
 		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry || isConstructorEntry );
 		m_showCallsMenu.setEnabled( isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
-		m_openPreviousMenu.setEnabled( m_controller.hasPreviousEntry() );
+		m_openPreviousMenu.setEnabled( m_controller.hasPreviousLocation() );
 	}
 	
 	private void startRename( )
@@ -977,17 +987,17 @@ public class Gui
 		
 		if( m_selectedEntryPair.obf instanceof FieldEntry )
 		{
-			FieldCallsTreeNode node = m_controller.getFieldCalls( (FieldEntry)m_selectedEntryPair.obf );
+			FieldReferenceTreeNode node = m_controller.getFieldReferences( (FieldEntry)m_selectedEntryPair.obf );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
 		else if( m_selectedEntryPair.obf instanceof MethodEntry )
 		{
-			MethodCallsTreeNode node = m_controller.getMethodCalls( (MethodEntry)m_selectedEntryPair.obf );
+			BehaviorReferenceTreeNode node = m_controller.getMethodReferences( (MethodEntry)m_selectedEntryPair.obf );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
 		else if( m_selectedEntryPair.obf instanceof ConstructorEntry )
 		{
-			MethodCallsTreeNode node = m_controller.getMethodCalls( (ConstructorEntry)m_selectedEntryPair.obf );
+			BehaviorReferenceTreeNode node = m_controller.getMethodReferences( (ConstructorEntry)m_selectedEntryPair.obf );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
 		
@@ -1009,13 +1019,13 @@ public class Gui
 		return new TreePath( nodes.toArray() );
 	}
 	
-	private void openEntry( )
+	private void openDeclaration( )
 	{	
 		if( m_selectedEntryPair == null )
 		{
 			return;
 		}
-		m_controller.openEntry( m_selectedEntryPair.obf );
+		m_controller.openDeclaration( m_selectedEntryPair.obf );
 	}
 	
 	private void close( )
