@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,15 +25,17 @@ import cuchaz.enigma.mapping.Entry;
 public class SourceIndex
 {
 	private String m_source;
-	private TreeMap<Token,Entry> m_tokens;
-	private Map<Entry,Token> m_declarations;
+	private TreeMap<Token,EntryReference<Entry,Entry>> m_tokenToReference;
+	private HashMap<EntryReference<Entry,Entry>,Token> m_referenceToToken;
+	private Map<Entry,Token> m_declarationToToken;
 	private List<Integer> m_lineOffsets;
 	
 	public SourceIndex( String source )
 	{
 		m_source = source;
-		m_tokens = Maps.newTreeMap();
-		m_declarations = Maps.newHashMap();
+		m_tokenToReference = Maps.newTreeMap();
+		m_referenceToToken = Maps.newHashMap();
+		m_declarationToToken = Maps.newHashMap();
 		m_lineOffsets = Lists.newArrayList();
 		
 		// count the lines
@@ -87,12 +90,13 @@ public class SourceIndex
 		return token;
 	}
 	
-	public void add( Identifier node, Entry deobfEntry )
+	public void addReference( Identifier node, EntryReference<Entry,Entry> deobfReference )
 	{
 		Token token = getToken( node );
 		if( token != null )
 		{
-			m_tokens.put( token, deobfEntry );
+			m_tokenToReference.put( token, deobfReference );
+			m_referenceToToken.put( deobfReference, token );
 		}
 	}
 	
@@ -101,19 +105,16 @@ public class SourceIndex
 		Token token = getToken( node );
 		if( token != null )
 		{
-			m_tokens.put( token, deobfEntry );
-			m_declarations.put( deobfEntry, token );
+			EntryReference<Entry,Entry> reference = new EntryReference<Entry,Entry>( deobfEntry );
+			m_tokenToReference.put( token, reference );
+			m_referenceToToken.put( reference, token );
+			m_declarationToToken.put( deobfEntry, token );
 		}
 	}
 	
-	public Token getToken( int pos )
+	public Token getReferenceToken( int pos )
 	{
-		Map.Entry<Token,Entry> mapEntry = m_tokens.floorEntry( new Token( pos, pos ) );
-		if( mapEntry == null )
-		{
-			return null;
-		}
-		Token token = mapEntry.getKey();
+		Token token = m_tokenToReference.floorKey( new Token( pos, pos ) );
 		if( token.contains( pos ) )
 		{
 			return token;
@@ -121,23 +122,33 @@ public class SourceIndex
 		return null;
 	}
 	
-	public Entry getEntry( Token token )
+	public Token getReferenceToken( EntryReference<Entry,Entry> deobfReference )
+	{
+		return m_referenceToToken.get( deobfReference );
+	}
+	
+	public EntryReference<Entry,Entry> getDeobfReference( Token token )
 	{
 		if( token == null )
 		{
 			return null;
 		}
-		return m_tokens.get( token );
+		return m_tokenToReference.get( token );
 	}
 	
-	public Iterable<Token> tokens( )
+	public Iterable<Token> referenceTokens( )
 	{
-		return m_tokens.keySet();
+		return m_tokenToReference.keySet();
+	}
+	
+	public Iterable<Token> declarationTokens( )
+	{
+		return m_declarationToToken.values();
 	}
 	
 	public Token getDeclarationToken( Entry deobfEntry )
 	{
-		return m_declarations.get( deobfEntry );
+		return m_declarationToToken.get( deobfEntry );
 	}
 	
 	private int toPos( int line, int col )

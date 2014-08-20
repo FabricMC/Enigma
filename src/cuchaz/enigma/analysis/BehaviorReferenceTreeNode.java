@@ -21,13 +21,13 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.Translator;
 
-public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<BehaviorEntry>
+public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<BehaviorEntry,BehaviorEntry>
 {
 	private static final long serialVersionUID = -3658163700783307520L;
 	
 	private Translator m_deobfuscatingTranslator;
 	private BehaviorEntry m_entry;
-	private EntryReference<BehaviorEntry> m_reference;
+	private EntryReference<BehaviorEntry,BehaviorEntry> m_reference;
 	
 	public BehaviorReferenceTreeNode( Translator deobfuscatingTranslator, BehaviorEntry entry )
 	{
@@ -36,7 +36,7 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 		m_reference = null;
 	}
 	
-	public BehaviorReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<BehaviorEntry> reference )
+	public BehaviorReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<BehaviorEntry,BehaviorEntry> reference )
 	{
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_entry = reference.entry;
@@ -50,7 +50,7 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 	}
 	
 	@Override
-	public EntryReference<BehaviorEntry> getReference( )
+	public EntryReference<BehaviorEntry,BehaviorEntry> getReference( )
 	{
 		return m_reference;
 	}
@@ -60,7 +60,7 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 	{
 		if( m_reference != null )
 		{
-			return m_deobfuscatingTranslator.translateEntry( m_reference.caller ).toString();
+			return m_deobfuscatingTranslator.translateEntry( m_reference.context ).toString();
 		}
 		return m_deobfuscatingTranslator.translateEntry( m_entry ).toString();
 	}
@@ -68,7 +68,7 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 	public void load( JarIndex index, boolean recurse )
 	{
 		// get all the child nodes
-		for( EntryReference<BehaviorEntry> reference : index.getBehaviorReferences( m_entry ) )
+		for( EntryReference<BehaviorEntry,BehaviorEntry> reference : index.getBehaviorReferences( m_entry ) )
 		{
 			add( new BehaviorReferenceTreeNode( m_deobfuscatingTranslator, reference ) );
 		}

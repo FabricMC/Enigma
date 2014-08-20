@@ -14,10 +14,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
@@ -30,7 +31,6 @@ import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
-import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.MappingsReader;
@@ -43,18 +43,18 @@ public class GuiController
 	private Deobfuscator m_deobfuscator;
 	private Gui m_gui;
 	private SourceIndex m_index;
-	private ClassEntry m_currentClass;
+	private ClassEntry m_currentObfClass;
 	private boolean m_isDirty;
-	private Stack<Entry> m_locationStack; // TODO: make a location class, can be either Entry or EntryReference
+	private Deque<EntryReference<Entry,Entry>> m_referenceStack; // TODO: make a location class, can be either Entry or EntryReference
 	
 	public GuiController( Gui gui )
 	{
 		m_gui = gui;
 		m_deobfuscator = null;
 		m_index = null;
-		m_currentClass = null;
+		m_currentObfClass = null;
 		m_isDirty = false;
-		m_locationStack = new Stack<Entry>();
+		m_referenceStack = Queues.newArrayDeque();
 	}
 	
 	public boolean isDirty( )
@@ -112,22 +112,16 @@ public class GuiController
 			return null;
 		}
 		
-		return m_index.getToken( pos );
+		return m_index.getReferenceToken( pos );
 	}
 	
-	public EntryPair<Entry> getEntryPair( Token token )
+	public EntryReference<Entry,Entry> getDeobfReference( Token token )
 	{
 		if( m_index == null )
 		{
 			return null;
 		}
-		
-		Entry deobfEntry = m_index.getEntry( token );
-		if( deobfEntry == null )
-		{
-			return null;
-		}
-		return new EntryPair<Entry>( m_deobfuscator.obfuscateEntry( deobfEntry ), deobfEntry );
+		return m_index.getDeobfReference( token );
 	}
 	
 	public boolean entryHasMapping( Entry deobfEntry )
@@ -178,54 +172,63 @@ public class GuiController
 		return rootNode;
 	}
 	
-	public void rename( Entry obfEntry, String newName )
+	public void rename( EntryReference<Entry,Entry> deobfReference, String newName )
 	{
-		m_deobfuscator.rename( obfEntry, newName );
+		EntryReference<Entry,Entry> obfReference = m_deobfuscator.obfuscateReference( deobfReference );
+		m_deobfuscator.rename( obfReference.entry, newName );
 		m_isDirty = true;
 		refreshClasses();
-		refreshCurrentClass( obfEntry );
+		refreshCurrentClass( obfReference );
 	}
 	
 	public void openDeclaration( Entry entry )
 	{
-		// go to the entry
-		Entry obfEntry = m_deobfuscator.obfuscateEntry( entry );
-		if( m_currentClass == null || !m_currentClass.equals( obfEntry.getClassEntry() ) )
+		if( entry == null )
 		{
-			m_currentClass = new ClassEntry( obfEntry.getClassEntry() );
-			deobfuscate( m_currentClass, obfEntry );
+			throw new IllegalArgumentException( "Entry cannot be null!" );
+		}
+		openReference( new EntryReference<Entry,Entry>( entry ) );
+	}
+	
+	public void openReference( EntryReference<Entry,Entry> deobfReference )
+	{
+		if( deobfReference == null )
+		{
+			throw new IllegalArgumentException( "Reference cannot be null!" );
+		}
+		
+		// get the reference target class
+		EntryReference<Entry,Entry> obfReference = m_deobfuscator.obfuscateReference( deobfReference );
+		ClassEntry obfClassEntry = obfReference.getClassEntry().getOuterClassEntry();
+		if( m_currentObfClass == null || !m_currentObfClass.equals( obfClassEntry ) )
+		{
+			// deobfuscate the class, then navigate to the reference
+			m_currentObfClass = obfClassEntry;
+			deobfuscate( m_currentObfClass, obfReference );
 		}
 		else
 		{
-			m_gui.showToken( m_index.getDeclarationToken( m_deobfuscator.deobfuscateEntry( obfEntry ) ) );
-		}
-		
-		if( m_locationStack.isEmpty() || !m_locationStack.peek().equals( obfEntry ) )
-		{
-			// update the stack
-			m_locationStack.push( obfEntry );
+			// the class file is already open, just navigate to the reference
+			m_gui.showToken( m_index.getReferenceToken( deobfReference ) );
 		}
 	}
 	
-	public void openReference( EntryReference<Entry> reference )
+	public void savePreviousReference( EntryReference<Entry,Entry> deobfReference )
 	{
-		// TODO: find out how to load the n-th reference in a caller
-		// TEMP: just go to the caller for now
-		openDeclaration( reference.caller );
+		m_referenceStack.push( m_deobfuscator.obfuscateReference( deobfReference ) );
 	}
 	
-	public void openPreviousLocation( )
+	public void openPreviousReference( )
 	{
 		if( hasPreviousLocation() )
 		{
-			m_locationStack.pop();
-			openDeclaration( m_locationStack.peek() );
+			openReference( m_deobfuscator.deobfuscateReference( m_referenceStack.pop() ) );
 		}
 	}
 	
 	public boolean hasPreviousLocation( )
 	{
-		return m_locationStack.size() > 1;
+		return !m_referenceStack.isEmpty();
 	}
 	
 	private void refreshClasses( )
@@ -242,15 +245,15 @@ public class GuiController
 		refreshCurrentClass( null );
 	}
 	
-	private void refreshCurrentClass( Entry obfEntryToShow )
+	private void refreshCurrentClass( EntryReference<Entry,Entry> obfReferenceToShow )
 	{
-		if( m_currentClass != null )
+		if( m_currentObfClass != null )
 		{
-			deobfuscate( m_currentClass, obfEntryToShow );
+			deobfuscate( m_currentObfClass, obfReferenceToShow );
 		}
 	}
 	
-	private void deobfuscate( final ClassEntry classEntry, final Entry obfEntryToShow )
+	private void deobfuscate( final ClassEntry classEntry, final EntryReference<Entry,Entry> obfReferenceToShow )
 	{
 		m_gui.setSource( "(deobfuscating...)" );
 		
@@ -263,29 +266,32 @@ public class GuiController
 				// decompile,deobfuscate the bytecode
 				m_index = m_deobfuscator.getSource( classEntry.getClassName() );
 				m_gui.setSource( m_index.getSource() );
-				if( obfEntryToShow != null )
+				if( obfReferenceToShow != null )
 				{
-					Entry deobfEntryToShow = m_deobfuscator.deobfuscateEntry( obfEntryToShow );
-					Token token = m_index.getDeclarationToken( deobfEntryToShow );
+					EntryReference<Entry,Entry> deobfReferenceToShow = m_deobfuscator.deobfuscateReference( obfReferenceToShow );
+					Token token = m_index.getReferenceToken( deobfReferenceToShow );
 					if( token == null )
 					{
-						// TEMP
-						System.out.println( "WARNING: can't find token for " + obfEntryToShow + " -> " + deobfEntryToShow );
+						// DEBUG
+						System.out.println( "WARNING: can't find token for " + obfReferenceToShow + " -> " + deobfReferenceToShow );
 					}
-					m_gui.showToken( token );
+					else
+					{
+						m_gui.showToken( token );
+					}
 				}
 				
 				// set the highlighted tokens
 				List<Token> obfuscatedTokens = Lists.newArrayList();
 				List<Token> deobfuscatedTokens = Lists.newArrayList();
-				for( Token token : m_index.tokens() )
+				for( Token token : m_index.referenceTokens() )
 				{
-					Entry entry = m_index.getEntry( token );
-					if( entryHasMapping( entry ) )
+					EntryReference<Entry,Entry> reference = m_index.getDeobfReference( token );
+					if( entryHasMapping( reference.entry ) )
 					{
 						deobfuscatedTokens.add( token );
 					}
-					else if( entryIsObfuscatedIdenfitier( entry ) )
+					else if( entryIsObfuscatedIdenfitier( reference.entry ) )
 					{
 						obfuscatedTokens.add( token );
 					}

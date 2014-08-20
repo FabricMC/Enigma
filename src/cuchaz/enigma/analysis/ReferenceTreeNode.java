@@ -12,8 +12,8 @@ package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.mapping.Entry;
 
-public interface ReferenceTreeNode<T extends Entry>
+public interface ReferenceTreeNode<E extends Entry, C extends Entry>
 {
-	T getEntry();
-	EntryReference<T> getReference();
+	E getEntry();
+	EntryReference<E,C> getReference();
 }

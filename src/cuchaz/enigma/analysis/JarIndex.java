@@ -56,8 +56,8 @@ public class JarIndex
 	private Set<String> m_obfClassNames;
 	private Ancestries m_ancestries;
 	private Multimap<String,MethodEntry> m_methodImplementations;
-	private Multimap<BehaviorEntry,EntryReference<? extends Entry>> m_behaviorReferences;
-	private Multimap<FieldEntry,EntryReference<? extends Entry>> m_fieldReferences;
+	private Multimap<BehaviorEntry,EntryReference<BehaviorEntry,BehaviorEntry>> m_behaviorReferences;
+	private Multimap<FieldEntry,EntryReference<FieldEntry,BehaviorEntry>> m_fieldReferences;
 	private Multimap<String,String> m_innerClasses;
 	private Map<String,String> m_outerClasses;
 	private Set<String> m_anonymousClasses;
@@ -108,12 +108,12 @@ public class JarIndex
 					m_anonymousClasses.add( innerClassName );
 					
 					// DEBUG
-					System.out.println( "ANONYMOUS: " + outerClassName + "$" + innerClassName );
+					//System.out.println( "ANONYMOUS: " + outerClassName + "$" + innerClassName );
 				}
 				else
 				{
 					// DEBUG
-					System.out.println( "INNER: " + outerClassName + "$" + innerClassName );
+					//System.out.println( "INNER: " + outerClassName + "$" + innerClassName );
 				}
 			}
 		}
@@ -172,7 +172,7 @@ public class JarIndex
 						call.getSignature()
 					);
 					callNumbers.add( calledMethodEntry );
-					EntryReference<MethodEntry> reference = new EntryReference<MethodEntry>(
+					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledMethodEntry,
 						thisEntry,
 						callNumbers.count( calledMethodEntry ) - 1						
@@ -189,7 +189,7 @@ public class JarIndex
 						call.getFieldName()
 					);
 					callNumbers.add( calledFieldEntry );
-					EntryReference<FieldEntry> reference = new EntryReference<FieldEntry>(
+					EntryReference<FieldEntry,BehaviorEntry> reference = new EntryReference<FieldEntry,BehaviorEntry>(
 						calledFieldEntry,
 						thisEntry,
 						callNumbers.count( calledFieldEntry ) - 1
@@ -209,7 +209,7 @@ public class JarIndex
 						call.getSignature()
 					);
 					callNumbers.add( calledConstructorEntry );
-					EntryReference<ConstructorEntry> reference = new EntryReference<ConstructorEntry>(
+					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
 						thisEntry,
 						callNumbers.count( calledConstructorEntry ) - 1						
@@ -226,7 +226,7 @@ public class JarIndex
 						call.getSignature()
 					);
 					callNumbers.add( calledConstructorEntry );
-					EntryReference<ConstructorEntry> reference = new EntryReference<ConstructorEntry>(
+					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
 						thisEntry,
 						callNumbers.count( calledConstructorEntry ) - 1						
@@ -261,9 +261,9 @@ public class JarIndex
 				new ClassEntry( Descriptor.toJvmName( c.getName() ) ),
 				constructor.getMethodInfo().getDescriptor()
 			);
-			for( EntryReference<BehaviorEntry> reference : getBehaviorReferences( constructorEntry ) )
+			for( EntryReference<BehaviorEntry,BehaviorEntry> reference : getBehaviorReferences( constructorEntry ) )
 			{
-				callerClasses.add( reference.caller.getClassEntry() );
+				callerClasses.add( reference.context.getClassEntry() );
 			}
 			
 			// is this called by exactly one class?
@@ -496,26 +496,14 @@ public class JarIndex
 		return rootNode;
 	}
 	
-	@SuppressWarnings( "unchecked" )
-	public Collection<EntryReference<FieldEntry>> getFieldReferences( FieldEntry fieldEntry )
+	public Collection<EntryReference<FieldEntry,BehaviorEntry>> getFieldReferences( FieldEntry fieldEntry )
 	{
-		List<EntryReference<FieldEntry>> references = Lists.newArrayList();
-		for( EntryReference<? extends Entry> reference : m_fieldReferences.get( fieldEntry ) )
-		{
-			references.add( (EntryReference<FieldEntry>)reference );
-		}
-		return references;
+		return m_fieldReferences.get( fieldEntry );
 	}
 	
-	@SuppressWarnings( "unchecked" )
-	public Collection<EntryReference<BehaviorEntry>> getBehaviorReferences( BehaviorEntry behaviorEntry )
+	public Collection<EntryReference<BehaviorEntry,BehaviorEntry>> getBehaviorReferences( BehaviorEntry behaviorEntry )
 	{
-		List<EntryReference<BehaviorEntry>> references = Lists.newArrayList();
-		for( EntryReference<? extends Entry> reference : m_behaviorReferences.get( behaviorEntry ) )
-		{
-			references.add( (EntryReference<BehaviorEntry>)reference );
-		}
-		return references;
+		return m_behaviorReferences.get( behaviorEntry );
 	}
 
 	public Collection<String> getInnerClasses( String obfOuterClassName )
@@ -613,8 +601,9 @@ public class JarIndex
 		}
 		else if( thing instanceof EntryReference )
 		{
-			EntryReference<Entry> reference = (EntryReference<Entry>)thing;
+			EntryReference<Entry,Entry> reference = (EntryReference<Entry,Entry>)thing;
 			reference.entry = renameThing( renames, reference.entry );
+			reference.context = renameThing( renames, reference.context );
 			return thing;
 		}
 		else

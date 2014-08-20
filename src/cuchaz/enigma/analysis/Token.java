@@ -46,4 +46,10 @@ public class Token implements Comparable<Token>
 	{
 		return start == other.start && end == other.end;
 	}
+	
+	@Override
+	public String toString( )
+	{
+		return String.format( "[%d,%d]", start, end );
+	}
 }

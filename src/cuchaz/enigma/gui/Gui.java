@@ -68,6 +68,7 @@ import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.FieldReferenceTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.ReferenceTreeNode;
@@ -76,7 +77,6 @@ import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
-import cuchaz.enigma.mapping.EntryPair;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.IllegalNameException;
 import cuchaz.enigma.mapping.MappingParseException;
@@ -160,7 +160,7 @@ public class Gui
 	private JMenuItem m_showCallsMenu;
 	
 	// state
-	private EntryPair<? extends Entry> m_selectedEntryPair;
+	private EntryReference<Entry,Entry> m_reference;
 	private JFileChooser m_jarFileChooser;
 	private JFileChooser m_mappingsFileChooser;
 	
@@ -192,6 +192,10 @@ public class Gui
 					String selected = m_obfClasses.getSelectedValue();
 					if( selected != null )
 					{
+						if( m_reference != null )
+						{
+							m_controller.savePreviousReference( m_reference );
+						}
 						m_controller.openDeclaration( new ClassEntry( selected ) );
 					}
 				}
@@ -218,6 +222,10 @@ public class Gui
 					String selected = m_deobfClasses.getSelectedValue();
 					if( selected != null )
 					{
+						if( m_reference != null )
+						{
+							m_controller.savePreviousReference( m_reference );
+						}
 						m_controller.openDeclaration( new ClassEntry( selected ) );
 					}
 				}
@@ -234,7 +242,7 @@ public class Gui
 		m_infoPanel.setLayout( new GridLayout( 4, 1, 0, 0 ) );
 		m_infoPanel.setPreferredSize( new Dimension( 0, 100 ) );
 		m_infoPanel.setBorder( BorderFactory.createTitledBorder( "Identifier Info" ) );
-		clearEntryPair();
+		clearReference();
 		
 		// init editor
 		DefaultSyntaxKit.initKit();
@@ -273,7 +281,7 @@ public class Gui
 					break;
 					
 					case KeyEvent.VK_P:
-						m_controller.openPreviousLocation();
+						m_controller.openPreviousReference();
 					break;
 					
 					case KeyEvent.VK_C:
@@ -357,7 +365,7 @@ public class Gui
 				@Override
 				public void actionPerformed( ActionEvent event )
 				{
-					m_controller.openPreviousLocation();
+					m_controller.openPreviousReference();
 				}
 			} );
 			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
@@ -386,6 +394,10 @@ public class Gui
 					Object node = path.getLastPathComponent();
 					if( node instanceof ClassInheritanceTreeNode )
 					{
+						if( m_reference != null )
+						{
+							m_controller.savePreviousReference( m_reference );
+						}
 						m_controller.openDeclaration( new ClassEntry( ((ClassInheritanceTreeNode)node).getObfClassName() ) );
 					}
 					else if( node instanceof MethodInheritanceTreeNode )
@@ -393,6 +405,10 @@ public class Gui
 						MethodInheritanceTreeNode methodNode = (MethodInheritanceTreeNode)node;
 						if( methodNode.isImplemented() )
 						{
+							if( m_reference != null )
+							{
+								m_controller.savePreviousReference( m_reference );
+							}
 							m_controller.openDeclaration( methodNode.getMethodEntry() );
 						}
 					}
@@ -424,7 +440,11 @@ public class Gui
 					Object node = path.getLastPathComponent();
 					if( node instanceof ReferenceTreeNode )
 					{
-						ReferenceTreeNode<Entry> referenceNode = ((ReferenceTreeNode<Entry>)node);
+						if( m_reference != null )
+						{
+							m_controller.savePreviousReference( m_reference );
+						}
+						ReferenceTreeNode<Entry,Entry> referenceNode = ((ReferenceTreeNode<Entry,Entry>)node);
 						if( referenceNode.getReference() != null )
 						{
 							m_controller.openReference( referenceNode.getReference() );
@@ -715,6 +735,10 @@ public class Gui
 	
 	public void showToken( Token token )
 	{
+		if( token == null )
+		{
+			throw new IllegalArgumentException( "Token cannot be null!" );
+		}
 		m_editor.setCaretPosition( token.start );
 		m_editor.grabFocus();
 	}
@@ -752,7 +776,7 @@ public class Gui
 		}
 	}
 	
-	private void clearEntryPair( )
+	private void clearReference( )
 	{
 		m_infoPanel.removeAll();
 		JLabel label = new JLabel( "No identifier selected" );
@@ -763,76 +787,75 @@ public class Gui
 		redraw();
 	}
 	
-	@SuppressWarnings( "unchecked" )
-	private void showEntryPair( EntryPair<? extends Entry> pair )
+	private void showReference( EntryReference<Entry,Entry> reference )
 	{
-		if( pair == null )
+		if( reference == null )
 		{
-			clearEntryPair();
+			clearReference();
 			return;
 		}
 		
-		m_selectedEntryPair = pair;
+		m_reference = reference;
 		
 		m_infoPanel.removeAll();
-		if( pair.deobf instanceof ClassEntry )
+		if( reference.entry instanceof ClassEntry )
 		{
-			showClassEntryPair( (EntryPair<ClassEntry>)pair );
+			showClassEntry( (ClassEntry)m_reference.entry );
 		}
-		else if( pair.deobf instanceof FieldEntry )
+		else if( m_reference.entry instanceof FieldEntry )
 		{
-			showFieldEntryPair( (EntryPair<FieldEntry>)pair );
+			showFieldEntry( (FieldEntry)m_reference.entry );
 		}
-		else if( pair.deobf instanceof MethodEntry )
+		else if( m_reference.entry instanceof MethodEntry )
 		{
-			showMethodEntryPair( (EntryPair<MethodEntry>)pair );
+			showMethodEntry( (MethodEntry)m_reference.entry );
 		}
-		else if( pair.deobf instanceof ConstructorEntry )
+		else if( m_reference.entry instanceof ConstructorEntry )
 		{
-			showConstructorEntryPair( (EntryPair<ConstructorEntry>)pair );
+			showConstructorEntry( (ConstructorEntry)m_reference.entry );
 		}
-		else if( pair.deobf instanceof ArgumentEntry )
+		else if( m_reference.entry instanceof ArgumentEntry )
 		{
-			showArgumentEntryPair( (EntryPair<ArgumentEntry>)pair );
+			showArgumentEntry( (ArgumentEntry)m_reference.entry );
 		}
 		else
 		{
-			throw new Error( "Unknown entry type: " + pair.deobf.getClass().getName() );
+			throw new Error( "Unknown entry type: " + m_reference.entry.getClass().getName() );
 		}
 		
 		redraw();
 	}
 	
-	private void showClassEntryPair( EntryPair<ClassEntry> pair )
+	private void showClassEntry( ClassEntry entry )
 	{
-		addNameValue( m_infoPanel, "Class", pair.deobf.getName() );
+		addNameValue( m_infoPanel, "Class", entry.getName() );
 	}
 	
-	private void showFieldEntryPair( EntryPair<FieldEntry> pair )
+	private void showFieldEntry( FieldEntry entry )
 	{
-		addNameValue( m_infoPanel, "Field", pair.deobf.getName() );
-		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Field", entry.getName() );
+		addNameValue( m_infoPanel, "Class", entry.getClassEntry().getName() );
 	}
 	
-	private void showMethodEntryPair( EntryPair<MethodEntry> pair )
+	private void showMethodEntry( MethodEntry entry )
 	{
-		addNameValue( m_infoPanel, "Method", pair.deobf.getName() );
-		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
-		addNameValue( m_infoPanel, "Signature", pair.deobf.getSignature() );
+		addNameValue( m_infoPanel, "Method", entry.getName() );
+		addNameValue( m_infoPanel, "Class", entry.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Signature", entry.getSignature() );
 	}
 	
-	private void showConstructorEntryPair( EntryPair<ConstructorEntry> pair )
+	private void showConstructorEntry( ConstructorEntry entry )
 	{
-		addNameValue( m_infoPanel, "Constructor", pair.deobf.getClassEntry().getName() );
-		addNameValue( m_infoPanel, "Signature", pair.deobf.getSignature() );
+		addNameValue( m_infoPanel, "Constructor", entry.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Signature", entry.getSignature() );
 	}
 	
-	private void showArgumentEntryPair( EntryPair<ArgumentEntry> pair )
+	private void showArgumentEntry( ArgumentEntry entry )
 	{
-		addNameValue( m_infoPanel, "Argument", pair.deobf.getName() );
-		addNameValue( m_infoPanel, "Class", pair.deobf.getClassEntry().getName() );
-		addNameValue( m_infoPanel, "Method", pair.deobf.getMethodEntry().getName() );
-		addNameValue( m_infoPanel, "Index", Integer.toString( pair.deobf.getIndex() ) );
+		addNameValue( m_infoPanel, "Argument", entry.getName() );
+		addNameValue( m_infoPanel, "Class", entry.getClassEntry().getName() );
+		addNameValue( m_infoPanel, "Method", entry.getMethodEntry().getName() );
+		addNameValue( m_infoPanel, "Index", Integer.toString( entry.getIndex() ) );
 	}
 	
 	private void addNameValue( JPanel container, String name, String value )
@@ -853,19 +876,19 @@ public class Gui
 		Token token = m_controller.getToken( pos );
 		boolean isToken = token != null;
 		
-		m_selectedEntryPair = m_controller.getEntryPair( token );
-		boolean isClassEntry = isToken && m_selectedEntryPair.obf instanceof ClassEntry;
-		boolean isFieldEntry = isToken && m_selectedEntryPair.obf instanceof FieldEntry;
-		boolean isMethodEntry = isToken && m_selectedEntryPair.obf instanceof MethodEntry;
-		boolean isConstructorEntry = isToken && m_selectedEntryPair.obf instanceof ConstructorEntry;
+		m_reference = m_controller.getDeobfReference( token );
+		boolean isClassEntry = isToken && m_reference.entry instanceof ClassEntry;
+		boolean isFieldEntry = isToken && m_reference.entry instanceof FieldEntry;
+		boolean isMethodEntry = isToken && m_reference.entry instanceof MethodEntry;
+		boolean isConstructorEntry = isToken && m_reference.entry instanceof ConstructorEntry;
 		
 		if( isToken )
 		{
-			showEntryPair( m_selectedEntryPair );
+			showReference( m_reference );
 		}
 		else
 		{
-			clearEntryPair();
+			clearReference();
 		}
 		
 		m_renameMenu.setEnabled( isToken );
@@ -878,11 +901,11 @@ public class Gui
 	private void startRename( )
 	{
 		// get the class name
-		String className = m_selectedEntryPair.deobf.getName();
-		int pos = className.lastIndexOf( '$' );
-		if( pos >= 0 )
+		ClassEntry classEntry = m_reference.entry.getClassEntry();
+		String className = classEntry.getName();
+		if( classEntry.isInnerClass() )
 		{
-			className = className.substring( pos + 1 );
+			className = classEntry.getInnerClassName();
 		}
 		
 		// init the text box
@@ -924,7 +947,7 @@ public class Gui
 		{
 			try
 			{
-				m_controller.rename( m_selectedEntryPair.obf, newName );
+				m_controller.rename( m_reference, newName );
 			}
 			catch( IllegalNameException ex )
 			{
@@ -937,7 +960,7 @@ public class Gui
 		// abort the rename
 		JPanel panel = (JPanel)m_infoPanel.getComponent( 0 );
 		panel.remove( panel.getComponentCount() - 1 );
-		panel.add( unboldLabel( new JLabel( m_selectedEntryPair.deobf.getName(), JLabel.LEFT ) ) );
+		panel.add( unboldLabel( new JLabel( m_reference.entry.getName(), JLabel.LEFT ) ) );
 		
 		m_editor.grabFocus();
 		
@@ -946,15 +969,15 @@ public class Gui
 	
 	private void showInheritance( )
 	{
-		if( m_selectedEntryPair == null )
+		if( m_reference == null )
 		{
 			return;
 		}
 		
-		if( m_selectedEntryPair.obf instanceof ClassEntry )
+		if( m_reference.entry instanceof ClassEntry )
 		{
 			// get the class inheritance
-			ClassInheritanceTreeNode classNode = m_controller.getClassInheritance( (ClassEntry)m_selectedEntryPair.obf );
+			ClassInheritanceTreeNode classNode = m_controller.getClassInheritance( (ClassEntry)m_reference.entry );
 			
 			// show the tree at the root
 			TreePath path = getPathToRoot( classNode );
@@ -962,10 +985,10 @@ public class Gui
 			m_inheritanceTree.expandPath( path );
 			m_inheritanceTree.setSelectionRow( m_inheritanceTree.getRowForPath( path ) );
 		}
-		else if( m_selectedEntryPair.obf instanceof MethodEntry )
+		else if( m_reference.entry instanceof MethodEntry )
 		{
 			// get the method inheritance
-			MethodInheritanceTreeNode classNode = m_controller.getMethodInheritance( (MethodEntry)m_selectedEntryPair.obf );
+			MethodInheritanceTreeNode classNode = m_controller.getMethodInheritance( (MethodEntry)m_reference.entry );
 			
 			// show the tree at the root
 			TreePath path = getPathToRoot( classNode );
@@ -980,24 +1003,24 @@ public class Gui
 	
 	private void showCalls( )
 	{
-		if( m_selectedEntryPair == null )
+		if( m_reference == null )
 		{
 			return;
 		}
 		
-		if( m_selectedEntryPair.obf instanceof FieldEntry )
+		if( m_reference.entry instanceof FieldEntry )
 		{
-			FieldReferenceTreeNode node = m_controller.getFieldReferences( (FieldEntry)m_selectedEntryPair.obf );
+			FieldReferenceTreeNode node = m_controller.getFieldReferences( (FieldEntry)m_reference.entry );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
-		else if( m_selectedEntryPair.obf instanceof MethodEntry )
+		else if( m_reference.entry instanceof MethodEntry )
 		{
-			BehaviorReferenceTreeNode node = m_controller.getMethodReferences( (MethodEntry)m_selectedEntryPair.obf );
+			BehaviorReferenceTreeNode node = m_controller.getMethodReferences( (MethodEntry)m_reference.entry );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
-		else if( m_selectedEntryPair.obf instanceof ConstructorEntry )
+		else if( m_reference.entry instanceof ConstructorEntry )
 		{
-			BehaviorReferenceTreeNode node = m_controller.getMethodReferences( (ConstructorEntry)m_selectedEntryPair.obf );
+			BehaviorReferenceTreeNode node = m_controller.getMethodReferences( (ConstructorEntry)m_reference.entry );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
 		
@@ -1021,11 +1044,12 @@ public class Gui
 	
 	private void openDeclaration( )
 	{	
-		if( m_selectedEntryPair == null )
+		if( m_reference == null )
 		{
 			return;
 		}
-		m_controller.openDeclaration( m_selectedEntryPair.obf );
+		m_controller.savePreviousReference( m_reference );
+		m_controller.openDeclaration( m_reference.entry );
 	}
 	
 	private void close( )

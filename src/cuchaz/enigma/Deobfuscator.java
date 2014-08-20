@@ -26,6 +26,7 @@ import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 
+import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
@@ -169,7 +170,59 @@ public class Deobfuscator
 		SourceIndex index = new SourceIndex( buf.toString() );
 		root.acceptVisitor( new SourceIndexVisitor(), index );
 		
+		/* DEBUG
+		for( Token token : index.referenceTokens() )
+		{
+			EntryReference<Entry,Entry> reference = index.getDeobfReference( token );
+			System.out.println( token + " -> " + reference + " -> " + index.getReferenceToken( reference ) );
+		}
+		*/
+		
 		return index;
+	}
+	
+	public Entry obfuscateEntry( Entry deobfEntry )
+	{
+		if( deobfEntry == null )
+		{
+			return null;
+		}
+		return getTranslator( TranslationDirection.Obfuscating ).translateEntry( deobfEntry );
+	}
+	
+	public Entry deobfuscateEntry( Entry obfEntry )
+	{
+		if( obfEntry == null )
+		{
+			return null;
+		}
+		return getTranslator( TranslationDirection.Deobfuscating ).translateEntry( obfEntry );
+	}
+	
+	public EntryReference<Entry,Entry> obfuscateReference( EntryReference<Entry,Entry> deobfReference )
+	{
+		if( deobfReference == null )
+		{
+			return null;
+		}
+		return new EntryReference<Entry,Entry>(
+			obfuscateEntry( deobfReference.entry ),
+			obfuscateEntry( deobfReference.context ),
+			deobfReference.pos
+		);
+	}
+	
+	public EntryReference<Entry,Entry> deobfuscateReference( EntryReference<Entry,Entry> obfReference )
+	{
+		if( obfReference == null )
+		{
+			return null;
+		}
+		return new EntryReference<Entry,Entry>(
+			deobfuscateEntry( obfReference.entry ),
+			deobfuscateEntry( obfReference.context ),
+			obfReference.pos
+		);
 	}
 	
 	// NOTE: these methods are a bit messy... oh well
@@ -203,64 +256,6 @@ public class Deobfuscator
 		
 		// clear the type loader cache
 		m_typeLoader.clearCache();
-	}
-	
-	public Entry obfuscateEntry( Entry deobfEntry )
-	{
-		Translator translator = getTranslator( TranslationDirection.Obfuscating );
-		if( deobfEntry instanceof ClassEntry )
-		{
-			return translator.translateEntry( (ClassEntry)deobfEntry );
-		}
-		else if( deobfEntry instanceof FieldEntry )
-		{
-			return translator.translateEntry( (FieldEntry)deobfEntry );
-		}
-		else if( deobfEntry instanceof MethodEntry )
-		{
-			return translator.translateEntry( (MethodEntry)deobfEntry );
-		}
-		else if( deobfEntry instanceof ConstructorEntry )
-		{
-			return translator.translateEntry( (ConstructorEntry)deobfEntry );
-		}
-		else if( deobfEntry instanceof ArgumentEntry )
-		{
-			return translator.translateEntry( (ArgumentEntry)deobfEntry );
-		}
-		else
-		{
-			throw new Error( "Unknown entry type: " + deobfEntry.getClass().getName() );
-		}
-	}
-	
-	public Entry deobfuscateEntry( Entry obfEntry )
-	{
-		Translator translator = getTranslator( TranslationDirection.Deobfuscating );
-		if( obfEntry instanceof ClassEntry )
-		{
-			return translator.translateEntry( (ClassEntry)obfEntry );
-		}
-		else if( obfEntry instanceof FieldEntry )
-		{
-			return translator.translateEntry( (FieldEntry)obfEntry );
-		}
-		else if( obfEntry instanceof MethodEntry )
-		{
-			return translator.translateEntry( (MethodEntry)obfEntry );
-		}
-		else if( obfEntry instanceof ConstructorEntry )
-		{
-			return translator.translateEntry( (ConstructorEntry)obfEntry );
-		}
-		else if( obfEntry instanceof ArgumentEntry )
-		{
-			return translator.translateEntry( (ArgumentEntry)obfEntry );
-		}
-		else
-		{
-			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
-		}
 	}
 	
 	public boolean hasMapping( Entry obfEntry )

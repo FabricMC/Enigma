@@ -16,13 +16,13 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Translator;
 
-public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<FieldEntry>
+public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<FieldEntry,BehaviorEntry>
 {
 	private static final long serialVersionUID = -7934108091928699835L;
 	
 	private Translator m_deobfuscatingTranslator;
 	private FieldEntry m_entry;
-	private EntryReference<FieldEntry> m_reference;
+	private EntryReference<FieldEntry,BehaviorEntry> m_reference;
 	
 	public FieldReferenceTreeNode( Translator deobfuscatingTranslator, FieldEntry entry )
 	{
@@ -31,7 +31,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 		m_reference = null;
 	}
 	
-	private FieldReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<FieldEntry> reference )
+	private FieldReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<FieldEntry,BehaviorEntry> reference )
 	{
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_entry = reference.entry;
@@ -45,7 +45,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	}
 	
 	@Override
-	public EntryReference<FieldEntry> getReference( )
+	public EntryReference<FieldEntry,BehaviorEntry> getReference( )
 	{
 		return m_reference;
 	}
@@ -55,7 +55,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	{
 		if( m_reference != null )
 		{
-			return m_deobfuscatingTranslator.translateEntry( m_reference.caller ).toString();
+			return m_deobfuscatingTranslator.translateEntry( m_reference.context ).toString();
 		}
 		return m_deobfuscatingTranslator.translateEntry( m_entry ).toString();
 	}
@@ -65,14 +65,14 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 		// get all the child nodes
 		if( m_reference == null )
 		{
-			for( EntryReference<FieldEntry> reference : index.getFieldReferences( m_entry ) )
+			for( EntryReference<FieldEntry,BehaviorEntry> reference : index.getFieldReferences( m_entry ) )
 			{
 				add( new FieldReferenceTreeNode( m_deobfuscatingTranslator, reference ) );
 			}
 		}
 		else
 		{
-			for( EntryReference<BehaviorEntry> reference : index.getBehaviorReferences( m_reference.caller ) )
+			for( EntryReference<BehaviorEntry,BehaviorEntry> reference : index.getBehaviorReferences( m_reference.context ) )
 			{
 				add( new BehaviorReferenceTreeNode( m_deobfuscatingTranslator, reference ) );
 			}

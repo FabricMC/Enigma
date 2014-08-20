@@ -30,6 +30,34 @@ public class Translator
 		m_ancestries = ancestries;
 	}
 	
+	public Entry translateEntry( Entry entry )
+	{
+		if( entry instanceof ClassEntry )
+		{
+			return translateEntry( (ClassEntry)entry );
+		}
+		else if( entry instanceof FieldEntry )
+		{
+			return translateEntry( (FieldEntry)entry );
+		}
+		else if( entry instanceof MethodEntry )
+		{
+			return translateEntry( (MethodEntry)entry );
+		}
+		else if( entry instanceof ConstructorEntry )
+		{
+			return translateEntry( (ConstructorEntry)entry );
+		}
+		else if( entry instanceof ArgumentEntry )
+		{
+			return translateEntry( (ArgumentEntry)entry );
+		}
+		else
+		{
+			throw new Error( "Unknown entry type: " + entry.getClass().getName() );
+		}
+	}
+	
 	public String translateClass( String className )
 	{
 		return translate( new ClassEntry( className ) );
