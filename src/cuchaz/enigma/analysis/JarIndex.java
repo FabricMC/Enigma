@@ -146,10 +146,15 @@ public class JarIndex
 		}
 		else if( behavior instanceof CtConstructor )
 		{
-			thisEntry = new ConstructorEntry(
-				new ClassEntry( className ),
-				behavior.getSignature()
-			);
+			boolean isStatic = behavior.getName().equals( "<clinit>" );
+			if( isStatic )
+			{
+				thisEntry = new ConstructorEntry( new ClassEntry( className ) );
+			}
+			else
+			{
+				thisEntry = new ConstructorEntry( new ClassEntry( className ), behavior.getSignature() );
+			}
 		}
 		else
 		{
@@ -159,7 +164,6 @@ public class JarIndex
 		// index method calls
 		try
 		{
-			final Multiset<Entry> callNumbers = HashMultiset.create();
 			behavior.instrument( new ExprEditor( )
 			{
 				@Override
@@ -171,11 +175,9 @@ public class JarIndex
 						call.getMethodName(),
 						call.getSignature()
 					);
-					callNumbers.add( calledMethodEntry );
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledMethodEntry,
-						thisEntry,
-						callNumbers.count( calledMethodEntry ) - 1						
+						thisEntry
 					);
 					m_behaviorReferences.put( calledMethodEntry, reference );
 				}
@@ -188,11 +190,9 @@ public class JarIndex
 						new ClassEntry( className ),
 						call.getFieldName()
 					);
-					callNumbers.add( calledFieldEntry );
 					EntryReference<FieldEntry,BehaviorEntry> reference = new EntryReference<FieldEntry,BehaviorEntry>(
 						calledFieldEntry,
-						thisEntry,
-						callNumbers.count( calledFieldEntry ) - 1
+						thisEntry
 					);
 					m_fieldReferences.put( calledFieldEntry, reference );
 				}
@@ -208,11 +208,9 @@ public class JarIndex
 						new ClassEntry( className ),
 						call.getSignature()
 					);
-					callNumbers.add( calledConstructorEntry );
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
-						thisEntry,
-						callNumbers.count( calledConstructorEntry ) - 1						
+						thisEntry
 					);
 					m_behaviorReferences.put( calledConstructorEntry, reference );
 				}
@@ -225,11 +223,9 @@ public class JarIndex
 						new ClassEntry( className ),
 						call.getSignature()
 					);
-					callNumbers.add( calledConstructorEntry );
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
-						thisEntry,
-						callNumbers.count( calledConstructorEntry ) - 1						
+						thisEntry
 					);
 					m_behaviorReferences.put( calledConstructorEntry, reference );
 				}

@@ -10,8 +10,6 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.ParameterDefinition;
@@ -36,12 +34,10 @@ import cuchaz.enigma.mapping.MethodEntry;
 public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 {
 	private BehaviorEntry m_behaviorEntry;
-	private Multiset<Entry> m_indices;
 	
 	public SourceIndexBehaviorVisitor( BehaviorEntry behaviorEntry )
 	{
 		m_behaviorEntry = behaviorEntry;
-		m_indices = HashMultiset.create();
 	}
 	
 	@Override
@@ -64,10 +60,9 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 		MethodEntry methodEntry = new MethodEntry( classEntry, ref.getName(), ref.getSignature() );
 		if( node.getTarget() instanceof MemberReferenceExpression )
 		{
-			m_indices.add( methodEntry );
 			index.addReference(
 				((MemberReferenceExpression)node.getTarget()).getMemberNameToken(),
-				new EntryReference<Entry,Entry>( methodEntry, m_behaviorEntry, m_indices.count( methodEntry ) )
+				new EntryReference<Entry,Entry>( methodEntry, m_behaviorEntry )
 			);
 		}
 		
@@ -82,10 +77,9 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 		{
 			ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
 			FieldEntry fieldEntry = new FieldEntry( classEntry, ref.getName() );
-			m_indices.add( fieldEntry );
 			index.addReference(
 				node.getMemberNameToken(),
-				new EntryReference<Entry,Entry>( fieldEntry, m_behaviorEntry, m_indices.count( fieldEntry ) )
+				new EntryReference<Entry,Entry>( fieldEntry, m_behaviorEntry )
 			);
 		}
 		
@@ -99,10 +93,9 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 		if( node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY )
 		{
 			ClassEntry classEntry = new ClassEntry( ref.getInternalName() );
-			m_indices.add( classEntry );
 			index.addReference(
 				node.getIdentifierToken(),
-				new EntryReference<Entry,Entry>( classEntry, m_behaviorEntry, m_indices.count( classEntry ) )
+				new EntryReference<Entry,Entry>( classEntry, m_behaviorEntry )
 			);
 		}
 		
@@ -130,10 +123,9 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 		{
 			ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
 			FieldEntry fieldEntry = new FieldEntry( classEntry, ref.getName() );
-			m_indices.add( fieldEntry );
 			index.addReference(
 				node.getIdentifierToken(),
-				new EntryReference<Entry,Entry>( fieldEntry, m_behaviorEntry, m_indices.count( fieldEntry ) )
+				new EntryReference<Entry,Entry>( fieldEntry, m_behaviorEntry )
 			);
 		}
 		

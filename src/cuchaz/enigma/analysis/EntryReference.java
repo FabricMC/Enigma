@@ -18,14 +18,13 @@ public class EntryReference<E extends Entry, C extends Entry>
 {
 	public E entry;
 	public C context;
-	public int pos;
 	
 	public EntryReference( E entry )
 	{
-		this( entry, null, -1 );
+		this( entry, null );
 	}
 	
-	public EntryReference( E entry, C context, int pos )
+	public EntryReference( E entry, C context )
 	{
 		if( entry == null )
 		{
@@ -34,7 +33,6 @@ public class EntryReference<E extends Entry, C extends Entry>
 		
 		this.entry = entry;
 		this.context = context;
-		this.pos = pos;
 	}
 	
 	public ClassEntry getClassEntry( )
@@ -51,7 +49,7 @@ public class EntryReference<E extends Entry, C extends Entry>
 	{
 		if( context != null )
 		{
-			return Util.combineHashesOrdered( entry.hashCode(), context.hashCode(), Integer.valueOf( pos ).hashCode() );
+			return Util.combineHashesOrdered( entry.hashCode(), context.hashCode() );
 		}
 		return entry.hashCode();
 	}
@@ -82,7 +80,7 @@ public class EntryReference<E extends Entry, C extends Entry>
 		}
 		else if( context != null && other.context != null ) 
 		{
-			return context.equals( other.context ) && pos == other.pos;
+			return context.equals( other.context );
 		}
 		return false;
 	}
@@ -96,9 +94,6 @@ public class EntryReference<E extends Entry, C extends Entry>
 		{
 			buf.append( " called from " );
 			buf.append( context );
-			buf.append( " (" );
-			buf.append( pos );
-			buf.append( ")" );
 		}
 		return buf.toString();
 	}

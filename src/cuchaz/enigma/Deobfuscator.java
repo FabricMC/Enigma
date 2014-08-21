@@ -181,7 +181,7 @@ public class Deobfuscator
 		return index;
 	}
 	
-	public Entry obfuscateEntry( Entry deobfEntry )
+	public <T extends Entry> T obfuscateEntry( T deobfEntry )
 	{
 		if( deobfEntry == null )
 		{
@@ -190,7 +190,7 @@ public class Deobfuscator
 		return getTranslator( TranslationDirection.Obfuscating ).translateEntry( deobfEntry );
 	}
 	
-	public Entry deobfuscateEntry( Entry obfEntry )
+	public <T extends Entry> T deobfuscateEntry( T obfEntry )
 	{
 		if( obfEntry == null )
 		{
@@ -199,29 +199,27 @@ public class Deobfuscator
 		return getTranslator( TranslationDirection.Deobfuscating ).translateEntry( obfEntry );
 	}
 	
-	public EntryReference<Entry,Entry> obfuscateReference( EntryReference<Entry,Entry> deobfReference )
+	public <E extends Entry,C extends Entry> EntryReference<E,C> obfuscateReference( EntryReference<E,C> deobfReference )
 	{
 		if( deobfReference == null )
 		{
 			return null;
 		}
-		return new EntryReference<Entry,Entry>(
+		return new EntryReference<E,C>(
 			obfuscateEntry( deobfReference.entry ),
-			obfuscateEntry( deobfReference.context ),
-			deobfReference.pos
+			obfuscateEntry( deobfReference.context )
 		);
 	}
 	
-	public EntryReference<Entry,Entry> deobfuscateReference( EntryReference<Entry,Entry> obfReference )
+	public <E extends Entry,C extends Entry> EntryReference<E,C> deobfuscateReference( EntryReference<E,C> obfReference )
 	{
 		if( obfReference == null )
 		{
 			return null;
 		}
-		return new EntryReference<Entry,Entry>(
+		return new EntryReference<E,C>(
 			deobfuscateEntry( obfReference.entry ),
-			deobfuscateEntry( obfReference.context ),
-			obfReference.pos
+			deobfuscateEntry( obfReference.context )
 		);
 	}
 	

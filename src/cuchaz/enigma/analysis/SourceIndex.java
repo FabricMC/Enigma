@@ -10,13 +10,15 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.Region;
 import com.strobel.decompiler.languages.java.ast.Identifier;
 
@@ -26,7 +28,7 @@ public class SourceIndex
 {
 	private String m_source;
 	private TreeMap<Token,EntryReference<Entry,Entry>> m_tokenToReference;
-	private HashMap<EntryReference<Entry,Entry>,Token> m_referenceToToken;
+	private Multimap<EntryReference<Entry,Entry>,Token> m_referenceToTokens;
 	private Map<Entry,Token> m_declarationToToken;
 	private List<Integer> m_lineOffsets;
 	
@@ -34,7 +36,7 @@ public class SourceIndex
 	{
 		m_source = source;
 		m_tokenToReference = Maps.newTreeMap();
-		m_referenceToToken = Maps.newHashMap();
+		m_referenceToTokens = HashMultimap.create();
 		m_declarationToToken = Maps.newHashMap();
 		m_lineOffsets = Lists.newArrayList();
 		
@@ -96,7 +98,7 @@ public class SourceIndex
 		if( token != null )
 		{
 			m_tokenToReference.put( token, deobfReference );
-			m_referenceToToken.put( deobfReference, token );
+			m_referenceToTokens.put( deobfReference, token );
 		}
 	}
 	
@@ -107,7 +109,7 @@ public class SourceIndex
 		{
 			EntryReference<Entry,Entry> reference = new EntryReference<Entry,Entry>( deobfEntry );
 			m_tokenToReference.put( token, reference );
-			m_referenceToToken.put( reference, token );
+			m_referenceToTokens.put( reference, token );
 			m_declarationToToken.put( deobfEntry, token );
 		}
 	}
@@ -122,9 +124,9 @@ public class SourceIndex
 		return null;
 	}
 	
-	public Token getReferenceToken( EntryReference<Entry,Entry> deobfReference )
+	public Collection<Token> getReferenceTokens( EntryReference<Entry,Entry> deobfReference )
 	{
-		return m_referenceToToken.get( deobfReference );
+		return m_referenceToTokens.get( deobfReference );
 	}
 	
 	public EntryReference<Entry,Entry> getDeobfReference( Token token )
@@ -151,6 +153,27 @@ public class SourceIndex
 		return m_declarationToToken.get( deobfEntry );
 	}
 	
+	public int getLineNumber( int pos )
+	{
+		// line number is 1-based
+		int line = 0;
+		for( Integer offset : m_lineOffsets )
+		{
+			if( offset > pos )
+			{
+				break;
+			}
+			line++;
+		}
+		return line;
+	}
+	
+	public int getColumnNumber( int pos )
+	{
+		// column number is 1-based
+		return pos - m_lineOffsets.get( getLineNumber( pos ) - 1 ) + 1;
+	}
+
 	private int toPos( int line, int col )
 	{
 		// line and col are 1-based

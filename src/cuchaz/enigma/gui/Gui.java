@@ -28,6 +28,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -145,6 +146,7 @@ public class Gui
 	private BoxHighlightPainter m_deobfuscatedHighlightPainter;
 	private JTree m_inheritanceTree;
 	private JTree m_callsTree;
+	private JList<Token> m_tokens;
 	private JTabbedPane m_tabs;
 	
 	// dynamic menu items
@@ -457,9 +459,29 @@ public class Gui
 				}
 			}
 		} );
-		JPanel callPanel = new JPanel();
-		callPanel.setLayout( new BorderLayout() );
-		callPanel.add( new JScrollPane( m_callsTree ) );
+		m_tokens = new JList<Token>();
+		m_tokens.setCellRenderer( new TokenListCellRenderer( m_controller ) );
+		m_tokens.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
+		m_tokens.setLayoutOrientation( JList.VERTICAL );
+		m_tokens.addMouseListener( new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked( MouseEvent event )
+			{
+				if( event.getClickCount() == 2 )
+				{
+					Token selected = m_tokens.getSelectedValue();
+					if( selected != null )
+					{
+						showToken( selected );
+					}
+				}
+			}
+		} );
+		m_tokens.setPreferredSize( new Dimension( 0, 200 ) );
+		JSplitPane callPanel = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, new JScrollPane( m_callsTree ), new JScrollPane( m_tokens ) );
+		callPanel.setResizeWeight( 1 ); // let the top side take all the slack
+		callPanel.resetToPreferredSizes();
 		
 		// layout controls
 		JSplitPane splitLeft = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
@@ -743,6 +765,21 @@ public class Gui
 		m_editor.grabFocus();
 	}
 	
+	public void showTokens( Collection<Token> tokens )
+	{
+		Vector<Token> sortedTokens = new Vector<Token>( tokens );
+		Collections.sort( sortedTokens );
+		if( sortedTokens.size() > 1 )
+		{
+			// sort the tokens and update the tokens panel
+			m_tokens.setListData( sortedTokens );
+			m_tokens.setSelectedIndex( 0 );
+		}
+		
+		// show the first token
+		showToken( sortedTokens.get( 0 ) );
+	}
+	
 	public void setHighlightedTokens( Iterable<Token> obfuscatedTokens, Iterable<Token> deobfuscatedTokens )
 	{
 		// remove any old highlighters
@@ -900,17 +937,9 @@ public class Gui
 	
 	private void startRename( )
 	{
-		// get the class name
-		ClassEntry classEntry = m_reference.entry.getClassEntry();
-		String className = classEntry.getName();
-		if( classEntry.isInnerClass() )
-		{
-			className = classEntry.getInnerClassName();
-		}
-		
 		// init the text box
 		final JTextField text = new JTextField();
-		text.setText( className );
+		text.setText( m_reference.entry.getName() );
 		text.setPreferredSize( new Dimension( 360, text.getPreferredSize().height ) );
 		text.addKeyListener( new KeyAdapter( )
 		{

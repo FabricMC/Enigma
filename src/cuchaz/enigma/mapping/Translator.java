@@ -30,27 +30,28 @@ public class Translator
 		m_ancestries = ancestries;
 	}
 	
-	public Entry translateEntry( Entry entry )
+	@SuppressWarnings( "unchecked" )
+	public <T extends Entry> T translateEntry( T entry )
 	{
 		if( entry instanceof ClassEntry )
 		{
-			return translateEntry( (ClassEntry)entry );
+			return (T)translateEntry( (ClassEntry)entry );
 		}
 		else if( entry instanceof FieldEntry )
 		{
-			return translateEntry( (FieldEntry)entry );
+			return (T)translateEntry( (FieldEntry)entry );
 		}
 		else if( entry instanceof MethodEntry )
 		{
-			return translateEntry( (MethodEntry)entry );
+			return (T)translateEntry( (MethodEntry)entry );
 		}
 		else if( entry instanceof ConstructorEntry )
 		{
-			return translateEntry( (ConstructorEntry)entry );
+			return (T)translateEntry( (ConstructorEntry)entry );
 		}
 		else if( entry instanceof ArgumentEntry )
 		{
-			return translateEntry( (ArgumentEntry)entry );
+			return (T)translateEntry( (ArgumentEntry)entry );
 		}
 		else
 		{
@@ -194,10 +195,17 @@ public class Translator
 	
 	public ConstructorEntry translateEntry( ConstructorEntry in )
 	{
-		return new ConstructorEntry(
-			translateEntry( in.getClassEntry() ),
-			translateSignature( in.getSignature() )
-		);
+		if( in.isStatic() )
+		{
+			return new ConstructorEntry( translateEntry( in.getClassEntry() ) );
+		}
+		else
+		{
+			return new ConstructorEntry(
+				translateEntry( in.getClassEntry() ),
+				translateSignature( in.getSignature() )
+			);
+		}
 	}
 	
 	public BehaviorEntry translateEntry( BehaviorEntry in )

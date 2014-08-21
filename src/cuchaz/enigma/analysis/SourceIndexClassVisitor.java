@@ -10,8 +10,6 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -26,6 +24,7 @@ import com.strobel.decompiler.languages.java.ast.SimpleType;
 import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
 import com.strobel.decompiler.languages.java.ast.VariableInitializer;
 
+import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
@@ -35,12 +34,10 @@ import cuchaz.enigma.mapping.MethodEntry;
 public class SourceIndexClassVisitor extends SourceIndexVisitor
 {
 	private ClassEntry m_classEntry;
-	private Multiset<Entry> m_indices;
 	
 	public SourceIndexClassVisitor( ClassEntry classEntry )
 	{
 		m_classEntry = classEntry;
-		m_indices = HashMultiset.create();
 	}
 	
 	@Override
@@ -68,7 +65,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 			ClassEntry classEntry = new ClassEntry( ref.getInternalName() );
 			index.addReference(
 				node.getIdentifierToken(),
-				new EntryReference<Entry,Entry>( classEntry, m_classEntry, m_indices.count( classEntry ) )
+				new EntryReference<Entry,Entry>( classEntry, m_classEntry )
 			);
 		}
 		
@@ -80,11 +77,17 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 	{
 		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
 		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
-		MethodEntry methodEntry = new MethodEntry( classEntry, def.getName(), def.getSignature() );
-		index.addDeclaration( node.getNameToken(), methodEntry );
-		//if( !def.getName().equals( "<clinit>" ) )
-		
-		return node.acceptVisitor( new SourceIndexBehaviorVisitor( methodEntry ), index );
+		BehaviorEntry behaviorEntry;
+		if( def.getName().equals( "<clinit>" ) )
+		{
+			behaviorEntry = new ConstructorEntry( classEntry );
+		}
+		else
+		{
+			behaviorEntry = new MethodEntry( classEntry, def.getName(), def.getSignature() );
+		}
+		index.addDeclaration( node.getNameToken(), behaviorEntry );
+		return node.acceptVisitor( new SourceIndexBehaviorVisitor( behaviorEntry ), index );
 	}
 	
 	@Override

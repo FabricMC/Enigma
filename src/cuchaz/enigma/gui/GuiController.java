@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class GuiController
 	private SourceIndex m_index;
 	private ClassEntry m_currentObfClass;
 	private boolean m_isDirty;
-	private Deque<EntryReference<Entry,Entry>> m_referenceStack; // TODO: make a location class, can be either Entry or EntryReference
+	private Deque<EntryReference<Entry,Entry>> m_referenceStack;
 	
 	public GuiController( Gui gui )
 	{
@@ -111,7 +112,6 @@ public class GuiController
 		{
 			return null;
 		}
-		
 		return m_index.getReferenceToken( pos );
 	}
 	
@@ -124,6 +124,19 @@ public class GuiController
 		return m_index.getDeobfReference( token );
 	}
 	
+	public ReadableToken getReadableToken( Token token )
+	{
+		if( m_index == null )
+		{
+			return null;
+		}
+		return new ReadableToken(
+			m_index.getLineNumber( token.start ),
+			m_index.getColumnNumber( token.start ),
+			m_index.getColumnNumber( token.end )
+		);
+	}
+	
 	public boolean entryHasMapping( Entry deobfEntry )
 	{
 		return m_deobfuscator.hasMapping( m_deobfuscator.obfuscateEntry( deobfEntry ) );
@@ -134,8 +147,9 @@ public class GuiController
 		return m_deobfuscator.isObfuscatedIdentifier( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
 	
-	public ClassInheritanceTreeNode getClassInheritance( ClassEntry obfClassEntry )
+	public ClassInheritanceTreeNode getClassInheritance( ClassEntry deobfClassEntry )
 	{
+		ClassEntry obfClassEntry = m_deobfuscator.obfuscateEntry( deobfClassEntry );
 		ClassInheritanceTreeNode rootNode = m_deobfuscator.getJarIndex().getClassInheritance(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
 			obfClassEntry
@@ -143,8 +157,9 @@ public class GuiController
 		return ClassInheritanceTreeNode.findNode( rootNode, obfClassEntry );
 	}
 	
-	public MethodInheritanceTreeNode getMethodInheritance( MethodEntry obfMethodEntry )
+	public MethodInheritanceTreeNode getMethodInheritance( MethodEntry deobfMethodEntry )
 	{
+		MethodEntry obfMethodEntry = m_deobfuscator.obfuscateEntry( deobfMethodEntry );
 		MethodInheritanceTreeNode rootNode = m_deobfuscator.getJarIndex().getMethodInheritance(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
 			obfMethodEntry
@@ -152,8 +167,9 @@ public class GuiController
 		return MethodInheritanceTreeNode.findNode( rootNode, obfMethodEntry );
 	}
 	
-	public FieldReferenceTreeNode getFieldReferences( FieldEntry obfFieldEntry )
+	public FieldReferenceTreeNode getFieldReferences( FieldEntry deobfFieldEntry )
 	{
+		FieldEntry obfFieldEntry = m_deobfuscator.obfuscateEntry( deobfFieldEntry );
 		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
 			obfFieldEntry
@@ -162,11 +178,12 @@ public class GuiController
 		return rootNode;
 	}
 	
-	public BehaviorReferenceTreeNode getMethodReferences( BehaviorEntry obfEntry )
+	public BehaviorReferenceTreeNode getMethodReferences( BehaviorEntry deobfBehaviorEntry )
 	{
+		BehaviorEntry obfBehaviorEntry = m_deobfuscator.obfuscateEntry( deobfBehaviorEntry );
 		BehaviorReferenceTreeNode rootNode = new BehaviorReferenceTreeNode(
 			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
-			obfEntry
+			obfBehaviorEntry
 		);
 		rootNode.load( m_deobfuscator.getJarIndex(), true );
 		return rootNode;
@@ -181,13 +198,13 @@ public class GuiController
 		refreshCurrentClass( obfReference );
 	}
 	
-	public void openDeclaration( Entry entry )
+	public void openDeclaration( Entry deobfEntry )
 	{
-		if( entry == null )
+		if( deobfEntry == null )
 		{
 			throw new IllegalArgumentException( "Entry cannot be null!" );
 		}
-		openReference( new EntryReference<Entry,Entry>( entry ) );
+		openReference( new EntryReference<Entry,Entry>( deobfEntry ) );
 	}
 	
 	public void openReference( EntryReference<Entry,Entry> deobfReference )
@@ -208,8 +225,22 @@ public class GuiController
 		}
 		else
 		{
-			// the class file is already open, just navigate to the reference
-			m_gui.showToken( m_index.getReferenceToken( deobfReference ) );
+			showReference( obfReference );
+		}
+	}
+	
+	private void showReference( EntryReference<Entry,Entry> obfReference )
+	{
+		EntryReference<Entry,Entry> deobfReference = m_deobfuscator.deobfuscateReference( obfReference );
+		Collection<Token> tokens = m_index.getReferenceTokens( deobfReference );
+		if( tokens.isEmpty() )
+		{
+			// DEBUG
+			System.err.println( String.format( "WARNING: no tokens found for %s in %s", deobfReference, m_currentObfClass ) );
+		}
+		else
+		{
+			m_gui.showTokens( tokens );
 		}
 	}
 	
@@ -245,15 +276,15 @@ public class GuiController
 		refreshCurrentClass( null );
 	}
 	
-	private void refreshCurrentClass( EntryReference<Entry,Entry> obfReferenceToShow )
+	private void refreshCurrentClass( EntryReference<Entry,Entry> obfReference )
 	{
 		if( m_currentObfClass != null )
 		{
-			deobfuscate( m_currentObfClass, obfReferenceToShow );
+			deobfuscate( m_currentObfClass, obfReference );
 		}
 	}
 	
-	private void deobfuscate( final ClassEntry classEntry, final EntryReference<Entry,Entry> obfReferenceToShow )
+	private void deobfuscate( final ClassEntry classEntry, final EntryReference<Entry,Entry> obfReference )
 	{
 		m_gui.setSource( "(deobfuscating...)" );
 		
@@ -266,19 +297,9 @@ public class GuiController
 				// decompile,deobfuscate the bytecode
 				m_index = m_deobfuscator.getSource( classEntry.getClassName() );
 				m_gui.setSource( m_index.getSource() );
-				if( obfReferenceToShow != null )
+				if( obfReference != null )
 				{
-					EntryReference<Entry,Entry> deobfReferenceToShow = m_deobfuscator.deobfuscateReference( obfReferenceToShow );
-					Token token = m_index.getReferenceToken( deobfReferenceToShow );
-					if( token == null )
-					{
-						// DEBUG
-						System.out.println( "WARNING: can't find token for " + obfReferenceToShow + " -> " + deobfReferenceToShow );
-					}
-					else
-					{
-						m_gui.showToken( token );
-					}
+					showReference( obfReference );
 				}
 				
 				// set the highlighted tokens

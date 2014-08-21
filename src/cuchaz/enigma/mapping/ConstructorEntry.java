@@ -21,15 +21,16 @@ public class ConstructorEntry implements BehaviorEntry, Serializable
 	private ClassEntry m_classEntry;
 	private String m_signature;
 	
+	public ConstructorEntry( ClassEntry classEntry )
+	{
+		this( classEntry, null );
+	}
+	
 	public ConstructorEntry( ClassEntry classEntry, String signature )
 	{
 		if( classEntry == null )
 		{
 			throw new IllegalArgumentException( "Class cannot be null!" );
-		}
-		if( signature == null )
-		{
-			throw new IllegalArgumentException( "Method signature cannot be null!" );
 		}
 		
 		m_classEntry = classEntry;
@@ -47,11 +48,20 @@ public class ConstructorEntry implements BehaviorEntry, Serializable
 	{
 		return m_classEntry;
 	}
-
+	
 	@Override
 	public String getName( )
 	{
-		return m_classEntry.getName();
+		if( isStatic() )
+		{
+			return "<clinit>";
+		}
+		return "<init>";
+	}
+	
+	public boolean isStatic( )
+	{
+		return m_signature == null;
 	}
 	
 	@Override
@@ -69,7 +79,14 @@ public class ConstructorEntry implements BehaviorEntry, Serializable
 	@Override
 	public int hashCode( )
 	{
-		return Util.combineHashesOrdered( m_classEntry, m_signature );
+		if( isStatic() )
+		{
+			return Util.combineHashesOrdered( m_classEntry );
+		}
+		else
+		{
+			return Util.combineHashesOrdered( m_classEntry, m_signature );
+		}
 	}
 	
 	@Override
@@ -84,12 +101,31 @@ public class ConstructorEntry implements BehaviorEntry, Serializable
 	
 	public boolean equals( ConstructorEntry other )
 	{
-		return m_classEntry.equals( other.m_classEntry ) && m_signature.equals( other.m_signature );
+		if( isStatic() != other.isStatic() )
+		{
+			return false;
+		}
+		
+		if( isStatic() )
+		{
+			return m_classEntry.equals( other.m_classEntry );
+		}
+		else
+		{
+			return m_classEntry.equals( other.m_classEntry ) && m_signature.equals( other.m_signature );
+		}
 	}
 	
 	@Override
 	public String toString( )
 	{
-		return m_classEntry.getName() + m_signature;
+		if( isStatic() )
+		{
+			return m_classEntry.getName() + "." + getName();
+		}
+		else
+		{
+			return m_classEntry.getName() + "." + getName() + m_signature;
+		}
 	}
 }
