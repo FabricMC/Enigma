@@ -14,6 +14,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
@@ -45,6 +46,16 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 	@Override
 	public Void visitTypeDeclaration( TypeDeclaration node, SourceIndex index )
 	{
+		// is this this class, or a subtype?
+		TypeDefinition def = node.getUserData( Keys.TYPE_DEFINITION );
+		ClassEntry classEntry = new ClassEntry( def.getInternalName() );
+		if( !classEntry.equals( m_classEntry ) )
+		{
+			// it's a sub-type, recurse
+			index.addDeclaration( node.getNameToken(), classEntry );
+			return node.acceptVisitor( new SourceIndexClassVisitor( classEntry ), index );
+		}
+		
 		return recurse( node, index );
 	}
 	
@@ -84,7 +95,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 		ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, def.getSignature() );
 		index.addDeclaration( node.getNameToken(), constructorEntry );
 		
-		return recurse( node, index );
+		return node.acceptVisitor( new SourceIndexBehaviorVisitor( constructorEntry ), index );
 	}
 	
 	@Override
