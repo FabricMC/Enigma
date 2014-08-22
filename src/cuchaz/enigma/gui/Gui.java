@@ -17,6 +17,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -53,6 +54,7 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -142,8 +144,9 @@ public class Gui
 	private JList<String> m_deobfClasses;
 	private JEditorPane m_editor;
 	private JPanel m_infoPanel;
-	private BoxHighlightPainter m_obfuscatedHighlightPainter;
-	private BoxHighlightPainter m_deobfuscatedHighlightPainter;
+	private ObfuscatedHighlightPainter m_obfuscatedHighlightPainter;
+	private DeobfuscatedHighlightPainter m_deobfuscatedHighlightPainter;
+	private SelectionHighlightPainter m_selectionHighlightPainter;
 	private JTree m_inheritanceTree;
 	private JTree m_callsTree;
 	private JList<Token> m_tokens;
@@ -250,6 +253,7 @@ public class Gui
 		DefaultSyntaxKit.initKit();
 		m_obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
 		m_deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
+		m_selectionHighlightPainter = new SelectionHighlightPainter();
 		m_editor = new JEditorPane();
 		m_editor.setEditable( false );
 		m_editor.setCaret( new BrowserCaret() );
@@ -756,14 +760,64 @@ public class Gui
 		m_editor.setText( source );
 	}
 	
-	public void showToken( Token token )
+	public void showToken( final Token token )
 	{
 		if( token == null )
 		{
 			throw new IllegalArgumentException( "Token cannot be null!" );
 		}
+		
+		// set the caret position to the token
 		m_editor.setCaretPosition( token.start );
 		m_editor.grabFocus();
+		
+		try
+		{
+			// make sure the token is visible in the scroll window
+			Rectangle start = m_editor.modelToView( token.start );
+			Rectangle end = m_editor.modelToView( token.end );
+			Rectangle show = start.union( end );
+			show.grow( 0, start.height*6 );
+			m_editor.scrollRectToVisible( show );
+		}
+		catch( BadLocationException ex )
+		{
+			throw new Error( ex );
+		}
+		
+		// highlight the token momentarily
+		final Timer timer = new Timer( 200, new ActionListener( )
+		{
+			private int m_counter = 0;
+			private Object m_highlight = null;
+			
+			@Override
+			public void actionPerformed( ActionEvent event )
+			{
+				if( m_counter % 2 == 0 )
+				{
+					try
+					{
+						m_highlight = m_editor.getHighlighter().addHighlight( token.start, token.end, m_selectionHighlightPainter );
+					}
+					catch( BadLocationException ex )
+					{
+						// don't care
+					}
+				}
+				else if( m_highlight != null )
+				{
+					m_editor.getHighlighter().removeHighlight( m_highlight );
+				}
+				
+				if( m_counter++ > 6 )
+				{
+					Timer timer = (Timer)event.getSource();
+					timer.stop();
+				}
+			}
+		} );
+		timer.start();
 	}
 	
 	public void showTokens( Collection<Token> tokens )
@@ -789,6 +843,7 @@ public class Gui
 	{
 		// remove any old highlighters
 		m_editor.getHighlighter().removeAllHighlights();
+		
 		
 		// color things based on the index
 		if( obfuscatedTokens != null )

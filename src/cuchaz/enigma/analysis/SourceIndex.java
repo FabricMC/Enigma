@@ -117,7 +117,7 @@ public class SourceIndex
 	public Token getReferenceToken( int pos )
 	{
 		Token token = m_tokenToReference.floorKey( new Token( pos, pos ) );
-		if( token.contains( pos ) )
+		if( token != null && token.contains( pos ) )
 		{
 			return token;
 		}

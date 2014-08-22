@@ -33,10 +33,23 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
 	@Override
 	public void paint( Graphics g, int start, int end, Shape shape, JTextComponent text )
 	{
+		Rectangle bounds = getBounds( text, start, end );
+		
+		// fill the area
+		g.setColor( m_fillColor );
+		g.fillRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+		
+		// draw a box around the area
+		g.setColor( m_borderColor );
+		g.drawRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+	}
+	
+	protected static Rectangle getBounds( JTextComponent text, int start, int end )
+	{
 		try
 		{
 			// determine the bounds of the text
-			Rectangle bounds = text.getUI().modelToView( text, start ).union( text.getUI().modelToView( text, end ) );
+			Rectangle bounds = text.modelToView( start ).union( text.modelToView( end ) );
 			
 			// adjust the box so it looks nice
 			bounds.x -= 2;
@@ -44,13 +57,7 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
 			bounds.y += 1;
 			bounds.height -= 2;
 			
-			// fill the area
-			g.setColor( m_fillColor );
-			g.fillRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
-			
-			// draw a box around the area
-			g.setColor( m_borderColor );
-			g.drawRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+			return bounds;
 		}
 		catch( BadLocationException ex )
 		{
