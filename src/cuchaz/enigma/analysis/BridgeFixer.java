@@ -86,7 +86,6 @@ public class BridgeFixer
 		catch( NotFoundException ex )
 		{
 			// can't find the type? not a bridge method
-			ex.printStackTrace( System.err );
 			return null;
 		}
 	}

@@ -30,7 +30,6 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
-import cuchaz.enigma.analysis.TreeDumpVisitor;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
@@ -163,7 +162,7 @@ public class Deobfuscator
 		StringWriter buf = new StringWriter();
 		root.acceptVisitor( new InsertParenthesesVisitor(), null );
 		// DEBUG
-		root.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
+		//root.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
 		root.acceptVisitor( new JavaOutputVisitor( new PlainTextOutput( buf ), m_settings ), null );
 		
 		// build the source index

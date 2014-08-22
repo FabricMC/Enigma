@@ -21,12 +21,14 @@ import com.strobel.decompiler.languages.java.ast.InvocationExpression;
 import com.strobel.decompiler.languages.java.ast.Keys;
 import com.strobel.decompiler.languages.java.ast.MemberReferenceExpression;
 import com.strobel.decompiler.languages.java.ast.MethodDeclaration;
+import com.strobel.decompiler.languages.java.ast.ObjectCreationExpression;
 import com.strobel.decompiler.languages.java.ast.ParameterDeclaration;
 import com.strobel.decompiler.languages.java.ast.SimpleType;
 
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -57,9 +59,9 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 	{
 		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
 		ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
-		MethodEntry methodEntry = new MethodEntry( classEntry, ref.getName(), ref.getSignature() );
 		if( node.getTarget() instanceof MemberReferenceExpression )
 		{
+			MethodEntry methodEntry = new MethodEntry( classEntry, ref.getName(), ref.getSignature() );
 			index.addReference(
 				((MemberReferenceExpression)node.getTarget()).getMemberNameToken(),
 				new EntryReference<Entry,Entry>( methodEntry, m_behaviorEntry )
@@ -126,6 +128,23 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 			index.addReference(
 				node.getIdentifierToken(),
 				new EntryReference<Entry,Entry>( fieldEntry, m_behaviorEntry )
+			);
+		}
+		
+		return recurse( node, index );
+	}
+	
+	@Override
+	public Void visitObjectCreationExpression( ObjectCreationExpression node, SourceIndex index )
+	{
+		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
+		ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
+		ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, ref.getSignature() );
+		if( node.getType() instanceof SimpleType )
+		{
+			index.addReference(
+				((SimpleType)node.getType()).getIdentifierToken(),
+				new EntryReference<Entry,Entry>( constructorEntry, m_behaviorEntry )
 			);
 		}
 		

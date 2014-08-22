@@ -479,6 +479,7 @@ public class Gui
 			}
 		} );
 		m_tokens.setPreferredSize( new Dimension( 0, 200 ) );
+		m_tokens.setMinimumSize( new Dimension( 0, 200 ) );
 		JSplitPane callPanel = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, new JScrollPane( m_callsTree ), new JScrollPane( m_tokens ) );
 		callPanel.setResizeWeight( 1 ); // let the top side take all the slack
 		callPanel.resetToPreferredSizes();
@@ -774,6 +775,10 @@ public class Gui
 			// sort the tokens and update the tokens panel
 			m_tokens.setListData( sortedTokens );
 			m_tokens.setSelectedIndex( 0 );
+		}
+		else
+		{
+			m_tokens.setListData( new Vector<Token>() );
 		}
 		
 		// show the first token
