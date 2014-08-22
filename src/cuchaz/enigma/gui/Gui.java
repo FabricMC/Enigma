@@ -54,6 +54,7 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import javax.swing.event.CaretEvent;
@@ -776,9 +777,16 @@ public class Gui
 			// make sure the token is visible in the scroll window
 			Rectangle start = m_editor.modelToView( token.start );
 			Rectangle end = m_editor.modelToView( token.end );
-			Rectangle show = start.union( end );
-			show.grow( 0, start.height*6 );
-			m_editor.scrollRectToVisible( show );
+			final Rectangle show = start.union( end );
+			show.grow( start.width*10, start.height*6 );
+			SwingUtilities.invokeLater( new Runnable( )
+			{
+				@Override
+				public void run( )
+				{
+					m_editor.scrollRectToVisible( show );
+				}
+			} );
 		}
 		catch( BadLocationException ex )
 		{
@@ -818,6 +826,8 @@ public class Gui
 			}
 		} );
 		timer.start();
+		
+		redraw();
 	}
 	
 	public void showTokens( Collection<Token> tokens )

@@ -61,7 +61,8 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
 		}
 		catch( BadLocationException ex )
 		{
-			throw new Error( ex );
+			// don't care... just return something
+			return new Rectangle( 0, 0, 0, 0 );
 		}
 	}
 }

@@ -86,6 +86,10 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 				{
 					((BehaviorReferenceTreeNode)node).load( index, true );
 				}
+				else if( node instanceof FieldReferenceTreeNode )
+				{
+					((FieldReferenceTreeNode)node).load( index, true );
+				}
 			}
 		}
 	}
