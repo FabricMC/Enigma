@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
+import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
@@ -104,6 +105,27 @@ public class GuiController
 		m_gui.setMappingsFile( null );
 		refreshClasses();
 		refreshCurrentClass();
+	}
+	
+	public void export( final File dirOut )
+	{
+		new Thread( )
+		{
+			@Override
+			public void run( )
+			{
+				try
+				{
+					ProgressDialog progress = new ProgressDialog( m_gui.getFrame() );
+					m_deobfuscator.writeSources( dirOut, progress );
+					progress.close();
+				}
+				catch( IOException ex )
+				{
+					throw new Error( ex );
+				}
+			}
+		}.start();
 	}
 	
 	public Token getToken( int pos )
@@ -295,7 +317,9 @@ public class GuiController
 			public void run( )
 			{
 				// decompile,deobfuscate the bytecode
-				m_index = m_deobfuscator.getSource( classEntry.getClassName() );
+				CompilationUnit sourceTree = m_deobfuscator.getSourceTree( classEntry.getClassName() );
+				String source = m_deobfuscator.getSource( sourceTree );
+				m_index = m_deobfuscator.getSourceIndex( sourceTree, source );
 				m_gui.setSource( m_index.getSource() );
 				if( obfReference != null )
 				{

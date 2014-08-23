@@ -11,6 +11,7 @@
 package cuchaz.enigma;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
@@ -44,6 +45,12 @@ import cuchaz.enigma.mapping.Translator;
 
 public class Deobfuscator
 {
+	public interface ProgressListener
+	{
+		void init( int totalWork );
+		void onProgress( int numDone, String message );
+	}
+	
 	private File m_file;
 	private JarFile m_jar;
 	private DecompilerSettings m_settings;
@@ -137,7 +144,7 @@ public class Deobfuscator
 		}
 	}
 	
-	public SourceIndex getSource( String className )
+	public CompilationUnit getSourceTree( String className )
 	{
 		// is this class deobfuscated?
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
@@ -156,19 +163,18 @@ public class Deobfuscator
 		AstBuilder builder = new AstBuilder( context );
 		builder.addType( resolvedType );
 		builder.runTransformations( null );
-		CompilationUnit root = builder.getCompilationUnit();
+		return builder.getCompilationUnit();
+	}
+	
+	public SourceIndex getSourceIndex( CompilationUnit sourceTree, String source )
+	{
+		// build the source index
+		SourceIndex index = new SourceIndex( source );
+		sourceTree.acceptVisitor( new SourceIndexVisitor(), index );
 		
-		// render the AST into source
-		StringWriter buf = new StringWriter();
-		root.acceptVisitor( new InsertParenthesesVisitor(), null );
 		// DEBUG
 		//root.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
-		root.acceptVisitor( new JavaOutputVisitor( new PlainTextOutput( buf ), m_settings ), null );
-		
-		// build the source index
-		SourceIndex index = new SourceIndex( buf.toString() );
-		root.acceptVisitor( new SourceIndexVisitor(), index );
-		
+
 		/* DEBUG
 		for( Token token : index.referenceTokens() )
 		{
@@ -178,6 +184,56 @@ public class Deobfuscator
 		*/
 		
 		return index;
+	}
+	
+	public String getSource( CompilationUnit sourceTree )
+	{
+		// render the AST into source
+		StringWriter buf = new StringWriter();
+		sourceTree.acceptVisitor( new InsertParenthesesVisitor(), null );
+		sourceTree.acceptVisitor( new JavaOutputVisitor( new PlainTextOutput( buf ), m_settings ), null );
+		return buf.toString();
+	}
+	
+	public void writeSources( File dirOut, ProgressListener progress )
+	throws IOException
+	{
+		int numClasses = m_jarIndex.getObfClassNames().size();
+		if( progress != null )
+		{
+			progress.init( numClasses );
+		}
+		int i = 0;
+		
+		// DEOBFUSCATE ALL THE THINGS!! @_@
+		for( String obfClassName : m_jarIndex.getObfClassNames() )
+		{
+			// skip inner classes
+			if( m_jarIndex.getOuterClass( obfClassName ) != null )
+			{
+				continue;
+			}
+			
+			ClassEntry deobfClassEntry = deobfuscateEntry( new ClassEntry( obfClassName ) );
+			if( progress != null )
+			{
+				progress.onProgress( i++, deobfClassEntry.toString() );
+			}
+			
+			// get the source
+			String source = getSource( getSourceTree( obfClassName ) );
+			
+			// write the file
+			File file = new File( dirOut, deobfClassEntry.getName().replace( '.', '/' ) + ".java" );
+			file.getParentFile().mkdirs();
+			try( FileWriter out = new FileWriter( file ) )
+			{
+				out.write( source );
+			}
+		}
+		
+		// done!
+		progress.onProgress( numClasses, "Done!" );
 	}
 	
 	public <T extends Entry> T obfuscateEntry( T deobfEntry )

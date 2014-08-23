@@ -15,7 +15,6 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -169,6 +168,7 @@ public class Gui
 	private EntryReference<Entry,Entry> m_reference;
 	private JFileChooser m_jarFileChooser;
 	private JFileChooser m_mappingsFileChooser;
+	private JFileChooser m_exportFileChooser;
 	
 	public Gui( )
 	{
@@ -177,6 +177,8 @@ public class Gui
 		// init file choosers
 		m_jarFileChooser = new JFileChooser();
 		m_mappingsFileChooser = new JFileChooser();
+		m_exportFileChooser = new JFileChooser();
+		m_exportFileChooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
 		
 		// init frame
 		m_frame = new JFrame( Constants.Name );
@@ -637,6 +639,22 @@ public class Gui
 			}
 			menu.addSeparator();
 			{
+				JMenuItem item = new JMenuItem( "Export..." );
+				menu.add( item );
+				item.addActionListener( new ActionListener( ) 
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						if( m_exportFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						{
+							m_controller.export( m_exportFileChooser.getSelectedFile() );
+						}
+					}
+				} );
+			}
+			menu.addSeparator();
+			{
 				JMenuItem item = new JMenuItem( "Exit" );
 				menu.add( item );
 				item.addActionListener( new ActionListener( )
@@ -684,6 +702,11 @@ public class Gui
 		m_frame.setMinimumSize( new Dimension( 640, 480 ) );
 		m_frame.setVisible( true );
 		m_frame.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
+	}
+	
+	public JFrame getFrame( )
+	{
+		return m_frame;
 	}
 	
 	public GuiController getController( )
@@ -887,7 +910,7 @@ public class Gui
 	{
 		m_infoPanel.removeAll();
 		JLabel label = new JLabel( "No identifier selected" );
-		unboldLabel( label );
+		GuiTricks.unboldLabel( label );
 		label.setHorizontalAlignment( JLabel.CENTER );
 		m_infoPanel.add( label );
 		
@@ -975,7 +998,7 @@ public class Gui
 		label.setPreferredSize( new Dimension( 100, label.getPreferredSize().height ) );
 		panel.add( label );
 		
-		panel.add( unboldLabel( new JLabel( value, JLabel.LEFT ) ) );
+		panel.add( GuiTricks.unboldLabel( new JLabel( value, JLabel.LEFT ) ) );
 	}
 	
 	private void onCaretMove( int pos )
@@ -1059,7 +1082,7 @@ public class Gui
 		// abort the rename
 		JPanel panel = (JPanel)m_infoPanel.getComponent( 0 );
 		panel.remove( panel.getComponentCount() - 1 );
-		panel.add( unboldLabel( new JLabel( m_reference.entry.getName(), JLabel.LEFT ) ) );
+		panel.add( GuiTricks.unboldLabel( new JLabel( m_reference.entry.getName(), JLabel.LEFT ) ) );
 		
 		m_editor.grabFocus();
 		
@@ -1203,13 +1226,6 @@ public class Gui
 		}
 	}
 
-	private JLabel unboldLabel( JLabel label )
-	{
-		Font font = label.getFont();
-		label.setFont( font.deriveFont( font.getStyle() & ~Font.BOLD ) );
-		return label;
-	}
-	
 	private void redraw( )
 	{
 		m_frame.validate();
