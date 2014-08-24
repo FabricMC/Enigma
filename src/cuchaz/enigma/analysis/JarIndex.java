@@ -39,6 +39,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import cuchaz.enigma.Constants;
 import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
@@ -80,7 +81,7 @@ public class JarIndex
 			if( classEntry.isInDefaultPackage() )
 			{
 				// move out of default package
-				classEntry = new ClassEntry( "default/" + classEntry.getName() );
+				classEntry = new ClassEntry( Constants.NonePackage + "/" + classEntry.getName() );
 			}
 			m_obfClassEntries.add( classEntry );
 		}
@@ -138,8 +139,8 @@ public class JarIndex
 		if( classEntry.isInDefaultPackage() )
 		{
 			// move class out of default package
-			classEntry = new ClassEntry( "default/" + classEntry.getName() );
-			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, "default" );
+			classEntry = new ClassEntry( Constants.NonePackage + "/" + classEntry.getName() );
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
 		}
 	}
 

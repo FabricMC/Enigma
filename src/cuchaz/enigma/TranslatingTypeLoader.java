@@ -115,9 +115,9 @@ public class TranslatingTypeLoader implements ITypeLoader
 			// use just the inner class simple name for inner classes
 			classFileName = obfClassEntry.getInnerClassName();
 		}
-		else if( obfClassEntry.getPackageName().equals( "default" ) )
+		else if( obfClassEntry.getPackageName().equals( Constants.NonePackage ) )
 		{
-			// use the outer class simple name for classes in the "default" package
+			// use the outer class simple name for classes in the none package
 			classFileName = obfClassEntry.getSimpleName();
 		}
 		else
@@ -156,9 +156,9 @@ public class TranslatingTypeLoader implements ITypeLoader
 			classPool.insertClassPath( new ByteArrayClassPath( javaClassFileName, buf ) );
 			CtClass c = classPool.get( javaClassFileName );
 			
-			// we moved a lot of classes out of the default package into the "default" package
+			// we moved a lot of classes out of the default package into the none package
 			// make sure all the class references are consistent
-			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, "default" );
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
 			
 			// reconstruct inner classes
 			new InnerClassWriter( m_jarIndex ).write( c );

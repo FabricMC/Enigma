@@ -19,6 +19,7 @@ import java.util.Scanner;
 
 import com.google.common.collect.Queues;
 
+import cuchaz.enigma.Constants;
 import cuchaz.enigma.Util;
 
 public class MappingsReader
@@ -151,8 +152,8 @@ public class MappingsReader
 	private ClassMapping readClass( Scanner scanner )
 	{
 		return new ClassMapping(
-			moveOutOfDefaultPackage( scanner.next(), "default" ),
-			moveOutOfDefaultPackage( scanner.next(), "default" )
+			moveOutOfDefaultPackage( scanner.next(), Constants.NonePackage ),
+			moveOutOfDefaultPackage( scanner.next(), Constants.NonePackage )
 		);
 	}
 	
