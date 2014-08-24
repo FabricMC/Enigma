@@ -110,4 +110,29 @@ public class ClassEntry implements Entry, Serializable
 	{
 		return new ClassEntry( getOuterClassName() );
 	}
+	
+	public boolean isInDefaultPackage( )
+	{
+		return m_name.indexOf( '/' ) < 0;
+	}
+
+	public String getPackageName( )
+	{
+		int pos = m_name.lastIndexOf( '/' );
+		if( pos > 0 )
+		{
+			return m_name.substring( 0, pos );
+		}
+		return null;
+	}
+
+	public String getSimpleName( )
+	{
+		int pos = m_name.lastIndexOf( '/' );
+		if( pos > 0 )
+		{
+			return m_name.substring( pos + 1 );
+		}
+		return m_name;
+	}
 }

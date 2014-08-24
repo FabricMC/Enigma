@@ -17,6 +17,8 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.jar.JarFile;
 
+import javassist.bytecode.Descriptor;
+
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.DecompilerContext;
@@ -118,28 +120,30 @@ public class Deobfuscator
 	
 	public void getSeparatedClasses( List<String> obfClasses, List<String> deobfClasses )
 	{
-		for( String obfClassName : m_jarIndex.getObfClassNames() )
+		for( ClassEntry obfClassEntry : m_jarIndex.getObfClassEntries() )
 		{
 			// skip inner classes
-			if( m_jarIndex.getOuterClass( obfClassName ) != null )
+			if( m_jarIndex.getOuterClass( obfClassEntry.getName() ) != null )
 			{
 				continue;
 			}
 			
 			// separate the classes
-			ClassMapping classMapping = m_mappings.getClassByObf( obfClassName );
-			if( classMapping != null && !classMapping.getObfName().equals( classMapping.getDeobfName() ) )
+			ClassEntry deobfClassEntry = deobfuscateEntry( obfClassEntry );
+			if( !deobfClassEntry.equals( obfClassEntry ) )
 			{
-				deobfClasses.add( classMapping.getDeobfName() );
+				// if the class has a mapping, clearly it's deobfuscated
+				deobfClasses.add( deobfClassEntry.getName() );
 			}
-			else if( obfClassName.indexOf( '/' ) >= 0 )
+			else if( !obfClassEntry.getPackageName().equals( "default" ) )
 			{
-				// this class is in a package and therefore is not obfuscated
-				deobfClasses.add( obfClassName );
+				// also call it deobufscated if it's not in the "default" package
+				deobfClasses.add( obfClassEntry.getName() );
 			}
 			else
 			{
-				obfClasses.add( obfClassName );
+				// otherwise, assume it's still obfuscated
+				obfClasses.add( obfClassEntry.getName() );
 			}
 		}
 	}
@@ -198,7 +202,7 @@ public class Deobfuscator
 	public void writeSources( File dirOut, ProgressListener progress )
 	throws IOException
 	{
-		int numClasses = m_jarIndex.getObfClassNames().size();
+		int numClasses = m_jarIndex.getObfClassEntries().size();
 		if( progress != null )
 		{
 			progress.init( numClasses );
@@ -206,22 +210,22 @@ public class Deobfuscator
 		int i = 0;
 		
 		// DEOBFUSCATE ALL THE THINGS!! @_@
-		for( String obfClassName : m_jarIndex.getObfClassNames() )
+		for( ClassEntry obfClassEntry : m_jarIndex.getObfClassEntries() )
 		{
 			// skip inner classes
-			if( m_jarIndex.getOuterClass( obfClassName ) != null )
+			if( obfClassEntry.isInnerClass() )
 			{
 				continue;
 			}
 			
-			ClassEntry deobfClassEntry = deobfuscateEntry( new ClassEntry( obfClassName ) );
+			ClassEntry deobfClassEntry = deobfuscateEntry( new ClassEntry( obfClassEntry ) );
 			if( progress != null )
 			{
 				progress.onProgress( i++, deobfClassEntry.toString() );
 			}
 			
 			// get the source
-			String source = getSource( getSourceTree( obfClassName ) );
+			String source = getSource( getSourceTree( obfClassEntry.getName() ) );
 			
 			// write the file
 			File file = new File( dirOut, deobfClassEntry.getName().replace( '.', '/' ) + ".java" );
@@ -284,7 +288,7 @@ public class Deobfuscator
 	{
 		if( obfEntry instanceof ClassEntry )
 		{
-			m_renamer.setClassName( (ClassEntry)obfEntry, newName );
+			m_renamer.setClassName( (ClassEntry)obfEntry, Descriptor.toJvmName( newName ) );
 		}
 		else if( obfEntry instanceof FieldEntry )
 		{
@@ -348,21 +352,18 @@ public class Deobfuscator
 	{
 		if( obfEntry instanceof ClassEntry )
 		{
-			if( obfEntry.getName().indexOf( '$' ) >= 0 )
+			ClassEntry obfClassEntry = (ClassEntry)obfEntry;
+			if( obfClassEntry.isInnerClass() )
 			{
-				String[] parts = obfEntry.getName().split( "\\$" );
-				assert( parts.length == 2 ); // not supporting recursively-nested classes
-				String outerClassName = parts[0];
-				String innerClassName = parts[1];
-				
 				// both classes must be in the list
-				return m_jarIndex.getObfClassNames().contains( outerClassName )
-					&& m_jarIndex.getObfClassNames().contains( innerClassName );
+				return m_jarIndex.getObfClassEntries().contains( obfClassEntry.getOuterClassEntry() )
+					&& m_jarIndex.getObfClassEntries().contains( obfClassEntry.getInnerClassName() );
+				// TODO: make sure this works for the inner class!!
 			}
 			else
 			{
 				// class must be in the list
-				return m_jarIndex.getObfClassNames().contains( obfEntry.getName() );
+				return m_jarIndex.getObfClassEntries().contains( obfEntry );
 			}
 		}
 		else

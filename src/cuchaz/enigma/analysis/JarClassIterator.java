@@ -28,6 +28,7 @@ import javassist.bytecode.Descriptor;
 import com.beust.jcommander.internal.Lists;
 
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.mapping.ClassEntry;
 
 public class JarClassIterator implements Iterator<CtClass>
 {
@@ -36,13 +37,22 @@ public class JarClassIterator implements Iterator<CtClass>
 	
 	public JarClassIterator( JarFile jar )
 	{
-		this( jar, getClassEntries( jar ) );
-	}
-	
-	public JarClassIterator( JarFile jar, List<JarEntry> entries )
-	{
 		m_jar = jar;
-		m_iter = entries.iterator();
+		
+		// get the jar entries that correspond to classes
+		List<JarEntry> classEntries = Lists.newArrayList();
+		Enumeration<JarEntry> entries = m_jar.entries();
+		while( entries.hasMoreElements() )
+		{
+			JarEntry entry = entries.nextElement();
+			
+			// is this a class file?
+			if( entry.getName().endsWith( ".class" ) )
+			{
+				classEntries.add( entry );
+			}
+		}
+		m_iter = classEntries.iterator();
 	}
 	
 	@Override
@@ -79,19 +89,13 @@ public class JarClassIterator implements Iterator<CtClass>
 				}
 			}
 			
-			// determine the class name (ie chop off the ".class")
-			String className = Descriptor.toJavaName( entry.getName().substring( 0, entry.getName().length() - ".class".length() ) );
-			
 			// get a javassist handle for the class
+			String className = Descriptor.toJavaName( getClassEntry( entry ).getName() );
 			ClassPool classPool = new ClassPool();
 			classPool.insertClassPath( new ByteArrayClassPath( className, bos.toByteArray() ) );
 			return classPool.get( className );
 		}
-		catch( IOException ex )
-		{
-			throw new Error( "Unable to read class: " + entry.getName() );
-		}
-		catch( NotFoundException ex )
+		catch( IOException | NotFoundException ex )
 		{
 			throw new Error( "Unable to load class: " + entry.getName() );
 		}
@@ -103,9 +107,9 @@ public class JarClassIterator implements Iterator<CtClass>
 		throw new UnsupportedOperationException();
 	}
 	
-	public static List<JarEntry> getClassEntries( JarFile jar )
+	public static List<ClassEntry> getClassEntries( JarFile jar )
 	{
-		List<JarEntry> classes = Lists.newArrayList();
+		List<ClassEntry> classEntries = Lists.newArrayList();
 		Enumeration<JarEntry> entries = jar.entries();
 		while( entries.hasMoreElements() )
 		{
@@ -114,10 +118,10 @@ public class JarClassIterator implements Iterator<CtClass>
 			// is this a class file?
 			if( !entry.isDirectory() && entry.getName().endsWith( ".class" ) )
 			{
-				classes.add( entry );
+				classEntries.add( getClassEntry( entry ) );
 			}
 		}
-		return classes;
+		return classEntries;
 	}
 	
 	public static Iterable<CtClass> classes( final JarFile jar )
@@ -130,5 +134,10 @@ public class JarClassIterator implements Iterator<CtClass>
 				return new JarClassIterator( jar );
 			}
 		};
+	}
+	
+	private static ClassEntry getClassEntry( JarEntry entry )
+	{
+		return new ClassEntry( entry.getName().substring( 0, entry.getName().length() - ".class".length() ) );
 	}
 }

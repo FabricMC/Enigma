@@ -59,7 +59,11 @@ public class NameValidator
 	{
 		if( name == null || !ClassPattern.matcher( name ).matches() || ReservedWords.contains( name ) )
 		{
-			throw new IllegalNameException( name );
+			throw new IllegalNameException( name, "This doesn't look like a legal class name" );
+		}
+		if( new ClassEntry( name ).getPackageName() == null )
+		{
+			throw new IllegalNameException( name, "Classes must be in a package" );
 		}
 		return Descriptor.toJvmName( name );
 	}
@@ -68,7 +72,7 @@ public class NameValidator
 	{
 		if( name == null || !IdentifierPattern.matcher( name ).matches() || ReservedWords.contains( name ) )
 		{
-			throw new IllegalNameException( name );
+			throw new IllegalNameException( name, "This doesn't look like a legal identifier" );
 		}
 		return name;
 	}

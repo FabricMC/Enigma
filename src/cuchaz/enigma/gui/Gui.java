@@ -1073,8 +1073,9 @@ public class Gui
 			}
 			catch( IllegalNameException ex )
 			{
-				ex.printStackTrace( System.err );
 				text.setBorder( BorderFactory.createLineBorder( Color.red, 1 ) );
+				text.setToolTipText( ex.getReason() );
+				GuiTricks.showToolTipNow( text );
 			}
 			return;
 		}

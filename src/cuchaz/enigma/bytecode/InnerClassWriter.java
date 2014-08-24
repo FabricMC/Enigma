@@ -42,7 +42,7 @@ public class InnerClassWriter
 		else
 		{
 			// this is an inner class, rename it to outer$inner
-			ClassEntry obfClassEntry = new ClassEntry( obfOuterClassName + "$" + obfClassName );
+			ClassEntry obfClassEntry = new ClassEntry( obfOuterClassName + "$" + new ClassEntry( obfClassName ).getSimpleName() );
 			c.setName( obfClassEntry.getName() );
 		}
 		
@@ -60,8 +60,8 @@ public class InnerClassWriter
 		c.getClassFile().addAttribute( attr );
 		for( String obfInnerClassName : obfInnerClassNames )
 		{
-			// deobfuscate the class names
-			ClassEntry obfClassEntry = new ClassEntry( obfOuterClassName + "$" + obfInnerClassName );
+			// get the new inner class name
+			ClassEntry obfClassEntry = new ClassEntry( obfOuterClassName + "$" + new ClassEntry( obfInnerClassName ).getSimpleName() );
 			
 			// here's what the JVM spec says about the InnerClasses attribute
 			// append( inner, outer of inner if inner is member of outer 0 ow, name after $ if inner not anonymous 0 ow, flags ); 

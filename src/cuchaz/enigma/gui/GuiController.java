@@ -114,15 +114,18 @@ public class GuiController
 			@Override
 			public void run( )
 			{
+				ProgressDialog progress = new ProgressDialog( m_gui.getFrame() );
 				try
 				{
-					ProgressDialog progress = new ProgressDialog( m_gui.getFrame() );
 					m_deobfuscator.writeSources( dirOut, progress );
-					progress.close();
 				}
-				catch( IOException ex )
+				catch( Exception ex )
 				{
 					throw new Error( ex );
+				}
+				finally
+				{
+					progress.close();
 				}
 			}
 		}.start();

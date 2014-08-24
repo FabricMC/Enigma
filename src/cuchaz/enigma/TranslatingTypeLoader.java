@@ -13,6 +13,7 @@ package cuchaz.enigma;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -30,6 +31,7 @@ import com.strobel.assembler.metadata.ITypeLoader;
 
 import cuchaz.enigma.analysis.BridgeFixer;
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.bytecode.ClassTranslator;
 import cuchaz.enigma.bytecode.InnerClassWriter;
 import cuchaz.enigma.bytecode.MethodParameterWriter;
@@ -99,22 +101,29 @@ public class TranslatingTypeLoader implements ITypeLoader
 			return null;
 		}
 		
-		/* DEBUG
+		// DEBUG
 		if( !Arrays.asList( "java", "org", "io" ).contains( deobfClassName.split( "/" )[0] ) )
 		{
 			System.out.println( String.format( "Looking for %s (%s)", deobfClassEntry.getName(), obfClassEntry.getName() ) );
 		}
-		*/
+		//
 		
 		// get the jar entry
 		String classFileName;
 		if( obfClassEntry.isInnerClass() )
 		{
+			// use just the inner class simple name for inner classes
 			classFileName = obfClassEntry.getInnerClassName();
+		}
+		else if( obfClassEntry.getPackageName().equals( "default" ) )
+		{
+			// use the outer class simple name for classes in the "default" package
+			classFileName = obfClassEntry.getSimpleName();
 		}
 		else
 		{
-			classFileName = obfClassEntry.getOuterClassName();
+			// otherwise, just use the class name (ie for classes in packages)
+			classFileName = obfClassEntry.getName();
 		}
 		JarEntry entry = m_jar.getJarEntry( classFileName + ".class" );
 		if( entry == null )
@@ -146,6 +155,10 @@ public class TranslatingTypeLoader implements ITypeLoader
 			ClassPool classPool = new ClassPool();
 			classPool.insertClassPath( new ByteArrayClassPath( javaClassFileName, buf ) );
 			CtClass c = classPool.get( javaClassFileName );
+			
+			// we moved a lot of classes out of the default package into the "default" package
+			// make sure all the class references are consistent
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, "default" );
 			
 			// reconstruct inner classes
 			new InnerClassWriter( m_jarIndex ).write( c );

@@ -17,7 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javassist.CannotCompileException;
@@ -35,13 +34,12 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
+import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -53,7 +51,7 @@ import cuchaz.enigma.mapping.Translator;
 
 public class JarIndex
 {
-	private Set<String> m_obfClassNames;
+	private Set<ClassEntry> m_obfClassEntries;
 	private Ancestries m_ancestries;
 	private Multimap<String,MethodEntry> m_methodImplementations;
 	private Multimap<BehaviorEntry,EntryReference<BehaviorEntry,BehaviorEntry>> m_behaviorReferences;
@@ -64,7 +62,7 @@ public class JarIndex
 	
 	public JarIndex( )
 	{
-		m_obfClassNames = Sets.newHashSet();
+		m_obfClassEntries = Sets.newHashSet();
 		m_ancestries = new Ancestries();
 		m_methodImplementations = HashMultimap.create();
 		m_behaviorReferences = HashMultimap.create();
@@ -77,15 +75,20 @@ public class JarIndex
 	public void indexJar( JarFile jar )
 	{
 		// pass 1: read the class names
-		for( JarEntry entry : JarClassIterator.getClassEntries( jar ) )
+		for( ClassEntry classEntry : JarClassIterator.getClassEntries( jar ) )
 		{
-			String className = entry.getName().substring( 0, entry.getName().length() - 6 );
-			m_obfClassNames.add( Descriptor.toJvmName( className ) );
+			if( classEntry.isInDefaultPackage() )
+			{
+				// move out of default package
+				classEntry = new ClassEntry( "default/" + classEntry.getName() );
+			}
+			m_obfClassEntries.add( classEntry );
 		}
 		
 		// pass 2: index the types, methods
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
+			fixClass( c );
 			m_ancestries.addSuperclass( c.getName(), c.getClassFile().getSuperclass() );
 			for( CtBehavior behavior : c.getDeclaredBehaviors() )
 			{
@@ -96,8 +99,10 @@ public class JarIndex
 		// pass 2: index inner classes and anonymous classes
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
+			fixClass( c );
+			
 			String outerClassName = findOuterClass( c );
-			if( outerClassName != null )// /* TEMP */ && false )
+			if( outerClassName != null )
 			{
 				String innerClassName = Descriptor.toJvmName( c.getName() );
 				m_innerClasses.put( outerClassName, innerClassName );
@@ -125,6 +130,17 @@ public class JarIndex
 			renames.put( entry.getKey(), entry.getValue() + "$" + entry.getKey() );
 		}
 		renameClasses( renames );
+	}
+
+	private void fixClass( CtClass c )
+	{
+		ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
+		if( classEntry.isInDefaultPackage() )
+		{
+			// move class out of default package
+			classEntry = new ClassEntry( "default/" + classEntry.getName() );
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, "default" );
+		}
 	}
 
 	private void indexBehavior( CtBehavior behavior )
@@ -270,7 +286,7 @@ public class JarIndex
 			else if( callerClasses.size() > 1 )
 			{
 				// TEMP
-				System.out.println( "WARNING: Illegal class called by more than one class!" + callerClasses );
+				System.out.println( "WARNING: Illegal constructor called by more than one class!" + callerClasses );
 			}
 		}
 		
@@ -423,9 +439,9 @@ public class JarIndex
 		return true;
 	}
 	
-	public Set<String> getObfClassNames( )
+	public Set<ClassEntry> getObfClassEntries( )
 	{
-		return m_obfClassNames;
+		return m_obfClassEntries;
 	}
 	
 	public Ancestries getAncestries( )
