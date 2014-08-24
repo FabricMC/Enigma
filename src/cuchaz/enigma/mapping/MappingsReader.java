@@ -150,9 +150,22 @@ public class MappingsReader
 
 	private ClassMapping readClass( Scanner scanner )
 	{
-		return new ClassMapping( scanner.next(), scanner.next() );
+		return new ClassMapping(
+			moveOutOfDefaultPackage( scanner.next(), "default" ),
+			moveOutOfDefaultPackage( scanner.next(), "default" )
+		);
 	}
 	
+	private String moveOutOfDefaultPackage( String className, String newPackageName )
+	{
+		ClassEntry classEntry = new ClassEntry( className );
+		if( classEntry.isInDefaultPackage() )
+		{
+			return newPackageName + "/" + classEntry.getName();
+		}
+		return className;
+	}
+
 	private FieldMapping readField( Scanner scanner )
 	{
 		return new FieldMapping( scanner.next(), scanner.next() );
