@@ -45,6 +45,10 @@ public class ClassRenamer
 			{
 				ClassEntry inClassEntry = new ClassEntry( Descriptor.toJvmName( attr.innerClass( i ) ) );
 				ClassEntry outClassEntry = map.get( inClassEntry );
+				if( outClassEntry == null )
+				{
+					continue;
+				}
 				attr.setInnerClassIndex( i, constants.addClassInfo( outClassEntry.getName() ) );
 				if( attr.outerClassIndex( i ) != 0 )
 				{

@@ -73,6 +73,7 @@ public class Deobfuscator
 		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();
+		m_settings.setForceExplicitImports( true );
 		// DEBUG
 		//m_settings.setShowSyntheticMembers( true );
 		

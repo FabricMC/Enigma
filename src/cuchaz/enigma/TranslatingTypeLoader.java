@@ -27,6 +27,7 @@ import javassist.bytecode.Descriptor;
 
 import com.beust.jcommander.internal.Maps;
 import com.strobel.assembler.metadata.Buffer;
+import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
 
 import cuchaz.enigma.analysis.BridgeFixer;
@@ -45,6 +46,7 @@ public class TranslatingTypeLoader implements ITypeLoader
 	private Translator m_obfuscatingTranslator;
 	private Translator m_deobfuscatingTranslator;
 	private Map<String,byte[]> m_cache;
+	private ClasspathTypeLoader m_defaultTypeLoader;
 	
 	public TranslatingTypeLoader( JarFile jar, JarIndex jarIndex, Translator obfuscatingTranslator, Translator deobfuscatingTranslator )
 	{
@@ -53,6 +55,7 @@ public class TranslatingTypeLoader implements ITypeLoader
 		m_obfuscatingTranslator = obfuscatingTranslator;
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_cache = Maps.newHashMap();
+		m_defaultTypeLoader = new ClasspathTypeLoader();
 	}
 	
 	public void clearCache( )
@@ -77,7 +80,8 @@ public class TranslatingTypeLoader implements ITypeLoader
 		
 		if( data == null )
 		{
-			return false;
+			// chain to default type loader
+			return m_defaultTypeLoader.tryLoadType( deobfClassName, out );
 		}
 		
 		// send the class to the decompiler

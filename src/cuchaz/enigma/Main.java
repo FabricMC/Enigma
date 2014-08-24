@@ -32,7 +32,7 @@ public class Main
 		}
 		
 		// DEBUG
-		//gui.getController().openDeclaration( new ClassEntry( "none/aay" ) );
+		//gui.getController().openDeclaration( new ClassEntry( "none/bgl" ) );
 	}
 	
 	private static File getFile( String path )
