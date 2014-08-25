@@ -24,6 +24,7 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
+import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
@@ -60,6 +61,7 @@ public class JarIndex
 	private Multimap<String,String> m_innerClasses;
 	private Map<String,String> m_outerClasses;
 	private Set<String> m_anonymousClasses;
+	private Map<MethodEntry,MethodEntry> m_bridgeMethods;
 	
 	public JarIndex( )
 	{
@@ -71,11 +73,12 @@ public class JarIndex
 		m_innerClasses = HashMultimap.create();
 		m_outerClasses = Maps.newHashMap();
 		m_anonymousClasses = Sets.newHashSet();
+		m_bridgeMethods = Maps.newHashMap();
 	}
 	
 	public void indexJar( JarFile jar )
 	{
-		// pass 1: read the class names
+		// step 1: read the class names
 		for( ClassEntry classEntry : JarClassIterator.getClassEntries( jar ) )
 		{
 			if( classEntry.isInDefaultPackage() )
@@ -86,7 +89,7 @@ public class JarIndex
 			m_obfClassEntries.add( classEntry );
 		}
 		
-		// pass 2: index the types, methods
+		// step 2: index the types, methods
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
 			fixClass( c );
@@ -97,7 +100,7 @@ public class JarIndex
 			}
 		}
 		
-		// pass 2: index inner classes and anonymous classes
+		// step 3: index inner classes and anonymous classes
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
 			fixClass( c );
@@ -124,13 +127,16 @@ public class JarIndex
 			}
 		}
 		
-		// step 3: update other indicies with inner class info
+		// step 4: update other indices with inner class info
 		Map<String,String> renames = Maps.newHashMap();
 		for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
 		{
 			renames.put( entry.getKey(), entry.getValue() + "$" + entry.getKey() );
 		}
 		renameClasses( renames );
+		
+		// step 5: update other indices with bridge method info
+		renameMethods( m_bridgeMethods );
 	}
 
 	private void fixClass( CtClass c )
@@ -160,6 +166,18 @@ public class JarIndex
 			
 			// index implementation
 			m_methodImplementations.put( className, methodEntry );
+			
+			// look for bridge methods
+			CtMethod bridgedMethod = getBridgedMethod( (CtMethod)behavior );
+			if( bridgedMethod != null )
+			{
+				MethodEntry bridgedMethodEntry = new MethodEntry(
+					new ClassEntry( className ),
+					bridgedMethod.getName(),
+					bridgedMethod.getSignature()
+				);
+				m_bridgeMethods.put( bridgedMethodEntry, methodEntry );
+			}
 		}
 		else if( behavior instanceof CtConstructor )
 		{
@@ -251,6 +269,56 @@ public class JarIndex
 		catch( CannotCompileException ex )
 		{
 			throw new Error( ex );
+		}
+	}
+	
+
+	private CtMethod getBridgedMethod( CtMethod method )
+	{
+		// bridge methods just call another method, cast it to the return type, and return the result
+		// let's see if we can detect this scenario
+		
+		// skip non-synthetic methods
+		if( ( method.getModifiers() & AccessFlag.SYNTHETIC ) == 0 )
+		{
+			return null;
+		}
+					
+		// get all the called methods
+		final List<MethodCall> methodCalls = Lists.newArrayList();
+		try
+		{
+			method.instrument( new ExprEditor( )
+			{
+				@Override
+				public void edit( MethodCall call )
+				{
+					methodCalls.add( call );
+				}
+			} );
+		}
+		catch( CannotCompileException ex )
+		{
+			// this is stupid... we're not even compiling anything
+			throw new Error( ex );
+		}
+		
+		// is there just one?
+		if( methodCalls.size() != 1 )
+		{
+			return null;
+		}
+		MethodCall call = methodCalls.get( 0 );
+		
+		try
+		{
+			// we have a bridge method!
+			return call.getMethod();
+		}
+		catch( NotFoundException ex )
+		{
+			// can't find the type? not a bridge method
+			return null;
 		}
 	}
 	
@@ -534,15 +602,27 @@ public class JarIndex
 		return m_anonymousClasses.contains( obfInnerClassName );
 	}
 	
+	public MethodEntry getBridgeMethod( MethodEntry methodEntry )
+	{
+		return m_bridgeMethods.get( methodEntry );
+	}
+	
 	private void renameClasses( Map<String,String> renames )
 	{
 		m_ancestries.renameClasses( renames );
-		renameMultimap( renames, m_methodImplementations );
-		renameMultimap( renames, m_behaviorReferences );
-		renameMultimap( renames, m_fieldReferences );
+		renameClassesInMultimap( renames, m_methodImplementations );
+		renameClassesInMultimap( renames, m_behaviorReferences );
+		renameClassesInMultimap( renames, m_fieldReferences );
 	}
 	
-	private <Key,Val> void renameMultimap( Map<String,String> renames, Multimap<Key,Val> map )
+	private void renameMethods( Map<MethodEntry,MethodEntry> renames )
+	{
+		renameMethodsInMultimap( renames, m_methodImplementations );
+		renameMethodsInMultimap( renames, m_behaviorReferences );
+		renameMethodsInMultimap( renames, m_fieldReferences );
+	}
+	
+	private <Key,Val> void renameClassesInMultimap( Map<String,String> renames, Multimap<Key,Val> map )
 	{
 		// for each key/value pair...
 		Set<Map.Entry<Key,Val>> entriesToAdd = Sets.newHashSet();
@@ -552,8 +632,8 @@ public class JarIndex
 			Map.Entry<Key,Val> entry = iter.next();
 			iter.remove();
 			entriesToAdd.add( new AbstractMap.SimpleEntry<Key,Val>(
-				renameThing( renames, entry.getKey() ),
-				renameThing( renames, entry.getValue() )
+				renameClassesInThing( renames, entry.getKey() ),
+				renameClassesInThing( renames, entry.getValue() )
 			) );
 		}
 		for( Map.Entry<Key,Val> entry : entriesToAdd )
@@ -563,7 +643,7 @@ public class JarIndex
 	}
 	
 	@SuppressWarnings( "unchecked" )
-	private <T> T renameThing( Map<String,String> renames, T thing )
+	private <T> T renameClassesInThing( Map<String,String> renames, T thing )
 	{
 		if( thing instanceof String )
 		{
@@ -576,13 +656,13 @@ public class JarIndex
 		else if( thing instanceof ClassEntry )
 		{
 			ClassEntry classEntry = (ClassEntry)thing;
-			return (T)new ClassEntry( renameThing( renames, classEntry.getClassName() ) );
+			return (T)new ClassEntry( renameClassesInThing( renames, classEntry.getClassName() ) );
 		}
 		else if( thing instanceof FieldEntry )
 		{
 			FieldEntry fieldEntry = (FieldEntry)thing;
 			return (T)new FieldEntry(
-				renameThing( renames, fieldEntry.getClassEntry() ),
+				renameClassesInThing( renames, fieldEntry.getClassEntry() ),
 				fieldEntry.getName()
 			);
 		}
@@ -590,7 +670,7 @@ public class JarIndex
 		{
 			ConstructorEntry constructorEntry = (ConstructorEntry)thing;
 			return (T)new ConstructorEntry(
-				renameThing( renames, constructorEntry.getClassEntry() ),
+				renameClassesInThing( renames, constructorEntry.getClassEntry() ),
 				constructorEntry.getSignature()
 			);
 		}
@@ -598,7 +678,7 @@ public class JarIndex
 		{
 			MethodEntry methodEntry = (MethodEntry)thing;
 			return (T)new MethodEntry(
-				renameThing( renames, methodEntry.getClassEntry() ),
+				renameClassesInThing( renames, methodEntry.getClassEntry() ),
 				methodEntry.getName(),
 				methodEntry.getSignature()
 			);
@@ -607,7 +687,7 @@ public class JarIndex
 		{
 			ArgumentEntry argumentEntry = (ArgumentEntry)thing;
 			return (T)new ArgumentEntry(
-				renameThing( renames, argumentEntry.getMethodEntry() ),
+				renameClassesInThing( renames, argumentEntry.getMethodEntry() ),
 				argumentEntry.getIndex(),
 				argumentEntry.getName()
 			);
@@ -615,8 +695,8 @@ public class JarIndex
 		else if( thing instanceof EntryReference )
 		{
 			EntryReference<Entry,Entry> reference = (EntryReference<Entry,Entry>)thing;
-			reference.entry = renameThing( renames, reference.entry );
-			reference.context = renameThing( renames, reference.context );
+			reference.entry = renameClassesInThing( renames, reference.entry );
+			reference.context = renameClassesInThing( renames, reference.context );
 			return thing;
 		}
 		else
@@ -626,4 +706,60 @@ public class JarIndex
 		
 		return thing;
 	}
+	
+	private <Key,Val> void renameMethodsInMultimap( Map<MethodEntry,MethodEntry> renames, Multimap<Key,Val> map )
+	{
+		// for each key/value pair...
+		Set<Map.Entry<Key,Val>> entriesToAdd = Sets.newHashSet();
+		Iterator<Map.Entry<Key,Val>> iter = map.entries().iterator();
+		while( iter.hasNext() )
+		{
+			Map.Entry<Key,Val> entry = iter.next();
+			iter.remove();
+			entriesToAdd.add( new AbstractMap.SimpleEntry<Key,Val>(
+				renameMethodsInThing( renames, entry.getKey() ),
+				renameMethodsInThing( renames, entry.getValue() )
+			) );
+		}
+		for( Map.Entry<Key,Val> entry : entriesToAdd )
+		{
+			map.put( entry.getKey(), entry.getValue() );
+		}
+	}
+	
+	@SuppressWarnings( "unchecked" )
+	private <T> T renameMethodsInThing( Map<MethodEntry,MethodEntry> renames, T thing )
+	{
+		if( thing instanceof MethodEntry )
+		{
+			MethodEntry methodEntry = (MethodEntry)thing;
+			MethodEntry newMethodEntry = renames.get( methodEntry );
+			if( newMethodEntry != null )
+			{
+				return (T)new MethodEntry(
+					methodEntry.getClassEntry(),
+					newMethodEntry.getName(),
+					methodEntry.getSignature()
+				);
+			}
+			return thing;
+		}
+		else if( thing instanceof ArgumentEntry )
+		{
+			ArgumentEntry argumentEntry = (ArgumentEntry)thing;
+			return (T)new ArgumentEntry(
+				renameMethodsInThing( renames, argumentEntry.getMethodEntry() ),
+				argumentEntry.getIndex(),
+				argumentEntry.getName()
+			);
+		}
+		else if( thing instanceof EntryReference )
+		{
+			EntryReference<Entry,Entry> reference = (EntryReference<Entry,Entry>)thing;
+			reference.entry = renameMethodsInThing( renames, reference.entry );
+			reference.context = renameMethodsInThing( renames, reference.context );
+			return thing;
+		}
+		return thing;
+	}	
 }

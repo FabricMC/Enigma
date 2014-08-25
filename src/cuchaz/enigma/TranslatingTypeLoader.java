@@ -177,7 +177,7 @@ public class TranslatingTypeLoader implements ITypeLoader
 			assertClassName( c, obfClassEntry );
 			
 			// do all kinds of deobfuscating transformations on the class
-			new BridgeFixer().fixBridges( c );
+			new BridgeFixer( m_jarIndex ).fixBridges( c );
 			new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
 			new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
 			

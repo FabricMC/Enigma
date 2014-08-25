@@ -219,6 +219,12 @@ public class Deobfuscator
 				continue;
 			}
 			
+			// TEMP: skip the classes that won't decompile because of a procyon bug
+			if( obfClassEntry.getName().equals( "none/bgl" ) )
+			{
+				continue;
+			}
+			
 			ClassEntry deobfClassEntry = deobfuscateEntry( new ClassEntry( obfClassEntry ) );
 			if( progress != null )
 			{
