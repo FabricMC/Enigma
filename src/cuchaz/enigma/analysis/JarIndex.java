@@ -136,7 +136,7 @@ public class JarIndex
 		Map<String,String> renames = Maps.newHashMap();
 		for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
 		{
-			renames.put( entry.getKey(), entry.getValue() + "$" + entry.getKey() );
+			renames.put( entry.getKey(), entry.getValue() + "$" + new ClassEntry( entry.getKey() ).getSimpleName() );
 		}
 		renameClasses( renames );
 		

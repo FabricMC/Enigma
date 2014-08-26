@@ -25,12 +25,17 @@ public class ClassEntry implements Entry, Serializable
 		{
 			throw new IllegalArgumentException( "Class name cannot be null!" );
 		}
-		if( className.contains( "." ) )
+		if( className.indexOf( '.' ) >= 0 )
 		{
 			throw new IllegalArgumentException( "Class name must be in JVM format. ie, path/to/package/class$inner" );
 		}
 		
 		m_name = className;
+		
+		if( isInnerClass() && getInnerClassName().indexOf( '/' ) >= 0 )
+		{
+			throw new IllegalArgumentException( "Inner cast must not have a package: " + getInnerClassName() );
+		}
 	}
 	
 	public ClassEntry( ClassEntry other )
