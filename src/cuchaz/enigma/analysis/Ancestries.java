@@ -11,24 +11,32 @@
 package cuchaz.enigma.analysis;
 
 import java.io.Serializable;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javassist.bytecode.Descriptor;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 public class Ancestries implements Serializable
 {
 	private static final long serialVersionUID = 738687982126844179L;
 	
 	private Map<String,String> m_superclasses;
+	private Multimap<String,String> m_interfaces;
 	
 	public Ancestries( )
 	{
 		m_superclasses = Maps.newHashMap();
+		m_interfaces = HashMultimap.create();
 	}
 	
 	public void addSuperclass( String className, String superclassName )
@@ -47,8 +55,25 @@ public class Ancestries implements Serializable
 		}
 	}
 	
+	public void addInterface( String className, String interfaceName )
+	{
+		className = Descriptor.toJvmName( className );
+		interfaceName = Descriptor.toJvmName( interfaceName );
+		
+		if( className.equals( interfaceName ) )
+		{
+			throw new IllegalArgumentException( "Class cannot be its own interface! " + className );
+		}
+		
+		if( !isJre( className ) && !isJre( interfaceName ) )
+		{
+			m_interfaces.put( className, interfaceName );
+		}
+	}
+	
 	public void renameClasses( Map<String,String> renames )
 	{
+		// rename superclasses
 		Map<String,String> newSuperclasses = Maps.newHashMap();
 		for( Map.Entry<String,String> entry : m_superclasses.entrySet() )
 		{
@@ -65,6 +90,28 @@ public class Ancestries implements Serializable
 			newSuperclasses.put( subclass, superclass );
 		}
 		m_superclasses = newSuperclasses;
+		
+		// rename interfaces
+		Set<Map.Entry<String,String>> entriesToAdd = Sets.newHashSet();
+		for( Map.Entry<String,String> entry : m_interfaces.entries() )
+		{
+			String className = renames.get( entry.getKey() );
+			if( className == null )
+			{
+				className = entry.getKey();
+			}
+			String interfaceName = renames.get( entry.getValue() );
+			if( interfaceName == null )
+			{
+				interfaceName = entry.getValue();
+			}
+			entriesToAdd.add( new AbstractMap.SimpleEntry<String,String>( className, interfaceName ) );
+		}
+		m_interfaces.clear();
+		for( Map.Entry<String,String> entry : entriesToAdd )
+		{
+			m_interfaces.put( entry.getKey(), entry.getValue() );
+		}
 	}
 	
 	public String getSuperclassName( String className )
@@ -86,6 +133,17 @@ public class Ancestries implements Serializable
 		return ancestors;
 	}
 	
+	public Set<String> getInterfaces( String className )
+	{
+		Set<String> interfaceNames = new HashSet<String>();
+		interfaceNames.addAll( m_interfaces.get( className ) );
+		for( String ancestor : getAncestry( className ) )
+		{
+			interfaceNames.addAll( m_interfaces.get( ancestor ) );
+		}
+		return interfaceNames;
+	}
+	
 	public List<String> getSubclasses( String className )
 	{
 		// linear search is fast enough for now
@@ -102,6 +160,37 @@ public class Ancestries implements Serializable
 		return subclasses;
 	}
 	
+	public Set<String> getImplementingClasses( String targetInterfaceName )
+	{
+		// linear search is fast enough for now
+		Set<String> classNames = Sets.newHashSet();
+		for( Map.Entry<String,String> entry : m_interfaces.entries() )
+		{
+			String className = entry.getKey();
+			String interfaceName = entry.getValue();
+			if( interfaceName.equals( targetInterfaceName ) )
+			{
+				classNames.add( className );
+				collectSubclasses( classNames, className );
+			}
+		}
+		return classNames;
+	}
+	
+	public boolean isInterface( String className )
+	{
+		return m_interfaces.containsValue( className );
+	}
+	
+	private void collectSubclasses( Set<String> classNames, String className )
+	{
+		for( String subclassName : getSubclasses( className ) )
+		{
+			classNames.add( subclassName );
+			collectSubclasses( classNames, subclassName );
+		}
+	}
+
 	private boolean isJre( String className )
 	{
 		return className.startsWith( "java/" )

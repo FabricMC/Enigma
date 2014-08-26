@@ -24,9 +24,11 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
+import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.FieldReferenceTreeNode;
+import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
@@ -182,6 +184,15 @@ public class GuiController
 		return ClassInheritanceTreeNode.findNode( rootNode, obfClassEntry );
 	}
 	
+	public ClassImplementationsTreeNode getClassImplementations( ClassEntry deobfClassEntry )
+	{
+		ClassEntry obfClassEntry = m_deobfuscator.obfuscateEntry( deobfClassEntry );
+		return m_deobfuscator.getJarIndex().getClassImplementations(
+			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+			obfClassEntry
+		);
+	}
+	
 	public MethodInheritanceTreeNode getMethodInheritance( MethodEntry deobfMethodEntry )
 	{
 		MethodEntry obfMethodEntry = m_deobfuscator.obfuscateEntry( deobfMethodEntry );
@@ -190,6 +201,20 @@ public class GuiController
 			obfMethodEntry
 		);
 		return MethodInheritanceTreeNode.findNode( rootNode, obfMethodEntry );
+	}
+	
+	public MethodImplementationsTreeNode getMethodImplementations( MethodEntry deobfMethodEntry )
+	{
+		MethodEntry obfMethodEntry = m_deobfuscator.obfuscateEntry( deobfMethodEntry );
+		MethodImplementationsTreeNode rootNode = m_deobfuscator.getJarIndex().getMethodImplementations(
+			m_deobfuscator.getTranslator( TranslationDirection.Deobfuscating ),
+			obfMethodEntry
+		);
+		if( rootNode == null )
+		{
+			return null;
+		}
+		return MethodImplementationsTreeNode.findNode( rootNode, obfMethodEntry );
 	}
 	
 	public FieldReferenceTreeNode getFieldReferences( FieldEntry deobfFieldEntry )

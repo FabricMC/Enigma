@@ -16,7 +16,6 @@ import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 
 public class Renamer
 {
@@ -57,25 +56,9 @@ public class Renamer
 	
 	public void setMethodTreeName( MethodEntry obf, String deobfName )
 	{
-		// get the method tree
-		setMethodTreeName(
-			m_index.getMethodInheritance( m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ), obf ),
-			deobfName
-		);
-	}
-	
-	private void setMethodTreeName( MethodInheritanceTreeNode node, String deobfName )
-	{
-		if( node.isImplemented() )
+		for( MethodEntry entry : m_index.getRelatedMethodImplementations( obf ) )
 		{
-			// apply the name here
-			setMethodName( node.getMethodEntry(), deobfName );
-		}
-		
-		// recurse
-		for( int i=0; i<node.getChildCount(); i++ )
-		{
-			setMethodTreeName( (MethodInheritanceTreeNode)node.getChildAt( i ), deobfName );
+			setMethodName( entry, deobfName );
 		}
 	}
 

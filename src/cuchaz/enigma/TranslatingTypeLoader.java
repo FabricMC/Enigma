@@ -13,7 +13,6 @@ package cuchaz.enigma;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -105,12 +104,12 @@ public class TranslatingTypeLoader implements ITypeLoader
 			return null;
 		}
 		
-		// DEBUG
+		/* DEBUG
 		if( !Arrays.asList( "java", "org", "io" ).contains( deobfClassName.split( "/" )[0] ) )
 		{
 			System.out.println( String.format( "Looking for %s (%s)", deobfClassEntry.getName(), obfClassEntry.getName() ) );
 		}
-		//
+		*/
 		
 		// get the jar entry
 		String classFileName;

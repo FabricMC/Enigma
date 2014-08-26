@@ -70,9 +70,11 @@ import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
+import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.FieldReferenceTreeNode;
+import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.ReferenceTreeNode;
 import cuchaz.enigma.analysis.Token;
@@ -148,6 +150,7 @@ public class Gui
 	private DeobfuscatedHighlightPainter m_deobfuscatedHighlightPainter;
 	private SelectionHighlightPainter m_selectionHighlightPainter;
 	private JTree m_inheritanceTree;
+	private JTree m_implementationsTree;
 	private JTree m_callsTree;
 	private JList<Token> m_tokens;
 	private JTabbedPane m_tabs;
@@ -163,6 +166,7 @@ public class Gui
 	private JMenuItem m_openEntryMenu;
 	private JMenuItem m_openPreviousMenu;
 	private JMenuItem m_showCallsMenu;
+	private JMenuItem m_showImplementationsMenu;
 	
 	// state
 	private EntryReference<Entry,Entry> m_reference;
@@ -285,6 +289,10 @@ public class Gui
 						showInheritance();
 					break;
 					
+					case KeyEvent.VK_M:
+						showImplementations();
+					break;
+					
 					case KeyEvent.VK_N:
 						openDeclaration();
 					break;
@@ -336,6 +344,21 @@ public class Gui
 			menu.setEnabled( false );
 			popupMenu.add( menu );
 			m_showInheritanceMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem( "Show Implementations" );
+			menu.addActionListener( new ActionListener( )
+			{
+				@Override
+				public void actionPerformed( ActionEvent event )
+				{
+					showImplementations();
+				}
+			} );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_M, 0 ) );
+			menu.setEnabled( false );
+			popupMenu.add( menu );
+			m_showImplementationsMenu = menu;
 		}
 		{
 			JMenuItem menu = new JMenuItem( "Show Calls" );
@@ -428,6 +451,41 @@ public class Gui
 		inheritancePanel.setLayout( new BorderLayout() );
 		inheritancePanel.add( new JScrollPane( m_inheritanceTree ) );
 		
+		// init implementations panel
+		m_implementationsTree = new JTree();
+		m_implementationsTree.setModel( null );
+		m_implementationsTree.addMouseListener( new MouseAdapter( )
+		{
+			@Override
+			public void mouseClicked( MouseEvent event )
+			{
+				if( event.getClickCount() == 2 )
+				{
+					// get the selected node
+					TreePath path = m_implementationsTree.getSelectionPath();
+					if( path == null )
+					{
+						return;
+					}
+					
+					Object node = path.getLastPathComponent();
+					if( node instanceof ClassImplementationsTreeNode )
+					{
+						ClassImplementationsTreeNode classNode = (ClassImplementationsTreeNode)node;
+						m_controller.openDeclaration( classNode.getClassEntry() );
+					}
+					else if( node instanceof MethodImplementationsTreeNode )
+					{
+						MethodImplementationsTreeNode methodNode = (MethodImplementationsTreeNode)node;
+						m_controller.openDeclaration( methodNode.getMethodEntry() );
+					}
+				}
+			}
+		} );
+		JPanel implementationsPanel = new JPanel();
+		implementationsPanel.setLayout( new BorderLayout() );
+		implementationsPanel.add( new JScrollPane( m_implementationsTree ) );
+		
 		// init call panel
 		m_callsTree = new JTree();
 		m_callsTree.setModel( null );
@@ -501,6 +559,7 @@ public class Gui
 		m_tabs = new JTabbedPane();
 		m_tabs.setPreferredSize( new Dimension( 250, 0 ) );
 		m_tabs.addTab( "Inheritance", inheritancePanel );
+		m_tabs.addTab( "Implementations", implementationsPanel );
 		m_tabs.addTab( "Call Graph", callPanel );
 		JSplitPane splitRight = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, m_tabs );
 		splitRight.setResizeWeight( 1 ); // let the left side take all the slack
@@ -1023,6 +1082,7 @@ public class Gui
 		
 		m_renameMenu.setEnabled( isToken );
 		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry || isConstructorEntry );
+		m_showImplementationsMenu.setEnabled( isClassEntry || isMethodEntry );
 		m_showCallsMenu.setEnabled( isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openPreviousMenu.setEnabled( m_controller.hasPreviousLocation() );
@@ -1097,6 +1157,8 @@ public class Gui
 			return;
 		}
 		
+		m_inheritanceTree.setModel( null );
+		
 		if( m_reference.entry instanceof ClassEntry )
 		{
 			// get the class inheritance
@@ -1124,6 +1186,46 @@ public class Gui
 		redraw();
 	}
 	
+	private void showImplementations( )
+	{
+		if( m_reference == null )
+		{
+			return;
+		}
+		
+		m_implementationsTree.setModel( null );
+		
+		if( m_reference.entry instanceof ClassEntry )
+		{
+			// get the class implementations
+			ClassImplementationsTreeNode node = m_controller.getClassImplementations( (ClassEntry)m_reference.entry );
+			if( node != null )
+			{
+				// show the tree at the root
+				TreePath path = getPathToRoot( node );
+				m_implementationsTree.setModel( new DefaultTreeModel( (TreeNode)path.getPathComponent( 0 ) ) );
+				m_implementationsTree.expandPath( path );
+				m_implementationsTree.setSelectionRow( m_implementationsTree.getRowForPath( path ) );
+			}
+		}
+		else if( m_reference.entry instanceof MethodEntry )
+		{
+			// get the method implementations
+			MethodImplementationsTreeNode node = m_controller.getMethodImplementations( (MethodEntry)m_reference.entry );
+			if( node != null )
+			{
+				// show the tree at the root
+				TreePath path = getPathToRoot( node );
+				m_implementationsTree.setModel( new DefaultTreeModel( (TreeNode)path.getPathComponent( 0 ) ) );
+				m_implementationsTree.expandPath( path );
+				m_implementationsTree.setSelectionRow( m_implementationsTree.getRowForPath( path ) );
+			}
+		}
+		
+		m_tabs.setSelectedIndex( 1 );
+		redraw();
+	}
+	
 	private void showCalls( )
 	{
 		if( m_reference == null )
@@ -1147,7 +1249,7 @@ public class Gui
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
 		}
 		
-		m_tabs.setSelectedIndex( 1 );
+		m_tabs.setSelectedIndex( 2 );
 		redraw();
 	}
 	

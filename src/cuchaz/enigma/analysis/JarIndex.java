@@ -93,7 +93,12 @@ public class JarIndex
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
 			fixClass( c );
-			m_ancestries.addSuperclass( c.getName(), c.getClassFile().getSuperclass() );
+			String className = Descriptor.toJvmName( c.getName() );
+			m_ancestries.addSuperclass( className, Descriptor.toJvmName( c.getClassFile().getSuperclass() ) );
+			for( String interfaceName : c.getClassFile().getInterfaces() )
+			{
+				m_ancestries.addInterface( className, Descriptor.toJvmName( interfaceName ) );
+			}
 			for( CtBehavior behavior : c.getDeclaredBehaviors() )
 			{
 				indexBehavior( behavior );
@@ -354,7 +359,6 @@ public class JarIndex
 			}
 			else if( callerClasses.size() > 1 )
 			{
-				// TEMP
 				System.out.println( "WARNING: Illegal constructor called by more than one class!" + callerClasses );
 			}
 		}
@@ -542,6 +546,13 @@ public class JarIndex
 		return rootNode;
 	}
 	
+	public ClassImplementationsTreeNode getClassImplementations( Translator deobfuscatingTranslator, ClassEntry obfClassEntry )
+	{
+		ClassImplementationsTreeNode node = new ClassImplementationsTreeNode( deobfuscatingTranslator, obfClassEntry );
+		node.load( m_ancestries );
+		return node;
+	}
+	
 	public MethodInheritanceTreeNode getMethodInheritance( Translator deobfuscatingTranslator, MethodEntry obfMethodEntry )
 	{
 		// travel to the ancestor implementation
@@ -577,6 +588,90 @@ public class JarIndex
 		return rootNode;
 	}
 	
+	public MethodImplementationsTreeNode getMethodImplementations( Translator deobfuscatingTranslator, MethodEntry obfMethodEntry )
+	{
+		MethodEntry interfaceMethodEntry;
+		
+		// is this method on an interface?
+		if( m_ancestries.isInterface( obfMethodEntry.getClassName() ) )
+		{
+			interfaceMethodEntry = obfMethodEntry;
+		}
+		else
+		{
+			// get the interface class
+			List<MethodEntry> methodInterfaces = Lists.newArrayList();
+			for( String interfaceName : m_ancestries.getInterfaces( obfMethodEntry.getClassName() ) )
+			{
+				// is this method defined in this interface?
+				MethodEntry methodInterface = new MethodEntry(
+					new ClassEntry( interfaceName ),
+					obfMethodEntry.getName(),
+					obfMethodEntry.getSignature()
+				);
+				if( isMethodImplemented( methodInterface ) )
+				{
+					methodInterfaces.add( methodInterface );
+				}
+			}
+			if( methodInterfaces.isEmpty() )
+			{
+				return null;
+			}
+			if( methodInterfaces.size() > 1 )
+			{
+				throw new Error( "Too many interfaces define this method! This is not yet supported by Enigma!" );
+			}
+			interfaceMethodEntry = methodInterfaces.get( 0 );
+		}
+		
+		MethodImplementationsTreeNode rootNode = new MethodImplementationsTreeNode( deobfuscatingTranslator, interfaceMethodEntry );
+		rootNode.load( this );
+		return rootNode;
+	}
+	
+	public Set<MethodEntry> getRelatedMethodImplementations( MethodEntry obfMethodEntry )
+	{
+		Set<MethodEntry> methodEntries = Sets.newHashSet();
+		getRelatedMethodImplementations( methodEntries, getMethodInheritance( null, obfMethodEntry ) );
+		return methodEntries;
+	}
+	
+	private void getRelatedMethodImplementations( Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node )
+	{
+		MethodEntry methodEntry = node.getMethodEntry();
+		if( isMethodImplemented( methodEntry ) )
+		{
+			// collect the entry
+			methodEntries.add( methodEntry );
+		}
+		
+		// look at interface methods too
+		getRelatedMethodImplementations( methodEntries, getMethodImplementations( null, methodEntry ) );
+		
+		// recurse
+		for( int i=0; i<node.getChildCount(); i++ )
+		{
+			getRelatedMethodImplementations( methodEntries, (MethodInheritanceTreeNode)node.getChildAt( i ) );
+		}
+	}
+	
+	private void getRelatedMethodImplementations( Set<MethodEntry> methodEntries, MethodImplementationsTreeNode node )
+	{
+		MethodEntry methodEntry = node.getMethodEntry();
+		if( isMethodImplemented( methodEntry ) )
+		{
+			// collect the entry
+			methodEntries.add( methodEntry );
+		}
+		
+		// recurse
+		for( int i=0; i<node.getChildCount(); i++ )
+		{
+			getRelatedMethodImplementations( methodEntries, (MethodImplementationsTreeNode)node.getChildAt( i ) );
+		}
+	}
+
 	public Collection<EntryReference<FieldEntry,BehaviorEntry>> getFieldReferences( FieldEntry fieldEntry )
 	{
 		return m_fieldReferences.get( fieldEntry );
@@ -626,16 +721,14 @@ public class JarIndex
 	{
 		// for each key/value pair...
 		Set<Map.Entry<Key,Val>> entriesToAdd = Sets.newHashSet();
-		Iterator<Map.Entry<Key,Val>> iter = map.entries().iterator();
-		while( iter.hasNext() )
+		for( Map.Entry<Key,Val> entry : map.entries() )
 		{
-			Map.Entry<Key,Val> entry = iter.next();
-			iter.remove();
 			entriesToAdd.add( new AbstractMap.SimpleEntry<Key,Val>(
 				renameClassesInThing( renames, entry.getKey() ),
 				renameClassesInThing( renames, entry.getValue() )
 			) );
 		}
+		map.clear();
 		for( Map.Entry<Key,Val> entry : entriesToAdd )
 		{
 			map.put( entry.getKey(), entry.getValue() );
@@ -761,5 +854,5 @@ public class JarIndex
 			return thing;
 		}
 		return thing;
-	}	
+	}
 }
