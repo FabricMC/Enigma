@@ -19,7 +19,7 @@ targetCompatibility = 1.7
 
 group = "com.cuchazinteractive"
 archivesBaseName = "enigma"
-version = "0.4b"
+version = "0.4.1b"
 
 sourceSets
 {

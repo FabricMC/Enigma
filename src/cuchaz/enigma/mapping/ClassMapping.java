@@ -129,10 +129,18 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	
 	protected void addFieldMapping( FieldMapping fieldMapping )
 	{
+		if( m_fieldsByObf.containsKey( fieldMapping.getObfName() ) )
+		{
+			throw new Error( "Already have mapping for " + m_obfName + "." + fieldMapping.getObfName() );
+		}
+		if( m_fieldsByDeobf.containsKey( fieldMapping.getDeobfName() ) )
+		{
+			throw new Error( "Already have mapping for " + m_deobfName + "." + fieldMapping.getDeobfName() );
+		}
 		m_fieldsByObf.put( fieldMapping.getObfName(), fieldMapping );
 		m_fieldsByDeobf.put( fieldMapping.getDeobfName(), fieldMapping );
+		assert( m_fieldsByObf.size() == m_fieldsByDeobf.size() );
 	}
-	
 
 	public String getObfFieldName( String deobfName )
 	{
@@ -179,8 +187,19 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	
 	protected void addMethodMapping( MethodMapping methodMapping )
 	{
-		m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping );
-		m_methodsByDeobf.put( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ), methodMapping );
+		String obfKey = getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() );
+		String deobfKey = getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() );
+		if( m_methodsByObf.containsKey( obfKey ) )
+		{
+			throw new Error( "Already have mapping for " + m_obfName + "." + obfKey );
+		}
+		if( m_methodsByDeobf.containsKey( deobfKey ) )
+		{
+			throw new Error( "Already have mapping for " + m_deobfName + "." + deobfKey );
+		}
+		m_methodsByObf.put( obfKey, methodMapping );
+		m_methodsByDeobf.put( deobfKey, methodMapping );
+		assert( m_methodsByObf.size() == m_methodsByDeobf.size() );
 	}
 	
 	public MethodMapping getMethodByObf( String obfName, String signature )

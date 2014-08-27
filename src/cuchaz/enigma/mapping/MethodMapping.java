@@ -137,6 +137,6 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 	@Override
 	public int compareTo( MethodMapping other )
 	{
-		return m_obfName.compareTo( other.m_obfName );
+		return ( m_obfName + m_obfSignature ).compareTo( ( other.m_obfName + other.m_obfSignature ) );
 	}
 }

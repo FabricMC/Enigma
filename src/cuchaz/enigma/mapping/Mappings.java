@@ -70,8 +70,17 @@ public class Mappings implements Serializable
 	
 	protected void addClassMapping( ClassMapping classMapping )
 	{
+		if( m_classesByObf.containsKey( classMapping.getObfName() ) )
+		{
+			throw new Error( "Already have mapping for " + classMapping.getObfName() );
+		}
+		if( m_classesByDeobf.containsKey( classMapping.getDeobfName() ) )
+		{
+			throw new Error( "Already have mapping for " + classMapping.getDeobfName() );
+		}
 		m_classesByObf.put( classMapping.getObfName(), classMapping );
 		m_classesByDeobf.put( classMapping.getDeobfName(), classMapping );
+		assert( m_classesByObf.size() == m_classesByDeobf.size() );
 	}
 	
 	public ClassMapping getClassByObf( ClassEntry entry )
