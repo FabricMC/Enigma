@@ -28,6 +28,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -176,6 +177,22 @@ public class Gui
 	
 	public Gui( )
 	{
+		// init frame
+		m_frame = new JFrame( Constants.Name );
+		final Container pane = m_frame.getContentPane();
+		pane.setLayout( new BorderLayout() );
+		
+		// install a global exception handler to the event thread
+		CrashDialog.init( m_frame );
+		Thread.setDefaultUncaughtExceptionHandler( new UncaughtExceptionHandler( )
+		{
+			@Override
+			public void uncaughtException( Thread thread, Throwable ex )
+			{
+				CrashDialog.show( ex );
+			}
+		} );
+		
 		m_controller = new GuiController( this );
 		
 		// init file choosers
@@ -183,11 +200,6 @@ public class Gui
 		m_mappingsFileChooser = new JFileChooser();
 		m_exportFileChooser = new JFileChooser();
 		m_exportFileChooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
-		
-		// init frame
-		m_frame = new JFrame( Constants.Name );
-		final Container pane = m_frame.getContentPane();
-		pane.setLayout( new BorderLayout() );
 		
 		// init obfuscated classes list
 		m_obfClasses = new JList<String>();
