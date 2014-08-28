@@ -21,6 +21,7 @@ import com.google.common.collect.Queues;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Util;
+import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class MappingsReader
 {
@@ -152,12 +153,12 @@ public class MappingsReader
 	private ClassMapping readClass( Scanner scanner )
 	{
 		return new ClassMapping(
-			moveOutOfDefaultPackage( scanner.next(), Constants.NonePackage ),
-			moveOutOfDefaultPackage( scanner.next(), Constants.NonePackage )
+			moveClassOutOfDefaultPackage( scanner.next(), Constants.NonePackage ),
+			moveClassOutOfDefaultPackage( scanner.next(), Constants.NonePackage )
 		);
 	}
 	
-	private String moveOutOfDefaultPackage( String className, String newPackageName )
+	private String moveClassOutOfDefaultPackage( String className, String newPackageName )
 	{
 		ClassEntry classEntry = new ClassEntry( className );
 		if( classEntry.isInDefaultPackage() )
@@ -174,6 +175,27 @@ public class MappingsReader
 	
 	private MethodMapping readMethod( Scanner scanner )
 	{
-		return new MethodMapping( scanner.next(), scanner.next(), scanner.next(), scanner.next() );
+		return new MethodMapping(
+			scanner.next(), scanner.next(),
+			moveSignatureOutOfDefaultPackage( scanner.next(), Constants.NonePackage ),
+			moveSignatureOutOfDefaultPackage( scanner.next(), Constants.NonePackage )
+		);
+	}
+
+	private String moveSignatureOutOfDefaultPackage( String signature, final String newPackageName )
+	{
+		return SignatureUpdater.update( signature, new ClassNameUpdater( )
+		{
+			@Override
+			public String update( String className )
+			{
+				ClassEntry classEntry = new ClassEntry( className );
+				if( classEntry.isInDefaultPackage() )
+				{
+					return newPackageName + "/" + className;
+				}
+				return className;
+			}
+		} );
 	}
 }
