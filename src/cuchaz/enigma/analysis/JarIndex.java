@@ -23,6 +23,7 @@ import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
+import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
@@ -55,6 +56,7 @@ public class JarIndex
 {
 	private Set<ClassEntry> m_obfClassEntries;
 	private Ancestries m_ancestries;
+	private Map<Entry,Access> m_access;
 	private Multimap<String,MethodEntry> m_methodImplementations;
 	private Multimap<BehaviorEntry,EntryReference<BehaviorEntry,BehaviorEntry>> m_behaviorReferences;
 	private Multimap<FieldEntry,EntryReference<FieldEntry,BehaviorEntry>> m_fieldReferences;
@@ -67,6 +69,7 @@ public class JarIndex
 	{
 		m_obfClassEntries = Sets.newHashSet();
 		m_ancestries = new Ancestries();
+		m_access = Maps.newHashMap();
 		m_methodImplementations = HashMultimap.create();
 		m_behaviorReferences = HashMultimap.create();
 		m_fieldReferences = HashMultimap.create();
@@ -89,7 +92,24 @@ public class JarIndex
 			m_obfClassEntries.add( classEntry );
 		}
 		
-		// step 2: index the types, methods
+		// step 2: index method/field access
+		for( CtClass c : JarClassIterator.classes( jar ) )
+		{
+			fixClass( c );
+			ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
+			for( CtField field : c.getDeclaredFields() )
+			{
+				FieldEntry fieldEntry = new FieldEntry( classEntry, field.getName() );
+				m_access.put( fieldEntry, Access.get( field ) );
+			}
+			for( CtBehavior behavior : c.getDeclaredBehaviors() )
+			{
+				MethodEntry methodEntry = new MethodEntry( classEntry, behavior.getName(), behavior.getSignature() );
+				m_access.put( methodEntry, Access.get( behavior ) );
+			}
+		}
+		
+		// step 3: index the types, methods
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
 			fixClass( c );
@@ -105,7 +125,7 @@ public class JarIndex
 			}
 		}
 		
-		// step 3: index inner classes and anonymous classes
+		// step 4: index inner classes and anonymous classes
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
 			fixClass( c );
@@ -132,7 +152,7 @@ public class JarIndex
 			}
 		}
 		
-		// step 4: update other indices with inner class info
+		// step 5: update other indices with inner class info
 		Map<String,String> renames = Maps.newHashMap();
 		for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
 		{
@@ -520,6 +540,11 @@ public class JarIndex
 	public Ancestries getAncestries( )
 	{
 		return m_ancestries;
+	}
+	
+	public Access getAccess( Entry entry )
+	{
+		return m_access.get( entry );
 	}
 	
 	public boolean isMethodImplemented( MethodEntry methodEntry )

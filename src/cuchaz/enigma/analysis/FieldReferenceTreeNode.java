@@ -23,7 +23,8 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	private Translator m_deobfuscatingTranslator;
 	private FieldEntry m_entry;
 	private EntryReference<FieldEntry,BehaviorEntry> m_reference;
-	
+	private Access m_access;
+
 	public FieldReferenceTreeNode( Translator deobfuscatingTranslator, FieldEntry entry )
 	{
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
@@ -31,11 +32,12 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 		m_reference = null;
 	}
 	
-	private FieldReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<FieldEntry,BehaviorEntry> reference )
+	private FieldReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<FieldEntry,BehaviorEntry> reference, Access access )
 	{
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_entry = reference.entry;
 		m_reference = reference;
+		m_access = access;
 	}
 	
 	@Override
@@ -55,7 +57,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	{
 		if( m_reference != null )
 		{
-			return m_deobfuscatingTranslator.translateEntry( m_reference.context ).toString();
+			return String.format( "%s (%s)", m_deobfuscatingTranslator.translateEntry( m_reference.context ), m_access );
 		}
 		return m_deobfuscatingTranslator.translateEntry( m_entry ).toString();
 	}
@@ -67,14 +69,14 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 		{
 			for( EntryReference<FieldEntry,BehaviorEntry> reference : index.getFieldReferences( m_entry ) )
 			{
-				add( new FieldReferenceTreeNode( m_deobfuscatingTranslator, reference ) );
+				add( new FieldReferenceTreeNode( m_deobfuscatingTranslator, reference, index.getAccess( m_entry ) ) );
 			}
 		}
 		else
 		{
 			for( EntryReference<BehaviorEntry,BehaviorEntry> reference : index.getBehaviorReferences( m_reference.context ) )
 			{
-				add( new BehaviorReferenceTreeNode( m_deobfuscatingTranslator, reference ) );
+				add( new BehaviorReferenceTreeNode( m_deobfuscatingTranslator, reference, index.getAccess( m_reference.context ) ) );
 			}
 		}
 		

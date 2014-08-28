@@ -189,6 +189,7 @@ public class Gui
 			@Override
 			public void uncaughtException( Thread thread, Throwable ex )
 			{
+				ex.printStackTrace( System.err );
 				CrashDialog.show( ex );
 			}
 		} );

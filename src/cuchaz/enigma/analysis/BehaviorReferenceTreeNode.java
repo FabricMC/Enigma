@@ -28,6 +28,7 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 	private Translator m_deobfuscatingTranslator;
 	private BehaviorEntry m_entry;
 	private EntryReference<BehaviorEntry,BehaviorEntry> m_reference;
+	private Access m_access;
 	
 	public BehaviorReferenceTreeNode( Translator deobfuscatingTranslator, BehaviorEntry entry )
 	{
@@ -36,11 +37,12 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 		m_reference = null;
 	}
 	
-	public BehaviorReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<BehaviorEntry,BehaviorEntry> reference )
+	public BehaviorReferenceTreeNode( Translator deobfuscatingTranslator, EntryReference<BehaviorEntry,BehaviorEntry> reference, Access access )
 	{
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_entry = reference.entry;
 		m_reference = reference;
+		m_access = access;
 	}
 	
 	@Override
@@ -60,7 +62,7 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 	{
 		if( m_reference != null )
 		{
-			return m_deobfuscatingTranslator.translateEntry( m_reference.context ).toString();
+			return String.format( "%s (%s)", m_deobfuscatingTranslator.translateEntry( m_reference.context ), m_access );
 		}
 		return m_deobfuscatingTranslator.translateEntry( m_entry ).toString();
 	}
@@ -70,7 +72,7 @@ public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements
 		// get all the child nodes
 		for( EntryReference<BehaviorEntry,BehaviorEntry> reference : index.getBehaviorReferences( m_entry ) )
 		{
-			add( new BehaviorReferenceTreeNode( m_deobfuscatingTranslator, reference ) );
+			add( new BehaviorReferenceTreeNode( m_deobfuscatingTranslator, reference, index.getAccess( m_entry ) ) );
 		}
 		
 		if( recurse && children != null )
