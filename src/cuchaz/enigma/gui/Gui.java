@@ -696,7 +696,7 @@ public class Gui
 				m_saveMappingsAsMenu = item;
 			}
 			{
-				JMenuItem item = new JMenuItem( "Close Mapppings" );
+				JMenuItem item = new JMenuItem( "Close Mappings" );
 				menu.add( item );
 				item.addActionListener( new ActionListener( )
 				{
