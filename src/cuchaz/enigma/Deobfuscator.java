@@ -41,6 +41,7 @@ import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MethodEntry;
+import cuchaz.enigma.mapping.MethodMapping;
 import cuchaz.enigma.mapping.Renamer;
 import cuchaz.enigma.mapping.TranslationDirection;
 import cuchaz.enigma.mapping.Translator;
@@ -101,6 +102,37 @@ public class Deobfuscator
 		{
 			val = new Mappings();
 		}
+		
+		// make sure all the mappings match the classes in the jar
+		for( ClassMapping classMapping : val.classes() )
+		{
+			ClassEntry classEntry = new ClassEntry( classMapping.getObfName() );
+			if( !m_jarIndex.getObfClassEntries().contains( classEntry ) )
+			{
+				throw new Error( "Class " + classEntry + " not found in Jar!" );
+			}
+			
+			// and method implementations
+			for( MethodMapping methodMapping : classMapping.methods() )
+			{
+				if( methodMapping.getObfName().startsWith( "<" ) )
+				{
+					// skip constructors and static initializers
+					continue;
+				}
+				
+				MethodEntry methodEntry = new MethodEntry(
+					classEntry,
+					methodMapping.getObfName(),
+					methodMapping.getObfSignature()
+				);
+				if( !m_jarIndex.isMethodImplemented( methodEntry ) )
+				{
+					throw new Error( "Method " + methodEntry + " not found in Jar!" );
+				}
+			}
+		}
+		
 		m_mappings = val;
 		m_renamer = new Renamer( m_jarIndex, m_mappings );
 		
