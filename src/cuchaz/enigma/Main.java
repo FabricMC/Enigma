@@ -32,7 +32,7 @@ public class Main
 		}
 		
 		// DEBUG
-		//gui.getController().openDeclaration( new ClassEntry( "none/bsp" ) );
+		//gui.getController().openDeclaration( new ClassEntry( "none/bub" ) );
 	}
 	
 	private static File getFile( String path )

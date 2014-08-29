@@ -12,17 +12,31 @@ package cuchaz.enigma.convert;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarFile;
 
 import javassist.CtClass;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import cuchaz.enigma.analysis.JarClassIterator;
+import cuchaz.enigma.mapping.ClassEntry;
 
 public class ClassMapper
 {
+	private int m_numSourceClasses;
+	private int m_numDestClasses;
+	private Multimap<ClassIdentity,ClassIdentity> m_sourceClasses;
+	private Multimap<ClassIdentity,ClassIdentity> m_destClasses;
+	private List<ClassIdentity> m_unmatchedSourceClasses;
+	private List<ClassIdentity> m_unmatchedDestClasses;
+	private Map<ClassEntry,ClassIdentity> m_sourceKeyIndex;
+	
 	public static void main( String[] args )
 	throws IOException
 	{
@@ -30,44 +44,81 @@ public class ClassMapper
 		JarFile fromJar = new JarFile( new File( "input/1.8-pre1.jar" ) );
 		JarFile toJar = new JarFile( new File( "input/1.8-pre2.jar" ) );
 		
-		new ClassMapper( fromJar, toJar );
+		ClassMapper mapper = new ClassMapper( fromJar, toJar );
+		System.out.println( String.format( "Mapped %d/%d source classes (%d unmatched) to %d/%d dest classes (%d unmatched)",
+			mapper.m_sourceClasses.size(), mapper.m_numSourceClasses, mapper.m_unmatchedSourceClasses.size(),
+			mapper.m_destClasses.size(), mapper.m_numDestClasses, mapper.m_unmatchedDestClasses.size()
+		) );
 	}
 	
-	public ClassMapper( JarFile a, JarFile b )
+	public ClassMapper( JarFile sourceJar, JarFile destJar )
 	{
-		int numAClasses = JarClassIterator.getClassEntries( a ).size();
-		int numBClasses = JarClassIterator.getClassEntries( b ).size();
+		m_numSourceClasses = JarClassIterator.getClassEntries( sourceJar ).size();
+		m_numDestClasses = JarClassIterator.getClassEntries( destJar ).size();
 		
-		// TEMP
-		System.out.println( "A classes: " + numAClasses );
-		System.out.println( "B classes: " + numBClasses );
-		
-		// compute the a classes
-		Multiset<ClassIdentity> aclasses = HashMultiset.create();
-		for( CtClass c : JarClassIterator.classes( a ) )
+		// compute identities for the source classes
+		m_sourceClasses = ArrayListMultimap.create();
+		m_sourceKeyIndex = Maps.newHashMap();
+		for( CtClass c : JarClassIterator.classes( sourceJar ) )
 		{
-			ClassIdentity aclass = new ClassIdentity( c );
-			aclasses.add( aclass );
+			ClassIdentity sourceClass = new ClassIdentity( c );
+			m_sourceClasses.put( sourceClass, sourceClass );
+			m_sourceKeyIndex.put( sourceClass.getClassEntry(), sourceClass );
 		}
 		
-		int numMatches = 0;
-		
-		// match the b classes to the a classes
-		for( CtClass c : JarClassIterator.classes( b ) )
+		// match the dest classes to the source classes
+		m_destClasses = ArrayListMultimap.create();
+		m_unmatchedDestClasses = Lists.newArrayList();
+		for( CtClass c : JarClassIterator.classes( destJar ) )
 		{
-			ClassIdentity bclass = new ClassIdentity( c );
-			if( aclasses.contains( bclass ) )
+			ClassIdentity destClass = new ClassIdentity( c );
+			Collection<ClassIdentity> matchedSourceClasses = m_sourceClasses.get( destClass );
+			if( matchedSourceClasses.isEmpty() )
 			{
-				numMatches++;
+				// unmatched dest class
+				m_unmatchedDestClasses.add( destClass );
 			}
-			
-			// TEMP
-			//System.out.println( bclass );
+			else
+			{
+				ClassIdentity sourceClass = matchedSourceClasses.iterator().next();
+				m_destClasses.put( sourceClass, destClass );
+			}
 		}
-		
-		// TEMP
-		System.out.println( String.format( "Class matches: %d/%d (missing %d)",
-			numMatches, aclasses.size(), aclasses.size() - numMatches
-		) );
+
+		// get unmatched source classes
+		m_unmatchedSourceClasses = Lists.newArrayList();
+		for( ClassIdentity sourceClass : m_sourceClasses.keySet() )
+		{
+			Collection<ClassIdentity> matchedSourceClasses = m_sourceClasses.get( sourceClass );
+			Collection<ClassIdentity> matchedDestClasses = m_destClasses.get( sourceClass );
+			if( matchedDestClasses.isEmpty() )
+			{
+				m_unmatchedSourceClasses.add( sourceClass );
+			}
+			else if( matchedDestClasses.size() > 1 )
+			{
+				// warn about identity collisions
+				System.err.println( String.format( "WARNING: identity collision:\n\tSource: %s\n\t  Dest: %s",
+					getClassEntries( matchedSourceClasses ),
+					getClassEntries( matchedDestClasses )
+				) );
+			}
+		}
+	}
+	
+	public Map.Entry<Collection<ClassEntry>,Collection<ClassEntry>> getMapping( ClassEntry sourceEntry )
+	{
+		// TODO
+		return null;
+	}
+
+	private Collection<ClassEntry> getClassEntries( Collection<ClassIdentity> classes )
+	{
+		List<ClassEntry> entries = Lists.newArrayList();
+		for( ClassIdentity c : classes )
+		{
+			entries.add( c.getClassEntry() );
+		}
+		return entries;
 	}
 }
