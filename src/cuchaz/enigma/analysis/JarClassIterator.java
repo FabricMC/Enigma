@@ -67,33 +67,7 @@ public class JarClassIterator implements Iterator<CtClass>
 		JarEntry entry = m_iter.next();
 		try
 		{
-			// read the class into a buffer
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			byte[] buf = new byte[Constants.KiB];
-			int totalNumBytesRead = 0;
-			InputStream in = m_jar.getInputStream( entry );
-			while( in.available() > 0 )
-			{
-				int numBytesRead = in.read( buf );
-				if( numBytesRead < 0 )
-				{
-					break;
-				}
-				bos.write( buf, 0, numBytesRead );
-				
-				// sanity checking
-				totalNumBytesRead += numBytesRead;
-				if( totalNumBytesRead > Constants.MiB )
-				{
-					throw new Error( "Class file " + entry.getName() + " larger than 1 MiB! Something is wrong!" );
-				}
-			}
-			
-			// get a javassist handle for the class
-			String className = Descriptor.toJavaName( getClassEntry( entry ).getName() );
-			ClassPool classPool = new ClassPool();
-			classPool.insertClassPath( new ByteArrayClassPath( className, bos.toByteArray() ) );
-			return classPool.get( className );
+			return getClass( m_jar, entry );
 		}
 		catch( IOException | NotFoundException ex )
 		{
@@ -134,6 +108,50 @@ public class JarClassIterator implements Iterator<CtClass>
 				return new JarClassIterator( jar );
 			}
 		};
+	}
+	
+	public static CtClass getClass( JarFile jar, ClassEntry classEntry )
+	{
+		try
+		{
+			return getClass( jar, new JarEntry( classEntry.getName() + ".class" ) );
+		}
+		catch( IOException | NotFoundException ex )
+		{
+			throw new Error( "Unable to load class: " + classEntry.getName() );
+		}
+	}
+	
+	private static CtClass getClass( JarFile jar, JarEntry entry )
+	throws IOException, NotFoundException
+	{
+		// read the class into a buffer
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		byte[] buf = new byte[Constants.KiB];
+		int totalNumBytesRead = 0;
+		InputStream in = jar.getInputStream( entry );
+		while( in.available() > 0 )
+		{
+			int numBytesRead = in.read( buf );
+			if( numBytesRead < 0 )
+			{
+				break;
+			}
+			bos.write( buf, 0, numBytesRead );
+			
+			// sanity checking
+			totalNumBytesRead += numBytesRead;
+			if( totalNumBytesRead > Constants.MiB )
+			{
+				throw new Error( "Class file " + entry.getName() + " larger than 1 MiB! Something is wrong!" );
+			}
+		}
+		
+		// get a javassist handle for the class
+		String className = Descriptor.toJavaName( getClassEntry( entry ).getName() );
+		ClassPool classPool = new ClassPool();
+		classPool.insertClassPath( new ByteArrayClassPath( className, bos.toByteArray() ) );
+		return classPool.get( className );
 	}
 	
 	private static ClassEntry getClassEntry( JarEntry entry )

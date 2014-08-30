@@ -12,31 +12,20 @@ package cuchaz.enigma.convert;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 import javassist.CtClass;
-
-import com.beust.jcommander.internal.Lists;
-import com.beust.jcommander.internal.Maps;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-
-import cuchaz.enigma.analysis.JarClassIterator;
+import cuchaz.enigma.TranslatingTypeLoader;
+import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.ClassEntry;
 
 public class ClassMapper
 {
-	private int m_numSourceClasses;
-	private int m_numDestClasses;
-	private Multimap<ClassIdentity,ClassIdentity> m_sourceClasses;
-	private Multimap<ClassIdentity,ClassIdentity> m_destClasses;
-	private List<ClassIdentity> m_unmatchedSourceClasses;
-	private List<ClassIdentity> m_unmatchedDestClasses;
-	private Map<ClassEntry,ClassIdentity> m_sourceKeyIndex;
-	
 	public static void main( String[] args )
 	throws IOException
 	{
@@ -44,81 +33,146 @@ public class ClassMapper
 		JarFile fromJar = new JarFile( new File( "input/1.8-pre1.jar" ) );
 		JarFile toJar = new JarFile( new File( "input/1.8-pre2.jar" ) );
 		
-		ClassMapper mapper = new ClassMapper( fromJar, toJar );
-		System.out.println( String.format( "Mapped %d/%d source classes (%d unmatched) to %d/%d dest classes (%d unmatched)",
-			mapper.m_sourceClasses.size(), mapper.m_numSourceClasses, mapper.m_unmatchedSourceClasses.size(),
-			mapper.m_destClasses.size(), mapper.m_numDestClasses, mapper.m_unmatchedDestClasses.size()
-		) );
+		// compute the matching
+		ClassMatching matching = ClassMapper.computeMatching( fromJar, toJar );
+		
+		// TODO: use the matching to convert the mappings
 	}
 	
-	public ClassMapper( JarFile sourceJar, JarFile destJar )
+	public static ClassMatching computeMatching( JarFile sourceJar, JarFile destJar )
 	{
-		m_numSourceClasses = JarClassIterator.getClassEntries( sourceJar ).size();
-		m_numDestClasses = JarClassIterator.getClassEntries( destJar ).size();
+		// index jars
+		System.out.println( "Indexing source jar..." );
+		JarIndex sourceIndex = new JarIndex();
+		sourceIndex.indexJar( sourceJar );
+		System.out.println( "Indexing dest jar..." );
+		JarIndex destIndex = new JarIndex();
+		destIndex.indexJar( destJar );
 		
-		// compute identities for the source classes
-		m_sourceClasses = ArrayListMultimap.create();
-		m_sourceKeyIndex = Maps.newHashMap();
-		for( CtClass c : JarClassIterator.classes( sourceJar ) )
-		{
-			ClassIdentity sourceClass = new ClassIdentity( c );
-			m_sourceClasses.put( sourceClass, sourceClass );
-			m_sourceKeyIndex.put( sourceClass.getClassEntry(), sourceClass );
-		}
+		System.out.println( "Computing matching..." );
 		
-		// match the dest classes to the source classes
-		m_destClasses = ArrayListMultimap.create();
-		m_unmatchedDestClasses = Lists.newArrayList();
-		for( CtClass c : JarClassIterator.classes( destJar ) )
-		{
-			ClassIdentity destClass = new ClassIdentity( c );
-			Collection<ClassIdentity> matchedSourceClasses = m_sourceClasses.get( destClass );
-			if( matchedSourceClasses.isEmpty() )
-			{
-				// unmatched dest class
-				m_unmatchedDestClasses.add( destClass );
-			}
-			else
-			{
-				ClassIdentity sourceClass = matchedSourceClasses.iterator().next();
-				m_destClasses.put( sourceClass, destClass );
-			}
-		}
+		TranslatingTypeLoader sourceLoader = new TranslatingTypeLoader( sourceJar, sourceIndex );
+		TranslatingTypeLoader destLoader = new TranslatingTypeLoader( destJar, destIndex );
 
-		// get unmatched source classes
-		m_unmatchedSourceClasses = Lists.newArrayList();
-		for( ClassIdentity sourceClass : m_sourceClasses.keySet() )
+		ClassMatching matching = null;
+		for( boolean useReferences : Arrays.asList( false, true ) )
 		{
-			Collection<ClassIdentity> matchedSourceClasses = m_sourceClasses.get( sourceClass );
-			Collection<ClassIdentity> matchedDestClasses = m_destClasses.get( sourceClass );
-			if( matchedDestClasses.isEmpty() )
+			int numMatches = 0;
+			do
 			{
-				m_unmatchedSourceClasses.add( sourceClass );
+				SidedClassNamer sourceNamer = null;
+				SidedClassNamer destNamer = null;
+				if( matching != null )
+				{
+					// build a class namer
+					ClassNamer namer = new ClassNamer( matching.getUniqueMatches() );
+					sourceNamer = namer.getSourceNamer();
+					destNamer = namer.getDestNamer();
+					
+					// note the number of matches
+					numMatches = matching.getUniqueMatches().size();
+				}
+				
+				// get the entries left to match
+				Set<ClassEntry> sourceClassEntries = sourceIndex.getObfClassEntries();
+				Set<ClassEntry> destClassEntries = destIndex.getObfClassEntries();
+				if( matching != null )
+				{
+					sourceClassEntries.clear();
+					destClassEntries.clear();
+					for( Map.Entry<List<ClassIdentity>,List<ClassIdentity>> entry : matching.getAmbiguousMatches().entrySet() )
+					{
+						for( ClassIdentity c : entry.getKey() )
+						{
+							sourceClassEntries.add( c.getClassEntry() );
+							matching.removeSource( c );
+						}
+						for( ClassIdentity c : entry.getValue() )
+						{
+							destClassEntries.add( c.getClassEntry() );
+							matching.removeDest( c );
+						}
+					}
+					for( ClassIdentity c : matching.getUnmatchedSourceClasses() )
+					{
+						sourceClassEntries.add( c.getClassEntry() );
+						matching.removeSource( c );
+					}
+					for( ClassIdentity c : matching.getUnmatchedDestClasses() )
+					{
+						destClassEntries.add( c.getClassEntry() );
+						matching.removeDest( c );
+					}
+				}
+				else
+				{
+					matching = new ClassMatching();
+				}
+				
+				// compute a matching for the classes
+				for( ClassEntry classEntry : sourceClassEntries )
+				{
+					CtClass c = sourceLoader.loadClass( classEntry.getName() );
+					ClassIdentity sourceClass = new ClassIdentity( c, sourceNamer, sourceIndex, useReferences );
+					matching.addSource( sourceClass );
+				}
+				for( ClassEntry classEntry : destClassEntries )
+				{
+					CtClass c = destLoader.loadClass( classEntry.getName() );
+					ClassIdentity destClass = new ClassIdentity( c, destNamer, destIndex, useReferences );
+					matching.matchDestClass( destClass );
+				}
+				
+				// TEMP
+				System.out.println( matching );
 			}
-			else if( matchedDestClasses.size() > 1 )
-			{
-				// warn about identity collisions
-				System.err.println( String.format( "WARNING: identity collision:\n\tSource: %s\n\t  Dest: %s",
-					getClassEntries( matchedSourceClasses ),
-					getClassEntries( matchedDestClasses )
-				) );
-			}
+			while( matching.getUniqueMatches().size() - numMatches > 0 );
 		}
+		
+		/* DEBUG: show some ambiguous matches
+		List<Map.Entry<List<ClassIdentity>,List<ClassIdentity>>> ambiguousMatches = new ArrayList<Map.Entry<List<ClassIdentity>,List<ClassIdentity>>>( matching.getAmbiguousMatches().entrySet() );
+		Collections.sort( ambiguousMatches, new Comparator<Map.Entry<List<ClassIdentity>,List<ClassIdentity>>>( )
+		{
+			@Override
+			public int compare( Map.Entry<List<ClassIdentity>,List<ClassIdentity>> a, Map.Entry<List<ClassIdentity>,List<ClassIdentity>> b )
+			{
+				String aName = a.getKey().get( 0 ).getClassEntry().getName();
+				String bName = b.getKey().get( 0 ).getClassEntry().getName();
+				return aName.compareTo( bName );
+			}
+		} );
+		for( Map.Entry<List<ClassIdentity>,List<ClassIdentity>> entry : ambiguousMatches )
+		{
+			for( ClassIdentity c : entry.getKey() )
+			{
+				System.out.print( c.getClassEntry().getName() + " " );
+			}
+			System.out.println();
+		}
+		Map.Entry<List<ClassIdentity>,List<ClassIdentity>> entry = ambiguousMatches.get( 7 );
+		for( ClassIdentity c : entry.getKey() )
+		{
+			System.out.println( c );
+		}
+		for( ClassIdentity c : entry.getKey() )
+		{
+			System.out.println( decompile( sourceLoader, c.getClassEntry() ) );
+		}
+		*/
+		
+		return matching;
 	}
 	
-	public Map.Entry<Collection<ClassEntry>,Collection<ClassEntry>> getMapping( ClassEntry sourceEntry )
+	/* DEBUG
+	private static String decompile( TranslatingTypeLoader loader, ClassEntry classEntry )
 	{
-		// TODO
-		return null;
+		PlainTextOutput output = new PlainTextOutput();
+		DecompilerSettings settings = DecompilerSettings.javaDefaults();
+		settings.setForceExplicitImports( true );
+		settings.setShowSyntheticMembers( true );
+		settings.setTypeLoader( loader );
+		Decompiler.decompile( classEntry.getName(), output, settings );
+		return output.toString();
 	}
-
-	private Collection<ClassEntry> getClassEntries( Collection<ClassIdentity> classes )
-	{
-		List<ClassEntry> entries = Lists.newArrayList();
-		for( ClassIdentity c : classes )
-		{
-			entries.add( c.getClassEntry() );
-		}
-		return entries;
-	}
+	*/
 }

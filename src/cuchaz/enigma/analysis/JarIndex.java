@@ -95,7 +95,7 @@ public class JarIndex
 		// step 2: index method/field access
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
-			fixClass( c );
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
 			ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
 			for( CtField field : c.getDeclaredFields() )
 			{
@@ -112,7 +112,7 @@ public class JarIndex
 		// step 3: index the types, methods
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
-			fixClass( c );
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
 			String className = Descriptor.toJvmName( c.getName() );
 			m_ancestries.addSuperclass( className, Descriptor.toJvmName( c.getClassFile().getSuperclass() ) );
 			for( String interfaceName : c.getClassFile().getInterfaces() )
@@ -128,8 +128,7 @@ public class JarIndex
 		// step 4: index inner classes and anonymous classes
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
-			fixClass( c );
-			
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
 			String outerClassName = findOuterClass( c );
 			if( outerClassName != null )
 			{
@@ -162,17 +161,6 @@ public class JarIndex
 		
 		// step 5: update other indices with bridge method info
 		renameMethods( m_bridgeMethods );
-	}
-
-	private void fixClass( CtClass c )
-	{
-		ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
-		if( classEntry.isInDefaultPackage() )
-		{
-			// move class out of default package
-			classEntry = new ClassEntry( Constants.NonePackage + "/" + classEntry.getName() );
-			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
-		}
 	}
 
 	private void indexBehavior( CtBehavior behavior )
@@ -729,6 +717,22 @@ public class JarIndex
 	
 	private void renameClasses( Map<String,String> renames )
 	{
+		// rename class entries
+		Set<ClassEntry> obfClassEntries = Sets.newHashSet();
+		for( ClassEntry classEntry : m_obfClassEntries )
+		{
+			if( renames.containsKey( classEntry.getName() ) )
+			{
+				obfClassEntries.add( new ClassEntry( renames.get( classEntry.getName() ) ) );
+			}
+			else
+			{
+				obfClassEntries.add( classEntry );
+			}
+		}
+		m_obfClassEntries = obfClassEntries;
+		
+		// rename others
 		m_ancestries.renameClasses( renames );
 		renameClassesInMultimap( renames, m_methodImplementations );
 		renameClassesInMultimap( renames, m_behaviorReferences );

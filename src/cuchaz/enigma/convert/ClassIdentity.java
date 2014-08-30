@@ -13,10 +13,12 @@ package cuchaz.enigma.convert;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -27,34 +29,58 @@ import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.Opcode;
+import javassist.expr.ConstructorCall;
+import javassist.expr.ExprEditor;
+import javassist.expr.FieldAccess;
+import javassist.expr.MethodCall;
+import javassist.expr.NewExpr;
 
 import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 
+import cuchaz.enigma.Constants;
 import cuchaz.enigma.Util;
+import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.bytecode.ConstPoolEditor;
 import cuchaz.enigma.bytecode.InfoType;
 import cuchaz.enigma.bytecode.accessors.ConstInfoAccessor;
+import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
+import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
+import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.SignatureUpdater;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class ClassIdentity
 {
 	private ClassEntry m_classEntry;
+	private SidedClassNamer m_namer;
 	private Set<String> m_fields;
 	private Set<String> m_methods;
 	private Set<String> m_constructors;
 	private String m_staticInitializer;
+	private String m_extends;
+	private Set<String> m_implements;
+	private Set<String> m_implementations;
+	private Set<String> m_references;
 	
-	public ClassIdentity( CtClass c )
+	public ClassIdentity( CtClass c, SidedClassNamer namer, JarIndex index, boolean useReferences )
 	{
+		m_namer = namer;
+		
+		// stuff from the bytecode
+		
 		m_classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
 		m_fields = Sets.newHashSet();
 		for( CtField field : c.getDeclaredFields() )
 		{
-			m_fields.add( scrubSignature( scrubSignature( field.getSignature() ) ) );
+			m_fields.add( scrubSignature( field.getSignature() ) );
 		}
 		m_methods = Sets.newHashSet();
 		for( CtMethod method : c.getDeclaredMethods() )
@@ -70,6 +96,73 @@ public class ClassIdentity
 		if( c.getClassInitializer() != null )
 		{
 			m_staticInitializer = getBehaviorSignature( c.getClassInitializer() );
+		}
+		m_extends = "";
+		if( c.getClassFile().getSuperclass() != null )
+		{
+			m_extends = scrubClassName( c.getClassFile().getSuperclass() );
+		}
+		m_implements = Sets.newHashSet();
+		for( String interfaceName : c.getClassFile().getInterfaces() )
+		{
+			m_implements.add( scrubClassName( interfaceName ) );
+		}
+		
+		// stuff from the jar index
+		
+		m_implementations = Sets.newHashSet();
+		@SuppressWarnings( "unchecked" )
+		Enumeration<ClassImplementationsTreeNode> implementations = index.getClassImplementations( null, m_classEntry ).children();
+		while( implementations.hasMoreElements() )
+		{
+			ClassImplementationsTreeNode node = implementations.nextElement();
+			m_implementations.add( scrubClassName( node.getClassEntry().getName() ) );
+		}
+		
+		m_references = Sets.newHashSet();
+		if( useReferences )
+		{
+			for( CtField field : c.getDeclaredFields() )
+			{
+				FieldEntry fieldEntry = new FieldEntry( m_classEntry, field.getName() );
+				for( EntryReference<FieldEntry,BehaviorEntry> reference : index.getFieldReferences( fieldEntry ) )
+				{
+					addReference( reference );
+				}
+			}
+			for( CtMethod method : c.getDeclaredMethods() )
+			{
+				MethodEntry methodEntry = new MethodEntry( m_classEntry, method.getName(), method.getSignature() );
+				for( EntryReference<BehaviorEntry,BehaviorEntry> reference : index.getBehaviorReferences( methodEntry ) )
+				{
+					addReference( reference );
+				}
+			}
+			for( CtConstructor constructor : c.getDeclaredConstructors() )
+			{
+				ConstructorEntry constructorEntry = new ConstructorEntry( m_classEntry, constructor.getSignature() );
+				for( EntryReference<BehaviorEntry,BehaviorEntry> reference : index.getBehaviorReferences( constructorEntry ) )
+				{
+					addReference( reference );
+				}
+			}
+		}
+	}
+
+	private void addReference( EntryReference<? extends Entry,BehaviorEntry> reference )
+	{
+		if( reference.context.getSignature() != null )
+		{
+			m_references.add( String.format( "%s_%s",
+				scrubClassName( reference.context.getClassName() ),
+				scrubSignature( reference.context.getSignature() )
+			) );
+		}
+		else
+		{
+			m_references.add( String.format( "%s_<clinit>",
+				scrubClassName( reference.context.getClassName() )
+			) );
 		}
 	}
 
@@ -109,7 +202,36 @@ public class ClassIdentity
 			buf.append( m_staticInitializer );
 			buf.append( "\n" );
 		}
+		if( m_extends.length() > 0 )
+		{
+			buf.append( "\textends " );
+			buf.append( m_extends );
+			buf.append( "\n" );
+		}
+		for( String interfaceName : m_implements )
+		{
+			buf.append( "\timplements " );
+			buf.append( interfaceName );
+			buf.append( "\n" );
+		}
+		for( String implementation : m_implementations )
+		{
+			buf.append( "\timplemented by " );
+			buf.append( implementation );
+			buf.append( "\n" );
+		}
+		for( String reference : m_references )
+		{
+			buf.append( "\treference " );
+			buf.append( reference );
+			buf.append( "\n" );
+		}
 		return buf.toString();
+	}
+	
+	private String scrubClassName( String className )
+	{
+		return scrubSignature( "L" + Descriptor.toJvmName( className ) + ";" );
 	}
 	
 	private String scrubSignature( String signature )
@@ -121,12 +243,30 @@ public class ClassIdentity
 			@Override
 			public String update( String className )
 			{
-				// does the class have a package?
-				if( className.indexOf( '/' ) >= 0 )
+				// classes not in the none package can be passed through
+				ClassEntry classEntry = new ClassEntry( className );
+				if( !classEntry.getPackageName().equals( Constants.NonePackage ) )
 				{
 					return className;
 				}
 				
+				// is this class ourself?
+				if( className.equals( m_classEntry.getName() ) )
+				{
+					return "CSelf";
+				}
+				
+				// try the namer
+				if( m_namer != null )
+				{
+					String newName = m_namer.getName( className );
+					if( newName != null )
+					{
+						return newName;
+					}
+				}
+				
+				// otherwise, use local naming
 				if( !m_classNames.containsKey( className ) )
 				{
 					m_classNames.put( className, getNewClassName() );
@@ -141,6 +281,11 @@ public class ClassIdentity
 		} );
 	}
 	
+	private boolean isClassMatchedUniquely( String className )
+	{
+		return m_namer != null && m_namer.getName( Descriptor.toJvmName( className ) ) != null;
+	}
+	
 	private String getBehaviorSignature( CtBehavior behavior )
 	{
 		try
@@ -153,8 +298,7 @@ public class ClassIdentity
 			
 			// compute the hash from the opcodes
 			ConstPool constants = behavior.getMethodInfo().getConstPool();
-			ConstPoolEditor editor = new ConstPoolEditor( constants );
-			MessageDigest digest = MessageDigest.getInstance( "MD5" );
+			final MessageDigest digest = MessageDigest.getInstance( "MD5" );
 			CodeIterator iter = behavior.getMethodInfo().getCodeAttribute().iterator();
 			while( iter.hasNext() )
 			{
@@ -164,46 +308,91 @@ public class ClassIdentity
 				int opcode = iter.byteAt( pos );
 				digest.update( (byte)opcode );
 				
-				// is there a constant value here?
-				int constIndex = -1;
 				switch( opcode )
 				{
 					case Opcode.LDC:
-						constIndex = iter.byteAt( pos + 1 );
+					{
+						int constIndex = iter.byteAt( pos + 1 );
+						updateHashWithConstant( digest, constants, constIndex );
+					}
 					break;
 					
 					case Opcode.LDC_W:
-						constIndex = ( iter.byteAt( pos + 1 ) << 8 ) | iter.byteAt( pos + 2 );
-					break;
-					
 					case Opcode.LDC2_W:
-						constIndex = ( iter.byteAt( pos + 1 ) << 8 ) | iter.byteAt( pos + 2 );
-					break;
-				}
-				
-				if( constIndex >= 0 )
-				{
-					// update the hash with the constant value
-					ConstInfoAccessor item = editor.getItem( constIndex );
-					if( item.getType() == InfoType.StringInfo )
 					{
-						String val = constants.getStringInfo( constIndex );
-						try
-						{
-							digest.update( val.getBytes( "UTF8" ) );
-						}
-						catch( UnsupportedEncodingException ex )
-						{
-							throw new Error( ex );
-						}
+						int constIndex = ( iter.byteAt( pos + 1 ) << 8 ) | iter.byteAt( pos + 2 );
+						updateHashWithConstant( digest, constants, constIndex );
 					}
+					break;
 				}
 			}
+			
+			// update hash with method and field accesses
+			behavior.instrument( new ExprEditor( )
+			{
+				@Override
+				public void edit( MethodCall call )
+				{
+					updateHashWithString( digest, scrubClassName( call.getClassName() ) );
+					updateHashWithString( digest, scrubSignature( call.getSignature() ) );
+					if( isClassMatchedUniquely( call.getClassName() ) )
+					{
+						updateHashWithString( digest, call.getMethodName() );
+					}
+				}
+				
+				@Override
+				public void edit( FieldAccess access )
+				{
+					updateHashWithString( digest, scrubClassName( access.getClassName() ) );
+					updateHashWithString( digest, scrubSignature( access.getSignature() ) );
+					if( isClassMatchedUniquely( access.getClassName() ) )
+					{
+						updateHashWithString( digest, access.getFieldName() );
+					}
+				}
+				
+				@Override
+				public void edit( ConstructorCall call )
+				{
+					updateHashWithString( digest, scrubClassName( call.getClassName() ) );
+					updateHashWithString( digest, scrubSignature( call.getSignature() ) );
+				}
+				
+				@Override
+				public void edit( NewExpr expr )
+				{
+					updateHashWithString( digest, scrubClassName( expr.getClassName() ) );
+				}
+			} );
 			
 			// convert the hash to a hex string
 			return toHex( digest.digest() );
 		}
-		catch( BadBytecode | NoSuchAlgorithmException ex )
+		catch( BadBytecode | NoSuchAlgorithmException | CannotCompileException ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	private void updateHashWithConstant( MessageDigest digest, ConstPool constants, int index )
+	{
+		ConstPoolEditor editor = new ConstPoolEditor( constants );
+		ConstInfoAccessor item = editor.getItem( index );
+		if( item.getType() == InfoType.StringInfo )
+		{
+			updateHashWithString( digest, constants.getStringInfo( index ) );
+		}
+		// TODO: other constants
+	}
+	
+	private void updateHashWithString( MessageDigest digest, String val )
+	{
+		try
+		{
+			digest.update( val.getBytes( "UTF8" ) );
+		}
+		catch( UnsupportedEncodingException ex )
 		{
 			throw new Error( ex );
 		}
@@ -239,7 +428,11 @@ public class ClassIdentity
 		return m_fields.equals( other.m_fields )
 			&& m_methods.equals( other.m_methods )
 			&& m_constructors.equals( other.m_constructors )
-			&& m_staticInitializer.equals( other.m_staticInitializer );
+			&& m_staticInitializer.equals( other.m_staticInitializer )
+			&& m_extends.equals( other.m_extends )
+			&& m_implements.equals( other.m_implements )
+			&& m_implementations.equals( other.m_implementations )
+			&& m_references.equals( other.m_references );
 	}
 	
 	@Override
@@ -250,6 +443,10 @@ public class ClassIdentity
 		objs.addAll( m_methods );
 		objs.addAll( m_constructors );
 		objs.add( m_staticInitializer );
+		objs.add( m_extends );
+		objs.addAll( m_implements );
+		objs.addAll( m_implementations );
+		objs.addAll( m_references );
 		return Util.combineHashesOrdered( objs );
 	}
 }

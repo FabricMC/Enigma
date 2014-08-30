@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javassist.ClassMap;
+import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
@@ -23,6 +24,8 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.SignatureUpdater;
+import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class ClassRenamer
 {
@@ -115,5 +118,37 @@ public class ClassRenamer
 			}
 		}
 		ClassRenamer.renameClasses( c, map );
+		
+		// TEMP
+		for( ClassEntry classEntry : ClassRenamer.getAllClassEntries( c ) )
+		{
+			if( classEntry.isInDefaultPackage() )
+			{
+				throw new Error( "!!! " + classEntry );
+			}
+		}
+		
+		// TEMP
+		for( CtBehavior behavior : c.getDeclaredBehaviors() )
+		{
+			if( behavior.getSignature() == null )
+			{
+				continue;
+			}
+			
+			SignatureUpdater.update( behavior.getSignature(), new ClassNameUpdater( )
+			{
+				@Override
+				public String update( String className )
+				{
+					ClassEntry classEntry = new ClassEntry( className );
+					if( classEntry.isInDefaultPackage() )
+					{
+						throw new Error( "!!! " + className );
+					}
+					return className;
+				}
+			} );
+		}
 	}
 }

@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.beust.jcommander.internal.Maps;
+
 import cuchaz.enigma.analysis.Ancestries;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
@@ -22,6 +24,13 @@ public class Translator
 	private TranslationDirection m_direction;
 	public Map<String,ClassMapping> m_classes;
 	private Ancestries m_ancestries;
+	
+	public Translator( )
+	{
+		m_direction = null;
+		m_classes = Maps.newHashMap();
+		m_ancestries = new Ancestries();
+	}
 	
 	protected Translator( TranslationDirection direction, Map<String,ClassMapping> classes, Ancestries ancestries )
 	{

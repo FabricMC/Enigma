@@ -47,6 +47,11 @@ public class TranslatingTypeLoader implements ITypeLoader
 	private Map<String,byte[]> m_cache;
 	private ClasspathTypeLoader m_defaultTypeLoader;
 	
+	public TranslatingTypeLoader( JarFile jar, JarIndex jarIndex )
+	{
+		this( jar, jarIndex, new Translator(), new Translator() );
+	}
+	
 	public TranslatingTypeLoader( JarFile jar, JarIndex jarIndex, Translator obfuscatingTranslator, Translator deobfuscatingTranslator )
 	{
 		m_jar = jar;
@@ -88,6 +93,28 @@ public class TranslatingTypeLoader implements ITypeLoader
 		System.arraycopy( data, 0, out.array(), out.position(), data.length );
 		out.position( 0 );
 		return true;
+	}
+	
+	public CtClass loadClass( String deobfClassName )
+	{
+		byte[] data = loadType( deobfClassName );
+		if( data == null )
+		{
+			return null;
+		}
+		
+		// return a javassist handle for the class
+		String javaClassFileName = Descriptor.toJavaName( deobfClassName );
+		ClassPool classPool = new ClassPool();
+		classPool.insertClassPath( new ByteArrayClassPath( javaClassFileName, data ) );
+		try
+		{
+			return classPool.get( javaClassFileName );
+		}
+		catch( NotFoundException ex )
+		{
+			throw new Error( ex );
+		}
 	}
 	
 	private byte[] loadType( String deobfClassName )
