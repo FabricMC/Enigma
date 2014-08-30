@@ -14,6 +14,8 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
+import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
+
 public class MethodMapping implements Serializable, Comparable<MethodMapping>
 {
 	private static final long serialVersionUID = -4409570216084263978L;
@@ -138,5 +140,23 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 	public int compareTo( MethodMapping other )
 	{
 		return ( m_obfName + m_obfSignature ).compareTo( ( other.m_obfName + other.m_obfSignature ) );
+	}
+
+	public void renameObfClasses( final Map<String,String> nameMap )
+	{
+		// rename obf classes in the signature
+		m_obfSignature = SignatureUpdater.update( m_obfSignature, new ClassNameUpdater( )
+		{
+			@Override
+			public String update( String className )
+			{
+				String newName = nameMap.get( className );
+				if( newName != null )
+				{
+					return newName;
+				}
+				return className;
+			}
+		} );
 	}
 }

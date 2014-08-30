@@ -11,6 +11,7 @@
 package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -298,5 +299,33 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	public int compareTo( ClassMapping other )
 	{
 		return m_obfName.compareTo( other.m_obfName );
+	}
+	
+	public void renameObfClasses( Map<String,String> nameMap )
+	{
+		// rename self
+		{
+			String newName = nameMap.get( m_obfName );
+			if( newName != null )
+			{
+				m_obfName = newName;
+			}
+		}
+		
+		// rename inner classes
+		for( ClassMapping classMapping : new ArrayList<ClassMapping>( m_innerClassesByObf.values() ) )
+		{
+			m_innerClassesByObf.remove( classMapping.getObfName() );
+			classMapping.renameObfClasses( nameMap );
+			m_innerClassesByObf.put( classMapping.getObfName(), classMapping );
+		}
+		
+		// rename method signatures
+		for( MethodMapping methodMapping : new ArrayList<MethodMapping>( m_methodsByObf.values() ) )
+		{
+			m_methodsByObf.remove( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ) );
+			methodMapping.renameObfClasses( nameMap );
+			m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping );
+		}
 	}
 }

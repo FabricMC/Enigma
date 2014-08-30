@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -135,5 +136,29 @@ public class Mappings implements Serializable
 			buf.append( "\n" );
 		}
 		return buf.toString();
+	}
+	
+	public void renameObfClasses( Map<String,String> nameMap )
+	{
+		for( ClassMapping classMapping : new ArrayList<ClassMapping>( m_classesByObf.values() ) )
+		{
+			String newName = nameMap.get( classMapping.getObfName() );
+			if( newName != null )
+			{
+				m_classesByObf.remove( classMapping.getObfName() );
+				classMapping.renameObfClasses( nameMap );
+				m_classesByObf.put( classMapping.getObfName(), classMapping );
+			}
+		}
+	}
+
+	public void removeClassByObfName( String obfName )
+	{
+		ClassMapping classMapping = m_classesByObf.get( obfName );
+		if( classMapping != null )
+		{
+			m_classesByObf.remove( classMapping.getObfName() );
+			m_classesByDeobf.remove( classMapping.getDeobfName() );
+		}
 	}
 }

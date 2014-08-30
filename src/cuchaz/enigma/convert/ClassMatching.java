@@ -10,12 +10,15 @@
  ******************************************************************************/
 package cuchaz.enigma.convert;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -154,6 +157,36 @@ public class ClassMatching
 	public List<ClassIdentity> getUnmatchedDestClasses( )
 	{
 		return new ArrayList<ClassIdentity>( m_unmatchedDestClasses );
+	}
+	
+	public Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> getConversionMap( )
+	{
+		Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> conversion = Maps.newHashMap();
+		for( Map.Entry<ClassIdentity,ClassIdentity> entry : getUniqueMatches().entrySet() )
+		{
+			conversion.put(
+				entry.getKey().getClassEntry().getName(),
+				new AbstractMap.SimpleEntry<ClassIdentity,List<ClassIdentity>>( entry.getKey(), Arrays.asList( entry.getValue() ) )
+			);
+		}
+		for( Map.Entry<List<ClassIdentity>,List<ClassIdentity>> entry : getAmbiguousMatches().entrySet() )
+		{
+			for( ClassIdentity sourceClass : entry.getKey() )
+			{
+				conversion.put(
+					sourceClass.getClassEntry().getName(),
+					new AbstractMap.SimpleEntry<ClassIdentity,List<ClassIdentity>>( sourceClass, entry.getValue() )
+				);
+			}
+		}
+		for( ClassIdentity sourceClass : getUnmatchedSourceClasses() )
+		{
+			conversion.put(
+				sourceClass.getClassEntry().getName(),
+				new AbstractMap.SimpleEntry<ClassIdentity,List<ClassIdentity>>( sourceClass, new ArrayList<ClassIdentity>() )
+			);
+		}
+		return conversion;
 	}
 	
 	@Override
