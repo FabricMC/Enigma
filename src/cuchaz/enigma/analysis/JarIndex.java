@@ -79,7 +79,7 @@ public class JarIndex
 		m_bridgeMethods = Maps.newHashMap();
 	}
 	
-	public void indexJar( JarFile jar )
+	public void indexJar( JarFile jar, boolean buildInnerClasses )
 	{
 		// step 1: read the class names
 		for( ClassEntry classEntry : JarClassIterator.getClassEntries( jar ) )
@@ -125,39 +125,42 @@ public class JarIndex
 			}
 		}
 		
-		// step 4: index inner classes and anonymous classes
-		for( CtClass c : JarClassIterator.classes( jar ) )
+		if( buildInnerClasses )
 		{
-			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
-			String outerClassName = findOuterClass( c );
-			if( outerClassName != null )
+			// step 4: index inner classes and anonymous classes
+			for( CtClass c : JarClassIterator.classes( jar ) )
 			{
-				String innerClassName = Descriptor.toJvmName( c.getName() );
-				m_innerClasses.put( outerClassName, innerClassName );
-				m_outerClasses.put( innerClassName, outerClassName );
-				
-				if( isAnonymousClass( c, outerClassName ) )
+				ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
+				String outerClassName = findOuterClass( c );
+				if( outerClassName != null )
 				{
-					m_anonymousClasses.add( innerClassName );
+					String innerClassName = Descriptor.toJvmName( c.getName() );
+					m_innerClasses.put( outerClassName, innerClassName );
+					m_outerClasses.put( innerClassName, outerClassName );
 					
-					// DEBUG
-					//System.out.println( "ANONYMOUS: " + outerClassName + "$" + innerClassName );
-				}
-				else
-				{
-					// DEBUG
-					//System.out.println( "INNER: " + outerClassName + "$" + innerClassName );
+					if( isAnonymousClass( c, outerClassName ) )
+					{
+						m_anonymousClasses.add( innerClassName );
+						
+						// DEBUG
+						//System.out.println( "ANONYMOUS: " + outerClassName + "$" + innerClassName );
+					}
+					else
+					{
+						// DEBUG
+						//System.out.println( "INNER: " + outerClassName + "$" + innerClassName );
+					}
 				}
 			}
+			
+			// step 5: update other indices with inner class info
+			Map<String,String> renames = Maps.newHashMap();
+			for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
+			{
+				renames.put( entry.getKey(), entry.getValue() + "$" + new ClassEntry( entry.getKey() ).getSimpleName() );
+			}
+			renameClasses( renames );
 		}
-		
-		// step 5: update other indices with inner class info
-		Map<String,String> renames = Maps.newHashMap();
-		for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
-		{
-			renames.put( entry.getKey(), entry.getValue() + "$" + new ClassEntry( entry.getKey() ).getSimpleName() );
-		}
-		renameClasses( renames );
 		
 		// step 5: update other indices with bridge method info
 		renameMethods( m_bridgeMethods );

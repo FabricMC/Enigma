@@ -96,7 +96,7 @@ public class ClassMatching
 			if( matchedSourceClasses.size() == 1 && matchedDestClasses.size() == 1 )
 			{
 				ClassIdentity matchedSourceClass = matchedSourceClasses.iterator().next();
-				ClassIdentity matchedDestClass = matchedSourceClasses.iterator().next();
+				ClassIdentity matchedDestClass = matchedDestClasses.iterator().next();
 				uniqueMatches.put( matchedSourceClass, matchedDestClass );
 			}
 		}

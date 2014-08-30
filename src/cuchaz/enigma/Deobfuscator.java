@@ -70,7 +70,7 @@ public class Deobfuscator
 		
 		// build the jar index
 		m_jarIndex = new JarIndex();
-		m_jarIndex.indexJar( m_jar );
+		m_jarIndex.indexJar( m_jar, true );
 		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();

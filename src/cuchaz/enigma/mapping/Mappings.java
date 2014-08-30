@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -160,5 +161,11 @@ public class Mappings implements Serializable
 			m_classesByObf.remove( classMapping.getObfName() );
 			m_classesByDeobf.remove( classMapping.getDeobfName() );
 		}
+	}
+
+	public List<String> getAllObfClassNames( )
+	{
+		// TODO: implement this
+		return null;
 	}
 }

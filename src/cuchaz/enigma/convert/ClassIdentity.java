@@ -16,7 +16,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
@@ -36,8 +35,9 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 import com.beust.jcommander.internal.Maps;
-import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Util;
@@ -62,14 +62,14 @@ public class ClassIdentity
 	private ClassEntry m_classEntry;
 	private String m_rawName;
 	private SidedClassNamer m_namer;
-	private Set<String> m_fields;
-	private Set<String> m_methods;
-	private Set<String> m_constructors;
+	private Multiset<String> m_fields;
+	private Multiset<String> m_methods;
+	private Multiset<String> m_constructors;
 	private String m_staticInitializer;
 	private String m_extends;
-	private Set<String> m_implements;
-	private Set<String> m_implementations;
-	private Set<String> m_references;
+	private Multiset<String> m_implements;
+	private Multiset<String> m_implementations;
+	private Multiset<String> m_references;
 	
 	public ClassIdentity( CtClass c, SidedClassNamer namer, JarIndex index, boolean useReferences, boolean useRawNames )
 	{
@@ -83,17 +83,17 @@ public class ClassIdentity
 		{
 			m_rawName = m_classEntry.getName();
 		}
-		m_fields = Sets.newHashSet();
+		m_fields = HashMultiset.create();
 		for( CtField field : c.getDeclaredFields() )
 		{
 			m_fields.add( scrubSignature( field.getSignature() ) );
 		}
-		m_methods = Sets.newHashSet();
+		m_methods = HashMultiset.create();
 		for( CtMethod method : c.getDeclaredMethods() )
 		{
 			m_methods.add( scrubSignature( method.getSignature() ) + "0x" + getBehaviorSignature( method ) );
 		}
-		m_constructors = Sets.newHashSet();
+		m_constructors = HashMultiset.create();
 		for( CtConstructor constructor : c.getDeclaredConstructors() )
 		{
 			m_constructors.add( scrubSignature( constructor.getSignature() ) + "0x" + getBehaviorSignature( constructor ) );
@@ -108,7 +108,7 @@ public class ClassIdentity
 		{
 			m_extends = scrubClassName( c.getClassFile().getSuperclass() );
 		}
-		m_implements = Sets.newHashSet();
+		m_implements = HashMultiset.create();
 		for( String interfaceName : c.getClassFile().getInterfaces() )
 		{
 			m_implements.add( scrubClassName( interfaceName ) );
@@ -116,7 +116,7 @@ public class ClassIdentity
 		
 		// stuff from the jar index
 		
-		m_implementations = Sets.newHashSet();
+		m_implementations = HashMultiset.create();
 		@SuppressWarnings( "unchecked" )
 		Enumeration<ClassImplementationsTreeNode> implementations = index.getClassImplementations( null, m_classEntry ).children();
 		while( implementations.hasMoreElements() )
@@ -125,7 +125,7 @@ public class ClassIdentity
 			m_implementations.add( scrubClassName( node.getClassEntry().getName() ) );
 		}
 		
-		m_references = Sets.newHashSet();
+		m_references = HashMultiset.create();
 		if( useReferences )
 		{
 			for( CtField field : c.getDeclaredFields() )
@@ -154,7 +154,7 @@ public class ClassIdentity
 			}
 		}
 	}
-
+	
 	private void addReference( EntryReference<? extends Entry,BehaviorEntry> reference )
 	{
 		if( reference.context.getSignature() != null )
@@ -473,7 +473,15 @@ public class ClassIdentity
 			+ getNumMatches( m_constructors, other.m_constructors );
 	}
 	
-	private int getNumMatches( Set<String> a, Set<String> b ) 
+	public boolean matches( CtClass c )
+	{
+		// just compare declaration counts
+		return m_fields.size() == c.getDeclaredFields().length
+			&& m_methods.size() == c.getDeclaredMethods().length
+			&& m_constructors.size() == c.getDeclaredConstructors().length;
+	}
+	
+	private int getNumMatches( Multiset<String> a, Multiset<String> b ) 
 	{
 		int numMatches = 0;
 		for( String val : a )
