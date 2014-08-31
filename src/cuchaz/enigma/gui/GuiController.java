@@ -66,11 +66,12 @@ public class GuiController
 		return m_isDirty;
 	}
 	
-	public void openJar( File file )
+	public void openJar( final File file )
 	throws IOException
 	{
+		m_gui.onStartOpenJar();
 		m_deobfuscator = new Deobfuscator( file );
-		m_gui.onOpenJar( m_deobfuscator.getJarName() );
+		m_gui.onFinishOpenJar( m_deobfuscator.getJarName() );
 		refreshClasses();
 	}
 	

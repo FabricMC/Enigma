@@ -146,6 +146,8 @@ public class Gui
 	private JList<String> m_obfClasses;
 	private JList<String> m_deobfClasses;
 	private JEditorPane m_editor;
+	private JPanel m_classesPanel;
+	private JSplitPane m_splitClasses;
 	private JPanel m_infoPanel;
 	private ObfuscatedHighlightPainter m_obfuscatedHighlightPainter;
 	private DeobfuscatedHighlightPainter m_deobfuscatedHighlightPainter;
@@ -261,6 +263,12 @@ public class Gui
 		deobfPanel.setLayout( new BorderLayout() );
 		deobfPanel.add( new JLabel( "De-obfuscated Classes" ), BorderLayout.NORTH );
 		deobfPanel.add( deobfScroller, BorderLayout.CENTER );
+		
+		// set up classes panel (don't add the splitter yet)
+		m_splitClasses = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
+		m_classesPanel = new JPanel();
+		m_classesPanel.setLayout( new BorderLayout() );
+		m_classesPanel.setPreferredSize( new Dimension( 250, 0 ) );
 		
 		// init info panel
 		m_infoPanel = new JPanel();
@@ -563,8 +571,6 @@ public class Gui
 		callPanel.resetToPreferredSizes();
 		
 		// layout controls
-		JSplitPane splitLeft = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
-		splitLeft.setPreferredSize( new Dimension( 250, 0 ) );
 		JPanel centerPanel = new JPanel();
 		centerPanel.setLayout( new BorderLayout() );
 		centerPanel.add( m_infoPanel, BorderLayout.NORTH );
@@ -577,7 +583,7 @@ public class Gui
 		JSplitPane splitRight = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, m_tabs );
 		splitRight.setResizeWeight( 1 ); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
-		JSplitPane splitCenter = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, splitLeft, splitRight );
+		JSplitPane splitCenter = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, true, m_classesPanel, splitRight );
 		splitCenter.setResizeWeight( 0 ); // let the right side take all the slack
 		pane.add( splitCenter, BorderLayout.CENTER );
 		
@@ -597,14 +603,22 @@ public class Gui
 					{
 						if( m_jarFileChooser.showOpenDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
 						{
-							try
+							// load the jar in a separate thread
+							new Thread( )
 							{
-								m_controller.openJar( m_jarFileChooser.getSelectedFile() );
-							}
-							catch( IOException ex )
-							{
-								throw new Error( ex );
-							}
+								@Override
+								public void run( )
+								{
+									try
+									{
+										m_controller.openJar( m_jarFileChooser.getSelectedFile() );
+									}
+									catch( IOException ex )
+									{
+										throw new Error( ex );
+									}
+								}
+							}.start();
 						}
 					}
 				} );
@@ -786,10 +800,22 @@ public class Gui
 		return m_controller;
 	}
 	
-	public void onOpenJar( String jarName )
+	public void onStartOpenJar( )
+	{
+		m_classesPanel.removeAll();
+		JPanel panel = new JPanel();
+		panel.setLayout( new FlowLayout() );
+		panel.add( new JLabel( "Loading..." ) );
+		m_classesPanel.add( panel );
+		redraw();
+	}
+	
+	public void onFinishOpenJar( String jarName )
 	{
 		// update gui
 		m_frame.setTitle( Constants.Name + " - " + jarName );
+		m_classesPanel.removeAll();
+		m_classesPanel.add( m_splitClasses );
 		setSource( null );
 		
 		// update menu
@@ -798,6 +824,8 @@ public class Gui
 		m_saveMappingsMenu.setEnabled( false );
 		m_saveMappingsAsMenu.setEnabled( true );
 		m_closeMappingsMenu.setEnabled( true );
+		
+		redraw();
 	}
 	
 	public void onCloseJar( )
@@ -807,6 +835,7 @@ public class Gui
 		setObfClasses( null );
 		setDeobfClasses( null );
 		setSource( null );
+		m_classesPanel.removeAll();
 		
 		// update menu
 		m_closeJarMenu.setEnabled( false );
@@ -814,6 +843,8 @@ public class Gui
 		m_saveMappingsMenu.setEnabled( false );
 		m_saveMappingsAsMenu.setEnabled( false );
 		m_closeMappingsMenu.setEnabled( false );
+		
+		redraw();
 	}
 	
 	public void setObfClasses( List<String> obfClasses )
