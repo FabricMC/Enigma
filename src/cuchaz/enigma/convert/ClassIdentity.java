@@ -60,7 +60,6 @@ import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 public class ClassIdentity
 {
 	private ClassEntry m_classEntry;
-	private String m_rawName;
 	private SidedClassNamer m_namer;
 	private Multiset<String> m_fields;
 	private Multiset<String> m_methods;
@@ -71,18 +70,13 @@ public class ClassIdentity
 	private Multiset<String> m_implementations;
 	private Multiset<String> m_references;
 	
-	public ClassIdentity( CtClass c, SidedClassNamer namer, JarIndex index, boolean useReferences, boolean useRawNames )
+	public ClassIdentity( CtClass c, SidedClassNamer namer, JarIndex index, boolean useReferences )
 	{
 		m_namer = namer;
 		
 		// stuff from the bytecode
 		
 		m_classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
-		m_rawName = "";
-		if( useRawNames )
-		{
-			m_rawName = m_classEntry.getName();
-		}
 		m_fields = HashMultiset.create();
 		for( CtField field : c.getDeclaredFields() )
 		{
@@ -186,12 +180,6 @@ public class ClassIdentity
 		buf.append( " " );
 		buf.append( hashCode() );
 		buf.append( "\n" );
-		if( m_rawName.length() > 0 )
-		{
-			buf.append( "\traw name: " );
-			buf.append( m_rawName );
-			buf.append( "\n" );
-		}
 		for( String field : m_fields )
 		{
 			buf.append( "\tfield " );
@@ -439,8 +427,7 @@ public class ClassIdentity
 	
 	public boolean equals( ClassIdentity other )
 	{
-		return m_rawName.equals( other.m_rawName )
-			&& m_fields.equals( other.m_fields )
+		return m_fields.equals( other.m_fields )
 			&& m_methods.equals( other.m_methods )
 			&& m_constructors.equals( other.m_constructors )
 			&& m_staticInitializer.equals( other.m_staticInitializer )
@@ -454,7 +441,6 @@ public class ClassIdentity
 	public int hashCode( )
 	{
 		List<Object> objs = Lists.newArrayList();
-		objs.add( m_rawName );
 		objs.addAll( m_fields );
 		objs.addAll( m_methods );
 		objs.addAll( m_constructors );
@@ -471,6 +457,11 @@ public class ClassIdentity
 		return getNumMatches( m_fields, other.m_fields )
 			+ getNumMatches( m_methods, other.m_methods )
 			+ getNumMatches( m_constructors, other.m_constructors );
+	}
+	
+	public int getMaxMatchScore( )
+	{
+		return m_fields.size() + m_methods.size() + m_constructors.size();
 	}
 	
 	public boolean matches( CtClass c )

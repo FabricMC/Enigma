@@ -183,7 +183,7 @@ public class ClassMatching
 		{
 			conversion.put(
 				sourceClass.getClassEntry().getName(),
-				new AbstractMap.SimpleEntry<ClassIdentity,List<ClassIdentity>>( sourceClass, new ArrayList<ClassIdentity>() )
+				new AbstractMap.SimpleEntry<ClassIdentity,List<ClassIdentity>>( sourceClass, getUnmatchedDestClasses() )
 			);
 		}
 		return conversion;
@@ -193,25 +193,11 @@ public class ClassMatching
 	public String toString( )
 	{
 		StringBuilder buf = new StringBuilder();
-		
-		buf.append( "Source classes: " );
-		buf.append( getSourceClasses().size() );
-		buf.append( "\n\tUnique: " );
-		buf.append( getUniqueMatches().size() );
-		buf.append( "\n\tAmbiguous: " );
-		buf.append( getNumAmbiguousSourceMatches() );
-		buf.append( "\n\tUnmatched: " );
-		buf.append( getUnmatchedSourceClasses().size() );
-		
-		buf.append( "\nDest classes: " );
-		buf.append( getDestClasses().size() );
-		buf.append( "\n\tUnique: " );
-		buf.append( getUniqueMatches().size() );
-		buf.append( "\n\tAmbiguous: " );
-		buf.append( getNumAmbiguousDestMatches() );
-		buf.append( "\n\tUnmatched: " );
-		buf.append( getUnmatchedDestClasses().size() );
-		
+		buf.append( String.format( "%12s%8s%8s\n", "", "Source", "Dest" ) );
+		buf.append( String.format( "%12s%8d%8d\n", "Classes", getSourceClasses().size(), getDestClasses().size() ) );
+		buf.append( String.format( "%12s%8d%8d\n", "Unique", getUniqueMatches().size(), getUniqueMatches().size() ) );
+		buf.append( String.format( "%12s%8d%8d\n", "Ambiguous", getNumAmbiguousSourceMatches(), getNumAmbiguousDestMatches() ) );
+		buf.append( String.format( "%12s%8d%8d\n", "Unmatched", getUnmatchedSourceClasses().size(), getUnmatchedDestClasses().size() ) );
 		return buf.toString();
 	}
 }

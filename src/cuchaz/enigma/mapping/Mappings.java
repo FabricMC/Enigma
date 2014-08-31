@@ -15,15 +15,17 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.Util;
 import cuchaz.enigma.analysis.Ancestries;
 import cuchaz.enigma.analysis.DeobfuscatedAncestries;
+import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class Mappings implements Serializable
 {
@@ -163,9 +165,28 @@ public class Mappings implements Serializable
 		}
 	}
 
-	public List<String> getAllObfClassNames( )
+	public Set<String> getAllObfClassNames( )
 	{
-		// TODO: implement this
-		return null;
+		final Set<String> classNames = Sets.newHashSet();
+		for( ClassMapping classMapping : classes() )
+		{
+			// add the class name
+			classNames.add( classMapping.getObfName() );
+			
+			// add classes from method signatures
+			for( MethodMapping methodMapping : classMapping.methods() )
+			{
+				SignatureUpdater.update( methodMapping.getObfSignature(), new ClassNameUpdater( )
+				{
+					@Override
+					public String update( String className )
+					{
+						classNames.add( className );
+						return className;
+					}
+				} );
+			}
+		}
+		return classNames;
 	}
 }

@@ -14,17 +14,14 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.jar.JarFile;
 
 import javassist.CtBehavior;
@@ -32,9 +29,11 @@ import javassist.CtClass;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import cuchaz.enigma.TranslatingTypeLoader;
 import cuchaz.enigma.analysis.JarIndex;
@@ -55,22 +54,28 @@ public class ClassMatcher
 	{
 		// TEMP
 		JarFile sourceJar = new JarFile( new File( "input/1.8-pre1.jar" ) );
-		JarFile destJar = new JarFile( new File( "input/1.8-pre2.jar" ) );
+		JarFile destJar = new JarFile( new File( "input/1.8-pre3.jar" ) );
 		File inMappingsFile = new File( "../minecraft-mappings/1.8-pre.mappings" );
-		File outMappingsFile = new File( "../minecraft-mappings/1.8-pre2.mappings" );
+		File outMappingsFile = new File( "../minecraft-mappings/1.8-pre3.mappings" );
+		
+		// define a matching to use when the automated system cannot find a match
+		Map<String,String> fallbackMatching = Maps.newHashMap();
+		fallbackMatching.put( "none/ayb", "none/ayb" );
+		fallbackMatching.put( "none/ayd", "none/ayd" );
+		fallbackMatching.put( "none/bgk", "none/bgk" );
 		
 		// do the conversion
 		Mappings mappings = new MappingsReader().read( new FileReader( inMappingsFile ) );
-		convertMappings( sourceJar, destJar, mappings );
+		convertMappings( sourceJar, destJar, mappings, fallbackMatching );
 		
-		// write out the convert mappings
+		// write out the converted mappings
 		FileWriter writer = new FileWriter( outMappingsFile );
 		new MappingsWriter().write( writer, mappings );
 		writer.close();
 		System.out.println( "Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath() );
 	}
 	
-	private static void convertMappings( JarFile sourceJar, JarFile destJar, Mappings mappings )
+	private static void convertMappings( JarFile sourceJar, JarFile destJar, Mappings mappings, Map<String,String> fallbackMatching )
 	{
 		// index jars
 		System.out.println( "Indexing source jar..." );
@@ -83,58 +88,77 @@ public class ClassMatcher
 		TranslatingTypeLoader destLoader = new TranslatingTypeLoader( destJar, destIndex );
 
 		// compute the matching
-		ClassMatching matching = ClassMatcher.computeMatching( sourceIndex, sourceLoader, destIndex, destLoader );
+		ClassMatching matching = computeMatching( sourceIndex, sourceLoader, destIndex, destLoader );
 		
 		// start the class conversion map with the unique and ambiguous matchings
 		Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> conversionMap = matching.getConversionMap();
 		
-		// probabilistically match the unmatched source classes
-		for( ClassIdentity sourceClass : new ArrayList<ClassIdentity>( matching.getUnmatchedSourceClasses() ) )
+		// get all the obf class names used in the mappings
+		Set<String> usedClassNames = mappings.getAllObfClassNames();
+		Set<String> allClassNames = Sets.newHashSet();
+		for( ClassEntry classEntry : sourceIndex.getObfClassEntries() )
 		{
+			allClassNames.add( classEntry.getName() );
+		}
+		usedClassNames.retainAll( allClassNames );
+		
+		// probabilistically match the non-uniquely-matched source classes
+		for( Map.Entry<ClassIdentity,List<ClassIdentity>> entry : conversionMap.values() )
+		{
+			ClassIdentity sourceClass = entry.getKey();
+			List<ClassIdentity> destClasses = entry.getValue();
+			
+			// skip classes that are uniquely matched
+			if( destClasses.size() == 1 )
+			{
+				continue;
+			}
+			
+			// skip classes that aren't used in the mappings
+			if( !usedClassNames.contains( sourceClass.getClassEntry().getName() ) )
+			{
+				continue;
+			}
+			
 			System.out.println( "No exact match for source class " + sourceClass.getClassEntry() );
 			
 			// find the closest classes
-			TreeMap<Integer,ClassIdentity> scoredMatches = Maps.newTreeMap( Collections.reverseOrder() );
-			for( ClassIdentity c : matching.getUnmatchedDestClasses() )
+			Multimap<Integer,ClassIdentity> scoredMatches = ArrayListMultimap.create();
+			for( ClassIdentity c : destClasses )
 			{
 				scoredMatches.put( sourceClass.getMatchScore( c ), c );
 			}
-			Iterator<Map.Entry<Integer,ClassIdentity>> iter = scoredMatches.entrySet().iterator();
-			for( int i=0; i<10 && iter.hasNext(); i++ )
-			{
-				Map.Entry<Integer,ClassIdentity> score = iter.next();
-				System.out.println( String.format( "\tScore: %3d   %s", score.getKey(), score.getValue().getClassEntry().getName() ) );
-			}
+			List<Integer> scores = new ArrayList<Integer>( scoredMatches.keySet() );
+			Collections.sort( scores, Collections.reverseOrder() );
+			printScoredMatches( sourceClass.getMaxMatchScore(), scores, scoredMatches );
 			
 			// does the best match have a non-zero score and the same name?
-			Map.Entry<Integer,ClassIdentity> bestMatch = scoredMatches.firstEntry();
-			if( bestMatch.getKey() > 0 && bestMatch.getValue().getClassEntry().equals( sourceClass.getClassEntry() ) )
+			int bestScore = scores.get( 0 );
+			Collection<ClassIdentity> bestMatches = scoredMatches.get( bestScore );
+			if( bestScore > 0 && bestMatches.size() == 1 )
 			{
-				// use it
-				System.out.println( "\tAutomatically choosing likely match: " + bestMatch.getValue().getClassEntry().getName() );
-				conversionMap.put(
-					sourceClass.getClassEntry().getName(),
-					new AbstractMap.SimpleEntry<ClassIdentity,List<ClassIdentity>>( sourceClass, Arrays.asList( bestMatch.getValue() ) )
-				);
+				ClassIdentity bestMatch = bestMatches.iterator().next();
+				if( bestMatch.getClassEntry().equals( sourceClass.getClassEntry() ) )
+				{
+					// use it
+					System.out.println( "\tAutomatically choosing likely match: " + bestMatch.getClassEntry().getName() );
+					destClasses.clear();
+					destClasses.add( bestMatch );
+				}
 			}
 		}
 		
 		// use the matching to convert the mappings
 		BiMap<String,String> classConversion = HashBiMap.create();
 		Set<String> unmatchedSourceClasses = Sets.newHashSet();
-		for( String className : mappings.getAllObfClassNames() )
+		for( String className : usedClassNames )
 		{
 			// is there a match for this class?
 			Map.Entry<ClassIdentity,List<ClassIdentity>> entry = conversionMap.get( className );
 			ClassIdentity sourceClass = entry.getKey();
 			List<ClassIdentity> matches = entry.getValue();
 			
-			if( matches.isEmpty() )
-			{
-				// no match! =(
-				unmatchedSourceClasses.add( className );
-			}
-			else if( matches.size() == 1 )
+			if( matches.size() == 1 )
 			{
 				// unique match! We're good to go!
 				classConversion.put(
@@ -142,10 +166,21 @@ public class ClassMatcher
 					matches.get( 0 ).getClassEntry().getName()
 				);
 			}
-			else if( matches.size() > 1 )
+			else
 			{
-				// too many matches! =(
-				unmatchedSourceClasses.add( className );
+				// no match, check the fallback matching
+				String fallbackMatch = fallbackMatching.get( className );
+				if( fallbackMatch != null )
+				{
+					classConversion.put(
+						sourceClass.getClassEntry().getName(),
+						fallbackMatch
+					);
+				}
+				else
+				{
+					unmatchedSourceClasses.add( className );
+				}
 			}
 		}
 		
@@ -176,17 +211,11 @@ public class ClassMatcher
 			}
 		}
 		
-		// TEMP: show some classes
-		for( String className : Arrays.asList( "none/em", "none/ej", "none/en" ) )
-		{
-			System.out.println( String.format( "check: %s -> %s", className, classConversion.get( className ) ) );
-		}
-		
-		// convert the classes
+		// convert the mappings
 		mappings.renameObfClasses( classConversion );
 		
-		// look for method matches
-		System.out.println( "Matching methods..." );
+		// check the method matches
+		System.out.println( "Checking methods..." );
 		for( ClassMapping classMapping : mappings.classes() )
 		{
 			ClassEntry classEntry = new ClassEntry( classMapping.getObfName() );
@@ -234,91 +263,93 @@ public class ClassMatcher
 				}
 			}
 		}
+		
+		System.out.println( "Done!" );
 	}
 	
 	public static ClassMatching computeMatching( JarIndex sourceIndex, TranslatingTypeLoader sourceLoader, JarIndex destIndex, TranslatingTypeLoader destLoader )
 	{
 		System.out.println( "Matching classes..." );
 		ClassMatching matching = null;
-		for( boolean useRawNames : Arrays.asList( false/*, true*/ ) )
+		for( boolean useReferences : Arrays.asList( false, true ) )
 		{
-			for( boolean useReferences : Arrays.asList( false, true ) )
+			int numMatches = 0;
+			do
 			{
-				int numMatches = 0;
-				do
+				SidedClassNamer sourceNamer = null;
+				SidedClassNamer destNamer = null;
+				if( matching != null )
 				{
-					SidedClassNamer sourceNamer = null;
-					SidedClassNamer destNamer = null;
-					if( matching != null )
-					{
-						// build a class namer
-						ClassNamer namer = new ClassNamer( matching.getUniqueMatches() );
-						sourceNamer = namer.getSourceNamer();
-						destNamer = namer.getDestNamer();
-						
-						// note the number of matches
-						numMatches = matching.getUniqueMatches().size();
-					}
+					// build a class namer
+					ClassNamer namer = new ClassNamer( matching.getUniqueMatches() );
+					sourceNamer = namer.getSourceNamer();
+					destNamer = namer.getDestNamer();
 					
-					// get the entries left to match
-					Set<ClassEntry> sourceClassEntries = sourceIndex.getObfClassEntries();
-					Set<ClassEntry> destClassEntries = destIndex.getObfClassEntries();
-					if( matching != null )
+					// note the number of matches
+					numMatches = matching.getUniqueMatches().size();
+				}
+				
+				// get the entries left to match
+				Set<ClassEntry> sourceClassEntries = Sets.newHashSet();
+				Set<ClassEntry> destClassEntries = Sets.newHashSet();
+				if( matching == null )
+				{
+					sourceClassEntries.addAll( sourceIndex.getObfClassEntries() );
+					destClassEntries.addAll( destIndex.getObfClassEntries() );
+					matching = new ClassMatching();
+				}
+				else
+				{
+					for( Map.Entry<List<ClassIdentity>,List<ClassIdentity>> entry : matching.getAmbiguousMatches().entrySet() )
 					{
-						sourceClassEntries.clear();
-						destClassEntries.clear();
-						for( Map.Entry<List<ClassIdentity>,List<ClassIdentity>> entry : matching.getAmbiguousMatches().entrySet() )
-						{
-							for( ClassIdentity c : entry.getKey() )
-							{
-								sourceClassEntries.add( c.getClassEntry() );
-								matching.removeSource( c );
-							}
-							for( ClassIdentity c : entry.getValue() )
-							{
-								destClassEntries.add( c.getClassEntry() );
-								matching.removeDest( c );
-							}
-						}
-						for( ClassIdentity c : matching.getUnmatchedSourceClasses() )
+						for( ClassIdentity c : entry.getKey() )
 						{
 							sourceClassEntries.add( c.getClassEntry() );
 							matching.removeSource( c );
 						}
-						for( ClassIdentity c : matching.getUnmatchedDestClasses() )
+						for( ClassIdentity c : entry.getValue() )
 						{
 							destClassEntries.add( c.getClassEntry() );
 							matching.removeDest( c );
 						}
 					}
-					else
+					for( ClassIdentity c : matching.getUnmatchedSourceClasses() )
 					{
-						matching = new ClassMatching();
+						sourceClassEntries.add( c.getClassEntry() );
+						matching.removeSource( c );
 					}
-					
-					// compute a matching for the classes
-					for( ClassEntry classEntry : sourceClassEntries )
+					for( ClassIdentity c : matching.getUnmatchedDestClasses() )
 					{
-						CtClass c = sourceLoader.loadClass( classEntry.getName() );
-						ClassIdentity sourceClass = new ClassIdentity( c, sourceNamer, sourceIndex, useReferences, useRawNames );
-						matching.addSource( sourceClass );
+						destClassEntries.add( c.getClassEntry() );
+						matching.removeDest( c );
 					}
-					for( ClassEntry classEntry : destClassEntries )
-					{
-						CtClass c = destLoader.loadClass( classEntry.getName() );
-						ClassIdentity destClass = new ClassIdentity( c, destNamer, destIndex, useReferences, useRawNames );
-						matching.matchDestClass( destClass );
-					}
-					
-					// TEMP
-					System.out.println( matching );
 				}
-				while( matching.getUniqueMatches().size() - numMatches > 0 );
+				
+				// compute a matching for the classes
+				for( ClassEntry classEntry : sourceClassEntries )
+				{
+					CtClass c = sourceLoader.loadClass( classEntry.getName() );
+					ClassIdentity sourceClass = new ClassIdentity( c, sourceNamer, sourceIndex, useReferences );
+					matching.addSource( sourceClass );
+				}
+				for( ClassEntry classEntry : destClassEntries )
+				{
+					CtClass c = destLoader.loadClass( classEntry.getName() );
+					ClassIdentity destClass = new ClassIdentity( c, destNamer, destIndex, useReferences );
+					matching.matchDestClass( destClass );
+				}
+				
+				// TEMP
+				System.out.println( matching );
 			}
+			while( matching.getUniqueMatches().size() - numMatches > 0 );
 		}
 		
-		// DEBUG: check the class matches
+		// check the class matches
 		System.out.println( "Checking class matches..." );
+		ClassNamer namer = new ClassNamer( matching.getUniqueMatches() );
+		SidedClassNamer sourceNamer = namer.getSourceNamer();
+		SidedClassNamer destNamer = namer.getDestNamer();
 		for( Map.Entry<ClassIdentity,ClassIdentity> entry : matching.getUniqueMatches().entrySet() )
 		{
 			// check source
@@ -327,7 +358,7 @@ public class ClassMatcher
 			assert( sourceC != null )
 				: "Unable to load source class " + sourceClass.getClassEntry();
 			assert( sourceClass.matches( sourceC ) )
-				: "Source " + sourceClass + " doesn't match " + new ClassIdentity( sourceC, null, sourceIndex, false, false );
+				: "Source " + sourceClass + " doesn't match " + new ClassIdentity( sourceC, sourceNamer, sourceIndex, false );
 			
 			// check dest
 			ClassIdentity destClass = entry.getValue();
@@ -335,7 +366,7 @@ public class ClassMatcher
 			assert( destC != null )
 				: "Unable to load dest class " + destClass.getClassEntry();
 			assert( destClass.matches( destC ) )
-				: "Dest " + destClass + " doesn't match " + new ClassIdentity( destC, null, destIndex, false, false );
+				: "Dest " + destClass + " doesn't match " + new ClassIdentity( destC, destNamer, destIndex, false );
 		}
 		
 		// warn about the ambiguous matchings
@@ -370,6 +401,27 @@ public class ClassMatcher
 		*/
 		
 		return matching;
+	}
+	
+	private static void printScoredMatches( int maxScore, List<Integer> scores, Multimap<Integer,ClassIdentity> scoredMatches )
+	{
+		int numScoredMatchesShown = 0;
+		for( int score : scores )
+		{
+			for( ClassIdentity scoredMatch : scoredMatches.get( score ) )
+			{
+				System.out.println( String.format( "\tScore: %3d %3.0f%%   %s",
+					score,
+					100.0*score/maxScore,
+					scoredMatch.getClassEntry().getName()
+				) );
+				
+				if( numScoredMatchesShown++ > 10 )
+				{
+					return;
+				}
+			}
+		}
 	}
 	
 	private static List<String> getClassNames( Collection<ClassIdentity> classes )
