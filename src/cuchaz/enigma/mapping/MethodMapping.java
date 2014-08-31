@@ -142,21 +142,27 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 		return ( m_obfName + m_obfSignature ).compareTo( ( other.m_obfName + other.m_obfSignature ) );
 	}
 
-	public void renameObfClasses( final Map<String,String> nameMap )
+	public boolean renameObfClass( final String oldObfClassName, final String newObfClassName )
 	{
 		// rename obf classes in the signature
-		m_obfSignature = SignatureUpdater.update( m_obfSignature, new ClassNameUpdater( )
+		String newSignature = SignatureUpdater.update( m_obfSignature, new ClassNameUpdater( )
 		{
 			@Override
 			public String update( String className )
 			{
-				String newName = nameMap.get( className );
-				if( newName != null )
+				if( className.equals( oldObfClassName ) )
 				{
-					return newName;
+					return newObfClassName;
 				}
 				return className;
 			}
 		} );
+		
+		if( newSignature != m_obfSignature )
+		{
+			m_obfSignature = newSignature;
+			return true;
+		}
+		return false;
 	}
 }

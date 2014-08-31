@@ -159,7 +159,7 @@ public class ClassMatching
 		return new ArrayList<ClassIdentity>( m_unmatchedDestClasses );
 	}
 	
-	public Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> getConversionMap( )
+	public Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> getIndex( )
 	{
 		Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> conversion = Maps.newHashMap();
 		for( Map.Entry<ClassIdentity,ClassIdentity> entry : getUniqueMatches().entrySet() )

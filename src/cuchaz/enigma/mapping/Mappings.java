@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -66,7 +67,7 @@ public class Mappings implements Serializable
 		}
 	}
 	
-	public Iterable<ClassMapping> classes( )
+	public Collection<ClassMapping> classes( )
 	{
 		assert( m_classesByObf.size() == m_classesByDeobf.size() );
 		return m_classesByObf.values();
@@ -141,30 +142,19 @@ public class Mappings implements Serializable
 		return buf.toString();
 	}
 	
-	public void renameObfClasses( Map<String,String> nameMap )
+	public void renameObfClass( String oldObfName, String newObfName )
 	{
-		for( ClassMapping classMapping : new ArrayList<ClassMapping>( m_classesByObf.values() ) )
+		for( ClassMapping classMapping : new ArrayList<ClassMapping>( classes() ) )
 		{
-			String newName = nameMap.get( classMapping.getObfName() );
-			if( newName != null )
+			if( classMapping.renameObfClass( oldObfName, newObfName ) )
 			{
-				m_classesByObf.remove( classMapping.getObfName() );
-				classMapping.renameObfClasses( nameMap );
-				m_classesByObf.put( classMapping.getObfName(), classMapping );
+				m_classesByObf.remove( oldObfName );
+				m_classesByObf.put( newObfName, classMapping );
+				assert( m_classesByObf.size() == m_classesByDeobf.size() );
 			}
 		}
 	}
-
-	public void removeClassByObfName( String obfName )
-	{
-		ClassMapping classMapping = m_classesByObf.get( obfName );
-		if( classMapping != null )
-		{
-			m_classesByObf.remove( classMapping.getObfName() );
-			m_classesByDeobf.remove( classMapping.getDeobfName() );
-		}
-	}
-
+	
 	public Set<String> getAllObfClassNames( )
 	{
 		final Set<String> classNames = Sets.newHashSet();

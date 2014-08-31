@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,9 +91,7 @@ public class ClassMatcher
 
 		// compute the matching
 		ClassMatching matching = computeMatching( sourceIndex, sourceLoader, destIndex, destLoader );
-		
-		// start the class conversion map with the unique and ambiguous matchings
-		Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> conversionMap = matching.getConversionMap();
+		Map<String,Map.Entry<ClassIdentity,List<ClassIdentity>>> matchingIndex = matching.getIndex();
 		
 		// get all the obf class names used in the mappings
 		Set<String> usedClassNames = mappings.getAllObfClassNames();
@@ -101,9 +101,10 @@ public class ClassMatcher
 			allClassNames.add( classEntry.getName() );
 		}
 		usedClassNames.retainAll( allClassNames );
+		System.out.println( "Used " + usedClassNames.size() + " classes in the mappings" );
 		
 		// probabilistically match the non-uniquely-matched source classes
-		for( Map.Entry<ClassIdentity,List<ClassIdentity>> entry : conversionMap.values() )
+		for( Map.Entry<ClassIdentity,List<ClassIdentity>> entry : matchingIndex.values() )
 		{
 			ClassIdentity sourceClass = entry.getKey();
 			List<ClassIdentity> destClasses = entry.getValue();
@@ -148,20 +149,20 @@ public class ClassMatcher
 			}
 		}
 		
-		// use the matching to convert the mappings
-		BiMap<String,String> classConversion = HashBiMap.create();
-		Set<String> unmatchedSourceClasses = Sets.newHashSet();
+		// group the matching into unique and non-unique matches
+		BiMap<String,String> matchedClassNames = HashBiMap.create();
+		Set<String> unmatchedSourceClassNames = Sets.newHashSet();
 		for( String className : usedClassNames )
 		{
 			// is there a match for this class?
-			Map.Entry<ClassIdentity,List<ClassIdentity>> entry = conversionMap.get( className );
+			Map.Entry<ClassIdentity,List<ClassIdentity>> entry = matchingIndex.get( className );
 			ClassIdentity sourceClass = entry.getKey();
 			List<ClassIdentity> matches = entry.getValue();
 			
 			if( matches.size() == 1 )
 			{
 				// unique match! We're good to go!
-				classConversion.put(
+				matchedClassNames.put(
 					sourceClass.getClassEntry().getName(),
 					matches.get( 0 ).getClassEntry().getName()
 				);
@@ -172,35 +173,36 @@ public class ClassMatcher
 				String fallbackMatch = fallbackMatching.get( className );
 				if( fallbackMatch != null )
 				{
-					classConversion.put(
+					matchedClassNames.put(
 						sourceClass.getClassEntry().getName(),
 						fallbackMatch
 					);
 				}
 				else
 				{
-					unmatchedSourceClasses.add( className );
+					unmatchedSourceClassNames.add( className );
 				}
 			}
 		}
 		
-		// remove (and warn about) unmatched classes
-		if( !unmatchedSourceClasses.isEmpty() )
+		// report unmatched classes
+		if( !unmatchedSourceClassNames.isEmpty() )
 		{
-			System.err.println( "WARNING: there were unmatched classes!" );
-			for( String className : unmatchedSourceClasses )
+			System.err.println( "ERROR: there were unmatched classes!" );
+			for( String className : unmatchedSourceClassNames )
 			{
 				System.err.println( "\t" + className );
-				mappings.removeClassByObfName( className );
 			}
-			System.err.println( "Mappings for these classes have been removed." );
+			return;
 		}
 		
-		// show the class name changes
-		for( Map.Entry<String,String> entry : classConversion.entrySet() )
+		// get the class name changes from the matched class names
+		Map<String,String> classChanges = Maps.newHashMap();
+		for( Map.Entry<String,String> entry : matchedClassNames.entrySet() )
 		{
 			if( !entry.getKey().equals( entry.getValue() ) )
 			{
+				classChanges.put( entry.getKey(), entry.getValue() );
 				System.out.println( String.format( "Class change: %s -> %s", entry.getKey(), entry.getValue() ) );
 				/* DEBUG
 				System.out.println( String.format( "\n%s\n%s",
@@ -211,8 +213,45 @@ public class ClassMatcher
 			}
 		}
 		
-		// convert the mappings
-		mappings.renameObfClasses( classConversion );
+		// sort the changes so classes are renamed in the correct order
+		// ie. if we have the mappings a->b, b->c, we have to apply b->c before a->b
+		LinkedHashMap<String,String> orderedClassChanges = Maps.newLinkedHashMap();
+		int numChangesLeft = classChanges.size();
+		while( !classChanges.isEmpty() )
+		{
+			Iterator<Map.Entry<String,String>> iter = classChanges.entrySet().iterator();
+			while( iter.hasNext() )
+			{
+				Map.Entry<String,String> entry = iter.next();
+				if( classChanges.get( entry.getValue() ) == null )
+				{
+					orderedClassChanges.put( entry.getKey(), entry.getValue() );
+					iter.remove();
+				}
+			}
+			
+			// did we remove any changes?
+			if( numChangesLeft - classChanges.size() > 0 )
+			{
+				// keep going
+				numChangesLeft = classChanges.size();				
+			}
+			else
+			{
+				// can't sort anymore. There must be a loop
+				break;
+			}
+		}
+		if( classChanges.size() > 0 )
+		{
+			throw new Error( String.format( "Unable to sort %d/%d class changes!", classChanges.size(), matchedClassNames.size() ) );
+		}
+		
+		// convert the mappings in the correct class order
+		for( Map.Entry<String,String> entry : orderedClassChanges.entrySet() )
+		{
+			mappings.renameObfClass( entry.getKey(), entry.getValue() );
+		}
 		
 		// check the method matches
 		System.out.println( "Checking methods..." );
@@ -250,7 +289,7 @@ public class ClassMatcher
 					}
 					
 					System.err.println( "\tAvailable source methods:" );
-					c = sourceLoader.loadClass( classConversion.inverse().get( classMapping.getObfName() ) );
+					c = sourceLoader.loadClass( matchedClassNames.inverse().get( classMapping.getObfName() ) );
 					for( CtBehavior behavior : c.getDeclaredBehaviors() )
 					{
 						MethodEntry declaredMethodEntry = new MethodEntry(

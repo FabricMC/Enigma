@@ -301,31 +301,37 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		return m_obfName.compareTo( other.m_obfName );
 	}
 	
-	public void renameObfClasses( Map<String,String> nameMap )
+	public boolean renameObfClass( String oldObfClassName, String newObfClassName )
 	{
-		// rename self
-		{
-			String newName = nameMap.get( m_obfName );
-			if( newName != null )
-			{
-				m_obfName = newName;
-			}
-		}
-		
 		// rename inner classes
-		for( ClassMapping classMapping : new ArrayList<ClassMapping>( m_innerClassesByObf.values() ) )
+		for( ClassMapping innerClassMapping : new ArrayList<ClassMapping>( m_innerClassesByObf.values() ) )
 		{
-			m_innerClassesByObf.remove( classMapping.getObfName() );
-			classMapping.renameObfClasses( nameMap );
-			m_innerClassesByObf.put( classMapping.getObfName(), classMapping );
+			if( innerClassMapping.renameObfClass( oldObfClassName, newObfClassName ) )
+			{
+				m_innerClassesByObf.remove( oldObfClassName );
+				m_innerClassesByObf.put( newObfClassName, innerClassMapping );
+				assert( m_innerClassesByObf.size() == m_innerClassesByDeobf.size() );
+			}
 		}
 		
 		// rename method signatures
 		for( MethodMapping methodMapping : new ArrayList<MethodMapping>( m_methodsByObf.values() ) )
 		{
-			m_methodsByObf.remove( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ) );
-			methodMapping.renameObfClasses( nameMap );
-			m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping );
+			String oldMethodKey = getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() );
+			if( methodMapping.renameObfClass( oldObfClassName, newObfClassName ) )
+			{
+				m_methodsByObf.remove( oldMethodKey );
+				m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping );
+				assert( m_methodsByObf.size() == m_methodsByDeobf.size() );
+			}
 		}
+		
+		if( m_obfName.equals( oldObfClassName ) )
+		{
+			// rename this class
+			m_obfName = newObfClassName;
+			return true;
+		}
+		return false;
 	}
 }
