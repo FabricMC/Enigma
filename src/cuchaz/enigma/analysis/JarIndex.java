@@ -663,7 +663,11 @@ public class JarIndex
 		}
 		
 		// look at interface methods too
-		getRelatedMethodImplementations( methodEntries, getMethodImplementations( null, methodEntry ) );
+		MethodImplementationsTreeNode implementations = getMethodImplementations( null, methodEntry );
+		if( implementations != null )
+		{
+			getRelatedMethodImplementations( methodEntries, implementations );
+		}
 		
 		// recurse
 		for( int i=0; i<node.getChildCount(); i++ )

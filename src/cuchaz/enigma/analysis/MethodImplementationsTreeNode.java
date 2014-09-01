@@ -29,6 +29,11 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode
 	
 	public MethodImplementationsTreeNode( Translator deobfuscatingTranslator, MethodEntry entry )
 	{
+		if( entry == null )
+		{
+			throw new IllegalArgumentException( "entry cannot be null!" );
+		}
+		
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_entry = entry;
 	}
