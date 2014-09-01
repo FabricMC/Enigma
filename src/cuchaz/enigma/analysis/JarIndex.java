@@ -891,4 +891,19 @@ public class JarIndex
 		}
 		return thing;
 	}
+
+	public boolean containsObfClass( ClassEntry obfClassEntry )
+	{
+		return m_obfClassEntries.contains( obfClassEntry );
+	}
+
+	public boolean containsObfField( FieldEntry obfFieldEntry )
+	{
+		return m_access.containsKey( obfFieldEntry );
+	}
+
+	public boolean containsObfMethod( MethodEntry obfMethodEntry )
+	{
+		return m_access.containsKey( obfMethodEntry );
+	}
 }

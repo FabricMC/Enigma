@@ -165,4 +165,16 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 		}
 		return false;
 	}
+
+	public boolean containsArgument( String name )
+	{
+		for( ArgumentMapping argumentMapping : m_arguments.values() )
+		{
+			if( argumentMapping.getName().equals( name ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 }

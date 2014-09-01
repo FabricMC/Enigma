@@ -334,4 +334,24 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		}
 		return false;
 	}
+
+	public boolean containsDeobfField( String name )
+	{
+		return m_fieldsByDeobf.containsKey( name );
+	}
+
+	public boolean containsDeobfMethod( String name, String signature )
+	{
+		return m_methodsByDeobf.containsKey( getMethodKey( name, signature ) );
+	}
+
+	public boolean containsArgument( MethodEntry obfMethodEntry, String name )
+	{
+		MethodMapping methodMapping = m_methodsByObf.get( getMethodKey( obfMethodEntry.getName(), obfMethodEntry.getSignature() ) );
+		if( methodMapping != null )
+		{
+			return methodMapping.containsArgument( name );
+		}
+		return false;
+	}
 }

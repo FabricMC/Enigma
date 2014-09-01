@@ -179,4 +179,39 @@ public class Mappings implements Serializable
 		}
 		return classNames;
 	}
+
+	public boolean containsDeobfClass( String deobfName )
+	{
+		return m_classesByDeobf.containsKey( deobfName );
+	}
+	
+	public boolean containsDeobfField( ClassEntry obfClassEntry, String deobfName )
+	{
+		ClassMapping classMapping = m_classesByObf.get( obfClassEntry.getName() );
+		if( classMapping != null )
+		{
+			return classMapping.containsDeobfField( deobfName );
+		}
+		return false;
+	}
+
+	public boolean containsDeobfMethod( ClassEntry obfClassEntry, String deobfName, String deobfSignature )
+	{
+		ClassMapping classMapping = m_classesByObf.get( obfClassEntry.getName() );
+		if( classMapping != null )
+		{
+			return classMapping.containsDeobfMethod( deobfName, deobfSignature );
+		}
+		return false;
+	}
+
+	public boolean containsArgument( MethodEntry obfMethodEntry, String name )
+	{
+		ClassMapping classMapping = m_classesByObf.get( obfMethodEntry.getClassName() );
+		if( classMapping != null )
+		{
+			return classMapping.containsArgument( obfMethodEntry, name );
+		}
+		return false;
+	}
 }

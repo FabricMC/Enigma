@@ -13,6 +13,7 @@ package cuchaz.enigma.mapping;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import cuchaz.enigma.analysis.JarIndex;
@@ -31,6 +32,12 @@ public class Renamer
 	public void setClassName( ClassEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateClassName( deobfName );
+		ClassEntry targetEntry = new ClassEntry( deobfName );
+		if( m_mappings.containsDeobfClass( deobfName ) || m_index.containsObfClass( targetEntry ) )
+		{
+			throw new IllegalNameException( deobfName, "There is already a class with that name" );
+		}
+		
 		ClassMapping classMapping = getOrCreateClassMapping( obf );
 		
 		if( obf.isInnerClass() )
@@ -50,13 +57,32 @@ public class Renamer
 	public void setFieldName( FieldEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateFieldName( deobfName );
+		FieldEntry targetEntry = new FieldEntry( obf.getClassEntry(), deobfName );
+		if( m_mappings.containsDeobfField( obf.getClassEntry(), deobfName ) || m_index.containsObfField( targetEntry ) )
+		{
+			throw new IllegalNameException( deobfName, "There is already a field with that name" );
+		}
+		
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
 		classMapping.setFieldName( obf.getName(), deobfName );
 	}
 	
 	public void setMethodTreeName( MethodEntry obf, String deobfName )
 	{
-		for( MethodEntry entry : m_index.getRelatedMethodImplementations( obf ) )
+		Set<MethodEntry> implementations = m_index.getRelatedMethodImplementations( obf );
+		
+		deobfName = NameValidator.validateMethodName( deobfName );
+		for( MethodEntry entry : implementations )
+		{
+			MethodEntry targetEntry = new MethodEntry( entry.getClassEntry(), deobfName, entry.getSignature() );
+			if( m_mappings.containsDeobfMethod( entry.getClassEntry(), deobfName, entry.getSignature() ) || m_index.containsObfMethod( targetEntry ) )
+			{
+				String className = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateClass( entry.getClassName() );
+				throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + className );
+			}
+		}
+		
+		for( MethodEntry entry : implementations )
 		{
 			setMethodName( entry, deobfName );
 		}
@@ -65,6 +91,13 @@ public class Renamer
 	public void setMethodName( MethodEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateMethodName( deobfName );
+		MethodEntry targetEntry = new MethodEntry( obf.getClassEntry(), deobfName, obf.getSignature() );
+		if( m_mappings.containsDeobfMethod( obf.getClassEntry(), deobfName, obf.getSignature() ) || m_index.containsObfMethod( targetEntry ) )
+		{
+			String className = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateClass( obf.getClassName() );
+			throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + className );
+		}
+		
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
 		String deobfSignature = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
 		classMapping.setMethodNameAndSignature( obf.getName(), obf.getSignature(), deobfName, deobfSignature );
@@ -73,6 +106,12 @@ public class Renamer
 	public void setArgumentName( ArgumentEntry obf, String deobfName )
 	{
 		deobfName = NameValidator.validateArgumentName( deobfName );
+		// NOTE: don't need to check arguments for name collisions with names determined by Procyon
+		if( m_mappings.containsArgument( obf.getMethodEntry(), deobfName ) )
+		{
+			throw new IllegalNameException( deobfName, "There is already an argument with that name" );
+		}
+		
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
 		classMapping.setArgumentName( obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), deobfName );
 	}
