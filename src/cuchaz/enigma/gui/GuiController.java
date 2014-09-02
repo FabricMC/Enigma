@@ -315,8 +315,8 @@ public class GuiController
 	
 	private void refreshClasses( )
 	{
-		List<String> obfClasses = Lists.newArrayList();
-		List<String> deobfClasses = Lists.newArrayList();
+		List<ClassEntry> obfClasses = Lists.newArrayList();
+		List<ClassEntry> deobfClasses = Lists.newArrayList();
 		m_deobfuscator.getSeparatedClasses( obfClasses, deobfClasses );
 		m_gui.setObfClasses( obfClasses );
 		m_gui.setDeobfClasses( deobfClasses );

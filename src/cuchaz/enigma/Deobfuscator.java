@@ -151,12 +151,12 @@ public class Deobfuscator
 		return m_mappings.getTranslator( m_jarIndex.getAncestries(), direction );
 	}
 	
-	public void getSeparatedClasses( List<String> obfClasses, List<String> deobfClasses )
+	public void getSeparatedClasses( List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses )
 	{
 		for( ClassEntry obfClassEntry : m_jarIndex.getObfClassEntries() )
 		{
 			// skip inner classes
-			if( m_jarIndex.getOuterClass( obfClassEntry.getName() ) != null )
+			if( obfClassEntry.isInnerClass() )
 			{
 				continue;
 			}
@@ -166,17 +166,17 @@ public class Deobfuscator
 			if( !deobfClassEntry.equals( obfClassEntry ) )
 			{
 				// if the class has a mapping, clearly it's deobfuscated
-				deobfClasses.add( deobfClassEntry.getName() );
+				deobfClasses.add( deobfClassEntry );
 			}
 			else if( !obfClassEntry.getPackageName().equals( Constants.NonePackage ) )
 			{
 				// also call it deobufscated if it's not in the none package
-				deobfClasses.add( obfClassEntry.getName() );
+				deobfClasses.add( obfClassEntry );
 			}
 			else
 			{
 				// otherwise, assume it's still obfuscated
-				obfClasses.add( obfClassEntry.getName() );
+				obfClasses.add( obfClassEntry );
 			}
 		}
 	}

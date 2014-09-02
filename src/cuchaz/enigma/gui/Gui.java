@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 
@@ -79,6 +78,7 @@ import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.ReferenceTreeNode;
 import cuchaz.enigma.analysis.Token;
+import cuchaz.enigma.gui.ClassSelector.ClassSelectionListener;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
@@ -90,61 +90,12 @@ import cuchaz.enigma.mapping.MethodEntry;
 
 public class Gui
 {
-	private static Comparator<String> m_obfClassSorter;
-	private static Comparator<String> m_deobfClassSorter;
-	
-	static
-	{
-		m_obfClassSorter = new Comparator<String>( )
-		{
-			@Override
-			public int compare( String a, String b )
-			{
-				if( a.length() != b.length() )
-				{
-					return a.length() - b.length();
-				}
-				return a.compareTo( b );
-			}
-		};
-		
-		m_deobfClassSorter = new Comparator<String>( )
-		{
-			@Override
-			public int compare( String a, String b )
-			{
-				// I can never keep this rule straight when writing these damn things...
-				// a < b => -1, a == b => 0, a > b => +1
-				
-				String[] aparts = a.split( "\\." );
-				String[] bparts = b.split( "\\." );
-				for( int i=0; true; i++ )
-				{
-					if( i >= aparts.length )
-					{
-						return -1;
-					}
-					else if( i >= bparts.length )
-					{
-						return 1;
-					}
-					
-					int result = aparts[i].compareTo( bparts[i] );
-					if( result != 0 )
-					{
-						return result;
-					}
-				}
-			}
-		};
-	}
-	
 	private GuiController m_controller;
 	
 	// controls
 	private JFrame m_frame;
-	private JList<String> m_obfClasses;
-	private JList<String> m_deobfClasses;
+	private ClassSelector m_obfClasses;
+	private ClassSelector m_deobfClasses;
 	private JEditorPane m_editor;
 	private JPanel m_classesPanel;
 	private JSplitPane m_splitClasses;
@@ -205,27 +156,17 @@ public class Gui
 		m_exportFileChooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
 		
 		// init obfuscated classes list
-		m_obfClasses = new JList<String>();
-		m_obfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
-		m_obfClasses.setLayoutOrientation( JList.VERTICAL );
-		m_obfClasses.setCellRenderer( new ClassListCellRenderer() );
-		m_obfClasses.addMouseListener( new MouseAdapter()
+		m_obfClasses = new ClassSelector( ClassSelector.ObfuscatedClassEntryComparator );
+		m_obfClasses.setListener( new ClassSelectionListener( )
 		{
 			@Override
-			public void mouseClicked( MouseEvent event )
+			public void onSelectClass( ClassEntry classEntry )
 			{
-				if( event.getClickCount() == 2 )
+				if( m_reference != null )
 				{
-					String selected = m_obfClasses.getSelectedValue();
-					if( selected != null )
-					{
-						if( m_reference != null )
-						{
-							m_controller.savePreviousReference( m_reference );
-						}
-						m_controller.openDeclaration( new ClassEntry( selected ) );
-					}
+					m_controller.savePreviousReference( m_reference );
 				}
+				m_controller.openDeclaration( classEntry );
 			}
 		} );
 		JScrollPane obfScroller = new JScrollPane( m_obfClasses );
@@ -235,27 +176,17 @@ public class Gui
 		obfPanel.add( obfScroller, BorderLayout.CENTER );
 		
 		// init deobfuscated classes list
-		m_deobfClasses = new JList<String>();
-		m_deobfClasses.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
-		m_deobfClasses.setLayoutOrientation( JList.VERTICAL );
-		m_deobfClasses.setCellRenderer( new ClassListCellRenderer() );
-		m_deobfClasses.addMouseListener( new MouseAdapter()
+		m_deobfClasses = new ClassSelector( ClassSelector.DeobfuscatedClassEntryComparator );
+		m_deobfClasses.setListener( new ClassSelectionListener( )
 		{
 			@Override
-			public void mouseClicked( MouseEvent event )
+			public void onSelectClass( ClassEntry classEntry )
 			{
-				if( event.getClickCount() == 2 )
+				if( m_reference != null )
 				{
-					String selected = m_deobfClasses.getSelectedValue();
-					if( selected != null )
-					{
-						if( m_reference != null )
-						{
-							m_controller.savePreviousReference( m_reference );
-						}
-						m_controller.openDeclaration( new ClassEntry( selected ) );
-					}
+					m_controller.savePreviousReference( m_reference );
 				}
+				m_controller.openDeclaration( classEntry );
 			}
 		} );
 		JScrollPane deobfScroller = new JScrollPane( m_deobfClasses );
@@ -266,6 +197,7 @@ public class Gui
 		
 		// set up classes panel (don't add the splitter yet)
 		m_splitClasses = new JSplitPane( JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel );
+		m_splitClasses.setResizeWeight( 0.3 );
 		m_classesPanel = new JPanel();
 		m_classesPanel.setLayout( new BorderLayout() );
 		m_classesPanel.setPreferredSize( new Dimension( 250, 0 ) );
@@ -847,32 +779,14 @@ public class Gui
 		redraw();
 	}
 	
-	public void setObfClasses( List<String> obfClasses )
+	public void setObfClasses( Collection<ClassEntry> obfClasses )
 	{
-		if( obfClasses != null )
-		{
-			Vector<String> sortedClasses = new Vector<String>( obfClasses );
-			Collections.sort( sortedClasses, m_obfClassSorter );
-			m_obfClasses.setListData( sortedClasses );
-		}
-		else
-		{
-			m_obfClasses.setListData( new Vector<String>() );
-		}
+		m_obfClasses.setClasses( obfClasses );
 	}
 	
-	public void setDeobfClasses( List<String> deobfClasses )
+	public void setDeobfClasses( Collection<ClassEntry> deobfClasses )
 	{
-		if( deobfClasses != null )
-		{
-			Vector<String> sortedClasses = new Vector<String>( deobfClasses );
-			Collections.sort( sortedClasses, m_deobfClassSorter );
-			m_deobfClasses.setListData( sortedClasses );
-		}
-		else
-		{
-			m_deobfClasses.setListData( new Vector<String>() );
-		}
+		m_deobfClasses.setClasses( deobfClasses );
 	}
 	
 	public void setMappingsFile( File file )
