@@ -16,10 +16,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 import javassist.bytecode.Descriptor;
 
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -42,9 +44,9 @@ import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Mappings;
+import cuchaz.enigma.mapping.MappingsRenamer;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.MethodMapping;
-import cuchaz.enigma.mapping.MappingsRenamer;
 import cuchaz.enigma.mapping.TranslationDirection;
 import cuchaz.enigma.mapping.Translator;
 
@@ -246,18 +248,12 @@ public class Deobfuscator
 	public void writeSources( File dirOut, ProgressListener progress )
 	throws IOException
 	{
-		int numClasses = m_jarIndex.getObfClassEntries().size();
-		if( progress != null )
-		{
-			progress.init( numClasses );
-		}
-		int i = 0;
-		
-		// DEOBFUSCATE ALL THE THINGS!! @_@
+		// get the classes to decompile
+		Set<ClassEntry> classEntries = Sets.newHashSet();
 		for( ClassEntry obfClassEntry : m_jarIndex.getObfClassEntries() )
 		{
 			// skip inner classes
-			if( m_jarIndex.getOuterClass( obfClassEntry.getName() ) != null )
+			if( obfClassEntry.isInnerClass() )
 			{
 				continue;
 			}
@@ -268,6 +264,18 @@ public class Deobfuscator
 				continue;
 			}
 			
+			classEntries.add( obfClassEntry );
+		}
+		
+		if( progress != null )
+		{
+			progress.init( classEntries.size() );
+		}
+		
+		// DEOBFUSCATE ALL THE THINGS!! @_@
+		int i = 0;
+		for( ClassEntry obfClassEntry : classEntries )
+		{
 			ClassEntry deobfClassEntry = deobfuscateEntry( new ClassEntry( obfClassEntry ) );
 			if( progress != null )
 			{
@@ -287,7 +295,7 @@ public class Deobfuscator
 		}
 		
 		// done!
-		progress.onProgress( numClasses, "Done!" );
+		progress.onProgress( classEntries.size(), "Done!" );
 	}
 	
 	public <T extends Entry> T obfuscateEntry( T deobfEntry )
