@@ -83,7 +83,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode
 	{
 		// get all the child nodes
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-		for( String subclassName : index.getAncestries().getSubclasses( m_entry.getClassName() ) )
+		for( String subclassName : index.getTranslationIndex().getSubclassNames( m_entry.getClassName() ) )
 		{
 			MethodEntry methodEntry = new MethodEntry(
 				new ClassEntry( subclassName ),

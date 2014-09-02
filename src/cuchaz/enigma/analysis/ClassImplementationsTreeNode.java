@@ -54,11 +54,11 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode
 		return className;
 	}
 	
-	public void load( Ancestries ancestries )
+	public void load( JarIndex index )
 	{
 		// get all method implementations
 		List<ClassImplementationsTreeNode> nodes = Lists.newArrayList();
-		for( String implementingClassName : ancestries.getImplementingClasses( m_entry.getClassName() ) )
+		for( String implementingClassName : index.getImplementingClasses( m_entry.getClassName() ) )
 		{
 			nodes.add( new ClassImplementationsTreeNode( m_deobfuscatingTranslator, new ClassEntry( implementingClassName ) ) );
 		}

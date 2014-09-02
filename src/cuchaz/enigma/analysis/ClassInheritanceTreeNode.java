@@ -53,11 +53,11 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode
 		return m_obfClassName;
 	}
 	
-	public void load( Ancestries ancestries, boolean recurse )
+	public void load( TranslationIndex ancestries, boolean recurse )
 	{
 		// get all the child nodes
 		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
-		for( String subclassName : ancestries.getSubclasses( m_obfClassName ) )
+		for( String subclassName : ancestries.getSubclassNames( m_obfClassName ) )
 		{
 			nodes.add( new ClassInheritanceTreeNode( m_deobfuscatingTranslator, subclassName ) );
 		}

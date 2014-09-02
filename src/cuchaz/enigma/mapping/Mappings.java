@@ -24,8 +24,7 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.Util;
-import cuchaz.enigma.analysis.Ancestries;
-import cuchaz.enigma.analysis.DeobfuscatedAncestries;
+import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class Mappings implements Serializable
@@ -108,12 +107,27 @@ public class Mappings implements Serializable
 		return m_classesByDeobf.get( deobfName );
 	}
 	
-	public Translator getTranslator( Ancestries ancestries, TranslationDirection direction )
+	public Translator getTranslator( TranslationIndex index, TranslationDirection direction )
 	{
+		if( direction == TranslationDirection.Obfuscating )
+		{
+			// deobfuscate the index
+			index = new TranslationIndex( index );
+			Map<String,String> renames = Maps.newHashMap();
+			for( ClassMapping classMapping : classes() )
+			{
+				renames.put( classMapping.getObfName(), classMapping.getDeobfName() );
+				for( ClassMapping innerClassMapping : classMapping.innerClasses() )
+				{
+					renames.put( innerClassMapping.getObfName(), innerClassMapping.getDeobfName() );
+				}
+			}
+			index.renameClasses( renames );
+		}
 		return new Translator(
 			direction,
 			direction.choose( m_classesByObf, m_classesByDeobf ),
-			direction.choose( ancestries, new DeobfuscatedAncestries( ancestries, m_classesByObf, m_classesByDeobf ) )
+			index
 		);
 	}
 	

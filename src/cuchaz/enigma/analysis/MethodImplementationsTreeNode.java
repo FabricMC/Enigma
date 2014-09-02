@@ -74,7 +74,7 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode
 	{
 		// get all method implementations
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
-		for( String implementingClassName : index.getAncestries().getImplementingClasses( m_entry.getClassName() ) )
+		for( String implementingClassName : index.getImplementingClasses( m_entry.getClassName() ) )
 		{
 			MethodEntry methodEntry = new MethodEntry(
 				new ClassEntry( implementingClassName ),

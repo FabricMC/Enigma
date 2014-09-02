@@ -18,12 +18,12 @@ import java.util.zip.GZIPOutputStream;
 
 import cuchaz.enigma.analysis.JarIndex;
 
-public class Renamer
+public class MappingsRenamer
 {
 	private JarIndex m_index;
 	private Mappings m_mappings;
 	
-	public Renamer( JarIndex index, Mappings mappings )
+	public MappingsRenamer( JarIndex index, Mappings mappings )
 	{
 		m_index = index;
 		m_mappings = mappings;
@@ -77,8 +77,8 @@ public class Renamer
 			MethodEntry targetEntry = new MethodEntry( entry.getClassEntry(), deobfName, entry.getSignature() );
 			if( m_mappings.containsDeobfMethod( entry.getClassEntry(), deobfName, entry.getSignature() ) || m_index.containsObfMethod( targetEntry ) )
 			{
-				String className = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateClass( entry.getClassName() );
-				throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + className );
+				String deobfClassName = getTranslator( TranslationDirection.Deobfuscating ).translateClass( entry.getClassName() );
+				throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + deobfClassName );
 			}
 		}
 		
@@ -94,12 +94,12 @@ public class Renamer
 		MethodEntry targetEntry = new MethodEntry( obf.getClassEntry(), deobfName, obf.getSignature() );
 		if( m_mappings.containsDeobfMethod( obf.getClassEntry(), deobfName, obf.getSignature() ) || m_index.containsObfMethod( targetEntry ) )
 		{
-			String className = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateClass( obf.getClassName() );
-			throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + className );
+			String deobfClassName = getTranslator( TranslationDirection.Deobfuscating ).translateClass( obf.getClassName() );
+			throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + deobfClassName );
 		}
 		
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
-		String deobfSignature = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
+		String deobfSignature = getTranslator( TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
 		classMapping.setMethodNameAndSignature( obf.getName(), obf.getSignature(), deobfName, deobfSignature );
 	}
 	
@@ -151,10 +151,14 @@ public class Renamer
 	
 	private void updateDeobfMethodSignatures( )
 	{
-		Translator translator = m_mappings.getTranslator( m_index.getAncestries(), TranslationDirection.Deobfuscating );
 		for( ClassMapping classMapping : m_mappings.m_classesByObf.values() )
 		{
-			classMapping.updateDeobfMethodSignatures( translator );
+			classMapping.updateDeobfMethodSignatures( getTranslator( TranslationDirection.Deobfuscating ) );
 		}
+	}
+	
+	private Translator getTranslator( TranslationDirection direction )
+	{
+		return m_mappings.getTranslator( m_index.getTranslationIndex(), direction );
 	}
 }

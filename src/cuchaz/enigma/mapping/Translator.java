@@ -16,27 +16,27 @@ import java.util.Map;
 
 import com.beust.jcommander.internal.Maps;
 
-import cuchaz.enigma.analysis.Ancestries;
+import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class Translator
 {
 	private TranslationDirection m_direction;
-	public Map<String,ClassMapping> m_classes;
-	private Ancestries m_ancestries;
+	private Map<String,ClassMapping> m_classes;
+	private TranslationIndex m_index;
 	
 	public Translator( )
 	{
 		m_direction = null;
 		m_classes = Maps.newHashMap();
-		m_ancestries = new Ancestries();
+		m_index = new TranslationIndex();
 	}
 	
-	protected Translator( TranslationDirection direction, Map<String,ClassMapping> classes, Ancestries ancestries )
+	public Translator( TranslationDirection direction, Map<String,ClassMapping> classes, TranslationIndex index )
 	{
 		m_direction = direction;
 		m_classes = classes;
-		m_ancestries = ancestries;
+		m_index = index;
 	}
 	
 	@SuppressWarnings( "unchecked" )
@@ -144,6 +144,13 @@ public class Translator
 				{
 					return translatedName;
 				}
+			}
+			
+			// is the field implemented in this class?
+			if( m_index.containsField( className, in.getName() ) )
+			{
+				// stop traversing the superclass chain
+				break;
 			}
 		}
 		return null;
@@ -291,7 +298,7 @@ public class Translator
 	{
 		List<String> ancestry = new ArrayList<String>();
 		ancestry.add( className );
-		ancestry.addAll( m_ancestries.getAncestry( className ) );
+		ancestry.addAll( m_index.getAncestry( className ) );
 		return ancestry;
 	}
 	

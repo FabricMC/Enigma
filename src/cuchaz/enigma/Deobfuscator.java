@@ -15,10 +15,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarFile;
 
 import javassist.bytecode.Descriptor;
 
+import com.google.common.collect.Maps;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.DecompilerContext;
@@ -42,7 +44,7 @@ import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.MethodMapping;
-import cuchaz.enigma.mapping.Renamer;
+import cuchaz.enigma.mapping.MappingsRenamer;
 import cuchaz.enigma.mapping.TranslationDirection;
 import cuchaz.enigma.mapping.Translator;
 
@@ -59,8 +61,8 @@ public class Deobfuscator
 	private DecompilerSettings m_settings;
 	private JarIndex m_jarIndex;
 	private Mappings m_mappings;
-	private Renamer m_renamer;
-	private TranslatingTypeLoader m_typeLoader;
+	private MappingsRenamer m_renamer;
+	private Map<TranslationDirection,Translator> m_translatorCache;
 	
 	public Deobfuscator( File file )
 	throws IOException
@@ -77,6 +79,9 @@ public class Deobfuscator
 		m_settings.setForceExplicitImports( true );
 		// DEBUG
 		//m_settings.setShowSyntheticMembers( true );
+		
+		// init defaults
+		m_translatorCache = Maps.newTreeMap();
 		
 		// init mappings
 		setMappings( new Mappings() );
@@ -134,21 +139,19 @@ public class Deobfuscator
 		}
 		
 		m_mappings = val;
-		m_renamer = new Renamer( m_jarIndex, m_mappings );
-		
-		// update decompiler options
-		m_typeLoader = new TranslatingTypeLoader(
-			m_jar,
-			m_jarIndex,
-			getTranslator( TranslationDirection.Obfuscating ),
-			getTranslator( TranslationDirection.Deobfuscating )
-		);
-		m_settings.setTypeLoader( m_typeLoader );
+		m_renamer = new MappingsRenamer( m_jarIndex, m_mappings );
+		m_translatorCache.clear();
 	}
 	
 	public Translator getTranslator( TranslationDirection direction )
 	{
-		return m_mappings.getTranslator( m_jarIndex.getAncestries(), direction );
+		Translator translator = m_translatorCache.get( direction );
+		if( translator == null )
+		{
+			translator = m_mappings.getTranslator( m_jarIndex.getTranslationIndex(), direction );
+			m_translatorCache.put( direction, translator );
+		}
+		return translator;
 	}
 	
 	public void getSeparatedClasses( List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses )
@@ -191,6 +194,14 @@ public class Deobfuscator
 		{
 			className = classMapping.getDeobfName();
 		}
+		
+		// set the type loader
+		m_settings.setTypeLoader( new TranslatingTypeLoader(
+			m_jar,
+			m_jarIndex,
+			getTranslator( TranslationDirection.Obfuscating ),
+			getTranslator( TranslationDirection.Deobfuscating )
+		) );
 		
 		// decompile it!
 		TypeDefinition resolvedType = new MetadataSystem( m_settings.getTypeLoader() ).lookupType( className ).resolve();
@@ -350,8 +361,8 @@ public class Deobfuscator
 			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
 		}
 		
-		// clear the type loader cache
-		m_typeLoader.clearCache();
+		// clear caches
+		m_translatorCache.clear();
 	}
 	
 	public boolean hasMapping( Entry obfEntry )
