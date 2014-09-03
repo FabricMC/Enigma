@@ -13,3 +13,5 @@ syntax: regexp
 ^build$
 syntax: regexp
 ^data$
+syntax: regexp
+^input$
