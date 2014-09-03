@@ -55,16 +55,16 @@ public class ClassMatcher
 	throws IOException, MappingParseException
 	{
 		// TEMP
-		JarFile sourceJar = new JarFile( new File( "input/1.8-pre1.jar" ) );
-		JarFile destJar = new JarFile( new File( "input/1.8-pre3.jar" ) );
-		File inMappingsFile = new File( "../minecraft-mappings/1.8-pre.mappings" );
-		File outMappingsFile = new File( "../minecraft-mappings/1.8-pre3.mappings" );
+		JarFile sourceJar = new JarFile( new File( "input/1.8-pre3.jar" ) );
+		JarFile destJar = new JarFile( new File( "input/1.8.jar" ) );
+		File inMappingsFile = new File( "../minecraft-mappings/1.8-pre3.mappings" );
+		File outMappingsFile = new File( "../minecraft-mappings/1.8.mappings" );
 		
 		// define a matching to use when the automated system cannot find a match
 		Map<String,String> fallbackMatching = Maps.newHashMap();
-		fallbackMatching.put( "none/ayb", "none/ayb" );
+		fallbackMatching.put( "none/ayb", "none/ayf" );
 		fallbackMatching.put( "none/ayd", "none/ayd" );
-		fallbackMatching.put( "none/bgk", "none/bgk" );
+		fallbackMatching.put( "none/bgk", "unknown/bgk" );
 		
 		// do the conversion
 		Mappings mappings = new MappingsReader().read( new FileReader( inMappingsFile ) );
