@@ -37,7 +37,14 @@ public class MappingsWriter
 	private void write( PrintWriter out, ClassMapping classMapping, int depth )
 	throws IOException
 	{
-		out.format( "%sCLASS %s %s\n", getIndent( depth ), classMapping.getObfName(), classMapping.getDeobfName() );
+		if( classMapping.getDeobfName() == null )
+		{
+			out.format( "%sCLASS %s\n", getIndent( depth ), classMapping.getObfName() );
+		}
+		else
+		{
+			out.format( "%sCLASS %s %s\n", getIndent( depth ), classMapping.getObfName(), classMapping.getDeobfName() );
+		}
 		
 		for( ClassMapping innerClassMapping : sorted( classMapping.innerClasses() ) )
 		{
@@ -64,11 +71,21 @@ public class MappingsWriter
 	private void write( PrintWriter out, MethodMapping methodMapping, int depth )
 	throws IOException
 	{
-		out.format( "%sMETHOD %s %s %s %s\n",
-			getIndent( depth ),
-			methodMapping.getObfName(), methodMapping.getDeobfName(),
-			methodMapping.getObfSignature(), methodMapping.getDeobfSignature()
-		);
+		if( methodMapping.getDeobfName() == null )
+		{
+			out.format( "%sMETHOD %s %s\n",
+				getIndent( depth ),
+				methodMapping.getObfName(), methodMapping.getObfSignature()
+			);
+		}
+		else
+		{
+			out.format( "%sMETHOD %s %s %s %s\n",
+				getIndent( depth ),
+				methodMapping.getObfName(), methodMapping.getDeobfName(),
+				methodMapping.getObfSignature(), methodMapping.getDeobfSignature()
+			);
+		}
 		
 		for( ArgumentMapping argumentMapping : sorted( methodMapping.arguments() ) )
 		{

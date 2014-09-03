@@ -57,7 +57,11 @@ public class NameValidator
 	
 	public static String validateClassName( String name )
 	{
-		if( name == null || !ClassPattern.matcher( name ).matches() || ReservedWords.contains( name ) )
+		if( name == null )
+		{
+			return null;
+		}
+		if( !ClassPattern.matcher( name ).matches() || ReservedWords.contains( name ) )
 		{
 			throw new IllegalNameException( name, "This doesn't look like a legal class name" );
 		}
@@ -70,7 +74,11 @@ public class NameValidator
 	
 	public static String validateFieldName( String name )
 	{
-		if( name == null || !IdentifierPattern.matcher( name ).matches() || ReservedWords.contains( name ) )
+		if( name == null )
+		{
+			return null;
+		}
+		if( !IdentifierPattern.matcher( name ).matches() || ReservedWords.contains( name ) )
 		{
 			throw new IllegalNameException( name, "This doesn't look like a legal identifier" );
 		}

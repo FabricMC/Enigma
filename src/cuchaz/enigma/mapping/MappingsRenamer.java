@@ -46,9 +46,11 @@ public class MappingsRenamer
 		}
 		else
 		{
-			m_mappings.m_classesByDeobf.remove( classMapping.getDeobfName() );
+			boolean wasRemoved = m_mappings.m_classesByDeobf.remove( classMapping.getDeobfName() ) != null;
+			assert( wasRemoved );
 			classMapping.setDeobfName( deobfName );
-			m_mappings.m_classesByDeobf.put( deobfName, classMapping );
+			boolean wasAdded = m_mappings.m_classesByDeobf.put( deobfName, classMapping ) == null;
+			assert( wasAdded );
 		}
 		
 		updateDeobfMethodSignatures();
@@ -132,9 +134,11 @@ public class MappingsRenamer
 		ClassMapping classMapping = m_mappings.m_classesByObf.get( obfClassName );
 		if( classMapping == null )
 		{
-			classMapping = new ClassMapping( obfClassName, obfClassName );
-			m_mappings.m_classesByObf.put( classMapping.getObfName(), classMapping );
-			m_mappings.m_classesByDeobf.put( classMapping.getDeobfName(), classMapping );
+			classMapping = new ClassMapping( obfClassName );
+			boolean obfWasAdded = m_mappings.m_classesByObf.put( classMapping.getObfName(), classMapping ) == null;
+			assert( obfWasAdded );
+			boolean deobfWasAdded = m_mappings.m_classesByDeobf.put( classMapping.getDeobfName(), classMapping ) == null;
+			assert( deobfWasAdded );
 		}
 		return classMapping;
 	}

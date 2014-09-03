@@ -192,7 +192,7 @@ public class Deobfuscator
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
 		// the decompiler only sees the deobfuscated class, so we need to load it by the deobfuscated name
 		ClassMapping classMapping = m_mappings.getClassByObf( className );
-		if( classMapping != null )
+		if( classMapping != null && classMapping.getDeobfName() != null )
 		{
 			className = classMapping.getDeobfName();
 		}

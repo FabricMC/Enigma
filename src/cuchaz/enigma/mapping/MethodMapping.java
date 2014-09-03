@@ -26,8 +26,12 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 	private String m_deobfSignature;
 	private Map<Integer,ArgumentMapping> m_arguments;
 	
-	// NOTE: this argument order is important for the MethodReader/MethodWriter
-	public MethodMapping( String obfName, String deobfName, String obfSignature, String deobfSignature )
+	public MethodMapping( String obfName, String obfSignature )
+	{
+		this( obfName, obfSignature, null, null );
+	}
+	
+	public MethodMapping( String obfName, String obfSignature, String deobfName, String deobfSignature )
 	{
 		m_obfName = obfName;
 		m_deobfName = NameValidator.validateMethodName( deobfName );
@@ -69,9 +73,10 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 		return m_arguments.values();
 	}
 	
-	protected void addArgumentMapping( ArgumentMapping argumentMapping )
+	public void addArgumentMapping( ArgumentMapping argumentMapping )
 	{
-		m_arguments.put( argumentMapping.getIndex(), argumentMapping );
+		boolean wasAdded = m_arguments.put( argumentMapping.getIndex(), argumentMapping ) == null;
+		assert( wasAdded );
 	}
 	
 	public String getObfArgumentName( int index )
@@ -102,7 +107,8 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 		if( argumentMapping == null )
 		{
 			argumentMapping = new ArgumentMapping( index, name );
-			m_arguments.put( index, argumentMapping );
+			boolean wasAdded = m_arguments.put( index, argumentMapping ) == null;
+			assert( wasAdded );
 		}
 		else
 		{

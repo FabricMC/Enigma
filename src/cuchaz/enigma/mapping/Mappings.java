@@ -47,7 +47,10 @@ public class Mappings implements Serializable
 		for( ClassMapping classMapping : classes )
 		{
 			m_classesByObf.put( classMapping.getObfName(), classMapping );
-			m_classesByDeobf.put( classMapping.getDeobfName(), classMapping );
+			if( classMapping.getDeobfName() != null )
+			{
+				m_classesByDeobf.put( classMapping.getDeobfName(), classMapping );
+			}
 		}
 	}
 	
@@ -68,23 +71,27 @@ public class Mappings implements Serializable
 	
 	public Collection<ClassMapping> classes( )
 	{
-		assert( m_classesByObf.size() == m_classesByDeobf.size() );
+		assert( m_classesByObf.size() >= m_classesByDeobf.size() );
 		return m_classesByObf.values();
 	}
 	
-	protected void addClassMapping( ClassMapping classMapping )
+	public void addClassMapping( ClassMapping classMapping )
 	{
 		if( m_classesByObf.containsKey( classMapping.getObfName() ) )
 		{
 			throw new Error( "Already have mapping for " + classMapping.getObfName() );
 		}
-		if( m_classesByDeobf.containsKey( classMapping.getDeobfName() ) )
+		boolean obfWasAdded = m_classesByObf.put( classMapping.getObfName(), classMapping ) == null;
+		assert( obfWasAdded );
+		if( classMapping.getDeobfName() != null )
 		{
-			throw new Error( "Already have mapping for " + classMapping.getDeobfName() );
+			if( m_classesByDeobf.containsKey( classMapping.getDeobfName() ) )
+			{
+				throw new Error( "Already have mapping for " + classMapping.getDeobfName() );
+			}
+			boolean deobfWasAdded = m_classesByDeobf.put( classMapping.getDeobfName(), classMapping ) == null;
+			assert( deobfWasAdded );
 		}
-		m_classesByObf.put( classMapping.getObfName(), classMapping );
-		m_classesByDeobf.put( classMapping.getDeobfName(), classMapping );
-		assert( m_classesByObf.size() == m_classesByDeobf.size() );
 	}
 	
 	public ClassMapping getClassByObf( ClassEntry entry )
@@ -99,7 +106,7 @@ public class Mappings implements Serializable
 	
 	public ClassMapping getClassByDeobf( ClassEntry entry )
 	{
-		return getClassByObf( entry.getName() );
+		return getClassByDeobf( entry.getName() );
 	}
 	
 	public ClassMapping getClassByDeobf( String deobfName )
@@ -109,26 +116,52 @@ public class Mappings implements Serializable
 	
 	public Translator getTranslator( TranslationIndex index, TranslationDirection direction )
 	{
-		if( direction == TranslationDirection.Obfuscating )
+		switch( direction )
 		{
-			// deobfuscate the index
-			index = new TranslationIndex( index );
-			Map<String,String> renames = Maps.newHashMap();
-			for( ClassMapping classMapping : classes() )
-			{
-				renames.put( classMapping.getObfName(), classMapping.getDeobfName() );
-				for( ClassMapping innerClassMapping : classMapping.innerClasses() )
+			case Deobfuscating:
+				
+				return new Translator( direction, m_classesByObf, index );
+				
+			case Obfuscating:
+				
+				// deobfuscate the index
+				index = new TranslationIndex( index );
+				Map<String,String> renames = Maps.newHashMap();
+				for( ClassMapping classMapping : classes() )
 				{
-					renames.put( innerClassMapping.getObfName(), innerClassMapping.getDeobfName() );
+					if( classMapping.getDeobfName() != null )
+					{
+						renames.put( classMapping.getObfName(), classMapping.getDeobfName() );
+					}
+					for( ClassMapping innerClassMapping : classMapping.innerClasses() )
+					{
+						if( innerClassMapping.getDeobfName() != null )
+						{
+							renames.put( innerClassMapping.getObfName(), innerClassMapping.getDeobfName() );
+						}
+					}
 				}
-			}
-			index.renameClasses( renames );
+				index.renameClasses( renames );
+				
+				// fill in the missing deobf class entries with obf entries
+				Map<String,ClassMapping> classes = Maps.newHashMap();
+				for( ClassMapping classMapping : classes() )
+				{
+					if( classMapping.getDeobfName() != null )
+					{
+						classes.put( classMapping.getDeobfName(), classMapping );
+					}
+					else
+					{
+						classes.put( classMapping.getObfName(), classMapping );
+					}
+				}
+				
+				return new Translator( direction, classes, index );
+				
+			default:
+				throw new Error( "Invalid translation direction!" );
 		}
-		return new Translator(
-			direction,
-			direction.choose( m_classesByObf, m_classesByDeobf ),
-			index
-		);
 	}
 	
 	public static Mappings newFromStream( InputStream in )
@@ -162,9 +195,10 @@ public class Mappings implements Serializable
 		{
 			if( classMapping.renameObfClass( oldObfName, newObfName ) )
 			{
-				m_classesByObf.remove( oldObfName );
-				m_classesByObf.put( newObfName, classMapping );
-				assert( m_classesByObf.size() == m_classesByDeobf.size() );
+				boolean wasRemoved = m_classesByObf.remove( oldObfName ) != null;
+				assert( wasRemoved );
+				boolean wasAdded = m_classesByObf.put( newObfName, classMapping ) == null;
+				assert( wasAdded );
 			}
 		}
 	}

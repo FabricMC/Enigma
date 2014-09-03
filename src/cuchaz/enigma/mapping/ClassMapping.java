@@ -29,7 +29,11 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	private Map<String,MethodMapping> m_methodsByObf;
 	private Map<String,MethodMapping> m_methodsByDeobf;
 	
-	// NOTE: this argument order is important for the MethodReader/MethodWriter
+	public ClassMapping( String obfName )
+	{
+		this( obfName, null );
+	}
+	
 	public ClassMapping( String obfName, String deobfName )
 	{
 		m_obfName = obfName;
@@ -60,14 +64,19 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	
 	public Iterable<ClassMapping> innerClasses( )
 	{
-		assert( m_innerClassesByObf.size() == m_innerClassesByDeobf.size() );
+		assert( m_innerClassesByObf.size() >= m_innerClassesByDeobf.size() );
 		return m_innerClassesByObf.values();
 	}
 	
-	protected void addInnerClassMapping( ClassMapping classMapping )
+	public void addInnerClassMapping( ClassMapping classMapping )
 	{
-		m_innerClassesByObf.put( classMapping.getObfName(), classMapping );
-		m_innerClassesByDeobf.put( classMapping.getDeobfName(), classMapping );
+		boolean obfWasAdded = m_innerClassesByObf.put( classMapping.getObfName(), classMapping ) == null;
+		assert( obfWasAdded );
+		if( classMapping.getDeobfName() != null )
+		{
+			boolean deobfWasAdded = m_innerClassesByDeobf.put( classMapping.getDeobfName(), classMapping ) == null;
+			assert( deobfWasAdded );
+		}
 	}
 	
 	public ClassMapping getOrCreateInnerClass( String obfName )
@@ -75,9 +84,9 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		ClassMapping classMapping = m_innerClassesByObf.get( obfName );
 		if( classMapping == null )
 		{
-			classMapping = new ClassMapping( obfName, obfName );
-			m_innerClassesByObf.put( obfName, classMapping );
-			m_innerClassesByDeobf.put( obfName, classMapping );
+			classMapping = new ClassMapping( obfName );
+			boolean wasAdded = m_innerClassesByObf.put( obfName, classMapping ) == null;
+			assert( wasAdded );
 		}
 		return classMapping;
 	}
@@ -115,9 +124,11 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	public void setInnerClassName( String obfName, String deobfName )
 	{
 		ClassMapping classMapping = getOrCreateInnerClass( obfName );
-		m_innerClassesByDeobf.remove( classMapping.getDeobfName() );
+		boolean wasRemoved = m_innerClassesByDeobf.remove( classMapping.getDeobfName() ) != null;
+		assert( wasRemoved );
 		classMapping.setDeobfName( deobfName );
-		m_innerClassesByDeobf.put( deobfName, classMapping );
+		boolean wasAdded = m_innerClassesByDeobf.put( deobfName, classMapping ) == null;
+		assert( wasAdded );
 	}
 	
 	//// FIELDS ////////
@@ -128,7 +139,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		return m_fieldsByObf.values();
 	}
 	
-	protected void addFieldMapping( FieldMapping fieldMapping )
+	public void addFieldMapping( FieldMapping fieldMapping )
 	{
 		if( m_fieldsByObf.containsKey( fieldMapping.getObfName() ) )
 		{
@@ -138,8 +149,10 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		{
 			throw new Error( "Already have mapping for " + m_deobfName + "." + fieldMapping.getDeobfName() );
 		}
-		m_fieldsByObf.put( fieldMapping.getObfName(), fieldMapping );
-		m_fieldsByDeobf.put( fieldMapping.getDeobfName(), fieldMapping );
+		boolean obfWasAdded = m_fieldsByObf.put( fieldMapping.getObfName(), fieldMapping ) == null;
+		assert( obfWasAdded );
+		boolean deobfWasAdded = m_fieldsByDeobf.put( fieldMapping.getDeobfName(), fieldMapping ) == null;
+		assert( deobfWasAdded );
 		assert( m_fieldsByObf.size() == m_fieldsByDeobf.size() );
 	}
 
@@ -169,38 +182,47 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		if( fieldMapping == null )
 		{
 			fieldMapping = new FieldMapping( obfName, deobfName );
-			m_fieldsByObf.put( obfName, fieldMapping );
-			m_fieldsByDeobf.put( deobfName, fieldMapping );
+			boolean obfWasAdded = m_fieldsByObf.put( obfName, fieldMapping ) == null;
+			assert( obfWasAdded );
 		}
-		
-		m_fieldsByDeobf.remove( fieldMapping.getDeobfName() );
+		else
+		{
+			boolean wasRemoved = m_fieldsByDeobf.remove( fieldMapping.getDeobfName() ) != null;
+			assert( wasRemoved );
+		}
 		fieldMapping.setDeobfName( deobfName );
-		m_fieldsByDeobf.put( deobfName, fieldMapping );
+		boolean wasAdded = m_fieldsByDeobf.put( deobfName, fieldMapping ) == null;
+		assert( wasAdded );
 	}
 	
 	//// METHODS ////////
 	
 	public Iterable<MethodMapping> methods( )
 	{
-		assert( m_methodsByObf.size() == m_methodsByDeobf.size() );
+		assert( m_methodsByObf.size() >= m_methodsByDeobf.size() );
 		return m_methodsByObf.values();
 	}
 	
-	protected void addMethodMapping( MethodMapping methodMapping )
+	public void addMethodMapping( MethodMapping methodMapping )
 	{
 		String obfKey = getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() );
-		String deobfKey = getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() );
 		if( m_methodsByObf.containsKey( obfKey ) )
 		{
 			throw new Error( "Already have mapping for " + m_obfName + "." + obfKey );
 		}
-		if( m_methodsByDeobf.containsKey( deobfKey ) )
+		boolean wasAdded = m_methodsByObf.put( obfKey, methodMapping ) == null;
+		assert( wasAdded );
+		if( methodMapping.getDeobfName() != null )
 		{
-			throw new Error( "Already have mapping for " + m_deobfName + "." + deobfKey );
+			String deobfKey = getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() );
+			if( m_methodsByDeobf.containsKey( deobfKey ) )
+			{
+				throw new Error( "Already have mapping for " + m_deobfName + "." + deobfKey );
+			}
+			boolean deobfWasAdded = m_methodsByDeobf.put( deobfKey, methodMapping ) == null;
+			assert( deobfWasAdded );
 		}
-		m_methodsByObf.put( obfKey, methodMapping );
-		m_methodsByDeobf.put( deobfKey, methodMapping );
-		assert( m_methodsByObf.size() == m_methodsByDeobf.size() );
+		assert( m_methodsByObf.size() >= m_methodsByDeobf.size() );
 	}
 	
 	public MethodMapping getMethodByObf( String obfName, String signature )
@@ -231,13 +253,17 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		MethodMapping methodMapping = m_methodsByObf.get( getMethodKey( obfName, obfSignature ) );
 		if( methodMapping == null )
 		{
-			methodMapping = createMethodIndex( obfName, obfSignature );
+			methodMapping = createMethodMapping( obfName, obfSignature );
 		}
-		
-		m_methodsByDeobf.remove( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ) );
+		else
+		{
+			boolean wasRemoved = m_methodsByDeobf.remove( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ) ) != null;
+			assert( wasRemoved );
+		}
 		methodMapping.setDeobfName( deobfName );
 		methodMapping.setDeobfSignature( deobfSignature );
-		m_methodsByDeobf.put( getMethodKey( deobfName, deobfSignature ), methodMapping );
+		boolean wasAdded = m_methodsByDeobf.put( getMethodKey( deobfName, deobfSignature ), methodMapping ) == null;
+		assert( wasAdded );
 	}
 	
 	public void updateDeobfMethodSignatures( Translator translator )
@@ -255,17 +281,16 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		MethodMapping methodIndex = m_methodsByObf.get( getMethodKey( obfMethodName, obfMethodSignature ) );
 		if( methodIndex == null )
 		{
-			methodIndex = createMethodIndex( obfMethodName, obfMethodSignature );
+			methodIndex = createMethodMapping( obfMethodName, obfMethodSignature );
 		}
 		methodIndex.setArgumentName( argumentIndex, argumentName );
 	}
 
-	private MethodMapping createMethodIndex( String obfName, String obfSignature )
+	private MethodMapping createMethodMapping( String obfName, String obfSignature )
 	{
-		MethodMapping methodMapping = new MethodMapping( obfName, obfName, obfSignature, obfSignature );
-		String key = getMethodKey( obfName, obfSignature );
-		m_methodsByObf.put( key, methodMapping );
-		m_methodsByDeobf.put( key, methodMapping );
+		MethodMapping methodMapping = new MethodMapping( obfName, obfSignature );
+		boolean wasAdded = m_methodsByObf.put( getMethodKey( obfName, obfSignature ), methodMapping ) == null;
+		assert( wasAdded );
 		return methodMapping;
 	}
 
@@ -308,9 +333,10 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		{
 			if( innerClassMapping.renameObfClass( oldObfClassName, newObfClassName ) )
 			{
-				m_innerClassesByObf.remove( oldObfClassName );
-				m_innerClassesByObf.put( newObfClassName, innerClassMapping );
-				assert( m_innerClassesByObf.size() == m_innerClassesByDeobf.size() );
+				boolean wasRemoved = m_innerClassesByObf.remove( oldObfClassName ) != null;
+				assert( wasRemoved );
+				boolean wasAdded = m_innerClassesByObf.put( newObfClassName, innerClassMapping ) == null;
+				assert( wasAdded );
 			}
 		}
 		
@@ -320,9 +346,10 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 			String oldMethodKey = getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() );
 			if( methodMapping.renameObfClass( oldObfClassName, newObfClassName ) )
 			{
-				m_methodsByObf.remove( oldMethodKey );
-				m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping );
-				assert( m_methodsByObf.size() == m_methodsByDeobf.size() );
+				boolean wasRemoved = m_methodsByObf.remove( oldMethodKey ) != null;
+				assert( wasRemoved );
+				boolean wasAdded = m_methodsByObf.put( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ), methodMapping ) == null;
+				assert( wasAdded );
 			}
 		}
 		

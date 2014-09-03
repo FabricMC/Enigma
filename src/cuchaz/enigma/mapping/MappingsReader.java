@@ -14,13 +14,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Deque;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 import com.google.common.collect.Queues;
 
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.Util;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class MappingsReader
@@ -73,89 +70,99 @@ public class MappingsReader
 				mappingStack.pop();
 			}
 			
-			Scanner scanner = new Scanner( line );
+			String[] parts = line.trim().split( "\\s" );
 			try
 			{
-				while( scanner.hasNext() )
+				// read the first token
+				String token = parts[0];
+				
+				if( token.equalsIgnoreCase( "CLASS" ) )
 				{
-					// read the first token
-					String token = scanner.next();
-					
-					if( token.equalsIgnoreCase( "CLASS" ) )
+					ClassMapping classMapping = readClass( parts );
+					if( indent == 0 )
 					{
-						ClassMapping classMapping = readClass( scanner );
-						if( indent == 0 )
-						{
-							// outer class
-							mappings.addClassMapping( classMapping );
-						}
-						else if( indent == 1 )
-						{
-							// inner class
-							if( !( mappingStack.getFirst() instanceof ClassMapping ) )
-							{
-								throw new MappingParseException( lineNumber, "Unexpected CLASS entry here!" );
-							}
-							((ClassMapping)mappingStack.getFirst()).addInnerClassMapping( classMapping );
-						}
-						else
+						// outer class
+						mappings.addClassMapping( classMapping );
+					}
+					else if( indent == 1 )
+					{
+						// inner class
+						if( !( mappingStack.getFirst() instanceof ClassMapping ) )
 						{
 							throw new MappingParseException( lineNumber, "Unexpected CLASS entry here!" );
 						}
-						mappingStack.push( classMapping );
+						((ClassMapping)mappingStack.getFirst()).addInnerClassMapping( classMapping );
 					}
-					else if( token.equalsIgnoreCase( "FIELD" ) )
+					else
 					{
-						if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof ClassMapping) )
-						{
-							throw new MappingParseException( lineNumber, "Unexpected FIELD entry here!" );
-						}
-						((ClassMapping)mappingStack.getFirst()).addFieldMapping( readField( scanner ) );
+						throw new MappingParseException( lineNumber, "Unexpected CLASS entry here!" );
 					}
-					else if( token.equalsIgnoreCase( "METHOD" ) )
+					mappingStack.push( classMapping );
+				}
+				else if( token.equalsIgnoreCase( "FIELD" ) )
+				{
+					if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof ClassMapping) )
 					{
-						if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof ClassMapping) )
-						{
-							throw new MappingParseException( lineNumber, "Unexpected METHOD entry here!" );
-						}
-						MethodMapping methodMapping = readMethod( scanner );
-						((ClassMapping)mappingStack.getFirst()).addMethodMapping( methodMapping );
-						mappingStack.push( methodMapping );
+						throw new MappingParseException( lineNumber, "Unexpected FIELD entry here!" );
 					}
-					else if( token.equalsIgnoreCase( "ARG" ) )
+					((ClassMapping)mappingStack.getFirst()).addFieldMapping( readField( parts ) );
+				}
+				else if( token.equalsIgnoreCase( "METHOD" ) )
+				{
+					if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof ClassMapping) )
 					{
-						if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof MethodMapping) )
-						{
-							throw new MappingParseException( lineNumber, "Unexpected ARG entry here!" );
-						}
-						((MethodMapping)mappingStack.getFirst()).addArgumentMapping( readArgument( scanner ) );
+						throw new MappingParseException( lineNumber, "Unexpected METHOD entry here!" );
 					}
+					MethodMapping methodMapping = readMethod( parts );
+					((ClassMapping)mappingStack.getFirst()).addMethodMapping( methodMapping );
+					mappingStack.push( methodMapping );
+				}
+				else if( token.equalsIgnoreCase( "ARG" ) )
+				{
+					if( mappingStack.isEmpty() || !(mappingStack.getFirst() instanceof MethodMapping) )
+					{
+						throw new MappingParseException( lineNumber, "Unexpected ARG entry here!" );
+					}
+					((MethodMapping)mappingStack.getFirst()).addArgumentMapping( readArgument( parts ) );
 				}
 			}
-			catch( NoSuchElementException ex )
+			catch( ArrayIndexOutOfBoundsException | NumberFormatException ex )
 			{
 				throw new MappingParseException( lineNumber, "Malformed line!" );
-			}
-			finally
-			{
-				Util.closeQuietly( scanner );
 			}
 		}
 		
 		return mappings;
 	}
 
-	private ArgumentMapping readArgument( Scanner scanner )
+	private ArgumentMapping readArgument( String[] parts )
 	{
-		return new ArgumentMapping( scanner.nextInt(), scanner.next() );
+		return new ArgumentMapping( Integer.parseInt( parts[1] ), parts[2] );
 	}
 
-	private ClassMapping readClass( Scanner scanner )
+	private ClassMapping readClass( String[] parts )
 	{
-		return new ClassMapping(
-			moveClassOutOfDefaultPackage( scanner.next(), Constants.NonePackage ),
-			moveClassOutOfDefaultPackage( scanner.next(), Constants.NonePackage )
-		);
+		if( parts.length == 2 )
+		{
+			String obfName = parts[1];
+			return new ClassMapping( moveClassOutOfDefaultPackage( obfName, Constants.NonePackage ) );
+		}
+		else
+		{
+			String obfName = parts[1];
+			String deobfName = parts[2];
+			if( obfName.equals( deobfName ) )
+			{
+				return new ClassMapping( moveClassOutOfDefaultPackage( obfName, Constants.NonePackage ) );
+			}
+			else
+			{
+				return new ClassMapping(
+					moveClassOutOfDefaultPackage( parts[1], Constants.NonePackage ),
+					moveClassOutOfDefaultPackage( parts[2], Constants.NonePackage )
+				);
+			}
+		}
 	}
 	
 	private String moveClassOutOfDefaultPackage( String className, String newPackageName )
@@ -168,18 +175,34 @@ public class MappingsReader
 		return className;
 	}
 
-	private FieldMapping readField( Scanner scanner )
+	private FieldMapping readField( String[] parts )
 	{
-		return new FieldMapping( scanner.next(), scanner.next() );
+		return new FieldMapping( parts[1], parts[2] );
 	}
 	
-	private MethodMapping readMethod( Scanner scanner )
+	private MethodMapping readMethod( String[] parts )
 	{
-		return new MethodMapping(
-			scanner.next(), scanner.next(),
-			moveSignatureOutOfDefaultPackage( scanner.next(), Constants.NonePackage ),
-			moveSignatureOutOfDefaultPackage( scanner.next(), Constants.NonePackage )
-		);
+		if( parts.length == 3 )
+		{
+			String obfName = parts[1];
+			String obfSignature = moveSignatureOutOfDefaultPackage( parts[2], Constants.NonePackage );
+			return new MethodMapping( obfName, obfSignature );
+		}
+		else
+		{
+			String obfName = parts[1];
+			String deobfName = parts[2];
+			String obfSignature = moveSignatureOutOfDefaultPackage( parts[3], Constants.NonePackage );
+			String deobfSignature = moveSignatureOutOfDefaultPackage( parts[4], Constants.NonePackage );
+			if( obfName.equals( deobfName ) )
+			{
+				return new MethodMapping( obfName, obfSignature );
+			}
+			else
+			{
+				return new MethodMapping( obfName, obfSignature, deobfName, deobfSignature );
+			}
+		}
 	}
 
 	private String moveSignatureOutOfDefaultPackage( String signature, final String newPackageName )
