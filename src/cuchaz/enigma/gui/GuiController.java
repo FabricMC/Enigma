@@ -167,8 +167,6 @@ public class GuiController
 	
 	public boolean entryHasMapping( Entry deobfEntry )
 	{
-		// TEMP
-		System.out.println( deobfEntry + " -> " + m_deobfuscator.obfuscateEntry( deobfEntry ) );
 		return m_deobfuscator.hasMapping( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
 	

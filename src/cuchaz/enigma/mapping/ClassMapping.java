@@ -255,7 +255,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		{
 			methodMapping = createMethodMapping( obfName, obfSignature );
 		}
-		else
+		else if( methodMapping.getDeobfName() != null )
 		{
 			boolean wasRemoved = m_methodsByDeobf.remove( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ) ) != null;
 			assert( wasRemoved );
