@@ -34,7 +34,7 @@ public class ClassEntry implements Entry, Serializable
 		
 		if( isInnerClass() && getInnerClassName().indexOf( '/' ) >= 0 )
 		{
-			throw new IllegalArgumentException( "Inner cast must not have a package: " + getInnerClassName() );
+			throw new IllegalArgumentException( "Inner class must not have a package: " + getInnerClassName() );
 		}
 	}
 	
