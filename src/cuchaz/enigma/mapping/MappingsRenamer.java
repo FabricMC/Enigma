@@ -46,14 +46,15 @@ public class MappingsRenamer
 		}
 		else
 		{
-			boolean wasRemoved = m_mappings.m_classesByDeobf.remove( classMapping.getDeobfName() ) != null;
-			assert( wasRemoved );
+			if( classMapping.getDeobfName() != null )
+			{
+				boolean wasRemoved = m_mappings.m_classesByDeobf.remove( classMapping.getDeobfName() ) != null;
+				assert( wasRemoved );
+			}
 			classMapping.setDeobfName( deobfName );
 			boolean wasAdded = m_mappings.m_classesByDeobf.put( deobfName, classMapping ) == null;
 			assert( wasAdded );
 		}
-		
-		updateDeobfMethodSignatures();
 	}
 	
 	public void setFieldName( FieldEntry obf, String deobfName )
@@ -76,7 +77,8 @@ public class MappingsRenamer
 		deobfName = NameValidator.validateMethodName( deobfName );
 		for( MethodEntry entry : implementations )
 		{
-			MethodEntry targetEntry = new MethodEntry( entry.getClassEntry(), deobfName, entry.getSignature() );
+			String deobfSignature = getTranslator( TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
+			MethodEntry targetEntry = new MethodEntry( entry.getClassEntry(), deobfName, deobfSignature );
 			if( m_mappings.containsDeobfMethod( entry.getClassEntry(), deobfName, entry.getSignature() ) || m_index.containsObfMethod( targetEntry ) )
 			{
 				String deobfClassName = getTranslator( TranslationDirection.Deobfuscating ).translateClass( entry.getClassName() );
@@ -101,8 +103,7 @@ public class MappingsRenamer
 		}
 		
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
-		String deobfSignature = getTranslator( TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
-		classMapping.setMethodNameAndSignature( obf.getName(), obf.getSignature(), deobfName, deobfSignature );
+		classMapping.setMethodName( obf.getName(), obf.getSignature(), deobfName );
 	}
 	
 	public void setArgumentName( ArgumentEntry obf, String deobfName )
@@ -137,8 +138,6 @@ public class MappingsRenamer
 			classMapping = new ClassMapping( obfClassName );
 			boolean obfWasAdded = m_mappings.m_classesByObf.put( classMapping.getObfName(), classMapping ) == null;
 			assert( obfWasAdded );
-			boolean deobfWasAdded = m_mappings.m_classesByDeobf.put( classMapping.getDeobfName(), classMapping ) == null;
-			assert( deobfWasAdded );
 		}
 		return classMapping;
 	}
@@ -151,14 +150,6 @@ public class MappingsRenamer
 			classMapping = classMapping.getOrCreateInnerClass( obfClassEntry.getInnerClassName() );
 		}
 		return classMapping;
-	}
-	
-	private void updateDeobfMethodSignatures( )
-	{
-		for( ClassMapping classMapping : m_mappings.m_classesByObf.values() )
-		{
-			classMapping.updateDeobfMethodSignatures( getTranslator( TranslationDirection.Deobfuscating ) );
-		}
 	}
 	
 	private Translator getTranslator( TranslationDirection direction )

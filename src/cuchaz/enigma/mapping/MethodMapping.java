@@ -23,20 +23,26 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 	private String m_obfName;
 	private String m_deobfName;
 	private String m_obfSignature;
-	private String m_deobfSignature;
 	private Map<Integer,ArgumentMapping> m_arguments;
 	
 	public MethodMapping( String obfName, String obfSignature )
 	{
-		this( obfName, obfSignature, null, null );
+		this( obfName, obfSignature, null );
 	}
 	
-	public MethodMapping( String obfName, String obfSignature, String deobfName, String deobfSignature )
+	public MethodMapping( String obfName, String obfSignature, String deobfName )
 	{
+		if( obfName == null )
+		{
+			throw new IllegalArgumentException( "obf name cannot be null!" );
+		}
+		if( obfSignature == null )
+		{
+			throw new IllegalArgumentException( "obf signature cannot be null!" );
+		}
 		m_obfName = obfName;
 		m_deobfName = NameValidator.validateMethodName( deobfName );
 		m_obfSignature = obfSignature;
-		m_deobfSignature = deobfSignature;
 		m_arguments = new TreeMap<Integer,ArgumentMapping>();
 	}
 
@@ -57,15 +63,6 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 	public String getObfSignature( )
 	{
 		return m_obfSignature;
-	}
-	
-	public String getDeobfSignature( )
-	{
-		return m_deobfSignature;
-	}
-	public void setDeobfSignature( String val )
-	{
-		m_deobfSignature = val;
 	}
 	
 	public Iterable<ArgumentMapping> arguments( )
@@ -127,8 +124,6 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 		buf.append( "\n" );
 		buf.append( "\t" );
 		buf.append( m_obfSignature );
-		buf.append( " <-> " );
-		buf.append( m_deobfSignature );
 		buf.append( "\n" );
 		buf.append( "\tArguments:\n" );
 		for( ArgumentMapping argumentMapping : m_arguments.values() )
@@ -145,7 +140,7 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 	@Override
 	public int compareTo( MethodMapping other )
 	{
-		return ( m_obfName + m_obfSignature ).compareTo( ( other.m_obfName + other.m_obfSignature ) );
+		return ( m_obfName + m_obfSignature ).compareTo( other.m_obfName + other.m_obfSignature );
 	}
 
 	public boolean renameObfClass( final String oldObfClassName, final String newObfClassName )

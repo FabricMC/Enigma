@@ -80,10 +80,10 @@ public class MappingsWriter
 		}
 		else
 		{
-			out.format( "%sMETHOD %s %s %s %s\n",
+			out.format( "%sMETHOD %s %s %s\n",
 				getIndent( depth ),
 				methodMapping.getObfName(), methodMapping.getDeobfName(),
-				methodMapping.getObfSignature(), methodMapping.getDeobfSignature()
+				methodMapping.getObfSignature()
 			);
 		}
 		

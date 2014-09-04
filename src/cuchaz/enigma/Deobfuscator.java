@@ -1,5 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2014 Jeff Martin.
+ * Copyright (c) 2014 Jeff Martin.\
+ * 
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
@@ -78,7 +79,9 @@ public class Deobfuscator
 		
 		// config the decompiler
 		m_settings = DecompilerSettings.javaDefaults();
+		m_settings.setMergeVariables( true );
 		m_settings.setForceExplicitImports( true );
+		m_settings.setForceExplicitTypeArguments( true );
 		// DEBUG
 		//m_settings.setShowSyntheticMembers( true );
 		

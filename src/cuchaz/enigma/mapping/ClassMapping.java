@@ -214,7 +214,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		assert( wasAdded );
 		if( methodMapping.getDeobfName() != null )
 		{
-			String deobfKey = getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() );
+			String deobfKey = getMethodKey( methodMapping.getDeobfName(), methodMapping.getObfSignature() );
 			if( m_methodsByDeobf.containsKey( deobfKey ) )
 			{
 				throw new Error( "Already have mapping for " + m_deobfName + "." + deobfKey );
@@ -248,7 +248,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		return name + signature;
 	}
 	
-	public void setMethodNameAndSignature( String obfName, String obfSignature, String deobfName, String deobfSignature )
+	public void setMethodName( String obfName, String obfSignature, String deobfName )
 	{
 		MethodMapping methodMapping = m_methodsByObf.get( getMethodKey( obfName, obfSignature ) );
 		if( methodMapping == null )
@@ -257,23 +257,14 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		}
 		else if( methodMapping.getDeobfName() != null )
 		{
-			boolean wasRemoved = m_methodsByDeobf.remove( getMethodKey( methodMapping.getDeobfName(), methodMapping.getDeobfSignature() ) ) != null;
+			boolean wasRemoved = m_methodsByDeobf.remove( getMethodKey( methodMapping.getDeobfName(), methodMapping.getObfSignature() ) ) != null;
 			assert( wasRemoved );
 		}
 		methodMapping.setDeobfName( deobfName );
-		methodMapping.setDeobfSignature( deobfSignature );
-		boolean wasAdded = m_methodsByDeobf.put( getMethodKey( deobfName, deobfSignature ), methodMapping ) == null;
+		boolean wasAdded = m_methodsByDeobf.put( getMethodKey( deobfName, obfSignature ), methodMapping ) == null;
 		assert( wasAdded );
 	}
 	
-	public void updateDeobfMethodSignatures( Translator translator )
-	{
-		for( MethodMapping methodIndex : m_methodsByObf.values() )
-		{
-			methodIndex.setDeobfSignature( translator.translateSignature( methodIndex.getObfSignature() ) );
-		}
-	}
-
 	//// ARGUMENTS ////////
 	
 	public void setArgumentName( String obfMethodName, String obfMethodSignature, int argumentIndex, String argumentName )

@@ -180,7 +180,7 @@ public class Translator
 				// look for the method
 				MethodMapping methodMapping = m_direction.choose(
 					classMapping.getMethodByObf( in.getName(), in.getSignature() ),
-					classMapping.getMethodByDeobf( in.getName(), in.getSignature() )
+					classMapping.getMethodByDeobf( in.getName(), translateSignature( in.getSignature() ) )
 				);
 				if( methodMapping != null )
 				{
@@ -248,7 +248,7 @@ public class Translator
 				// look for the method
 				MethodMapping methodMapping = m_direction.choose(
 					classMapping.getMethodByObf( in.getMethodName(), in.getMethodSignature() ),
-					classMapping.getMethodByDeobf( in.getMethodName(), in.getMethodSignature() )
+					classMapping.getMethodByDeobf( in.getMethodName(), translateSignature( in.getMethodSignature() ) )
 				);
 				if( methodMapping != null )
 				{

@@ -193,14 +193,13 @@ public class MappingsReader
 			String obfName = parts[1];
 			String deobfName = parts[2];
 			String obfSignature = moveSignatureOutOfDefaultPackage( parts[3], Constants.NonePackage );
-			String deobfSignature = moveSignatureOutOfDefaultPackage( parts[4], Constants.NonePackage );
 			if( obfName.equals( deobfName ) )
 			{
 				return new MethodMapping( obfName, obfSignature );
 			}
 			else
 			{
-				return new MethodMapping( obfName, obfSignature, deobfName, deobfSignature );
+				return new MethodMapping( obfName, obfSignature, deobfName );
 			}
 		}
 	}
