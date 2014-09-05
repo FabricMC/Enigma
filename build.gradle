@@ -5,7 +5,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2-rc1'
+        classpath "eu.appsatori:gradle-fatjar-plugin:0.2-rc1"
+        classpath "net.sf.proguard:proguard-gradle:5.0"
     }
 }
 
@@ -19,41 +20,29 @@ targetCompatibility = 1.7
 
 group = "com.cuchazinteractive"
 archivesBaseName = "enigma"
-version = "0.5b"
+version = "0.5.1b"
 
-sourceSets
-{
-	main
-	{
-		java
-		{
+sourceSets {
+	main {
+		java {
 			srcDir "src"
 		}
-		resources
-		{
+		resources {
 			srcDir "conf"
 		}
 	}
-	test
-	{
-		java
-		{
+	test {
+		java {
 			srcDir "test"
-		}
-		resources
-		{
-			srcDir "conf"
 		}
 	}
 }
 
-repositories
-{
+repositories {
 	mavenCentral()
 }
 
-dependencies
-{
+dependencies {
 	compile fileTree( dir: "libs", include: "*.jar" )
 	compile "de.sciss:jsyntaxpane:1.0.0"
 	compile "com.google.guava:guava:17.0"
@@ -62,13 +51,11 @@ dependencies
 	testCompile "junit:junit:4.11"
 }
 
-fatJar
-{
-	from ".", {
-		include "*.txt"
+fatJar {
+	from( "." ) {
+		include( "*.txt" )
 	}
-	manifest
-	{
+	manifest {
 		attributes(
 			"Title": archivesBaseName,
 			"Manifest-Version": "1.0",
@@ -76,4 +63,26 @@ fatJar
 			"Main-Class" : "cuchaz.enigma.Main"
 		)
 	}
+}
+
+task jarTestCases( type: Jar ) {
+	from( sourceSets.test.output ) {
+		include( "cuchaz/enigma/inputs/**" )
+	}
+	archiveName( "testCases.jar" )
+}
+
+task obfTestCases( type: proguard.gradle.ProGuardTask ) {
+	dependsOn jarTestCases
+	
+	injars( "build/libs/testCases.jar" )
+	outjars( "build/libs/testCases.obf.jar" )
+	
+	libraryjars( "${System.getProperty('java.home')}/lib/rt.jar" )
+	overloadaggressively
+	repackageclasses
+	allowaccessmodification
+	
+	keep( "class cuchaz.enigma.inputs.Keep" )
+	dontshrink
 }
