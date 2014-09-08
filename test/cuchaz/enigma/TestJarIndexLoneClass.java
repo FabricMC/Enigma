@@ -95,7 +95,6 @@ public class TestJarIndexLoneClass
 		assertThat( node.getObfClassName(), is( "none/a" ) );
 		assertThat( node.getChildCount(), is( 0 ) );
 	}
-	
 
 	@Test
 	public void methodInheritance( )
@@ -133,10 +132,11 @@ public class TestJarIndexLoneClass
 	@SuppressWarnings( "unchecked" )
 	public void fieldReferences( )
 	{
-		Collection<EntryReference<FieldEntry,BehaviorEntry>> references = m_index.getFieldReferences( newField( "none/a", "a" ) );
+		FieldEntry source = newField( "none/a", "a" );
+		Collection<EntryReference<FieldEntry,BehaviorEntry>> references = m_index.getFieldReferences( source );
 		assertThat( references, containsInAnyOrder(
-			newFieldReferenceByConstructor( "none/a", "a", "none/a", "(Ljava/lang/String;)V" ),
-			newFieldReferenceByMethod( "none/a", "a", "none/a", "a", "()Ljava/lang/String;" )
+			newFieldReferenceByConstructor( source, "none/a", "(Ljava/lang/String;)V" ),
+			newFieldReferenceByMethod( source, "none/a", "a", "()Ljava/lang/String;" )
 		) );
 	}
 	

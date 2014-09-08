@@ -40,13 +40,23 @@ public class EntryFactory
 		return new ConstructorEntry( newClass( className ), signature );
 	}
 	
-	public static EntryReference<FieldEntry,BehaviorEntry> newFieldReferenceByMethod( String fieldClassName, String fieldName, String callerClassName, String callerName, String callerSignature )
+	public static EntryReference<FieldEntry,BehaviorEntry> newFieldReferenceByMethod( FieldEntry fieldEntry, String callerClassName, String callerName, String callerSignature )
 	{
-		return new EntryReference<FieldEntry,BehaviorEntry>( newField( fieldClassName, fieldName ), newMethod( callerClassName, callerName, callerSignature ) );
+		return new EntryReference<FieldEntry,BehaviorEntry>( fieldEntry, newMethod( callerClassName, callerName, callerSignature ) );
 	}
 	
-	public static EntryReference<FieldEntry,BehaviorEntry> newFieldReferenceByConstructor( String fieldClassName, String fieldName, String callerClassName, String callerSignature )
+	public static EntryReference<FieldEntry,BehaviorEntry> newFieldReferenceByConstructor( FieldEntry fieldEntry, String callerClassName, String callerSignature )
 	{
-		return new EntryReference<FieldEntry,BehaviorEntry>( newField( fieldClassName, fieldName ), newConstructor( callerClassName, callerSignature ) );
+		return new EntryReference<FieldEntry,BehaviorEntry>( fieldEntry, newConstructor( callerClassName, callerSignature ) );
+	}
+	
+	public static EntryReference<BehaviorEntry,BehaviorEntry> newBehaviorReferenceByMethod( BehaviorEntry behaviorEntry, String callerClassName, String callerName, String callerSignature )
+	{
+		return new EntryReference<BehaviorEntry,BehaviorEntry>( behaviorEntry, newMethod( callerClassName, callerName, callerSignature ) );
+	}
+	
+	public static EntryReference<BehaviorEntry,BehaviorEntry> newBehaviorReferenceByConstructor( BehaviorEntry behaviorEntry, String callerClassName, String callerSignature )
+	{
+		return new EntryReference<BehaviorEntry,BehaviorEntry>( behaviorEntry, newConstructor( callerClassName, callerSignature ) );
 	}
 }
