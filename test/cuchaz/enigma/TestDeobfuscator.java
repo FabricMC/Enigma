@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Jeff Martin.\
+ * 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Jeff Martin - initial API and implementation
+ ******************************************************************************/
 package cuchaz.enigma;
 
 import static org.junit.Assert.*;
@@ -17,7 +28,7 @@ public class TestDeobfuscator
 	private Deobfuscator getDeobfuscator( )
 	throws IOException
 	{
-		return new Deobfuscator( new File( "build/libs/testCases.obf.jar" ) );
+		return new Deobfuscator( new File( "build/libs/testLoneClass.obf.jar" ) );
 	}
 	
 	@Test

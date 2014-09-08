@@ -1,4 +1,4 @@
-package cuchaz.enigma.inputs;
+package cuchaz.enigma.inputs.loneClass;
 
 public class LoneClass
 {

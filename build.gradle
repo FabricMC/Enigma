@@ -49,6 +49,7 @@ dependencies {
 	compile "org.javassist:javassist:3.18.1-GA"
 	
 	testCompile "junit:junit:4.11"
+	testCompile "org.hamcrest:hamcrest-all:1.3"
 }
 
 fatJar {
@@ -65,23 +66,25 @@ fatJar {
 	}
 }
 
-task jarTestCases( type: Jar ) {
+task jarLoneClass( type: Jar ) {
 	from( sourceSets.test.output ) {
-		include( "cuchaz/enigma/inputs/**" )
+		include( "cuchaz/enigma/inputs/Keep.class" )
+		include( "cuchaz/enigma/inputs/loneClass/**" )
 	}
-	archiveName( "testCases.jar" )
+	archiveName( "testLoneClass.jar" )
 }
 
 task obfTestCases( type: proguard.gradle.ProGuardTask ) {
-	dependsOn jarTestCases
+	dependsOn jarLoneClass
 	
-	injars( "build/libs/testCases.jar" )
-	outjars( "build/libs/testCases.obf.jar" )
+	injars( "build/libs/testLoneClass.jar" )
+	outjars( "build/libs/testLoneClass.obf.jar" )
 	
 	libraryjars( "${System.getProperty('java.home')}/lib/rt.jar" )
 	overloadaggressively
 	repackageclasses
 	allowaccessmodification
+	dontoptimize
 	
 	keep( "class cuchaz.enigma.inputs.Keep" )
 	dontshrink

@@ -587,9 +587,14 @@ public class JarIndex
 	
 	public ClassImplementationsTreeNode getClassImplementations( Translator deobfuscatingTranslator, ClassEntry obfClassEntry )
 	{
-		ClassImplementationsTreeNode node = new ClassImplementationsTreeNode( deobfuscatingTranslator, obfClassEntry );
-		node.load( this );
-		return node;
+		// is this even an interface?
+		if( isInterface( obfClassEntry.getClassName() ) )
+		{
+			ClassImplementationsTreeNode node = new ClassImplementationsTreeNode( deobfuscatingTranslator, obfClassEntry );
+			node.load( this );
+			return node;
+		}
+		return null;
 	}
 	
 	public MethodInheritanceTreeNode getMethodInheritance( Translator deobfuscatingTranslator, MethodEntry obfMethodEntry )

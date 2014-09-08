@@ -111,12 +111,16 @@ public class ClassIdentity
 		// stuff from the jar index
 		
 		m_implementations = HashMultiset.create();
-		@SuppressWarnings( "unchecked" )
-		Enumeration<ClassImplementationsTreeNode> implementations = index.getClassImplementations( null, m_classEntry ).children();
-		while( implementations.hasMoreElements() )
+		ClassImplementationsTreeNode implementationsNode = index.getClassImplementations( null, m_classEntry );
+		if( implementationsNode != null )
 		{
-			ClassImplementationsTreeNode node = implementations.nextElement();
-			m_implementations.add( scrubClassName( node.getClassEntry().getName() ) );
+			@SuppressWarnings( "unchecked" )
+			Enumeration<ClassImplementationsTreeNode> implementations = implementationsNode.children();
+			while( implementations.hasMoreElements() )
+			{
+				ClassImplementationsTreeNode node = implementations.nextElement();
+				m_implementations.add( scrubClassName( node.getClassEntry().getName() ) );
+			}
 		}
 		
 		m_references = HashMultiset.create();
