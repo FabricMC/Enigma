@@ -127,7 +127,7 @@ public class JarIndex
 			}
 			for( CtField field : c.getDeclaredFields() )
 			{
-				indexField( field );
+				m_translationIndex.addField( className, field.getName() );
 			}
 			for( CtBehavior behavior : c.getDeclaredBehaviors() )
 			{
@@ -135,9 +135,19 @@ public class JarIndex
 			}
 		}
 		
+		// step 4: index field, method, constructor references
+		for( CtClass c : JarClassIterator.classes( jar ) )
+		{
+			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
+			for( CtBehavior behavior : c.getDeclaredBehaviors() )
+			{
+				indexBehaviorReferences( behavior );
+			}
+		}
+		
 		if( buildInnerClasses )
 		{
-			// step 4: index inner classes and anonymous classes
+			// step 5: index inner classes and anonymous classes
 			for( CtClass c : JarClassIterator.classes( jar ) )
 			{
 				ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
@@ -163,7 +173,7 @@ public class JarIndex
 				}
 			}
 			
-			// step 5: update other indices with inner class info
+			// step 6: update other indices with inner class info
 			Map<String,String> renames = Maps.newHashMap();
 			for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
 			{
@@ -183,25 +193,14 @@ public class JarIndex
 		EntryRenamer.renameMethodsInMultimap( m_bridgeMethods, m_fieldReferences );
 	}
 	
-	private void indexField( CtField field )
-	{
-		String className = Descriptor.toJvmName( field.getDeclaringClass().getName() );
-		m_translationIndex.addField( className, field.getName() );
-	}
-
 	private void indexBehavior( CtBehavior behavior )
 	{
-		// get the method entry
+		// get the behavior entry
 		String className = Descriptor.toJvmName( behavior.getDeclaringClass().getName() );
-		final BehaviorEntry thisEntry;
-		if( behavior instanceof CtMethod )
+		final BehaviorEntry behaviorEntry = getBehaviorEntry( behavior );
+		if( behaviorEntry instanceof MethodEntry )
 		{
-			MethodEntry methodEntry = new MethodEntry(
-				new ClassEntry( className ),
-				behavior.getName(),
-				behavior.getSignature()
-			);
-			thisEntry = methodEntry;
+			MethodEntry methodEntry = (MethodEntry)behaviorEntry;
 			
 			// index implementation
 			m_methodImplementations.put( className, methodEntry );
@@ -218,24 +217,13 @@ public class JarIndex
 				m_bridgeMethods.put( bridgedMethodEntry, methodEntry );
 			}
 		}
-		else if( behavior instanceof CtConstructor )
-		{
-			boolean isStatic = behavior.getName().equals( "<clinit>" );
-			if( isStatic )
-			{
-				thisEntry = new ConstructorEntry( new ClassEntry( className ) );
-			}
-			else
-			{
-				thisEntry = new ConstructorEntry( new ClassEntry( className ), behavior.getSignature() );
-			}
-		}
-		else
-		{
-			throw new IllegalArgumentException( "behavior must be a method or a constructor!" );
-		}
-		
+		// looks like we don't care about constructors here
+	}
+	
+	private void indexBehaviorReferences( CtBehavior behavior )
+	{
 		// index method calls
+		final BehaviorEntry behaviorEntry = getBehaviorEntry( behavior );
 		try
 		{
 			behavior.instrument( new ExprEditor( )
@@ -249,9 +237,10 @@ public class JarIndex
 						call.getMethodName(),
 						call.getSignature()
 					);
+					calledMethodEntry = resolveMethodClass( calledMethodEntry );
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledMethodEntry,
-						thisEntry
+						behaviorEntry
 					);
 					m_behaviorReferences.put( calledMethodEntry, reference );
 				}
@@ -266,7 +255,7 @@ public class JarIndex
 					);
 					EntryReference<FieldEntry,BehaviorEntry> reference = new EntryReference<FieldEntry,BehaviorEntry>(
 						calledFieldEntry,
-						thisEntry
+						behaviorEntry
 					);
 					m_fieldReferences.put( calledFieldEntry, reference );
 				}
@@ -284,7 +273,7 @@ public class JarIndex
 					);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
-						thisEntry
+						behaviorEntry
 					);
 					m_behaviorReferences.put( calledConstructorEntry, reference );
 				}
@@ -299,7 +288,7 @@ public class JarIndex
 					);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
-						thisEntry
+						behaviorEntry
 					);
 					m_behaviorReferences.put( calledConstructorEntry, reference );
 				}
@@ -311,6 +300,59 @@ public class JarIndex
 		}
 	}
 	
+	private BehaviorEntry getBehaviorEntry( CtBehavior behavior )
+	{
+		String className = Descriptor.toJvmName( behavior.getDeclaringClass().getName() );
+		if( behavior instanceof CtMethod )
+		{
+			return new MethodEntry(
+				new ClassEntry( className ),
+				behavior.getName(),
+				behavior.getSignature()
+			);
+		}
+		else if( behavior instanceof CtConstructor )
+		{
+			boolean isStatic = behavior.getName().equals( "<clinit>" );
+			if( isStatic )
+			{
+				return new ConstructorEntry( new ClassEntry( className ) );
+			}
+			else
+			{
+				return new ConstructorEntry( new ClassEntry( className ), behavior.getSignature() );
+			}
+		}
+		else
+		{
+			throw new IllegalArgumentException( "behavior must be a method or a constructor!" );
+		}
+	}
+
+	private MethodEntry resolveMethodClass( MethodEntry methodEntry )
+	{
+		// this entry could refer to a method on a class where the method is not actually implemented
+		// travel up the inheritance tree to find the closest implementation
+		while( !isMethodImplemented( methodEntry ) )
+		{
+			// is there a parent class?
+			String superclassName = m_translationIndex.getSuperclassName( methodEntry.getClassName() );
+			if( superclassName == null )
+			{
+				// this is probably a method from a class in a library
+				// we can't trace the implementation up any higher unless we index the library
+				return methodEntry;
+			}
+			
+			// move up to the parent class
+			methodEntry = new MethodEntry(
+				new ClassEntry( superclassName ),
+				methodEntry.getName(),
+				methodEntry.getSignature()
+			);
+		}
+		return methodEntry;
+	}
 
 	private CtMethod getBridgedMethod( CtMethod method )
 	{

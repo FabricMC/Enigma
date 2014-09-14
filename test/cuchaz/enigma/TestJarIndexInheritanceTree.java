@@ -220,7 +220,8 @@ public class TestJarIndexInheritanceTree
 		source = new MethodEntry( m_baseClass, "a", "()Ljava/lang/String;" );
 		references = m_index.getBehaviorReferences( source );
 		assertThat( references, containsInAnyOrder(
-			newBehaviorReferenceByMethod( source, m_subClassAA.getName(), "a", "()Ljava/lang/String;" )
+			newBehaviorReferenceByMethod( source, m_subClassAA.getName(), "a", "()Ljava/lang/String;" ),
+			newBehaviorReferenceByMethod( source, m_subClassB.getName(), "a", "()V" )
 		) );
 		
 		// subclassAA.getName()
