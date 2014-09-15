@@ -1041,7 +1041,7 @@ public class Gui
 		m_renameMenu.setEnabled( isToken );
 		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry || isConstructorEntry );
 		m_showImplementationsMenu.setEnabled( isClassEntry || isMethodEntry );
-		m_showCallsMenu.setEnabled( isFieldEntry || isMethodEntry || isConstructorEntry );
+		m_showCallsMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openPreviousMenu.setEnabled( m_controller.hasPreviousLocation() );
 	}
@@ -1191,7 +1191,14 @@ public class Gui
 			return;
 		}
 		
-		if( m_reference.entry instanceof FieldEntry )
+		if( m_reference.entry instanceof ClassEntry )
+		{
+			// look for calls to the default constructor
+			// TODO: get a list of all the constructors and find calls to all of them
+			BehaviorReferenceTreeNode node = m_controller.getMethodReferences( new ConstructorEntry( (ClassEntry)m_reference.entry, "()V" ) );
+			m_callsTree.setModel( new DefaultTreeModel( node ) );
+		}
+		else if( m_reference.entry instanceof FieldEntry )
 		{
 			FieldReferenceTreeNode node = m_controller.getFieldReferences( (FieldEntry)m_reference.entry );
 			m_callsTree.setModel( new DefaultTreeModel( node ) );
