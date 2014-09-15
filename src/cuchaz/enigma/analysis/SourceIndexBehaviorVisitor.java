@@ -12,9 +12,11 @@ package cuchaz.enigma.analysis;
 
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
+import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
 import com.strobel.decompiler.languages.java.ast.IdentifierExpression;
 import com.strobel.decompiler.languages.java.ast.InvocationExpression;
@@ -24,6 +26,8 @@ import com.strobel.decompiler.languages.java.ast.MethodDeclaration;
 import com.strobel.decompiler.languages.java.ast.ObjectCreationExpression;
 import com.strobel.decompiler.languages.java.ast.ParameterDeclaration;
 import com.strobel.decompiler.languages.java.ast.SimpleType;
+import com.strobel.decompiler.languages.java.ast.SuperReferenceExpression;
+import com.strobel.decompiler.languages.java.ast.ThisReferenceExpression;
 
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
@@ -58,14 +62,49 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 	public Void visitInvocationExpression( InvocationExpression node, SourceIndex index )
 	{
 		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
+		
+		// get the behavior entry
 		ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
-		if( node.getTarget() instanceof MemberReferenceExpression )
+		BehaviorEntry behaviorEntry = null;
+		if( ref instanceof MethodReference )
 		{
-			MethodEntry methodEntry = new MethodEntry( classEntry, ref.getName(), ref.getSignature() );
-			index.addReference(
-				((MemberReferenceExpression)node.getTarget()).getMemberNameToken(),
-				new EntryReference<Entry,Entry>( methodEntry, m_behaviorEntry )
-			);
+			MethodReference methodRef = (MethodReference)ref;
+			if( methodRef.isConstructor() )
+			{
+				behaviorEntry = new ConstructorEntry( classEntry, ref.getSignature() );
+			}
+			else if( methodRef.isTypeInitializer() )
+			{
+				behaviorEntry = new ConstructorEntry( classEntry );
+			}
+			else
+			{
+				behaviorEntry = new MethodEntry( classEntry, ref.getName(), ref.getSignature() );
+			}
+		}
+		if( behaviorEntry != null )
+		{
+			// get the node for the token
+			AstNode tokenNode = null;
+			if( node.getTarget() instanceof MemberReferenceExpression )
+			{
+				tokenNode = ((MemberReferenceExpression)node.getTarget()).getMemberNameToken();
+			}
+			else if( node.getTarget() instanceof SuperReferenceExpression )
+			{
+				tokenNode = node.getTarget();
+			}
+			else if( node.getTarget() instanceof ThisReferenceExpression )
+			{
+				tokenNode = node.getTarget();
+			}
+			if( tokenNode != null )
+			{
+				index.addReference(
+					tokenNode,
+					new EntryReference<Entry,Entry>( behaviorEntry, m_behaviorEntry )
+				);
+			}
 		}
 		
 		return recurse( node, index );

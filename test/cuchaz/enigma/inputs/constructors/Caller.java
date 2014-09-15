@@ -20,28 +20,35 @@ public class Caller
 	// c()V
 	public void callSubDefault( )
 	{
-		// none/c.<init>()V
+		// none/d.<init>()V
 		System.out.println( new SubClass() );
 	}
 
 	// d()V
 	public void callSubInt( )
 	{
-		// none/c.<init>(I)V
+		// none/d.<init>(I)V
 		System.out.println( new SubClass( 6 ) );
 	}
 
 	// e()V
 	public void callSubIntInt( )
 	{
-		// none/c.<init>(II)V
+		// none/d.<init>(II)V
 		System.out.println( new SubClass( 4, 2 ) );
 	}
 
 	// f()V
 	public void callSubSubInt( )
 	{
-		// none/d.<init>(I)V
+		// none/e.<init>(I)V
 		System.out.println( new SubSubClass( 3 ) );
+	}
+	
+	// g()V
+	public void callDefaultConstructable()
+	{
+		// none/c.<init>()V
+		System.out.println( new DefaultConstructable() );
 	}
 }

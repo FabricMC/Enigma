@@ -20,7 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.Region;
-import com.strobel.decompiler.languages.java.ast.Identifier;
+import com.strobel.decompiler.languages.java.ast.AstNode;
 
 import cuchaz.enigma.mapping.Entry;
 
@@ -56,7 +56,7 @@ public class SourceIndex
 		return m_source;
 	}
 	
-	public Token getToken( Identifier node )
+	public Token getToken( AstNode node )
 	{
 		// get a token for this node's region
 		Region region = node.getRegion();
@@ -71,7 +71,7 @@ public class SourceIndex
 		);
 		
 		// for tokens representing inner classes, make sure we only get the simple name
-		int pos = node.getName().lastIndexOf( '$' );
+		int pos = node.toString().lastIndexOf( '$' );
 		if( pos >= 0 )
 		{
 			token.end -= pos + 1;
@@ -92,7 +92,7 @@ public class SourceIndex
 		return token;
 	}
 	
-	public void addReference( Identifier node, EntryReference<Entry,Entry> deobfReference )
+	public void addReference( AstNode node, EntryReference<Entry,Entry> deobfReference )
 	{
 		Token token = getToken( node );
 		if( token != null )
@@ -102,7 +102,7 @@ public class SourceIndex
 		}
 	}
 	
-	public void addDeclaration( Identifier node, Entry deobfEntry )
+	public void addDeclaration( AstNode node, Entry deobfEntry )
 	{
 		Token token = getToken( node );
 		if( token != null )

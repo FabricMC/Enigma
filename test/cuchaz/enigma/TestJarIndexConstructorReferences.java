@@ -18,10 +18,13 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.jar.JarFile;
 
 import org.junit.Test;
 
+import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -30,17 +33,19 @@ import cuchaz.enigma.mapping.ConstructorEntry;
 public class TestJarIndexConstructorReferences
 {
 	private JarIndex m_index;
-	
+		
 	private ClassEntry m_baseClass = new ClassEntry( "none/a" );
-	private ClassEntry m_subClass = new ClassEntry( "none/c" );
-	private ClassEntry m_subsubClass = new ClassEntry( "none/d" );
+	private ClassEntry m_subClass = new ClassEntry( "none/d" );
+	private ClassEntry m_subsubClass = new ClassEntry( "none/e" );
+	private ClassEntry m_defaultClass = new ClassEntry( "none/c" );
 	private ClassEntry m_callerClass = new ClassEntry( "none/b" );
-	
+
 	public TestJarIndexConstructorReferences( )
 	throws Exception
 	{
+		File jarFile = new File( "build/libs/testConstructors.obf.jar" );
 		m_index = new JarIndex();
-		m_index.indexJar( new JarFile( "build/libs/testConstructors.obf.jar" ), false );
+		m_index.indexJar( new JarFile( jarFile ), false );
 	}
 	
 	@Test
@@ -51,6 +56,7 @@ public class TestJarIndexConstructorReferences
 			m_baseClass,
 			m_subClass,
 			m_subsubClass,
+			m_defaultClass,
 			m_callerClass
 		) );
 	}
@@ -60,7 +66,8 @@ public class TestJarIndexConstructorReferences
 	public void baseDefault( )
 	{
 		BehaviorEntry source = new ConstructorEntry( m_baseClass, "()V" );
-		assertThat( m_index.getBehaviorReferences( source ), containsInAnyOrder(
+		Collection<EntryReference<BehaviorEntry,BehaviorEntry>> references = m_index.getBehaviorReferences( source );
+		assertThat( references, containsInAnyOrder(
 			newBehaviorReferenceByMethod( source, m_callerClass.getName(), "a", "()V" ),
 			newBehaviorReferenceByConstructor( source, m_subClass.getName(), "()V" ),
 			newBehaviorReferenceByConstructor( source, m_subClass.getName(), "(III)V" )
@@ -124,6 +131,16 @@ public class TestJarIndexConstructorReferences
 		BehaviorEntry source = new ConstructorEntry( m_subsubClass, "(I)V" );
 		assertThat( m_index.getBehaviorReferences( source ), containsInAnyOrder(
 			newBehaviorReferenceByMethod( source, m_callerClass.getName(), "f", "()V" )
+		) );
+	}
+
+	@Test
+	@SuppressWarnings( "unchecked" )
+	public void defaultConstructable( )
+	{
+		BehaviorEntry source = new ConstructorEntry( m_defaultClass, "()V" );
+		assertThat( m_index.getBehaviorReferences( source ), containsInAnyOrder(
+			newBehaviorReferenceByMethod( source, m_callerClass.getName(), "g", "()V" )
 		) );
 	}
 }

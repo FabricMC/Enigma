@@ -97,7 +97,6 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
 		ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, def.getSignature() );
 		index.addDeclaration( node.getNameToken(), constructorEntry );
-		
 		return node.acceptVisitor( new SourceIndexBehaviorVisitor( constructorEntry ), index );
 	}
 	
