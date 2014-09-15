@@ -82,8 +82,16 @@ task jarInheritanceTree( type: Jar ) {
 	archiveName( "testInheritanceTree.jar" )
 }
 
+task jarConstructors( type: Jar ) {
+	from( sourceSets.test.output ) {
+		include( "cuchaz/enigma/inputs/Keep.class" )
+		include( "cuchaz/enigma/inputs/constructors/**" )
+	}
+	archiveName( "testConstructors.jar" )
+}
+
 task obfTestCases( type: proguard.gradle.ProGuardTask ) {
-	dependsOn jarLoneClass, jarInheritanceTree
+	dependsOn jarLoneClass, jarInheritanceTree, jarConstructors
 	
 	libraryjars( "${System.getProperty('java.home')}/lib/rt.jar" )
 	overloadaggressively
@@ -94,7 +102,7 @@ task obfTestCases( type: proguard.gradle.ProGuardTask ) {
 	
 	keep( "class cuchaz.enigma.inputs.Keep" )
 		
-	def jarNames = [ "LoneClass", "InheritanceTree" ];
+	def jarNames = [ "LoneClass", "InheritanceTree", "Constructors" ];
 	jarNames.each() {
 		injars( "build/libs/test${it}.jar" )
 		outjars( "build/libs/test${it}.obf.jar" )
