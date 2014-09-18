@@ -200,6 +200,12 @@ public class Deobfuscator
 			className = classMapping.getDeobfName();
 		}
 		
+		// is this class even in the jar?
+		if( !m_jarIndex.containsObfClass( new ClassEntry( className ) ) )
+		{
+			return null;
+		}
+		
 		// set the type loader
 		m_settings.setTypeLoader( new TranslatingTypeLoader(
 			m_jar,
@@ -279,15 +285,22 @@ public class Deobfuscator
 				progress.onProgress( i++, deobfClassEntry.toString() );
 			}
 			
-			// get the source
-			String source = getSource( getSourceTree( obfClassEntry.getName() ) );
-			
-			// write the file
-			File file = new File( dirOut, deobfClassEntry.getName().replace( '.', '/' ) + ".java" );
-			file.getParentFile().mkdirs();
-			try( FileWriter out = new FileWriter( file ) )
+			try
 			{
-				out.write( source );
+				// get the source
+				String source = getSource( getSourceTree( obfClassEntry.getName() ) );
+				
+				// write the file
+				File file = new File( dirOut, deobfClassEntry.getName().replace( '.', '/' ) + ".java" );
+				file.getParentFile().mkdirs();
+				try( FileWriter out = new FileWriter( file ) )
+				{
+					out.write( source );
+				}
+			}
+			catch( Throwable t )
+			{
+				throw new Error( "Unable to deobfuscate class " + deobfClassEntry.toString() + " (" + obfClassEntry.toString() + ")", t );
 			}
 		}
 		

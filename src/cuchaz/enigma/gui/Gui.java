@@ -162,11 +162,7 @@ public class Gui
 			@Override
 			public void onSelectClass( ClassEntry classEntry )
 			{
-				if( m_reference != null )
-				{
-					m_controller.savePreviousReference( m_reference );
-				}
-				m_controller.openDeclaration( classEntry );
+				navigateTo( classEntry );
 			}
 		} );
 		JScrollPane obfScroller = new JScrollPane( m_obfClasses );
@@ -182,11 +178,7 @@ public class Gui
 			@Override
 			public void onSelectClass( ClassEntry classEntry )
 			{
-				if( m_reference != null )
-				{
-					m_controller.savePreviousReference( m_reference );
-				}
-				m_controller.openDeclaration( classEntry );
+				navigateTo( classEntry );
 			}
 		} );
 		JScrollPane deobfScroller = new JScrollPane( m_deobfClasses );
@@ -247,7 +239,7 @@ public class Gui
 					break;
 					
 					case KeyEvent.VK_N:
-						openDeclaration();
+						navigateTo( m_reference.entry );
 					break;
 					
 					case KeyEvent.VK_P:
@@ -335,7 +327,7 @@ public class Gui
 				@Override
 				public void actionPerformed( ActionEvent event )
 				{
-					openDeclaration();
+					navigateTo( m_reference.entry );
 				}
 			} );
 			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_N, 0 ) );
@@ -379,22 +371,15 @@ public class Gui
 					Object node = path.getLastPathComponent();
 					if( node instanceof ClassInheritanceTreeNode )
 					{
-						if( m_reference != null )
-						{
-							m_controller.savePreviousReference( m_reference );
-						}
-						m_controller.openDeclaration( new ClassEntry( ((ClassInheritanceTreeNode)node).getObfClassName() ) );
+						ClassInheritanceTreeNode classNode = (ClassInheritanceTreeNode)node;
+						navigateTo( new ClassEntry( classNode.getObfClassName() ) );
 					}
 					else if( node instanceof MethodInheritanceTreeNode )
 					{
 						MethodInheritanceTreeNode methodNode = (MethodInheritanceTreeNode)node;
 						if( methodNode.isImplemented() )
 						{
-							if( m_reference != null )
-							{
-								m_controller.savePreviousReference( m_reference );
-							}
-							m_controller.openDeclaration( methodNode.getMethodEntry() );
+							navigateTo( methodNode.getMethodEntry() );
 						}
 					}
 				}
@@ -425,12 +410,12 @@ public class Gui
 					if( node instanceof ClassImplementationsTreeNode )
 					{
 						ClassImplementationsTreeNode classNode = (ClassImplementationsTreeNode)node;
-						m_controller.openDeclaration( classNode.getClassEntry() );
+						navigateTo( classNode.getClassEntry() );
 					}
 					else if( node instanceof MethodImplementationsTreeNode )
 					{
 						MethodImplementationsTreeNode methodNode = (MethodImplementationsTreeNode)node;
-						m_controller.openDeclaration( methodNode.getMethodEntry() );
+						navigateTo( methodNode.getMethodEntry() );
 					}
 				}
 			}
@@ -460,18 +445,14 @@ public class Gui
 					Object node = path.getLastPathComponent();
 					if( node instanceof ReferenceTreeNode )
 					{
-						if( m_reference != null )
-						{
-							m_controller.savePreviousReference( m_reference );
-						}
 						ReferenceTreeNode<Entry,Entry> referenceNode = ((ReferenceTreeNode<Entry,Entry>)node);
 						if( referenceNode.getReference() != null )
 						{
-							m_controller.openReference( referenceNode.getReference() );
+							navigateTo( referenceNode.getReference() );
 						}
 						else
 						{
-							m_controller.openDeclaration( referenceNode.getEntry() );
+							navigateTo( referenceNode.getEntry() );
 						}
 					}
 				}
@@ -1028,6 +1009,7 @@ public class Gui
 		boolean isFieldEntry = isToken && m_reference.entry instanceof FieldEntry;
 		boolean isMethodEntry = isToken && m_reference.entry instanceof MethodEntry;
 		boolean isConstructorEntry = isToken && m_reference.entry instanceof ConstructorEntry;
+		boolean isInJar = isToken && m_controller.entryIsInJar( m_reference.entry.getClassEntry() );
 		
 		if( isToken )
 		{
@@ -1038,12 +1020,40 @@ public class Gui
 			clearReference();
 		}
 		
-		m_renameMenu.setEnabled( isToken );
+		m_renameMenu.setEnabled( isInJar && isToken );
 		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry || isConstructorEntry );
 		m_showImplementationsMenu.setEnabled( isClassEntry || isMethodEntry );
 		m_showCallsMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
-		m_openEntryMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
+		m_openEntryMenu.setEnabled( isInJar && ( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry ) );
 		m_openPreviousMenu.setEnabled( m_controller.hasPreviousLocation() );
+	}
+	
+	private void navigateTo( Entry entry )
+	{
+		if( !m_controller.entryIsInJar( entry ) )
+		{
+			// entry is not in the jar. Ignore it
+			return;
+		}
+		if( m_reference != null )
+		{
+			m_controller.savePreviousReference( m_reference );
+		}
+		m_controller.openDeclaration( entry );
+	}
+	
+	private void navigateTo( EntryReference<Entry,Entry> reference )
+	{
+		if( !m_controller.entryIsInJar( reference.getClassEntry() ) )
+		{
+			// reference is not in the jar. Ignore it
+			return;
+		}
+		if( m_reference != null )
+		{
+			m_controller.savePreviousReference( m_reference );
+		}
+		m_controller.openReference( reference );
 	}
 	
 	private void startRename( )
@@ -1230,16 +1240,6 @@ public class Gui
 		while( n != null );
 		Collections.reverse( nodes );
 		return new TreePath( nodes.toArray() );
-	}
-	
-	private void openDeclaration( )
-	{	
-		if( m_reference == null )
-		{
-			return;
-		}
-		m_controller.savePreviousReference( m_reference );
-		m_controller.openDeclaration( m_reference.entry );
 	}
 	
 	private void close( )

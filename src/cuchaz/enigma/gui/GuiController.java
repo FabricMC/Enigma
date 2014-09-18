@@ -170,7 +170,7 @@ public class GuiController
 		return m_deobfuscator.hasMapping( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
 	
-	public boolean entryIsObfuscatedIdenfitier( Entry deobfEntry )
+	public boolean entryIsInJar( Entry deobfEntry )
 	{
 		return m_deobfuscator.isObfuscatedIdentifier( m_deobfuscator.obfuscateEntry( deobfEntry ) );
 	}
@@ -268,6 +268,10 @@ public class GuiController
 		// get the reference target class
 		EntryReference<Entry,Entry> obfReference = m_deobfuscator.obfuscateReference( deobfReference );
 		ClassEntry obfClassEntry = obfReference.getClassEntry().getOuterClassEntry();
+		if( !m_deobfuscator.isObfuscatedIdentifier( obfClassEntry ) )
+		{
+			throw new IllegalArgumentException( "Entry must be in the jar!" );
+		}
 		if( m_currentObfClass == null || !m_currentObfClass.equals( obfClassEntry ) )
 		{
 			// deobfuscate the class, then navigate to the reference
@@ -347,6 +351,11 @@ public class GuiController
 			{
 				// decompile,deobfuscate the bytecode
 				CompilationUnit sourceTree = m_deobfuscator.getSourceTree( classEntry.getClassName() );
+				if( sourceTree == null )
+				{
+					// decompilation of this class is not supported
+					return;
+				}
 				String source = m_deobfuscator.getSource( sourceTree );
 				m_index = m_deobfuscator.getSourceIndex( sourceTree, source );
 				m_gui.setSource( m_index.getSource() );
@@ -365,7 +374,7 @@ public class GuiController
 					{
 						deobfuscatedTokens.add( token );
 					}
-					else if( entryIsObfuscatedIdenfitier( reference.entry ) )
+					else if( entryIsInJar( reference.entry ) )
 					{
 						obfuscatedTokens.add( token );
 					}
