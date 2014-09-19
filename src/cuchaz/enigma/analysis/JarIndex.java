@@ -417,12 +417,11 @@ public class JarIndex
 				continue;
 			}
 			
+			ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
+			ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, constructor.getMethodInfo().getDescriptor() );
+			
 			// who calls this constructor?
 			Set<ClassEntry> callerClasses = Sets.newHashSet();
-			ConstructorEntry constructorEntry = new ConstructorEntry(
-				new ClassEntry( Descriptor.toJvmName( c.getName() ) ),
-				constructor.getMethodInfo().getDescriptor()
-			);
 			for( EntryReference<BehaviorEntry,BehaviorEntry> reference : getBehaviorReferences( constructorEntry ) )
 			{
 				callerClasses.add( reference.context.getClassEntry() );
@@ -431,7 +430,13 @@ public class JarIndex
 			// is this called by exactly one class?
 			if( callerClasses.size() == 1 )
 			{
-				return callerClasses.iterator().next().getName();
+				ClassEntry callerClassEntry = callerClasses.iterator().next();
+				
+				// does this class make sense as an outer class?
+				if( !callerClassEntry.equals( classEntry ) )
+				{
+					return callerClassEntry.getName();
+				}
 			}
 			else if( callerClasses.size() > 1 )
 			{
