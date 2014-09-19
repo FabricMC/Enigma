@@ -74,7 +74,7 @@ public class ClassRenamer
 		}
 	}
 	
-	public static Set<ClassEntry> getAllClassEntries( CtClass c )
+	public static Set<ClassEntry> getAllClassEntries( final CtClass c )
 	{
 		// get the classes that javassist knows about
 		final Set<ClassEntry> entries = Sets.newHashSet();
@@ -85,7 +85,23 @@ public class ClassRenamer
 			{
 				if( obj instanceof String )
 				{
-					entries.add( new ClassEntry( (String)obj ) );
+					String str = (String)obj;
+					
+					// javassist throws a lot of weird things at this map
+					// I either have to implement my on class scanner, or just try to filter out the weirdness
+					// I'm opting to filter out the weirdness for now
+					
+					// skip anything with generic arguments
+					if( str.indexOf( '<' ) >= 0 || str.indexOf( '>' ) >= 0 || str.indexOf( ';' ) >= 0 )
+					{
+						return null;
+					}
+					
+					// convert path/to/class.inner to path/to/class$inner
+					str = str.replace( '.', '$' );
+					
+					// remember everything else
+					entries.add( new ClassEntry( str ) );
 				}
 				return null;
 			}

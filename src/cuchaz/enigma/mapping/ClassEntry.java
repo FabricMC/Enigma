@@ -27,14 +27,14 @@ public class ClassEntry implements Entry, Serializable
 		}
 		if( className.indexOf( '.' ) >= 0 )
 		{
-			throw new IllegalArgumentException( "Class name must be in JVM format. ie, path/to/package/class$inner" );
+			throw new IllegalArgumentException( "Class name must be in JVM format. ie, path/to/package/class$inner : " + className );
 		}
 		
 		m_name = className;
 		
 		if( isInnerClass() && getInnerClassName().indexOf( '/' ) >= 0 )
 		{
-			throw new IllegalArgumentException( "Inner class must not have a package: " + getInnerClassName() );
+			throw new IllegalArgumentException( "Inner class must not have a package: " + className );
 		}
 	}
 	
