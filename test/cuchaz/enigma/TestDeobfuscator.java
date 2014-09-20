@@ -11,7 +11,7 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 import cuchaz.enigma.mapping.ClassEntry;
 

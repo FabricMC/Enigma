@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import cuchaz.enigma.Util;
 import cuchaz.enigma.analysis.TranslationIndex;

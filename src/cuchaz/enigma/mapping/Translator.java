@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;

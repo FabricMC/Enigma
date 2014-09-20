@@ -26,7 +26,7 @@ import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.ExceptionTable;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 

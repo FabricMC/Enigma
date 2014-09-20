@@ -29,13 +29,13 @@ import java.util.jar.JarFile;
 import javassist.CtBehavior;
 import javassist.CtClass;
 
-import com.beust.jcommander.internal.Lists;
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 import cuchaz.enigma.TranslatingTypeLoader;
 import cuchaz.enigma.analysis.JarIndex;

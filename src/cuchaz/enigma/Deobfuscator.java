@@ -22,8 +22,8 @@ import java.util.jar.JarFile;
 
 import javassist.bytecode.Descriptor;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.DecompilerContext;

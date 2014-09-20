@@ -12,8 +12,8 @@ package cuchaz.enigma.convert;
 
 import java.util.Map;
 
-import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.Maps;
 
 public class ClassNamer
 {

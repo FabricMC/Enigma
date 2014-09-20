@@ -15,13 +15,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.analysis.TreeDumpVisitor;
 import cuchaz.enigma.mapping.Entry;
 
 public class TokenChecker

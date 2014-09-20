@@ -34,9 +34,9 @@ import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
-import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 
 import cuchaz.enigma.Constants;

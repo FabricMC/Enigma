@@ -13,6 +13,7 @@ package cuchaz.enigma;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -24,7 +25,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
@@ -212,7 +213,7 @@ public class TranslatingTypeLoader implements ITypeLoader
 			assertClassName( c, deobfClassEntry );
 			
 			// DEBUG
-			Util.writeClass( c );
+			//Util.writeClass( c );
 			
 			// we have a transformed class!
 			return c.toBytecode();

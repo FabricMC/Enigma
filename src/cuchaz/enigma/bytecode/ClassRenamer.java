@@ -20,8 +20,8 @@ import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.InnerClassesAttribute;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.SignatureUpdater;

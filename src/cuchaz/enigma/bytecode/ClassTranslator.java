@@ -19,7 +19,7 @@ import javassist.CtMethod;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.FieldEntry;
