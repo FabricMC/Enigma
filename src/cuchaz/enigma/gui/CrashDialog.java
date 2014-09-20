@@ -57,6 +57,7 @@ public class CrashDialog
 		FlowLayout buttonsLayout = new FlowLayout();
 		buttonsLayout.setAlignment( FlowLayout.RIGHT );
 		buttonsPanel.setLayout( buttonsLayout );
+		buttonsPanel.add( GuiTricks.unboldLabel( new JLabel( "If you choose exit, you will lose any unsaved work." ) ) );
 		JButton ignoreButton = new JButton( "Ignore" );
 		ignoreButton.addActionListener( new ActionListener( )
 		{
