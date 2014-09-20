@@ -48,7 +48,7 @@ public class InnerClassWriter
 		
 		// write the inner classes if needed
 		Collection<String> obfInnerClassNames = m_jarIndex.getInnerClasses( obfOuterClassName );
-		if( obfInnerClassNames != null )
+		if( obfInnerClassNames != null && !obfInnerClassNames.isEmpty() )
 		{
 			writeInnerClasses( c, obfOuterClassName, obfInnerClassNames );
 		}
