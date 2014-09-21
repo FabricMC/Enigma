@@ -11,17 +11,9 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import static cuchaz.enigma.EntryFactory.newClass;
-import static cuchaz.enigma.EntryFactory.newField;
-import static cuchaz.enigma.EntryFactory.newFieldReferenceByConstructor;
-import static cuchaz.enigma.EntryFactory.newFieldReferenceByMethod;
-import static cuchaz.enigma.EntryFactory.newMethod;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
+import static cuchaz.enigma.EntryFactory.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 import java.util.Collection;
 import java.util.Set;

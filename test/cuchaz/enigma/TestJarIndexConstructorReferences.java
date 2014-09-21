@@ -10,13 +10,9 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import static cuchaz.enigma.EntryFactory.newBehaviorReferenceByConstructor;
-import static cuchaz.enigma.EntryFactory.newBehaviorReferenceByMethod;
-import static cuchaz.enigma.EntryFactory.newClass;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
+import static cuchaz.enigma.EntryFactory.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 import java.io.File;
 import java.util.Collection;

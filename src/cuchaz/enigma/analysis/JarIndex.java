@@ -48,6 +48,7 @@ import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
+import cuchaz.enigma.mapping.SignatureUpdater;
 import cuchaz.enigma.mapping.Translator;
 
 public class JarIndex
@@ -56,6 +57,7 @@ public class JarIndex
 	private TranslationIndex m_translationIndex;
 	private Multimap<String,String> m_interfaces;
 	private Map<Entry,Access> m_access;
+	private Map<FieldEntry,ClassEntry> m_fieldClasses;
 	private Multimap<String,MethodEntry> m_methodImplementations;
 	private Multimap<BehaviorEntry,EntryReference<BehaviorEntry,BehaviorEntry>> m_behaviorReferences;
 	private Multimap<FieldEntry,EntryReference<FieldEntry,BehaviorEntry>> m_fieldReferences;
@@ -70,6 +72,7 @@ public class JarIndex
 		m_translationIndex = new TranslationIndex();
 		m_interfaces = HashMultimap.create();
 		m_access = Maps.newHashMap();
+		m_fieldClasses = Maps.newHashMap();
 		m_methodImplementations = HashMultimap.create();
 		m_behaviorReferences = HashMultimap.create();
 		m_fieldReferences = HashMultimap.create();
@@ -127,7 +130,7 @@ public class JarIndex
 			}
 			for( CtField field : c.getDeclaredFields() )
 			{
-				m_translationIndex.addField( className, field.getName() );
+				indexField( field );
 			}
 			for( CtBehavior behavior : c.getDeclaredBehaviors() )
 			{
@@ -193,6 +196,22 @@ public class JarIndex
 		EntryRenamer.renameMethodsInMultimap( m_bridgeMethods, m_fieldReferences );
 	}
 	
+	private void indexField( CtField field )
+	{
+		// get the field entry
+		String className = Descriptor.toJvmName( field.getDeclaringClass().getName() );
+		FieldEntry fieldEntry = new FieldEntry( new ClassEntry( className ), field.getName() );
+		
+		m_translationIndex.addField( className, field.getName() );
+		
+		// is the field a class type?
+		if( field.getSignature().startsWith( "L" ) )
+		{
+			ClassEntry fieldTypeEntry = new ClassEntry( field.getSignature().substring( 1, field.getSignature().length() - 1 ) );
+			m_fieldClasses.put( fieldEntry, fieldTypeEntry );
+		}
+	}
+
 	private void indexBehavior( CtBehavior behavior )
 	{
 		// get the behavior entry
@@ -412,7 +431,8 @@ public class JarIndex
 		// use the synthetic fields to find the synthetic constructors
 		for( CtConstructor constructor : c.getDeclaredConstructors() )
 		{
-			if( !isIllegalConstructor( constructor ) )
+			Set<String> syntheticFieldTypes = Sets.newHashSet();
+			if( !isIllegalConstructor( syntheticFieldTypes, constructor ) )
 			{
 				continue;
 			}
@@ -420,27 +440,57 @@ public class JarIndex
 			ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
 			ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, constructor.getMethodInfo().getDescriptor() );
 			
+			// look at the synthetic types to get candidates for the outer class
+			Set<ClassEntry> candidateOuterClasses = Sets.newHashSet();
+			for( String type : syntheticFieldTypes )
+			{
+				if( type.startsWith( "L" ) )
+				{
+					candidateOuterClasses.add( new ClassEntry( type.substring( 1, type.length() - 1 ) ) );
+				}
+			}
+			
+			// do we have an answer yet?
+			if( candidateOuterClasses.isEmpty() )
+			{
+				continue;
+			}
+			else if( candidateOuterClasses.size() == 1 )
+			{
+				ClassEntry outerClassEntry = candidateOuterClasses.iterator().next();
+				
+				// does this class make sense as an outer class?
+				if( !outerClassEntry.equals( classEntry ) )
+				{
+					return outerClassEntry.getName();
+				}
+			}
+			
 			// who calls this constructor?
 			Set<ClassEntry> callerClasses = Sets.newHashSet();
 			for( EntryReference<BehaviorEntry,BehaviorEntry> reference : getBehaviorReferences( constructorEntry ) )
 			{
-				callerClasses.add( reference.context.getClassEntry() );
-			}
-			
-			// is this called by exactly one class?
-			if( callerClasses.size() == 1 )
-			{
-				ClassEntry callerClassEntry = callerClasses.iterator().next();
-				
-				// does this class make sense as an outer class?
-				if( !callerClassEntry.equals( classEntry ) )
+				// is that one of our candidates?
+				if( candidateOuterClasses.contains( reference.context.getClassEntry() ) )
 				{
-					return callerClassEntry.getName();
+					callerClasses.add( reference.context.getClassEntry() );	
 				}
 			}
-			else if( callerClasses.size() > 1 )
+			
+			// do we have an answer yet?
+			if( callerClasses.size() == 1 )
 			{
-				System.out.println( "WARNING: Illegal constructor called by more than one class!" + callerClasses );
+				ClassEntry outerClassEntry = callerClasses.iterator().next();
+				
+				// does this class make sense as an outer class?
+				if( !outerClassEntry.equals( classEntry ) )
+				{
+					return outerClassEntry.getName();
+				}
+			}
+			else
+			{
+				System.out.println( "WARNING: Unable to choose outer class among options: " + candidateOuterClasses );
 			}
 		}
 		
@@ -448,7 +498,7 @@ public class JarIndex
 	}
 	
 	@SuppressWarnings( "unchecked" )
-	private boolean isIllegalConstructor( CtConstructor constructor )
+	private boolean isIllegalConstructor( Set<String> syntheticFieldTypes, CtConstructor constructor )
 	{
 		// illegal constructors only set synthetic member fields, then call super()
 		String className = constructor.getDeclaringClass().getName();
@@ -456,7 +506,6 @@ public class JarIndex
 		// collect all the field accesses, constructor calls, and method calls
 		final List<FieldAccess> illegalFieldWrites = Lists.newArrayList();
 		final List<ConstructorCall> constructorCalls = Lists.newArrayList();
-		final List<MethodCall> methodCalls = Lists.newArrayList();
 		try
 		{
 			constructor.instrument( new ExprEditor( )
@@ -475,37 +524,12 @@ public class JarIndex
 				{
 					constructorCalls.add( constructorCall );
 				}
-				
-				@Override
-				public void edit( MethodCall methodCall )
-				{
-					methodCalls.add( methodCall );
-				}
 			} );
 		}
 		catch( CannotCompileException ex )
 		{
 			// we're not compiling anything... this is stupid
 			throw new Error( ex );
-		}
-		
-		// method calls are not allowed
-		if( !methodCalls.isEmpty() )
-		{
-			return false;
-		}
-		
-		// is there only one constructor call?
-		if( constructorCalls.size() != 1 )
-		{
-			return false;
-		}
-		
-		// is the call to super?
-		ConstructorCall constructorCall = constructorCalls.get( 0 );
-		if( !constructorCall.getMethodName().equals( "super" ) )
-		{
-			return false;
 		}
 		
 		// are there any illegal field writes?
@@ -528,7 +552,7 @@ public class JarIndex
 			FieldInfo fieldInfo = null;
 			for( FieldInfo info : (List<FieldInfo>)constructor.getDeclaringClass().getClassFile().getFields() )
 			{
-				if( info.getName().equals( fieldWrite.getFieldName() ) )
+				if( info.getName().equals( fieldWrite.getFieldName() ) && info.getDescriptor().equals( fieldWrite.getSignature() ) )
 				{
 					fieldInfo = info;
 					break;
@@ -542,9 +566,13 @@ public class JarIndex
 			
 			// is this field synthetic?
 			boolean isSynthetic = (fieldInfo.getAccessFlags() & AccessFlag.SYNTHETIC) != 0;
-			if( !isSynthetic )
+			if( isSynthetic )
 			{
-				System.err.println( String.format( "WARNING: illegal write to non synthetic field %s.%s", className, fieldInfo.getName() ) );
+				syntheticFieldTypes.add( fieldInfo.getDescriptor() );
+			}
+			else
+			{
+				System.err.println( String.format( "WARNING: illegal write to non synthetic field %s %s.%s", fieldInfo.getDescriptor(), className, fieldInfo.getName() ) );
 				return false;
 			}
 		}
@@ -555,15 +583,15 @@ public class JarIndex
 
 	private boolean isAnonymousClass( CtClass c, String outerClassName )
 	{
-		String innerClassName = Descriptor.toJvmName( c.getName() );
+		ClassEntry innerClassEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
 		
 		// anonymous classes:
 		//    can't be abstract
 		//    have only one constructor
 		//    it's called exactly once by the outer class
-		//    type of inner class not referenced anywhere in outer class
+		//    the type the instance is assigned to can't be this type
 		
-		// is absract?
+		// is abstract?
 		if( Modifier.isAbstract( c.getModifiers() ) )
 		{
 			return false;
@@ -577,22 +605,40 @@ public class JarIndex
 		CtConstructor constructor = c.getDeclaredConstructors()[0];
 		
 		// is this constructor called exactly once?
-		ConstructorEntry constructorEntry = new ConstructorEntry(
-			new ClassEntry( innerClassName ),
-			constructor.getMethodInfo().getDescriptor()
-		);
-		if( getBehaviorReferences( constructorEntry ).size() != 1 )
+		ConstructorEntry constructorEntry = new ConstructorEntry( innerClassEntry, constructor.getMethodInfo().getDescriptor() );
+		Collection<EntryReference<BehaviorEntry,BehaviorEntry>> references = getBehaviorReferences( constructorEntry );
+		if( references.size() != 1 )
 		{
 			return false;
 		}
 		
-		// TODO: check outer class doesn't reference type
-		// except this is hard because we can't just load the outer class now
-		// we'd have to pre-index those references in the JarIndex
+		// does the caller use this type?
+		BehaviorEntry caller = references.iterator().next().context;
+		for( FieldEntry fieldEntry : getReferencedFields( caller ) )
+		{
+			ClassEntry fieldClass = getFieldClass( fieldEntry );
+			if( fieldClass != null && fieldClass.equals( innerClassEntry ) )
+			{
+				// caller references this type, so it can't be anonymous
+				return false;
+			}
+		}
+		for( BehaviorEntry behaviorEntry : getReferencedBehaviors( caller ) )
+		{
+			// get the class types from the signature
+			for( String className : SignatureUpdater.getClasses( behaviorEntry.getSignature() ) )
+			{
+				if( className.equals( innerClassEntry.getName() ) )
+				{
+					// caller references this type, so it can't be anonymous
+					return false;
+				}
+			}
+		}
 		
 		return true;
 	}
-	
+
 	public Set<ClassEntry> getObfClassEntries( )
 	{
 		return m_obfClassEntries;
@@ -606,6 +652,11 @@ public class JarIndex
 	public Access getAccess( Entry entry )
 	{
 		return m_access.get( entry );
+	}
+	
+	public ClassEntry getFieldClass( FieldEntry fieldEntry )
+	{
+		return m_fieldClasses.get( fieldEntry );
 	}
 	
 	public boolean isMethodImplemented( MethodEntry methodEntry )
@@ -772,11 +823,39 @@ public class JarIndex
 		return m_fieldReferences.get( fieldEntry );
 	}
 	
+	public Collection<FieldEntry> getReferencedFields( BehaviorEntry behaviorEntry )
+	{
+		// linear search is fast enough for now
+		Set<FieldEntry> fieldEntries = Sets.newHashSet();
+		for( EntryReference<FieldEntry,BehaviorEntry> reference : m_fieldReferences.values() )
+		{
+			if( reference.context == behaviorEntry )
+			{
+				fieldEntries.add( reference.entry );
+			}
+		}
+		return fieldEntries;
+	}
+	
 	public Collection<EntryReference<BehaviorEntry,BehaviorEntry>> getBehaviorReferences( BehaviorEntry behaviorEntry )
 	{
 		return m_behaviorReferences.get( behaviorEntry );
 	}
 
+	public Collection<BehaviorEntry> getReferencedBehaviors( BehaviorEntry behaviorEntry )
+	{
+		// linear search is fast enough for now
+		Set<BehaviorEntry> behaviorEntries = Sets.newHashSet();
+		for( EntryReference<BehaviorEntry,BehaviorEntry> reference : m_behaviorReferences.values() )
+		{
+			if( reference.context == behaviorEntry )
+			{
+				behaviorEntries.add( reference.entry );
+			}
+		}
+		return behaviorEntries;
+	}
+	
 	public Collection<String> getInnerClasses( String obfOuterClassName )
 	{
 		return m_innerClasses.get( obfOuterClassName );

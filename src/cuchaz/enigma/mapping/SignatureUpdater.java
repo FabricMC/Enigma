@@ -12,6 +12,9 @@ package cuchaz.enigma.mapping;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
+
+import com.beust.jcommander.internal.Lists;
 
 public class SignatureUpdater
 {
@@ -83,5 +86,20 @@ public class SignatureUpdater
 		}
 		
 		return null;
+	}
+	
+	public static List<String> getClasses( String signature )
+	{
+		final List<String> classNames = Lists.newArrayList();
+		update( signature, new ClassNameUpdater( )
+		{
+			@Override
+			public String update( String className )
+			{
+				classNames.add( className );
+				return className;
+			}
+		} );
+		return classNames;
 	}
 }

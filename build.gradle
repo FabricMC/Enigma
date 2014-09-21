@@ -90,21 +90,46 @@ task jarConstructors( type: Jar ) {
 	archiveName( "testConstructors.jar" )
 }
 
-task obfTestCases( type: proguard.gradle.ProGuardTask ) {
-	dependsOn jarLoneClass, jarInheritanceTree, jarConstructors
-	
+task jarInnerClasses( type: Jar ) {
+	from( sourceSets.test.output ) {
+		include( "cuchaz/enigma/inputs/Keep.class" )
+		include( "cuchaz/enigma/inputs/innerClasses/**" )
+	}
+	archiveName( "testInnerClasses.jar" )
+}
+
+tasks.withType( proguard.gradle.ProGuardTask ) {
 	libraryjars( "${System.getProperty('java.home')}/lib/rt.jar" )
 	overloadaggressively
 	repackageclasses
 	allowaccessmodification
 	dontoptimize
 	dontshrink
-	
 	keep( "class cuchaz.enigma.inputs.Keep" )
-		
-	def jarNames = [ "LoneClass", "InheritanceTree", "Constructors" ];
-	jarNames.each() {
-		injars( "build/libs/test${it}.jar" )
-		outjars( "build/libs/test${it}.obf.jar" )
-	}
 }
+
+task obfLoneClass( type: proguard.gradle.ProGuardTask, dependsOn: jarLoneClass ) {
+	def name = "LoneClass"
+	injars( "build/libs/test${name}.jar" )
+	outjars( "build/libs/test${name}.obf.jar" )
+}
+
+task obfInheritanceTree( type: proguard.gradle.ProGuardTask, dependsOn: jarInheritanceTree ) {
+	def name = "InheritanceTree"
+	injars( "build/libs/test${name}.jar" )
+	outjars( "build/libs/test${name}.obf.jar" )
+}
+
+task obfConstructors( type: proguard.gradle.ProGuardTask, dependsOn: jarConstructors ) {
+	def name = "Constructors"
+	injars( "build/libs/test${name}.jar" )
+	outjars( "build/libs/test${name}.obf.jar" )
+}
+
+task obfInnerClasses( type: proguard.gradle.ProGuardTask, dependsOn: jarInnerClasses ) {
+	def name = "InnerClasses"
+	injars( "build/libs/test${name}.jar" )
+	outjars( "build/libs/test${name}.obf.jar" )
+}
+
+task obfTestCases( dependsOn: tasks.withType( proguard.gradle.ProGuardTask ) )
