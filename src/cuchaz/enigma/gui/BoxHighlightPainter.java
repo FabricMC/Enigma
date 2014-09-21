@@ -36,8 +36,11 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
 		Rectangle bounds = getBounds( text, start, end );
 		
 		// fill the area
-		g.setColor( m_fillColor );
-		g.fillRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+		if( m_fillColor != null )
+		{
+			g.setColor( m_fillColor );
+			g.fillRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+		}
 		
 		// draw a box around the area
 		g.setColor( m_borderColor );

@@ -77,7 +77,7 @@ public class SourceIndex
 			token.end -= pos + 1;
 		}
 		
-		// HACKHACK: sometimes node regions are off by one
+		/* HACKHACK: sometimes node regions are off by one
 		// I think this is a bug in Procyon, but it's easy to work around
 		if( !Character.isJavaIdentifierStart( m_source.charAt( token.start ) ) )
 		{
@@ -88,6 +88,7 @@ public class SourceIndex
 				throw new IllegalArgumentException( "Region " + region + " does not describe valid token: '" + m_source.substring( token.start, token.end ) + "'" );
 			}
 		}
+		*/
 		
 		return token;
 	}

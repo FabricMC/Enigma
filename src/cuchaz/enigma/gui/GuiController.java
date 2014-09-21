@@ -367,6 +367,7 @@ public class GuiController
 				// set the highlighted tokens
 				List<Token> obfuscatedTokens = Lists.newArrayList();
 				List<Token> deobfuscatedTokens = Lists.newArrayList();
+				List<Token> otherTokens = Lists.newArrayList();
 				for( Token token : m_index.referenceTokens() )
 				{
 					EntryReference<Entry,Entry> reference = m_index.getDeobfReference( token );
@@ -378,8 +379,12 @@ public class GuiController
 					{
 						obfuscatedTokens.add( token );
 					}
+					else
+					{
+						otherTokens.add( token );
+					}
 				}
-				m_gui.setHighlightedTokens( obfuscatedTokens, deobfuscatedTokens );
+				m_gui.setHighlightedTokens( obfuscatedTokens, deobfuscatedTokens, otherTokens );
 			}
 		}.start();
 	}

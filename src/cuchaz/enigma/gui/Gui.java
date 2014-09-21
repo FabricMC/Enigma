@@ -102,6 +102,7 @@ public class Gui
 	private JPanel m_infoPanel;
 	private ObfuscatedHighlightPainter m_obfuscatedHighlightPainter;
 	private DeobfuscatedHighlightPainter m_deobfuscatedHighlightPainter;
+	private OtherHighlightPainter m_otherHighlightPainter;
 	private SelectionHighlightPainter m_selectionHighlightPainter;
 	private JTree m_inheritanceTree;
 	private JTree m_implementationsTree;
@@ -205,6 +206,7 @@ public class Gui
 		DefaultSyntaxKit.initKit();
 		m_obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
 		m_deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
+		m_otherHighlightPainter = new OtherHighlightPainter();
 		m_selectionHighlightPainter = new SelectionHighlightPainter();
 		m_editor = new JEditorPane();
 		m_editor.setEditable( false );
@@ -870,11 +872,10 @@ public class Gui
 		showToken( sortedTokens.get( 0 ) );
 	}
 	
-	public void setHighlightedTokens( Iterable<Token> obfuscatedTokens, Iterable<Token> deobfuscatedTokens )
+	public void setHighlightedTokens( Iterable<Token> obfuscatedTokens, Iterable<Token> deobfuscatedTokens, Iterable<Token> otherTokens )
 	{
 		// remove any old highlighters
 		m_editor.getHighlighter().removeAllHighlights();
-		
 		
 		// color things based on the index
 		if( obfuscatedTokens != null )
@@ -884,6 +885,10 @@ public class Gui
 		if( deobfuscatedTokens != null )
 		{
 			setHighlightedTokens( deobfuscatedTokens, m_deobfuscatedHighlightPainter );
+		}
+		if( otherTokens != null )
+		{
+			setHighlightedTokens( otherTokens, m_otherHighlightPainter );
 		}
 		
 		redraw();
