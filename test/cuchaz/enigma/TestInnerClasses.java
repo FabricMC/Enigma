@@ -26,10 +26,12 @@ public class TestInnerClasses
 	
 	private static final String AnonymousOuter = "none/a";
 	private static final String AnonymousInner = "none/b";
-	private static final String SimpleOuter = "none/e";
-	private static final String SimpleInner = "none/f";
-	private static final String ConstructorArgsOuter = "none/c";
-	private static final String ConstructorArgsInner = "none/d";
+	private static final String SimpleOuter = "none/g";
+	private static final String SimpleInner = "none/h";
+	private static final String ConstructorArgsOuter = "none/e";
+	private static final String ConstructorArgsInner = "none/f";
+	private static final String AnonymousWithScopeArgsOuter = "none/c";
+	private static final String AnonymousWithScopeArgsInner = "none/d";
 	
 	public TestInnerClasses( )
 	throws Exception
@@ -60,5 +62,13 @@ public class TestInnerClasses
 		assertThat( m_index.getOuterClass( ConstructorArgsInner ), is( ConstructorArgsOuter ) );
 		assertThat( m_index.getInnerClasses( ConstructorArgsOuter ), containsInAnyOrder( ConstructorArgsInner ) );
 		assertThat( m_index.isAnonymousClass( ConstructorArgsInner ), is( false ) );
+	}
+	
+	@Test
+	public void anonymousWithScopeArgs( )
+	{
+		assertThat( m_index.getOuterClass( AnonymousWithScopeArgsInner ), is( AnonymousWithScopeArgsOuter ) );
+		assertThat( m_index.getInnerClasses( AnonymousWithScopeArgsOuter ), containsInAnyOrder( AnonymousWithScopeArgsInner ) );
+		assertThat( m_index.isAnonymousClass( AnonymousWithScopeArgsInner ), is( true ) );
 	}
 }

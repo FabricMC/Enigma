@@ -440,29 +440,17 @@ public class JarIndex
 			ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
 			ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, constructor.getMethodInfo().getDescriptor() );
 			
-			// look at the synthetic types to get candidates for the outer class
-			Set<ClassEntry> candidateOuterClasses = Sets.newHashSet();
+			// gather the classes from the illegally-set synthetic fields
+			Set<ClassEntry> illegallySetClasses = Sets.newHashSet();
 			for( String type : syntheticFieldTypes )
 			{
 				if( type.startsWith( "L" ) )
 				{
-					candidateOuterClasses.add( new ClassEntry( type.substring( 1, type.length() - 1 ) ) );
-				}
-			}
-			
-			// do we have an answer yet?
-			if( candidateOuterClasses.isEmpty() )
-			{
-				continue;
-			}
-			else if( candidateOuterClasses.size() == 1 )
-			{
-				ClassEntry outerClassEntry = candidateOuterClasses.iterator().next();
-				
-				// does this class make sense as an outer class?
-				if( !outerClassEntry.equals( classEntry ) )
-				{
-					return outerClassEntry.getName();
+					ClassEntry outerClassEntry = new ClassEntry( type.substring( 1, type.length() - 1 ) );
+					if( isSaneOuterClass( outerClassEntry, classEntry ) )
+					{
+						illegallySetClasses.add( outerClassEntry );
+					}
 				}
 			}
 			
@@ -470,33 +458,82 @@ public class JarIndex
 			Set<ClassEntry> callerClasses = Sets.newHashSet();
 			for( EntryReference<BehaviorEntry,BehaviorEntry> reference : getBehaviorReferences( constructorEntry ) )
 			{
-				// is that one of our candidates?
-				if( candidateOuterClasses.contains( reference.context.getClassEntry() ) )
+				// make sure it's not a call to super
+				if( reference.entry instanceof ConstructorEntry && reference.context instanceof ConstructorEntry )
 				{
-					callerClasses.add( reference.context.getClassEntry() );	
+					// is the entry a superclass of the context?
+					String calledClassName = reference.entry.getClassName();
+					String callerSuperclassName = m_translationIndex.getSuperclassName( reference.context.getClassName() );
+					if( callerSuperclassName != null && callerSuperclassName.equals( calledClassName ) )
+					{
+						// it's a super call, skip
+						continue;
+					}
+				}
+				
+				if( isSaneOuterClass( reference.context.getClassEntry(), classEntry ) )
+				{
+					callerClasses.add( reference.context.getClassEntry() );
 				}
 			}
 			
 			// do we have an answer yet?
-			if( callerClasses.size() == 1 )
+			if( callerClasses.isEmpty() )
 			{
-				ClassEntry outerClassEntry = callerClasses.iterator().next();
-				
-				// does this class make sense as an outer class?
-				if( !outerClassEntry.equals( classEntry ) )
+				if( illegallySetClasses.size() == 1 )
 				{
-					return outerClassEntry.getName();
+					return illegallySetClasses.iterator().next().getName();
+				}
+				else
+				{
+					System.out.println( String.format( "WARNING: Unable to find outer class for %s. No caller and no illegally set field classes.", classEntry ) );
 				}
 			}
 			else
 			{
-				System.out.println( "WARNING: Unable to choose outer class among options: " + candidateOuterClasses );
+				if( callerClasses.size() == 1 )
+				{
+					return callerClasses.iterator().next().getName();
+				}
+				else
+				{
+					// multiple callers, do the illegally set classes narrow it down?
+					Set<ClassEntry> intersection = Sets.newHashSet( callerClasses );
+					intersection.retainAll( illegallySetClasses );
+					if( intersection.size() == 1 )
+					{
+						return intersection.iterator().next().getName();
+					}
+					else
+					{
+						System.out.println( String.format( "WARNING: Unable to choose outer class for %s among options: %s",
+							classEntry, callerClasses
+						) );
+					}
+				}
 			}
 		}
 		
 		return null;
 	}
 	
+	private boolean isSaneOuterClass( ClassEntry outerClassEntry, ClassEntry innerClassEntry )
+	{
+		// clearly this would be silly
+		if( outerClassEntry.equals( innerClassEntry ) )
+		{
+			return false;
+		}
+		
+		// is the outer class in the jar?
+		if( !m_obfClassEntries.contains( outerClassEntry ) )
+		{
+			return false;
+		}
+		
+		return true;
+	}
+
 	@SuppressWarnings( "unchecked" )
 	private boolean isIllegalConstructor( Set<String> syntheticFieldTypes, CtConstructor constructor )
 	{

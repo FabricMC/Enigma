@@ -1,8 +1,8 @@
 package cuchaz.enigma.inputs.innerClasses;
 
-public class Simple // e
+public class Simple
 {
-	class Inner // f
+	class Inner
 	{
 		// nothing to do
 	}

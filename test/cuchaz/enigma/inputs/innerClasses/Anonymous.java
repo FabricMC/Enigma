@@ -1,10 +1,10 @@
 package cuchaz.enigma.inputs.innerClasses;
 
-public class Anonymous // a
+public class Anonymous
 {
 	public void foo( )
 	{
-		Runnable runnable = new Runnable( ) // b
+		Runnable runnable = new Runnable( )
 		{
 			@Override
 			public void run( )
