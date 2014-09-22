@@ -232,7 +232,7 @@ public class Deobfuscator
 		sourceTree.acceptVisitor( new SourceIndexVisitor(), index );
 		
 		// DEBUG
-		//root.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
+		//sourceTree.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
 
 		/* DEBUG
 		for( Token token : index.referenceTokens() )
@@ -420,19 +420,7 @@ public class Deobfuscator
 	{
 		if( obfEntry instanceof ClassEntry )
 		{
-			ClassEntry obfClassEntry = (ClassEntry)obfEntry;
-			if( obfClassEntry.isInnerClass() )
-			{
-				// both classes must be in the list
-				return m_jarIndex.getObfClassEntries().contains( obfClassEntry.getOuterClassEntry() )
-					&& m_jarIndex.getObfClassEntries().contains( obfClassEntry.getInnerClassName() );
-				// TODO: make sure this works for the inner class!!
-			}
-			else
-			{
-				// class must be in the list
-				return m_jarIndex.getObfClassEntries().contains( obfEntry );
-			}
+			return m_jarIndex.getObfClassEntries().contains( obfEntry );
 		}
 		else
 		{

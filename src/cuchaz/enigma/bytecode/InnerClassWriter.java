@@ -16,8 +16,10 @@ import javassist.CtClass;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.EnclosingMethodAttribute;
 import javassist.bytecode.InnerClassesAttribute;
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 
 public class InnerClassWriter
@@ -44,6 +46,18 @@ public class InnerClassWriter
 			// this is an inner class, rename it to outer$inner
 			ClassEntry obfClassEntry = new ClassEntry( obfOuterClassName + "$" + new ClassEntry( obfClassName ).getSimpleName() );
 			c.setName( obfClassEntry.getName() );
+			
+			BehaviorEntry caller = m_jarIndex.getAnonymousClassCaller( obfClassName );
+			if( caller != null )
+			{
+				// write the enclosing method attribute
+				c.getClassFile().addAttribute( new EnclosingMethodAttribute(
+					c.getClassFile().getConstPool(),
+					caller.getClassName(),
+					caller.getName(),
+					caller.getSignature()
+				) );
+			}
 		}
 		
 		// write the inner classes if needed

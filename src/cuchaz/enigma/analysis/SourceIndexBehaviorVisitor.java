@@ -177,14 +177,17 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 	public Void visitObjectCreationExpression( ObjectCreationExpression node, SourceIndex index )
 	{
 		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
-		ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
-		ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, ref.getSignature() );
-		if( node.getType() instanceof SimpleType )
+		if( ref != null )
 		{
-			index.addReference(
-				((SimpleType)node.getType()).getIdentifierToken(),
-				new EntryReference<Entry,Entry>( constructorEntry, m_behaviorEntry )
-			);
+			ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
+			ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, ref.getSignature() );
+			if( node.getType() instanceof SimpleType )
+			{
+				index.addReference(
+					((SimpleType)node.getType()).getIdentifierToken(),
+					new EntryReference<Entry,Entry>( constructorEntry, m_behaviorEntry )
+				);
+			}
 		}
 		
 		return recurse( node, index );

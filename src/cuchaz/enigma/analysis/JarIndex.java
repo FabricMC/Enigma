@@ -63,7 +63,7 @@ public class JarIndex
 	private Multimap<FieldEntry,EntryReference<FieldEntry,BehaviorEntry>> m_fieldReferences;
 	private Multimap<String,String> m_innerClasses;
 	private Map<String,String> m_outerClasses;
-	private Set<String> m_anonymousClasses;
+	private Map<String,BehaviorEntry> m_anonymousClasses;
 	private Map<MethodEntry,MethodEntry> m_bridgeMethods;
 	
 	public JarIndex( )
@@ -78,7 +78,7 @@ public class JarIndex
 		m_fieldReferences = HashMultimap.create();
 		m_innerClasses = HashMultimap.create();
 		m_outerClasses = Maps.newHashMap();
-		m_anonymousClasses = Sets.newHashSet();
+		m_anonymousClasses = Maps.newHashMap();
 		m_bridgeMethods = Maps.newHashMap();
 	}
 	
@@ -161,9 +161,10 @@ public class JarIndex
 					m_innerClasses.put( outerClassName, innerClassName );
 					m_outerClasses.put( innerClassName, outerClassName );
 					
-					if( isAnonymousClass( c, outerClassName ) )
+					BehaviorEntry enclosingBehavior = isAnonymousClass( c, outerClassName );
+					if( enclosingBehavior != null )
 					{
-						m_anonymousClasses.add( innerClassName );
+						m_anonymousClasses.put( innerClassName, enclosingBehavior );
 						
 						// DEBUG
 						//System.out.println( "ANONYMOUS: " + outerClassName + "$" + innerClassName );
@@ -188,6 +189,7 @@ public class JarIndex
 			EntryRenamer.renameClassesInMultimap( renames, m_methodImplementations );
 			EntryRenamer.renameClassesInMultimap( renames, m_behaviorReferences );
 			EntryRenamer.renameClassesInMultimap( renames, m_fieldReferences );
+			EntryRenamer.renameClassesInMap( renames, m_bridgeMethods );
 		}
 		
 		// step 6: update other indices with bridge method info
@@ -618,7 +620,7 @@ public class JarIndex
 		return true;
 	}
 
-	private boolean isAnonymousClass( CtClass c, String outerClassName )
+	private BehaviorEntry isAnonymousClass( CtClass c, String outerClassName )
 	{
 		ClassEntry innerClassEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
 		
@@ -631,13 +633,13 @@ public class JarIndex
 		// is abstract?
 		if( Modifier.isAbstract( c.getModifiers() ) )
 		{
-			return false;
+			return null;
 		}
 		
 		// is there exactly one constructor?
 		if( c.getDeclaredConstructors().length != 1 )
 		{
-			return false;
+			return null;
 		}
 		CtConstructor constructor = c.getDeclaredConstructors()[0];
 		
@@ -646,7 +648,7 @@ public class JarIndex
 		Collection<EntryReference<BehaviorEntry,BehaviorEntry>> references = getBehaviorReferences( constructorEntry );
 		if( references.size() != 1 )
 		{
-			return false;
+			return null;
 		}
 		
 		// does the caller use this type?
@@ -657,7 +659,7 @@ public class JarIndex
 			if( fieldClass != null && fieldClass.equals( innerClassEntry ) )
 			{
 				// caller references this type, so it can't be anonymous
-				return false;
+				return null;
 			}
 		}
 		for( BehaviorEntry behaviorEntry : getReferencedBehaviors( caller ) )
@@ -668,12 +670,12 @@ public class JarIndex
 				if( className.equals( innerClassEntry.getName() ) )
 				{
 					// caller references this type, so it can't be anonymous
-					return false;
+					return null;
 				}
 			}
 		}
 		
-		return true;
+		return caller;
 	}
 
 	public Set<ClassEntry> getObfClassEntries( )
@@ -905,7 +907,12 @@ public class JarIndex
 	
 	public boolean isAnonymousClass( String obfInnerClassName )
 	{
-		return m_anonymousClasses.contains( obfInnerClassName );
+		return m_anonymousClasses.containsKey( obfInnerClassName );
+	}
+	
+	public BehaviorEntry getAnonymousClassCaller( String obfInnerClassName )
+	{
+		return m_anonymousClasses.get( obfInnerClassName );
 	}
 	
 	public Set<String> getInterfaces( String className )

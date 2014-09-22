@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 public class SignatureUpdater
 {
