@@ -51,12 +51,22 @@ public class InnerClassWriter
 			if( caller != null )
 			{
 				// write the enclosing method attribute
-				c.getClassFile().addAttribute( new EnclosingMethodAttribute(
-					c.getClassFile().getConstPool(),
-					caller.getClassName(),
-					caller.getName(),
-					caller.getSignature()
-				) );
+				if( caller.getName().equals( "<clinit>" ) )
+				{
+					c.getClassFile().addAttribute( new EnclosingMethodAttribute(
+						c.getClassFile().getConstPool(),
+						caller.getClassName()
+					) );
+				}
+				else
+				{
+					c.getClassFile().addAttribute( new EnclosingMethodAttribute(
+						c.getClassFile().getConstPool(),
+						caller.getClassName(),
+						caller.getName(),
+						caller.getSignature()
+					) );
+				}
 			}
 		}
 		
