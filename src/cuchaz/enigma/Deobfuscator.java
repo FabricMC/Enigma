@@ -22,6 +22,7 @@ import java.util.jar.JarFile;
 
 import javassist.bytecode.Descriptor;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.strobel.assembler.metadata.MetadataSystem;
@@ -44,6 +45,7 @@ import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsRenamer;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -113,34 +115,36 @@ public class Deobfuscator
 			val = new Mappings();
 		}
 		
-		// make sure all the mappings match the classes in the jar
+		// look for any classes that got moved to inner classes
+		Map<String,String> renames = Maps.newHashMap();
 		for( ClassMapping classMapping : val.classes() )
 		{
-			ClassEntry classEntry = new ClassEntry( classMapping.getObfName() );
-			if( !m_jarIndex.getObfClassEntries().contains( classEntry ) )
+			String outerClassName = m_jarIndex.getOuterClass( classMapping.getObfName() );
+			if( outerClassName != null )
 			{
-				throw new Error( "Class " + classEntry + " not found in Jar!" );
-			}
-			
-			// and method implementations
-			for( MethodMapping methodMapping : classMapping.methods() )
-			{
-				if( methodMapping.getObfName().startsWith( "<" ) )
-				{
-					// skip constructors and static initializers
-					continue;
-				}
+				// build the composite class name
+				String newName = outerClassName + "$" + new ClassEntry( classMapping.getObfName() ).getSimpleName();
 				
-				MethodEntry methodEntry = new MethodEntry(
-					classEntry,
-					methodMapping.getObfName(),
-					methodMapping.getObfSignature()
-				);
-				if( !m_jarIndex.isMethodImplemented( methodEntry ) )
-				{
-					throw new Error( "Method " + methodEntry + " not found in Jar!" );
-				}
+				// add a rename
+				renames.put( classMapping.getObfName(), newName );
+				
+				System.out.println( String.format( "Converted class mapping %s to %s", classMapping.getObfName(), newName ) );
 			}
+		}
+		for( Map.Entry<String,String> entry : renames.entrySet() )
+		{
+			val.renameObfClass( entry.getKey(), entry.getValue() );
+		}
+		
+		// drop mappings that don't match the jar
+		List<ClassEntry> unknownClasses = Lists.newArrayList();
+		for( ClassMapping classMapping : val.classes() )
+		{
+			checkClassMapping( unknownClasses, classMapping );
+		}
+		if( !unknownClasses.isEmpty() )
+		{
+			throw new Error( "Unable to find classes in jar: " + unknownClasses );
 		}
 		
 		m_mappings = val;
@@ -148,6 +152,70 @@ public class Deobfuscator
 		m_translatorCache.clear();
 	}
 	
+	private void checkClassMapping( List<ClassEntry> unknownClasses, ClassMapping classMapping )
+	{
+		// check the class
+		ClassEntry classEntry = new ClassEntry( classMapping.getObfName() );
+		String outerClassName = m_jarIndex.getOuterClass( classMapping.getObfName() );
+		if( outerClassName != null )
+		{
+			classEntry = new ClassEntry( outerClassName + "$" + classEntry.getSimpleName() );
+		}
+		if( !m_jarIndex.getObfClassEntries().contains( classEntry ) )
+		{
+			unknownClasses.add( classEntry );
+		}
+		
+		// check the fields
+		for( FieldMapping fieldMapping : Lists.newArrayList( classMapping.fields() ) )
+		{
+			FieldEntry fieldEntry = new FieldEntry( classEntry, fieldMapping.getObfName() );
+			if( m_jarIndex.getAccess( fieldEntry ) == null )
+			{
+				System.err.println( "WARNING: unable to find field " + fieldEntry + ". dropping mapping." );
+				classMapping.removeFieldMapping( fieldMapping );
+			}
+		}
+		
+		// check methods
+		for( MethodMapping methodMapping : Lists.newArrayList( classMapping.methods() ) )
+		{
+			if( methodMapping.getObfName().equals( "<clinit>" ) )
+			{
+				// skip static initializers
+				continue;
+			}
+			else if( methodMapping.getObfName().equals( "<init>" ) )
+			{
+				ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, methodMapping.getObfSignature() );
+				if( m_jarIndex.getAccess( constructorEntry ) == null )
+				{
+					System.err.println( "WARNING: unable to find constructor " + constructorEntry + ". dropping mapping." );
+					classMapping.removeMethodMapping( methodMapping );
+				}
+			}
+			else
+			{
+				MethodEntry methodEntry = new MethodEntry(
+					classEntry,
+					methodMapping.getObfName(),
+					methodMapping.getObfSignature()
+				);
+				if( m_jarIndex.getAccess( methodEntry ) == null )
+				{
+					System.err.println( "WARNING: unable to find method " + methodEntry + ". dropping mapping." );
+					classMapping.removeMethodMapping( methodMapping );
+				}
+			}
+		}
+		
+		// check inner classes
+		for( ClassMapping innerClassMapping : classMapping.innerClasses() )
+		{
+			checkClassMapping( unknownClasses, innerClassMapping );
+		}
+	}
+
 	public Translator getTranslator( TranslationDirection direction )
 	{
 		Translator translator = m_translatorCache.get( direction );

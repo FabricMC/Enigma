@@ -155,6 +155,17 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		assert( deobfWasAdded );
 		assert( m_fieldsByObf.size() == m_fieldsByDeobf.size() );
 	}
+	
+	public void removeFieldMapping( FieldMapping fieldMapping )
+	{
+		boolean obfWasRemoved = m_fieldsByObf.remove( fieldMapping.getObfName() ) != null;
+		assert( obfWasRemoved );
+		if( fieldMapping.getDeobfName() != null )
+		{
+			boolean deobfWasRemoved = m_fieldsByDeobf.remove( fieldMapping.getDeobfName() ) != null;
+			assert( deobfWasRemoved );
+		}
+	}
 
 	public String getObfFieldName( String deobfName )
 	{
@@ -223,6 +234,17 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 			assert( deobfWasAdded );
 		}
 		assert( m_methodsByObf.size() >= m_methodsByDeobf.size() );
+	}
+	
+	public void removeMethodMapping( MethodMapping methodMapping )
+	{
+		boolean obfWasRemoved = m_methodsByObf.remove( getMethodKey( methodMapping.getObfName(), methodMapping.getObfSignature() ) ) != null;
+		assert( obfWasRemoved );
+		if( methodMapping.getDeobfName() != null )
+		{
+			boolean deobfWasRemoved = m_methodsByDeobf.remove( getMethodKey( methodMapping.getDeobfName(), methodMapping.getObfSignature() ) ) != null;
+			assert( deobfWasRemoved );
+		}
 	}
 	
 	public MethodMapping getMethodByObf( String obfName, String signature )

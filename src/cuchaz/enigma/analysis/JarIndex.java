@@ -95,7 +95,7 @@ public class JarIndex
 			m_obfClassEntries.add( classEntry );
 		}
 		
-		// step 2: index method/field access
+		// step 2: index field/method/constructor access
 		for( CtClass c : JarClassIterator.classes( jar ) )
 		{
 			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
@@ -105,10 +105,15 @@ public class JarIndex
 				FieldEntry fieldEntry = new FieldEntry( classEntry, field.getName() );
 				m_access.put( fieldEntry, Access.get( field ) );
 			}
-			for( CtBehavior behavior : c.getDeclaredBehaviors() )
+			for( CtMethod method : c.getDeclaredMethods() )
 			{
-				MethodEntry methodEntry = new MethodEntry( classEntry, behavior.getName(), behavior.getSignature() );
-				m_access.put( methodEntry, Access.get( behavior ) );
+				MethodEntry methodEntry = new MethodEntry( classEntry, method.getName(), method.getSignature() );
+				m_access.put( methodEntry, Access.get( method ) );
+			}
+			for( CtConstructor constructor : c.getDeclaredConstructors() )
+			{
+				ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, constructor.getSignature() );
+				m_access.put( constructorEntry, Access.get( constructor ) );
 			}
 		}
 		
@@ -190,6 +195,7 @@ public class JarIndex
 			EntryRenamer.renameClassesInMultimap( renames, m_behaviorReferences );
 			EntryRenamer.renameClassesInMultimap( renames, m_fieldReferences );
 			EntryRenamer.renameClassesInMap( renames, m_bridgeMethods );
+			EntryRenamer.renameClassesInMap( renames, m_access );
 		}
 		
 		// step 6: update other indices with bridge method info

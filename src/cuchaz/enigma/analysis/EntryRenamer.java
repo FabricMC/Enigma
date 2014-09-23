@@ -189,10 +189,6 @@ public class EntryRenamer
 			reference.context = renameClassesInThing( renames, reference.context );
 			return thing;
 		}
-		else
-		{
-			throw new Error( "Not an entry: " + thing );
-		}
 		
 		return thing;
 	}
