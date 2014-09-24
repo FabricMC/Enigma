@@ -81,6 +81,12 @@ public class MethodEntry implements BehaviorEntry, Serializable
 	}
 	
 	@Override
+	public MethodEntry cloneToNewClass( ClassEntry classEntry )
+	{
+		return new MethodEntry( this, classEntry.getName() );
+	}
+	
+	@Override
 	public int hashCode( )
 	{
 		return Util.combineHashesOrdered( m_classEntry, m_name, m_signature );

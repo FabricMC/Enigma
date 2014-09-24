@@ -57,8 +57,8 @@ public class ClassMatcher
 		// TEMP
 		JarFile sourceJar = new JarFile( new File( "input/1.8-pre3.jar" ) );
 		JarFile destJar = new JarFile( new File( "input/1.8.jar" ) );
-		File inMappingsFile = new File( "../minecraft-mappings/1.8-pre3.mappings" );
-		File outMappingsFile = new File( "../minecraft-mappings/1.8.mappings" );
+		File inMappingsFile = new File( "../Enigma Mappings/1.8-pre3.mappings" );
+		File outMappingsFile = new File( "../Enigma Mappings/1.8.mappings" );
 		
 		// define a matching to use when the automated system cannot find a match
 		Map<String,String> fallbackMatching = Maps.newHashMap();
@@ -271,7 +271,7 @@ public class ClassMatcher
 					methodMapping.getObfName(),
 					methodMapping.getObfSignature()
 				);
-				if( !destIndex.isMethodImplemented( methodEntry ) )
+				if( !destIndex.containsObfBehavior( methodEntry ) )
 				{
 					System.err.println( "WARNING: method doesn't match: " + methodEntry );
 					

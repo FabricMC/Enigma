@@ -44,12 +44,6 @@ public class ClassEntry implements Entry, Serializable
 	}
 	
 	@Override
-	public ClassEntry getClassEntry( )
-	{
-		return this;
-	}
-
-	@Override
 	public String getName( )
 	{
 		return m_name;
@@ -61,6 +55,18 @@ public class ClassEntry implements Entry, Serializable
 		return m_name;
 	}
 	
+	@Override
+	public ClassEntry getClassEntry( )
+	{
+		return this;
+	}
+	
+	@Override
+	public ClassEntry cloneToNewClass( ClassEntry classEntry )
+	{
+		return classEntry;
+	}
+
 	@Override
 	public int hashCode( )
 	{

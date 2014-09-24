@@ -81,7 +81,7 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode
 				m_entry.getName(),
 				m_entry.getSignature()
 			);
-			if( index.isMethodImplemented( methodEntry ) )
+			if( index.containsObfBehavior( methodEntry ) )
 			{
 				nodes.add( new MethodImplementationsTreeNode( m_deobfuscatingTranslator, methodEntry ) );
 			}

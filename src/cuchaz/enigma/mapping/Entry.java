@@ -15,4 +15,5 @@ public interface Entry
 	String getName( );
 	String getClassName( );
 	ClassEntry getClassEntry( );
+	Entry cloneToNewClass( ClassEntry classEntry );
 }

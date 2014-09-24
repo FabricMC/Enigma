@@ -18,15 +18,15 @@ public class ArgumentEntry implements Entry, Serializable
 {
 	private static final long serialVersionUID = 4472172468162696006L;
 	
-	private MethodEntry m_methodEntry;
+	private BehaviorEntry m_behaviorEntry;
 	private int m_index;
 	private String m_name;
 	
-	public ArgumentEntry( MethodEntry methodEntry, int index, String name )
+	public ArgumentEntry( BehaviorEntry behaviorEntry, int index, String name )
 	{
-		if( methodEntry == null )
+		if( behaviorEntry == null )
 		{
-			throw new IllegalArgumentException( "Method cannot be null!" );
+			throw new IllegalArgumentException( "Behavior cannot be null!" );
 		}
 		if( index < 0 )
 		{
@@ -37,21 +37,28 @@ public class ArgumentEntry implements Entry, Serializable
 			throw new IllegalArgumentException( "Argument name cannot be null!" );
 		}
 		
-		m_methodEntry = methodEntry;
+		m_behaviorEntry = behaviorEntry;
 		m_index = index;
 		m_name = name;
 	}
 	
 	public ArgumentEntry( ArgumentEntry other )
 	{
-		m_methodEntry = new MethodEntry( other.m_methodEntry );
+		m_behaviorEntry = (BehaviorEntry)m_behaviorEntry.cloneToNewClass( getClassEntry() );
 		m_index = other.m_index;
 		m_name = other.m_name;
 	}
 	
-	public MethodEntry getMethodEntry( )
+	public ArgumentEntry( ArgumentEntry other, String newClassName )
 	{
-		return m_methodEntry;
+		m_behaviorEntry = (BehaviorEntry)other.m_behaviorEntry.cloneToNewClass( new ClassEntry( newClassName ) );
+		m_index = other.m_index;
+		m_name = other.m_name;
+	}
+	
+	public BehaviorEntry getBehaviorEntry( )
+	{
+		return m_behaviorEntry;
 	}
 	
 	public int getIndex( )
@@ -68,29 +75,35 @@ public class ArgumentEntry implements Entry, Serializable
 	@Override
 	public ClassEntry getClassEntry( )
 	{
-		return m_methodEntry.getClassEntry();
+		return m_behaviorEntry.getClassEntry();
 	}
 	
 	@Override
 	public String getClassName( )
 	{
-		return m_methodEntry.getClassName();
+		return m_behaviorEntry.getClassName();
+	}
+	
+	@Override
+	public ArgumentEntry cloneToNewClass( ClassEntry classEntry )
+	{
+		return new ArgumentEntry( this, classEntry.getName() );
 	}
 	
 	public String getMethodName( )
 	{
-		return m_methodEntry.getName();
+		return m_behaviorEntry.getName();
 	}
 	
 	public String getMethodSignature( )
 	{
-		return m_methodEntry.getSignature();
+		return m_behaviorEntry.getSignature();
 	}
 	
 	@Override
 	public int hashCode( )
 	{
-		return Util.combineHashesOrdered( m_methodEntry, Integer.valueOf( m_index ).hashCode(), m_name.hashCode() );
+		return Util.combineHashesOrdered( m_behaviorEntry, Integer.valueOf( m_index ).hashCode(), m_name.hashCode() );
 	}
 	
 	@Override
@@ -105,7 +118,7 @@ public class ArgumentEntry implements Entry, Serializable
 	
 	public boolean equals( ArgumentEntry other )
 	{
-		return m_methodEntry.equals( other.m_methodEntry )
+		return m_behaviorEntry.equals( other.m_behaviorEntry )
 			&& m_index == other.m_index
 			&& m_name.equals( other.m_name );
 	}
@@ -113,6 +126,6 @@ public class ArgumentEntry implements Entry, Serializable
 	@Override
 	public String toString( )
 	{
-		return m_methodEntry.toString() + "(" + m_index + ":" + m_name + ")";
+		return m_behaviorEntry.toString() + "(" + m_index + ":" + m_name + ")";
 	}
 }

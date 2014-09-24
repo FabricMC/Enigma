@@ -253,12 +253,12 @@ public class Mappings implements Serializable
 		return false;
 	}
 
-	public boolean containsArgument( MethodEntry obfMethodEntry, String name )
+	public boolean containsArgument( BehaviorEntry obfBehaviorEntry, String name )
 	{
-		ClassMapping classMapping = m_classesByObf.get( obfMethodEntry.getClassName() );
+		ClassMapping classMapping = m_classesByObf.get( obfBehaviorEntry.getClassName() );
 		if( classMapping != null )
 		{
-			return classMapping.containsArgument( obfMethodEntry, name );
+			return classMapping.containsArgument( obfBehaviorEntry, name );
 		}
 		return false;
 	}

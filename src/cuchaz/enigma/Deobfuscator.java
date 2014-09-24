@@ -39,6 +39,7 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
+import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
@@ -115,7 +116,7 @@ public class Deobfuscator
 			val = new Mappings();
 		}
 		
-		// look for any classes that got moved to inner classes
+		// pass 1: look for any classes that got moved to inner classes
 		Map<String,String> renames = Maps.newHashMap();
 		for( ClassMapping classMapping : val.classes() )
 		{
@@ -136,6 +137,53 @@ public class Deobfuscator
 			val.renameObfClass( entry.getKey(), entry.getValue() );
 		}
 		
+		// pass 2: look for fields/methods that are actually declared in superclasses
+		MappingsRenamer renamer = new MappingsRenamer( m_jarIndex, val );
+		for( ClassMapping classMapping : val.classes() )
+		{
+			ClassEntry obfClassEntry = new ClassEntry( classMapping.getObfName() );
+			
+			// fields
+			for( FieldMapping fieldMapping : Lists.newArrayList( classMapping.fields() ) )
+			{
+				FieldEntry fieldEntry = new FieldEntry( obfClassEntry, fieldMapping.getObfName() );
+				ClassEntry resolvedObfClassEntry = m_jarIndex.resolveEntryClass( fieldEntry );
+				if( resolvedObfClassEntry != null && !resolvedObfClassEntry.equals( fieldEntry.getClassEntry() ) )
+				{
+					boolean wasMoved = renamer.moveFieldToObfClass( classMapping, fieldMapping, resolvedObfClassEntry );
+					if( wasMoved )
+					{
+						System.out.println( String.format( "Moved field %s to class %s", fieldEntry, resolvedObfClassEntry ) );
+					}
+					else
+					{
+						System.err.println( String.format( "WARNING: Would move field %s to class %s but the field was already there. Dropping instead.", fieldEntry, resolvedObfClassEntry ) );
+					}
+				}
+			}
+			
+			// methods
+			for( MethodMapping methodMapping : Lists.newArrayList( classMapping.methods() ) )
+			{
+				MethodEntry methodEntry = new MethodEntry( obfClassEntry, methodMapping.getObfName(), methodMapping.getObfSignature() );
+				ClassEntry resolvedObfClassEntry = m_jarIndex.resolveEntryClass( methodEntry );
+				if( resolvedObfClassEntry != null && !resolvedObfClassEntry.equals( methodEntry.getClassEntry() ) )
+				{
+					boolean wasMoved = renamer.moveMethodToObfClass( classMapping, methodMapping, resolvedObfClassEntry );
+					if( wasMoved )
+					{
+						System.out.println( String.format( "Moved method %s to class %s", methodEntry, resolvedObfClassEntry ) );
+					}
+					else
+					{
+						System.err.println( String.format( "WARNING: Would move method %s to class %s but the method was already there. Dropping instead.", methodEntry, resolvedObfClassEntry ) );
+					}
+				}
+			}
+			
+			// TODO: recurse to inner classes?
+		}
+		
 		// drop mappings that don't match the jar
 		List<ClassEntry> unknownClasses = Lists.newArrayList();
 		for( ClassMapping classMapping : val.classes() )
@@ -148,7 +196,7 @@ public class Deobfuscator
 		}
 		
 		m_mappings = val;
-		m_renamer = new MappingsRenamer( m_jarIndex, m_mappings );
+		m_renamer = renamer;
 		m_translatorCache.clear();
 	}
 	
@@ -170,7 +218,7 @@ public class Deobfuscator
 		for( FieldMapping fieldMapping : Lists.newArrayList( classMapping.fields() ) )
 		{
 			FieldEntry fieldEntry = new FieldEntry( classEntry, fieldMapping.getObfName() );
-			if( m_jarIndex.getAccess( fieldEntry ) == null )
+			if( !m_jarIndex.containsObfField( fieldEntry ) )
 			{
 				System.err.println( "WARNING: unable to find field " + fieldEntry + ". dropping mapping." );
 				classMapping.removeFieldMapping( fieldMapping );
@@ -188,7 +236,7 @@ public class Deobfuscator
 			else if( methodMapping.getObfName().equals( "<init>" ) )
 			{
 				ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, methodMapping.getObfSignature() );
-				if( m_jarIndex.getAccess( constructorEntry ) == null )
+				if( !m_jarIndex.containsObfBehavior( constructorEntry ) )
 				{
 					System.err.println( "WARNING: unable to find constructor " + constructorEntry + ". dropping mapping." );
 					classMapping.removeMethodMapping( methodMapping );
@@ -201,7 +249,7 @@ public class Deobfuscator
 					methodMapping.getObfName(),
 					methodMapping.getObfSignature()
 				);
-				if( m_jarIndex.getAccess( methodEntry ) == null )
+				if( !m_jarIndex.containsObfBehavior( methodEntry ) )
 				{
 					System.err.println( "WARNING: unable to find method " + methodEntry + ". dropping mapping." );
 					classMapping.removeMethodMapping( methodMapping );
@@ -257,19 +305,20 @@ public class Deobfuscator
 		}
 	}
 	
-	public CompilationUnit getSourceTree( String className )
+	public CompilationUnit getSourceTree( String obfClassName )
 	{
 		// is this class deobfuscated?
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
 		// the decompiler only sees the deobfuscated class, so we need to load it by the deobfuscated name
-		ClassMapping classMapping = m_mappings.getClassByObf( className );
+		String lookupClassName = obfClassName;
+		ClassMapping classMapping = m_mappings.getClassByObf( obfClassName );
 		if( classMapping != null && classMapping.getDeobfName() != null )
 		{
-			className = classMapping.getDeobfName();
+			lookupClassName = classMapping.getDeobfName();
 		}
 		
 		// is this class even in the jar?
-		if( !m_jarIndex.containsObfClass( new ClassEntry( className ) ) )
+		if( !m_jarIndex.containsObfClass( new ClassEntry( obfClassName ) ) )
 		{
 			return null;
 		}
@@ -283,7 +332,7 @@ public class Deobfuscator
 		) );
 		
 		// decompile it!
-		TypeDefinition resolvedType = new MetadataSystem( m_settings.getTypeLoader() ).lookupType( className ).resolve();
+		TypeDefinition resolvedType = new MetadataSystem( m_settings.getTypeLoader() ).lookupType( lookupClassName ).resolve();
 		DecompilerContext context = new DecompilerContext();
 		context.setCurrentType( resolvedType );
 		context.setSettings( m_settings );
@@ -302,13 +351,29 @@ public class Deobfuscator
 		// DEBUG
 		//sourceTree.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
 
-		/* DEBUG
+		// resolve all the classes in the source references
 		for( Token token : index.referenceTokens() )
 		{
-			EntryReference<Entry,Entry> reference = index.getDeobfReference( token );
-			System.out.println( token + " -> " + reference + " -> " + index.getReferenceToken( reference ) );
+			EntryReference<Entry,Entry> deobfReference = index.getDeobfReference( token );
+			
+			// get the obfuscated entry
+			Entry obfEntry = obfuscateEntry( deobfReference.entry );
+			
+			// try to resolve the class
+			ClassEntry resolvedObfClassEntry = m_jarIndex.resolveEntryClass( obfEntry );
+			if( resolvedObfClassEntry != null && !resolvedObfClassEntry.equals( obfEntry.getClassEntry() ) )
+			{
+				// change the class of the entry
+				obfEntry = obfEntry.cloneToNewClass( resolvedObfClassEntry );
+				
+				// save the new deobfuscated reference
+				deobfReference.entry = deobfuscateEntry( obfEntry );
+				index.replaceDeobfReference( token, deobfReference );
+			}
+			
+			// DEBUG
+			//System.out.println( token + " -> " + reference + " -> " + index.getReferenceToken( reference ) );
 		}
-		*/
 		
 		return index;
 	}
@@ -486,13 +551,6 @@ public class Deobfuscator
 
 	public boolean isObfuscatedIdentifier( Entry obfEntry )
 	{
-		if( obfEntry instanceof ClassEntry )
-		{
-			return m_jarIndex.getObfClassEntries().contains( obfEntry );
-		}
-		else
-		{
-			return isObfuscatedIdentifier( obfEntry.getClassEntry() );
-		}
+		return m_jarIndex.containsObfEntry( obfEntry );
 	}
 }

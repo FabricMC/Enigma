@@ -42,6 +42,7 @@ import com.google.common.collect.Sets;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.bytecode.ClassRenamer;
+import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
@@ -264,7 +265,15 @@ public class JarIndex
 						call.getMethodName(),
 						call.getSignature()
 					);
-					calledMethodEntry = resolveMethodClass( calledMethodEntry );
+					ClassEntry resolvedClassEntry = resolveEntryClass( calledMethodEntry );
+					if( resolvedClassEntry != null && !resolvedClassEntry.equals( calledMethodEntry.getClassEntry() ) )
+					{
+						calledMethodEntry = new MethodEntry(
+							resolvedClassEntry,
+							call.getMethodName(),
+							call.getSignature()
+						);
+					}
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledMethodEntry,
 						behaviorEntry
@@ -280,6 +289,14 @@ public class JarIndex
 						new ClassEntry( className ),
 						call.getFieldName()
 					);
+					ClassEntry resolvedClassEntry = resolveEntryClass( calledFieldEntry );
+					if( resolvedClassEntry != null && !resolvedClassEntry.equals( calledFieldEntry.getClassEntry() ) )
+					{
+						calledFieldEntry = new FieldEntry(
+							resolvedClassEntry,
+							call.getFieldName()
+						);
+					}
 					EntryReference<FieldEntry,BehaviorEntry> reference = new EntryReference<FieldEntry,BehaviorEntry>(
 						calledFieldEntry,
 						behaviorEntry
@@ -355,30 +372,26 @@ public class JarIndex
 			throw new IllegalArgumentException( "behavior must be a method or a constructor!" );
 		}
 	}
-
-	private MethodEntry resolveMethodClass( MethodEntry methodEntry )
+	
+	public ClassEntry resolveEntryClass( Entry obfEntry )
 	{
 		// this entry could refer to a method on a class where the method is not actually implemented
 		// travel up the inheritance tree to find the closest implementation
-		while( !isMethodImplemented( methodEntry ) )
+		while( !containsObfEntry( obfEntry ) )
 		{
 			// is there a parent class?
-			String superclassName = m_translationIndex.getSuperclassName( methodEntry.getClassName() );
+			String superclassName = m_translationIndex.getSuperclassName( obfEntry.getClassName() );
 			if( superclassName == null )
 			{
 				// this is probably a method from a class in a library
 				// we can't trace the implementation up any higher unless we index the library
-				return methodEntry;
+				return null;
 			}
 			
 			// move up to the parent class
-			methodEntry = new MethodEntry(
-				new ClassEntry( superclassName ),
-				methodEntry.getName(),
-				methodEntry.getSignature()
-			);
+			obfEntry = obfEntry.cloneToNewClass( new ClassEntry( superclassName ) );
 		}
-		return methodEntry;
+		return obfEntry.getClassEntry();
 	}
 
 	private CtMethod getBridgedMethod( CtMethod method )
@@ -704,16 +717,6 @@ public class JarIndex
 		return m_fieldClasses.get( fieldEntry );
 	}
 	
-	public boolean isMethodImplemented( MethodEntry methodEntry )
-	{
-		Collection<MethodEntry> implementations = m_methodImplementations.get( methodEntry.getClassName() );
-		if( implementations == null )
-		{
-			return false;
-		}
-		return implementations.contains( methodEntry );
-	}
-
 	public ClassInheritanceTreeNode getClassInheritance( Translator deobfuscatingTranslator, ClassEntry obfClassEntry )
 	{
 		// get the root node
@@ -751,7 +754,7 @@ public class JarIndex
 				obfMethodEntry.getName(),
 				obfMethodEntry.getSignature()
 			);
-			if( isMethodImplemented( ancestorMethodEntry ) )
+			if( containsObfBehavior( ancestorMethodEntry ) )
 			{
 				baseImplementationClassName = ancestorClassName;
 			}
@@ -766,7 +769,7 @@ public class JarIndex
 		MethodInheritanceTreeNode rootNode = new MethodInheritanceTreeNode(
 			deobfuscatingTranslator,
 			methodEntry,
-			isMethodImplemented( methodEntry )
+			containsObfBehavior( methodEntry )
 		);
 		
 		// expand the full tree
@@ -796,7 +799,7 @@ public class JarIndex
 					obfMethodEntry.getName(),
 					obfMethodEntry.getSignature()
 				);
-				if( isMethodImplemented( methodInterface ) )
+				if( containsObfBehavior( methodInterface ) )
 				{
 					methodInterfaces.add( methodInterface );
 				}
@@ -827,7 +830,7 @@ public class JarIndex
 	private void getRelatedMethodImplementations( Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node )
 	{
 		MethodEntry methodEntry = node.getMethodEntry();
-		if( isMethodImplemented( methodEntry ) )
+		if( containsObfBehavior( methodEntry ) )
 		{
 			// collect the entry
 			methodEntries.add( methodEntry );
@@ -850,7 +853,7 @@ public class JarIndex
 	private void getRelatedMethodImplementations( Set<MethodEntry> methodEntries, MethodImplementationsTreeNode node )
 	{
 		MethodEntry methodEntry = node.getMethodEntry();
-		if( isMethodImplemented( methodEntry ) )
+		if( containsObfBehavior( methodEntry ) )
 		{
 			// collect the entry
 			methodEntries.add( methodEntry );
@@ -969,8 +972,49 @@ public class JarIndex
 		return m_access.containsKey( obfFieldEntry );
 	}
 
-	public boolean containsObfMethod( MethodEntry obfMethodEntry )
+	public boolean containsObfBehavior( BehaviorEntry obfBehaviorEntry )
 	{
-		return m_access.containsKey( obfMethodEntry );
+		return m_access.containsKey( obfBehaviorEntry );
+	}
+	
+	public boolean containsObfArgument( ArgumentEntry obfArgumentEntry )
+	{
+		// check the behavior
+		if( !containsObfBehavior( obfArgumentEntry.getBehaviorEntry() ) )
+		{
+			return false;
+		}
+		
+		// check the argument
+		if( obfArgumentEntry.getIndex() >= Descriptor.numOfParameters( obfArgumentEntry.getBehaviorEntry().getSignature() ) )
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public boolean containsObfEntry( Entry obfEntry )
+	{
+		if( obfEntry instanceof ClassEntry )
+		{
+			return containsObfClass( (ClassEntry)obfEntry );
+		}
+		else if( obfEntry instanceof FieldEntry )
+		{
+			return containsObfField( (FieldEntry)obfEntry );
+		}
+		else if( obfEntry instanceof BehaviorEntry )
+		{
+			return containsObfBehavior( (BehaviorEntry)obfEntry );
+		}
+		else if( obfEntry instanceof ArgumentEntry )
+		{
+			return containsObfArgument( (ArgumentEntry)obfEntry );
+		}
+		else
+		{
+			throw new Error( "Entry type not supported: " + obfEntry.getClass().getName() );
+		}
 	}
 }

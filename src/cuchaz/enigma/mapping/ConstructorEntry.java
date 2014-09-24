@@ -43,6 +43,12 @@ public class ConstructorEntry implements BehaviorEntry, Serializable
 		m_signature = other.m_signature;
 	}
 	
+	public ConstructorEntry( ConstructorEntry other, String newClassName )
+	{
+		m_classEntry = new ClassEntry( newClassName );
+		m_signature = other.m_signature;
+	}
+	
 	@Override
 	public ClassEntry getClassEntry( )
 	{
@@ -74,6 +80,12 @@ public class ConstructorEntry implements BehaviorEntry, Serializable
 	public String getClassName( )
 	{
 		return m_classEntry.getName();
+	}
+	
+	@Override
+	public ConstructorEntry cloneToNewClass( ClassEntry classEntry )
+	{
+		return new ConstructorEntry( this, classEntry.getName() );
 	}
 	
 	@Override

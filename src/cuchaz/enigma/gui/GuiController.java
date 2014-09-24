@@ -270,7 +270,7 @@ public class GuiController
 		ClassEntry obfClassEntry = obfReference.getClassEntry().getOuterClassEntry();
 		if( !m_deobfuscator.isObfuscatedIdentifier( obfClassEntry ) )
 		{
-			throw new IllegalArgumentException( "Entry must be in the jar!" );
+			throw new IllegalArgumentException( "Obfuscated class " + obfClassEntry + " was not found in the jar!" );
 		}
 		if( m_currentObfClass == null || !m_currentObfClass.equals( obfClassEntry ) )
 		{
@@ -354,6 +354,7 @@ public class GuiController
 				if( sourceTree == null )
 				{
 					// decompilation of this class is not supported
+					m_gui.setSource("Unable to find class: " + classEntry);
 					return;
 				}
 				String source = m_deobfuscator.getSource( sourceTree );

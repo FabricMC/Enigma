@@ -79,7 +79,7 @@ public class MappingsRenamer
 		{
 			String deobfSignature = getTranslator( TranslationDirection.Deobfuscating ).translateSignature( obf.getSignature() );
 			MethodEntry targetEntry = new MethodEntry( entry.getClassEntry(), deobfName, deobfSignature );
-			if( m_mappings.containsDeobfMethod( entry.getClassEntry(), deobfName, entry.getSignature() ) || m_index.containsObfMethod( targetEntry ) )
+			if( m_mappings.containsDeobfMethod( entry.getClassEntry(), deobfName, entry.getSignature() ) || m_index.containsObfBehavior( targetEntry ) )
 			{
 				String deobfClassName = getTranslator( TranslationDirection.Deobfuscating ).translateClass( entry.getClassName() );
 				throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + deobfClassName );
@@ -96,7 +96,7 @@ public class MappingsRenamer
 	{
 		deobfName = NameValidator.validateMethodName( deobfName );
 		MethodEntry targetEntry = new MethodEntry( obf.getClassEntry(), deobfName, obf.getSignature() );
-		if( m_mappings.containsDeobfMethod( obf.getClassEntry(), deobfName, obf.getSignature() ) || m_index.containsObfMethod( targetEntry ) )
+		if( m_mappings.containsDeobfMethod( obf.getClassEntry(), deobfName, obf.getSignature() ) || m_index.containsObfBehavior( targetEntry ) )
 		{
 			String deobfClassName = getTranslator( TranslationDirection.Deobfuscating ).translateClass( obf.getClassName() );
 			throw new IllegalNameException( deobfName, "There is already a method with that name and signature in class " + deobfClassName );
@@ -110,13 +110,39 @@ public class MappingsRenamer
 	{
 		deobfName = NameValidator.validateArgumentName( deobfName );
 		// NOTE: don't need to check arguments for name collisions with names determined by Procyon
-		if( m_mappings.containsArgument( obf.getMethodEntry(), deobfName ) )
+		if( m_mappings.containsArgument( obf.getBehaviorEntry(), deobfName ) )
 		{
 			throw new IllegalNameException( deobfName, "There is already an argument with that name" );
 		}
 		
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping( obf.getClassEntry() );
 		classMapping.setArgumentName( obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), deobfName );
+	}
+	
+	public boolean moveFieldToObfClass( ClassMapping classMapping, FieldMapping fieldMapping, ClassEntry obfClass )
+	{
+		classMapping.removeFieldMapping( fieldMapping );
+		ClassMapping targetClassMapping = getOrCreateClassMapping( obfClass );
+		if( !targetClassMapping.containsObfField( fieldMapping.getObfName() )
+			&& !targetClassMapping.containsDeobfField( fieldMapping.getDeobfName() ) )
+		{
+			targetClassMapping.addFieldMapping( fieldMapping );
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean moveMethodToObfClass( ClassMapping classMapping, MethodMapping methodMapping, ClassEntry obfClass )
+	{
+		classMapping.removeMethodMapping( methodMapping );
+		ClassMapping targetClassMapping = getOrCreateClassMapping( obfClass );
+		if( !targetClassMapping.containsObfMethod( methodMapping.getObfName(), methodMapping.getObfSignature() )
+			&& !targetClassMapping.containsDeobfMethod( methodMapping.getDeobfName(), methodMapping.getObfSignature() ) )
+		{
+			targetClassMapping.addMethodMapping( methodMapping );
+			return true;
+		}
+		return false;
 	}
 	
 	public void write( OutputStream out )

@@ -139,6 +139,16 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		return m_fieldsByObf.values();
 	}
 	
+	public boolean containsObfField( String obfName )
+	{
+		return m_fieldsByObf.containsKey( obfName );
+	}
+	
+	public boolean containsDeobfField( String deobfName )
+	{
+		return m_fieldsByDeobf.containsKey( deobfName );
+	}
+	
 	public void addFieldMapping( FieldMapping fieldMapping )
 	{
 		if( m_fieldsByObf.containsKey( fieldMapping.getObfName() ) )
@@ -212,6 +222,16 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	{
 		assert( m_methodsByObf.size() >= m_methodsByDeobf.size() );
 		return m_methodsByObf.values();
+	}
+	
+	public boolean containsObfMethod( String obfName, String obfSignature )
+	{
+		return m_methodsByObf.containsKey( getMethodKey( obfName, obfSignature ) );
+	}
+	
+	public boolean containsDeobfMethod( String deobfName, String deobfSignature )
+	{
+		return m_methodsByDeobf.containsKey( getMethodKey( deobfName, deobfSignature ) );
 	}
 	
 	public void addMethodMapping( MethodMapping methodMapping )
@@ -375,19 +395,9 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		return false;
 	}
 
-	public boolean containsDeobfField( String name )
+	public boolean containsArgument( BehaviorEntry obfBehaviorEntry, String name )
 	{
-		return m_fieldsByDeobf.containsKey( name );
-	}
-
-	public boolean containsDeobfMethod( String name, String signature )
-	{
-		return m_methodsByDeobf.containsKey( getMethodKey( name, signature ) );
-	}
-
-	public boolean containsArgument( MethodEntry obfMethodEntry, String name )
-	{
-		MethodMapping methodMapping = m_methodsByObf.get( getMethodKey( obfMethodEntry.getName(), obfMethodEntry.getSignature() ) );
+		MethodMapping methodMapping = m_methodsByObf.get( getMethodKey( obfBehaviorEntry.getName(), obfBehaviorEntry.getSignature() ) );
 		if( methodMapping != null )
 		{
 			return methodMapping.containsArgument( name );

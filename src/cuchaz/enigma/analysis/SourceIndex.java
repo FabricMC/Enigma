@@ -126,6 +126,15 @@ public class SourceIndex
 		return m_tokenToReference.get( token );
 	}
 	
+	public void replaceDeobfReference( Token token, EntryReference<Entry,Entry> newDeobfReference )
+	{
+		EntryReference<Entry,Entry> oldDeobfReference = m_tokenToReference.get( token );
+		m_tokenToReference.put( token, newDeobfReference );
+		Collection<Token> tokens = m_referenceToTokens.get( oldDeobfReference );
+		m_referenceToTokens.removeAll( oldDeobfReference );
+		m_referenceToTokens.putAll( newDeobfReference, tokens );
+	}
+	
 	public Iterable<Token> referenceTokens( )
 	{
 		return m_tokenToReference.keySet();

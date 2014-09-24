@@ -229,27 +229,27 @@ public class Gui
 				switch( event.getKeyCode() )
 				{
 					case KeyEvent.VK_R:
-						startRename();
+						m_renameMenu.doClick();
 					break;
 					
 					case KeyEvent.VK_I:
-						showInheritance();
+						m_showInheritanceMenu.doClick();
 					break;
 					
 					case KeyEvent.VK_M:
-						showImplementations();
+						m_showImplementationsMenu.doClick();
 					break;
 					
 					case KeyEvent.VK_N:
-						navigateTo( m_reference.entry );
+						m_openEntryMenu.doClick();
 					break;
 					
 					case KeyEvent.VK_P:
-						m_controller.openPreviousReference();
+						m_openPreviousMenu.doClick();
 					break;
 					
 					case KeyEvent.VK_C:
-						showCalls();
+						m_showCallsMenu.doClick();
 					break;
 				}
 			}
@@ -987,7 +987,7 @@ public class Gui
 	{
 		addNameValue( m_infoPanel, "Argument", entry.getName() );
 		addNameValue( m_infoPanel, "Class", entry.getClassEntry().getName() );
-		addNameValue( m_infoPanel, "Method", entry.getMethodEntry().getName() );
+		addNameValue( m_infoPanel, "Method", entry.getBehaviorEntry().getName() );
 		addNameValue( m_infoPanel, "Index", Integer.toString( entry.getIndex() ) );
 	}
 	
@@ -1014,7 +1014,7 @@ public class Gui
 		boolean isFieldEntry = isToken && m_reference.entry instanceof FieldEntry;
 		boolean isMethodEntry = isToken && m_reference.entry instanceof MethodEntry;
 		boolean isConstructorEntry = isToken && m_reference.entry instanceof ConstructorEntry;
-		boolean isInJar = isToken && m_controller.entryIsInJar( m_reference.entry.getClassEntry() );
+		boolean isInJar = isToken && m_controller.entryIsInJar( m_reference.entry );
 		
 		if( isToken )
 		{

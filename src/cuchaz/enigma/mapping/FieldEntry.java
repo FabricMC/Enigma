@@ -68,6 +68,12 @@ public class FieldEntry implements Entry, Serializable
 	}
 	
 	@Override
+	public FieldEntry cloneToNewClass( ClassEntry classEntry )
+	{
+		return new FieldEntry( this, classEntry.getName() );
+	}
+	
+	@Override
 	public int hashCode( )
 	{
 		return Util.combineHashesOrdered( m_classEntry, m_name );

@@ -271,7 +271,7 @@ public class Translator
 			name = in.getName();
 		}
 		return new ArgumentEntry(
-			translateEntry( in.getMethodEntry() ),
+			translateEntry( in.getBehaviorEntry() ),
 			in.getIndex(),
 			name
 		);

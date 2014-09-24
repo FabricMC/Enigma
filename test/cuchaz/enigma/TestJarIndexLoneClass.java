@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Jeff Martin.\
+ * Copyright (c) 2014 Jeff Martin.
  * 
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
@@ -70,13 +70,6 @@ public class TestJarIndexLoneClass
 		assertThat( m_index.getAccess( newField( "none/a", "a" ) ), is( Access.Private ) );
 		assertThat( m_index.getAccess( newMethod( "none/a", "a", "()Ljava/lang/String;" ) ), is( Access.Public ) );
 		assertThat( m_index.getAccess( newField( "none/a", "b" ) ), is( nullValue() ) );
-	}
-	
-	@Test
-	public void isImplemented( )
-	{
-		assertThat( m_index.isMethodImplemented( newMethod( "none/a", "a", "()Ljava/lang/String;" ) ), is( true ) );
-		assertThat( m_index.isMethodImplemented( newMethod( "none/a", "b", "()Ljava/lang/String;" ) ), is( false ) );
 	}
 	
 	@Test
@@ -187,7 +180,7 @@ public class TestJarIndexLoneClass
 		assertThat( m_index.containsObfClass( newClass( "none/b" ) ), is( false ) );
 		assertThat( m_index.containsObfField( newField( "none/a", "a" ) ), is( true ) );
 		assertThat( m_index.containsObfField( newField( "none/a", "b" ) ), is( false ) );
-		assertThat( m_index.containsObfMethod( newMethod( "none/a", "a", "()Ljava/lang/String;" ) ), is( true ) );
-		assertThat( m_index.containsObfMethod( newMethod( "none/a", "b", "()Ljava/lang/String;" ) ), is( false ) );
+		assertThat( m_index.containsObfBehavior( newMethod( "none/a", "a", "()Ljava/lang/String;" ) ), is( true ) );
+		assertThat( m_index.containsObfBehavior( newMethod( "none/a", "b", "()Ljava/lang/String;" ) ), is( false ) );
 	}
 }

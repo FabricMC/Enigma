@@ -117,7 +117,7 @@ public class EntryRenamer
 		{
 			ArgumentEntry argumentEntry = (ArgumentEntry)thing;
 			return (T)new ArgumentEntry(
-				renameMethodsInThing( renames, argumentEntry.getMethodEntry() ),
+				renameMethodsInThing( renames, argumentEntry.getBehaviorEntry() ),
 				argumentEntry.getIndex(),
 				argumentEntry.getName()
 			);
@@ -177,7 +177,7 @@ public class EntryRenamer
 		{
 			ArgumentEntry argumentEntry = (ArgumentEntry)thing;
 			return (T)new ArgumentEntry(
-				renameClassesInThing( renames, argumentEntry.getMethodEntry() ),
+				renameClassesInThing( renames, argumentEntry.getBehaviorEntry() ),
 				argumentEntry.getIndex(),
 				argumentEntry.getName()
 			);

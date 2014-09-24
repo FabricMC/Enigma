@@ -15,9 +15,13 @@ import java.util.List;
 
 import javassist.CtBehavior;
 import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtMethod;
 import javassist.bytecode.Descriptor;
 import cuchaz.enigma.mapping.ArgumentEntry;
+import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
 
@@ -42,12 +46,26 @@ public class MethodParameterWriter
 				continue;
 			}
 			
+			// get the behavior entry
+			BehaviorEntry behaviorEntry;
+			if( behavior instanceof CtMethod )
+			{
+				behaviorEntry = new MethodEntry( classEntry, behavior.getMethodInfo().getName(), behavior.getSignature() );
+			}
+			else if( behavior instanceof CtConstructor )
+			{
+				behaviorEntry = new ConstructorEntry( classEntry, behavior.getSignature() );
+			}
+			else
+			{
+				throw new Error( "Unsupported behavior type: " + behavior.getClass().getName() );
+			}
+			
 			// get the list of parameter names
-			MethodEntry methodEntry = new MethodEntry( classEntry, behavior.getMethodInfo().getName(), behavior.getSignature() );
 			List<String> names = new ArrayList<String>( numParams );
 			for( int i=0; i<numParams; i++ )
 			{
-				names.add( m_translator.translate( new ArgumentEntry( methodEntry, i, "" ) ) );
+				names.add( m_translator.translate( new ArgumentEntry( behaviorEntry, i, "" ) ) );
 			}
 			
 			// save the mappings to the class

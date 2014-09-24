@@ -93,7 +93,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode
 			nodes.add( new MethodInheritanceTreeNode(
 				m_deobfuscatingTranslator,
 				methodEntry,
-				index.isMethodImplemented( methodEntry )
+				index.containsObfBehavior( methodEntry )
 			) );
 		}
 		

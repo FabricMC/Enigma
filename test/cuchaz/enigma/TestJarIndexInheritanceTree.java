@@ -100,28 +100,6 @@ public class TestJarIndexInheritanceTree
 	}
 	
 	@Test
-	public void isImplemented( )
-	{
-		// getName()
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_baseClass, "a", "()Ljava/lang/String;" ) ), is( true ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassA, "a", "()Ljava/lang/String;" ) ), is( false ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassAA, "a", "()Ljava/lang/String;" ) ), is( true ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassB, "a", "()Ljava/lang/String;" ) ), is( false ) );
-		
-		// doBaseThings()
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_baseClass, "a", "()V" ) ), is( true ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassA, "a", "()V" ) ), is( false ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassAA, "a", "()V" ) ), is( true ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassB, "a", "()V" ) ), is( true ) );
-		
-		// doBThings()
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_baseClass, "b", "()V" ) ), is( false ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassA, "b", "()V" ) ), is( false ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassAA, "b", "()V" ) ), is( false ) );
-		assertThat( m_index.isMethodImplemented( new MethodEntry( m_subClassB, "b", "()V" ) ), is( true ) );
-	}
-
-	@Test
 	public void relatedMethodImplementations( )
 	{
 		Set<MethodEntry> entries;
@@ -238,11 +216,23 @@ public class TestJarIndexInheritanceTree
 		assertThat( m_index.containsObfField( m_numThingsField ), is( true ) );
 		
 		// methods
-		assertThat( m_index.containsObfMethod( new MethodEntry( m_baseClass, "a", "()Ljava/lang/String;" ) ), is( true ) );
-		assertThat( m_index.containsObfMethod( new MethodEntry( m_baseClass, "a", "()V" ) ), is( true ) );
-		assertThat( m_index.containsObfMethod( new MethodEntry( m_subClassAA, "a", "()Ljava/lang/String;" ) ), is( true ) );
-		assertThat( m_index.containsObfMethod( new MethodEntry( m_subClassAA, "a", "()V" ) ), is( true ) );
-		assertThat( m_index.containsObfMethod( new MethodEntry( m_subClassB, "a", "()V" ) ), is( true ) );
-		assertThat( m_index.containsObfMethod( new MethodEntry( m_subClassB, "b", "()V" ) ), is( true ) );
+		// getName()
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_baseClass, "a", "()Ljava/lang/String;" ) ), is( true ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassA, "a", "()Ljava/lang/String;" ) ), is( false ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassAA, "a", "()Ljava/lang/String;" ) ), is( true ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassB, "a", "()Ljava/lang/String;" ) ), is( false ) );
+		
+		// doBaseThings()
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_baseClass, "a", "()V" ) ), is( true ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassA, "a", "()V" ) ), is( false ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassAA, "a", "()V" ) ), is( true ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassB, "a", "()V" ) ), is( true ) );
+		
+		// doBThings()
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_baseClass, "b", "()V" ) ), is( false ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassA, "b", "()V" ) ), is( false ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassAA, "b", "()V" ) ), is( false ) );
+		assertThat( m_index.containsObfBehavior( new MethodEntry( m_subClassB, "b", "()V" ) ), is( true ) );
+
 	}
 }

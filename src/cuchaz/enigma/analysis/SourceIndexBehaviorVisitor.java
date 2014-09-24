@@ -116,6 +116,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 		MemberReference ref = node.getUserData( Keys.MEMBER_REFERENCE );
 		if( ref != null )
 		{
+			// make sure this is actually a field
+			if( ref.getSignature().indexOf( '(' ) >= 0 )
+			{
+				throw new Error( "Expected a field here! got " + ref );
+			}
+			
 			ClassEntry classEntry = new ClassEntry( ref.getDeclaringType().getInternalName() );
 			FieldEntry fieldEntry = new FieldEntry( classEntry, ref.getName() );
 			index.addReference(
@@ -149,8 +155,16 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 		ParameterDefinition def = node.getUserData( Keys.PARAMETER_DEFINITION );
 		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
 		MethodDefinition methodDef = (MethodDefinition)def.getMethod();
-		MethodEntry methodEntry = new MethodEntry( classEntry, methodDef.getName(), methodDef.getSignature() );
-		ArgumentEntry argumentEntry = new ArgumentEntry( methodEntry, def.getPosition(), def.getName() );
+		BehaviorEntry behaviorEntry;
+		if( methodDef.isConstructor() )
+		{
+			behaviorEntry = new ConstructorEntry( classEntry, methodDef.getSignature() );
+		}
+		else
+		{
+			behaviorEntry = new MethodEntry( classEntry, methodDef.getName(), methodDef.getSignature() );
+		}
+		ArgumentEntry argumentEntry = new ArgumentEntry( behaviorEntry, def.getPosition(), def.getName() );
 		index.addDeclaration( node.getNameToken(), argumentEntry );
 		
 		return recurse( node, index );
