@@ -123,11 +123,17 @@ public class MappingsRenamer
 	{
 		classMapping.removeFieldMapping( fieldMapping );
 		ClassMapping targetClassMapping = getOrCreateClassMapping( obfClass );
-		if( !targetClassMapping.containsObfField( fieldMapping.getObfName() )
-			&& !targetClassMapping.containsDeobfField( fieldMapping.getDeobfName() ) )
+		if( !targetClassMapping.containsObfField( fieldMapping.getObfName() ) )
 		{
-			targetClassMapping.addFieldMapping( fieldMapping );
-			return true;
+			if( !targetClassMapping.containsDeobfField( fieldMapping.getDeobfName() ) )
+			{
+				targetClassMapping.addFieldMapping( fieldMapping );
+				return true;
+			}
+			else
+			{
+				System.err.println( "WARNING: deobf field was already there: " + obfClass + "." + fieldMapping.getDeobfName() );
+			}
 		}
 		return false;
 	}
@@ -136,11 +142,17 @@ public class MappingsRenamer
 	{
 		classMapping.removeMethodMapping( methodMapping );
 		ClassMapping targetClassMapping = getOrCreateClassMapping( obfClass );
-		if( !targetClassMapping.containsObfMethod( methodMapping.getObfName(), methodMapping.getObfSignature() )
-			&& !targetClassMapping.containsDeobfMethod( methodMapping.getDeobfName(), methodMapping.getObfSignature() ) )
+		if( !targetClassMapping.containsObfMethod( methodMapping.getObfName(), methodMapping.getObfSignature() ) )
 		{
-			targetClassMapping.addMethodMapping( methodMapping );
-			return true;
+			if( !targetClassMapping.containsDeobfMethod( methodMapping.getDeobfName(), methodMapping.getObfSignature() ) )
+			{
+				targetClassMapping.addMethodMapping( methodMapping );
+				return true;
+			}
+			else
+			{
+				System.err.println( "WARNING: deobf method was already there: " + obfClass + "." + methodMapping.getDeobfName() + methodMapping.getObfSignature() );
+			}
 		}
 		return false;
 	}
