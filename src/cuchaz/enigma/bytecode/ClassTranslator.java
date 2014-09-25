@@ -21,6 +21,8 @@ import javassist.bytecode.Descriptor;
 
 import com.google.common.collect.Maps;
 
+import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
@@ -53,19 +55,15 @@ public class ClassTranslator
 						new ClassEntry( Descriptor.toJvmName( constants.getFieldrefClassName( i ) ) ),
 						constants.getFieldrefName( i )
 					);
-					String translatedName = m_translator.translate( entry );
-					if( translatedName == null )
-					{
-						translatedName = entry.getName();
-					}
+					FieldEntry translatedEntry = m_translator.translateEntry( entry );
 					
 					// translate the type
 					String type = constants.getFieldrefType( i );
 					String translatedType = m_translator.translateSignature( type );
 					
-					if( !entry.getName().equals( translatedName ) || !type.equals( translatedType ) )
+					if( !entry.equals( translatedEntry ) || !type.equals( translatedType ) )
 					{
-						editor.changeMemberrefNameAndType( i, translatedName, translatedType );
+						editor.changeMemberrefNameAndType( i, translatedEntry.getName(), translatedType );
 					}
 				}
 				break;
@@ -74,21 +72,16 @@ public class ClassTranslator
 				case ConstPool.CONST_InterfaceMethodref:
 				{
 					// translate the name and type
-					MethodEntry entry = new MethodEntry(
-						new ClassEntry( Descriptor.toJvmName( editor.getMemberrefClassname( i ) ) ),
+					BehaviorEntry entry = BehaviorEntryFactory.create(
+						Descriptor.toJvmName( editor.getMemberrefClassname( i ) ),
 						editor.getMemberrefName( i ),
 						editor.getMemberrefType( i )
 					);
-					String translatedName = m_translator.translate( entry );
-					if( translatedName == null )
-					{
-						translatedName = entry.getName();
-					}
-					String translatedSignature = m_translator.translateSignature( entry.getSignature() );
+					BehaviorEntry translatedEntry = m_translator.translateEntry( entry );
 					
-					if( !entry.getName().equals( translatedName ) || !entry.getSignature().equals( translatedSignature ) )
+					if( !entry.getName().equals( translatedEntry.getName() ) || !entry.getSignature().equals( translatedEntry.getSignature() ) )
 					{
-						editor.changeMemberrefNameAndType( i, translatedName, translatedSignature );
+						editor.changeMemberrefNameAndType( i, translatedEntry.getName(), translatedEntry.getSignature() );
 					}
 				}
 				break;
@@ -116,14 +109,16 @@ public class ClassTranslator
 		// translate all the methods and constructors
 		for( CtBehavior behavior : c.getDeclaredBehaviors() )
 		{
-			// translate the name
-			MethodEntry entry = new MethodEntry( classEntry, behavior.getName(), behavior.getSignature() );
-			String translatedName = m_translator.translate( entry );
-			if( translatedName != null )
+			if( behavior instanceof CtMethod )
 			{
-				if( behavior instanceof CtMethod )
+				CtMethod method = (CtMethod)behavior;
+				
+				// translate the name
+				MethodEntry entry = new MethodEntry( classEntry, method.getName(), method.getSignature() );
+				String translatedName = m_translator.translate( entry );
+				if( translatedName != null )
 				{
-					((CtMethod)behavior).setName( translatedName );
+					method.setName( translatedName );
 				}
 			}
 

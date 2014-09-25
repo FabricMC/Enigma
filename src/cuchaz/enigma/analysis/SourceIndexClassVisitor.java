@@ -25,11 +25,11 @@ import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
 import com.strobel.decompiler.languages.java.ast.VariableInitializer;
 
 import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.MethodEntry;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor
 {
@@ -77,15 +77,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 	{
 		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
 		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
-		BehaviorEntry behaviorEntry;
-		if( def.getName().equals( "<clinit>" ) )
-		{
-			behaviorEntry = new ConstructorEntry( classEntry );
-		}
-		else
-		{
-			behaviorEntry = new MethodEntry( classEntry, def.getName(), def.getSignature() );
-		}
+		BehaviorEntry behaviorEntry = BehaviorEntryFactory.create( classEntry, def.getName(), def.getSignature() );
 		index.addDeclaration( node.getNameToken(), behaviorEntry );
 		return node.acceptVisitor( new SourceIndexBehaviorVisitor( behaviorEntry ), index );
 	}

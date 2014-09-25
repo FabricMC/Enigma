@@ -11,7 +11,6 @@
 package cuchaz.enigma.analysis;
 
 import java.util.AbstractMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,16 +79,32 @@ public class EntryRenamer
 	{
 		// for each key/value pair...
 		Set<Map.Entry<Key,Val>> entriesToAdd = Sets.newHashSet();
-		Iterator<Map.Entry<Key,Val>> iter = map.entries().iterator();
-		while( iter.hasNext() )
+		for( Map.Entry<Key,Val> entry : map.entries() )
 		{
-			Map.Entry<Key,Val> entry = iter.next();
-			iter.remove();
 			entriesToAdd.add( new AbstractMap.SimpleEntry<Key,Val>(
 				renameMethodsInThing( renames, entry.getKey() ),
 				renameMethodsInThing( renames, entry.getValue() )
 			) );
 		}
+		map.clear();
+		for( Map.Entry<Key,Val> entry : entriesToAdd )
+		{
+			map.put( entry.getKey(), entry.getValue() );
+		}
+	}
+	
+	public static <Key,Val> void renameMethodsInMap( Map<MethodEntry,MethodEntry> renames, Map<Key,Val> map )
+	{
+		// for each key/value pair...
+		Set<Map.Entry<Key,Val>> entriesToAdd = Sets.newHashSet();
+		for( Map.Entry<Key,Val> entry : map.entrySet() )
+		{
+			entriesToAdd.add( new AbstractMap.SimpleEntry<Key,Val>(
+				renameMethodsInThing( renames, entry.getKey() ),
+				renameMethodsInThing( renames, entry.getValue() )
+			) );
+		}
+		map.clear();
 		for( Map.Entry<Key,Val> entry : entriesToAdd )
 		{
 			map.put( entry.getKey(), entry.getValue() );

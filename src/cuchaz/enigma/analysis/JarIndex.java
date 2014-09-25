@@ -44,6 +44,7 @@ import cuchaz.enigma.Constants;
 import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
@@ -203,6 +204,7 @@ public class JarIndex
 		EntryRenamer.renameMethodsInMultimap( m_bridgeMethods, m_methodImplementations );
 		EntryRenamer.renameMethodsInMultimap( m_bridgeMethods, m_behaviorReferences );
 		EntryRenamer.renameMethodsInMultimap( m_bridgeMethods, m_fieldReferences );
+		EntryRenamer.renameMethodsInMap( m_bridgeMethods, m_access );
 	}
 	
 	private void indexField( CtField field )
@@ -224,21 +226,20 @@ public class JarIndex
 	private void indexBehavior( CtBehavior behavior )
 	{
 		// get the behavior entry
-		String className = Descriptor.toJvmName( behavior.getDeclaringClass().getName() );
-		final BehaviorEntry behaviorEntry = getBehaviorEntry( behavior );
+		final BehaviorEntry behaviorEntry = BehaviorEntryFactory.create( behavior );
 		if( behaviorEntry instanceof MethodEntry )
 		{
 			MethodEntry methodEntry = (MethodEntry)behaviorEntry;
 			
 			// index implementation
-			m_methodImplementations.put( className, methodEntry );
+			m_methodImplementations.put( behaviorEntry.getClassName(), methodEntry );
 			
 			// look for bridge methods
 			CtMethod bridgedMethod = getBridgedMethod( (CtMethod)behavior );
 			if( bridgedMethod != null )
 			{
 				MethodEntry bridgedMethodEntry = new MethodEntry(
-					new ClassEntry( className ),
+					behaviorEntry.getClassEntry(),
 					bridgedMethod.getName(),
 					bridgedMethod.getSignature()
 				);
@@ -251,7 +252,7 @@ public class JarIndex
 	private void indexBehaviorReferences( CtBehavior behavior )
 	{
 		// index method calls
-		final BehaviorEntry behaviorEntry = getBehaviorEntry( behavior );
+		final BehaviorEntry behaviorEntry = BehaviorEntryFactory.create( behavior );
 		try
 		{
 			behavior.instrument( new ExprEditor( )
@@ -341,35 +342,6 @@ public class JarIndex
 		catch( CannotCompileException ex )
 		{
 			throw new Error( ex );
-		}
-	}
-	
-	private BehaviorEntry getBehaviorEntry( CtBehavior behavior )
-	{
-		String className = Descriptor.toJvmName( behavior.getDeclaringClass().getName() );
-		if( behavior instanceof CtMethod )
-		{
-			return new MethodEntry(
-				new ClassEntry( className ),
-				behavior.getName(),
-				behavior.getSignature()
-			);
-		}
-		else if( behavior instanceof CtConstructor )
-		{
-			boolean isStatic = behavior.getName().equals( "<clinit>" );
-			if( isStatic )
-			{
-				return new ConstructorEntry( new ClassEntry( className ) );
-			}
-			else
-			{
-				return new ConstructorEntry( new ClassEntry( className ), behavior.getSignature() );
-			}
-		}
-		else
-		{
-			throw new IllegalArgumentException( "behavior must be a method or a constructor!" );
 		}
 	}
 	

@@ -15,6 +15,8 @@ import javassist.CtMethod;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import cuchaz.enigma.bytecode.ConstPoolEditor;
+import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 
@@ -57,17 +59,23 @@ public class BridgeFixer
 				case ConstPool.CONST_Methodref:
 				case ConstPool.CONST_InterfaceMethodref:
 				{
-					// translate the name and type
-					MethodEntry methodEntry = new MethodEntry(
-						new ClassEntry( Descriptor.toJvmName( editor.getMemberrefClassname( i ) ) ),
+					BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(
+						Descriptor.toJvmName( editor.getMemberrefClassname( i ) ),
 						editor.getMemberrefName( i ),
 						editor.getMemberrefType( i )
 					);
-					MethodEntry bridgeMethodEntry = m_index.getBridgeMethod( methodEntry );
-					if( bridgeMethodEntry != null )
+					
+					if( behaviorEntry instanceof MethodEntry )
 					{
-						// FIXIT FIXIT FIXIT FIXIT FIXIT FIXIT FIXIT
-						editor.changeMemberrefNameAndType( i, bridgeMethodEntry.getName(), bridgeMethodEntry.getSignature() );
+						MethodEntry methodEntry = (MethodEntry)behaviorEntry;
+						
+						// translate the name and type
+						MethodEntry bridgeMethodEntry = m_index.getBridgeMethod( methodEntry );
+						if( bridgeMethodEntry != null )
+						{
+							// FIXIT FIXIT FIXIT FIXIT FIXIT FIXIT FIXIT
+							editor.changeMemberrefNameAndType( i, bridgeMethodEntry.getName(), bridgeMethodEntry.getSignature() );
+						}
 					}
 				}
 				break;

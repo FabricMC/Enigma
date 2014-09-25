@@ -41,6 +41,8 @@ import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
+import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.ConstructorEntry;
@@ -165,6 +167,12 @@ public class Deobfuscator
 			// methods
 			for( MethodMapping methodMapping : Lists.newArrayList( classMapping.methods() ) )
 			{
+				// skip constructors
+				if( methodMapping.isConstructor() )
+				{
+					continue;
+				}
+				
 				MethodEntry methodEntry = new MethodEntry( obfClassEntry, methodMapping.getObfName(), methodMapping.getObfSignature() );
 				ClassEntry resolvedObfClassEntry = m_jarIndex.resolveEntryClass( methodEntry );
 				if( resolvedObfClassEntry != null && !resolvedObfClassEntry.equals( methodEntry.getClassEntry() ) )
@@ -228,33 +236,12 @@ public class Deobfuscator
 		// check methods
 		for( MethodMapping methodMapping : Lists.newArrayList( classMapping.methods() ) )
 		{
-			if( methodMapping.getObfName().equals( "<clinit>" ) )
+			BehaviorEntry obfBehaviorEntry = BehaviorEntryFactory.createObf( classEntry, methodMapping );
+			if( !m_jarIndex.containsObfBehavior( obfBehaviorEntry ) )
 			{
-				// skip static initializers
-				continue;
-			}
-			else if( methodMapping.getObfName().equals( "<init>" ) )
-			{
-				ConstructorEntry constructorEntry = new ConstructorEntry( classEntry, methodMapping.getObfSignature() );
-				if( !m_jarIndex.containsObfBehavior( constructorEntry ) )
-				{
-					System.err.println( "WARNING: unable to find constructor " + constructorEntry + ". dropping mapping." );
-					classMapping.removeMethodMapping( methodMapping );
-				}
-			}
-			else
-			{
-				MethodEntry methodEntry = new MethodEntry(
-					classEntry,
-					methodMapping.getObfName(),
-					methodMapping.getObfSignature()
-				);
-				if( !m_jarIndex.containsObfBehavior( methodEntry ) )
-				{
-					System.err.println( "WARNING: unable to find method " + methodEntry + ". dropping mapping." );
-					classMapping.removeMethodMapping( methodMapping );
-				}
-			}
+				System.err.println( "WARNING: unable to find behavior " + obfBehaviorEntry + ". dropping mapping." );
+				classMapping.removeMethodMapping( methodMapping );
+			}	
 		}
 		
 		// check inner classes

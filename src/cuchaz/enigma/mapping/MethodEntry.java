@@ -36,6 +36,10 @@ public class MethodEntry implements BehaviorEntry, Serializable
 		{
 			throw new IllegalArgumentException( "Method signature cannot be null!" );
 		}
+		if( name.startsWith( "<" ) )
+		{
+			throw new IllegalArgumentException( "Don't use MethodEntry for a constructor!" );
+		}
 		
 		m_classEntry = classEntry;
 		m_name = name;

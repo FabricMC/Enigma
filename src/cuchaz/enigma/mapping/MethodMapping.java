@@ -70,6 +70,11 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 		return m_arguments.values();
 	}
 	
+	public boolean isConstructor( )
+	{
+		return m_obfName.startsWith( "<" );
+	}
+	
 	public void addArgumentMapping( ArgumentMapping argumentMapping )
 	{
 		boolean wasAdded = m_arguments.put( argumentMapping.getIndex(), argumentMapping ) == null;
