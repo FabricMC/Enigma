@@ -62,13 +62,20 @@ public class SourceIndex
 		Region region = node.getRegion();
 		if( region.getBeginLine() == 0 || region.getEndLine() == 0 )
 		{
-			System.err.println( "WARNING: " + node.getNodeType() + " node has invalid region: " + region );
+			// DEBUG
+			//System.err.println( "WARNING: " + node.getNodeType() + " node has invalid region: " + region );
 			return null;
 		}
 		Token token = new Token(
 			toPos( region.getBeginLine(), region.getBeginColumn() ),
 			toPos( region.getEndLine(), region.getEndColumn() )
 		);
+		if( token.start == 0 )
+		{
+			// DEBUG
+			//System.err.println( "WARNING: " + node.getNodeType() + " node has invalid start: " + region );
+			return null;
+		}
 		
 		// for tokens representing inner classes, make sure we only get the simple name
 		int pos = node.toString().lastIndexOf( '$' );
