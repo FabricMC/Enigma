@@ -118,6 +118,12 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>
 		}
 	}
 	
+	public void removeArgumentName( int index )
+	{
+		boolean wasRemoved = m_arguments.remove( index ) != null;
+		assert( wasRemoved );
+	}
+	
 	@Override
 	public String toString( )
 	{

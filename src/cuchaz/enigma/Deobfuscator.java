@@ -508,23 +508,19 @@ public class Deobfuscator
 		Translator translator = getTranslator( TranslationDirection.Deobfuscating );
 		if( obfEntry instanceof ClassEntry )
 		{
-			String deobfName = translator.translate( (ClassEntry)obfEntry );
-			return deobfName != null && !deobfName.equals( obfEntry.getName() );
+			return translator.translate( (ClassEntry)obfEntry ) != null;
 		}
 		else if( obfEntry instanceof FieldEntry )
 		{
-			String deobfName = translator.translate( (FieldEntry)obfEntry );
-			return deobfName != null && !deobfName.equals( obfEntry.getName() );
+			return translator.translate( (FieldEntry)obfEntry ) != null;
 		}
 		else if( obfEntry instanceof MethodEntry )
 		{
-			String deobfName = translator.translate( (MethodEntry)obfEntry );
-			return deobfName != null && !deobfName.equals( obfEntry.getName() );
+			return translator.translate( (MethodEntry)obfEntry ) != null;
 		}
 		else if( obfEntry instanceof ConstructorEntry )
 		{
-			String deobfName = translator.translate( obfEntry.getClassEntry() );
-			return deobfName != null && !deobfName.equals( obfEntry.getClassName() );
+			return translator.translate( obfEntry.getClassEntry() ) != null;
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
@@ -539,5 +535,61 @@ public class Deobfuscator
 	public boolean isObfuscatedIdentifier( Entry obfEntry )
 	{
 		return m_jarIndex.containsObfEntry( obfEntry );
+	}
+	
+	public void removeMapping( Entry obfEntry )
+	{
+		if( obfEntry instanceof ClassEntry )
+		{
+			m_renamer.removeClassMapping( (ClassEntry)obfEntry );
+		}
+		else if( obfEntry instanceof FieldEntry )
+		{
+			m_renamer.removeFieldMapping( (FieldEntry)obfEntry );
+		}
+		else if( obfEntry instanceof MethodEntry )
+		{
+			m_renamer.removeMethodTreeMapping( (MethodEntry)obfEntry );
+		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			m_renamer.removeClassMapping( obfEntry.getClassEntry() );
+		}
+		else if( obfEntry instanceof ArgumentEntry )
+		{
+			m_renamer.removeArgumentMapping( (ArgumentEntry)obfEntry );
+		}
+		else
+		{
+			throw new Error( "Unknown entry type: " + obfEntry );
+		}
+	}
+	
+	public void markAsDeobfuscated( Entry obfEntry )
+	{
+		if( obfEntry instanceof ClassEntry )
+		{
+			m_renamer.markClassAsDeobfuscated( (ClassEntry)obfEntry );
+		}
+		else if( obfEntry instanceof FieldEntry )
+		{
+			m_renamer.markFieldAsDeobfuscated( (FieldEntry)obfEntry );
+		}
+		else if( obfEntry instanceof MethodEntry )
+		{
+			m_renamer.markMethodTreeAsDeobfuscated( (MethodEntry)obfEntry );
+		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			m_renamer.markClassAsDeobfuscated( obfEntry.getClassEntry() );
+		}
+		else if( obfEntry instanceof ArgumentEntry )
+		{
+			m_renamer.markArgumentAsDeobfuscated( (ArgumentEntry)obfEntry );
+		}
+		else
+		{
+			throw new Error( "Unknown entry type: " + obfEntry );
+		}
 	}
 }

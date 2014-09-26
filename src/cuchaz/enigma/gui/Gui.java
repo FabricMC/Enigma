@@ -122,6 +122,7 @@ public class Gui
 	private JMenuItem m_openPreviousMenu;
 	private JMenuItem m_showCallsMenu;
 	private JMenuItem m_showImplementationsMenu;
+	private JMenuItem m_toggleMappingMenu;
 	
 	// state
 	private EntryReference<Entry,Entry> m_reference;
@@ -136,17 +137,20 @@ public class Gui
 		final Container pane = m_frame.getContentPane();
 		pane.setLayout( new BorderLayout() );
 		
-		// install a global exception handler to the event thread
-		CrashDialog.init( m_frame );
-		Thread.setDefaultUncaughtExceptionHandler( new UncaughtExceptionHandler( )
+		if( Boolean.parseBoolean( System.getProperty( "enigma.catchExceptions", "true" ) ) )
 		{
-			@Override
-			public void uncaughtException( Thread thread, Throwable ex )
+			// install a global exception handler to the event thread
+			CrashDialog.init( m_frame );
+			Thread.setDefaultUncaughtExceptionHandler( new UncaughtExceptionHandler( )
 			{
-				ex.printStackTrace( System.err );
-				CrashDialog.show( ex );
-			}
-		} );
+				@Override
+				public void uncaughtException( Thread thread, Throwable ex )
+				{
+					ex.printStackTrace( System.err );
+					CrashDialog.show( ex );
+				}
+			} );
+		}
 		
 		m_controller = new GuiController( this );
 		
@@ -251,6 +255,10 @@ public class Gui
 					case KeyEvent.VK_C:
 						m_showCallsMenu.doClick();
 					break;
+					
+					case KeyEvent.VK_T:
+						m_toggleMappingMenu.doClick();
+					break;
 				}
 			}
 		} );
@@ -351,6 +359,21 @@ public class Gui
 			menu.setEnabled( false );
 			popupMenu.add( menu );
 			m_openPreviousMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem( "Mark as deobfuscated" );
+			menu.addActionListener( new ActionListener( )
+			{
+				@Override
+				public void actionPerformed( ActionEvent event )
+				{
+					toggleMapping();
+				}
+			} );
+			menu.setAccelerator( KeyStroke.getKeyStroke( KeyEvent.VK_T, 0 ) );
+			menu.setEnabled( false );
+			popupMenu.add( menu );
+			m_toggleMappingMenu = menu;
 		}
 		
 		// init inheritance panel
@@ -1031,6 +1054,16 @@ public class Gui
 		m_showCallsMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openEntryMenu.setEnabled( isInJar && ( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry ) );
 		m_openPreviousMenu.setEnabled( m_controller.hasPreviousLocation() );
+		m_toggleMappingMenu.setEnabled( isInJar && isToken );
+		
+		if( isToken && m_controller.entryHasMapping( m_reference.entry ) )
+		{
+			m_toggleMappingMenu.setText( "Reset to obfuscated" );
+		}
+		else
+		{
+			m_toggleMappingMenu.setText( "Mark as deobfuscated" );
+		}
 	}
 	
 	private void navigateTo( Entry entry )
@@ -1231,6 +1264,18 @@ public class Gui
 		
 		m_tabs.setSelectedIndex( 2 );
 		redraw();
+	}
+	
+	private void toggleMapping()
+	{
+		if( m_controller.entryHasMapping( m_reference.entry ) )
+		{
+			m_controller.removeMapping( m_reference );
+		}
+		else
+		{
+			m_controller.markAsDeobfuscated( m_reference );
+		}
 	}
 	
 	private TreePath getPathToRoot( TreeNode node )

@@ -94,6 +94,17 @@ public class Mappings implements Serializable
 		}
 	}
 	
+	public void removeClassMapping( ClassMapping classMapping )
+	{
+		boolean obfWasRemoved = m_classesByObf.remove( classMapping.getObfName() ) != null;
+		assert( obfWasRemoved );
+		if( classMapping.getDeobfName() != null )
+		{
+			boolean deobfWasRemoved = m_classesByDeobf.remove( classMapping.getDeobfName() ) != null;
+			assert( deobfWasRemoved );
+		}
+	}
+	
 	public ClassMapping getClassByObf( ClassEntry entry )
 	{
 		return getClassByObf( entry.getName() );

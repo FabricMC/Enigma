@@ -249,6 +249,24 @@ public class GuiController
 		refreshCurrentClass( obfReference );
 	}
 	
+	public void removeMapping( EntryReference<Entry,Entry> deobfReference )
+	{
+		EntryReference<Entry,Entry> obfReference = m_deobfuscator.obfuscateReference( deobfReference );
+		m_deobfuscator.removeMapping( obfReference.entry );
+		m_isDirty = true;
+		refreshClasses();
+		refreshCurrentClass( obfReference );
+	}
+	
+	public void markAsDeobfuscated( EntryReference<Entry,Entry> deobfReference )
+	{
+		EntryReference<Entry,Entry> obfReference = m_deobfuscator.obfuscateReference( deobfReference );
+		m_deobfuscator.markAsDeobfuscated( obfReference.entry );
+		m_isDirty = true;
+		refreshClasses();
+		refreshCurrentClass( obfReference );
+	}
+	
 	public void openDeclaration( Entry deobfEntry )
 	{
 		if( deobfEntry == null )
