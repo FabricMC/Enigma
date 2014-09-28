@@ -14,11 +14,21 @@ public class Token implements Comparable<Token>
 {
 	public int start;
 	public int end;
+	public String text;
 	
 	public Token( int start, int end )
 	{
+		this( start, end, null );
+	}
+	
+	public Token( int start, int end, String source )
+	{
 		this.start = start;
 		this.end = end;
+		if( source != null )
+		{
+			this.text = source.substring( start, end );
+		}
 	}
 	
 	public boolean contains( int pos )

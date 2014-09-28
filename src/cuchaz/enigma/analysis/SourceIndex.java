@@ -21,6 +21,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.Region;
 import com.strobel.decompiler.languages.java.ast.AstNode;
+import com.strobel.decompiler.languages.java.ast.Identifier;
 
 import cuchaz.enigma.mapping.Entry;
 
@@ -58,40 +59,54 @@ public class SourceIndex
 	
 	public Token getToken( AstNode node )
 	{
+		// get the text of the node
+		String name = "";
+		if( node instanceof Identifier )
+		{
+			name = ((Identifier)node).getName();
+		}
+		
 		// get a token for this node's region
 		Region region = node.getRegion();
 		if( region.getBeginLine() == 0 || region.getEndLine() == 0 )
 		{
 			// DEBUG
-			//System.err.println( "WARNING: " + node.getNodeType() + " node has invalid region: " + region );
+			System.err.println( String.format( "WARNING: %s \"%s\" has invalid region: %s", node.getNodeType(), name, region ) );
 			return null;
 		}
 		Token token = new Token(
 			toPos( region.getBeginLine(), region.getBeginColumn() ),
-			toPos( region.getEndLine(), region.getEndColumn() )
+			toPos( region.getEndLine(), region.getEndColumn() ),
+			m_source
 		);
 		if( token.start == 0 )
 		{
 			// DEBUG
-			//System.err.println( "WARNING: " + node.getNodeType() + " node has invalid start: " + region );
+			System.err.println( String.format( "WARNING: %s \"%s\" has invalid start: %s", node.getNodeType(), name, region ) );
 			return null;
 		}
 		
+		// DEBUG
+		//System.out.println( String.format( "%s \"%s\" region: %s", node.getNodeType(), name, region ) );
+		
+		/* TODO: double check that we still need this
 		// for tokens representing inner classes, make sure we only get the simple name
-		int pos = node.toString().lastIndexOf( '$' );
+		int pos = node.getText().lastIndexOf( '$' );
 		if( pos >= 0 )
 		{
 			token.end -= pos + 1;
 		}
+		*/
 		
 		return token;
 	}
 	
-	public void addReference( AstNode node, EntryReference<Entry,Entry> deobfReference )
+	public void addReference( AstNode node, Entry deobfEntry, Entry deobfContext )
 	{
 		Token token = getToken( node );
 		if( token != null )
 		{
+			EntryReference<Entry,Entry> deobfReference = new EntryReference<Entry,Entry>( deobfEntry, token.text, deobfContext );
 			m_tokenToReference.put( token, deobfReference );
 			m_referenceToTokens.put( deobfReference, token );
 		}
@@ -102,7 +117,7 @@ public class SourceIndex
 		Token token = getToken( node );
 		if( token != null )
 		{
-			EntryReference<Entry,Entry> reference = new EntryReference<Entry,Entry>( deobfEntry );
+			EntryReference<Entry,Entry> reference = new EntryReference<Entry,Entry>( deobfEntry, token.text );
 			m_tokenToReference.put( token, reference );
 			m_referenceToTokens.put( reference, token );
 			m_declarationToToken.put( deobfEntry, token );
@@ -111,7 +126,7 @@ public class SourceIndex
 	
 	public Token getReferenceToken( int pos )
 	{
-		Token token = m_tokenToReference.floorKey( new Token( pos, pos ) );
+		Token token = m_tokenToReference.floorKey( new Token( pos, pos, null ) );
 		if( token != null && token.contains( pos ) )
 		{
 			return token;

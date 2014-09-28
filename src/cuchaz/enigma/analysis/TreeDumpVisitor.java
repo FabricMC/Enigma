@@ -141,7 +141,7 @@ public class TreeDumpVisitor implements IAstVisitor<Void, Void>
 	{
 		if( node instanceof Identifier )
 		{
-			return "\"" + node.getText() + "\"";
+			return "\"" + ((Identifier)node).getName() + "\"";
 		}
 		return "";
 	}

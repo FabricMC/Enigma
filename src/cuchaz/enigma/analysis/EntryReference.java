@@ -10,21 +10,28 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import java.util.Arrays;
+import java.util.List;
+
 import cuchaz.enigma.Util;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 
 public class EntryReference<E extends Entry, C extends Entry>
 {
+	private static final List<String> ConstructorNonNames = Arrays.asList( "this", "super" );
 	public E entry;
 	public C context;
 	
-	public EntryReference( E entry )
+	private boolean m_isNamed;
+	
+	public EntryReference( E entry, String sourceName )
 	{
-		this( entry, null );
+		this( entry, sourceName, null );
 	}
 	
-	public EntryReference( E entry, C context )
+	public EntryReference( E entry, String sourceName, C context )
 	{
 		if( entry == null )
 		{
@@ -33,15 +40,43 @@ public class EntryReference<E extends Entry, C extends Entry>
 		
 		this.entry = entry;
 		this.context = context;
+		
+		m_isNamed = sourceName != null && sourceName.length() > 0;
+		if( entry instanceof ConstructorEntry && ConstructorNonNames.contains( sourceName ) )
+		{
+			m_isNamed = false;
+		}
 	}
 	
-	public ClassEntry getClassEntry( )
+	public EntryReference( E entry, C context, EntryReference<E,C> other )
+	{
+		this.entry = entry;
+		this.context = context;
+		m_isNamed = other.m_isNamed;
+	}
+	
+	public ClassEntry getLocationClassEntry( )
 	{
 		if( context != null )
 		{
 			return context.getClassEntry();
 		}
 		return entry.getClassEntry();
+	}
+	
+	public boolean isNamed( )
+	{
+		return m_isNamed;
+	}
+	
+	public Entry getNameableEntry( )
+	{
+		if( entry instanceof ConstructorEntry )
+		{
+			// renaming a constructor really means renaming the class
+			return entry.getClassEntry();
+		}
+		return entry;
 	}
 	
 	@Override

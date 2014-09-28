@@ -277,6 +277,7 @@ public class JarIndex
 					}
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledMethodEntry,
+						call.getMethodName(),
 						behaviorEntry
 					);
 					m_behaviorReferences.put( calledMethodEntry, reference );
@@ -300,6 +301,7 @@ public class JarIndex
 					}
 					EntryReference<FieldEntry,BehaviorEntry> reference = new EntryReference<FieldEntry,BehaviorEntry>(
 						calledFieldEntry,
+						call.getFieldName(),
 						behaviorEntry
 					);
 					m_fieldReferences.put( calledFieldEntry, reference );
@@ -308,9 +310,6 @@ public class JarIndex
 				@Override
 				public void edit( ConstructorCall call )
 				{
-					// TODO: save isSuper in the reference somehow
-					boolean isSuper = call.getMethodName().equals( "super" );
-					
 					String className = Descriptor.toJvmName( call.getClassName() );
 					ConstructorEntry calledConstructorEntry = new ConstructorEntry(
 						new ClassEntry( className ),
@@ -318,6 +317,7 @@ public class JarIndex
 					);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
+						call.getMethodName(),
 						behaviorEntry
 					);
 					m_behaviorReferences.put( calledConstructorEntry, reference );
@@ -333,6 +333,7 @@ public class JarIndex
 					);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
+						call.getClassName(),
 						behaviorEntry
 					);
 					m_behaviorReferences.put( calledConstructorEntry, reference );

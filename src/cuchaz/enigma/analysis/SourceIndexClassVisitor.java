@@ -28,7 +28,6 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
-import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor
@@ -63,10 +62,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 		if( node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY )
 		{
 			ClassEntry classEntry = new ClassEntry( ref.getInternalName() );
-			index.addReference(
-				node.getIdentifierToken(),
-				new EntryReference<Entry,Entry>( classEntry, m_classEntry )
-			);
+			index.addReference( node.getIdentifierToken(), classEntry, m_classEntry );
 		}
 		
 		return recurse( node, index );

@@ -40,6 +40,7 @@ import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
+import cuchaz.enigma.analysis.TreeDumpVisitor;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.BehaviorEntryFactory;
@@ -337,7 +338,7 @@ public class Deobfuscator
 		
 		// DEBUG
 		//sourceTree.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
-
+		
 		// resolve all the classes in the source references
 		for( Token token : index.referenceTokens() )
 		{
@@ -454,7 +455,8 @@ public class Deobfuscator
 		}
 		return new EntryReference<E,C>(
 			obfuscateEntry( deobfReference.entry ),
-			obfuscateEntry( deobfReference.context )
+			obfuscateEntry( deobfReference.context ),
+			deobfReference
 		);
 	}
 	
@@ -466,11 +468,53 @@ public class Deobfuscator
 		}
 		return new EntryReference<E,C>(
 			deobfuscateEntry( obfReference.entry ),
-			deobfuscateEntry( obfReference.context )
+			deobfuscateEntry( obfReference.context ),
+			obfReference
 		);
 	}
 	
+	public boolean isObfuscatedIdentifier( Entry obfEntry )
+	{
+		return m_jarIndex.containsObfEntry( obfEntry );
+	}
+	
+	public boolean isRenameable( EntryReference<Entry,Entry> obfReference )
+	{
+		return obfReference.isNamed() && isObfuscatedIdentifier( obfReference.getNameableEntry() );
+	}
+	
+	
 	// NOTE: these methods are a bit messy... oh well
+
+	public boolean hasDeobfuscatedName( Entry obfEntry )
+	{
+		Translator translator = getTranslator( TranslationDirection.Deobfuscating );
+		if( obfEntry instanceof ClassEntry )
+		{
+			return translator.translate( (ClassEntry)obfEntry ) != null;
+		}
+		else if( obfEntry instanceof FieldEntry )
+		{
+			return translator.translate( (FieldEntry)obfEntry ) != null;
+		}
+		else if( obfEntry instanceof MethodEntry )
+		{
+			return translator.translate( (MethodEntry)obfEntry ) != null;
+		}
+		else if( obfEntry instanceof ConstructorEntry )
+		{
+			// constructors have no names
+			return false;
+		}
+		else if( obfEntry instanceof ArgumentEntry )
+		{
+			return translator.translate( (ArgumentEntry)obfEntry ) != null;
+		}
+		else
+		{
+			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
+		}
+	}
 
 	public void rename( Entry obfEntry, String newName )
 	{
@@ -488,7 +532,7 @@ public class Deobfuscator
 		}
 		else if( obfEntry instanceof ConstructorEntry )
 		{
-			m_renamer.setClassName( obfEntry.getClassEntry(), newName );
+			throw new IllegalArgumentException( "Cannot rename constructors" );
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
@@ -501,40 +545,6 @@ public class Deobfuscator
 		
 		// clear caches
 		m_translatorCache.clear();
-	}
-	
-	public boolean hasMapping( Entry obfEntry )
-	{
-		Translator translator = getTranslator( TranslationDirection.Deobfuscating );
-		if( obfEntry instanceof ClassEntry )
-		{
-			return translator.translate( (ClassEntry)obfEntry ) != null;
-		}
-		else if( obfEntry instanceof FieldEntry )
-		{
-			return translator.translate( (FieldEntry)obfEntry ) != null;
-		}
-		else if( obfEntry instanceof MethodEntry )
-		{
-			return translator.translate( (MethodEntry)obfEntry ) != null;
-		}
-		else if( obfEntry instanceof ConstructorEntry )
-		{
-			return translator.translate( obfEntry.getClassEntry() ) != null;
-		}
-		else if( obfEntry instanceof ArgumentEntry )
-		{
-			return translator.translate( (ArgumentEntry)obfEntry ) != null;
-		}
-		else
-		{
-			throw new Error( "Unknown entry type: " + obfEntry.getClass().getName() );
-		}
-	}
-
-	public boolean isObfuscatedIdentifier( Entry obfEntry )
-	{
-		return m_jarIndex.containsObfEntry( obfEntry );
 	}
 	
 	public void removeMapping( Entry obfEntry )
@@ -553,7 +563,7 @@ public class Deobfuscator
 		}
 		else if( obfEntry instanceof ConstructorEntry )
 		{
-			m_renamer.removeClassMapping( obfEntry.getClassEntry() );
+			throw new IllegalArgumentException( "Cannot rename constructors" );
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
@@ -563,6 +573,9 @@ public class Deobfuscator
 		{
 			throw new Error( "Unknown entry type: " + obfEntry );
 		}
+		
+		// clear caches
+		m_translatorCache.clear();
 	}
 	
 	public void markAsDeobfuscated( Entry obfEntry )
@@ -581,7 +594,7 @@ public class Deobfuscator
 		}
 		else if( obfEntry instanceof ConstructorEntry )
 		{
-			m_renamer.markClassAsDeobfuscated( obfEntry.getClassEntry() );
+			throw new IllegalArgumentException( "Cannot rename constructors" );
 		}
 		else if( obfEntry instanceof ArgumentEntry )
 		{
@@ -591,5 +604,8 @@ public class Deobfuscator
 		{
 			throw new Error( "Unknown entry type: " + obfEntry );
 		}
+
+		// clear caches
+		m_translatorCache.clear();
 	}
 }

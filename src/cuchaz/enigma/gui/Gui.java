@@ -1038,6 +1038,7 @@ public class Gui
 		boolean isMethodEntry = isToken && m_reference.entry instanceof MethodEntry;
 		boolean isConstructorEntry = isToken && m_reference.entry instanceof ConstructorEntry;
 		boolean isInJar = isToken && m_controller.entryIsInJar( m_reference.entry );
+		boolean isRenameable = isToken && m_controller.referenceIsRenameable( m_reference );
 		
 		if( isToken )
 		{
@@ -1048,15 +1049,15 @@ public class Gui
 			clearReference();
 		}
 		
-		m_renameMenu.setEnabled( isInJar && isToken );
+		m_renameMenu.setEnabled( isRenameable && isToken );
 		m_showInheritanceMenu.setEnabled( isClassEntry || isMethodEntry || isConstructorEntry );
 		m_showImplementationsMenu.setEnabled( isClassEntry || isMethodEntry );
 		m_showCallsMenu.setEnabled( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry );
 		m_openEntryMenu.setEnabled( isInJar && ( isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry ) );
 		m_openPreviousMenu.setEnabled( m_controller.hasPreviousLocation() );
-		m_toggleMappingMenu.setEnabled( isInJar && isToken );
+		m_toggleMappingMenu.setEnabled( isRenameable && isToken );
 		
-		if( isToken && m_controller.entryHasMapping( m_reference.entry ) )
+		if( isToken && m_controller.entryHasDeobfuscatedName( m_reference.entry ) )
 		{
 			m_toggleMappingMenu.setText( "Reset to obfuscated" );
 		}
@@ -1082,7 +1083,7 @@ public class Gui
 	
 	private void navigateTo( EntryReference<Entry,Entry> reference )
 	{
-		if( !m_controller.entryIsInJar( reference.getClassEntry() ) )
+		if( !m_controller.entryIsInJar( reference.getLocationClassEntry() ) )
 		{
 			// reference is not in the jar. Ignore it
 			return;
@@ -1098,7 +1099,7 @@ public class Gui
 	{
 		// init the text box
 		final JTextField text = new JTextField();
-		text.setText( m_reference.entry.getName() );
+		text.setText( m_reference.getNameableEntry().getName() );
 		text.setPreferredSize( new Dimension( 360, text.getPreferredSize().height ) );
 		text.addKeyListener( new KeyAdapter( )
 		{
@@ -1149,7 +1150,7 @@ public class Gui
 		// abort the rename
 		JPanel panel = (JPanel)m_infoPanel.getComponent( 0 );
 		panel.remove( panel.getComponentCount() - 1 );
-		panel.add( GuiTricks.unboldLabel( new JLabel( m_reference.entry.getName(), JLabel.LEFT ) ) );
+		panel.add( GuiTricks.unboldLabel( new JLabel( m_reference.getNameableEntry().getName(), JLabel.LEFT ) ) );
 		
 		m_editor.grabFocus();
 		
@@ -1268,7 +1269,7 @@ public class Gui
 	
 	private void toggleMapping()
 	{
-		if( m_controller.entryHasMapping( m_reference.entry ) )
+		if( m_controller.entryHasDeobfuscatedName( m_reference.entry ) )
 		{
 			m_controller.removeMapping( m_reference );
 		}
