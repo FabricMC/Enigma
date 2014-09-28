@@ -13,7 +13,6 @@ package cuchaz.enigma;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -157,12 +156,13 @@ public class TranslatingTypeLoader implements ITypeLoader
 			// otherwise, just use the class name (ie for classes in packages)
 			classFileName = obfClassEntry.getName();
 		}
+		
 		JarEntry entry = m_jar.getJarEntry( classFileName + ".class" );
 		if( entry == null )
 		{
 			return null;
 		}
-		
+
 		try
 		{
 			// read the class file into a buffer
@@ -188,32 +188,10 @@ public class TranslatingTypeLoader implements ITypeLoader
 			classPool.insertClassPath( new ByteArrayClassPath( javaClassFileName, buf ) );
 			CtClass c = classPool.get( javaClassFileName );
 			
-			// we moved a lot of classes out of the default package into the none package
-			// make sure all the class references are consistent
-			ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
-			
-			// reconstruct inner classes
-			new InnerClassWriter( m_jarIndex ).write( c );
-			
-			// re-get the javassist handle since we changed class names
-			String javaClassReconstructedName = Descriptor.toJavaName( obfClassEntry.getName() );
-			classPool = new ClassPool();
-			classPool.insertClassPath( new ByteArrayClassPath( javaClassReconstructedName, c.toBytecode() ) );
-			c = classPool.get( javaClassReconstructedName );
-			
-			// check that the file is correct after inner class reconstruction (ie cause Javassist to fail fast if something is wrong)
-			assertClassName( c, obfClassEntry );
-			
-			// do all kinds of deobfuscating transformations on the class
-			new BridgeFixer( m_jarIndex ).fixBridges( c );
-			new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
-			new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
+			c = transformClass( c );
 			
 			// sanity checking
 			assertClassName( c, deobfClassEntry );
-			
-			// DEBUG
-			//Util.writeClass( c );
 			
 			// we have a transformed class!
 			return c.toBytecode();
@@ -222,6 +200,37 @@ public class TranslatingTypeLoader implements ITypeLoader
 		{
 			throw new Error( ex );
 		}
+	}
+	
+	public CtClass transformClass( CtClass c )
+	throws IOException, NotFoundException, CannotCompileException
+	{
+		// we moved a lot of classes out of the default package into the none package
+		// make sure all the class references are consistent
+		ClassRenamer.moveAllClassesOutOfDefaultPackage( c, Constants.NonePackage );
+		
+		// reconstruct inner classes
+		new InnerClassWriter( m_jarIndex ).write( c );
+		
+		// re-get the javassist handle since we changed class names
+		ClassEntry obfClassEntry = new ClassEntry( Descriptor.toJvmName( c.getName() ) );
+		String javaClassReconstructedName = Descriptor.toJavaName( obfClassEntry.getName() );
+		ClassPool classPool = new ClassPool();
+		classPool.insertClassPath( new ByteArrayClassPath( javaClassReconstructedName, c.toBytecode() ) );
+		c = classPool.get( javaClassReconstructedName );
+		
+		// check that the file is correct after inner class reconstruction (ie cause Javassist to fail fast if something is wrong)
+		assertClassName( c, obfClassEntry );
+		
+		// do all kinds of deobfuscating transformations on the class
+		new BridgeFixer( m_jarIndex ).fixBridges( c );
+		new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
+		new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
+		
+		// DEBUG
+		//Util.writeClass( c );
+		
+		return c;
 	}
 
 	private void assertClassName( CtClass c, ClassEntry obfClassEntry )

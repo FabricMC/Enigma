@@ -23,6 +23,7 @@ import com.google.common.collect.Queues;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.Deobfuscator.ProgressListener;
 import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
 import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
@@ -32,6 +33,7 @@ import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
+import cuchaz.enigma.gui.ProgressDialog.ProgressRunnable;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
@@ -110,28 +112,29 @@ public class GuiController
 		refreshCurrentClass();
 	}
 	
-	public void export( final File dirOut )
+	public void exportSource( final File dirOut )
 	{
-		new Thread( )
+		ProgressDialog.runInThread( m_gui.getFrame(), new ProgressRunnable( )
 		{
 			@Override
-			public void run( )
+			public void run( ProgressListener progress )
+			throws Exception
 			{
-				ProgressDialog progress = new ProgressDialog( m_gui.getFrame() );
-				try
-				{
-					m_deobfuscator.writeSources( dirOut, progress );
-				}
-				catch( Exception ex )
-				{
-					throw new Error( ex );
-				}
-				finally
-				{
-					progress.close();
-				}
+				m_deobfuscator.writeSources( dirOut, progress );
 			}
-		}.start();
+		} );
+	}
+	
+	public void exportJar( final File fileOut )
+	{
+		ProgressDialog.runInThread( m_gui.getFrame(), new ProgressRunnable( )
+		{
+			@Override
+			public void run( ProgressListener progress )
+			{
+				m_deobfuscator.writeJar( fileOut, progress );
+			}
+		} );
 	}
 	
 	public Token getToken( int pos )

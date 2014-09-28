@@ -123,12 +123,15 @@ public class Gui
 	private JMenuItem m_showCallsMenu;
 	private JMenuItem m_showImplementationsMenu;
 	private JMenuItem m_toggleMappingMenu;
+	private JMenuItem m_exportSourceMenu;
+	private JMenuItem m_exportJarMenu;
 	
 	// state
 	private EntryReference<Entry,Entry> m_reference;
 	private JFileChooser m_jarFileChooser;
 	private JFileChooser m_mappingsFileChooser;
-	private JFileChooser m_exportFileChooser;
+	private JFileChooser m_exportSourceFileChooser;
+	private JFileChooser m_exportJarFileChooser;
 	
 	public Gui( )
 	{
@@ -157,8 +160,9 @@ public class Gui
 		// init file choosers
 		m_jarFileChooser = new JFileChooser();
 		m_mappingsFileChooser = new JFileChooser();
-		m_exportFileChooser = new JFileChooser();
-		m_exportFileChooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+		m_exportSourceFileChooser = new JFileChooser();
+		m_exportSourceFileChooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+		m_exportJarFileChooser = new JFileChooser();
 		
 		// init obfuscated classes list
 		m_obfClasses = new ClassSelector( ClassSelector.ObfuscatedClassEntryComparator );
@@ -663,19 +667,36 @@ public class Gui
 			}
 			menu.addSeparator();
 			{
-				JMenuItem item = new JMenuItem( "Export..." );
+				JMenuItem item = new JMenuItem( "Export Source..." );
 				menu.add( item );
 				item.addActionListener( new ActionListener( ) 
 				{
 					@Override
 					public void actionPerformed( ActionEvent event )
 					{
-						if( m_exportFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						if( m_exportSourceFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
 						{
-							m_controller.export( m_exportFileChooser.getSelectedFile() );
+							m_controller.exportSource( m_exportSourceFileChooser.getSelectedFile() );
 						}
 					}
 				} );
+				m_exportSourceMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem( "Export Jar..." );
+				menu.add( item );
+				item.addActionListener( new ActionListener( ) 
+				{
+					@Override
+					public void actionPerformed( ActionEvent event )
+					{
+						if( m_exportJarFileChooser.showSaveDialog( m_frame ) == JFileChooser.APPROVE_OPTION )
+						{
+							m_controller.exportJar( m_exportJarFileChooser.getSelectedFile() );
+						}
+					}
+				} );
+				m_exportJarMenu = item;
 			}
 			menu.addSeparator();
 			{
@@ -762,6 +783,8 @@ public class Gui
 		m_saveMappingsMenu.setEnabled( false );
 		m_saveMappingsAsMenu.setEnabled( true );
 		m_closeMappingsMenu.setEnabled( true );
+		m_exportSourceMenu.setEnabled( true );
+		m_exportJarMenu.setEnabled( true );
 		
 		redraw();
 	}
@@ -781,6 +804,8 @@ public class Gui
 		m_saveMappingsMenu.setEnabled( false );
 		m_saveMappingsAsMenu.setEnabled( false );
 		m_closeMappingsMenu.setEnabled( false );
+		m_exportSourceMenu.setEnabled( false );
+		m_exportJarMenu.setEnabled( false );
 		
 		redraw();
 	}

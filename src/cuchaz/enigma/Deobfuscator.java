@@ -12,14 +12,18 @@
 package cuchaz.enigma;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
+import javassist.CtClass;
 import javassist.bytecode.Descriptor;
 
 import com.google.common.collect.Lists;
@@ -36,11 +40,11 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.JarClassIterator;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.analysis.TreeDumpVisitor;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.BehaviorEntryFactory;
@@ -61,7 +65,7 @@ public class Deobfuscator
 {
 	public interface ProgressListener
 	{
-		void init( int totalWork );
+		void init( int totalWork, String title );
 		void onProgress( int numDone, String message );
 	}
 	
@@ -393,7 +397,7 @@ public class Deobfuscator
 		
 		if( progress != null )
 		{
-			progress.init( classEntries.size() );
+			progress.init( classEntries.size(), "Decompiling classes..." );
 		}
 		
 		// DEOBFUSCATE ALL THE THINGS!! @_@
@@ -424,9 +428,60 @@ public class Deobfuscator
 				throw new Error( "Unable to deobfuscate class " + deobfClassEntry.toString() + " (" + obfClassEntry.toString() + ")", t );
 			}
 		}
-		
-		// done!
-		progress.onProgress( classEntries.size(), "Done!" );
+		if( progress != null )
+		{
+			progress.onProgress( i, "Done!" );
+		}
+	}
+	
+	public void writeJar( File out, ProgressListener progress )
+	{
+		try( JarOutputStream outJar = new JarOutputStream( new FileOutputStream( out ) ) )
+		{
+			if( progress != null )
+			{
+				progress.init( JarClassIterator.getClassEntries( m_jar ).size(), "Translating classes..." );
+			}
+			
+			// prep the loader
+			TranslatingTypeLoader loader = new TranslatingTypeLoader(
+				m_jar,
+				m_jarIndex,
+				getTranslator( TranslationDirection.Obfuscating ),
+				getTranslator( TranslationDirection.Deobfuscating )
+			);
+			
+			int i = 0;
+			for( CtClass c : JarClassIterator.classes( m_jar ) )
+			{
+				if( progress != null )
+				{
+					progress.onProgress( i++, c.getName() );
+				}
+				
+				try
+				{
+					c = loader.transformClass( c );
+					outJar.putNextEntry( new JarEntry( c.getName().replace( '.', '/' ) + ".class" ) );
+					outJar.write( c.toBytecode() );
+					outJar.closeEntry();
+				}
+				catch( Throwable t )
+				{
+					throw new Error( "Unable to deobfuscate class " + c.getName(), t );
+				}
+			}
+			if( progress != null )
+			{
+				progress.onProgress( i, "Done!" );
+			}
+			
+			outJar.close();
+		}
+		catch( IOException ex )
+		{
+			throw new Error( "Unable to write to Jar file!" );
+		}
 	}
 	
 	public <T extends Entry> T obfuscateEntry( T deobfEntry )
