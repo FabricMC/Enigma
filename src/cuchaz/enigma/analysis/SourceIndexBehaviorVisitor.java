@@ -154,7 +154,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor
 		{
 			behaviorEntry = new MethodEntry( classEntry, methodDef.getName(), methodDef.getSignature() );
 		}
-		ArgumentEntry argumentEntry = new ArgumentEntry( behaviorEntry, def.getPosition(), def.getName() );
+		ArgumentEntry argumentEntry = new ArgumentEntry( behaviorEntry, def.getPosition(), node.getName() );
 		index.addDeclaration( node.getNameToken(), argumentEntry );
 		
 		return recurse( node, index );
