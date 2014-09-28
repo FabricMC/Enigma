@@ -69,19 +69,32 @@ public class SignatureUpdater
 	throws IOException
 	{
 		// read all the characters in the buffer until we hit a ';'
+		// remember to treat generics correctly
 		StringBuilder buf = new StringBuilder();
+		int depth = 0;
 		int i = -1;
 		while( ( i = reader.read() ) != -1 )
 		{
 			char c = (char)i;
 			
-			if( c == ';' )
+			if( c == '<' )
 			{
-				return buf.toString();
+				depth++;
 			}
-			else
+			else if( c == '>' )
 			{
-				buf.append( c );
+				depth--;
+			}
+			else if( depth == 0 )
+			{
+				if( c == ';' )
+				{
+					return buf.toString();
+				}
+				else
+				{
+					buf.append( c );
+				}
 			}
 		}
 		
