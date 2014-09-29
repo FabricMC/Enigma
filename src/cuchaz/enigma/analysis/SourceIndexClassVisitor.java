@@ -15,6 +15,7 @@ import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
+import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
 import com.strobel.decompiler.languages.java.ast.EnumValueDeclaration;
 import com.strobel.decompiler.languages.java.ast.FieldDeclaration;
@@ -74,7 +75,16 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor
 		MethodDefinition def = node.getUserData( Keys.METHOD_DEFINITION );
 		ClassEntry classEntry = new ClassEntry( def.getDeclaringType().getInternalName() );
 		BehaviorEntry behaviorEntry = BehaviorEntryFactory.create( classEntry, def.getName(), def.getSignature() );
-		index.addDeclaration( node.getNameToken(), behaviorEntry );
+		AstNode tokenNode = node.getNameToken();
+		if( behaviorEntry instanceof ConstructorEntry )
+		{
+			ConstructorEntry constructorEntry = (ConstructorEntry)behaviorEntry;
+			if( constructorEntry.isStatic() )
+			{
+				tokenNode = node.getModifiers().firstOrNullObject();
+			}
+		}
+		index.addDeclaration( tokenNode, behaviorEntry );
 		return node.acceptVisitor( new SourceIndexBehaviorVisitor( behaviorEntry ), index );
 	}
 	

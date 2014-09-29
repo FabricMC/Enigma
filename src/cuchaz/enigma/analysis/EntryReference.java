@@ -20,7 +20,7 @@ import cuchaz.enigma.mapping.Entry;
 
 public class EntryReference<E extends Entry, C extends Entry>
 {
-	private static final List<String> ConstructorNonNames = Arrays.asList( "this", "super" );
+	private static final List<String> ConstructorNonNames = Arrays.asList( "this", "super", "static" );
 	public E entry;
 	public C context;
 	

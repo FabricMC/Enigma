@@ -45,6 +45,7 @@ import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
+import cuchaz.enigma.analysis.TreeDumpVisitor;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.BehaviorEntryFactory;
