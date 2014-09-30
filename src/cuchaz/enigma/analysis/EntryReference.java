@@ -79,6 +79,21 @@ public class EntryReference<E extends Entry, C extends Entry>
 		return entry;
 	}
 	
+	public String getNamableName( )
+	{
+		if( getNameableEntry() instanceof ClassEntry )
+		{
+			ClassEntry classEntry = (ClassEntry)getNameableEntry();
+			if( classEntry.isInnerClass() )
+			{
+				// make sure we only rename the inner class name
+				return classEntry.getInnerClassName();
+			}
+		}
+		
+		return getNameableEntry().getName();
+	}
+	
 	@Override
 	public int hashCode( )
 	{

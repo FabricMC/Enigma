@@ -55,7 +55,7 @@ public class NameValidator
 		ClassPattern = Pattern.compile( String.format( "^(%s(\\.|/))*(%s)$", identifierRegex, identifierRegex ) );
 	}
 	
-	public static String validateClassName( String name )
+	public static String validateClassName( String name, boolean packageRequired )
 	{
 		if( name == null )
 		{
@@ -65,9 +65,9 @@ public class NameValidator
 		{
 			throw new IllegalNameException( name, "This doesn't look like a legal class name" );
 		}
-		if( new ClassEntry( name ).getPackageName() == null )
+		if( packageRequired && new ClassEntry( name ).getPackageName() == null )
 		{
-			throw new IllegalNameException( name, "Classes must be in a package" );
+			throw new IllegalNameException( name, "Class must be in a package" );
 		}
 		return Descriptor.toJvmName( name );
 	}

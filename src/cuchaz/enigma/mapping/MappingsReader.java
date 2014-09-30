@@ -78,10 +78,11 @@ public class MappingsReader
 				
 				if( token.equalsIgnoreCase( "CLASS" ) )
 				{
-					ClassMapping classMapping = readClass( parts );
+					ClassMapping classMapping;
 					if( indent == 0 )
 					{
 						// outer class
+						classMapping = readClass( parts, false );
 						mappings.addClassMapping( classMapping );
 					}
 					else if( indent == 1 )
@@ -91,11 +92,13 @@ public class MappingsReader
 						{
 							throw new MappingParseException( lineNumber, "Unexpected CLASS entry here!" );
 						}
+						
+						classMapping = readClass( parts, true );
 						((ClassMapping)mappingStack.getFirst()).addInnerClassMapping( classMapping );
 					}
 					else
 					{
-						throw new MappingParseException( lineNumber, "Unexpected CLASS entry here!" );
+						throw new MappingParseException( lineNumber, "Unexpected CLASS entry nesting!" );
 					}
 					mappingStack.push( classMapping );
 				}
@@ -140,28 +143,30 @@ public class MappingsReader
 		return new ArgumentMapping( Integer.parseInt( parts[1] ), parts[2] );
 	}
 
-	private ClassMapping readClass( String[] parts )
+	private ClassMapping readClass( String[] parts, boolean makeSimple )
 	{
 		if( parts.length == 2 )
 		{
-			String obfName = parts[1];
-			return new ClassMapping( moveClassOutOfDefaultPackage( obfName, Constants.NonePackage ) );
+			String obfName = processName( parts[1], makeSimple );
+			return new ClassMapping( obfName );
 		}
 		else
 		{
-			String obfName = parts[1];
-			String deobfName = parts[2];
-			if( obfName.equals( deobfName ) )
-			{
-				return new ClassMapping( moveClassOutOfDefaultPackage( obfName, Constants.NonePackage ) );
-			}
-			else
-			{
-				return new ClassMapping(
-					moveClassOutOfDefaultPackage( parts[1], Constants.NonePackage ),
-					moveClassOutOfDefaultPackage( parts[2], Constants.NonePackage )
-				);
-			}
+			String obfName = processName( parts[1], makeSimple );
+			String deobfName = processName( parts[2], makeSimple );
+			return new ClassMapping( obfName, deobfName );
+		}
+	}
+	
+	private String processName( String name, boolean makeSimple )
+	{
+		if( makeSimple )
+		{
+			return new ClassEntry( name ).getSimpleName();
+		}
+		else
+		{
+			return moveClassOutOfDefaultPackage( name, Constants.NonePackage );
 		}
 	}
 	

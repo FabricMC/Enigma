@@ -80,19 +80,26 @@ public class Translator
 		{
 			if( in.isInnerClass() )
 			{
-				// look for the inner class
+				// translate the inner class
 				String translatedInnerClassName = m_direction.choose(
 					classMapping.getDeobfInnerClassName( in.getInnerClassName() ),
 					classMapping.getObfInnerClassName( in.getInnerClassName() )
 				);
 				if( translatedInnerClassName != null )
 				{
-					// return outer$inner
+					// try to translate the outer name
 					String translatedOuterClassName = m_direction.choose(
 						classMapping.getDeobfName(),
 						classMapping.getObfName()
 					);
-					return translatedOuterClassName + "$" + translatedInnerClassName;
+					if( translatedOuterClassName != null )
+					{
+						return translatedOuterClassName + "$" + translatedInnerClassName;
+					}
+					else
+					{
+						return in.getOuterClassName() + "$" + translatedInnerClassName;
+					}
 				}
 			}
 			else
@@ -109,6 +116,7 @@ public class Translator
 	
 	public ClassEntry translateEntry( ClassEntry in )
 	{
+		// can we translate the inner class?
 		String name = translate( in );
 		if( name != null )
 		{
@@ -117,13 +125,14 @@ public class Translator
 		
 		if( in.isInnerClass() )
 		{
-			// just translate the outer class name
+			// guess not. just translate the outer class name then
 			String outerClassName = translate( in.getOuterClassEntry() );
 			if( outerClassName != null )
 			{
 				return new ClassEntry( outerClassName + "$" + in.getInnerClassName() );
 			}
 		}
+		
 		return in;
 	}
 	

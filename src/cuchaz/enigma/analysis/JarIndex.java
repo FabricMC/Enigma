@@ -164,9 +164,10 @@ public class JarIndex
 				String outerClassName = findOuterClass( c );
 				if( outerClassName != null )
 				{
-					String innerClassName = Descriptor.toJvmName( c.getName() );
+					String innerClassName = c.getSimpleName();
 					m_innerClasses.put( outerClassName, innerClassName );
-					m_outerClasses.put( innerClassName, outerClassName );
+					boolean innerWasAdded = m_outerClasses.put( innerClassName, outerClassName ) == null;
+					assert( innerWasAdded );
 					
 					BehaviorEntry enclosingBehavior = isAnonymousClass( c, outerClassName );
 					if( enclosingBehavior != null )
@@ -188,7 +189,7 @@ public class JarIndex
 			Map<String,String> renames = Maps.newHashMap();
 			for( Map.Entry<String,String> entry : m_outerClasses.entrySet() )
 			{
-				renames.put( entry.getKey(), entry.getValue() + "$" + new ClassEntry( entry.getKey() ).getSimpleName() );
+				renames.put( Constants.NonePackage + "/" + entry.getKey(), entry.getValue() + "$" + entry.getKey() );
 			}
 			EntryRenamer.renameClassesInSet( renames, m_obfClassEntries );
 			m_translationIndex.renameClasses( renames );

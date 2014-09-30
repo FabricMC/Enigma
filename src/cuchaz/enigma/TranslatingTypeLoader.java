@@ -13,6 +13,7 @@ package cuchaz.enigma;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -119,7 +120,6 @@ public class TranslatingTypeLoader implements ITypeLoader
 	
 	private byte[] loadType( String deobfClassName )
 	{
-		// what class file should we actually load?
 		ClassEntry deobfClassEntry = new ClassEntry( deobfClassName );
 		ClassEntry obfClassEntry = m_obfuscatingTranslator.translateEntry( deobfClassEntry );
 		
@@ -143,7 +143,7 @@ public class TranslatingTypeLoader implements ITypeLoader
 		String classFileName;
 		if( obfClassEntry.isInnerClass() )
 		{
-			// use just the inner class simple name for inner classes
+			// use just the inner class name for inner classes
 			classFileName = obfClassEntry.getInnerClassName();
 		}
 		else if( obfClassEntry.getPackageName().equals( Constants.NonePackage ) )
@@ -193,6 +193,9 @@ public class TranslatingTypeLoader implements ITypeLoader
 			// sanity checking
 			assertClassName( c, deobfClassEntry );
 			
+			// DEBUG
+			//Util.writeClass( c );
+
 			// we have a transformed class!
 			return c.toBytecode();
 		}
@@ -226,9 +229,6 @@ public class TranslatingTypeLoader implements ITypeLoader
 		new BridgeFixer( m_jarIndex ).fixBridges( c );
 		new MethodParameterWriter( m_deobfuscatingTranslator ).writeMethodArguments( c );
 		new ClassTranslator( m_deobfuscatingTranslator ).translate( c );
-		
-		// DEBUG
-		//Util.writeClass( c );
 		
 		return c;
 	}

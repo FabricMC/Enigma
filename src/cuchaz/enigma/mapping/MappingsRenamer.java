@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
+import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.JarIndex;
 
 public class MappingsRenamer
@@ -31,7 +32,7 @@ public class MappingsRenamer
 	
 	public void setClassName( ClassEntry obf, String deobfName )
 	{
-		deobfName = NameValidator.validateClassName( deobfName );
+		deobfName = NameValidator.validateClassName( deobfName, !obf.isInnerClass() );
 		ClassEntry targetEntry = new ClassEntry( deobfName );
 		if( m_mappings.containsDeobfClass( deobfName ) || m_index.containsObfClass( targetEntry ) )
 		{
@@ -77,7 +78,8 @@ public class MappingsRenamer
 		ClassMapping classMapping = getOrCreateClassMapping( obf );
 		if( obf.isInnerClass() )
 		{
-			classMapping.setInnerClassName( obf.getName(), obf.getName() );
+			String innerClassName = Constants.NonePackage + "/" + obf.getInnerClassName();
+			classMapping.setInnerClassName( innerClassName, innerClassName );
 		}
 		else
 		{

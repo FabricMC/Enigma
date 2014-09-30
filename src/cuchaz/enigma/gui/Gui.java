@@ -1124,7 +1124,7 @@ public class Gui
 	{
 		// init the text box
 		final JTextField text = new JTextField();
-		text.setText( m_reference.getNameableEntry().getName() );
+		text.setText( m_reference.getNamableName() );
 		text.setPreferredSize( new Dimension( 360, text.getPreferredSize().height ) );
 		text.addKeyListener( new KeyAdapter( )
 		{
@@ -1175,7 +1175,7 @@ public class Gui
 		// abort the rename
 		JPanel panel = (JPanel)m_infoPanel.getComponent( 0 );
 		panel.remove( panel.getComponentCount() - 1 );
-		panel.add( GuiTricks.unboldLabel( new JLabel( m_reference.getNameableEntry().getName(), JLabel.LEFT ) ) );
+		panel.add( GuiTricks.unboldLabel( new JLabel( m_reference.getNamableName(), JLabel.LEFT ) ) );
 		
 		m_editor.grabFocus();
 		

@@ -37,34 +37,25 @@ public class ClassRenamer
 		{
 			nameMap.put( entry.getKey().getName(), entry.getValue().getName() );
 		}
+		
 		c.replaceClassName( nameMap );
 		
-		// translate the names in the InnerClasses attribute
+		// replace simple names in the InnerClasses attribute too
 		ConstPool constants = c.getClassFile().getConstPool();
 		InnerClassesAttribute attr = (InnerClassesAttribute)c.getClassFile().getAttribute( InnerClassesAttribute.tag );
 		if( attr != null )
 		{
 			for( int i=0; i<attr.tableLength(); i++ )
 			{
-				ClassEntry inClassEntry = new ClassEntry( Descriptor.toJvmName( attr.innerClass( i ) ) );
-				ClassEntry outClassEntry = map.get( inClassEntry );
-				if( outClassEntry == null )
-				{
-					continue;
-				}
-				attr.setInnerClassIndex( i, constants.addClassInfo( outClassEntry.getName() ) );
-				if( attr.outerClassIndex( i ) != 0 )
-				{
-					attr.setOuterClassIndex( i, constants.addClassInfo( outClassEntry.getOuterClassName() ) );
-				}
+				ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( attr.innerClass( i ) ) );
 				if( attr.innerNameIndex( i ) != 0 )
 				{
-					attr.setInnerNameIndex( i, constants.addUtf8Info( outClassEntry.getInnerClassName() ) );
+					attr.setInnerNameIndex( i, constants.addUtf8Info( classEntry.getInnerClassName() ) );
 				}
 				
 				/* DEBUG
-				System.out.println( String.format( "\tOBF: %s DEOBF: %s-> ATTR: %s,%s,%s",
-					obfClassEntry, deobfClassEntry,
+				System.out.println( String.format( "\tDEOBF: %s-> ATTR: %s,%s,%s",
+					classEntry,
 					attr.outerClass( i ),
 					attr.innerClass( i ),
 					attr.innerName( i )
@@ -108,16 +99,6 @@ public class ClassRenamer
 			private static final long serialVersionUID = -202160293602070641L;
 		};
 		c.replaceClassName( map );
-		
-		// also check InnerClassesAttribute
-		InnerClassesAttribute attr = (InnerClassesAttribute)c.getClassFile().getAttribute( InnerClassesAttribute.tag );
-		if( attr != null )
-		{
-			for( int i=0; i<attr.tableLength(); i++ )
-			{
-				entries.add( new ClassEntry( Descriptor.toJvmName( attr.innerClass( i ) ) ) );
-			}
-		}
 		
 		return entries;
 	}

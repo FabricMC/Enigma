@@ -132,7 +132,11 @@ public class ClassTranslator
 		Map<ClassEntry,ClassEntry> map = Maps.newHashMap();
 		for( ClassEntry obfClassEntry : ClassRenamer.getAllClassEntries( c ) )
 		{
-			map.put( obfClassEntry, m_translator.translateEntry( obfClassEntry ) );
+			ClassEntry deobfClassEntry = m_translator.translateEntry( obfClassEntry );
+			if( !obfClassEntry.equals( deobfClassEntry ) )
+			{
+				map.put( obfClassEntry, deobfClassEntry );
+			}
 		}
 		ClassRenamer.renameClasses( c, map );
 	}
