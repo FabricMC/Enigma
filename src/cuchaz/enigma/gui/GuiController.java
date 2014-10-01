@@ -43,7 +43,6 @@ import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.TranslationDirection;
-import cuchaz.enigma.mapping.Translator;
 
 public class GuiController
 {
