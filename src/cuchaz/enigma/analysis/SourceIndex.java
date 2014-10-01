@@ -90,7 +90,7 @@ public class SourceIndex
 		//System.out.println( String.format( "%s \"%s\" region: %s", node.getNodeType(), name, region ) );
 		
 		// for tokens representing inner classes, make sure we only get the simple name
-		int pos = node.getText().lastIndexOf( '$' );
+		int pos = name.lastIndexOf( '$' );
 		if( pos >= 0 )
 		{
 			token.end -= pos + 1;

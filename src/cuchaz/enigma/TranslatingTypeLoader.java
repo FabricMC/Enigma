@@ -13,7 +13,6 @@ package cuchaz.enigma;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;

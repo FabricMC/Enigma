@@ -13,6 +13,7 @@ package cuchaz.enigma;
 import java.io.File;
 
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.mapping.ClassEntry;
 
 public class Main
 {
@@ -32,7 +33,7 @@ public class Main
 		}
 		
 		// DEBUG
-		//gui.getController().openDeclaration( new ClassEntry( "none/bub" ) );
+		gui.getController().openDeclaration( new ClassEntry( "none/ry" ) );
 	}
 	
 	private static File getFile( String path )

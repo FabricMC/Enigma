@@ -261,7 +261,7 @@ public class Deobfuscator
 		Translator translator = m_translatorCache.get( direction );
 		if( translator == null )
 		{
-			translator = m_mappings.getTranslator( m_jarIndex.getTranslationIndex(), direction );
+			translator = m_mappings.getTranslator( direction );
 			m_translatorCache.put( direction, translator );
 		}
 		return translator;

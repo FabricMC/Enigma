@@ -117,6 +117,16 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 		return m_innerClassesByDeobf.get( deobfName );
 	}
 	
+	public ClassMapping getInnerClassByDeobfThenObf( String name )
+	{
+		ClassMapping classMapping = getInnerClassByDeobf( name );
+		if( classMapping == null )
+		{
+			classMapping = getInnerClassByObf( name );
+		}
+		return classMapping;
+	}
+	
 	public String getObfInnerClassName( String deobfName )
 	{
 		assert( isSimpleClassName( deobfName ) );
@@ -392,9 +402,18 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 			buf.append( "\n" );
 		}
 		buf.append( "Methods:\n" );
-		for( MethodMapping methodIndex : m_methodsByObf.values() )
+		for( MethodMapping methodMapping : m_methodsByObf.values() )
 		{
-			buf.append( methodIndex.toString() );
+			buf.append( methodMapping.toString() );
+			buf.append( "\n" );
+		}
+		buf.append( "Inner Classes:\n" );
+		for( ClassMapping classMapping : m_innerClassesByObf.values() )
+		{
+			buf.append( "\t" );
+			buf.append( classMapping.getObfName() );
+			buf.append( " <-> " );
+			buf.append( classMapping.getDeobfName() );
 			buf.append( "\n" );
 		}
 		return buf.toString();
@@ -403,6 +422,11 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping>
 	@Override
 	public int compareTo( ClassMapping other )
 	{
+		// sort by a, b, c, ... aa, ab, etc
+		if( m_obfName.length() != other.m_obfName.length() )
+		{
+			return m_obfName.length() - other.m_obfName.length();
+		}
 		return m_obfName.compareTo( other.m_obfName );
 	}
 	

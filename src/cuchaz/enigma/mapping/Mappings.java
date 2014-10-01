@@ -24,7 +24,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import cuchaz.enigma.Util;
-import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class Mappings implements Serializable
@@ -125,34 +124,15 @@ public class Mappings implements Serializable
 		return m_classesByDeobf.get( deobfName );
 	}
 	
-	public Translator getTranslator( TranslationIndex index, TranslationDirection direction )
+	public Translator getTranslator( TranslationDirection direction )
 	{
 		switch( direction )
 		{
 			case Deobfuscating:
 				
-				return new Translator( direction, m_classesByObf, index );
+				return new Translator( direction, m_classesByObf );
 				
 			case Obfuscating:
-				
-				// deobfuscate the index
-				index = new TranslationIndex( index );
-				Map<String,String> renames = Maps.newHashMap();
-				for( ClassMapping classMapping : classes() )
-				{
-					if( classMapping.getDeobfName() != null )
-					{
-						renames.put( classMapping.getObfName(), classMapping.getDeobfName() );
-					}
-					for( ClassMapping innerClassMapping : classMapping.innerClasses() )
-					{
-						if( innerClassMapping.getDeobfName() != null )
-						{
-							renames.put( innerClassMapping.getObfName(), innerClassMapping.getDeobfName() );
-						}
-					}
-				}
-				index.renameClasses( renames );
 				
 				// fill in the missing deobf class entries with obf entries
 				Map<String,ClassMapping> classes = Maps.newHashMap();
@@ -168,7 +148,7 @@ public class Mappings implements Serializable
 					}
 				}
 				
-				return new Translator( direction, classes, index );
+				return new Translator( direction, classes );
 				
 			default:
 				throw new Error( "Invalid translation direction!" );
