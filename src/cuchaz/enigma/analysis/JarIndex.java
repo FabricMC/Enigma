@@ -885,6 +885,11 @@ public class JarIndex
 	
 	public String getOuterClass( String obfInnerClassName )
 	{
+		// make sure we use the right name
+		if( new ClassEntry( obfInnerClassName ).getPackageName() != null )
+		{
+			throw new IllegalArgumentException( "Don't reference obfuscated inner classes using packages: " + obfInnerClassName );
+		}
 		return m_outerClasses.get( obfInnerClassName );
 	}
 	

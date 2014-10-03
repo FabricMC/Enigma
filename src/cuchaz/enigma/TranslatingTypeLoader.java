@@ -123,7 +123,7 @@ public class TranslatingTypeLoader implements ITypeLoader
 		ClassEntry obfClassEntry = m_obfuscatingTranslator.translateEntry( deobfClassEntry );
 		
 		// is this an inner class referenced directly?
-		String obfOuterClassName = m_jarIndex.getOuterClass( obfClassEntry.getName() );
+		String obfOuterClassName = m_jarIndex.getOuterClass( obfClassEntry.getSimpleName() );
 		if( obfOuterClassName != null )
 		{
 			// this class doesn't really exist. Reference it by outer$inner instead

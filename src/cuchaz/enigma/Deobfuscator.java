@@ -127,11 +127,13 @@ public class Deobfuscator
 		Map<String,String> renames = Maps.newHashMap();
 		for( ClassMapping classMapping : val.classes() )
 		{
-			String outerClassName = m_jarIndex.getOuterClass( classMapping.getObfName() );
+			// make sure we strip the packages off of obfuscated inner classes
+			String innerClassName = new ClassEntry( classMapping.getObfName() ).getSimpleName();
+			String outerClassName = m_jarIndex.getOuterClass( innerClassName );
 			if( outerClassName != null )
 			{
 				// build the composite class name
-				String newName = outerClassName + "$" + new ClassEntry( classMapping.getObfName() ).getSimpleName();
+				String newName = outerClassName + "$" + innerClassName;
 				
 				// add a rename
 				renames.put( classMapping.getObfName(), newName );
@@ -217,7 +219,7 @@ public class Deobfuscator
 	{
 		// check the class
 		ClassEntry classEntry = new ClassEntry( classMapping.getObfName() );
-		String outerClassName = m_jarIndex.getOuterClass( classMapping.getObfName() );
+		String outerClassName = m_jarIndex.getOuterClass( classEntry.getSimpleName() );
 		if( outerClassName != null )
 		{
 			classEntry = new ClassEntry( outerClassName + "$" + classMapping.getObfName() );
