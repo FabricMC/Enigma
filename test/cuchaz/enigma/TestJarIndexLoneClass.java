@@ -140,7 +140,7 @@ public class TestJarIndexLoneClass
 	@Test
 	public void outerClass( )
 	{
-		assertThat( m_index.getOuterClass( "none/a" ), is( nullValue() ) );
+		assertThat( m_index.getOuterClass( "a" ), is( nullValue() ) );
 	}
 	
 	@Test
