@@ -1,17 +1,15 @@
 
 syntax: regexp
-^\.classpath$
+^\.
 syntax: regexp
-^\.project$
+^bin$
 syntax: regexp
-^\.gradle$
-syntax: regexp
-^\.settings$
-syntax: regexp
-^libs$
+^lib$
 syntax: regexp
 ^build$
 syntax: regexp
 ^data$
 syntax: regexp
 ^input$
+syntax: regexp
+^ivy$

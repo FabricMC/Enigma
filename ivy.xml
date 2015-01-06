@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+	<info organisation="com.cuchazinteractive" module="Enigma" status="integration"/>
+	<dependencies>
+		<dependency org="com.google.guava" name="guava" rev="17.0" transitive="false"/>
+		<dependency org="de.sciss" name="jsyntaxpane" rev="1.0.0" transitive="false"/>
+		<dependency org="org.javassist" name="javassist" rev="3.18.1-GA" transitive="false"/>
+		
+		<!-- for testing -->
+		<dependency org="junit" name="junit" rev="4.11" transitive="false"/>
+		<dependency org="org.hamcrest" name="hamcrest-all" rev="1.3" transitive="false"/>
+	</dependencies>
+</ivy-module>
