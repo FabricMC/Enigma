@@ -20,112 +20,92 @@ import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
 
-public class MethodInheritanceTreeNode extends DefaultMutableTreeNode
-{
+public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
+	
 	private static final long serialVersionUID = 1096677030991810007L;
 	
 	private Translator m_deobfuscatingTranslator;
 	private MethodEntry m_entry;
 	private boolean m_isImplemented;
 	
-	public MethodInheritanceTreeNode( Translator deobfuscatingTranslator, MethodEntry entry, boolean isImplemented )
-	{
+	public MethodInheritanceTreeNode(Translator deobfuscatingTranslator, MethodEntry entry, boolean isImplemented) {
 		m_deobfuscatingTranslator = deobfuscatingTranslator;
 		m_entry = entry;
 		m_isImplemented = isImplemented;
 	}
 	
-	public MethodEntry getMethodEntry( )
-	{
+	public MethodEntry getMethodEntry() {
 		return m_entry;
 	}
 	
-	public String getDeobfClassName( )
-	{
-		return m_deobfuscatingTranslator.translateClass( m_entry.getClassName() );
+	public String getDeobfClassName() {
+		return m_deobfuscatingTranslator.translateClass(m_entry.getClassName());
 	}
 	
-	public String getDeobfMethodName( )
-	{
-		return m_deobfuscatingTranslator.translate( m_entry );
+	public String getDeobfMethodName() {
+		return m_deobfuscatingTranslator.translate(m_entry);
 	}
 	
-	public boolean isImplemented( )
-	{
+	public boolean isImplemented() {
 		return m_isImplemented;
 	}
 	
 	@Override
-	public String toString( )
-	{
+	public String toString() {
 		String className = getDeobfClassName();
-		if( className == null )
-		{
+		if (className == null) {
 			className = m_entry.getClassName();
 		}
 		
-		if( !m_isImplemented )
-		{
+		if (!m_isImplemented) {
 			return className;
-		}
-		else
-		{
+		} else {
 			String methodName = getDeobfMethodName();
-			if( methodName == null )
-			{
+			if (methodName == null) {
 				methodName = m_entry.getName();
 			}
 			return className + "." + methodName + "()";
 		}
 	}
 	
-	public void load( JarIndex index, boolean recurse )
-	{
+	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-		for( String subclassName : index.getTranslationIndex().getSubclassNames( m_entry.getClassName() ) )
-		{
+		for (String subclassName : index.getTranslationIndex().getSubclassNames(m_entry.getClassName())) {
 			MethodEntry methodEntry = new MethodEntry(
-				new ClassEntry( subclassName ),
+				new ClassEntry(subclassName),
 				m_entry.getName(),
 				m_entry.getSignature()
 			);
-			nodes.add( new MethodInheritanceTreeNode(
+			nodes.add(new MethodInheritanceTreeNode(
 				m_deobfuscatingTranslator,
 				methodEntry,
-				index.containsObfBehavior( methodEntry )
-			) );
+				index.containsObfBehavior(methodEntry)
+			));
 		}
 		
 		// add them to this node
-		for( MethodInheritanceTreeNode node : nodes )
-		{
-			this.add( node );
+		for (MethodInheritanceTreeNode node : nodes) {
+			this.add(node);
 		}
 		
-		if( recurse )
-		{
-			for( MethodInheritanceTreeNode node : nodes )
-			{
-				node.load( index, true );
+		if (recurse) {
+			for (MethodInheritanceTreeNode node : nodes) {
+				node.load(index, true);
 			}
 		}
 	}
 	
-	public static MethodInheritanceTreeNode findNode( MethodInheritanceTreeNode node, MethodEntry entry )
-	{
+	public static MethodInheritanceTreeNode findNode(MethodInheritanceTreeNode node, MethodEntry entry) {
 		// is this the node?
-		if( node.getMethodEntry().equals( entry ) )
-		{
+		if (node.getMethodEntry().equals(entry)) {
 			return node;
 		}
 		
 		// recurse
-		for( int i=0; i<node.getChildCount(); i++ )
-		{
-			MethodInheritanceTreeNode foundNode = findNode( (MethodInheritanceTreeNode)node.getChildAt( i ), entry );
-			if( foundNode != null )
-			{
+		for (int i = 0; i < node.getChildCount(); i++) {
+			MethodInheritanceTreeNode foundNode = findNode((MethodInheritanceTreeNode)node.getChildAt(i), entry);
+			if (foundNode != null) {
 				return foundNode;
 			}
 		}

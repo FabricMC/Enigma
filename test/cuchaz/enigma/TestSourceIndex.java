@@ -21,35 +21,27 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import cuchaz.enigma.mapping.ClassEntry;
 
-public class TestSourceIndex
-{
+public class TestSourceIndex {
+	
 	@Test
-	public void indexEverything( )
-	throws Exception
-	{
-		Deobfuscator deobfuscator = new Deobfuscator( new File( "input/1.8.jar" ) );
+	public void indexEverything() throws Exception {
+		Deobfuscator deobfuscator = new Deobfuscator(new File("input/1.8.jar"));
 		
 		// get all classes that aren't inner classes
 		Set<ClassEntry> classEntries = Sets.newHashSet();
-		for( ClassEntry obfClassEntry : deobfuscator.getJarIndex().getObfClassEntries() )
-		{
-			if( !obfClassEntry.isInnerClass() )
-			{
-				classEntries.add( obfClassEntry );
+		for (ClassEntry obfClassEntry : deobfuscator.getJarIndex().getObfClassEntries()) {
+			if (!obfClassEntry.isInnerClass()) {
+				classEntries.add(obfClassEntry);
 			}
 		}
 		
-		for( ClassEntry obfClassEntry : classEntries )
-		{
-			try
-			{
-				CompilationUnit tree = deobfuscator.getSourceTree( obfClassEntry.getName() );
-				String source = deobfuscator.getSource( tree );
-				deobfuscator.getSourceIndex( tree, source );
-			}
-			catch( Throwable t )
-			{
-				throw new Error( "Unable to index " + obfClassEntry, t );
+		for (ClassEntry obfClassEntry : classEntries) {
+			try {
+				CompilationUnit tree = deobfuscator.getSourceTree(obfClassEntry.getName());
+				String source = deobfuscator.getSource(tree);
+				deobfuscator.getSourceIndex(tree, source);
+			} catch (Throwable t) {
+				throw new Error("Unable to index " + obfClassEntry, t);
 			}
 		}
 	}

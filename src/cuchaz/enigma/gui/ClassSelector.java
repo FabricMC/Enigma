@@ -30,39 +30,32 @@ import com.google.common.collect.Multimap;
 
 import cuchaz.enigma.mapping.ClassEntry;
 
-public class ClassSelector extends JTree
-{
+public class ClassSelector extends JTree {
+	
 	private static final long serialVersionUID = -7632046902384775977L;
 	
-	public interface ClassSelectionListener
-	{
-		void onSelectClass( ClassEntry classEntry );
+	public interface ClassSelectionListener {
+		void onSelectClass(ClassEntry classEntry);
 	}
 	
 	public static Comparator<ClassEntry> ObfuscatedClassEntryComparator;
 	public static Comparator<ClassEntry> DeobfuscatedClassEntryComparator;
 	
-	static
-	{
-		ObfuscatedClassEntryComparator = new Comparator<ClassEntry>( )
-		{
+	static {
+		ObfuscatedClassEntryComparator = new Comparator<ClassEntry>() {
 			@Override
-			public int compare( ClassEntry a, ClassEntry b )
-			{
-				if( a.getName().length() != b.getName().length() )
-				{
+			public int compare(ClassEntry a, ClassEntry b) {
+				if (a.getName().length() != b.getName().length()) {
 					return a.getName().length() - b.getName().length();
 				}
-				return a.getName().compareTo( b.getName() );
+				return a.getName().compareTo(b.getName());
 			}
 		};
 		
-		DeobfuscatedClassEntryComparator = new Comparator<ClassEntry>( )
-		{
+		DeobfuscatedClassEntryComparator = new Comparator<ClassEntry>() {
 			@Override
-			public int compare( ClassEntry a, ClassEntry b )
-			{
-				return a.getName().compareTo( b.getName() );
+			public int compare(ClassEntry a, ClassEntry b) {
+				return a.getName().compareTo(b.getName());
 			}
 		};
 	}
@@ -70,122 +63,102 @@ public class ClassSelector extends JTree
 	private ClassSelectionListener m_listener;
 	private Comparator<ClassEntry> m_comparator;
 	
-	public ClassSelector( Comparator<ClassEntry> comparator )
-	{
+	public ClassSelector(Comparator<ClassEntry> comparator) {
 		m_comparator = comparator;
 		
 		// configure the tree control
-		setRootVisible( false );
-		setShowsRootHandles( false );
-		setModel( null );
+		setRootVisible(false);
+		setShowsRootHandles(false);
+		setModel(null);
 		
 		// hook events
-		addMouseListener( new MouseAdapter()
-		{
+		addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked( MouseEvent event )
-			{
-				if( m_listener != null && event.getClickCount() == 2 )
-				{
+			public void mouseClicked(MouseEvent event) {
+				if (m_listener != null && event.getClickCount() == 2) {
 					// get the selected node
 					TreePath path = getSelectionPath();
-					if( path != null && path.getLastPathComponent() instanceof ClassSelectorClassNode )
-					{
+					if (path != null && path.getLastPathComponent() instanceof ClassSelectorClassNode) {
 						ClassSelectorClassNode node = (ClassSelectorClassNode)path.getLastPathComponent();
-						m_listener.onSelectClass( node.getClassEntry() );
+						m_listener.onSelectClass(node.getClassEntry());
 					}
 				}
 			}
-		} );
+		});
 		
 		// init defaults
 		m_listener = null;
 	}
 	
-	public void setListener( ClassSelectionListener val )
-	{
+	public void setListener(ClassSelectionListener val) {
 		m_listener = val;
 	}
 	
-	public void setClasses( Collection<ClassEntry> classEntries )
-	{
-		if( classEntries == null )
-		{
-			setModel( null );
+	public void setClasses(Collection<ClassEntry> classEntries) {
+		if (classEntries == null) {
+			setModel(null);
 			return;
 		}
 		
 		// build the package names
 		Map<String,ClassSelectorPackageNode> packages = Maps.newHashMap();
-		for( ClassEntry classEntry : classEntries )
-		{
-			packages.put( classEntry.getPackageName(), null );
+		for (ClassEntry classEntry : classEntries) {
+			packages.put(classEntry.getPackageName(), null);
 		}
 		
 		// sort the packages
-		List<String> sortedPackageNames = Lists.newArrayList( packages.keySet() );
-		Collections.sort( sortedPackageNames, new Comparator<String>( )
-		{
+		List<String> sortedPackageNames = Lists.newArrayList(packages.keySet());
+		Collections.sort(sortedPackageNames, new Comparator<String>() {
 			@Override
-			public int compare( String a, String b )
-			{
+			public int compare(String a, String b) {
 				// I can never keep this rule straight when writing these damn things...
 				// a < b => -1, a == b => 0, a > b => +1
 				
-				String[] aparts = a.split( "/" );
-				String[] bparts = b.split( "/" );
-				for( int i=0; true; i++ )
-				{
-					if( i >= aparts.length )
-					{
+				String[] aparts = a.split("/");
+				String[] bparts = b.split("/");
+				for (int i = 0; true; i++) {
+					if (i >= aparts.length) {
 						return -1;
-					}
-					else if( i >= bparts.length )
-					{
+					} else if (i >= bparts.length) {
 						return 1;
 					}
 					
-					int result = aparts[i].compareTo( bparts[i] );
-					if( result != 0 )
-					{
+					int result = aparts[i].compareTo(bparts[i]);
+					if (result != 0) {
 						return result;
 					}
 				}
 			}
-		} );
+		});
 		
 		// create the root node and the package nodes
 		DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-		for( String packageName : sortedPackageNames )
-		{
-			ClassSelectorPackageNode node = new ClassSelectorPackageNode( packageName );
-			packages.put( packageName, node );
-			root.add( node );
+		for (String packageName : sortedPackageNames) {
+			ClassSelectorPackageNode node = new ClassSelectorPackageNode(packageName);
+			packages.put(packageName, node);
+			root.add(node);
 		}
 		
 		// put the classes into packages
 		Multimap<String,ClassEntry> packagedClassEntries = ArrayListMultimap.create();
-		for( ClassEntry classEntry : classEntries )
-		{
-			packagedClassEntries.put( classEntry.getPackageName(), classEntry );
+		for (ClassEntry classEntry : classEntries) {
+			packagedClassEntries.put(classEntry.getPackageName(), classEntry);
 		}
 		
 		// build the class nodes
-		for( String packageName : packagedClassEntries.keySet() )
-		{
+		for (String packageName : packagedClassEntries.keySet()) {
 			// sort the class entries
-			List<ClassEntry> classEntriesInPackage = Lists.newArrayList( packagedClassEntries.get( packageName ) );
-			Collections.sort( classEntriesInPackage, m_comparator );
+			List<ClassEntry> classEntriesInPackage = Lists.newArrayList(packagedClassEntries.get(packageName));
+			Collections.sort(classEntriesInPackage, m_comparator);
 			
 			// create the nodes in order
-			for( ClassEntry classEntry : classEntriesInPackage )
-			{
-				ClassSelectorPackageNode node = packages.get( packageName );
-				node.add( new ClassSelectorClassNode( classEntry ) );
+			for (ClassEntry classEntry : classEntriesInPackage) {
+				ClassSelectorPackageNode node = packages.get(packageName);
+				node.add(new ClassSelectorClassNode(classEntry));
 			}
 		}
 		
 		// finally, update the tree control
-		setModel( new DefaultTreeModel( root ) );
+		setModel(new DefaultTreeModel(root));
 	}
 }

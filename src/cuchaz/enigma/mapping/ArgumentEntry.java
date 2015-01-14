@@ -14,27 +14,23 @@ import java.io.Serializable;
 
 import cuchaz.enigma.Util;
 
-public class ArgumentEntry implements Entry, Serializable
-{
+public class ArgumentEntry implements Entry, Serializable {
+	
 	private static final long serialVersionUID = 4472172468162696006L;
 	
 	private BehaviorEntry m_behaviorEntry;
 	private int m_index;
 	private String m_name;
 	
-	public ArgumentEntry( BehaviorEntry behaviorEntry, int index, String name )
-	{
-		if( behaviorEntry == null )
-		{
-			throw new IllegalArgumentException( "Behavior cannot be null!" );
+	public ArgumentEntry(BehaviorEntry behaviorEntry, int index, String name) {
+		if (behaviorEntry == null) {
+			throw new IllegalArgumentException("Behavior cannot be null!");
 		}
-		if( index < 0 )
-		{
-			throw new IllegalArgumentException( "Index must be non-negative!" );
+		if (index < 0) {
+			throw new IllegalArgumentException("Index must be non-negative!");
 		}
-		if( name == null )
-		{
-			throw new IllegalArgumentException( "Argument name cannot be null!" );
+		if (name == null) {
+			throw new IllegalArgumentException("Argument name cannot be null!");
 		}
 		
 		m_behaviorEntry = behaviorEntry;
@@ -42,90 +38,79 @@ public class ArgumentEntry implements Entry, Serializable
 		m_name = name;
 	}
 	
-	public ArgumentEntry( ArgumentEntry other )
-	{
-		m_behaviorEntry = (BehaviorEntry)m_behaviorEntry.cloneToNewClass( getClassEntry() );
+	public ArgumentEntry(ArgumentEntry other) {
+		m_behaviorEntry = (BehaviorEntry)m_behaviorEntry.cloneToNewClass(getClassEntry());
 		m_index = other.m_index;
 		m_name = other.m_name;
 	}
 	
-	public ArgumentEntry( ArgumentEntry other, String newClassName )
-	{
-		m_behaviorEntry = (BehaviorEntry)other.m_behaviorEntry.cloneToNewClass( new ClassEntry( newClassName ) );
+	public ArgumentEntry(ArgumentEntry other, String newClassName) {
+		m_behaviorEntry = (BehaviorEntry)other.m_behaviorEntry.cloneToNewClass(new ClassEntry(newClassName));
 		m_index = other.m_index;
 		m_name = other.m_name;
 	}
 	
-	public BehaviorEntry getBehaviorEntry( )
-	{
+	public BehaviorEntry getBehaviorEntry() {
 		return m_behaviorEntry;
 	}
 	
-	public int getIndex( )
-	{
+	public int getIndex() {
 		return m_index;
 	}
 	
 	@Override
-	public String getName( )
-	{
+	public String getName() {
 		return m_name;
 	}
 	
 	@Override
-	public ClassEntry getClassEntry( )
-	{
+	public ClassEntry getClassEntry() {
 		return m_behaviorEntry.getClassEntry();
 	}
 	
 	@Override
-	public String getClassName( )
-	{
+	public String getClassName() {
 		return m_behaviorEntry.getClassName();
 	}
 	
 	@Override
-	public ArgumentEntry cloneToNewClass( ClassEntry classEntry )
-	{
-		return new ArgumentEntry( this, classEntry.getName() );
+	public ArgumentEntry cloneToNewClass(ClassEntry classEntry) {
+		return new ArgumentEntry(this, classEntry.getName());
 	}
 	
-	public String getMethodName( )
-	{
+	public String getMethodName() {
 		return m_behaviorEntry.getName();
 	}
 	
-	public String getMethodSignature( )
-	{
+	public String getMethodSignature() {
 		return m_behaviorEntry.getSignature();
 	}
 	
 	@Override
-	public int hashCode( )
-	{
-		return Util.combineHashesOrdered( m_behaviorEntry, Integer.valueOf( m_index ).hashCode(), m_name.hashCode() );
+	public int hashCode() {
+		return Util.combineHashesOrdered(
+			m_behaviorEntry,
+			Integer.valueOf(m_index).hashCode(),
+			m_name.hashCode()
+		);
 	}
 	
 	@Override
-	public boolean equals( Object other )
-	{
-		if( other instanceof ArgumentEntry )
-		{
-			return equals( (ArgumentEntry)other );
+	public boolean equals(Object other) {
+		if (other instanceof ArgumentEntry) {
+			return equals((ArgumentEntry)other);
 		}
 		return false;
 	}
 	
-	public boolean equals( ArgumentEntry other )
-	{
-		return m_behaviorEntry.equals( other.m_behaviorEntry )
+	public boolean equals(ArgumentEntry other) {
+		return m_behaviorEntry.equals(other.m_behaviorEntry)
 			&& m_index == other.m_index
-			&& m_name.equals( other.m_name );
+			&& m_name.equals(other.m_name);
 	}
 	
 	@Override
-	public String toString( )
-	{
+	public String toString() {
 		return m_behaviorEntry.toString() + "(" + m_index + ":" + m_name + ")";
 	}
 }

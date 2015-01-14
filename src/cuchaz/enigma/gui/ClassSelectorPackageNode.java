@@ -12,25 +12,22 @@ package cuchaz.enigma.gui;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class ClassSelectorPackageNode extends DefaultMutableTreeNode
-{
+public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
+	
 	private static final long serialVersionUID = -3730868701219548043L;
 	
 	private String m_packageName;
 	
-	public ClassSelectorPackageNode( String packageName )
-	{
+	public ClassSelectorPackageNode(String packageName) {
 		m_packageName = packageName;
 	}
 	
-	public String getPackageName( )
-	{
+	public String getPackageName() {
 		return m_packageName;
 	}
 	
 	@Override
-	public String toString( )
-	{
+	public String toString() {
 		return m_packageName;
 	}
 }

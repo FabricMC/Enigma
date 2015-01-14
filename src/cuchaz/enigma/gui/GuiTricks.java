@@ -17,27 +17,20 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.ToolTipManager;
 
-public class GuiTricks
-{
-	public static JLabel unboldLabel( JLabel label )
-	{
+public class GuiTricks {
+	
+	public static JLabel unboldLabel(JLabel label) {
 		Font font = label.getFont();
-		label.setFont( font.deriveFont( font.getStyle() & ~Font.BOLD ) );
+		label.setFont(font.deriveFont(font.getStyle() & ~Font.BOLD));
 		return label;
 	}
 	
-	public static void showToolTipNow( JComponent component )
-	{
+	public static void showToolTipNow(JComponent component) {
 		// HACKHACK: trick the tooltip manager into showing the tooltip right now
 		ToolTipManager manager = ToolTipManager.sharedInstance();
 		int oldDelay = manager.getInitialDelay();
-		manager.setInitialDelay( 0 );
-		manager.mouseMoved( new MouseEvent(
-			component,
-			MouseEvent.MOUSE_MOVED,
-			System.currentTimeMillis(),
-			0, 0, 0, 0, false
-		) );
-		manager.setInitialDelay( oldDelay );
+		manager.setInitialDelay(0);
+		manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
+		manager.setInitialDelay(oldDelay);
 	}
 }

@@ -10,39 +10,34 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-public class IllegalNameException extends RuntimeException
-{
+public class IllegalNameException extends RuntimeException {
+	
 	private static final long serialVersionUID = -2279910052561114323L;
 	
 	private String m_name;
 	private String m_reason;
 	
-	public IllegalNameException( String name )
-	{
-		this( name, null );
+	public IllegalNameException(String name) {
+		this(name, null);
 	}
 	
-	public IllegalNameException( String name, String reason )
-	{
+	public IllegalNameException(String name, String reason) {
 		m_name = name;
 		m_reason = reason;
 	}
 	
-	public String getReason( )
-	{
+	public String getReason() {
 		return m_reason;
 	}
 	
 	@Override
-	public String getMessage( )
-	{
+	public String getMessage() {
 		StringBuilder buf = new StringBuilder();
-		buf.append( "Illegal name: " );
-		buf.append( m_name );
-		if( m_reason != null )
-		{
-			buf.append( " because " );
-			buf.append( m_reason );
+		buf.append("Illegal name: ");
+		buf.append(m_name);
+		if (m_reason != null) {
+			buf.append(" because ");
+			buf.append(m_reason);
 		}
 		return buf.toString();
 	}

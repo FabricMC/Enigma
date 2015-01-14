@@ -27,68 +27,60 @@ import javax.swing.WindowConstants;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Util;
 
-public class AboutDialog
-{
-	public static void show( JFrame parent )
-	{
+public class AboutDialog {
+	
+	public static void show(JFrame parent) {
 		// init frame
-		final JFrame frame = new JFrame( Constants.Name + " - About" );
+		final JFrame frame = new JFrame(Constants.Name + " - About");
 		final Container pane = frame.getContentPane();
-		pane.setLayout( new FlowLayout() );
+		pane.setLayout(new FlowLayout());
 		
 		// load the content
-		try
-		{
-			String html = Util.readResourceToString( "/about.html" );
-			html = String.format( html, Constants.Name, Constants.Version );
-			JLabel label = new JLabel( html );
-			label.setHorizontalAlignment( JLabel.CENTER );
-			pane.add( label );
-		}
-		catch( IOException ex )
-		{
-			throw new Error( ex );
+		try {
+			String html = Util.readResourceToString("/about.html");
+			html = String.format(html, Constants.Name, Constants.Version);
+			JLabel label = new JLabel(html);
+			label.setHorizontalAlignment(JLabel.CENTER);
+			pane.add(label);
+		} catch (IOException ex) {
+			throw new Error(ex);
 		}
 		
 		// show the link
 		String html = "<html><a href=\"%s\">%s</a></html>";
-		html = String.format( html, Constants.Url, Constants.Url );
-		JButton link = new JButton( html );
-		link.addActionListener( new ActionListener( )
-		{
+		html = String.format(html, Constants.Url, Constants.Url);
+		JButton link = new JButton(html);
+		link.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed( ActionEvent event )
-			{
-				Util.openUrl( Constants.Url );
+			public void actionPerformed(ActionEvent event) {
+				Util.openUrl(Constants.Url);
 			}
-		} );
-		link.setBorderPainted( false );
-		link.setOpaque( false );
-		link.setBackground( Color.WHITE );
-		link.setCursor( new Cursor( Cursor.HAND_CURSOR ) );
-		link.setFocusable( false );
+		});
+		link.setBorderPainted(false);
+		link.setOpaque(false);
+		link.setBackground(Color.WHITE);
+		link.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		link.setFocusable(false);
 		JPanel linkPanel = new JPanel();
-		linkPanel.add( link );
-		pane.add( linkPanel );
+		linkPanel.add(link);
+		pane.add(linkPanel);
 		
 		// show ok button
-		JButton okButton = new JButton( "Ok" );
-		pane.add( okButton );
-		okButton.addActionListener( new ActionListener( )
-		{
+		JButton okButton = new JButton("Ok");
+		pane.add(okButton);
+		okButton.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed( ActionEvent arg0 )
-			{
+			public void actionPerformed(ActionEvent arg0) {
 				frame.dispose();
 			}
-		} );
+		});
 		
 		// show the frame
 		pane.doLayout();
-		frame.setSize( 400, 220 );
-		frame.setResizable( false );
-		frame.setLocationRelativeTo( parent );
-		frame.setVisible( true );
-		frame.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
+		frame.setSize(400, 220);
+		frame.setResizable(false);
+		frame.setLocationRelativeTo(parent);
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 }

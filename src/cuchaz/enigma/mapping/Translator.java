@@ -16,277 +16,203 @@ import com.google.common.collect.Maps;
 
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
-public class Translator
-{
+public class Translator {
+	
 	private TranslationDirection m_direction;
 	private Map<String,ClassMapping> m_classes;
 	
-	public Translator( )
-	{
+	public Translator() {
 		m_direction = null;
 		m_classes = Maps.newHashMap();
 	}
 	
-	public Translator( TranslationDirection direction, Map<String,ClassMapping> classes )
-	{
+	public Translator(TranslationDirection direction, Map<String,ClassMapping> classes) {
 		m_direction = direction;
 		m_classes = classes;
 	}
 	
-	@SuppressWarnings( "unchecked" )
-	public <T extends Entry> T translateEntry( T entry )
-	{
-		if( entry instanceof ClassEntry )
-		{
-			return (T)translateEntry( (ClassEntry)entry );
-		}
-		else if( entry instanceof FieldEntry )
-		{
-			return (T)translateEntry( (FieldEntry)entry );
-		}
-		else if( entry instanceof MethodEntry )
-		{
-			return (T)translateEntry( (MethodEntry)entry );
-		}
-		else if( entry instanceof ConstructorEntry )
-		{
-			return (T)translateEntry( (ConstructorEntry)entry );
-		}
-		else if( entry instanceof ArgumentEntry )
-		{
-			return (T)translateEntry( (ArgumentEntry)entry );
-		}
-		else
-		{
-			throw new Error( "Unknown entry type: " + entry.getClass().getName() );
+	@SuppressWarnings("unchecked")
+	public <T extends Entry> T translateEntry(T entry) {
+		if (entry instanceof ClassEntry) {
+			return (T)translateEntry((ClassEntry)entry);
+		} else if (entry instanceof FieldEntry) {
+			return (T)translateEntry((FieldEntry)entry);
+		} else if (entry instanceof MethodEntry) {
+			return (T)translateEntry((MethodEntry)entry);
+		} else if (entry instanceof ConstructorEntry) {
+			return (T)translateEntry((ConstructorEntry)entry);
+		} else if (entry instanceof ArgumentEntry) {
+			return (T)translateEntry((ArgumentEntry)entry);
+		} else {
+			throw new Error("Unknown entry type: " + entry.getClass().getName());
 		}
 	}
 	
-	public String translateClass( String className )
-	{
-		return translate( new ClassEntry( className ) );
+	public String translateClass(String className) {
+		return translate(new ClassEntry(className));
 	}
 	
-	public String translate( ClassEntry in )
-	{
-		ClassMapping classMapping = m_classes.get( in.getOuterClassName() );
-		if( classMapping != null )
-		{
-			if( in.isInnerClass() )
-			{
+	public String translate(ClassEntry in) {
+		ClassMapping classMapping = m_classes.get(in.getOuterClassName());
+		if (classMapping != null) {
+			if (in.isInnerClass()) {
 				// translate the inner class
 				String translatedInnerClassName = m_direction.choose(
-					classMapping.getDeobfInnerClassName( in.getInnerClassName() ),
-					classMapping.getObfInnerClassName( in.getInnerClassName() )
+					classMapping.getDeobfInnerClassName(in.getInnerClassName()),
+					classMapping.getObfInnerClassName(in.getInnerClassName())
 				);
-				if( translatedInnerClassName != null )
-				{
+				if (translatedInnerClassName != null) {
 					// try to translate the outer name
-					String translatedOuterClassName = m_direction.choose(
-						classMapping.getDeobfName(),
-						classMapping.getObfName()
-					);
-					if( translatedOuterClassName != null )
-					{
+					String translatedOuterClassName = m_direction.choose(classMapping.getDeobfName(), classMapping.getObfName());
+					if (translatedOuterClassName != null) {
 						return translatedOuterClassName + "$" + translatedInnerClassName;
-					}
-					else
-					{
+					} else {
 						return in.getOuterClassName() + "$" + translatedInnerClassName;
 					}
 				}
-			}
-			else
-			{
+			} else {
 				// just return outer
-				return m_direction.choose(
-					classMapping.getDeobfName(),
-					classMapping.getObfName()
-				);
+				return m_direction.choose(classMapping.getDeobfName(), classMapping.getObfName());
 			}
 		}
 		return null;
 	}
 	
-	public ClassEntry translateEntry( ClassEntry in )
-	{
+	public ClassEntry translateEntry(ClassEntry in) {
+		
 		// can we translate the inner class?
-		String name = translate( in );
-		if( name != null )
-		{
-			return new ClassEntry( name );
+		String name = translate(in);
+		if (name != null) {
+			return new ClassEntry(name);
 		}
 		
-		if( in.isInnerClass() )
-		{
+		if (in.isInnerClass()) {
+			
 			// guess not. just translate the outer class name then
-			String outerClassName = translate( in.getOuterClassEntry() );
-			if( outerClassName != null )
-			{
-				return new ClassEntry( outerClassName + "$" + in.getInnerClassName() );
+			String outerClassName = translate(in.getOuterClassEntry());
+			if (outerClassName != null) {
+				return new ClassEntry(outerClassName + "$" + in.getInnerClassName());
 			}
 		}
 		
 		return in;
 	}
 	
-	public String translate( FieldEntry in )
-	{
+	public String translate(FieldEntry in) {
+		
 		// look for the class
-		ClassMapping classMapping = findClassMapping( in.getClassEntry() );
-		if( classMapping != null )
-		{
+		ClassMapping classMapping = findClassMapping(in.getClassEntry());
+		if (classMapping != null) {
+			
 			// look for the field
 			String translatedName = m_direction.choose(
-				classMapping.getDeobfFieldName( in.getName() ),
-				classMapping.getObfFieldName( in.getName() )
+				classMapping.getDeobfFieldName(in.getName()),
+				classMapping.getObfFieldName(in.getName())
 			);
-			if( translatedName != null )
-			{
+			if (translatedName != null) {
 				return translatedName;
 			}
 		}
 		return null;
 	}
 	
-	public FieldEntry translateEntry( FieldEntry in )
-	{
-		String name = translate( in );
-		if( name == null )
-		{
+	public FieldEntry translateEntry(FieldEntry in) {
+		String name = translate(in);
+		if (name == null) {
 			name = in.getName();
 		}
-		return new FieldEntry(
-			translateEntry( in.getClassEntry() ),
-			name
-		);
+		return new FieldEntry(translateEntry(in.getClassEntry()), name);
 	}
 	
-	public String translate( MethodEntry in )
-	{
+	public String translate(MethodEntry in) {
+		
 		// look for class
-		ClassMapping classMapping = findClassMapping( in.getClassEntry() );
-		if( classMapping != null )
-		{
+		ClassMapping classMapping = findClassMapping(in.getClassEntry());
+		if (classMapping != null) {
+			
 			// look for the method
-			MethodMapping methodMapping = m_direction.choose(
-				classMapping.getMethodByObf( in.getName(), in.getSignature() ),
-				classMapping.getMethodByDeobf( in.getName(), translateSignature( in.getSignature() ) )
-			);
-			if( methodMapping != null )
-			{
-				return m_direction.choose(
-					methodMapping.getDeobfName(),
-					methodMapping.getObfName()
-				);
+			MethodMapping methodMapping = m_direction.choose(classMapping.getMethodByObf(in.getName(), in.getSignature()),
+					classMapping.getMethodByDeobf(in.getName(), translateSignature(in.getSignature())));
+			if (methodMapping != null) {
+				return m_direction.choose(methodMapping.getDeobfName(), methodMapping.getObfName());
 			}
 		}
 		return null;
 	}
 	
-	public MethodEntry translateEntry( MethodEntry in )
-	{
-		String name = translate( in );
-		if( name == null )
-		{
+	public MethodEntry translateEntry(MethodEntry in) {
+		String name = translate(in);
+		if (name == null) {
 			name = in.getName();
 		}
-		return new MethodEntry(
-			translateEntry( in.getClassEntry() ),
-			name,
-			translateSignature( in.getSignature() )
-		);
+		return new MethodEntry(translateEntry(in.getClassEntry()), name, translateSignature(in.getSignature()));
 	}
 	
-	public ConstructorEntry translateEntry( ConstructorEntry in )
-	{
-		if( in.isStatic() )
-		{
-			return new ConstructorEntry( translateEntry( in.getClassEntry() ) );
-		}
-		else
-		{
-			return new ConstructorEntry(
-				translateEntry( in.getClassEntry() ),
-				translateSignature( in.getSignature() )
-			);
+	public ConstructorEntry translateEntry(ConstructorEntry in) {
+		if (in.isStatic()) {
+			return new ConstructorEntry(translateEntry(in.getClassEntry()));
+		} else {
+			return new ConstructorEntry(translateEntry(in.getClassEntry()), translateSignature(in.getSignature()));
 		}
 	}
 	
-	public BehaviorEntry translateEntry( BehaviorEntry in )
-	{
-		if( in instanceof MethodEntry )
-		{
-			return translateEntry( (MethodEntry)in );
+	public BehaviorEntry translateEntry(BehaviorEntry in) {
+		if (in instanceof MethodEntry) {
+			return translateEntry((MethodEntry)in);
+		} else if (in instanceof ConstructorEntry) {
+			return translateEntry((ConstructorEntry)in);
 		}
-		else if( in instanceof ConstructorEntry )
-		{
-			return translateEntry( (ConstructorEntry)in );
-		}
-		throw new Error( "Wrong entry type!" );
+		throw new Error("Wrong entry type!");
 	}
 	
-	public String translate( ArgumentEntry in )
-	{
+	public String translate(ArgumentEntry in) {
+		
 		// look for the class
-		ClassMapping classMapping = findClassMapping( in.getClassEntry() );
-		if( classMapping != null )
-		{
+		ClassMapping classMapping = findClassMapping(in.getClassEntry());
+		if (classMapping != null) {
+			
 			// look for the method
 			MethodMapping methodMapping = m_direction.choose(
-				classMapping.getMethodByObf( in.getMethodName(), in.getMethodSignature() ),
-				classMapping.getMethodByDeobf( in.getMethodName(), translateSignature( in.getMethodSignature() ) )
+				classMapping.getMethodByObf(in.getMethodName(), in.getMethodSignature()),
+				classMapping.getMethodByDeobf(in.getMethodName(), translateSignature(in.getMethodSignature()))
 			);
-			if( methodMapping != null )
-			{
+			if (methodMapping != null) {
 				return m_direction.choose(
-					methodMapping.getDeobfArgumentName( in.getIndex() ),
-					methodMapping.getObfArgumentName( in.getIndex() )
+					methodMapping.getDeobfArgumentName(in.getIndex()),
+					methodMapping.getObfArgumentName(in.getIndex())
 				);
 			}
 		}
 		return null;
 	}
 	
-	public ArgumentEntry translateEntry( ArgumentEntry in )
-	{
-		String name = translate( in );
-		if( name == null )
-		{
+	public ArgumentEntry translateEntry(ArgumentEntry in) {
+		String name = translate(in);
+		if (name == null) {
 			name = in.getName();
 		}
-		return new ArgumentEntry(
-			translateEntry( in.getBehaviorEntry() ),
-			in.getIndex(),
-			name
-		);
+		return new ArgumentEntry(translateEntry(in.getBehaviorEntry()), in.getIndex(), name);
 	}
 	
-	public String translateSignature( String signature )
-	{
-		return SignatureUpdater.update( signature, new ClassNameUpdater( )
-		{
+	public String translateSignature(String signature) {
+		return SignatureUpdater.update(signature, new ClassNameUpdater() {
 			@Override
-			public String update( String className )
-			{
-				String translatedName = translateClass( className );
-				if( translatedName != null )
-				{
+			public String update(String className) {
+				String translatedName = translateClass(className);
+				if (translatedName != null) {
 					return translatedName;
 				}
 				return className;
 			}
-		} );
+		});
 	}
 	
-	private ClassMapping findClassMapping( ClassEntry classEntry )
-	{
-		ClassMapping classMapping = m_classes.get( classEntry.getOuterClassName() );
-		if( classMapping != null && classEntry.isInnerClass() )
-		{
+	private ClassMapping findClassMapping(ClassEntry classEntry) {
+		ClassMapping classMapping = m_classes.get(classEntry.getOuterClassName());
+		if (classMapping != null && classEntry.isInnerClass()) {
 			classMapping = m_direction.choose(
-				classMapping.getInnerClassByObf( classEntry.getInnerClassName() ),
-				classMapping.getInnerClassByDeobfThenObf( classEntry.getInnerClassName() )
+				classMapping.getInnerClassByObf(classEntry.getInnerClassName()),
+				classMapping.getInnerClassByDeobfThenObf(classEntry.getInnerClassName())
 			);
 		}
 		return classMapping;

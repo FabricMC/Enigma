@@ -10,25 +10,20 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-
-public enum TranslationDirection
-{
-	Deobfuscating
-	{
+public enum TranslationDirection {
+	
+	Deobfuscating {
 		@Override
-		public <T> T choose( T deobfChoice, T obfChoice )
-		{
+		public <T> T choose(T deobfChoice, T obfChoice) {
 			return deobfChoice;
 		}
 	},
-	Obfuscating
-	{
+	Obfuscating {
 		@Override
-		public <T> T choose( T deobfChoice, T obfChoice )
-		{
+		public <T> T choose(T deobfChoice, T obfChoice) {
 			return obfChoice;
 		}
 	};
-
-	public abstract <T> T choose( T deobfChoice, T obfChoice );
+	
+	public abstract <T> T choose(T deobfChoice, T obfChoice);
 }

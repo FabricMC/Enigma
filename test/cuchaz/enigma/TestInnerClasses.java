@@ -20,8 +20,8 @@ import org.junit.Test;
 
 import cuchaz.enigma.analysis.JarIndex;
 
-public class TestInnerClasses
-{
+public class TestInnerClasses {
+	
 	private JarIndex m_index;
 	
 	private static final String AnonymousOuter = "none/a";
@@ -33,42 +33,36 @@ public class TestInnerClasses
 	private static final String AnonymousWithScopeArgsOuter = "none/c";
 	private static final String AnonymousWithScopeArgsInner = "d";
 	
-	public TestInnerClasses( )
-	throws Exception
-	{
+	public TestInnerClasses() throws Exception {
 		m_index = new JarIndex();
-		m_index.indexJar( new JarFile( "build/libs/testInnerClasses.obf.jar" ), true );
+		m_index.indexJar(new JarFile("build/libs/testInnerClasses.obf.jar"), true);
 	}
 	
 	@Test
-	public void simple( )
-	{
-		assertThat( m_index.getOuterClass( SimpleInner ), is( SimpleOuter ) );
-		assertThat( m_index.getInnerClasses( SimpleOuter ), containsInAnyOrder( SimpleInner ) );
-		assertThat( m_index.isAnonymousClass( SimpleInner ), is( false ) );
+	public void simple() {
+		assertThat(m_index.getOuterClass(SimpleInner), is(SimpleOuter));
+		assertThat(m_index.getInnerClasses(SimpleOuter), containsInAnyOrder(SimpleInner));
+		assertThat(m_index.isAnonymousClass(SimpleInner), is(false));
 	}
 	
 	@Test
-	public void anonymous( )
-	{
-		assertThat( m_index.getOuterClass( AnonymousInner ), is( AnonymousOuter ) );
-		assertThat( m_index.getInnerClasses( AnonymousOuter ), containsInAnyOrder( AnonymousInner ) );
-		assertThat( m_index.isAnonymousClass( AnonymousInner ), is( true ) );
-	}
-
-	@Test
-	public void constructorArgs( )
-	{
-		assertThat( m_index.getOuterClass( ConstructorArgsInner ), is( ConstructorArgsOuter ) );
-		assertThat( m_index.getInnerClasses( ConstructorArgsOuter ), containsInAnyOrder( ConstructorArgsInner ) );
-		assertThat( m_index.isAnonymousClass( ConstructorArgsInner ), is( false ) );
+	public void anonymous() {
+		assertThat(m_index.getOuterClass(AnonymousInner), is(AnonymousOuter));
+		assertThat(m_index.getInnerClasses(AnonymousOuter), containsInAnyOrder(AnonymousInner));
+		assertThat(m_index.isAnonymousClass(AnonymousInner), is(true));
 	}
 	
 	@Test
-	public void anonymousWithScopeArgs( )
-	{
-		assertThat( m_index.getOuterClass( AnonymousWithScopeArgsInner ), is( AnonymousWithScopeArgsOuter ) );
-		assertThat( m_index.getInnerClasses( AnonymousWithScopeArgsOuter ), containsInAnyOrder( AnonymousWithScopeArgsInner ) );
-		assertThat( m_index.isAnonymousClass( AnonymousWithScopeArgsInner ), is( true ) );
+	public void constructorArgs() {
+		assertThat(m_index.getOuterClass(ConstructorArgsInner), is(ConstructorArgsOuter));
+		assertThat(m_index.getInnerClasses(ConstructorArgsOuter), containsInAnyOrder(ConstructorArgsInner));
+		assertThat(m_index.isAnonymousClass(ConstructorArgsInner), is(false));
+	}
+	
+	@Test
+	public void anonymousWithScopeArgs() {
+		assertThat(m_index.getOuterClass(AnonymousWithScopeArgsInner), is(AnonymousWithScopeArgsOuter));
+		assertThat(m_index.getInnerClasses(AnonymousWithScopeArgsOuter), containsInAnyOrder(AnonymousWithScopeArgsInner));
+		assertThat(m_index.isAnonymousClass(AnonymousWithScopeArgsInner), is(true));
 	}
 }

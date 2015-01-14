@@ -27,55 +27,43 @@ import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.SignatureUpdater;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
-public class ClassRenamer
-{
-	public static void renameClasses( CtClass c, Map<ClassEntry,ClassEntry> map )
-	{
+public class ClassRenamer {
+	
+	public static void renameClasses(CtClass c, Map<ClassEntry,ClassEntry> map) {
+		
 		// build the map used by javassist
 		ClassMap nameMap = new ClassMap();
-		for( Map.Entry<ClassEntry,ClassEntry> entry : map.entrySet() )
-		{
-			nameMap.put( entry.getKey().getName(), entry.getValue().getName() );
+		for (Map.Entry<ClassEntry,ClassEntry> entry : map.entrySet()) {
+			nameMap.put(entry.getKey().getName(), entry.getValue().getName());
 		}
 		
-		c.replaceClassName( nameMap );
+		c.replaceClassName(nameMap);
 		
 		// replace simple names in the InnerClasses attribute too
 		ConstPool constants = c.getClassFile().getConstPool();
-		InnerClassesAttribute attr = (InnerClassesAttribute)c.getClassFile().getAttribute( InnerClassesAttribute.tag );
-		if( attr != null )
-		{
-			for( int i=0; i<attr.tableLength(); i++ )
-			{
-				ClassEntry classEntry = new ClassEntry( Descriptor.toJvmName( attr.innerClass( i ) ) );
-				if( attr.innerNameIndex( i ) != 0 )
-				{
-					attr.setInnerNameIndex( i, constants.addUtf8Info( classEntry.getInnerClassName() ) );
+		InnerClassesAttribute attr = (InnerClassesAttribute)c.getClassFile().getAttribute(InnerClassesAttribute.tag);
+		if (attr != null) {
+			for (int i = 0; i < attr.tableLength(); i++) {
+				ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(attr.innerClass(i)));
+				if (attr.innerNameIndex(i) != 0) {
+					attr.setInnerNameIndex(i, constants.addUtf8Info(classEntry.getInnerClassName()));
 				}
 				
 				/* DEBUG
-				System.out.println( String.format( "\tDEOBF: %s-> ATTR: %s,%s,%s",
-					classEntry,
-					attr.outerClass( i ),
-					attr.innerClass( i ),
-					attr.innerName( i )
-				) );
+				System.out.println(String.format("\tDEOBF: %s-> ATTR: %s,%s,%s", classEntry, attr.outerClass(i), attr.innerClass(i), attr.innerName(i)));
 				*/
 			}
 		}
 	}
 	
-	public static Set<ClassEntry> getAllClassEntries( final CtClass c )
-	{
+	public static Set<ClassEntry> getAllClassEntries(final CtClass c) {
+		
 		// get the classes that javassist knows about
 		final Set<ClassEntry> entries = Sets.newHashSet();
-		ClassMap map = new ClassMap( )
-		{
+		ClassMap map = new ClassMap() {
 			@Override
-			public Object get( Object obj )
-			{
-				if( obj instanceof String )
-				{
+			public Object get(Object obj) {
+				if (obj instanceof String) {
 					String str = (String)obj;
 					
 					// javassist throws a lot of weird things at this map
@@ -83,69 +71,60 @@ public class ClassRenamer
 					// I'm opting to filter out the weirdness for now
 					
 					// skip anything with generic arguments
-					if( str.indexOf( '<' ) >= 0 || str.indexOf( '>' ) >= 0 || str.indexOf( ';' ) >= 0 )
-					{
+					if (str.indexOf('<') >= 0 || str.indexOf('>') >= 0 || str.indexOf(';') >= 0) {
 						return null;
 					}
 					
 					// convert path/to/class.inner to path/to/class$inner
-					str = str.replace( '.', '$' );
+					str = str.replace('.', '$');
 					
 					// remember everything else
-					entries.add( new ClassEntry( str ) );
+					entries.add(new ClassEntry(str));
 				}
 				return null;
 			}
+			
 			private static final long serialVersionUID = -202160293602070641L;
 		};
-		c.replaceClassName( map );
+		c.replaceClassName(map);
 		
 		return entries;
 	}
 	
-	public static void moveAllClassesOutOfDefaultPackage( CtClass c, String newPackageName )
-	{
+	public static void moveAllClassesOutOfDefaultPackage(CtClass c, String newPackageName) {
+		
 		// rename all classes
 		Map<ClassEntry,ClassEntry> map = Maps.newHashMap();
-		for( ClassEntry classEntry : ClassRenamer.getAllClassEntries( c ) )
-		{
-			if( classEntry.isInDefaultPackage() )
-			{
-				map.put( classEntry, new ClassEntry( newPackageName + "/" + classEntry.getName() ) );
+		for (ClassEntry classEntry : ClassRenamer.getAllClassEntries(c)) {
+			if (classEntry.isInDefaultPackage()) {
+				map.put(classEntry, new ClassEntry(newPackageName + "/" + classEntry.getName()));
 			}
 		}
-		ClassRenamer.renameClasses( c, map );
+		ClassRenamer.renameClasses(c, map);
 		
 		// TEMP
-		for( ClassEntry classEntry : ClassRenamer.getAllClassEntries( c ) )
-		{
-			if( classEntry.isInDefaultPackage() )
-			{
-				throw new Error( "!!! " + classEntry );
+		for (ClassEntry classEntry : ClassRenamer.getAllClassEntries(c)) {
+			if (classEntry.isInDefaultPackage()) {
+				throw new Error("!!! " + classEntry);
 			}
 		}
 		
 		// TEMP
-		for( CtBehavior behavior : c.getDeclaredBehaviors() )
-		{
-			if( behavior.getSignature() == null )
-			{
+		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
+			if (behavior.getSignature() == null) {
 				continue;
 			}
 			
-			SignatureUpdater.update( behavior.getSignature(), new ClassNameUpdater( )
-			{
+			SignatureUpdater.update(behavior.getSignature(), new ClassNameUpdater() {
 				@Override
-				public String update( String className )
-				{
-					ClassEntry classEntry = new ClassEntry( className );
-					if( classEntry.isInDefaultPackage() )
-					{
-						throw new Error( "!!! " + className );
+				public String update(String className) {
+					ClassEntry classEntry = new ClassEntry(className);
+					if (classEntry.isInDefaultPackage()) {
+						throw new Error("!!! " + className);
 					}
 					return className;
 				}
-			} );
+			});
 		}
 	}
 }

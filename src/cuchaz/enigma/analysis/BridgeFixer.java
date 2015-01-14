@@ -20,61 +20,48 @@ import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 
-public class BridgeFixer
-{
+public class BridgeFixer {
+	
 	private JarIndex m_index;
 	
-	public BridgeFixer( JarIndex index )
-	{
+	public BridgeFixer(JarIndex index) {
 		m_index = index;
 	}
-
-	public void fixBridges( CtClass c )
-	{
+	
+	public void fixBridges(CtClass c) {
 		// rename declared methods
-		for( CtMethod method : c.getDeclaredMethods() )
-		{
+		for (CtMethod method : c.getDeclaredMethods()) {
 			// get the method entry
 			MethodEntry methodEntry = new MethodEntry(
-				new ClassEntry( Descriptor.toJvmName( c.getName() ) ),
+				new ClassEntry(Descriptor.toJvmName(c.getName())),
 				method.getName(),
 				method.getSignature()
 			);
-			MethodEntry bridgeMethodEntry = m_index.getBridgeMethod( methodEntry );
-			if( bridgeMethodEntry != null )
-			{
+			MethodEntry bridgeMethodEntry = m_index.getBridgeMethod(methodEntry);
+			if (bridgeMethodEntry != null) {
 				// fix this bridged method
-				method.setName( bridgeMethodEntry.getName() );
+				method.setName(bridgeMethodEntry.getName());
 			}
 		}
 		
 		// rename method references
 		// translate all the field and method references in the code by editing the constant pool
 		ConstPool constants = c.getClassFile().getConstPool();
-		ConstPoolEditor editor = new ConstPoolEditor( constants );
-		for( int i=1; i<constants.getSize(); i++ )
-		{
-			switch( constants.getTag( i ) )
-			{
+		ConstPoolEditor editor = new ConstPoolEditor(constants);
+		for (int i = 1; i < constants.getSize(); i++) {
+			switch (constants.getTag(i)) {
 				case ConstPool.CONST_Methodref:
-				case ConstPool.CONST_InterfaceMethodref:
-				{
-					BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(
-						Descriptor.toJvmName( editor.getMemberrefClassname( i ) ),
-						editor.getMemberrefName( i ),
-						editor.getMemberrefType( i )
-					);
+				case ConstPool.CONST_InterfaceMethodref: {
+					BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(Descriptor.toJvmName(editor.getMemberrefClassname(i)), editor.getMemberrefName(i), editor.getMemberrefType(i));
 					
-					if( behaviorEntry instanceof MethodEntry )
-					{
+					if (behaviorEntry instanceof MethodEntry) {
 						MethodEntry methodEntry = (MethodEntry)behaviorEntry;
 						
 						// translate the name and type
-						MethodEntry bridgeMethodEntry = m_index.getBridgeMethod( methodEntry );
-						if( bridgeMethodEntry != null )
-						{
+						MethodEntry bridgeMethodEntry = m_index.getBridgeMethod(methodEntry);
+						if (bridgeMethodEntry != null) {
 							// FIXIT FIXIT FIXIT FIXIT FIXIT FIXIT FIXIT
-							editor.changeMemberrefNameAndType( i, bridgeMethodEntry.getName(), bridgeMethodEntry.getSignature() );
+							editor.changeMemberrefNameAndType(i, bridgeMethodEntry.getName(), bridgeMethodEntry.getSignature());
 						}
 					}
 				}

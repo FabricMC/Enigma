@@ -12,36 +12,32 @@ package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
 
-public class FieldMapping implements Serializable, Comparable<FieldMapping>
-{
+public class FieldMapping implements Serializable, Comparable<FieldMapping> {
+	
 	private static final long serialVersionUID = 8610742471440861315L;
 	
 	private String m_obfName;
 	private String m_deobfName;
 	
-	public FieldMapping( String obfName, String deobfName )
-	{
+	public FieldMapping(String obfName, String deobfName) {
 		m_obfName = obfName;
-		m_deobfName = NameValidator.validateFieldName( deobfName );
+		m_deobfName = NameValidator.validateFieldName(deobfName);
 	}
-
-	public String getObfName( )
-	{
+	
+	public String getObfName() {
 		return m_obfName;
 	}
-
-	public String getDeobfName( )
-	{
+	
+	public String getDeobfName() {
 		return m_deobfName;
 	}
-	public void setDeobfName( String val )
-	{
-		m_deobfName = NameValidator.validateFieldName( val );
+	
+	public void setDeobfName(String val) {
+		m_deobfName = NameValidator.validateFieldName(val);
 	}
 	
 	@Override
-	public int compareTo( FieldMapping other )
-	{
-		return m_obfName.compareTo( other.m_obfName );
+	public int compareTo(FieldMapping other) {
+		return m_obfName.compareTo(other.m_obfName);
 	}
 }

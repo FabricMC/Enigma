@@ -14,25 +14,22 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 import cuchaz.enigma.mapping.ClassEntry;
 
-public class ClassSelectorClassNode extends DefaultMutableTreeNode
-{
+public class ClassSelectorClassNode extends DefaultMutableTreeNode {
+	
 	private static final long serialVersionUID = -8956754339813257380L;
 	
 	private ClassEntry m_classEntry;
 	
-	public ClassSelectorClassNode( ClassEntry classEntry )
-	{
+	public ClassSelectorClassNode(ClassEntry classEntry) {
 		m_classEntry = classEntry;
 	}
 	
-	public ClassEntry getClassEntry( )
-	{
+	public ClassEntry getClassEntry() {
 		return m_classEntry;
 	}
 	
 	@Override
-	public String toString( )
-	{
+	public String toString() {
 		return m_classEntry.getSimpleName();
 	}
 }

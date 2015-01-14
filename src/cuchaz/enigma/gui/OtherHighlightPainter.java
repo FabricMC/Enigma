@@ -12,11 +12,10 @@ package cuchaz.enigma.gui;
 
 import java.awt.Color;
 
-public class OtherHighlightPainter extends BoxHighlightPainter
-{
-	public OtherHighlightPainter( )
-	{
+public class OtherHighlightPainter extends BoxHighlightPainter {
+	
+	public OtherHighlightPainter() {
 		// grey
-		super( null, new Color( 180, 180, 180 ) );
+		super(null, new Color(180, 180, 180));
 	}
 }

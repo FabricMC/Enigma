@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-public interface BehaviorEntry extends Entry
-{
+public interface BehaviorEntry extends Entry {
 	String getSignature();
 }

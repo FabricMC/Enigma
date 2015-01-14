@@ -19,40 +19,35 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 
-public abstract class BoxHighlightPainter implements Highlighter.HighlightPainter
-{
+public abstract class BoxHighlightPainter implements Highlighter.HighlightPainter {
+	
 	private Color m_fillColor;
 	private Color m_borderColor;
 	
-	protected BoxHighlightPainter( Color fillColor, Color borderColor )
-	{
+	protected BoxHighlightPainter(Color fillColor, Color borderColor) {
 		m_fillColor = fillColor;
 		m_borderColor = borderColor;
 	}
 	
 	@Override
-	public void paint( Graphics g, int start, int end, Shape shape, JTextComponent text )
-	{
-		Rectangle bounds = getBounds( text, start, end );
+	public void paint(Graphics g, int start, int end, Shape shape, JTextComponent text) {
+		Rectangle bounds = getBounds(text, start, end);
 		
 		// fill the area
-		if( m_fillColor != null )
-		{
-			g.setColor( m_fillColor );
-			g.fillRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+		if (m_fillColor != null) {
+			g.setColor(m_fillColor);
+			g.fillRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
 		}
 		
 		// draw a box around the area
-		g.setColor( m_borderColor );
-		g.drawRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+		g.setColor(m_borderColor);
+		g.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
 	}
 	
-	protected static Rectangle getBounds( JTextComponent text, int start, int end )
-	{
-		try
-		{
+	protected static Rectangle getBounds(JTextComponent text, int start, int end) {
+		try {
 			// determine the bounds of the text
-			Rectangle bounds = text.modelToView( start ).union( text.modelToView( end ) );
+			Rectangle bounds = text.modelToView(start).union(text.modelToView(end));
 			
 			// adjust the box so it looks nice
 			bounds.x -= 2;
@@ -61,11 +56,9 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
 			bounds.height -= 2;
 			
 			return bounds;
-		}
-		catch( BadLocationException ex )
-		{
+		} catch (BadLocationException ex) {
 			// don't care... just return something
-			return new Rectangle( 0, 0, 0, 0 );
+			return new Rectangle(0, 0, 0, 0);
 		}
 	}
 }

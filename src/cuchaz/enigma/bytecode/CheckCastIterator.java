@@ -22,15 +22,14 @@ import cuchaz.enigma.bytecode.CheckCastIterator.CheckCast;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 
-public class CheckCastIterator implements Iterator<CheckCast>
-{
-	public static class CheckCast
-	{
+public class CheckCastIterator implements Iterator<CheckCast> {
+	
+	public static class CheckCast {
+		
 		public String className;
 		public MethodEntry prevMethodEntry;
 		
-		public CheckCast( String className, MethodEntry prevMethodEntry )
-		{
+		public CheckCast(String className, MethodEntry prevMethodEntry) {
 			this.className = className;
 			this.prevMethodEntry = prevMethodEntry;
 		}
@@ -41,9 +40,7 @@ public class CheckCastIterator implements Iterator<CheckCast>
 	private CodeIterator m_iter;
 	private CheckCast m_next;
 	
-	public CheckCastIterator( CodeAttribute codeAttribute )
-	throws BadBytecode
-	{
+	public CheckCastIterator(CodeAttribute codeAttribute) throws BadBytecode {
 		m_constants = codeAttribute.getConstPool();
 		m_attribute = codeAttribute;
 		m_iter = m_attribute.iterator();
@@ -52,52 +49,38 @@ public class CheckCastIterator implements Iterator<CheckCast>
 	}
 	
 	@Override
-	public boolean hasNext( )
-	{
+	public boolean hasNext() {
 		return m_next != null;
 	}
-
+	
 	@Override
-	public CheckCast next( )
-	{
+	public CheckCast next() {
 		CheckCast out = m_next;
-		try
-		{
+		try {
 			m_next = getNext();
-		}
-		catch( BadBytecode ex )
-		{
-			throw new Error( ex );
+		} catch (BadBytecode ex) {
+			throw new Error(ex);
 		}
 		return out;
 	}
-
+	
 	@Override
-	public void remove( )
-	{
+	public void remove() {
 		throw new UnsupportedOperationException();
 	}
 	
-	private CheckCast getNext( )
-	throws BadBytecode
-	{
+	private CheckCast getNext() throws BadBytecode {
 		int prevPos = 0;
-		while( m_iter.hasNext() )
-		{
+		while (m_iter.hasNext()) {
 			int pos = m_iter.next();
-			int opcode = m_iter.byteAt( pos );
-			switch( opcode )
-			{
+			int opcode = m_iter.byteAt(pos);
+			switch (opcode) {
 				case Opcode.CHECKCAST:
 					
 					// get the type of this op code (next two bytes are a classinfo index)
-					MethodEntry prevMethodEntry = getMethodEntry( prevPos );
-					if( prevMethodEntry != null )
-					{
-						return new CheckCast(
-							m_constants.getClassInfo( m_iter.s16bitAt( pos + 1 ) ),
-							prevMethodEntry
-						);
+					MethodEntry prevMethodEntry = getMethodEntry(prevPos);
+					if (prevMethodEntry != null) {
+						return new CheckCast(m_constants.getClassInfo(m_iter.s16bitAt(pos + 1)), prevMethodEntry);
 					}
 				break;
 			}
@@ -106,43 +89,36 @@ public class CheckCastIterator implements Iterator<CheckCast>
 		return null;
 	}
 	
-	private MethodEntry getMethodEntry( int pos )
-	{
-		switch( m_iter.byteAt( pos ) )
-		{
+	private MethodEntry getMethodEntry(int pos) {
+		switch (m_iter.byteAt(pos)) {
 			case Opcode.INVOKEVIRTUAL:
 			case Opcode.INVOKESTATIC:
 			case Opcode.INVOKEDYNAMIC:
-			case Opcode.INVOKESPECIAL:
-			{
-				int index = m_iter.s16bitAt( pos + 1 );
+			case Opcode.INVOKESPECIAL: {
+				int index = m_iter.s16bitAt(pos + 1);
 				return new MethodEntry(
-					new ClassEntry( Descriptor.toJvmName( m_constants.getMethodrefClassName( index ) ) ),
-					m_constants.getMethodrefName( index ),
-					m_constants.getMethodrefType( index )
+					new ClassEntry(Descriptor.toJvmName(m_constants.getMethodrefClassName(index))),
+					m_constants.getMethodrefName(index),
+					m_constants.getMethodrefType(index)
 				);
 			}
 			
-			case Opcode.INVOKEINTERFACE:
-			{
-				int index = m_iter.s16bitAt( pos + 1 );
+			case Opcode.INVOKEINTERFACE: {
+				int index = m_iter.s16bitAt(pos + 1);
 				return new MethodEntry(
-					new ClassEntry( Descriptor.toJvmName( m_constants.getInterfaceMethodrefClassName( index ) ) ),
-					m_constants.getInterfaceMethodrefName( index ),
-					m_constants.getInterfaceMethodrefType( index )
+					new ClassEntry(Descriptor.toJvmName(m_constants.getInterfaceMethodrefClassName(index))),
+					m_constants.getInterfaceMethodrefName(index),
+					m_constants.getInterfaceMethodrefType(index)
 				);
 			}
 		}
 		return null;
 	}
-
-	public Iterable<CheckCast> casts( )
-	{
-		return new Iterable<CheckCast>( )
-		{
+	
+	public Iterable<CheckCast> casts() {
+		return new Iterable<CheckCast>() {
 			@Override
-			public Iterator<CheckCast> iterator( )
-			{
+			public Iterator<CheckCast> iterator() {
 				return CheckCastIterator.this;
 			}
 		};

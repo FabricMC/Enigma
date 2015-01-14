@@ -23,40 +23,32 @@ import com.google.common.collect.Lists;
 
 import cuchaz.enigma.mapping.ClassEntry;
 
-public class TestDeobfuscator
-{
-	private Deobfuscator getDeobfuscator( )
-	throws IOException
-	{
-		return new Deobfuscator( new File( "build/libs/testLoneClass.obf.jar" ) );
+public class TestDeobfuscator {
+	
+	private Deobfuscator getDeobfuscator() throws IOException {
+		return new Deobfuscator(new File("build/libs/testLoneClass.obf.jar"));
 	}
 	
 	@Test
-	public void loadJar( )
-	throws Exception
-	{
+	public void loadJar() throws Exception {
 		getDeobfuscator();
 	}
 	
 	@Test
-	public void getClasses( )
-	throws Exception
-	{
+	public void getClasses() throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
 		List<ClassEntry> obfClasses = Lists.newArrayList();
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
-		deobfuscator.getSeparatedClasses( obfClasses, deobfClasses );
-		assertEquals( 1, obfClasses.size() );
-		assertEquals( "none/a", obfClasses.get( 0 ).getName() );
-		assertEquals( 1, deobfClasses.size() );
-		assertEquals( "cuchaz/enigma/inputs/Keep", deobfClasses.get( 0 ).getName() );
+		deobfuscator.getSeparatedClasses(obfClasses, deobfClasses);
+		assertEquals(1, obfClasses.size());
+		assertEquals("none/a", obfClasses.get(0).getName());
+		assertEquals(1, deobfClasses.size());
+		assertEquals("cuchaz/enigma/inputs/Keep", deobfClasses.get(0).getName());
 	}
 	
 	@Test
-	public void decompileClass( )
-	throws Exception
-	{
+	public void decompileClass() throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
-		deobfuscator.getSource( deobfuscator.getSourceTree( "none/a" ) );
+		deobfuscator.getSource(deobfuscator.getSourceTree("none/a"));
 	}
 }

@@ -20,16 +20,15 @@ import java.awt.Shape;
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 
-public class SelectionHighlightPainter implements Highlighter.HighlightPainter
-{
+public class SelectionHighlightPainter implements Highlighter.HighlightPainter {
+	
 	@Override
-	public void paint( Graphics g, int start, int end, Shape shape, JTextComponent text )
-	{
+	public void paint(Graphics g, int start, int end, Shape shape, JTextComponent text) {
 		// draw a thick border
 		Graphics2D g2d = (Graphics2D)g;
-		Rectangle bounds = BoxHighlightPainter.getBounds( text, start, end );
-		g2d.setColor( Color.black );
-		g2d.setStroke( new BasicStroke( 2.0f ) );
-		g2d.drawRoundRect( bounds.x, bounds.y, bounds.width, bounds.height, 4, 4 );
+		Rectangle bounds = BoxHighlightPainter.getBounds(text, start, end);
+		g2d.setColor(Color.black);
+		g2d.setStroke(new BasicStroke(2.0f));
+		g2d.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
 	}
 }
