@@ -12,8 +12,11 @@ dirBuild = "build"
 dirTemp = os.path.join(dirBuild, "tmp")
 
 
-def getJarFullName(name) :
-    return "%s-%s-%s.jar" % (projectName, name, version)
+def getJarFullName(name=None) :
+	if name is not None:
+		return "%s-%s-%s.jar" % (projectName, name, version)
+	else:
+		return "%s-%s.jar" % (projectName, version)
 
 def buildGuiJar():
     jarName = "gui"
@@ -25,9 +28,9 @@ def buildGuiJar():
     ssjb.delete(os.path.join(dirTemp, "LICENSE.txt"))
     ssjb.copyFile(dirTemp, "license.APL2.txt")
     ssjb.copyFile(dirTemp, "license.GPL3.txt")
-    ssjb.copyFile(dirTemp, "readme.gui.txt", renameTo="readme.txt")
-    manifest = ssjb.buildManifest("%s-%s" % (projectName, jarName), version, author, "cuchaz.enigma.Main")
-    ssjb.jar(os.path.join(dirBuild, getJarFullName(jarName)), dirTemp, manifest=manifest)
+    ssjb.copyFile(dirTemp, "readme.txt")
+    manifest = ssjb.buildManifest(projectName, version, author, "cuchaz.enigma.Main")
+    ssjb.jar(os.path.join(dirBuild, getJarFullName()), dirTemp, manifest=manifest)
     ssjb.delete(dirTemp)
 
 def buildTranslateJar():

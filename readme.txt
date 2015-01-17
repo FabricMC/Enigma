@@ -17,3 +17,12 @@ Enigma includes unmodified versions of the following libraries which are also re
 	JSyntaxPane
 
 Copies of the GNU General Public license verion 3 and the Apache license v2 have been included in this distribution.
+
+
+USING ENIGMA
+
+Launch the GUI:
+	java -jar enigma.jar
+	
+Use Enigma on the command line:
+	java -cp enigma.jar cuchaz.enigma.CommandMain
