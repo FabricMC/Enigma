@@ -18,6 +18,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.SourceFileAttribute;
 
 import com.google.common.collect.Maps;
 
@@ -125,5 +126,12 @@ public class ClassTranslator {
 			}
 		}
 		ClassRenamer.renameClasses(c, map);
+		
+		// translate the source file attribute too
+		ClassEntry deobfClassEntry = map.get(classEntry);
+		if (deobfClassEntry != null) {
+			String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOuterClassName()) + ".java";
+			c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));
+		}
 	}
 }
