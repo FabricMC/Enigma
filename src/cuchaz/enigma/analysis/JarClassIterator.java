@@ -126,6 +126,7 @@ public class JarClassIterator implements Iterator<CtClass> {
 		// get a javassist handle for the class
 		String className = Descriptor.toJavaName(getClassEntry(entry).getName());
 		ClassPool classPool = new ClassPool();
+		classPool.appendSystemPath();
 		classPool.insertClassPath(new ByteArrayClassPath(className, bos.toByteArray()));
 		return classPool.get(className);
 	}
