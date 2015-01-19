@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javassist.ClassMap;
-import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
@@ -24,8 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.SignatureUpdater;
-import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class ClassRenamer {
 	
@@ -92,8 +89,6 @@ public class ClassRenamer {
 	}
 	
 	public static void moveAllClassesOutOfDefaultPackage(CtClass c, String newPackageName) {
-		
-		// rename all classes
 		Map<ClassEntry,ClassEntry> map = Maps.newHashMap();
 		for (ClassEntry classEntry : ClassRenamer.getAllClassEntries(c)) {
 			if (classEntry.isInDefaultPackage()) {
@@ -101,30 +96,15 @@ public class ClassRenamer {
 			}
 		}
 		ClassRenamer.renameClasses(c, map);
-		
-		// TEMP
+	}
+	
+	public static void moveAllClassesIntoDefaultPackage(CtClass c, String oldPackageName) {
+		Map<ClassEntry,ClassEntry> map = Maps.newHashMap();
 		for (ClassEntry classEntry : ClassRenamer.getAllClassEntries(c)) {
-			if (classEntry.isInDefaultPackage()) {
-				throw new Error("!!! " + classEntry);
+			if (classEntry.getPackageName().equals(oldPackageName)) {
+				map.put(classEntry, new ClassEntry(classEntry.getSimpleName()));
 			}
 		}
-		
-		// TEMP
-		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-			if (behavior.getSignature() == null) {
-				continue;
-			}
-			
-			SignatureUpdater.update(behavior.getSignature(), new ClassNameUpdater() {
-				@Override
-				public String update(String className) {
-					ClassEntry classEntry = new ClassEntry(className);
-					if (classEntry.isInDefaultPackage()) {
-						throw new Error("!!! " + className);
-					}
-					return className;
-				}
-			});
-		}
+		ClassRenamer.renameClasses(c, map);
 	}
 }
