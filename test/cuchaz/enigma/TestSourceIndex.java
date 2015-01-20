@@ -23,6 +23,7 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class TestSourceIndex {
 	
+	// TEMP
 	@Test
 	public void indexEverything() throws Exception {
 		Deobfuscator deobfuscator = new Deobfuscator(new File("input/1.8.jar"));

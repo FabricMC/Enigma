@@ -26,7 +26,7 @@ import cuchaz.enigma.mapping.ClassEntry;
 public class TestDeobfuscator {
 	
 	private Deobfuscator getDeobfuscator() throws IOException {
-		return new Deobfuscator(new File("build/libs/testLoneClass.obf.jar"));
+		return new Deobfuscator(new File("build/testLoneClass.obf.jar"));
 	}
 	
 	@Test

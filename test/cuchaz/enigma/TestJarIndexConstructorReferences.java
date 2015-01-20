@@ -37,7 +37,7 @@ public class TestJarIndexConstructorReferences {
 	private ClassEntry m_callerClass = new ClassEntry("none/b");
 	
 	public TestJarIndexConstructorReferences() throws Exception {
-		File jarFile = new File("build/libs/testConstructors.obf.jar");
+		File jarFile = new File("build/testConstructors.obf.jar");
 		m_index = new JarIndex();
 		m_index.indexJar(new JarFile(jarFile), false);
 	}

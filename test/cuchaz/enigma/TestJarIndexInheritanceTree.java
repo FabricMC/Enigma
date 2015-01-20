@@ -43,7 +43,7 @@ public class TestJarIndexInheritanceTree {
 	
 	public TestJarIndexInheritanceTree() throws Exception {
 		m_index = new JarIndex();
-		m_index.indexJar(new JarFile("build/libs/testInheritanceTree.obf.jar"), false);
+		m_index.indexJar(new JarFile("build/testInheritanceTree.obf.jar"), false);
 	}
 	
 	@Test
@@ -63,27 +63,27 @@ public class TestJarIndexInheritanceTree {
 		TranslationIndex index = m_index.getTranslationIndex();
 		
 		// base class
-		assertThat(index.getSuperclassName(m_baseClass.getName()), is(nullValue()));
-		assertThat(index.getAncestry(m_baseClass.getName()), is(empty()));
-		assertThat(index.getSubclassNames(m_baseClass.getName()), containsInAnyOrder(
-			m_subClassA.getName(),
-			m_subClassB.getName()
+		assertThat(index.getSuperclass(m_baseClass), is(nullValue()));
+		assertThat(index.getAncestry(m_baseClass), is(empty()));
+		assertThat(index.getSubclass(m_baseClass), containsInAnyOrder(
+			m_subClassA,
+			m_subClassB
 		));
 		
 		// subclass a
-		assertThat(index.getSuperclassName(m_subClassA.getName()), is(m_baseClass.getName()));
-		assertThat(index.getAncestry(m_subClassA.getName()), contains(m_baseClass.getName()));
-		assertThat(index.getSubclassNames(m_subClassA.getName()), contains(m_subClassAA.getName()));
+		assertThat(index.getSuperclass(m_subClassA), is(m_baseClass));
+		assertThat(index.getAncestry(m_subClassA), contains(m_baseClass));
+		assertThat(index.getSubclass(m_subClassA), contains(m_subClassAA));
 		
 		// subclass aa
-		assertThat(index.getSuperclassName(m_subClassAA.getName()), is(m_subClassA.getName()));
-		assertThat(index.getAncestry(m_subClassAA.getName()), contains(m_subClassA.getName(), m_baseClass.getName()));
-		assertThat(index.getSubclassNames(m_subClassAA.getName()), is(empty()));
+		assertThat(index.getSuperclass(m_subClassAA), is(m_subClassA));
+		assertThat(index.getAncestry(m_subClassAA), contains(m_subClassA, m_baseClass));
+		assertThat(index.getSubclass(m_subClassAA), is(empty()));
 		
 		// subclass b
-		assertThat(index.getSuperclassName(m_subClassB.getName()), is(m_baseClass.getName()));
-		assertThat(index.getAncestry(m_subClassB.getName()), contains(m_baseClass.getName()));
-		assertThat(index.getSubclassNames(m_subClassB.getName()), is(empty()));
+		assertThat(index.getSuperclass(m_subClassB), is(m_baseClass));
+		assertThat(index.getAncestry(m_subClassB), contains(m_baseClass));
+		assertThat(index.getSubclass(m_subClassB), is(empty()));
 	}
 	
 	@Test

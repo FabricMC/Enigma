@@ -114,8 +114,8 @@ public class JarIndex {
 		// step 3: index extends, implements, fields, and methods
 		for (CtClass c : JarClassIterator.classes(jar)) {
 			ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
+			m_translationIndex.indexClass(c);
 			String className = Descriptor.toJvmName(c.getName());
-			m_translationIndex.addSuperclass(className, Descriptor.toJvmName(c.getClassFile().getSuperclass()));
 			for (String interfaceName : c.getClassFile().getInterfaces()) {
 				className = Descriptor.toJvmName(className);
 				interfaceName = Descriptor.toJvmName(interfaceName);
@@ -191,8 +191,6 @@ public class JarIndex {
 		String className = Descriptor.toJvmName(field.getDeclaringClass().getName());
 		FieldEntry fieldEntry = new FieldEntry(new ClassEntry(className), field.getName());
 		
-		m_translationIndex.addField(className, field.getName());
-		
 		// is the field a class type?
 		if (field.getSignature().startsWith("L")) {
 			ClassEntry fieldTypeEntry = new ClassEntry(field.getSignature().substring(1, field.getSignature().length() - 1));
@@ -230,13 +228,12 @@ public class JarIndex {
 			behavior.instrument(new ExprEditor() {
 				@Override
 				public void edit(MethodCall call) {
-					String className = Descriptor.toJvmName(call.getClassName());
 					MethodEntry calledMethodEntry = new MethodEntry(
-						new ClassEntry(className),
+						new ClassEntry(Descriptor.toJvmName(call.getClassName())),
 						call.getMethodName(),
 						call.getSignature()
 					);
-					ClassEntry resolvedClassEntry = resolveEntryClass(calledMethodEntry);
+					ClassEntry resolvedClassEntry = m_translationIndex.resolveEntryClass(calledMethodEntry);
 					if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledMethodEntry.getClassEntry())) {
 						calledMethodEntry = new MethodEntry(
 							resolvedClassEntry,
@@ -254,12 +251,11 @@ public class JarIndex {
 				
 				@Override
 				public void edit(FieldAccess call) {
-					String className = Descriptor.toJvmName(call.getClassName());
 					FieldEntry calledFieldEntry = new FieldEntry(
-						new ClassEntry(className),
+						new ClassEntry(Descriptor.toJvmName(call.getClassName())),
 						call.getFieldName()
 					);
-					ClassEntry resolvedClassEntry = resolveEntryClass(calledFieldEntry);
+					ClassEntry resolvedClassEntry = m_translationIndex.resolveEntryClass(calledFieldEntry);
 					if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledFieldEntry.getClassEntry())) {
 						calledFieldEntry = new FieldEntry(resolvedClassEntry, call.getFieldName());
 					}
@@ -273,9 +269,8 @@ public class JarIndex {
 				
 				@Override
 				public void edit(ConstructorCall call) {
-					String className = Descriptor.toJvmName(call.getClassName());
 					ConstructorEntry calledConstructorEntry = new ConstructorEntry(
-						new ClassEntry(className),
+						new ClassEntry(Descriptor.toJvmName(call.getClassName())),
 						call.getSignature()
 					);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
@@ -288,9 +283,8 @@ public class JarIndex {
 				
 				@Override
 				public void edit(NewExpr call) {
-					String className = Descriptor.toJvmName(call.getClassName());
 					ConstructorEntry calledConstructorEntry = new ConstructorEntry(
-						new ClassEntry(className),
+						new ClassEntry(Descriptor.toJvmName(call.getClassName())),
 						call.getSignature()
 					);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
@@ -304,25 +298,6 @@ public class JarIndex {
 		} catch (CannotCompileException ex) {
 			throw new Error(ex);
 		}
-	}
-	
-	public ClassEntry resolveEntryClass(Entry obfEntry) {
-		
-		// this entry could refer to a method on a class where the method is not actually implemented
-		// travel up the inheritance tree to find the closest implementation
-		while (!containsObfEntry(obfEntry)) {
-			// is there a parent class?
-			String superclassName = m_translationIndex.getSuperclassName(obfEntry.getClassName());
-			if (superclassName == null) {
-				// this is probably a method from a class in a library
-				// we can't trace the implementation up any higher unless we index the library
-				return null;
-			}
-			
-			// move up to the parent class
-			obfEntry = obfEntry.cloneToNewClass(new ClassEntry(superclassName));
-		}
-		return obfEntry.getClassEntry();
 	}
 	
 	private CtMethod getBridgedMethod(CtMethod method) {
@@ -402,9 +377,9 @@ public class JarIndex {
 				if (reference.entry instanceof ConstructorEntry && reference.context instanceof ConstructorEntry) {
 					
 					// is the entry a superclass of the context?
-					String calledClassName = reference.entry.getClassName();
-					String callerSuperclassName = m_translationIndex.getSuperclassName(reference.context.getClassName());
-					if (callerSuperclassName != null && callerSuperclassName.equals(calledClassName)) {
+					ClassEntry calledClassEntry = reference.entry.getClassEntry();
+					ClassEntry superclassEntry = m_translationIndex.getSuperclass(reference.context.getClassEntry());
+					if (superclassEntry != null && superclassEntry.equals(calledClassEntry)) {
 						// it's a super call, skip
 						continue;
 					}
@@ -599,7 +574,9 @@ public class JarIndex {
 		// get the root node
 		List<String> ancestry = Lists.newArrayList();
 		ancestry.add(obfClassEntry.getName());
-		ancestry.addAll(m_translationIndex.getAncestry(obfClassEntry.getName()));
+		for (ClassEntry classEntry : m_translationIndex.getAncestry(obfClassEntry)) {
+			ancestry.add(classEntry.getName());
+		}
 		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode(
 			deobfuscatingTranslator,
 			ancestry.get(ancestry.size() - 1)
@@ -625,21 +602,21 @@ public class JarIndex {
 	public MethodInheritanceTreeNode getMethodInheritance(Translator deobfuscatingTranslator, MethodEntry obfMethodEntry) {
 		
 		// travel to the ancestor implementation
-		String baseImplementationClassName = obfMethodEntry.getClassName();
-		for (String ancestorClassName : m_translationIndex.getAncestry(obfMethodEntry.getClassName())) {
+		ClassEntry baseImplementationClassEntry = obfMethodEntry.getClassEntry();
+		for (ClassEntry ancestorClassEntry : m_translationIndex.getAncestry(obfMethodEntry.getClassEntry())) {
 			MethodEntry ancestorMethodEntry = new MethodEntry(
-				new ClassEntry(ancestorClassName),
+				new ClassEntry(ancestorClassEntry),
 				obfMethodEntry.getName(),
 				obfMethodEntry.getSignature()
 			);
 			if (containsObfBehavior(ancestorMethodEntry)) {
-				baseImplementationClassName = ancestorClassName;
+				baseImplementationClassEntry = ancestorClassEntry;
 			}
 		}
 		
 		// make a root node at the base
 		MethodEntry methodEntry = new MethodEntry(
-			new ClassEntry(baseImplementationClassName),
+			baseImplementationClassEntry,
 			obfMethodEntry.getName(),
 			obfMethodEntry.getSignature()
 		);
@@ -781,8 +758,8 @@ public class JarIndex {
 	public Set<String> getInterfaces(String className) {
 		Set<String> interfaceNames = new HashSet<String>();
 		interfaceNames.addAll(m_interfaces.get(className));
-		for (String ancestor : m_translationIndex.getAncestry(className)) {
-			interfaceNames.addAll(m_interfaces.get(ancestor));
+		for (ClassEntry ancestor : m_translationIndex.getAncestry(new ClassEntry(className))) {
+			interfaceNames.addAll(m_interfaces.get(ancestor.getName()));
 		}
 		return interfaceNames;
 	}
@@ -795,7 +772,7 @@ public class JarIndex {
 			String interfaceName = entry.getValue();
 			if (interfaceName.equals(targetInterfaceName)) {
 				classNames.add(className);
-				m_translationIndex.getSubclassNamesRecursively(classNames, className);
+				m_translationIndex.getSubclassNamesRecursively(classNames, new ClassEntry(className));
 			}
 		}
 		return classNames;

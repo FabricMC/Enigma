@@ -71,9 +71,9 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-		for (String subclassName : index.getTranslationIndex().getSubclassNames(m_entry.getClassName())) {
+		for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(m_entry.getClassEntry())) {
 			MethodEntry methodEntry = new MethodEntry(
-				new ClassEntry(subclassName),
+				subclassEntry,
 				m_entry.getName(),
 				m_entry.getSignature()
 			);

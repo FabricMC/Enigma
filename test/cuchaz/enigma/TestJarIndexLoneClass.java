@@ -29,6 +29,7 @@ import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
@@ -39,7 +40,7 @@ public class TestJarIndexLoneClass {
 	
 	public TestJarIndexLoneClass() throws Exception {
 		m_index = new JarIndex();
-		m_index.indexJar(new JarFile("build/libs/testLoneClass.obf.jar"), false);
+		m_index.indexJar(new JarFile("build/testLoneClass.obf.jar"), false);
 	}
 	
 	@Test
@@ -52,12 +53,12 @@ public class TestJarIndexLoneClass {
 	
 	@Test
 	public void translationIndex() {
-		assertThat(m_index.getTranslationIndex().getSuperclassName("none/a"), is(nullValue()));
-		assertThat(m_index.getTranslationIndex().getSuperclassName("cuchaz/enigma/inputs/Keep"), is(nullValue()));
-		assertThat(m_index.getTranslationIndex().getAncestry("none/a"), is(empty()));
-		assertThat(m_index.getTranslationIndex().getAncestry("cuchaz/enigma/inputs/Keep"), is(empty()));
-		assertThat(m_index.getTranslationIndex().getSubclassNames("none/a"), is(empty()));
-		assertThat(m_index.getTranslationIndex().getSubclassNames("cuchaz/enigma/inputs/Keep"), is(empty()));
+		assertThat(m_index.getTranslationIndex().getSuperclass(new ClassEntry("none/a")), is(nullValue()));
+		assertThat(m_index.getTranslationIndex().getSuperclass(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(nullValue()));
+		assertThat(m_index.getTranslationIndex().getAncestry(new ClassEntry("none/a")), is(empty()));
+		assertThat(m_index.getTranslationIndex().getAncestry(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(empty()));
+		assertThat(m_index.getTranslationIndex().getSubclass(new ClassEntry("none/a")), is(empty()));
+		assertThat(m_index.getTranslationIndex().getSubclass(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(empty()));
 	}
 	
 	@Test

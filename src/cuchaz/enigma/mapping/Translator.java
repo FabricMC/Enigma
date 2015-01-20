@@ -14,21 +14,24 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
+import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class Translator {
 	
 	private TranslationDirection m_direction;
 	private Map<String,ClassMapping> m_classes;
+	private TranslationIndex m_index;
 	
 	public Translator() {
 		m_direction = null;
 		m_classes = Maps.newHashMap();
 	}
 	
-	public Translator(TranslationDirection direction, Map<String,ClassMapping> classes) {
+	public Translator(TranslationDirection direction, Map<String,ClassMapping> classes, TranslationIndex index) {
 		m_direction = direction;
 		m_classes = classes;
+		m_index = index;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -100,17 +103,22 @@ public class Translator {
 	
 	public String translate(FieldEntry in) {
 		
-		// look for the class
-		ClassMapping classMapping = findClassMapping(in.getClassEntry());
-		if (classMapping != null) {
-			
-			// look for the field
-			String translatedName = m_direction.choose(
-				classMapping.getDeobfFieldName(in.getName()),
-				classMapping.getObfFieldName(in.getName())
-			);
-			if (translatedName != null) {
-				return translatedName;
+		// resolve the class entry
+		ClassEntry resolvedClassEntry = m_index.resolveEntryClass(in);
+		if (resolvedClassEntry != null) {
+		
+			// look for the class
+			ClassMapping classMapping = findClassMapping(resolvedClassEntry);
+			if (classMapping != null) {
+				
+				// look for the field
+				String translatedName = m_direction.choose(
+					classMapping.getDeobfFieldName(in.getName()),
+					classMapping.getObfFieldName(in.getName())
+				);
+				if (translatedName != null) {
+					return translatedName;
+				}
 			}
 		}
 		return null;
@@ -126,15 +134,22 @@ public class Translator {
 	
 	public String translate(MethodEntry in) {
 		
-		// look for class
-		ClassMapping classMapping = findClassMapping(in.getClassEntry());
-		if (classMapping != null) {
-			
-			// look for the method
-			MethodMapping methodMapping = m_direction.choose(classMapping.getMethodByObf(in.getName(), in.getSignature()),
-					classMapping.getMethodByDeobf(in.getName(), translateSignature(in.getSignature())));
-			if (methodMapping != null) {
-				return m_direction.choose(methodMapping.getDeobfName(), methodMapping.getObfName());
+		// resolve the class entry
+		ClassEntry resolvedClassEntry = m_index.resolveEntryClass(in);
+		if (resolvedClassEntry != null) {
+		
+			// look for class
+			ClassMapping classMapping = findClassMapping(resolvedClassEntry);
+			if (classMapping != null) {
+				
+				// look for the method
+				MethodMapping methodMapping = m_direction.choose(
+					classMapping.getMethodByObf(in.getName(), in.getSignature()),
+					classMapping.getMethodByDeobf(in.getName(), translateSignature(in.getSignature()))
+				);
+				if (methodMapping != null) {
+					return m_direction.choose(methodMapping.getDeobfName(), methodMapping.getObfName());
+				}
 			}
 		}
 		return null;

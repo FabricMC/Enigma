@@ -38,6 +38,7 @@ public class ClassTranslator {
 	}
 	
 	public void translate(CtClass c) {
+		
 		// NOTE: the order of these translations is very important
 		
 		// translate all the field and method references in the code by editing the constant pool
@@ -45,13 +46,20 @@ public class ClassTranslator {
 		ConstPoolEditor editor = new ConstPoolEditor(constants);
 		for (int i = 1; i < constants.getSize(); i++) {
 			switch (constants.getTag(i)) {
+				
 				case ConstPool.CONST_Fieldref: {
+					
 					// translate the name
 					FieldEntry entry = new FieldEntry(
 						new ClassEntry(Descriptor.toJvmName(constants.getFieldrefClassName(i))),
 						constants.getFieldrefName(i)
 					);
 					FieldEntry translatedEntry = m_translator.translateEntry(entry);
+					
+					// TEMP
+					if (entry.toString().equals("none/bxq.m")) {
+						System.out.println("FIELD: " + entry + " -> " + translatedEntry);
+					}
 					
 					// translate the type
 					String type = constants.getFieldrefType(i);
@@ -65,6 +73,7 @@ public class ClassTranslator {
 				
 				case ConstPool.CONST_Methodref:
 				case ConstPool.CONST_InterfaceMethodref: {
+					
 					// translate the name and type
 					BehaviorEntry entry = BehaviorEntryFactory.create(
 						Descriptor.toJvmName(editor.getMemberrefClassname(i)),

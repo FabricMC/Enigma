@@ -100,10 +100,10 @@ public class MappingsRenamer {
 		
 		deobfName = NameValidator.validateMethodName(deobfName);
 		for (MethodEntry entry : implementations) {
-			String deobfSignature = m_mappings.getTranslator(TranslationDirection.Deobfuscating).translateSignature(obf.getSignature());
+			String deobfSignature = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateSignature(obf.getSignature());
 			MethodEntry targetEntry = new MethodEntry(entry.getClassEntry(), deobfName, deobfSignature);
 			if (m_mappings.containsDeobfMethod(entry.getClassEntry(), deobfName, entry.getSignature()) || m_index.containsObfBehavior(targetEntry)) {
-				String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating).translateClass(entry.getClassName());
+				String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(entry.getClassName());
 				throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
 			}
 		}
@@ -117,7 +117,7 @@ public class MappingsRenamer {
 		deobfName = NameValidator.validateMethodName(deobfName);
 		MethodEntry targetEntry = new MethodEntry(obf.getClassEntry(), deobfName, obf.getSignature());
 		if (m_mappings.containsDeobfMethod(obf.getClassEntry(), deobfName, obf.getSignature()) || m_index.containsObfBehavior(targetEntry)) {
-			String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating).translateClass(obf.getClassName());
+			String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(obf.getClassName());
 			throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
 		}
 		

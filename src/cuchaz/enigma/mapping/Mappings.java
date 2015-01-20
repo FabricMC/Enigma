@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import cuchaz.enigma.Util;
+import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
 public class Mappings implements Serializable {
@@ -104,11 +105,11 @@ public class Mappings implements Serializable {
 		return m_classesByDeobf.get(deobfName);
 	}
 	
-	public Translator getTranslator(TranslationDirection direction) {
+	public Translator getTranslator(TranslationDirection direction, TranslationIndex index) {
 		switch (direction) {
 			case Deobfuscating:
 				
-				return new Translator(direction, m_classesByObf);
+				return new Translator(direction, m_classesByObf, index);
 				
 			case Obfuscating:
 				
@@ -122,7 +123,11 @@ public class Mappings implements Serializable {
 					}
 				}
 				
-				return new Translator(direction, classes);
+				// translate the translation index
+				// NOTE: this isn't actually recursive
+				TranslationIndex deobfIndex = new TranslationIndex(index, getTranslator(TranslationDirection.Deobfuscating, index));
+				
+				return new Translator(direction, classes, deobfIndex);
 				
 			default:
 				throw new Error("Invalid translation direction!");

@@ -35,7 +35,7 @@ public class TestInnerClasses {
 	
 	public TestInnerClasses() throws Exception {
 		m_index = new JarIndex();
-		m_index.indexJar(new JarFile("build/libs/testInnerClasses.obf.jar"), true);
+		m_index.indexJar(new JarFile("build/testInnerClasses.obf.jar"), true);
 	}
 	
 	@Test

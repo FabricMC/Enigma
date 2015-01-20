@@ -28,7 +28,7 @@ public class Main {
 		}
 		
 		// DEBUG
-		// gui.getController().openDeclaration( new ClassEntry( "none/ces" ) );
+		//gui.getController().openDeclaration(new ClassEntry("none/bxq"));
 	}
 	
 	private static File getFile(String path) {

@@ -144,7 +144,7 @@ public class Deobfuscator {
 			// fields
 			for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
 				FieldEntry fieldEntry = new FieldEntry(obfClassEntry, fieldMapping.getObfName());
-				ClassEntry resolvedObfClassEntry = m_jarIndex.resolveEntryClass(fieldEntry);
+				ClassEntry resolvedObfClassEntry = m_jarIndex.getTranslationIndex().resolveEntryClass(fieldEntry);
 				if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(fieldEntry.getClassEntry())) {
 					boolean wasMoved = renamer.moveFieldToObfClass(classMapping, fieldMapping, resolvedObfClassEntry);
 					if (wasMoved) {
@@ -167,7 +167,7 @@ public class Deobfuscator {
 					methodMapping.getObfName(),
 					methodMapping.getObfSignature()
 				);
-				ClassEntry resolvedObfClassEntry = m_jarIndex.resolveEntryClass(methodEntry);
+				ClassEntry resolvedObfClassEntry = m_jarIndex.getTranslationIndex().resolveEntryClass(methodEntry);
 				if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(methodEntry.getClassEntry())) {
 					boolean wasMoved = renamer.moveMethodToObfClass(classMapping, methodMapping, resolvedObfClassEntry);
 					if (wasMoved) {
@@ -233,7 +233,7 @@ public class Deobfuscator {
 	public Translator getTranslator(TranslationDirection direction) {
 		Translator translator = m_translatorCache.get(direction);
 		if (translator == null) {
-			translator = m_mappings.getTranslator(direction);
+			translator = m_mappings.getTranslator(direction, m_jarIndex.getTranslationIndex());
 			m_translatorCache.put(direction, translator);
 		}
 		return translator;
@@ -311,7 +311,7 @@ public class Deobfuscator {
 			Entry obfEntry = obfuscateEntry(deobfReference.entry);
 			
 			// try to resolve the class
-			ClassEntry resolvedObfClassEntry = m_jarIndex.resolveEntryClass(obfEntry);
+			ClassEntry resolvedObfClassEntry = m_jarIndex.getTranslationIndex().resolveEntryClass(obfEntry);
 			if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(obfEntry.getClassEntry())) {
 				// change the class of the entry
 				obfEntry = obfEntry.cloneToNewClass(resolvedObfClassEntry);
