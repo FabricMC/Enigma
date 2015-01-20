@@ -10,10 +10,18 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -81,7 +89,7 @@ public class TranslationIndex implements Serializable {
 		
 		// add the superclass
 		ClassEntry superclassEntry = JavassistUtil.getSuperclassEntry(c);
-		if (!isJre(classEntry) && !isJre(superclassEntry)) {
+		if (!isJre(classEntry) && superclassEntry != null && !isJre(superclassEntry)) {
 			m_superclasses.put(classEntry, superclassEntry);
 		}
 		
@@ -190,6 +198,30 @@ public class TranslationIndex implements Serializable {
 	}
 	
 	private boolean isJre(ClassEntry classEntry) {
-		return classEntry.getPackageName().startsWith("java") || classEntry.getPackageName().startsWith("javax");
+		String packageName = classEntry.getPackageName();
+		return packageName != null && (packageName.startsWith("java") || packageName.startsWith("javax"));
+	}
+	
+	public void write(OutputStream out)
+	throws IOException {
+		GZIPOutputStream gzipout = new GZIPOutputStream(out);
+		ObjectOutputStream oout = new ObjectOutputStream(gzipout);
+		oout.writeObject(m_superclasses);
+		oout.writeObject(m_fieldEntries);
+		oout.writeObject(m_behaviorEntries);
+		gzipout.finish();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void read(InputStream in)
+	throws IOException {
+		try {
+			ObjectInputStream oin = new ObjectInputStream(new GZIPInputStream(in));
+			m_superclasses = (HashMap<ClassEntry,ClassEntry>)oin.readObject();
+			m_fieldEntries = (HashMultimap<ClassEntry,FieldEntry>)oin.readObject();
+			m_behaviorEntries = (HashMultimap<ClassEntry,BehaviorEntry>)oin.readObject();
+		} catch (ClassNotFoundException ex) {
+			throw new Error(ex);
+		}
 	}
 }
