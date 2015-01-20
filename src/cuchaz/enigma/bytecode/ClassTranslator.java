@@ -56,11 +56,6 @@ public class ClassTranslator {
 					);
 					FieldEntry translatedEntry = m_translator.translateEntry(entry);
 					
-					// TEMP
-					if (entry.toString().equals("none/bxq.m")) {
-						System.out.println("FIELD: " + entry + " -> " + translatedEntry);
-					}
-					
 					// translate the type
 					String type = constants.getFieldrefType(i);
 					String translatedType = m_translator.translateSignature(type);
