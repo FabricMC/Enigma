@@ -1,7 +1,6 @@
 
 # stupidly simple jar builder
 # Jeff Martin
-# 2015-01-05
 
 import os
 import sys
@@ -167,4 +166,20 @@ def callJava(classpath, className, javaArgs):
 
 def callJavaJar(jar, javaArgs):
 	subprocess.call(["java", "-jar", jar] + javaArgs)
+
+def deployJarToLocalMavenRepo(pathLocalRepo, pathJar, artifactDesc):
+
+	# parse the artifact description
+	(groupId, artifactId, version) = artifactDesc.split(":")
+
+	args = ["mvn", "install:install-file",
+		"-Dmaven.repo.local=%s" % pathLocalRepo,
+		"-Dfile=%s" % pathJar,
+		"-Dpackaging=jar",
+		"-DgroupId=%s" % groupId,
+		"-DartifactId=%s" % artifactId,
+		"-Dversion=%s" % version
+	]
+	subprocess.call(args)
+	print "Deployed Maven artifact %s to %s" % (artifactDesc, pathLocalRepo)
 
