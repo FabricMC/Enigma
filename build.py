@@ -33,11 +33,12 @@ def buildJar():
 	ssjb.copyFile(DirTemp, "license.GPL3.txt")
 	ssjb.copyFile(DirTemp, "readme.txt")
 	manifest = ssjb.buildManifest(ProjectName, Version, Author, "cuchaz.enigma.Main")
-	ssjb.jar(os.path.join(DirBuild, getJarFullName()), DirTemp, manifest=manifest)
+	pathJar = os.path.join(DirBuild, getJarFullName()) 
+	ssjb.jar(pathJar, DirTemp, manifest=manifest)
 	ssjb.delete(DirTemp)
 	ssjb.deployJarToLocalMavenRepo(
 		PathLocalMavenRepo,
-		getJarFullName(),
+		pathJar,
 		"%s:%s:%s" % (GroupId, ProjectName, Version)
 	)
 
