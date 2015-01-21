@@ -1,15 +1,8 @@
 
-syntax: regexp
-^\.
-syntax: regexp
-^bin$
-syntax: regexp
-^lib$
-syntax: regexp
-^build$
-syntax: regexp
-^data$
-syntax: regexp
-^input$
-syntax: regexp
-^ivy$
+syntax: glob
+bin
+lib
+build
+data
+input
+ivy
