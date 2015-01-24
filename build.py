@@ -9,7 +9,6 @@ Author = "Cuchaz"
 DirBin = "bin"
 DirLib = "lib"
 DirBuild = "build"
-DirTemp = os.path.join(DirBuild, "tmp")
 PathLocalMavenRepo = "../maven"
 
 
@@ -19,17 +18,20 @@ import ssjb
 import ssjb.ivy
 
 
-ThisArtifact = ssjb.ivy.Dep("cuchaz:enigma:0.6b")
+ArtifactStandalone = ssjb.ivy.Dep("cuchaz:enigma:0.6b")
+ArtifactLib = ssjb.ivy.Dep("cuchaz:enigma-lib:0.6b")
 
 # dependencies
 ExtraRepos = [
 	"http://maven.cuchazinteractive.com"
 ]
-Deps = [
+LibDeps = [
 	ssjb.ivy.Dep("com.google.guava:guava:17.0"),
-	ssjb.ivy.Dep("de.sciss:jsyntaxpane:1.0.0"),
 	ssjb.ivy.Dep("org.javassist:javassist:3.18.1-GA"),
 	ssjb.ivy.Dep("org.bitbucket.mstrobel:procyon-decompiler:0.5.26-enigma")
+]
+StandaloneDeps = LibDeps + [
+	ssjb.ivy.Dep("de.sciss:jsyntaxpane:1.0.0")
 ]
 ProguardDep = ssjb.ivy.Dep("net.sf.proguard:proguard-base:5.1")
 TestDeps = [
@@ -57,6 +59,39 @@ def buildTestJar(name, glob):
 	)
 
 
+def applyReadme(dirTemp):
+	ssjb.file.copy(dirTemp, "license.APL2.txt")
+	ssjb.file.copy(dirTemp, "license.GPL3.txt")
+	ssjb.file.copy(dirTemp, "readme.txt")
+
+
+def buildStandaloneJar(dirOut):
+	with ssjb.file.TempDir(os.path.join(dirOut, "tmp")) as dirTemp:
+		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin))
+		for path in ssjb.ivy.getJarPaths(StandaloneDeps, ExtraRepos):
+			ssjb.jar.unpackJar(dirTemp, path)
+		ssjb.file.delete(os.path.join(dirTemp, "LICENSE.txt"))
+		ssjb.file.delete(os.path.join(dirTemp, "META-INF/maven"))
+		applyReadme(dirTemp)
+		manifest = ssjb.jar.buildManifest(
+			ArtifactStandalone.artifactId,
+			ArtifactStandalone.version,
+			Author,
+			"cuchaz.enigma.Main"
+		)
+		pathJar = os.path.join(DirBuild, "%s.jar" % ArtifactStandalone.getName()) 
+		ssjb.jar.makeJar(pathJar, dirTemp, manifest=manifest)
+		ssjb.ivy.deployJarToLocalMavenRepo(PathLocalMavenRepo, pathJar, ArtifactStandalone)
+
+def buildLibJar(dirOut):
+	with ssjb.file.TempDir(os.path.join(dirOut, "tmp")) as dirTemp:
+		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin))
+		applyReadme(dirTemp)
+		pathJar = os.path.join(DirBuild, "%s.jar" % ArtifactLib.getName()) 
+		ssjb.jar.makeJar(pathJar, dirTemp)
+		ssjb.ivy.deployJarToLocalMavenRepo(PathLocalMavenRepo, pathJar, ArtifactLib, deps=LibDeps)
+
+
 # tasks
 
 def taskGetDeps():
@@ -72,35 +107,10 @@ def taskBuildTestJars():
 	buildTestJar("testInnerClasses", "cuchaz/enigma/inputs/innerClasses/*.class")
 
 def taskBuild():
-
-	# make the build directory
 	ssjb.file.delete(DirBuild)
 	ssjb.file.mkdir(DirBuild)
-
-	# make the main jar
-	with ssjb.file.TempDir(DirTemp) as dirTemp:
-		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin))
-		for path in ssjb.ivy.getJarPaths(Deps, ExtraRepos):
-			ssjb.jar.unpackJar(dirTemp, path)
-		ssjb.file.delete(os.path.join(dirTemp, "LICENSE.txt"))
-		ssjb.file.delete(os.path.join(dirTemp, "META-INF/maven"))
-		ssjb.file.copy(dirTemp, "license.APL2.txt")
-		ssjb.file.copy(dirTemp, "license.GPL3.txt")
-		ssjb.file.copy(dirTemp, "readme.txt")
-		manifest = ssjb.jar.buildManifest(
-			ThisArtifact.artifactId,
-			ThisArtifact.version,
-			Author,
-			"cuchaz.enigma.Main"
-		)
-		pathJar = os.path.join(DirBuild, "%s.jar" % ThisArtifact.getName()) 
-		ssjb.jar.makeJar(pathJar, dirTemp, manifest=manifest)
-	
-	ssjb.ivy.deployJarToLocalMavenRepo(
-		PathLocalMavenRepo,
-		pathJar,
-		ThisArtifact
-	)
+	buildStandaloneJar(DirBuild)
+	buildLibJar(DirBuild)
 
 ssjb.registerTask("getDeps", taskGetDeps)
 ssjb.registerTask("buildTestJars", taskBuildTestJars)
