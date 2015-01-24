@@ -80,7 +80,8 @@ def taskBuild():
 	# make the main jar
 	with ssjb.file.TempDir(DirTemp) as dirTemp:
 		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin))
-		ssjb.jar.unpackJar(dirTemp, os.path.join(DirLib, "deps.jar"))
+		for path in ssjb.ivy.getJarPaths(Deps, ExtraRepos):
+			ssjb.jar.unpackJar(dirTemp, path)
 		ssjb.file.delete(os.path.join(dirTemp, "LICENSE.txt"))
 		ssjb.file.delete(os.path.join(dirTemp, "META-INF/maven"))
 		ssjb.file.copy(dirTemp, "license.APL2.txt")
