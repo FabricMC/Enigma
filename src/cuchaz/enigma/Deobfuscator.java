@@ -138,7 +138,7 @@ public class Deobfuscator {
 		
 		// pass 2: look for fields/methods that are actually declared in superclasses
 		MappingsRenamer renamer = new MappingsRenamer(m_jarIndex, val);
-		for (ClassMapping classMapping : val.classes()) {
+		for (ClassMapping classMapping : Lists.newArrayList(val.classes())) {
 			ClassEntry obfClassEntry = new ClassEntry(classMapping.getObfName());
 			
 			// fields
