@@ -11,8 +11,8 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import java.io.File;
 import java.util.Set;
+import java.util.jar.JarFile;
 
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ public class TestSourceIndex {
 	// TEMP
 	@Test
 	public void indexEverything() throws Exception {
-		Deobfuscator deobfuscator = new Deobfuscator(new File("input/1.8.jar"));
+		Deobfuscator deobfuscator = new Deobfuscator(new JarFile("input/1.8.jar"));
 		
 		// get all classes that aren't inner classes
 		Set<ClassEntry> classEntries = Sets.newHashSet();

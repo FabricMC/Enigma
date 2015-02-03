@@ -1,6 +1,6 @@
 package cuchaz.enigma.inputs.innerClasses;
 
-public class Anonymous {
+public class A_Anonymous {
 	
 	public void foo() {
 		Runnable runnable = new Runnable() {

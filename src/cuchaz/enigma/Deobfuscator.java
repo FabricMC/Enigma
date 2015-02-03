@@ -68,7 +68,6 @@ public class Deobfuscator {
 		void onProgress(int numDone, String message);
 	}
 	
-	private File m_file;
 	private JarFile m_jar;
 	private DecompilerSettings m_settings;
 	private JarIndex m_jarIndex;
@@ -76,9 +75,8 @@ public class Deobfuscator {
 	private MappingsRenamer m_renamer;
 	private Map<TranslationDirection,Translator> m_translatorCache;
 	
-	public Deobfuscator(File file) throws IOException {
-		m_file = file;
-		m_jar = new JarFile(m_file);
+	public Deobfuscator(JarFile jar) throws IOException {
+		m_jar = jar;
 		
 		// build the jar index
 		m_jarIndex = new JarIndex();
@@ -100,7 +98,7 @@ public class Deobfuscator {
 	}
 	
 	public String getJarName() {
-		return m_file.getName();
+		return m_jar.getName();
 	}
 	
 	public JarIndex getJarIndex() {

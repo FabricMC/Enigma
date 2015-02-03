@@ -1,7 +1,7 @@
 package cuchaz.enigma.inputs.innerClasses;
 
 @SuppressWarnings("unused")
-public class ConstructorArgs {
+public class C_ConstructorArgs {
 	
 	class Inner {
 		

@@ -13,9 +13,9 @@ package cuchaz.enigma;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.jar.JarFile;
 
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ import cuchaz.enigma.mapping.ClassEntry;
 public class TestDeobfuscator {
 	
 	private Deobfuscator getDeobfuscator() throws IOException {
-		return new Deobfuscator(new File("build/testLoneClass.obf.jar"));
+		return new Deobfuscator(new JarFile("build/testLoneClass.obf.jar"));
 	}
 	
 	@Test

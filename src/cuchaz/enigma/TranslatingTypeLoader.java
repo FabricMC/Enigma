@@ -29,7 +29,6 @@ import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
 
-import cuchaz.enigma.analysis.BridgeFixer;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.bytecode.ClassTranslator;
@@ -168,7 +167,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 			assertClassName(c, deobfClassEntry);
 			
 			// DEBUG
-			// Util.writeClass( c );
+			Util.writeClass( c );
 			
 			// we have a transformed class!
 			return c.toBytecode();
@@ -196,7 +195,6 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		assertClassName(c, obfClassEntry);
 		
 		// do all kinds of deobfuscating transformations on the class
-		new BridgeFixer(m_jarIndex).fixBridges(c);
 		new MethodParameterWriter(m_deobfuscatingTranslator).writeMethodArguments(c);
 		new ClassTranslator(m_deobfuscatingTranslator).translate(c);
 		

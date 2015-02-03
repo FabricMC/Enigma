@@ -23,6 +23,7 @@ import cuchaz.enigma.analysis.JarIndex;
 public class TestInnerClasses {
 	
 	private JarIndex m_index;
+	private Deobfuscator m_deobfuscator;
 	
 	private static final String AnonymousOuter = "none/a";
 	private static final String AnonymousInner = "b";
@@ -32,10 +33,14 @@ public class TestInnerClasses {
 	private static final String ConstructorArgsInner = "f";
 	private static final String AnonymousWithScopeArgsOuter = "none/c";
 	private static final String AnonymousWithScopeArgsInner = "d";
+	private static final String AnonymousWithOuterAccessOuter = "none/i";
+	private static final String AnonymousWithOuterAccessInner = "j";
 	
 	public TestInnerClasses() throws Exception {
 		m_index = new JarIndex();
-		m_index.indexJar(new JarFile("build/testInnerClasses.obf.jar"), true);
+		JarFile jar = new JarFile("build/testInnerClasses.obf.jar");
+		m_index.indexJar(jar, true);
+		m_deobfuscator = new Deobfuscator(jar);
 	}
 	
 	@Test
@@ -43,6 +48,7 @@ public class TestInnerClasses {
 		assertThat(m_index.getOuterClass(SimpleInner), is(SimpleOuter));
 		assertThat(m_index.getInnerClasses(SimpleOuter), containsInAnyOrder(SimpleInner));
 		assertThat(m_index.isAnonymousClass(SimpleInner), is(false));
+		decompile(SimpleOuter);
 	}
 	
 	@Test
@@ -50,6 +56,7 @@ public class TestInnerClasses {
 		assertThat(m_index.getOuterClass(AnonymousInner), is(AnonymousOuter));
 		assertThat(m_index.getInnerClasses(AnonymousOuter), containsInAnyOrder(AnonymousInner));
 		assertThat(m_index.isAnonymousClass(AnonymousInner), is(true));
+		decompile(AnonymousOuter);
 	}
 	
 	@Test
@@ -57,6 +64,7 @@ public class TestInnerClasses {
 		assertThat(m_index.getOuterClass(ConstructorArgsInner), is(ConstructorArgsOuter));
 		assertThat(m_index.getInnerClasses(ConstructorArgsOuter), containsInAnyOrder(ConstructorArgsInner));
 		assertThat(m_index.isAnonymousClass(ConstructorArgsInner), is(false));
+		decompile(ConstructorArgsOuter);
 	}
 	
 	@Test
@@ -64,5 +72,18 @@ public class TestInnerClasses {
 		assertThat(m_index.getOuterClass(AnonymousWithScopeArgsInner), is(AnonymousWithScopeArgsOuter));
 		assertThat(m_index.getInnerClasses(AnonymousWithScopeArgsOuter), containsInAnyOrder(AnonymousWithScopeArgsInner));
 		assertThat(m_index.isAnonymousClass(AnonymousWithScopeArgsInner), is(true));
+		decompile(AnonymousWithScopeArgsOuter);
+	}
+	
+	@Test
+	public void anonymousWithOuterAccess() {
+		assertThat(m_index.getOuterClass(AnonymousWithOuterAccessInner), is(AnonymousWithOuterAccessOuter));
+		assertThat(m_index.getInnerClasses(AnonymousWithOuterAccessOuter), containsInAnyOrder(AnonymousWithOuterAccessInner));
+		assertThat(m_index.isAnonymousClass(AnonymousWithOuterAccessInner), is(true));
+		decompile(AnonymousWithOuterAccessOuter);
+	}
+	
+	private void decompile(String name) {
+		m_deobfuscator.getSourceTree(name);
 	}
 }

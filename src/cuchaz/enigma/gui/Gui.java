@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
+import java.util.jar.JarFile;
 
 import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
@@ -499,7 +500,7 @@ public class Gui {
 								@Override
 								public void run() {
 									try {
-										m_controller.openJar(m_jarFileChooser.getSelectedFile());
+										m_controller.openJar(new JarFile(m_jarFileChooser.getSelectedFile()));
 									} catch (IOException ex) {
 										throw new Error(ex);
 									}

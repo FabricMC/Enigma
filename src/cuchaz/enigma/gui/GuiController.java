@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
+import java.util.jar.JarFile;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
@@ -66,9 +67,9 @@ public class GuiController {
 		return m_isDirty;
 	}
 	
-	public void openJar(final File file) throws IOException {
+	public void openJar(final JarFile jar) throws IOException {
 		m_gui.onStartOpenJar();
-		m_deobfuscator = new Deobfuscator(file);
+		m_deobfuscator = new Deobfuscator(jar);
 		m_gui.onFinishOpenJar(m_deobfuscator.getJarName());
 		refreshClasses();
 	}

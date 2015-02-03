@@ -28,7 +28,7 @@ ExtraRepos = [
 LibDeps = [
 	ssjb.ivy.Dep("com.google.guava:guava:17.0"),
 	ssjb.ivy.Dep("org.javassist:javassist:3.18.1-GA"),
-	ssjb.ivy.Dep("org.bitbucket.mstrobel:procyon-decompiler:0.5.26-enigma")
+	ssjb.ivy.Dep("org.bitbucket.mstrobel:procyon-decompiler:0.5.28-enigma")
 ]
 StandaloneDeps = LibDeps + [
 	ssjb.ivy.Dep("de.sciss:jsyntaxpane:1.0.0")
@@ -47,7 +47,7 @@ def buildTestJar(name, glob):
 	pathObfJar = os.path.join(DirBuild, "%s.obf.jar" % name)
 
 	# build the deobf jar
-	with ssjb.file.TempDir(DirTemp) as dirTemp:
+	with ssjb.file.TempDir("tmp") as dirTemp:
 		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin, "cuchaz/enigma/inputs/Keep.class"))
 		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin, glob))
 		ssjb.jar.makeJar(pathJar, dirTemp)
@@ -96,7 +96,7 @@ def buildLibJar(dirOut):
 
 def taskGetDeps():
 	ssjb.file.mkdir(DirLib)
-	ssjb.ivy.makeLibsJar(os.path.join(DirLib, "deps.jar"), Deps, extraRepos=ExtraRepos)
+	ssjb.ivy.makeLibsJar(os.path.join(DirLib, "deps.jar"), StandaloneDeps, extraRepos=ExtraRepos)
 	ssjb.ivy.makeLibsJar(os.path.join(DirLib, "test-deps.jar"), TestDeps)
 	ssjb.ivy.makeJar(os.path.join(DirLib, "proguard.jar"), ProguardDep)
 

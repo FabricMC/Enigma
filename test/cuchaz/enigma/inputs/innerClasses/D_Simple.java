@@ -1,6 +1,6 @@
 package cuchaz.enigma.inputs.innerClasses;
 
-public class Simple {
+public class D_Simple {
 	
 	class Inner {
 		// nothing to do

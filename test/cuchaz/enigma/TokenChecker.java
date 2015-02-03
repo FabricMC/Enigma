@@ -10,10 +10,10 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.jar.JarFile;
 
 import com.google.common.collect.Lists;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
@@ -27,7 +27,7 @@ public class TokenChecker {
 	
 	private Deobfuscator m_deobfuscator;
 	
-	protected TokenChecker(File jarFile) throws IOException {
+	protected TokenChecker(JarFile jarFile) throws IOException {
 		m_deobfuscator = new Deobfuscator(jarFile);
 	}
 	

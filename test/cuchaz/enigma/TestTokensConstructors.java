@@ -10,15 +10,11 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import static cuchaz.enigma.EntryFactory.newBehaviorReferenceByConstructor;
-import static cuchaz.enigma.EntryFactory.newBehaviorReferenceByMethod;
-import static cuchaz.enigma.EntryFactory.newConstructor;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static cuchaz.enigma.EntryFactory.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
-import java.io.File;
+import java.util.jar.JarFile;
 
 import org.junit.Test;
 
@@ -27,7 +23,7 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 public class TestTokensConstructors extends TokenChecker {
 	
 	public TestTokensConstructors() throws Exception {
-		super(new File("build/testConstructors.obf.jar"));
+		super(new JarFile("build/testConstructors.obf.jar"));
 	}
 	
 	@Test
@@ -63,11 +59,11 @@ public class TestTokensConstructors extends TokenChecker {
 		);
 		assertThat(
 			getReferenceTokens(newBehaviorReferenceByConstructor(source, "none/d", "()V")),
-			containsInAnyOrder("super") // implicit call, decompiled to "super"
+			is(empty()) // implicit call, not decompiled to token
 		);
 		assertThat(
 			getReferenceTokens(newBehaviorReferenceByConstructor(source, "none/d", "(III)V")),
-			containsInAnyOrder("super") // implicit call, decompiled to "super"
+			is(empty()) // implicit call, not decompiled to token
 		);
 	}
 	

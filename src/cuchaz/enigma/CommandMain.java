@@ -2,6 +2,7 @@ package cuchaz.enigma;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.jar.JarFile;
 
 import cuchaz.enigma.Deobfuscator.ProgressListener;
 import cuchaz.enigma.mapping.Mappings;
@@ -78,7 +79,7 @@ public class CommandMain {
 		File fileMappings = getReadableFile(getArg(args, 1, "mappings file"));
 		File fileJarIn = getReadableFile(getArg(args, 2, "in jar"));
 		File fileJarOut = getWritableFolder(getArg(args, 3, "out folder"));
-		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, fileJarIn);
+		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeSources(fileJarOut, new ConsoleProgressListener());
 	}
 
@@ -87,16 +88,16 @@ public class CommandMain {
 		File fileMappings = getReadableFile(getArg(args, 1, "mappings file"));
 		File fileJarIn = getReadableFile(getArg(args, 2, "in jar"));
 		File fileJarOut = getWritableFile(getArg(args, 3, "out jar"));
-		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, fileJarIn);
+		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeJar(fileJarOut, new ConsoleProgressListener());
 	}
 	
-	private static Deobfuscator getDeobfuscator(File fileMappings, File fileJar)
+	private static Deobfuscator getDeobfuscator(File fileMappings, JarFile jar)
 	throws Exception {
 		System.out.println("Reading mappings...");
 		Mappings mappings = new MappingsReader().read(new FileReader(fileMappings));
 		System.out.println("Reading jar...");
-		Deobfuscator deobfuscator = new Deobfuscator(fileJar);
+		Deobfuscator deobfuscator = new Deobfuscator(jar);
 		deobfuscator.setMappings(mappings);
 		return deobfuscator;
 	}
