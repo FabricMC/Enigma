@@ -11,6 +11,7 @@
 package cuchaz.enigma;
 
 import java.io.File;
+import java.util.jar.JarFile;
 
 import cuchaz.enigma.gui.Gui;
 
@@ -21,7 +22,7 @@ public class Main {
 		
 		// parse command-line args
 		if (args.length >= 1) {
-			gui.getController().openJar(getFile(args[0]));
+			gui.getController().openJar(new JarFile(getFile(args[0])));
 		}
 		if (args.length >= 2) {
 			gui.getController().openMappings(getFile(args[1]));

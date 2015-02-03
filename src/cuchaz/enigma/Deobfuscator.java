@@ -88,7 +88,7 @@ public class Deobfuscator {
 		m_settings.setForceExplicitImports(true);
 		m_settings.setForceExplicitTypeArguments(true);
 		// DEBUG
-		// m_settings.setShowSyntheticMembers( true );
+		//m_settings.setShowSyntheticMembers(true);
 		
 		// init defaults
 		m_translatorCache = Maps.newTreeMap();
