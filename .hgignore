@@ -1,0 +1,9 @@
+
+syntax: glob
+bin
+lib
+build
+data
+input
+ivy
+*.pyc
