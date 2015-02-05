@@ -167,7 +167,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 			assertClassName(c, deobfClassEntry);
 			
 			// DEBUG
-			Util.writeClass( c );
+			//Util.writeClass( c );
 			
 			// we have a transformed class!
 			return c.toBytecode();
