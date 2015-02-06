@@ -22,7 +22,8 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 
 public class TestTokensConstructors extends TokenChecker {
 	
-	public TestTokensConstructors() throws Exception {
+	public TestTokensConstructors()
+	throws Exception {
 		super(new JarFile("build/testConstructors.obf.jar"));
 	}
 	

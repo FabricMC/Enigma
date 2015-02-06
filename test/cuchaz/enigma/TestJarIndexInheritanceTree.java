@@ -41,7 +41,8 @@ public class TestJarIndexInheritanceTree {
 	private FieldEntry m_nameField = new FieldEntry(m_baseClass, "a");
 	private FieldEntry m_numThingsField = new FieldEntry(m_subClassB, "a");
 	
-	public TestJarIndexInheritanceTree() throws Exception {
+	public TestJarIndexInheritanceTree()
+	throws Exception {
 		m_index = new JarIndex();
 		m_index.indexJar(new JarFile("build/testInheritanceTree.obf.jar"), false);
 	}

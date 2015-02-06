@@ -27,7 +27,8 @@ public class TokenChecker {
 	
 	private Deobfuscator m_deobfuscator;
 	
-	protected TokenChecker(JarFile jarFile) throws IOException {
+	protected TokenChecker(JarFile jarFile)
+	throws IOException {
 		m_deobfuscator = new Deobfuscator(jarFile);
 	}
 	

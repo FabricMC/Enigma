@@ -38,7 +38,8 @@ public class TestJarIndexLoneClass {
 	
 	private JarIndex m_index;
 	
-	public TestJarIndexLoneClass() throws Exception {
+	public TestJarIndexLoneClass()
+	throws Exception {
 		m_index = new JarIndex();
 		m_index.indexJar(new JarFile("build/testLoneClass.obf.jar"), false);
 	}

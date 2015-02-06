@@ -25,17 +25,20 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class TestDeobfuscator {
 	
-	private Deobfuscator getDeobfuscator() throws IOException {
+	private Deobfuscator getDeobfuscator()
+	throws IOException {
 		return new Deobfuscator(new JarFile("build/testLoneClass.obf.jar"));
 	}
 	
 	@Test
-	public void loadJar() throws Exception {
+	public void loadJar()
+	throws Exception {
 		getDeobfuscator();
 	}
 	
 	@Test
-	public void getClasses() throws Exception {
+	public void getClasses()
+	throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
 		List<ClassEntry> obfClasses = Lists.newArrayList();
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
@@ -47,7 +50,8 @@ public class TestDeobfuscator {
 	}
 	
 	@Test
-	public void decompileClass() throws Exception {
+	public void decompileClass()
+	throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
 		deobfuscator.getSource(deobfuscator.getSourceTree("none/a"));
 	}
