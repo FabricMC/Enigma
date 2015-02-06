@@ -10,20 +10,15 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import cuchaz.enigma.Util;
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.mapping.SignatureUpdater.ClassNameUpdater;
 
@@ -47,16 +42,6 @@ public class Mappings implements Serializable {
 			if (classMapping.getDeobfName() != null) {
 				m_classesByDeobf.put(classMapping.getDeobfName(), classMapping);
 			}
-		}
-	}
-	
-	public static Mappings newFromResource(String resource) throws IOException {
-		InputStream in = null;
-		try {
-			in = Mappings.class.getResourceAsStream(resource);
-			return newFromStream(in);
-		} finally {
-			Util.closeQuietly(in);
 		}
 	}
 	
@@ -131,14 +116,6 @@ public class Mappings implements Serializable {
 				
 			default:
 				throw new Error("Invalid translation direction!");
-		}
-	}
-	
-	public static Mappings newFromStream(InputStream in) throws IOException {
-		try {
-			return (Mappings)new ObjectInputStream(new GZIPInputStream(in)).readObject();
-		} catch (ClassNotFoundException ex) {
-			throw new Error(ex);
 		}
 	}
 	

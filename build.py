@@ -105,6 +105,7 @@ def taskBuildTestJars():
 	buildTestJar("testConstructors", "cuchaz/enigma/inputs/constructors/*.class")
 	buildTestJar("testInheritanceTree", "cuchaz/enigma/inputs/inheritanceTree/*.class")
 	buildTestJar("testInnerClasses", "cuchaz/enigma/inputs/innerClasses/*.class")
+	buildTestJar("testTranslation", "cuchaz/enigma/inputs/translation/*.class")
 
 def taskBuild():
 	ssjb.file.delete(DirBuild)

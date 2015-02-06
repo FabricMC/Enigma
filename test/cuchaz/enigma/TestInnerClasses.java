@@ -36,7 +36,8 @@ public class TestInnerClasses {
 	private static final String AnonymousWithOuterAccessOuter = "none/i";
 	private static final String AnonymousWithOuterAccessInner = "j";
 	
-	public TestInnerClasses() throws Exception {
+	public TestInnerClasses()
+	throws Exception {
 		m_index = new JarIndex();
 		JarFile jar = new JarFile("build/testInnerClasses.obf.jar");
 		m_index.indexJar(jar, true);
