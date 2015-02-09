@@ -3,9 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="conf"/>
 	<classpathentry kind="src" path="test"/>
-	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/procyon"/>
 	<classpathentry kind="lib" path="lib/deps.jar"/>
 	<classpathentry kind="lib" path="lib/test-deps.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java-7-openjdk-amd64"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
