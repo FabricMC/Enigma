@@ -114,86 +114,20 @@ public class Deobfuscator {
 			val = new Mappings();
 		}
 		
-		// pass 1: look for any classes that got moved to inner classes
-		Map<String,String> renames = Maps.newHashMap();
-		for (ClassMapping classMapping : val.classes()) {
-			// make sure we strip the packages off of obfuscated inner classes
-			String innerClassName = new ClassEntry(classMapping.getObfName()).getSimpleName();
-			String outerClassName = m_jarIndex.getOuterClass(innerClassName);
-			if (outerClassName != null) {
-				// build the composite class name
-				String newName = outerClassName + "$" + innerClassName;
-				
-				// add a rename
-				renames.put(classMapping.getObfName(), newName);
-				
-				System.out.println(String.format("Converted class mapping %s to %s", classMapping.getObfName(), newName));
-			}
-		}
-		for (Map.Entry<String,String> entry : renames.entrySet()) {
-			val.renameObfClass(entry.getKey(), entry.getValue());
-		}
-		
-		// pass 2: look for fields/methods that are actually declared in superclasses
-		MappingsRenamer renamer = new MappingsRenamer(m_jarIndex, val);
-		for (ClassMapping classMapping : Lists.newArrayList(val.classes())) {
-			ClassEntry obfClassEntry = new ClassEntry(classMapping.getObfName());
-			
-			// fields
-			for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
-				FieldEntry fieldEntry = new FieldEntry(obfClassEntry, fieldMapping.getObfName(), fieldMapping.getObfType());
-				ClassEntry resolvedObfClassEntry = m_jarIndex.getTranslationIndex().resolveEntryClass(fieldEntry);
-				if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(fieldEntry.getClassEntry())) {
-					boolean wasMoved = renamer.moveFieldToObfClass(classMapping, fieldMapping, resolvedObfClassEntry);
-					if (wasMoved) {
-						System.out.println(String.format("Moved field %s to class %s", fieldEntry, resolvedObfClassEntry));
-					} else {
-						System.err.println(String.format("WARNING: Would move field %s to class %s but the field was already there. Dropping instead.", fieldEntry, resolvedObfClassEntry));
-					}
-				}
-			}
-			
-			// methods
-			for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
-				// skip constructors
-				if (methodMapping.isConstructor()) {
-					continue;
-				}
-				
-				MethodEntry methodEntry = new MethodEntry(
-					obfClassEntry,
-					methodMapping.getObfName(),
-					methodMapping.getObfSignature()
-				);
-				ClassEntry resolvedObfClassEntry = m_jarIndex.getTranslationIndex().resolveEntryClass(methodEntry);
-				if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(methodEntry.getClassEntry())) {
-					boolean wasMoved = renamer.moveMethodToObfClass(classMapping, methodMapping, resolvedObfClassEntry);
-					if (wasMoved) {
-						System.out.println(String.format("Moved method %s to class %s", methodEntry, resolvedObfClassEntry));
-					} else {
-						System.err.println(String.format("WARNING: Would move method %s to class %s but the method was already there. Dropping instead.", methodEntry, resolvedObfClassEntry));
-					}
-				}
-			}
-			
-			// TODO: recurse to inner classes?
-		}
-		
 		// drop mappings that don't match the jar
-		List<ClassEntry> unknownClasses = Lists.newArrayList();
-		for (ClassMapping classMapping : val.classes()) {
-			checkClassMapping(unknownClasses, classMapping);
-		}
-		if (!unknownClasses.isEmpty()) {
-			throw new Error("Unable to find classes in jar: " + unknownClasses);
+		for (ClassMapping classMapping : Lists.newArrayList(val.classes())) {
+			if (!checkClassMapping(classMapping)) {
+				val.removeClassMapping(classMapping);
+			}
 		}
 		
 		m_mappings = val;
-		m_renamer = renamer;
+		m_renamer = new MappingsRenamer(m_jarIndex, val);
 		m_translatorCache.clear();
 	}
 	
-	private void checkClassMapping(List<ClassEntry> unknownClasses, ClassMapping classMapping) {
+	private boolean checkClassMapping(ClassMapping classMapping) {
+		
 		// check the class
 		ClassEntry classEntry = new ClassEntry(classMapping.getObfName());
 		String outerClassName = m_jarIndex.getOuterClass(classEntry.getSimpleName());
@@ -201,7 +135,7 @@ public class Deobfuscator {
 			classEntry = new ClassEntry(outerClassName + "$" + classMapping.getObfName());
 		}
 		if (!m_jarIndex.getObfClassEntries().contains(classEntry)) {
-			unknownClasses.add(classEntry);
+			return false;
 		}
 		
 		// check the fields
@@ -224,8 +158,13 @@ public class Deobfuscator {
 		
 		// check inner classes
 		for (ClassMapping innerClassMapping : classMapping.innerClasses()) {
-			checkClassMapping(unknownClasses, innerClassMapping);
+			if (!checkClassMapping(innerClassMapping)) {
+				System.err.println("WARNING: unable to find inner class " + innerClassMapping + ". dropping mapping.");
+				classMapping.removeInnerClassMapping(innerClassMapping);
+			}
 		}
+		
+		return true;
 	}
 	
 	public Translator getTranslator(TranslationDirection direction) {
