@@ -66,11 +66,11 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		if (ref instanceof MethodReference) {
 			MethodReference methodRef = (MethodReference)ref;
 			if (methodRef.isConstructor()) {
-				behaviorEntry = new ConstructorEntry(classEntry, new Signature(ref.getSignature()));
+				behaviorEntry = new ConstructorEntry(classEntry, new Signature(ref.getErasedSignature()));
 			} else if (methodRef.isTypeInitializer()) {
 				behaviorEntry = new ConstructorEntry(classEntry);
 			} else {
-				behaviorEntry = new MethodEntry(classEntry, ref.getName(), new Signature(ref.getSignature()));
+				behaviorEntry = new MethodEntry(classEntry, ref.getName(), new Signature(ref.getErasedSignature()));
 			}
 		}
 		if (behaviorEntry != null) {
@@ -96,12 +96,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
 			// make sure this is actually a field
-			if (ref.getSignature().indexOf('(') >= 0) {
+			if (ref.getErasedSignature().indexOf('(') >= 0) {
 				throw new Error("Expected a field here! got " + ref);
 			}
 			
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getSignature()));
+			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
 			index.addReference(node.getMemberNameToken(), fieldEntry, m_behaviorEntry);
 		}
 		
@@ -141,7 +141,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getSignature()));
+			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
 			index.addReference(node.getIdentifierToken(), fieldEntry, m_behaviorEntry);
 		}
 		
@@ -153,7 +153,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			ConstructorEntry constructorEntry = new ConstructorEntry(classEntry, new Signature(ref.getSignature()));
+			ConstructorEntry constructorEntry = new ConstructorEntry(classEntry, new Signature(ref.getErasedSignature()));
 			if (node.getType() instanceof SimpleType) {
 				SimpleType simpleTypeNode = (SimpleType)node.getType();
 				index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, m_behaviorEntry);

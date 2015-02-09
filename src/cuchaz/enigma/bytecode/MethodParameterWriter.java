@@ -18,6 +18,7 @@ import javassist.CtClass;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.BehaviorEntryFactory;
+import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Translator;
 
 public class MethodParameterWriter {
@@ -35,7 +36,12 @@ public class MethodParameterWriter {
 			BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(behavior);
 
 			// get the number of arguments
-			int numParams = behaviorEntry.getSignature().getArgumentTypes().size();
+			Signature signature = behaviorEntry.getSignature();
+			if (signature == null) {
+				// static initializers have no signatures, or arguments
+				continue;
+			}
+			int numParams = signature.getArgumentTypes().size();
 			if (numParams <= 0) {
 				continue;
 			}

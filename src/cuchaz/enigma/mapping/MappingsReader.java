@@ -19,11 +19,13 @@ import com.google.common.collect.Queues;
 
 public class MappingsReader {
 	
-	public Mappings read(Reader in) throws IOException, MappingParseException {
+	public Mappings read(Reader in)
+	throws IOException, MappingParseException {
 		return read(new BufferedReader(in));
 	}
 	
-	public Mappings read(BufferedReader in) throws IOException, MappingParseException {
+	public Mappings read(BufferedReader in)
+	throws IOException, MappingParseException {
 		Mappings mappings = new Mappings();
 		Deque<Object> mappingStack = Queues.newArrayDeque();
 		
@@ -64,42 +66,41 @@ public class MappingsReader {
 				
 				if (token.equalsIgnoreCase("CLASS")) {
 					ClassMapping classMapping;
-					if (indent == 0) {
+					if (indent <= 0) {
 						// outer class
 						classMapping = readClass(parts, false);
 						mappings.addClassMapping(classMapping);
-					} else if (indent == 1) {
+					} else {
+						
 						// inner class
-						if (! (mappingStack.getFirst() instanceof ClassMapping)) {
+						if (!(mappingStack.peek() instanceof ClassMapping)) {
 							throw new MappingParseException(lineNumber, "Unexpected CLASS entry here!");
 						}
 						
 						classMapping = readClass(parts, true);
-						((ClassMapping)mappingStack.getFirst()).addInnerClassMapping(classMapping);
-					} else {
-						throw new MappingParseException(lineNumber, "Unexpected CLASS entry nesting!");
+						((ClassMapping)mappingStack.peek()).addInnerClassMapping(classMapping);
 					}
 					mappingStack.push(classMapping);
 				} else if (token.equalsIgnoreCase("FIELD")) {
-					if (mappingStack.isEmpty() || ! (mappingStack.getFirst() instanceof ClassMapping)) {
+					if (mappingStack.isEmpty() || ! (mappingStack.peek() instanceof ClassMapping)) {
 						throw new MappingParseException(lineNumber, "Unexpected FIELD entry here!");
 					}
-					((ClassMapping)mappingStack.getFirst()).addFieldMapping(readField(parts));
+					((ClassMapping)mappingStack.peek()).addFieldMapping(readField(parts));
 				} else if (token.equalsIgnoreCase("METHOD")) {
-					if (mappingStack.isEmpty() || ! (mappingStack.getFirst() instanceof ClassMapping)) {
+					if (mappingStack.isEmpty() || ! (mappingStack.peek() instanceof ClassMapping)) {
 						throw new MappingParseException(lineNumber, "Unexpected METHOD entry here!");
 					}
 					MethodMapping methodMapping = readMethod(parts);
-					((ClassMapping)mappingStack.getFirst()).addMethodMapping(methodMapping);
+					((ClassMapping)mappingStack.peek()).addMethodMapping(methodMapping);
 					mappingStack.push(methodMapping);
 				} else if (token.equalsIgnoreCase("ARG")) {
-					if (mappingStack.isEmpty() || ! (mappingStack.getFirst() instanceof MethodMapping)) {
+					if (mappingStack.isEmpty() || ! (mappingStack.peek() instanceof MethodMapping)) {
 						throw new MappingParseException(lineNumber, "Unexpected ARG entry here!");
 					}
-					((MethodMapping)mappingStack.getFirst()).addArgumentMapping(readArgument(parts));
+					((MethodMapping)mappingStack.peek()).addArgumentMapping(readArgument(parts));
 				}
-			} catch (ArrayIndexOutOfBoundsException | NumberFormatException ex) {
-				throw new MappingParseException(lineNumber, "Malformed line!");
+			} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) {
+				throw new MappingParseException(lineNumber, "Malformed line:\n" + line);
 			}
 		}
 		
@@ -118,7 +119,8 @@ public class MappingsReader {
 		}
 	}
 	
-	private FieldMapping readField(String[] parts) {
+	/* TEMP */
+	protected FieldMapping readField(String[] parts) {
 		return new FieldMapping(parts[1], new Type(parts[3]), parts[2]);
 	}
 	
