@@ -55,7 +55,8 @@ public class ClassTranslator {
 					// translate the name
 					FieldEntry entry = new FieldEntry(
 						new ClassEntry(Descriptor.toJvmName(constants.getFieldrefClassName(i))),
-						constants.getFieldrefName(i)
+						constants.getFieldrefName(i),
+						new Type(constants.getFieldrefType(i))
 					);
 					FieldEntry translatedEntry = m_translator.translateEntry(entry);
 					
@@ -94,7 +95,7 @@ public class ClassTranslator {
 		for (CtField field : c.getDeclaredFields()) {
 			
 			// translate the name
-			FieldEntry entry = new FieldEntry(classEntry, field.getName());
+			FieldEntry entry = JavassistUtil.getFieldEntry(field);
 			String translatedName = m_translator.translate(entry);
 			if (translatedName != null) {
 				field.setName(translatedName);

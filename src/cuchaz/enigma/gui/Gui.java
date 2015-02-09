@@ -874,6 +874,7 @@ public class Gui {
 	private void showFieldEntry(FieldEntry entry) {
 		addNameValue(m_infoPanel, "Field", entry.getName());
 		addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
+		addNameValue(m_infoPanel, "Type", entry.getType().toString());
 	}
 	
 	private void showMethodEntry(MethodEntry entry) {

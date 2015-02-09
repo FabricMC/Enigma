@@ -18,10 +18,12 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping> {
 	
 	private String m_obfName;
 	private String m_deobfName;
+	private Type m_obfType;
 	
-	public FieldMapping(String obfName, String deobfName) {
+	public FieldMapping(String obfName, Type obfType, String deobfName) {
 		m_obfName = obfName;
 		m_deobfName = NameValidator.validateFieldName(deobfName);
+		m_obfType = obfType;
 	}
 	
 	public String getObfName() {
@@ -36,8 +38,12 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping> {
 		m_deobfName = NameValidator.validateFieldName(val);
 	}
 	
+	public Type getObfType() {
+		return m_obfType;
+	}
+	
 	@Override
 	public int compareTo(FieldMapping other) {
-		return m_obfName.compareTo(other.m_obfName);
+		return (m_obfName + m_obfType).compareTo(other.m_obfName + other.m_obfType);
 	}
 }

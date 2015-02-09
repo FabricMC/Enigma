@@ -141,7 +141,7 @@ public class Deobfuscator {
 			
 			// fields
 			for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
-				FieldEntry fieldEntry = new FieldEntry(obfClassEntry, fieldMapping.getObfName());
+				FieldEntry fieldEntry = new FieldEntry(obfClassEntry, fieldMapping.getObfName(), fieldMapping.getObfType());
 				ClassEntry resolvedObfClassEntry = m_jarIndex.getTranslationIndex().resolveEntryClass(fieldEntry);
 				if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(fieldEntry.getClassEntry())) {
 					boolean wasMoved = renamer.moveFieldToObfClass(classMapping, fieldMapping, resolvedObfClassEntry);
@@ -206,7 +206,7 @@ public class Deobfuscator {
 		
 		// check the fields
 		for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
-			FieldEntry fieldEntry = new FieldEntry(classEntry, fieldMapping.getObfName());
+			FieldEntry fieldEntry = new FieldEntry(classEntry, fieldMapping.getObfName(), fieldMapping.getObfType());
 			if (!m_jarIndex.containsObfField(fieldEntry)) {
 				System.err.println("WARNING: unable to find field " + fieldEntry + ". dropping mapping.");
 				classMapping.removeFieldMapping(fieldMapping);

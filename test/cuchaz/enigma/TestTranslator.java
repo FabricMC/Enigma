@@ -35,5 +35,8 @@ public class TestTranslator {
 	throws Exception {
 		Translator translator = m_deobfuscator.getTranslator(TranslationDirection.Deobfuscating);
 		assertThat(translator.translateEntry(newClass("none/a")), is(newClass("deobf/A")));
+		assertThat(translator.translateEntry(newField("none/a", "a", "I")), is(newField("deobf/A", "one", "I")));
+		assertThat(translator.translateEntry(newField("none/a", "a", "F")), is(newField("deobf/A", "two", "F")));
+		assertThat(translator.translateEntry(newField("none/a", "a", "Ljava/lang/String;")), is(newField("deobf/A", "three", "Ljava/lang/String;")));
 	}
 }

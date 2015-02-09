@@ -1,4 +1,4 @@
 CLASS none/a deobf/A
-	FIELD a one
-	FIELD b two
-	FIELD c three
+	FIELD a one I
+	FIELD a two F
+	FIELD a three Ljava/lang/String;

@@ -50,7 +50,7 @@ public class MappingsWriter {
 	}
 	
 	private void write(PrintWriter out, FieldMapping fieldMapping, int depth) throws IOException {
-		out.format("%sFIELD %s %s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName());
+		out.format("%sFIELD %s %s %s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName(), fieldMapping.getObfType().toString());
 	}
 	
 	private void write(PrintWriter out, MethodMapping methodMapping, int depth) throws IOException {

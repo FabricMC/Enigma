@@ -76,23 +76,23 @@ public class MappingsRenamer {
 	
 	public void setFieldName(FieldEntry obf, String deobfName) {
 		deobfName = NameValidator.validateFieldName(deobfName);
-		FieldEntry targetEntry = new FieldEntry(obf.getClassEntry(), deobfName);
-		if (m_mappings.containsDeobfField(obf.getClassEntry(), deobfName) || m_index.containsObfField(targetEntry)) {
+		FieldEntry targetEntry = new FieldEntry(obf.getClassEntry(), deobfName, obf.getType());
+		if (m_mappings.containsDeobfField(obf.getClassEntry(), deobfName, obf.getType()) || m_index.containsObfField(targetEntry)) {
 			throw new IllegalNameException(deobfName, "There is already a field with that name");
 		}
 		
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping(obf.getClassEntry());
-		classMapping.setFieldName(obf.getName(), deobfName);
+		classMapping.setFieldName(obf.getName(), obf.getType(), deobfName);
 	}
 	
 	public void removeFieldMapping(FieldEntry obf) {
 		ClassMapping classMapping = getClassMappingOrInnerClassMapping(obf.getClassEntry());
-		classMapping.setFieldName(obf.getName(), null);
+		classMapping.setFieldName(obf.getName(), obf.getType(), null);
 	}
 	
 	public void markFieldAsDeobfuscated(FieldEntry obf) {
 		ClassMapping classMapping = getOrCreateClassMappingOrInnerClassMapping(obf.getClassEntry());
-		classMapping.setFieldName(obf.getName(), obf.getName());
+		classMapping.setFieldName(obf.getName(), obf.getType(), obf.getName());
 	}
 	
 	public void setMethodTreeName(MethodEntry obf, String deobfName) {
@@ -171,8 +171,8 @@ public class MappingsRenamer {
 	public boolean moveFieldToObfClass(ClassMapping classMapping, FieldMapping fieldMapping, ClassEntry obfClass) {
 		classMapping.removeFieldMapping(fieldMapping);
 		ClassMapping targetClassMapping = getOrCreateClassMapping(obfClass);
-		if (!targetClassMapping.containsObfField(fieldMapping.getObfName())) {
-			if (!targetClassMapping.containsDeobfField(fieldMapping.getDeobfName())) {
+		if (!targetClassMapping.containsObfField(fieldMapping.getObfName(), fieldMapping.getObfType())) {
+			if (!targetClassMapping.containsDeobfField(fieldMapping.getDeobfName(), fieldMapping.getObfType())) {
 				targetClassMapping.addFieldMapping(fieldMapping);
 				return true;
 			} else {

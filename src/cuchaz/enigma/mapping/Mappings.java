@@ -162,10 +162,10 @@ public class Mappings implements Serializable {
 		return m_classesByDeobf.containsKey(deobfName);
 	}
 	
-	public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName) {
+	public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName, Type obfType) {
 		ClassMapping classMapping = m_classesByObf.get(obfClassEntry.getName());
 		if (classMapping != null) {
-			return classMapping.containsDeobfField(deobfName);
+			return classMapping.containsDeobfField(deobfName, obfType);
 		}
 		return false;
 	}

@@ -112,8 +112,8 @@ public class Translator {
 				
 				// look for the field
 				String translatedName = m_direction.choose(
-					classMapping.getDeobfFieldName(in.getName()),
-					classMapping.getObfFieldName(in.getName())
+					classMapping.getDeobfFieldName(in.getName(), in.getType()),
+					classMapping.getObfFieldName(in.getName(), translateType(in.getType()))
 				);
 				if (translatedName != null) {
 					return translatedName;
@@ -128,7 +128,7 @@ public class Translator {
 		if (name == null) {
 			name = in.getName();
 		}
-		return new FieldEntry(translateEntry(in.getClassEntry()), name);
+		return new FieldEntry(translateEntry(in.getClassEntry()), name, translateType(in.getType()));
 	}
 	
 	public String translate(MethodEntry in) {

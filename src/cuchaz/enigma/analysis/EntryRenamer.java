@@ -21,10 +21,13 @@ import com.google.common.collect.Sets;
 
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ClassNameReplacer;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
+import cuchaz.enigma.mapping.Signature;
+import cuchaz.enigma.mapping.Type;
 
 public class EntryRenamer {
 	
@@ -127,7 +130,7 @@ public class EntryRenamer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> T renameClassesInThing(Map<String,String> renames, T thing) {
+	public static <T> T renameClassesInThing(final Map<String,String> renames, T thing) {
 		if (thing instanceof String) {
 			String stringEntry = (String)thing;
 			if (renames.containsKey(stringEntry)) {
@@ -138,19 +141,23 @@ public class EntryRenamer {
 			return (T)new ClassEntry(renameClassesInThing(renames, classEntry.getClassName()));
 		} else if (thing instanceof FieldEntry) {
 			FieldEntry fieldEntry = (FieldEntry)thing;
-			return (T)new FieldEntry(renameClassesInThing(renames, fieldEntry.getClassEntry()), fieldEntry.getName());
+			return (T)new FieldEntry(
+				renameClassesInThing(renames, fieldEntry.getClassEntry()),
+				fieldEntry.getName(),
+				renameClassesInThing(renames, fieldEntry.getType())
+			);
 		} else if (thing instanceof ConstructorEntry) {
 			ConstructorEntry constructorEntry = (ConstructorEntry)thing;
 			return (T)new ConstructorEntry(
 				renameClassesInThing(renames, constructorEntry.getClassEntry()),
-				constructorEntry.getSignature()
+				renameClassesInThing(renames, constructorEntry.getSignature())
 			);
 		} else if (thing instanceof MethodEntry) {
 			MethodEntry methodEntry = (MethodEntry)thing;
 			return (T)new MethodEntry(
 				renameClassesInThing(renames, methodEntry.getClassEntry()),
 				methodEntry.getName(),
-				methodEntry.getSignature()
+				renameClassesInThing(renames, methodEntry.getSignature())
 			);
 		} else if (thing instanceof ArgumentEntry) {
 			ArgumentEntry argumentEntry = (ArgumentEntry)thing;
@@ -164,6 +171,20 @@ public class EntryRenamer {
 			reference.entry = renameClassesInThing(renames, reference.entry);
 			reference.context = renameClassesInThing(renames, reference.context);
 			return thing;
+		} else if (thing instanceof Signature) {
+			return (T)new Signature((Signature)thing, new ClassNameReplacer() {
+				@Override
+				public String replace(String className) {
+					return renameClassesInThing(renames, className);
+				}
+			});
+		} else if (thing instanceof Type) {
+			return (T)new Type((Type)thing, new ClassNameReplacer() {
+				@Override
+				public String replace(String className) {
+					return renameClassesInThing(renames, className);
+				}
+			});
 		}
 		
 		return thing;

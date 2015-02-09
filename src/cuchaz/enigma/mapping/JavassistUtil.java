@@ -70,14 +70,16 @@ public class JavassistUtil {
 	public static FieldEntry getFieldEntry(CtField field) {
 		return new FieldEntry(
 			getClassEntry(field.getDeclaringClass()),
-			field.getName()
+			field.getName(),
+			new Type(field.getFieldInfo().getDescriptor())
 		);
 	}
 	
 	public static FieldEntry getFieldEntry(FieldAccess call) {
 		return new FieldEntry(
 			new ClassEntry(Descriptor.toJvmName(call.getClassName())),
-			call.getFieldName()
+			call.getFieldName(),
+			new Type(call.getSignature())
 		);
 	}
 }

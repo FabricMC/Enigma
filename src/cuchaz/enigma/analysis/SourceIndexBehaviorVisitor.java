@@ -36,6 +36,7 @@ import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Signature;
+import cuchaz.enigma.mapping.Type;
 
 public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	
@@ -100,7 +101,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 			}
 			
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName());
+			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getSignature()));
 			index.addReference(node.getMemberNameToken(), fieldEntry, m_behaviorEntry);
 		}
 		
@@ -140,7 +141,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName());
+			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getSignature()));
 			index.addReference(node.getIdentifierToken(), fieldEntry, m_behaviorEntry);
 		}
 		

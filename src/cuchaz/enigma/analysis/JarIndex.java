@@ -57,7 +57,6 @@ public class JarIndex {
 	private TranslationIndex m_translationIndex;
 	private Multimap<String,String> m_interfaces;
 	private Map<Entry,Access> m_access;
-	private Map<FieldEntry,ClassEntry> m_fieldClasses; // TODO: this will become obsolete!
 	private Multimap<String,MethodEntry> m_methodImplementations;
 	private Multimap<BehaviorEntry,EntryReference<BehaviorEntry,BehaviorEntry>> m_behaviorReferences;
 	private Multimap<FieldEntry,EntryReference<FieldEntry,BehaviorEntry>> m_fieldReferences;
@@ -70,7 +69,6 @@ public class JarIndex {
 		m_translationIndex = new TranslationIndex();
 		m_interfaces = HashMultimap.create();
 		m_access = Maps.newHashMap();
-		m_fieldClasses = Maps.newHashMap();
 		m_methodImplementations = HashMultimap.create();
 		m_behaviorReferences = HashMultimap.create();
 		m_fieldReferences = HashMultimap.create();
@@ -113,9 +111,6 @@ public class JarIndex {
 					throw new IllegalArgumentException("Class cannot be its own interface! " + className);
 				}
 				m_interfaces.put(className, interfaceName);
-			}
-			for (CtField field : c.getDeclaredFields()) {
-				indexField(field);
 			}
 			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 				indexBehavior(behavior);
@@ -169,18 +164,6 @@ public class JarIndex {
 		}
 	}
 	
-	private void indexField(CtField field) {
-		// get the field entry
-		String className = Descriptor.toJvmName(field.getDeclaringClass().getName());
-		FieldEntry fieldEntry = new FieldEntry(new ClassEntry(className), field.getName());
-		
-		// is the field a class type?
-		if (field.getSignature().startsWith("L")) {
-			ClassEntry fieldTypeEntry = new ClassEntry(field.getSignature().substring(1, field.getSignature().length() - 1));
-			m_fieldClasses.put(fieldEntry, fieldTypeEntry);
-		}
-	}
-	
 	private void indexBehavior(CtBehavior behavior) {
 		// get the behavior entry
 		final BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(behavior);
@@ -222,7 +205,7 @@ public class JarIndex {
 					FieldEntry calledFieldEntry = JavassistUtil.getFieldEntry(call);
 					ClassEntry resolvedClassEntry = m_translationIndex.resolveEntryClass(calledFieldEntry);
 					if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledFieldEntry.getClassEntry())) {
-						calledFieldEntry = new FieldEntry(resolvedClassEntry, call.getFieldName());
+						calledFieldEntry = new FieldEntry(calledFieldEntry, resolvedClassEntry);
 					}
 					EntryReference<FieldEntry,BehaviorEntry> reference = new EntryReference<FieldEntry,BehaviorEntry>(
 						calledFieldEntry,
@@ -448,8 +431,7 @@ public class JarIndex {
 		// does the caller use this type?
 		BehaviorEntry caller = references.iterator().next().context;
 		for (FieldEntry fieldEntry : getReferencedFields(caller)) {
-			ClassEntry fieldClass = getFieldClass(fieldEntry);
-			if (fieldClass != null && fieldClass.equals(innerClassEntry)) {
+			if (fieldEntry.getType().hasClass() && fieldEntry.getType().getClassEntry().equals(innerClassEntry)) {
 				// caller references this type, so it can't be anonymous
 				return null;
 			}
@@ -473,10 +455,6 @@ public class JarIndex {
 	
 	public Access getAccess(Entry entry) {
 		return m_access.get(entry);
-	}
-	
-	public ClassEntry getFieldClass(FieldEntry fieldEntry) {
-		return m_fieldClasses.get(fieldEntry);
 	}
 	
 	public ClassInheritanceTreeNode getClassInheritance(Translator deobfuscatingTranslator, ClassEntry obfClassEntry) {

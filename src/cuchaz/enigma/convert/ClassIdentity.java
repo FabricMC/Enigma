@@ -116,7 +116,7 @@ public class ClassIdentity {
 		m_references = HashMultiset.create();
 		if (useReferences) {
 			for (CtField field : c.getDeclaredFields()) {
-				FieldEntry fieldEntry = new FieldEntry(m_classEntry, field.getName());
+				FieldEntry fieldEntry = JavassistUtil.getFieldEntry(field);
 				for (EntryReference<FieldEntry,BehaviorEntry> reference : index.getFieldReferences(fieldEntry)) {
 					addReference(reference);
 				}

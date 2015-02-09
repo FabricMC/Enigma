@@ -17,8 +17,6 @@ import java.util.Deque;
 
 import com.google.common.collect.Queues;
 
-import cuchaz.enigma.Constants;
-
 public class MappingsReader {
 	
 	public Mappings read(Reader in) throws IOException, MappingParseException {
@@ -114,62 +112,21 @@ public class MappingsReader {
 	
 	private ClassMapping readClass(String[] parts, boolean makeSimple) {
 		if (parts.length == 2) {
-			String obfName = processName(parts[1], makeSimple);
-			return new ClassMapping(obfName);
+			return new ClassMapping(parts[1]);
 		} else {
-			String obfName = processName(parts[1], makeSimple);
-			String deobfName = processName(parts[2], makeSimple);
-			return new ClassMapping(obfName, deobfName);
+			return new ClassMapping(parts[1], parts[2]);
 		}
-	}
-	
-	private String processName(String name, boolean makeSimple) {
-		if (makeSimple) {
-			return new ClassEntry(name).getSimpleName();
-		} else {
-			return moveClassOutOfDefaultPackage(name, Constants.NonePackage);
-		}
-	}
-	
-	private String moveClassOutOfDefaultPackage(String className, String newPackageName) {
-		ClassEntry classEntry = new ClassEntry(className);
-		if (classEntry.isInDefaultPackage()) {
-			return newPackageName + "/" + classEntry.getName();
-		}
-		return className;
 	}
 	
 	private FieldMapping readField(String[] parts) {
-		return new FieldMapping(parts[1], parts[2]);
+		return new FieldMapping(parts[1], new Type(parts[3]), parts[2]);
 	}
 	
 	private MethodMapping readMethod(String[] parts) {
 		if (parts.length == 3) {
-			String obfName = parts[1];
-			Signature obfSignature = moveSignatureOutOfDefaultPackage(new Signature(parts[2]), Constants.NonePackage);
-			return new MethodMapping(obfName, obfSignature);
+			return new MethodMapping(parts[1], new Signature(parts[2]));
 		} else {
-			String obfName = parts[1];
-			String deobfName = parts[2];
-			Signature obfSignature = moveSignatureOutOfDefaultPackage(new Signature(parts[3]), Constants.NonePackage);
-			if (obfName.equals(deobfName)) {
-				return new MethodMapping(obfName, obfSignature);
-			} else {
-				return new MethodMapping(obfName, obfSignature, deobfName);
-			}
+			return new MethodMapping(parts[1], new Signature(parts[3]), parts[2]);
 		}
-	}
-	
-	private Signature moveSignatureOutOfDefaultPackage(Signature signature, final String newPackageName) {
-		return new Signature(signature, new ClassNameReplacer() {
-			@Override
-			public String replace(String className) {
-				ClassEntry classEntry = new ClassEntry(className);
-				if (classEntry.isInDefaultPackage()) {
-					return newPackageName + "/" + className;
-				}
-				return null;
-			}
-		});
 	}
 }

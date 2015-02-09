@@ -37,8 +37,8 @@ public class TestJarIndexInheritanceTree {
 	private ClassEntry m_subClassA = newClass("none/b");
 	private ClassEntry m_subClassAA = newClass("none/d");
 	private ClassEntry m_subClassB = newClass("none/c");
-	private FieldEntry m_nameField = new FieldEntry(m_baseClass, "a");
-	private FieldEntry m_numThingsField = new FieldEntry(m_subClassB, "a");
+	private FieldEntry m_nameField = newField(m_baseClass, "a", "Ljava/lang/String;");
+	private FieldEntry m_numThingsField = newField(m_subClassB, "a", "I");
 	
 	public TestJarIndexInheritanceTree()
 	throws Exception {

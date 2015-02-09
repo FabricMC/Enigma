@@ -64,9 +64,10 @@ public class TestJarIndexLoneClass {
 	
 	@Test
 	public void access() {
-		assertThat(m_index.getAccess(newField("none/a", "a")), is(Access.Private));
+		assertThat(m_index.getAccess(newField("none/a", "a", "Ljava/lang/String;")), is(Access.Private));
 		assertThat(m_index.getAccess(newMethod("none/a", "a", "()Ljava/lang/String;")), is(Access.Public));
-		assertThat(m_index.getAccess(newField("none/a", "b")), is(nullValue()));
+		assertThat(m_index.getAccess(newField("none/a", "b", "Ljava/lang/String;")), is(nullValue()));
+		assertThat(m_index.getAccess(newField("none/a", "a", "LFoo;")), is(nullValue()));
 	}
 	
 	@Test
@@ -110,7 +111,7 @@ public class TestJarIndexLoneClass {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void fieldReferences() {
-		FieldEntry source = newField("none/a", "a");
+		FieldEntry source = newField("none/a", "a", "Ljava/lang/String;");
 		Collection<EntryReference<FieldEntry,BehaviorEntry>> references = m_index.getFieldReferences(source);
 		assertThat(references, containsInAnyOrder(
 			newFieldReferenceByConstructor(source, "none/a", "(Ljava/lang/String;)V"),
@@ -157,8 +158,9 @@ public class TestJarIndexLoneClass {
 	public void contains() {
 		assertThat(m_index.containsObfClass(newClass("none/a")), is(true));
 		assertThat(m_index.containsObfClass(newClass("none/b")), is(false));
-		assertThat(m_index.containsObfField(newField("none/a", "a")), is(true));
-		assertThat(m_index.containsObfField(newField("none/a", "b")), is(false));
+		assertThat(m_index.containsObfField(newField("none/a", "a", "Ljava/lang/String;")), is(true));
+		assertThat(m_index.containsObfField(newField("none/a", "b", "Ljava/lang/String;")), is(false));
+		assertThat(m_index.containsObfField(newField("none/a", "a", "LFoo;")), is(false));
 		assertThat(m_index.containsObfBehavior(newMethod("none/a", "a", "()Ljava/lang/String;")), is(true));
 		assertThat(m_index.containsObfBehavior(newMethod("none/a", "b", "()Ljava/lang/String;")), is(false));
 	}

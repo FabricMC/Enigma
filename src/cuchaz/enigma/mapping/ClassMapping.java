@@ -152,77 +152,91 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		return m_fieldsByObf.values();
 	}
 	
-	public boolean containsObfField(String obfName) {
-		return m_fieldsByObf.containsKey(obfName);
+	public boolean containsObfField(String obfName, Type obfType) {
+		return m_fieldsByObf.containsKey(getFieldKey(obfName, obfType));
 	}
 	
-	public boolean containsDeobfField(String deobfName) {
-		return m_fieldsByDeobf.containsKey(deobfName);
+	public boolean containsDeobfField(String deobfName, Type deobfType) {
+		return m_fieldsByDeobf.containsKey(getFieldKey(deobfName, deobfType));
 	}
 	
 	public void addFieldMapping(FieldMapping fieldMapping) {
-		if (m_fieldsByObf.containsKey(fieldMapping.getObfName())) {
-			throw new Error("Already have mapping for " + m_obfName + "." + fieldMapping.getObfName());
+		String obfKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
+		if (m_fieldsByObf.containsKey(obfKey)) {
+			throw new Error("Already have mapping for " + m_obfName + "." + obfKey);
 		}
-		if (m_fieldsByDeobf.containsKey(fieldMapping.getDeobfName())) {
-			throw new Error("Already have mapping for " + m_deobfName + "." + fieldMapping.getDeobfName());
+		String deobfKey = getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfType());
+		if (m_fieldsByDeobf.containsKey(deobfKey)) {
+			throw new Error("Already have mapping for " + m_deobfName + "." + deobfKey);
 		}
-		boolean obfWasAdded = m_fieldsByObf.put(fieldMapping.getObfName(), fieldMapping) == null;
+		boolean obfWasAdded = m_fieldsByObf.put(obfKey, fieldMapping) == null;
 		assert (obfWasAdded);
-		boolean deobfWasAdded = m_fieldsByDeobf.put(fieldMapping.getDeobfName(), fieldMapping) == null;
+		boolean deobfWasAdded = m_fieldsByDeobf.put(deobfKey, fieldMapping) == null;
 		assert (deobfWasAdded);
 		assert (m_fieldsByObf.size() == m_fieldsByDeobf.size());
 	}
 	
 	public void removeFieldMapping(FieldMapping fieldMapping) {
-		boolean obfWasRemoved = m_fieldsByObf.remove(fieldMapping.getObfName()) != null;
+		boolean obfWasRemoved = m_fieldsByObf.remove(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType())) != null;
 		assert (obfWasRemoved);
 		if (fieldMapping.getDeobfName() != null) {
-			boolean deobfWasRemoved = m_fieldsByDeobf.remove(fieldMapping.getDeobfName()) != null;
+			boolean deobfWasRemoved = m_fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfType())) != null;
 			assert (deobfWasRemoved);
 		}
 	}
 	
-	public FieldMapping getFieldByObf(String obfName) {
-		return m_fieldsByObf.get(obfName);
+	public FieldMapping getFieldByObf(String obfName, Type obfType) {
+		return m_fieldsByObf.get(getFieldKey(obfName, obfType));
 	}
 	
-	public FieldMapping getFieldByDeobf(String deobfName) {
-		return m_fieldsByDeobf.get(deobfName);
+	public FieldMapping getFieldByDeobf(String deobfName, Type obfType) {
+		return m_fieldsByDeobf.get(getFieldKey(deobfName, obfType));
 	}
 	
-	public String getObfFieldName(String deobfName) {
-		FieldMapping fieldMapping = m_fieldsByDeobf.get(deobfName);
+	public String getObfFieldName(String deobfName, Type obfType) {
+		FieldMapping fieldMapping = m_fieldsByDeobf.get(getFieldKey(deobfName, obfType));
 		if (fieldMapping != null) {
 			return fieldMapping.getObfName();
 		}
 		return null;
 	}
 	
-	public String getDeobfFieldName(String obfName) {
-		FieldMapping fieldMapping = m_fieldsByObf.get(obfName);
+	public String getDeobfFieldName(String obfName, Type obfType) {
+		FieldMapping fieldMapping = m_fieldsByObf.get(getFieldKey(obfName, obfType));
 		if (fieldMapping != null) {
 			return fieldMapping.getDeobfName();
 		}
 		return null;
 	}
 	
-	public void setFieldName(String obfName, String deobfName) {
-		FieldMapping fieldMapping = m_fieldsByObf.get(obfName);
+	private String getFieldKey(String name, Type type) {
+		if (name == null) {
+			throw new IllegalArgumentException("name cannot be null!");
+		}
+		if (type == null) {
+			throw new IllegalArgumentException("type cannot be null!");
+		}
+		return name + ":" + type;
+	}
+	
+	
+	public void setFieldName(String obfName, Type obfType, String deobfName) {
+		FieldMapping fieldMapping = m_fieldsByObf.get(getFieldKey(obfName, obfType));
 		if (fieldMapping == null) {
-			fieldMapping = new FieldMapping(obfName, deobfName);
-			boolean obfWasAdded = m_fieldsByObf.put(obfName, fieldMapping) == null;
+			fieldMapping = new FieldMapping(obfName, obfType, deobfName);
+			boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(obfName, obfType), fieldMapping) == null;
 			assert (obfWasAdded);
 		} else {
-			boolean wasRemoved = m_fieldsByDeobf.remove(fieldMapping.getDeobfName()) != null;
+			boolean wasRemoved = m_fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), obfType)) != null;
 			assert (wasRemoved);
 		}
 		fieldMapping.setDeobfName(deobfName);
 		if (deobfName != null) {
-			boolean wasAdded = m_fieldsByDeobf.put(deobfName, fieldMapping) == null;
+			boolean wasAdded = m_fieldsByDeobf.put(getFieldKey(deobfName, obfType), fieldMapping) == null;
 			assert (wasAdded);
 		}
 	}
+	
 	
 	//// METHODS ////////
 	
@@ -235,8 +249,8 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		return m_methodsByObf.containsKey(getMethodKey(obfName, obfSignature));
 	}
 	
-	public boolean containsDeobfMethod(String deobfName, Signature deobfSignature) {
-		return m_methodsByDeobf.containsKey(getMethodKey(deobfName, deobfSignature));
+	public boolean containsDeobfMethod(String deobfName, Signature obfSignature) {
+		return m_methodsByDeobf.containsKey(getMethodKey(deobfName, obfSignature));
 	}
 	
 	public void addMethodMapping(MethodMapping methodMapping) {
@@ -266,12 +280,12 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		}
 	}
 	
-	public MethodMapping getMethodByObf(String obfName, Signature signature) {
-		return m_methodsByObf.get(getMethodKey(obfName, signature));
+	public MethodMapping getMethodByObf(String obfName, Signature obfSignature) {
+		return m_methodsByObf.get(getMethodKey(obfName, obfSignature));
 	}
 	
-	public MethodMapping getMethodByDeobf(String deobfName, Signature signature) {
-		return m_methodsByDeobf.get(getMethodKey(deobfName, signature));
+	public MethodMapping getMethodByDeobf(String deobfName, Signature obfSignature) {
+		return m_methodsByDeobf.get(getMethodKey(deobfName, obfSignature));
 	}
 	
 	private String getMethodKey(String name, Signature signature) {
