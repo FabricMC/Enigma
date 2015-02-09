@@ -1,0 +1,4 @@
+CLASS none/a deobf/A
+	FIELD a one
+	FIELD b two
+	FIELD c three
