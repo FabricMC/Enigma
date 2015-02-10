@@ -1,4 +1,19 @@
-CLASS none/a deobf/A
-	FIELD a one I
-	FIELD a two F
-	FIELD a three Ljava/lang/String;
+CLASS none/a deobf/A_Basic
+	FIELD a f1 I
+	FIELD a f2 F
+	FIELD a f3 Ljava/lang/String;
+	METHOD a m1 ()V
+	METHOD a m2 ()I
+	METHOD a m3 (I)V
+	METHOD a m4 (I)I
+CLASS none/b deobf/B_BaseClass
+	FIELD a f1 I
+	FIELD a f2 C
+	METHOD a m1 ()I
+	METHOD b m2 ()I
+CLASS none/c deobf/C_SubClass
+	FIELD b f2 C
+	FIELD b f3 I
+	FIELD c f4 I
+	METHOD a m1 ()I
+	METHOD c m3 ()I

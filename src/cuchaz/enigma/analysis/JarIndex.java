@@ -42,12 +42,11 @@ import cuchaz.enigma.Constants;
 import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.JavassistUtil;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
 
@@ -92,10 +91,10 @@ public class JarIndex {
 		for (CtClass c : JarClassIterator.classes(jar)) {
 			ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
 			for (CtField field : c.getDeclaredFields()) {
-				m_access.put(JavassistUtil.getFieldEntry(field), Access.get(field));
+				m_access.put(EntryFactory.getFieldEntry(field), Access.get(field));
 			}
 			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-				m_access.put(JavassistUtil.getBehaviorEntry(behavior), Access.get(behavior));
+				m_access.put(EntryFactory.getBehaviorEntry(behavior), Access.get(behavior));
 			}
 		}
 		
@@ -166,7 +165,7 @@ public class JarIndex {
 	
 	private void indexBehavior(CtBehavior behavior) {
 		// get the behavior entry
-		final BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(behavior);
+		final BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
 		if (behaviorEntry instanceof MethodEntry) {
 			MethodEntry methodEntry = (MethodEntry)behaviorEntry;
 			
@@ -178,12 +177,12 @@ public class JarIndex {
 	
 	private void indexBehaviorReferences(CtBehavior behavior) {
 		// index method calls
-		final BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(behavior);
+		final BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
 		try {
 			behavior.instrument(new ExprEditor() {
 				@Override
 				public void edit(MethodCall call) {
-					MethodEntry calledMethodEntry = JavassistUtil.getMethodEntry(call);
+					MethodEntry calledMethodEntry = EntryFactory.getMethodEntry(call);
 					ClassEntry resolvedClassEntry = m_translationIndex.resolveEntryClass(calledMethodEntry);
 					if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledMethodEntry.getClassEntry())) {
 						calledMethodEntry = new MethodEntry(
@@ -202,7 +201,7 @@ public class JarIndex {
 				
 				@Override
 				public void edit(FieldAccess call) {
-					FieldEntry calledFieldEntry = JavassistUtil.getFieldEntry(call);
+					FieldEntry calledFieldEntry = EntryFactory.getFieldEntry(call);
 					ClassEntry resolvedClassEntry = m_translationIndex.resolveEntryClass(calledFieldEntry);
 					if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledFieldEntry.getClassEntry())) {
 						calledFieldEntry = new FieldEntry(calledFieldEntry, resolvedClassEntry);
@@ -217,7 +216,7 @@ public class JarIndex {
 				
 				@Override
 				public void edit(ConstructorCall call) {
-					ConstructorEntry calledConstructorEntry = JavassistUtil.getConstructorEntry(call);
+					ConstructorEntry calledConstructorEntry = EntryFactory.getConstructorEntry(call);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
 						call.getMethodName(),
@@ -228,7 +227,7 @@ public class JarIndex {
 				
 				@Override
 				public void edit(NewExpr call) {
-					ConstructorEntry calledConstructorEntry = JavassistUtil.getConstructorEntry(call);
+					ConstructorEntry calledConstructorEntry = EntryFactory.getConstructorEntry(call);
 					EntryReference<BehaviorEntry,BehaviorEntry> reference = new EntryReference<BehaviorEntry,BehaviorEntry>(
 						calledConstructorEntry,
 						call.getClassName(),
@@ -256,7 +255,7 @@ public class JarIndex {
 			}
 			
 			ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
-			ConstructorEntry constructorEntry = JavassistUtil.getConstructorEntry(constructor);
+			ConstructorEntry constructorEntry = EntryFactory.getConstructorEntry(constructor);
 			
 			// gather the classes from the illegally-set synthetic fields
 			Set<ClassEntry> illegallySetClasses = Sets.newHashSet();
@@ -422,7 +421,7 @@ public class JarIndex {
 		CtConstructor constructor = c.getDeclaredConstructors()[0];
 		
 		// is this constructor called exactly once?
-		ConstructorEntry constructorEntry = JavassistUtil.getConstructorEntry(constructor);
+		ConstructorEntry constructorEntry = EntryFactory.getConstructorEntry(constructor);
 		Collection<EntryReference<BehaviorEntry,BehaviorEntry>> references = getBehaviorReferences(constructorEntry);
 		if (references.size() != 1) {
 			return null;
@@ -520,17 +519,17 @@ public class JarIndex {
 		return rootNode;
 	}
 	
-	public MethodImplementationsTreeNode getMethodImplementations(Translator deobfuscatingTranslator, MethodEntry obfMethodEntry) {
+	public List<MethodImplementationsTreeNode> getMethodImplementations(Translator deobfuscatingTranslator, MethodEntry obfMethodEntry) {
 		
-		MethodEntry interfaceMethodEntry;
+		List<MethodEntry> interfaceMethodEntries = Lists.newArrayList();
 		
 		// is this method on an interface?
 		if (isInterface(obfMethodEntry.getClassName())) {
-			interfaceMethodEntry = obfMethodEntry;
+			interfaceMethodEntries.add(obfMethodEntry);
 		} else {
 			// get the interface class
-			List<MethodEntry> methodInterfaces = Lists.newArrayList();
 			for (String interfaceName : getInterfaces(obfMethodEntry.getClassName())) {
+				
 				// is this method defined in this interface?
 				MethodEntry methodInterface = new MethodEntry(
 					new ClassEntry(interfaceName),
@@ -538,21 +537,20 @@ public class JarIndex {
 					obfMethodEntry.getSignature()
 				);
 				if (containsObfBehavior(methodInterface)) {
-					methodInterfaces.add(methodInterface);
+					interfaceMethodEntries.add(methodInterface);
 				}
 			}
-			if (methodInterfaces.isEmpty()) {
-				return null;
-			}
-			if (methodInterfaces.size() > 1) {
-				throw new Error("Too many interfaces define this method! This is not yet supported by Enigma!");
-			}
-			interfaceMethodEntry = methodInterfaces.get(0);
 		}
 		
-		MethodImplementationsTreeNode rootNode = new MethodImplementationsTreeNode(deobfuscatingTranslator, interfaceMethodEntry);
-		rootNode.load(this);
-		return rootNode;
+		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
+		if (!interfaceMethodEntries.isEmpty()) {
+			for (MethodEntry interfaceMethodEntry : interfaceMethodEntries) {
+				MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(deobfuscatingTranslator, interfaceMethodEntry);
+				node.load(this);
+				nodes.add(node);
+			}
+		}
+		return nodes;
 	}
 	
 	public Set<MethodEntry> getRelatedMethodImplementations(MethodEntry obfMethodEntry) {
@@ -569,9 +567,8 @@ public class JarIndex {
 		}
 		
 		// look at interface methods too
-		MethodImplementationsTreeNode implementations = getMethodImplementations(null, methodEntry);
-		if (implementations != null) {
-			getRelatedMethodImplementations(methodEntries, implementations);
+		for (MethodImplementationsTreeNode implementationsNode : getMethodImplementations(null, methodEntry)) {
+			getRelatedMethodImplementations(methodEntries, implementationsNode);
 		}
 		
 		// recurse

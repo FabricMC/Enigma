@@ -7,7 +7,7 @@ import static org.hamcrest.Matchers.*;
 
 import cuchaz.enigma.mapping.Type;
 
-import static cuchaz.enigma.EntryFactory.*;
+import static cuchaz.enigma.TestEntryFactory.*;
 
 
 public class TestType {

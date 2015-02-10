@@ -186,14 +186,17 @@ public class GuiController {
 	
 	public MethodImplementationsTreeNode getMethodImplementations(MethodEntry deobfMethodEntry) {
 		MethodEntry obfMethodEntry = m_deobfuscator.obfuscateEntry(deobfMethodEntry);
-		MethodImplementationsTreeNode rootNode = m_deobfuscator.getJarIndex().getMethodImplementations(
+		List<MethodImplementationsTreeNode> rootNodes = m_deobfuscator.getJarIndex().getMethodImplementations(
 			m_deobfuscator.getTranslator(TranslationDirection.Deobfuscating),
 			obfMethodEntry
 		);
-		if (rootNode == null) {
+		if (rootNodes.isEmpty()) {
 			return null;
 		}
-		return MethodImplementationsTreeNode.findNode(rootNode, obfMethodEntry);
+		if (rootNodes.size() > 1) {
+			System.err.println("WARNING: Method " + deobfMethodEntry + " implements multiple interfaces. Only showing first one.");
+		}
+		return MethodImplementationsTreeNode.findNode(rootNodes.get(0), obfMethodEntry);
 	}
 	
 	public FieldReferenceTreeNode getFieldReferences(FieldEntry deobfFieldEntry) {

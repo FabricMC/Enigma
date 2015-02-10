@@ -20,7 +20,7 @@ import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Type;
 
-public class EntryFactory {
+public class TestEntryFactory {
 	
 	public static ClassEntry newClass(String name) {
 		return new ClassEntry(name);

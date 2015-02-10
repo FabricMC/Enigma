@@ -26,11 +26,10 @@ import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
 import com.strobel.decompiler.languages.java.ast.VariableInitializer;
 
 import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Type;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
@@ -69,12 +68,13 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitMethodDeclaration(MethodDeclaration node, SourceIndex index) {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
-		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
-		BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(classEntry, def.getName(), def.getSignature());
+		BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(def);
 		AstNode tokenNode = node.getNameToken();
+		
 		if (behaviorEntry instanceof ConstructorEntry) {
 			ConstructorEntry constructorEntry = (ConstructorEntry)behaviorEntry;
 			if (constructorEntry.isStatic()) {
+				// for static initializers, check elsewhere for the token node
 				tokenNode = node.getModifiers().firstOrNullObject();
 			}
 		}
@@ -85,8 +85,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitConstructorDeclaration(ConstructorDeclaration node, SourceIndex index) {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
-		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
-		ConstructorEntry constructorEntry = new ConstructorEntry(classEntry, new Signature(def.getSignature()));
+		ConstructorEntry constructorEntry = EntryFactory.getConstructorEntry(def);
 		index.addDeclaration(node.getNameToken(), constructorEntry);
 		return node.acceptVisitor(new SourceIndexBehaviorVisitor(constructorEntry), index);
 	}

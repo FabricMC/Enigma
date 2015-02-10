@@ -53,7 +53,7 @@ import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassNameReplacer;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.JavassistUtil;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.Signature;
 
 public class ClassIdentity {
@@ -116,13 +116,13 @@ public class ClassIdentity {
 		m_references = HashMultiset.create();
 		if (useReferences) {
 			for (CtField field : c.getDeclaredFields()) {
-				FieldEntry fieldEntry = JavassistUtil.getFieldEntry(field);
+				FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
 				for (EntryReference<FieldEntry,BehaviorEntry> reference : index.getFieldReferences(fieldEntry)) {
 					addReference(reference);
 				}
 			}
 			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-				BehaviorEntry behaviorEntry = JavassistUtil.getBehaviorEntry(behavior);
+				BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
 				for (EntryReference<BehaviorEntry,BehaviorEntry> reference : index.getBehaviorReferences(behaviorEntry)) {
 					addReference(reference);
 				}

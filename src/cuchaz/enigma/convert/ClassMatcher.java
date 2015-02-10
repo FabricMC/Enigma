@@ -42,7 +42,7 @@ import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
-import cuchaz.enigma.mapping.JavassistUtil;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsReader;
@@ -242,13 +242,13 @@ public class ClassMatcher {
 					System.err.println("\tAvailable dest methods:");
 					CtClass c = destLoader.loadClass(classMapping.getObfName());
 					for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-						System.err.println("\t\t" + JavassistUtil.getBehaviorEntry(behavior));
+						System.err.println("\t\t" + EntryFactory.getBehaviorEntry(behavior));
 					}
 					
 					System.err.println("\tAvailable source methods:");
 					c = sourceLoader.loadClass(matchedClassNames.inverse().get(classMapping.getObfName()));
 					for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-						System.err.println("\t\t" + JavassistUtil.getBehaviorEntry(behavior));
+						System.err.println("\t\t" + EntryFactory.getBehaviorEntry(behavior));
 					}
 				}
 			}

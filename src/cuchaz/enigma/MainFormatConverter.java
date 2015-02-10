@@ -18,7 +18,7 @@ import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.ClassNameReplacer;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.FieldMapping;
-import cuchaz.enigma.mapping.JavassistUtil;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
@@ -35,7 +35,7 @@ public class MainFormatConverter {
 		Map<String,Type> fieldTypes = Maps.newHashMap();
 		for (CtClass c : JarClassIterator.classes(jar)) {
 			for (CtField field : c.getDeclaredFields()) {
-				FieldEntry fieldEntry = JavassistUtil.getFieldEntry(field);
+				FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
 				fieldTypes.put(getFieldKey(fieldEntry), moveClasssesOutOfDefaultPackage(fieldEntry.getType()));
 			}
 		}

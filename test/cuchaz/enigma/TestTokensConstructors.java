@@ -10,7 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import static cuchaz.enigma.EntryFactory.*;
+import static cuchaz.enigma.TestEntryFactory.*;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 

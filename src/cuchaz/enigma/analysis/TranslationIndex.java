@@ -37,7 +37,7 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.JavassistUtil;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.Translator;
 
 public class TranslationIndex implements Serializable {
@@ -85,23 +85,23 @@ public class TranslationIndex implements Serializable {
 	
 	public void indexClass(CtClass c) {
 		
-		ClassEntry classEntry = JavassistUtil.getClassEntry(c);
+		ClassEntry classEntry = EntryFactory.getClassEntry(c);
 		
 		// add the superclass
-		ClassEntry superclassEntry = JavassistUtil.getSuperclassEntry(c);
+		ClassEntry superclassEntry = EntryFactory.getSuperclassEntry(c);
 		if (!isJre(classEntry) && superclassEntry != null && !isJre(superclassEntry)) {
 			m_superclasses.put(classEntry, superclassEntry);
 		}
 		
 		// add fields
 		for (CtField field : c.getDeclaredFields()) {
-			FieldEntry fieldEntry = JavassistUtil.getFieldEntry(field);
+			FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
 			m_fieldEntries.put(fieldEntry.getClassEntry(), fieldEntry);
 		}
 		
 		// add behaviors
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-			BehaviorEntry behaviorEntry = JavassistUtil.getBehaviorEntry(behavior);
+			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
 			m_behaviorEntries.put(behaviorEntry.getClassEntry(), behaviorEntry);
 		}
 	}

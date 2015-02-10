@@ -11,7 +11,7 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import static cuchaz.enigma.EntryFactory.*;
+import static cuchaz.enigma.TestEntryFactory.*;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
@@ -96,8 +96,7 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void methodImplementations() {
 		MethodEntry source = newMethod("none/a", "a", "()Ljava/lang/String;");
-		MethodImplementationsTreeNode node = m_index.getMethodImplementations(new Translator(), source);
-		assertThat(node, is(nullValue()));
+		assertThat(m_index.getMethodImplementations(new Translator(), source), is(empty()));
 	}
 	
 	@Test

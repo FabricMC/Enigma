@@ -42,16 +42,17 @@ import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarClassIterator;
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.RelatedMethodChecker;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.Mappings;
@@ -115,10 +116,16 @@ public class Deobfuscator {
 		}
 		
 		// drop mappings that don't match the jar
+		RelatedMethodChecker relatedMethodChecker = new RelatedMethodChecker(m_jarIndex);
 		for (ClassMapping classMapping : Lists.newArrayList(val.classes())) {
-			if (!checkClassMapping(classMapping)) {
+			if (!checkClassMapping(relatedMethodChecker, classMapping)) {
 				val.removeClassMapping(classMapping);
 			}
+		}
+		
+		// check for related method inconsistencies
+		if (relatedMethodChecker.hasProblems()) {
+			throw new Error("Related methods are inconsistent! Need to fix the mappings manually.\n" + relatedMethodChecker.getReport());
 		}
 		
 		m_mappings = val;
@@ -126,14 +133,10 @@ public class Deobfuscator {
 		m_translatorCache.clear();
 	}
 	
-	private boolean checkClassMapping(ClassMapping classMapping) {
+	private boolean checkClassMapping(RelatedMethodChecker relatedMethodChecker, ClassMapping classMapping) {
 		
 		// check the class
-		ClassEntry classEntry = new ClassEntry(classMapping.getObfName());
-		String outerClassName = m_jarIndex.getOuterClass(classEntry.getSimpleName());
-		if (outerClassName != null) {
-			classEntry = new ClassEntry(outerClassName + "$" + classMapping.getObfName());
-		}
+		ClassEntry classEntry = EntryFactory.getObfClassEntry(m_jarIndex, classMapping);
 		if (!m_jarIndex.getObfClassEntries().contains(classEntry)) {
 			return false;
 		}
@@ -149,16 +152,18 @@ public class Deobfuscator {
 		
 		// check methods
 		for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
-			BehaviorEntry obfBehaviorEntry = BehaviorEntryFactory.createObf(classEntry, methodMapping);
+			BehaviorEntry obfBehaviorEntry = EntryFactory.getObfBehaviorEntry(classEntry, methodMapping);
 			if (!m_jarIndex.containsObfBehavior(obfBehaviorEntry)) {
 				System.err.println("WARNING: unable to find behavior " + obfBehaviorEntry + ". dropping mapping.");
 				classMapping.removeMethodMapping(methodMapping);
 			}
+			
+			relatedMethodChecker.checkMethod(classEntry, methodMapping);
 		}
 		
 		// check inner classes
 		for (ClassMapping innerClassMapping : classMapping.innerClasses()) {
-			if (!checkClassMapping(innerClassMapping)) {
+			if (!checkClassMapping(relatedMethodChecker, innerClassMapping)) {
 				System.err.println("WARNING: unable to find inner class " + innerClassMapping + ". dropping mapping.");
 				classMapping.removeInnerClassMapping(innerClassMapping);
 			}

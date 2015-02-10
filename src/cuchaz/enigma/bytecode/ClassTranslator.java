@@ -23,10 +23,9 @@ import javassist.bytecode.SourceFileAttribute;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.BehaviorEntryFactory;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.JavassistUtil;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Translator;
@@ -74,7 +73,7 @@ public class ClassTranslator {
 				case ConstPool.CONST_InterfaceMethodref: {
 					
 					// translate the name and type
-					BehaviorEntry entry = BehaviorEntryFactory.create(
+					BehaviorEntry entry = EntryFactory.getBehaviorEntry(
 						Descriptor.toJvmName(editor.getMemberrefClassname(i)),
 						editor.getMemberrefName(i),
 						editor.getMemberrefType(i)
@@ -95,7 +94,7 @@ public class ClassTranslator {
 		for (CtField field : c.getDeclaredFields()) {
 			
 			// translate the name
-			FieldEntry entry = JavassistUtil.getFieldEntry(field);
+			FieldEntry entry = EntryFactory.getFieldEntry(field);
 			String translatedName = m_translator.translate(entry);
 			if (translatedName != null) {
 				field.setName(translatedName);
@@ -112,7 +111,7 @@ public class ClassTranslator {
 				CtMethod method = (CtMethod)behavior;
 				
 				// translate the name
-				MethodEntry entry = JavassistUtil.getMethodEntry(method);
+				MethodEntry entry = EntryFactory.getMethodEntry(method);
 				String translatedName = m_translator.translate(entry);
 				if (translatedName != null) {
 					method.setName(translatedName);

@@ -17,7 +17,7 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.BehaviorEntryFactory;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Translator;
 
@@ -33,7 +33,7 @@ public class MethodParameterWriter {
 		
 		// Procyon will read method arguments from the "MethodParameters" attribute, so write those
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-			BehaviorEntry behaviorEntry = BehaviorEntryFactory.create(behavior);
+			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
 
 			// get the number of arguments
 			Signature signature = behaviorEntry.getSignature();
