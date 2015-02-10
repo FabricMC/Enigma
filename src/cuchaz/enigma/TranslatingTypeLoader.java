@@ -104,6 +104,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 	}
 	
 	private byte[] loadType(String deobfClassName) {
+		
 		ClassEntry deobfClassEntry = new ClassEntry(deobfClassName);
 		ClassEntry obfClassEntry = m_obfuscatingTranslator.translateEntry(deobfClassEntry);
 		
@@ -176,7 +177,9 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		}
 	}
 	
-	public CtClass transformClass(CtClass c) throws IOException, NotFoundException, CannotCompileException {
+	public CtClass transformClass(CtClass c)
+	throws IOException, NotFoundException, CannotCompileException {
+		
 		// we moved a lot of classes out of the default package into the none package
 		// make sure all the class references are consistent
 		ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);

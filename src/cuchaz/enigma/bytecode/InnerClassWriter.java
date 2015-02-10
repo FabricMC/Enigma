@@ -13,7 +13,6 @@ package cuchaz.enigma.bytecode;
 import java.util.Collection;
 
 import javassist.CtClass;
-import javassist.bytecode.AccessFlag;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.EnclosingMethodAttribute;
@@ -77,18 +76,19 @@ public class InnerClassWriter {
 			int innerClassIndex = constPool.addClassInfo(obfClassEntry.getName());
 			int outerClassIndex = 0;
 			int innerClassSimpleNameIndex = 0;
+			int accessFlags = 0;
 			if (!m_jarIndex.isAnonymousClass(obfInnerClassName)) {
 				outerClassIndex = constPool.addClassInfo(obfClassEntry.getOuterClassName());
 				innerClassSimpleNameIndex = constPool.addUtf8Info(obfClassEntry.getInnerClassName());
 			}
 			
-			attr.append(innerClassIndex, outerClassIndex, innerClassSimpleNameIndex, c.getClassFile().getAccessFlags() & ~AccessFlag.SUPER);
+			attr.append(innerClassIndex, outerClassIndex, innerClassSimpleNameIndex, accessFlags);
 			
 			/* DEBUG 
 			System.out.println(String.format("\tOBF: %s -> ATTR: %s,%s,%s (replace %s with %s)",
 				obfClassEntry,
-				attr.outerClass(attr.tableLength() - 1),
 				attr.innerClass(attr.tableLength() - 1),
+				attr.outerClass(attr.tableLength() - 1),
 				attr.innerName(attr.tableLength() - 1),
 				Constants.NonePackage + "/" + obfInnerClassName,
 				obfClassEntry.getName()

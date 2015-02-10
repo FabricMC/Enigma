@@ -17,12 +17,10 @@ import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.AstNode;
-import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
 import com.strobel.decompiler.languages.java.ast.IdentifierExpression;
 import com.strobel.decompiler.languages.java.ast.InvocationExpression;
 import com.strobel.decompiler.languages.java.ast.Keys;
 import com.strobel.decompiler.languages.java.ast.MemberReferenceExpression;
-import com.strobel.decompiler.languages.java.ast.MethodDeclaration;
 import com.strobel.decompiler.languages.java.ast.ObjectCreationExpression;
 import com.strobel.decompiler.languages.java.ast.ParameterDeclaration;
 import com.strobel.decompiler.languages.java.ast.SimpleType;
@@ -33,6 +31,7 @@ import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Signature;
@@ -44,16 +43,6 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	
 	public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry) {
 		m_behaviorEntry = behaviorEntry;
-	}
-	
-	@Override
-	public Void visitMethodDeclaration(MethodDeclaration node, SourceIndex index) {
-		return recurse(node, index);
-	}
-	
-	@Override
-	public Void visitConstructorDeclaration(ConstructorDeclaration node, SourceIndex index) {
-		return recurse(node, index);
 	}
 	
 	@Override
@@ -122,14 +111,8 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitParameterDeclaration(ParameterDeclaration node, SourceIndex index) {
 		ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
-		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
 		MethodDefinition methodDef = (MethodDefinition)def.getMethod();
-		BehaviorEntry behaviorEntry;
-		if (methodDef.isConstructor()) {
-			behaviorEntry = new ConstructorEntry(classEntry, new Signature(methodDef.getSignature()));
-		} else {
-			behaviorEntry = new MethodEntry(classEntry, methodDef.getName(), new Signature(methodDef.getSignature()));
-		}
+		BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(methodDef);
 		ArgumentEntry argumentEntry = new ArgumentEntry(behaviorEntry, def.getPosition(), node.getName());
 		index.addDeclaration(node.getNameToken(), argumentEntry);
 		

@@ -82,10 +82,11 @@ public class SourceIndex {
 		// DEBUG
 		// System.out.println( String.format( "%s \"%s\" region: %s", node.getNodeType(), name, region ) );
 		
-		// for tokens representing inner classes, make sure we only get the simple name
-		int pos = name.lastIndexOf('$');
-		if (pos >= 0) {
-			token.end -= pos + 1;
+		// if the token has a $ in it, something's wrong. Ignore this token
+		if (name.lastIndexOf('$') >= 0) {
+			// DEBUG
+			System.err.println(String.format("WARNING: %s \"%s\" is probably a bad token. It was ignored", node.getNodeType(), name));
+			return null;
 		}
 		
 		return token;
