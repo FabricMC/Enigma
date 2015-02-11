@@ -34,8 +34,6 @@ import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -66,7 +64,7 @@ public class JarIndex {
 	private Multimap<String,String> m_innerClasses;
 	private Map<String,String> m_outerClasses;
 	private Map<String,BehaviorEntry> m_anonymousClasses;
-	private BiMap<MethodEntry,MethodEntry> m_bridgedMethods;
+	private Map<MethodEntry,MethodEntry> m_bridgedMethods;
 	
 	public JarIndex() {
 		m_obfClassEntries = Sets.newHashSet();
@@ -79,7 +77,7 @@ public class JarIndex {
 		m_innerClasses = HashMultimap.create();
 		m_outerClasses = Maps.newHashMap();
 		m_anonymousClasses = Maps.newHashMap();
-		m_bridgedMethods = HashBiMap.create();
+		m_bridgedMethods = Maps.newHashMap();
 	}
 	
 	public void indexJar(JarFile jar, boolean buildInnerClasses) {
@@ -758,7 +756,7 @@ public class JarIndex {
 		}
 	}
 	
-	public BiMap<MethodEntry,MethodEntry> getBridgedMethods() {
-		return m_bridgedMethods;
+	public MethodEntry getBridgedMethod(MethodEntry bridgeMethodEntry) {
+		return m_bridgedMethods.get(bridgeMethodEntry);
 	}
 }

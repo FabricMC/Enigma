@@ -3,18 +3,15 @@ package cuchaz.enigma.analysis;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.bytecode.AccessFlag;
-
-import com.google.common.collect.BiMap;
-
 import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.MethodEntry;
 
 public class BridgeMarker {
 	
-	private BiMap<MethodEntry,MethodEntry> m_bridgedMethods;
+	private JarIndex m_jarIndex;
 	
-	public BridgeMarker(BiMap<MethodEntry,MethodEntry> bridgedMethods) {
-		m_bridgedMethods = bridgedMethods;
+	public BridgeMarker(JarIndex jarIndex) {
+		m_jarIndex = jarIndex;
 	}
 	
 	public void markBridges(CtClass c) {
@@ -23,7 +20,7 @@ public class BridgeMarker {
 			MethodEntry methodEntry = EntryFactory.getMethodEntry(method);
 			
 			// is this a bridge method?
-			MethodEntry bridgedMethodEntry = m_bridgedMethods.get(methodEntry);
+			MethodEntry bridgedMethodEntry = m_jarIndex.getBridgedMethod(methodEntry);
 			if (bridgedMethodEntry != null) {
 				
 				// it's a bridge method! add the bridge flag
