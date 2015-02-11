@@ -221,6 +221,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 	
 	
 	public void setFieldName(String obfName, Type obfType, String deobfName) {
+		assert(deobfName != null);
 		FieldMapping fieldMapping = m_fieldsByObf.get(getFieldKey(obfName, obfType));
 		if (fieldMapping == null) {
 			fieldMapping = new FieldMapping(obfName, obfType, deobfName);
@@ -316,6 +317,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 	//// ARGUMENTS ////////
 	
 	public void setArgumentName(String obfMethodName, Signature obfMethodSignature, int argumentIndex, String argumentName) {
+		assert(argumentName != null);
 		MethodMapping methodMapping = m_methodsByObf.get(getMethodKey(obfMethodName, obfMethodSignature));
 		if (methodMapping == null) {
 			methodMapping = createMethodMapping(obfMethodName, obfMethodSignature);

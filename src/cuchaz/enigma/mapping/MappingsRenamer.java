@@ -87,7 +87,7 @@ public class MappingsRenamer {
 	
 	public void removeFieldMapping(FieldEntry obf) {
 		ClassMapping classMapping = getClassMappingOrInnerClassMapping(obf.getClassEntry());
-		classMapping.setFieldName(obf.getName(), obf.getType(), null);
+		classMapping.removeFieldMapping(classMapping.getFieldByObf(obf.getName(), obf.getType()));
 	}
 	
 	public void markFieldAsDeobfuscated(FieldEntry obf) {
