@@ -70,6 +70,7 @@ import jsyntaxpane.DefaultSyntaxKit;
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.BehaviorReferenceTreeNode;
 import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
@@ -147,9 +148,11 @@ public class Gui {
 			CrashDialog.init(m_frame);
 			Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 				@Override
-				public void uncaughtException(Thread thread, Throwable ex) {
-					ex.printStackTrace(System.err);
-					CrashDialog.show(ex);
+				public void uncaughtException(Thread thread, Throwable t) {
+					t.printStackTrace(System.err);
+					if (!ExceptionIgnorer.shouldIgnore(t)) {
+						CrashDialog.show(t);
+					}
 				}
 			});
 		}
