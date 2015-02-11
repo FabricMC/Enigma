@@ -23,6 +23,8 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtField;
+import javassist.CtMethod;
+import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
@@ -32,6 +34,8 @@ import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -62,6 +66,7 @@ public class JarIndex {
 	private Multimap<String,String> m_innerClasses;
 	private Map<String,String> m_outerClasses;
 	private Map<String,BehaviorEntry> m_anonymousClasses;
+	private BiMap<MethodEntry,MethodEntry> m_bridgedMethods;
 	
 	public JarIndex() {
 		m_obfClassEntries = Sets.newHashSet();
@@ -74,6 +79,7 @@ public class JarIndex {
 		m_innerClasses = HashMultimap.create();
 		m_outerClasses = Maps.newHashMap();
 		m_anonymousClasses = Maps.newHashMap();
+		m_bridgedMethods = HashBiMap.create();
 	}
 	
 	public void indexJar(JarFile jar, boolean buildInnerClasses) {
@@ -171,6 +177,12 @@ public class JarIndex {
 			
 			// index implementation
 			m_methodImplementations.put(behaviorEntry.getClassName(), methodEntry);
+			
+			// look for bridge and bridged methods
+			CtMethod bridgedMethod = getBridgedMethod((CtMethod)behavior);
+			if (bridgedMethod != null) {
+				m_bridgedMethods.put(methodEntry, EntryFactory.getMethodEntry(bridgedMethod));
+			}
 		}
 		// looks like we don't care about constructors here
 	}
@@ -238,6 +250,45 @@ public class JarIndex {
 			});
 		} catch (CannotCompileException ex) {
 			throw new Error(ex);
+		}
+	}
+	
+	private CtMethod getBridgedMethod(CtMethod method) {
+		
+		// bridge methods just call another method, cast it to the return type, and return the result
+		// let's see if we can detect this scenario
+		
+		// skip non-synthetic methods
+		if ((method.getModifiers() & AccessFlag.SYNTHETIC) == 0) {
+			return null;
+		}
+		
+		// get all the called methods
+		final List<MethodCall> methodCalls = Lists.newArrayList();
+		try {
+			method.instrument(new ExprEditor() {
+				@Override
+				public void edit(MethodCall call) {
+					methodCalls.add(call);
+				}
+			});
+		} catch (CannotCompileException ex) {
+			// this is stupid... we're not even compiling anything
+			throw new Error(ex);
+		}
+		
+		// is there just one?
+		if (methodCalls.size() != 1) {
+			return null;
+		}
+		MethodCall call = methodCalls.get(0);
+		
+		try {
+			// we have a bridge method!
+			return call.getMethod();
+		} catch (NotFoundException ex) {
+			// can't find the type? not a bridge method
+			return null;
 		}
 	}
 	
@@ -705,5 +756,9 @@ public class JarIndex {
 		} else {
 			throw new Error("Entry type not supported: " + obfEntry.getClass().getName());
 		}
+	}
+	
+	public BiMap<MethodEntry,MethodEntry> getBridgedMethods() {
+		return m_bridgedMethods;
 	}
 }
