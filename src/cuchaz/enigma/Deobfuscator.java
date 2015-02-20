@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
@@ -225,9 +226,15 @@ public class Deobfuscator {
 			getTranslator(TranslationDirection.Obfuscating),
 			getTranslator(TranslationDirection.Deobfuscating)
 		));
+
+		// see if procyon can find the type
+		TypeReference type = new MetadataSystem(m_settings.getTypeLoader()).lookupType(lookupClassName);
+		if (type == null) {
+			throw new Error("Unable to find type: " + lookupClassName + " (obf name: " + obfClassName + ")");
+		}
+		TypeDefinition resolvedType = type.resolve();
 		
 		// decompile it!
-		TypeDefinition resolvedType = new MetadataSystem(m_settings.getTypeLoader()).lookupType(lookupClassName).resolve();
 		DecompilerContext context = new DecompilerContext();
 		context.setCurrentType(resolvedType);
 		context.setSettings(m_settings);
