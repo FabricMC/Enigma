@@ -1,12 +1,15 @@
 package cuchaz.enigma.mapping;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.beust.jcommander.internal.Lists;
 
 import cuchaz.enigma.Util;
 
-public class Signature {
+public class Signature implements Serializable {
+	
+	private static final long serialVersionUID = -5843719505729497539L;
 	
 	private List<Type> m_argumentTypes;
 	private Type m_returnType;

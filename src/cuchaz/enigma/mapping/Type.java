@@ -1,11 +1,14 @@
 package cuchaz.enigma.mapping;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class Type {
+public class Type implements Serializable {
 	
+	private static final long serialVersionUID = 7862257669347104063L;
+
 	public enum Primitive {
 		Byte('B'),
 		Character('C'),
