@@ -26,7 +26,6 @@ import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -125,17 +124,17 @@ public class TestJarIndexLoneClass {
 	
 	@Test
 	public void innerClasses() {
-		assertThat(m_index.getInnerClasses("none/a"), is(empty()));
+		assertThat(m_index.getInnerClasses(newClass("none/a")), is(empty()));
 	}
 	
 	@Test
 	public void outerClass() {
-		assertThat(m_index.getOuterClass("a"), is(nullValue()));
+		assertThat(m_index.getOuterClass(newClass("a")), is(nullValue()));
 	}
 	
 	@Test
 	public void isAnonymousClass() {
-		assertThat(m_index.isAnonymousClass("none/a"), is(false));
+		assertThat(m_index.isAnonymousClass(newClass("none/a")), is(false));
 	}
 	
 	@Test

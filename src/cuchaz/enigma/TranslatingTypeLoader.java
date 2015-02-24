@@ -110,10 +110,10 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		ClassEntry obfClassEntry = m_obfuscatingTranslator.translateEntry(deobfClassEntry);
 		
 		// is this an inner class referenced directly?
-		String obfOuterClassName = m_jarIndex.getOuterClass(obfClassEntry.getSimpleName());
-		if (obfOuterClassName != null) {
+		ClassEntry obfOuterClassEntry = m_jarIndex.getOuterClass(obfClassEntry);
+		if (obfOuterClassEntry != null) {
 			// this class doesn't really exist. Reference it by outer$inner instead
-			System.err.println(String.format("WARNING: class %s referenced by bare inner name instead of via outer class %s", deobfClassName, obfOuterClassName));
+			System.err.println(String.format("WARNING: class %s referenced by bare inner name instead of via outer class %s", deobfClassName, obfOuterClassEntry));
 			return null;
 		}
 		

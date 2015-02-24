@@ -14,13 +14,12 @@ import java.util.Collection;
 
 import javassist.CtClass;
 import javassist.bytecode.ConstPool;
-import javassist.bytecode.Descriptor;
 import javassist.bytecode.EnclosingMethodAttribute;
 import javassist.bytecode.InnerClassesAttribute;
-import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.EntryFactory;
 
 public class InnerClassWriter {
 	
@@ -32,18 +31,23 @@ public class InnerClassWriter {
 	
 	public void write(CtClass c) {
 		
-		// is this an inner or outer class?
-		String obfInnerClassName = new ClassEntry(Descriptor.toJvmName(c.getName())).getSimpleName();
-		String obfOuterClassName = m_jarIndex.getOuterClass(obfInnerClassName);
-		if (obfOuterClassName == null) {
-			// this is an outer class
-			obfOuterClassName = Descriptor.toJvmName(c.getName());
+		// first, assume this is an inner class
+		ClassEntry obfInnerClassEntry = EntryFactory.getClassEntry(c);
+		ClassEntry obfOuterClassEntry = m_jarIndex.getOuterClass(obfInnerClassEntry);
+		
+		// see if we're right
+		if (obfOuterClassEntry == null) {
+			
+			// nope, it's an outer class
+			obfInnerClassEntry = null;
+			obfOuterClassEntry = EntryFactory.getClassEntry(c);
 		} else {
-			// this is an inner class, rename it to outer$inner
-			ClassEntry obfClassEntry = new ClassEntry(obfOuterClassName + "$" + obfInnerClassName);
+			
+			// yeah, it's an inner class, rename it to outer$inner
+			ClassEntry obfClassEntry = new ClassEntry(obfOuterClassEntry.getName() + "$" + obfInnerClassEntry.getSimpleName());
 			c.setName(obfClassEntry.getName());
 			
-			BehaviorEntry caller = m_jarIndex.getAnonymousClassCaller(obfInnerClassName);
+			BehaviorEntry caller = m_jarIndex.getAnonymousClassCaller(obfInnerClassEntry);
 			if (caller != null) {
 				// write the enclosing method attribute
 				if (caller.getName().equals("<clinit>")) {
@@ -55,18 +59,19 @@ public class InnerClassWriter {
 		}
 		
 		// write the inner classes if needed
-		Collection<String> obfInnerClassNames = m_jarIndex.getInnerClasses(obfOuterClassName);
-		if (obfInnerClassNames != null && !obfInnerClassNames.isEmpty()) {
-			writeInnerClasses(c, obfOuterClassName, obfInnerClassNames);
+		Collection<ClassEntry> obfInnerClassEntries = m_jarIndex.getInnerClasses(obfOuterClassEntry);
+		if (obfInnerClassEntries != null && !obfInnerClassEntries.isEmpty()) {
+			writeInnerClasses(c, obfOuterClassEntry, obfInnerClassEntries);
 		}
 	}
 	
-	private void writeInnerClasses(CtClass c, String obfOuterClassName, Collection<String> obfInnerClassNames) {
+	private void writeInnerClasses(CtClass c, ClassEntry obfOuterClassEntry, Collection<ClassEntry> obfInnerClassEntries) {
 		InnerClassesAttribute attr = new InnerClassesAttribute(c.getClassFile().getConstPool());
 		c.getClassFile().addAttribute(attr);
-		for (String obfInnerClassName : obfInnerClassNames) {
+		for (ClassEntry obfInnerClassEntry : obfInnerClassEntries) {
+			
 			// get the new inner class name
-			ClassEntry obfClassEntry = new ClassEntry(obfOuterClassName + "$" + obfInnerClassName);
+			ClassEntry obfClassEntry = new ClassEntry(obfOuterClassEntry.getName() + "$" + obfInnerClassEntry.getSimpleName());
 			
 			// here's what the JVM spec says about the InnerClasses attribute
 			// append( inner, outer of inner if inner is member of outer 0 ow, name after $ if inner not anonymous 0 ow, flags );
@@ -77,7 +82,7 @@ public class InnerClassWriter {
 			int outerClassIndex = 0;
 			int innerClassSimpleNameIndex = 0;
 			int accessFlags = 0;
-			if (!m_jarIndex.isAnonymousClass(obfInnerClassName)) {
+			if (!m_jarIndex.isAnonymousClass(obfInnerClassEntry)) {
 				outerClassIndex = constPool.addClassInfo(obfClassEntry.getOuterClassName());
 				innerClassSimpleNameIndex = constPool.addUtf8Info(obfClassEntry.getInnerClassName());
 			}
@@ -96,7 +101,7 @@ public class InnerClassWriter {
 			*/
 			
 			// make sure the outer class references only the new inner class names
-			c.replaceClassName(Constants.NonePackage + "/" + obfInnerClassName, obfClassEntry.getName());
+			c.replaceClassName(obfInnerClassEntry.getName(), obfClassEntry.getName());
 		}
 	}
 }

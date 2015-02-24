@@ -163,9 +163,9 @@ public class Deobfuscator {
 		}
 		
 		// check inner classes
-		for (ClassMapping innerClassMapping : classMapping.innerClasses()) {
+		for (ClassMapping innerClassMapping : Lists.newArrayList(classMapping.innerClasses())) {
 			if (!checkClassMapping(relatedMethodChecker, innerClassMapping)) {
-				System.err.println("WARNING: unable to find inner class " + innerClassMapping + ". dropping mapping.");
+				System.err.println("WARNING: unable to find inner class " + EntryFactory.getObfClassEntry(m_jarIndex, classMapping) + ". dropping mapping.");
 				classMapping.removeInnerClassMapping(innerClassMapping);
 			}
 		}

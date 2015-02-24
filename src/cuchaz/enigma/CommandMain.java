@@ -51,7 +51,7 @@ public class CommandMain {
 		try {
 			
 			// process the command
-			String command = getArg(args, 0, "command");
+			String command = getArg(args, 0, "command", true);
 			if (command.equalsIgnoreCase("deobfuscate")) {
 				deobfuscate(args);
 			} else if(command.equalsIgnoreCase("decompile")) {
@@ -70,46 +70,55 @@ public class CommandMain {
 		System.out.println("Usage:");
 		System.out.println("\tjava -cp enigma.jar cuchaz.enigma.CommandMain <command>");
 		System.out.println("\twhere <command> is one of:");
-		System.out.println("\t\tdeobfuscate <mappings file> <in jar> <out jar>");
-		System.out.println("\t\tdecompile <mappings file> <in jar> <out folder>");
+		System.out.println("\t\tdeobfuscate <in jar> <out jar> [<mappings file>]");
+		System.out.println("\t\tdecompile <in jar> <out folder> [<mappings file>]");
 	}
 	
 	private static void decompile(String[] args)
 	throws Exception {
-		File fileMappings = getReadableFile(getArg(args, 1, "mappings file"));
-		File fileJarIn = getReadableFile(getArg(args, 2, "in jar"));
-		File fileJarOut = getWritableFolder(getArg(args, 3, "out folder"));
+		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
+		File fileJarOut = getWritableFolder(getArg(args, 2, "out folder", true));
+		File fileMappings = getReadableFile(getArg(args, 3, "mappings file", false));
 		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeSources(fileJarOut, new ConsoleProgressListener());
 	}
 
 	private static void deobfuscate(String[] args)
 	throws Exception {
-		File fileMappings = getReadableFile(getArg(args, 1, "mappings file"));
-		File fileJarIn = getReadableFile(getArg(args, 2, "in jar"));
-		File fileJarOut = getWritableFile(getArg(args, 3, "out jar"));
+		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
+		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
+		File fileMappings = getReadableFile(getArg(args, 3, "mappings file", false));
 		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeJar(fileJarOut, new ConsoleProgressListener());
 	}
 	
 	private static Deobfuscator getDeobfuscator(File fileMappings, JarFile jar)
 	throws Exception {
-		System.out.println("Reading mappings...");
-		Mappings mappings = new MappingsReader().read(new FileReader(fileMappings));
 		System.out.println("Reading jar...");
 		Deobfuscator deobfuscator = new Deobfuscator(jar);
-		deobfuscator.setMappings(mappings);
+		if (fileMappings != null) {
+			System.out.println("Reading mappings...");
+			Mappings mappings = new MappingsReader().read(new FileReader(fileMappings));
+			deobfuscator.setMappings(mappings);
+		}
 		return deobfuscator;
 	}
 	
-	private static String getArg(String[] args, int i, String name) {
+	private static String getArg(String[] args, int i, String name, boolean required) {
 		if (i >= args.length) {
-			throw new IllegalArgumentException(name + " is required");
+			if (required) {
+				throw new IllegalArgumentException(name + " is required");
+			} else {
+				return null;
+			}
 		}
 		return args[i];
 	}
 
 	private static File getWritableFile(String path) {
+		if (path == null) {
+			return null;
+		}
 		File file = new File(path).getAbsoluteFile();
 		File dir = file.getParentFile();
 		if (dir == null || !dir.exists()) {
@@ -119,6 +128,9 @@ public class CommandMain {
 	}
 
 	private static File getWritableFolder(String path) {
+		if (path == null) {
+			return null;
+		}
 		File dir = new File(path).getAbsoluteFile();
 		if (!dir.exists()) {
 			throw new IllegalArgumentException("Cannot write to folder: " + dir);
@@ -127,6 +139,9 @@ public class CommandMain {
 	}
 	
 	private static File getReadableFile(String path) {
+		if (path == null) {
+			return null;
+		}
 		File file = new File(path).getAbsoluteFile();
 		if (!file.exists()) {
 			throw new IllegalArgumentException("Cannot find file: " + file.getAbsolutePath());

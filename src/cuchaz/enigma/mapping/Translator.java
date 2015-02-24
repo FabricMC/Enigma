@@ -10,8 +10,10 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+import java.util.List;
 import java.util.Map;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.analysis.TranslationIndex;
@@ -50,54 +52,106 @@ public class Translator {
 		}
 	}
 	
+	public <T extends Entry> String translate(T entry) {
+		if (entry instanceof ClassEntry) {
+			return translate((ClassEntry)entry);
+		} else if (entry instanceof FieldEntry) {
+			return translate((FieldEntry)entry);
+		} else if (entry instanceof MethodEntry) {
+			return translate((MethodEntry)entry);
+		} else if (entry instanceof ConstructorEntry) {
+			return translate((ConstructorEntry)entry);
+		} else if (entry instanceof ArgumentEntry) {
+			return translate((ArgumentEntry)entry);
+		} else {
+			throw new Error("Unknown entry type: " + entry.getClass().getName());
+		}
+	}
+	
 	public String translateClass(String className) {
 		return translate(new ClassEntry(className));
 	}
 	
 	public String translate(ClassEntry in) {
-		ClassMapping classMapping = m_classes.get(in.getOuterClassName());
-		if (classMapping != null) {
-			if (in.isInnerClass()) {
-				// translate the inner class
-				String translatedInnerClassName = m_direction.choose(
-					classMapping.getDeobfInnerClassName(in.getInnerClassName()),
-					classMapping.getObfInnerClassName(in.getInnerClassName())
-				);
-				if (translatedInnerClassName != null) {
-					// try to translate the outer name
-					String translatedOuterClassName = m_direction.choose(classMapping.getDeobfName(), classMapping.getObfName());
-					if (translatedOuterClassName != null) {
-						return translatedOuterClassName + "$" + translatedInnerClassName;
-					} else {
-						return in.getOuterClassName() + "$" + translatedInnerClassName;
-					}
+
+		if (in.isInnerClass()) {
+			
+			// translate everything in the class chain, or return null
+			List<ClassMapping> mappingsChain = getClassMappingChain(in);
+			StringBuilder buf = new StringBuilder();
+			for (ClassMapping classMapping : mappingsChain) {
+				if (classMapping == null) {
+					return null;
 				}
-			} else {
-				// just return outer
-				return m_direction.choose(classMapping.getDeobfName(), classMapping.getObfName());
+				boolean isFirstClass = buf.length() == 0;
+				String name = m_direction.choose(
+					classMapping.getDeobfName(),
+					isFirstClass ? classMapping.getObfFullName() : classMapping.getObfSimpleName()
+				);
+				if (name == null) {
+					return null;
+				}
+				if (!isFirstClass) {
+					buf.append("$");
+				}
+				buf.append(name);
 			}
+			return buf.toString();
+			
+		} else {
+			
+			// normal classes are easier
+			ClassMapping classMapping = m_classes.get(in.getName());
+			if (classMapping == null) {
+				return null;
+			}
+			return m_direction.choose(
+				classMapping.getDeobfName(),
+				classMapping.getObfFullName()
+			);
 		}
-		return null;
 	}
 	
 	public ClassEntry translateEntry(ClassEntry in) {
 		
-		// can we translate the inner class?
-		String name = translate(in);
-		if (name != null) {
-			return new ClassEntry(name);
-		}
-		
 		if (in.isInnerClass()) {
 			
-			// guess not. just translate the outer class name then
-			String outerClassName = translate(in.getOuterClassEntry());
-			if (outerClassName != null) {
-				return new ClassEntry(outerClassName + "$" + in.getInnerClassName());
+			// translate as much of the class chain as we can
+			List<ClassMapping> mappingsChain = getClassMappingChain(in);
+			String[] obfClassNames = in.getName().split("\\$");
+			StringBuilder buf = new StringBuilder();
+			for (int i=0; i<obfClassNames.length; i++) {
+				boolean isFirstClass = buf.length() == 0;
+				String className = null;
+				ClassMapping classMapping = mappingsChain.get(i);
+				if (classMapping != null) {
+					className = m_direction.choose(
+						classMapping.getDeobfName(),
+						isFirstClass ? classMapping.getObfFullName() : classMapping.getObfSimpleName()
+					);
+				}
+				if (className == null) {
+					className = obfClassNames[i];
+				}
+				if (!isFirstClass) {
+					buf.append("$");
+				}
+				buf.append(className);
 			}
+			return new ClassEntry(buf.toString());
+			
+		} else {
+			
+			// normal classes are easy
+			ClassMapping classMapping = m_classes.get(in.getName());
+			if (classMapping == null) {
+				return in;
+			}
+			return m_direction.choose(
+				classMapping.getDeobfName() != null ? new ClassEntry(classMapping.getDeobfName()) : in,
+				new ClassEntry(classMapping.getObfFullName())
+			);
 		}
-		
-		return in;
 	}
 	
 	public String translate(FieldEntry in) {
@@ -226,14 +280,36 @@ public class Translator {
 		});
 	}
 	
-	private ClassMapping findClassMapping(ClassEntry classEntry) {
-		ClassMapping classMapping = m_classes.get(classEntry.getOuterClassName());
-		if (classMapping != null && classEntry.isInnerClass()) {
-			classMapping = m_direction.choose(
-				classMapping.getInnerClassByObf(classEntry.getInnerClassName()),
-				classMapping.getInnerClassByDeobfThenObf(classEntry.getInnerClassName())
-			);
+	private ClassMapping findClassMapping(ClassEntry in) {
+		List<ClassMapping> mappingChain = getClassMappingChain(in);
+		return mappingChain.get(mappingChain.size() - 1);
+	}
+	
+	private List<ClassMapping> getClassMappingChain(ClassEntry in) {
+		
+		// get a list of all the classes in the hierarchy
+		String[] parts = in.getName().split("\\$");
+		List<ClassMapping> mappingsChain = Lists.newArrayList();
+		
+		// get mappings for the outer class
+		ClassMapping outerClassMapping = m_classes.get(parts[0]);
+		mappingsChain.add(outerClassMapping);
+		
+		for (int i=1; i<parts.length; i++) {
+			
+			// get mappings for the inner class
+			ClassMapping innerClassMapping = null;
+			if (outerClassMapping != null) {
+				innerClassMapping = m_direction.choose(
+					outerClassMapping.getInnerClassByObf(parts[i]),
+					outerClassMapping.getInnerClassByDeobfThenObf(parts[i])
+				);
+			}
+			mappingsChain.add(innerClassMapping);
+			outerClassMapping = innerClassMapping;
 		}
-		return classMapping;
+		
+		assert(mappingsChain.size() == parts.length);
+		return mappingsChain;
 	}
 }

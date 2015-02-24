@@ -222,7 +222,7 @@ public class ClassMatcher {
 		// check the method matches
 		System.out.println("Checking methods...");
 		for (ClassMapping classMapping : mappings.classes()) {
-			ClassEntry classEntry = new ClassEntry(classMapping.getObfName());
+			ClassEntry classEntry = new ClassEntry(classMapping.getObfFullName());
 			for (MethodMapping methodMapping : classMapping.methods()) {
 				
 				// skip constructors
@@ -240,13 +240,13 @@ public class ClassMatcher {
 					
 					// show the available methods
 					System.err.println("\tAvailable dest methods:");
-					CtClass c = destLoader.loadClass(classMapping.getObfName());
+					CtClass c = destLoader.loadClass(classMapping.getObfFullName());
 					for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 						System.err.println("\t\t" + EntryFactory.getBehaviorEntry(behavior));
 					}
 					
 					System.err.println("\tAvailable source methods:");
-					c = sourceLoader.loadClass(matchedClassNames.inverse().get(classMapping.getObfName()));
+					c = sourceLoader.loadClass(matchedClassNames.inverse().get(classMapping.getObfFullName()));
 					for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 						System.err.println("\t\t" + EntryFactory.getBehaviorEntry(behavior));
 					}

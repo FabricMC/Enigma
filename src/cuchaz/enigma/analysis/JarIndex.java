@@ -61,9 +61,9 @@ public class JarIndex {
 	private Multimap<String,MethodEntry> m_methodImplementations;
 	private Multimap<BehaviorEntry,EntryReference<BehaviorEntry,BehaviorEntry>> m_behaviorReferences;
 	private Multimap<FieldEntry,EntryReference<FieldEntry,BehaviorEntry>> m_fieldReferences;
-	private Multimap<String,String> m_innerClasses;
-	private Map<String,String> m_outerClasses;
-	private Map<String,BehaviorEntry> m_anonymousClasses;
+	private Multimap<ClassEntry,ClassEntry> m_innerClassesByOuter;
+	private Map<ClassEntry,ClassEntry> m_outerClassesByInner;
+	private Map<ClassEntry,BehaviorEntry> m_anonymousClasses;
 	private Map<MethodEntry,MethodEntry> m_bridgedMethods;
 	
 	public JarIndex() {
@@ -74,8 +74,8 @@ public class JarIndex {
 		m_methodImplementations = HashMultimap.create();
 		m_behaviorReferences = HashMultimap.create();
 		m_fieldReferences = HashMultimap.create();
-		m_innerClasses = HashMultimap.create();
-		m_outerClasses = Maps.newHashMap();
+		m_innerClassesByOuter = HashMultimap.create();
+		m_outerClassesByInner = Maps.newHashMap();
 		m_anonymousClasses = Maps.newHashMap();
 		m_bridgedMethods = Maps.newHashMap();
 	}
@@ -129,33 +129,40 @@ public class JarIndex {
 		}
 		
 		if (buildInnerClasses) {
+			
 			// step 5: index inner classes and anonymous classes
 			for (CtClass c : JarClassIterator.classes(jar)) {
 				ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
-				String outerClassName = findOuterClass(c);
-				if (outerClassName != null) {
-					String innerClassName = c.getSimpleName();
-					m_innerClasses.put(outerClassName, innerClassName);
-					boolean innerWasAdded = m_outerClasses.put(innerClassName, outerClassName) == null;
+				ClassEntry innerClassEntry = EntryFactory.getClassEntry(c);
+				ClassEntry outerClassEntry = findOuterClass(c);
+				if (outerClassEntry != null) {
+					m_innerClassesByOuter.put(outerClassEntry, innerClassEntry);
+					boolean innerWasAdded = m_outerClassesByInner.put(innerClassEntry, outerClassEntry) == null;
 					assert (innerWasAdded);
 					
-					BehaviorEntry enclosingBehavior = isAnonymousClass(c, outerClassName);
+					BehaviorEntry enclosingBehavior = isAnonymousClass(c, outerClassEntry);
 					if (enclosingBehavior != null) {
-						m_anonymousClasses.put(innerClassName, enclosingBehavior);
+						m_anonymousClasses.put(innerClassEntry, enclosingBehavior);
 						
 						// DEBUG
-						// System.out.println( "ANONYMOUS: " + outerClassName + "$" + innerClassName );
+						//System.out.println("ANONYMOUS: " + outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName());
 					} else {
 						// DEBUG
-						// System.out.println( "INNER: " + outerClassName + "$" + innerClassName );
+						//System.out.println("INNER: " + outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName());
 					}
 				}
 			}
 			
 			// step 6: update other indices with inner class info
 			Map<String,String> renames = Maps.newHashMap();
-			for (Map.Entry<String,String> entry : m_outerClasses.entrySet()) {
-				renames.put(Constants.NonePackage + "/" + entry.getKey(), entry.getValue() + "$" + entry.getKey());
+			for (Map.Entry<ClassEntry,ClassEntry> mapEntry : m_innerClassesByOuter.entries()) {
+				ClassEntry outerClassEntry = mapEntry.getKey();
+				ClassEntry innerClassEntry = mapEntry.getValue();
+				outerClassEntry = EntryFactory.getChainedOuterClassName(this, outerClassEntry);
+				String newName = outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName();
+				// DEBUG
+				//System.out.println("REPLACE: " + innerClassEntry.getName() + " WITH " + newName);
+				renames.put(innerClassEntry.getName(), newName);
 			}
 			EntryRenamer.renameClassesInSet(renames, m_obfClassEntries);
 			m_translationIndex.renameClasses(renames);
@@ -290,7 +297,7 @@ public class JarIndex {
 		}
 	}
 	
-	private String findOuterClass(CtClass c) {
+	private ClassEntry findOuterClass(CtClass c) {
 		
 		// inner classes:
 		// have constructors that can (illegally) set synthetic fields
@@ -341,19 +348,19 @@ public class JarIndex {
 			// do we have an answer yet?
 			if (callerClasses.isEmpty()) {
 				if (illegallySetClasses.size() == 1) {
-					return illegallySetClasses.iterator().next().getName();
+					return illegallySetClasses.iterator().next();
 				} else {
 					System.out.println(String.format("WARNING: Unable to find outer class for %s. No caller and no illegally set field classes.", classEntry));
 				}
 			} else {
 				if (callerClasses.size() == 1) {
-					return callerClasses.iterator().next().getName();
+					return callerClasses.iterator().next();
 				} else {
 					// multiple callers, do the illegally set classes narrow it down?
 					Set<ClassEntry> intersection = Sets.newHashSet(callerClasses);
 					intersection.retainAll(illegallySetClasses);
 					if (intersection.size() == 1) {
-						return intersection.iterator().next().getName();
+						return intersection.iterator().next();
 					} else {
 						System.out.println(String.format("WARNING: Unable to choose outer class for %s among options: %s", classEntry, callerClasses));
 					}
@@ -448,7 +455,7 @@ public class JarIndex {
 		return true;
 	}
 	
-	private BehaviorEntry isAnonymousClass(CtClass c, String outerClassName) {
+	private BehaviorEntry isAnonymousClass(CtClass c, ClassEntry outerClassEntry) {
 		
 		ClassEntry innerClassEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
 		
@@ -669,23 +676,19 @@ public class JarIndex {
 		return behaviorEntries;
 	}
 	
-	public Collection<String> getInnerClasses(String obfOuterClassName) {
-		return m_innerClasses.get(obfOuterClassName);
+	public Collection<ClassEntry> getInnerClasses(ClassEntry obfOuterClassEntry) {
+		return m_innerClassesByOuter.get(obfOuterClassEntry);
 	}
 	
-	public String getOuterClass(String obfInnerClassName) {
-		// make sure we use the right name
-		if (new ClassEntry(obfInnerClassName).getPackageName() != null) {
-			throw new IllegalArgumentException("Don't reference obfuscated inner classes using packages: " + obfInnerClassName);
-		}
-		return m_outerClasses.get(obfInnerClassName);
+	public ClassEntry getOuterClass(ClassEntry obfInnerClassEntry) {
+		return m_outerClassesByInner.get(obfInnerClassEntry);
 	}
 	
-	public boolean isAnonymousClass(String obfInnerClassName) {
-		return m_anonymousClasses.containsKey(obfInnerClassName);
+	public boolean isAnonymousClass(ClassEntry obfInnerClassEntry) {
+		return m_anonymousClasses.containsKey(obfInnerClassEntry);
 	}
 	
-	public BehaviorEntry getAnonymousClassCaller(String obfInnerClassName) {
+	public BehaviorEntry getAnonymousClassCaller(ClassEntry obfInnerClassName) {
 		return m_anonymousClasses.get(obfInnerClassName);
 	}
 	

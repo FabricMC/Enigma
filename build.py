@@ -18,8 +18,8 @@ import ssjb
 import ssjb.ivy
 
 
-ArtifactStandalone = ssjb.ivy.Dep("cuchaz:enigma:0.7b")
-ArtifactLib = ssjb.ivy.Dep("cuchaz:enigma-lib:0.7b")
+ArtifactStandalone = ssjb.ivy.Dep("cuchaz:enigma:0.8b")
+ArtifactLib = ssjb.ivy.Dep("cuchaz:enigma-lib:0.8b")
 
 # dependencies
 ExtraRepos = [
@@ -46,7 +46,7 @@ def buildTestJar(name, glob):
 	pathJar = os.path.join(DirBuild, "%s.jar" % name)
 	pathObfJar = os.path.join(DirBuild, "%s.obf.jar" % name)
 
-	# build the deobf jar
+	# build the unobf jar
 	with ssjb.file.TempDir("tmp") as dirTemp:
 		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin, "cuchaz/enigma/inputs/Keep.class"))
 		ssjb.file.copyTree(dirTemp, DirBin, ssjb.file.find(DirBin, glob))
@@ -58,12 +58,17 @@ def buildTestJar(name, glob):
 		["@proguard.conf", "-injars", pathJar, "-outjars", pathObfJar]
 	)
 
+def buildDeobfTestJar(outPath, inPath):
+	ssjb.callJava(
+		[DirBin, os.path.join(DirLib, "deps.jar")],
+		"cuchaz.enigma.CommandMain",
+		["deobfuscate", inPath, outPath]
+	)
 
 def applyReadme(dirTemp):
 	ssjb.file.copy(dirTemp, "license.APL2.txt")
 	ssjb.file.copy(dirTemp, "license.GPL3.txt")
 	ssjb.file.copy(dirTemp, "readme.txt")
-
 
 def buildStandaloneJar(dirOut):
 	with ssjb.file.TempDir(os.path.join(dirOut, "tmp")) as dirTemp:
@@ -105,10 +110,11 @@ def taskBuildTestJars():
 	buildTestJar("testConstructors", "cuchaz/enigma/inputs/constructors/*.class")
 	buildTestJar("testInheritanceTree", "cuchaz/enigma/inputs/inheritanceTree/*.class")
 	buildTestJar("testInnerClasses", "cuchaz/enigma/inputs/innerClasses/*.class")
-	buildTestJar("testTranslation", "cuchaz/enigma/inputs/translation/*.class")
-	
+	taskBuildTranslationTestJar()
+
 def taskBuildTranslationTestJar():
 	buildTestJar("testTranslation", "cuchaz/enigma/inputs/translation/*.class")
+	buildDeobfTestJar(os.path.join(DirBuild, "testTranslation.deobf.jar"), os.path.join(DirBuild, "testTranslation.obf.jar"))
 
 def taskBuild():
 	ssjb.file.delete(DirBuild)

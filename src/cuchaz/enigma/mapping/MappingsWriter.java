@@ -31,9 +31,9 @@ public class MappingsWriter {
 	
 	private void write(PrintWriter out, ClassMapping classMapping, int depth) throws IOException {
 		if (classMapping.getDeobfName() == null) {
-			out.format("%sCLASS %s\n", getIndent(depth), classMapping.getObfName());
+			out.format("%sCLASS %s\n", getIndent(depth), classMapping.getObfFullName());
 		} else {
-			out.format("%sCLASS %s %s\n", getIndent(depth), classMapping.getObfName(), classMapping.getDeobfName());
+			out.format("%sCLASS %s %s\n", getIndent(depth), classMapping.getObfFullName(), classMapping.getDeobfName());
 		}
 		
 		for (ClassMapping innerClassMapping : sorted(classMapping.innerClasses())) {

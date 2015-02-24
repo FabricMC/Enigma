@@ -213,7 +213,7 @@ public class MappingsRenamer {
 		ClassMapping classMapping = m_mappings.m_classesByObf.get(obfClassName);
 		if (classMapping == null) {
 			classMapping = new ClassMapping(obfClassName);
-			boolean obfWasAdded = m_mappings.m_classesByObf.put(classMapping.getObfName(), classMapping) == null;
+			boolean obfWasAdded = m_mappings.m_classesByObf.put(classMapping.getObfFullName(), classMapping) == null;
 			assert (obfWasAdded);
 		}
 		return classMapping;

@@ -97,8 +97,44 @@ public class TestTranslator {
 		assertMapping(newMethod("none/c", "b", "()I"), newMethod("deobf/C_SubClass", "m2", "()I"));
 	}
 	
+	@Test
+	public void innerClasses() {
+		
+		// classes
+		assertMapping(newClass("none/h"), newClass("deobf/H_OuterClass"));
+		assertMapping(newClass("none/h$i"), newClass("deobf/H_OuterClass$I_InnerClass"));
+		assertMapping(newClass("none/h$i$j"), newClass("deobf/H_OuterClass$I_InnerClass$J_InnerInnerClass"));
+		assertMapping(newClass("none/h$k"), newClass("deobf/H_OuterClass$k"));
+		assertMapping(newClass("none/h$k$l"), newClass("deobf/H_OuterClass$k$L_NamedInnerClass"));
+		
+		// fields
+		assertMapping(newField("none/h$i", "a", "I"), newField("deobf/H_OuterClass$I_InnerClass", "f1", "I"));
+		assertMapping(newField("none/h$i", "a", "Ljava/lang/String;"), newField("deobf/H_OuterClass$I_InnerClass", "f2", "Ljava/lang/String;"));
+		assertMapping(newField("none/h$i$j", "a", "I"), newField("deobf/H_OuterClass$I_InnerClass$J_InnerInnerClass", "f3", "I"));
+		assertMapping(newField("none/h$k$l", "a", "I"), newField("deobf/H_OuterClass$k$L_NamedInnerClass", "f4", "I"));
+		
+		// methods
+		assertMapping(newMethod("none/h$i", "a", "()V"), newMethod("deobf/H_OuterClass$I_InnerClass", "m1", "()V"));
+		assertMapping(newMethod("none/h$i$j", "a", "()V"), newMethod("deobf/H_OuterClass$I_InnerClass$J_InnerInnerClass", "m2", "()V"));
+	}
+	
+	@Test
+	public void namelessClass() {
+		assertMapping(newClass("none/m"), newClass("none/m"));
+	}
+	
 	private void assertMapping(Entry obf, Entry deobf) {
 		assertThat(m_deobfTranslator.translateEntry(obf), is(deobf));
 		assertThat(m_obfTranslator.translateEntry(deobf), is(obf));
+		
+		String deobfName = m_deobfTranslator.translate(obf);
+		if (deobfName != null) {
+			assertThat(deobfName, is(deobf.getName()));
+		}
+		
+		String obfName = m_obfTranslator.translate(deobf);
+		if (obfName != null) {
+			assertThat(obfName, is(obf.getName()));
+		}
 	}
 }

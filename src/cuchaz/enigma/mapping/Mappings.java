@@ -37,7 +37,7 @@ public class Mappings implements Serializable {
 		this();
 		
 		for (ClassMapping classMapping : classes) {
-			m_classesByObf.put(classMapping.getObfName(), classMapping);
+			m_classesByObf.put(classMapping.getObfFullName(), classMapping);
 			if (classMapping.getDeobfName() != null) {
 				m_classesByDeobf.put(classMapping.getDeobfName(), classMapping);
 			}
@@ -50,10 +50,10 @@ public class Mappings implements Serializable {
 	}
 	
 	public void addClassMapping(ClassMapping classMapping) {
-		if (m_classesByObf.containsKey(classMapping.getObfName())) {
-			throw new Error("Already have mapping for " + classMapping.getObfName());
+		if (m_classesByObf.containsKey(classMapping.getObfFullName())) {
+			throw new Error("Already have mapping for " + classMapping.getObfFullName());
 		}
-		boolean obfWasAdded = m_classesByObf.put(classMapping.getObfName(), classMapping) == null;
+		boolean obfWasAdded = m_classesByObf.put(classMapping.getObfFullName(), classMapping) == null;
 		assert (obfWasAdded);
 		if (classMapping.getDeobfName() != null) {
 			if (m_classesByDeobf.containsKey(classMapping.getDeobfName())) {
@@ -65,7 +65,7 @@ public class Mappings implements Serializable {
 	}
 	
 	public void removeClassMapping(ClassMapping classMapping) {
-		boolean obfWasRemoved = m_classesByObf.remove(classMapping.getObfName()) != null;
+		boolean obfWasRemoved = m_classesByObf.remove(classMapping.getObfFullName()) != null;
 		assert (obfWasRemoved);
 		if (classMapping.getDeobfName() != null) {
 			boolean deobfWasRemoved = m_classesByDeobf.remove(classMapping.getDeobfName()) != null;
@@ -103,7 +103,7 @@ public class Mappings implements Serializable {
 					if (classMapping.getDeobfName() != null) {
 						classes.put(classMapping.getDeobfName(), classMapping);
 					} else {
-						classes.put(classMapping.getObfName(), classMapping);
+						classes.put(classMapping.getObfFullName(), classMapping);
 					}
 				}
 				
@@ -144,7 +144,7 @@ public class Mappings implements Serializable {
 		for (ClassMapping classMapping : classes()) {
 			
 			// add the class name
-			classNames.add(classMapping.getObfName());
+			classNames.add(classMapping.getObfFullName());
 			
 			// add classes from method signatures
 			for (MethodMapping methodMapping : classMapping.methods()) {

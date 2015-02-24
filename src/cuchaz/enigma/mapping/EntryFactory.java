@@ -25,25 +25,19 @@ public class EntryFactory {
 	}
 	
 	public static ClassEntry getObfClassEntry(JarIndex jarIndex, ClassMapping classMapping) {
-		return new ClassEntry(getChainedOuterClassName(jarIndex, classMapping.getObfName()));
+		return getChainedOuterClassName(jarIndex, new ClassEntry(classMapping.getObfFullName()));
 	}
 	
-	private static String getChainedOuterClassName(JarIndex jarIndex, String obfClassName) {
+	public static ClassEntry getChainedOuterClassName(JarIndex jarIndex, ClassEntry obfClassEntry) {
 		
 		// lookup the chain of outer classes
-		List<String> obfOuterClassNames = Lists.newArrayList();
-		String checkName = obfClassName;
+		List<ClassEntry> obfClassChain = Lists.newArrayList(obfClassEntry);
+		ClassEntry checkClassEntry = obfClassEntry;
 		while (true) {
-			
-			// if this class name has a package, then it can't be an inner class
-			if (!new ClassEntry(checkName).isInDefaultPackage()) {
-				break;
-			}
-			
-			String obfOuterClassName = jarIndex.getOuterClass(checkName);
-			if (obfOuterClassName != null) {
-				obfOuterClassNames.add(obfOuterClassName);
-				checkName = obfOuterClassName;
+			ClassEntry obfOuterClassEntry = jarIndex.getOuterClass(checkClassEntry);
+			if (obfOuterClassEntry != null) {
+				obfClassChain.add(obfOuterClassEntry);
+				checkClassEntry = obfOuterClassEntry;
 			} else {
 				break;
 			}
@@ -51,12 +45,15 @@ public class EntryFactory {
 		
 		// build the chained class name
 		StringBuilder buf = new StringBuilder();
-		for (int i=obfOuterClassNames.size()-1; i>=0; i--) {
-			buf.append(obfOuterClassNames.get(i));
-			buf.append("$");
+		for (int i=obfClassChain.size()-1; i>=0; i--) {
+			if (buf.length() == 0) {
+				buf.append(obfClassChain.get(i).getName());
+			} else {
+				buf.append("$");
+				buf.append(obfClassChain.get(i).getSimpleName());
+			}
 		}
-		buf.append(obfClassName);
-		return buf.toString();
+		return new ClassEntry(buf.toString());
 	}
 	
 	public static ClassEntry getDeobfClassEntry(ClassMapping classMapping) {

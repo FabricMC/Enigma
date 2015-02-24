@@ -111,7 +111,7 @@ public class MainFormatConverter {
 	}
 
 	private static Object getFieldKey(ClassMapping classMapping, FieldMapping fieldMapping) {
-		return new ClassEntry(classMapping.getObfName()).getSimpleName() + "." + fieldMapping.getObfName();
+		return classMapping.getObfSimpleName() + "." + fieldMapping.getObfName();
 	}
 
 	private static String getFieldKey(FieldEntry obfFieldEntry) {

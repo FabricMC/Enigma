@@ -18,23 +18,30 @@ import java.util.jar.JarFile;
 
 import org.junit.Test;
 
+import static cuchaz.enigma.TestEntryFactory.*;
+
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.mapping.ClassEntry;
 
 public class TestInnerClasses {
 	
 	private JarIndex m_index;
 	private Deobfuscator m_deobfuscator;
 	
-	private static final String AnonymousOuter = "none/a";
-	private static final String AnonymousInner = "b";
-	private static final String SimpleOuter = "none/g";
-	private static final String SimpleInner = "h";
-	private static final String ConstructorArgsOuter = "none/e";
-	private static final String ConstructorArgsInner = "f";
-	private static final String AnonymousWithScopeArgsOuter = "none/c";
-	private static final String AnonymousWithScopeArgsInner = "d";
-	private static final String AnonymousWithOuterAccessOuter = "none/i";
-	private static final String AnonymousWithOuterAccessInner = "j";
+	private static final ClassEntry AnonymousOuter = newClass("none/a");
+	private static final ClassEntry AnonymousInner = newClass("none/b");
+	private static final ClassEntry SimpleOuter = newClass("none/g");
+	private static final ClassEntry SimpleInner = newClass("none/h");
+	private static final ClassEntry ConstructorArgsOuter = newClass("none/e");
+	private static final ClassEntry ConstructorArgsInner = newClass("none/f");
+	private static final ClassEntry AnonymousWithScopeArgsOuter = newClass("none/c");
+	private static final ClassEntry AnonymousWithScopeArgsInner = newClass("none/d");
+	private static final ClassEntry AnonymousWithOuterAccessOuter = newClass("none/i");
+	private static final ClassEntry AnonymousWithOuterAccessInner = newClass("none/j");
+	private static final ClassEntry ClassTreeRoot = newClass("none/k");
+	private static final ClassEntry ClassTreeLevel1 = newClass("none/l");
+	private static final ClassEntry ClassTreeLevel2 = newClass("none/m");
+	private static final ClassEntry ClassTreeLevel3 = newClass("none/n");
 	
 	public TestInnerClasses()
 	throws Exception {
@@ -84,7 +91,43 @@ public class TestInnerClasses {
 		decompile(AnonymousWithOuterAccessOuter);
 	}
 	
-	private void decompile(String name) {
-		m_deobfuscator.getSourceTree(name);
+	@Test
+	public void classTree() {
+		
+		// root level
+		assertThat(m_index.containsObfClass(ClassTreeRoot), is(true));
+		assertThat(m_index.getOuterClass(ClassTreeRoot), is(nullValue()));
+		assertThat(m_index.getInnerClasses(ClassTreeRoot), containsInAnyOrder(ClassTreeLevel1));
+		
+		// level 1
+		ClassEntry fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
+			+ "$" + ClassTreeLevel1.getSimpleName()
+		);
+		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
+		assertThat(m_index.getOuterClass(ClassTreeLevel1), is(ClassTreeRoot));
+		assertThat(m_index.getInnerClasses(ClassTreeLevel1), containsInAnyOrder(ClassTreeLevel2));
+		
+		// level 2
+		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
+			+ "$" + ClassTreeLevel1.getSimpleName()
+			+ "$" + ClassTreeLevel2.getSimpleName()
+		);
+		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
+		assertThat(m_index.getOuterClass(ClassTreeLevel2), is(ClassTreeLevel1));
+		assertThat(m_index.getInnerClasses(ClassTreeLevel2), containsInAnyOrder(ClassTreeLevel3));
+		
+		// level 3
+		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
+			+ "$" + ClassTreeLevel1.getSimpleName()
+			+ "$" + ClassTreeLevel2.getSimpleName()
+			+ "$" + ClassTreeLevel3.getSimpleName()
+		);
+		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
+		assertThat(m_index.getOuterClass(ClassTreeLevel3), is(ClassTreeLevel2));
+		assertThat(m_index.getInnerClasses(ClassTreeLevel3), is(empty()));
+	}
+	
+	private void decompile(ClassEntry classEntry) {
+		m_deobfuscator.getSourceTree(classEntry.getName());
 	}
 }
