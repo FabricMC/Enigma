@@ -28,6 +28,7 @@ import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
+import javassist.bytecode.InnerClassesAttribute;
 import javassist.expr.ConstructorCall;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
@@ -160,9 +161,11 @@ public class JarIndex {
 				ClassEntry innerClassEntry = mapEntry.getValue();
 				outerClassEntry = EntryFactory.getChainedOuterClassName(this, outerClassEntry);
 				String newName = outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName();
-				// DEBUG
-				//System.out.println("REPLACE: " + innerClassEntry.getName() + " WITH " + newName);
-				renames.put(innerClassEntry.getName(), newName);
+				if (!innerClassEntry.getName().equals(newName)) {
+					// DEBUG
+					//System.out.println("REPLACE: " + innerClassEntry.getName() + " WITH " + newName);
+					renames.put(innerClassEntry.getName(), newName);
+				}
 			}
 			EntryRenamer.renameClassesInSet(renames, m_obfClassEntries);
 			m_translationIndex.renameClasses(renames);
@@ -299,6 +302,22 @@ public class JarIndex {
 	
 	private ClassEntry findOuterClass(CtClass c) {
 		
+		ClassEntry classEntry = EntryFactory.getClassEntry(c);
+		
+		// does this class already have an outer class?
+		if (classEntry.isInnerClass()) {
+			return classEntry.getOuterClassEntry();
+		}
+		InnerClassesAttribute innerClassesAttribute = (InnerClassesAttribute)c.getClassFile().getAttribute(InnerClassesAttribute.tag);
+		if (innerClassesAttribute != null) {
+			for (int i=0; i<innerClassesAttribute.tableLength(); i++) {
+				ClassEntry innerClassEntry = new ClassEntry(Descriptor.toJvmName(innerClassesAttribute.innerClass(i)));
+				if (classEntry.equals(innerClassEntry)) {
+					return new ClassEntry(Descriptor.toJvmName(innerClassesAttribute.outerClass(i)));
+				}
+			}
+		}
+		
 		// inner classes:
 		// have constructors that can (illegally) set synthetic fields
 		// the outer class is the only class that calls constructors
@@ -310,7 +329,6 @@ public class JarIndex {
 				continue;
 			}
 			
-			ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
 			ConstructorEntry constructorEntry = EntryFactory.getConstructorEntry(constructor);
 			
 			// gather the classes from the illegally-set synthetic fields

@@ -114,6 +114,9 @@ public class ClassEntry implements Entry, Serializable {
 	}
 	
 	public String getSimpleName() {
+		if (isInnerClass()) {
+			return getInnerClassName();
+		}
 		int pos = m_name.lastIndexOf('/');
 		if (pos > 0) {
 			return m_name.substring(pos + 1);

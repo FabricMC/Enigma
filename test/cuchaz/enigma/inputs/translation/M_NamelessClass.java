@@ -3,14 +3,14 @@ package cuchaz.enigma.inputs.translation;
 
 public class M_NamelessClass {
 	
-	public class I_InnerClass {
+	public class N_InnerClass {
 		
 		public int f1;
 		public String f2;
 		
 		public void m1() {}
 		
-		public class J_InnerInnerClass {
+		public class O_InnerInnerClass {
 			
 			public int f3;
 			
@@ -18,9 +18,11 @@ public class M_NamelessClass {
 		}
 	}
 	
-	public class K_NamelessClass {
-		public class L_NamedInnerClass {
+	public class P_NamelessClass {
+		public class Q_NamedInnerClass {
 			public int f4;
+			public class R_AnotherInnerClass {}
+			public class S_YetAnotherInnerClass {}
 		}
 	}
 }
