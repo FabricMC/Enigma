@@ -1,5 +1,5 @@
 
-Enigma v0.7 beta
+Enigma v0.8 beta
 A tool for deobfuscation of Java bytecode
 
 Copyright Jeff Martin, 2015
@@ -26,3 +26,8 @@ Launch the GUI:
 	
 Use Enigma on the command line:
 	java -cp enigma.jar cuchaz.enigma.CommandMain
+
+
+OPEN SOURCE
+
+https://bitbucket.org/cuchaz/enigma

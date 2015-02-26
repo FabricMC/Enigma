@@ -12,6 +12,7 @@ package cuchaz.enigma.analysis;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -156,11 +157,8 @@ public class JarIndex {
 			
 			// step 6: update other indices with inner class info
 			Map<String,String> renames = Maps.newHashMap();
-			for (Map.Entry<ClassEntry,ClassEntry> mapEntry : m_innerClassesByOuter.entries()) {
-				ClassEntry outerClassEntry = mapEntry.getKey();
-				ClassEntry innerClassEntry = mapEntry.getValue();
-				outerClassEntry = EntryFactory.getChainedOuterClassName(this, outerClassEntry);
-				String newName = outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName();
+			for (ClassEntry innerClassEntry : m_innerClassesByOuter.values()) {
+				String newName = innerClassEntry.buildClassEntry(getObfClassChain(innerClassEntry)).getName();
 				if (!innerClassEntry.getName().equals(newName)) {
 					// DEBUG
 					//System.out.println("REPLACE: " + innerClassEntry.getName() + " WITH " + newName);
@@ -779,5 +777,26 @@ public class JarIndex {
 	
 	public MethodEntry getBridgedMethod(MethodEntry bridgeMethodEntry) {
 		return m_bridgedMethods.get(bridgeMethodEntry);
+	}
+
+	public List<ClassEntry> getObfClassChain(ClassEntry obfClassEntry) {
+		
+		// build class chain in inner-to-outer order
+		List<ClassEntry> obfClassChain = Lists.newArrayList(obfClassEntry);
+		ClassEntry checkClassEntry = obfClassEntry;
+		while (true) {
+			ClassEntry obfOuterClassEntry = getOuterClass(checkClassEntry);
+			if (obfOuterClassEntry != null) {
+				obfClassChain.add(obfOuterClassEntry);
+				checkClassEntry = obfOuterClassEntry;
+			} else {
+				break;
+			}
+		}
+		
+		// switch to outer-to-inner order
+		Collections.reverse(obfClassChain);
+		
+		return obfClassChain;
 	}
 }

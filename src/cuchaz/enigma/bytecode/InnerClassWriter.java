@@ -11,7 +11,6 @@
 package cuchaz.enigma.bytecode;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javassist.CtClass;
@@ -36,35 +35,14 @@ public class InnerClassWriter {
 	
 	public void write(CtClass c) {
 		
-		// build the class chain (inner to outer)
 		ClassEntry obfClassEntry = EntryFactory.getClassEntry(c);
-		List<ClassEntry> obfClassChain = Lists.newArrayList();
-		ClassEntry checkClassEntry = obfClassEntry;
-		while (checkClassEntry != null) {
-			obfClassChain.add(checkClassEntry);
-			checkClassEntry = m_index.getOuterClass(checkClassEntry);
-		}
-		
-		// change order: outer to inner
-		Collections.reverse(obfClassChain);
-		
-		// does this class have any inner classes?
-		Collection<ClassEntry> obfInnerClassEntries = m_index.getInnerClasses(obfClassEntry);
+		List<ClassEntry> obfClassChain = m_index.getObfClassChain(obfClassEntry);
 		
 		boolean isInnerClass = obfClassChain.size() > 1;
 		if (isInnerClass) {
 			
 			// it's an inner class, rename it to the fully qualified name
-			StringBuilder buf = new StringBuilder();
-			for (ClassEntry obfChainClassEntry : obfClassChain) {
-				if (buf.length() == 0) {
-					buf.append(obfChainClassEntry.getName());
-				} else {
-					buf.append("$");
-					buf.append(obfChainClassEntry.getSimpleName());
-				}
-			}
-			c.setName(buf.toString());
+			c.setName(obfClassEntry.buildClassEntry(obfClassChain).getName());
 			
 			BehaviorEntry caller = m_index.getAnonymousClassCaller(obfClassEntry);
 			if (caller != null) {
@@ -78,6 +56,9 @@ public class InnerClassWriter {
 			}
 		}
 		
+		// does this class have any inner classes?
+		Collection<ClassEntry> obfInnerClassEntries = m_index.getInnerClasses(obfClassEntry);
+		
 		if (isInnerClass || !obfInnerClassEntries.isEmpty()) {
 			
 			// create an inner class attribute
@@ -86,7 +67,11 @@ public class InnerClassWriter {
 			
 			// write the ancestry, but not the outermost class
 			for (int i=1; i<obfClassChain.size(); i++) {
-				writeInnerClass(attr, obfClassChain, obfClassChain.get(i));
+				ClassEntry obfInnerClassEntry = obfClassChain.get(i);
+				writeInnerClass(attr, obfClassChain, obfInnerClassEntry);
+				
+				// update references to use the fully qualified inner class name
+				c.replaceClassName(obfInnerClassEntry.getName(), obfInnerClassEntry.buildClassEntry(obfClassChain).getName());
 			}
 			
 			// write the inner classes
@@ -96,34 +81,34 @@ public class InnerClassWriter {
 				List<ClassEntry> extendedObfClassChain = Lists.newArrayList(obfClassChain);
 				extendedObfClassChain.add(obfInnerClassEntry);
 				
-				String fullyQualifiedInnerClassName = writeInnerClass(attr, extendedObfClassChain, obfInnerClassEntry);
+				writeInnerClass(attr, extendedObfClassChain, obfInnerClassEntry);
 				
-				// make sure we only reference the fully qualified inner class name
-				c.replaceClassName(obfInnerClassEntry.getName(), fullyQualifiedInnerClassName);
+				// update references to use the fully qualified inner class name
+				c.replaceClassName(obfInnerClassEntry.getName(), obfInnerClassEntry.buildClassEntry(extendedObfClassChain).getName());
 			}
 		}
 	}
 	
-	private String writeInnerClass(InnerClassesAttribute attr, List<ClassEntry> obfClassChain, ClassEntry obfClassEntry) {
+	private void writeInnerClass(InnerClassesAttribute attr, List<ClassEntry> obfClassChain, ClassEntry obfClassEntry) {
 		
 		// get the new inner class name
-		String obfInnerClassName = getFullyQualifiedName(obfClassChain, obfClassEntry);
-		String obfParentClassName = getFullyQualifiedParentName(obfClassChain, obfClassEntry);
+		ClassEntry obfInnerClassEntry = obfClassEntry.buildClassEntry(obfClassChain);
+		ClassEntry obfOuterClassEntry = obfInnerClassEntry.getOuterClassEntry();
 		
 		// here's what the JVM spec says about the InnerClasses attribute
 		// append(inner, parent, 0 if anonymous else simple name, flags);
 		
 		// update the attribute with this inner class
 		ConstPool constPool = attr.getConstPool();
-		int innerClassIndex = constPool.addClassInfo(obfInnerClassName);
-		int parentClassIndex = constPool.addClassInfo(obfParentClassName);
-		int innerClassSimpleNameIndex = 0;
+		int innerClassIndex = constPool.addClassInfo(obfInnerClassEntry.getName());
+		int parentClassIndex = constPool.addClassInfo(obfOuterClassEntry.getName());
+		int innerClassNameIndex = 0;
 		int accessFlags = 0;
 		if (!m_index.isAnonymousClass(obfClassEntry)) {
-			innerClassSimpleNameIndex = constPool.addUtf8Info(obfClassEntry.getSimpleName());
+			innerClassNameIndex = constPool.addUtf8Info(obfInnerClassEntry.getInnerClassName());
 		}
 		
-		attr.append(innerClassIndex, parentClassIndex, innerClassSimpleNameIndex, accessFlags);
+		attr.append(innerClassIndex, parentClassIndex, innerClassNameIndex, accessFlags);
 		
 		/* DEBUG 
 		System.out.println(String.format("\tOBF: %s -> ATTR: %s,%s,%s (replace %s with %s)",
@@ -135,32 +120,5 @@ public class InnerClassWriter {
 			obfClassEntry.getName()
 		));
 		*/
-		
-		return obfInnerClassName;
-	}
-
-	private String getFullyQualifiedParentName(List<ClassEntry> classChain, ClassEntry classEntry) {
-		assert(classChain.size() > 1);
-		assert(classChain.contains(classEntry));
-		StringBuilder buf = new StringBuilder();
-		for (int i=0; classChain.get(i) != classEntry; i++) {
-			ClassEntry chainEntry = classChain.get(i);
-			if (buf.length() == 0) {
-				buf.append(chainEntry.getName());
-			} else {
-				buf.append("$");
-				buf.append(chainEntry.getSimpleName());
-			}
-		}
-		return buf.toString();
-	}
-	
-	private String getFullyQualifiedName(List<ClassEntry> classChain, ClassEntry classEntry) {
-		boolean isInner = classChain.size() > 1;
-		if (isInner) {
-			return getFullyQualifiedParentName(classChain, classEntry) + "$" + classEntry.getSimpleName();
-		} else {
-			return classEntry.getName();
-		}
 	}
 }

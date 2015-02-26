@@ -204,33 +204,36 @@ public class Deobfuscator {
 		}
 	}
 	
-	public CompilationUnit getSourceTree(String obfClassName) {
-		// is this class deobfuscated?
-		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
-		// the decompiler only sees the deobfuscated class, so we need to load it by the deobfuscated name
-		String lookupClassName = obfClassName;
-		ClassMapping classMapping = m_mappings.getClassByObf(obfClassName);
-		if (classMapping != null && classMapping.getDeobfName() != null) {
-			lookupClassName = classMapping.getDeobfName();
-		}
+	public CompilationUnit getSourceTree(String className) {
 		
-		// is this class even in the jar?
-		if (!m_jarIndex.containsObfClass(new ClassEntry(obfClassName))) {
-			return null;
+		// we don't know if this class name is obfuscated or deobfuscated
+		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
+		// the decompiler only sees classes after deobfuscation, so we need to load it by the deobfuscated name if there is one
+		
+		// first, assume class name is deobf
+		String deobfClassName = className;
+		
+		// if it wasn't actually deobf, then we can find a mapping for it and get the deobf name
+		ClassMapping classMapping = m_mappings.getClassByObf(className);
+		if (classMapping != null && classMapping.getDeobfName() != null) {
+			deobfClassName = classMapping.getDeobfName();
 		}
 		
 		// set the type loader
-		m_settings.setTypeLoader(new TranslatingTypeLoader(
+		TranslatingTypeLoader loader = new TranslatingTypeLoader(
 			m_jar,
 			m_jarIndex,
 			getTranslator(TranslationDirection.Obfuscating),
 			getTranslator(TranslationDirection.Deobfuscating)
-		));
+		); 
+		m_settings.setTypeLoader(loader);
 
 		// see if procyon can find the type
-		TypeReference type = new MetadataSystem(m_settings.getTypeLoader()).lookupType(lookupClassName);
+		TypeReference type = new MetadataSystem(loader).lookupType(deobfClassName);
 		if (type == null) {
-			throw new Error("Unable to find type: " + lookupClassName + " (obf name: " + obfClassName + ")");
+			throw new Error(String.format("Unable to find type: %s (deobf: %s)\nTried class names: %s",
+				className, deobfClassName, loader.getClassNamesToTry(deobfClassName)
+			));
 		}
 		TypeDefinition resolvedType = type.resolve();
 		

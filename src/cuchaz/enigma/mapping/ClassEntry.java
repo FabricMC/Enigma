@@ -11,6 +11,7 @@
 package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class ClassEntry implements Entry, Serializable {
 	
@@ -114,13 +115,28 @@ public class ClassEntry implements Entry, Serializable {
 	}
 	
 	public String getSimpleName() {
-		if (isInnerClass()) {
-			return getInnerClassName();
-		}
 		int pos = m_name.lastIndexOf('/');
 		if (pos > 0) {
 			return m_name.substring(pos + 1);
 		}
 		return m_name;
+	}
+	
+	public ClassEntry buildClassEntry(List<ClassEntry> classChain) {
+		assert(classChain.contains(this));
+		StringBuilder buf = new StringBuilder();
+		for (ClassEntry chainEntry : classChain) {
+			if (buf.length() == 0) {
+				buf.append(chainEntry.getName());
+			} else {
+				buf.append("$");
+				buf.append(chainEntry.isInnerClass() ? chainEntry.getInnerClassName() : chainEntry.getSimpleName());
+			}
+			
+			if (chainEntry == this) {
+				break;
+			}
+		}
+		return new ClassEntry(buf.toString());
 	}
 }

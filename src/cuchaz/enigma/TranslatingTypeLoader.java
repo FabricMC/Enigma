@@ -13,6 +13,7 @@ package cuchaz.enigma;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -24,6 +25,7 @@ import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.Descriptor;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Maps;
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
@@ -65,19 +67,20 @@ public class TranslatingTypeLoader implements ITypeLoader {
 	}
 	
 	@Override
-	public boolean tryLoadType(String deobfClassName, Buffer out) {
+	public boolean tryLoadType(String className, Buffer out) {
+		
 		// check the cache
 		byte[] data;
-		if (m_cache.containsKey(deobfClassName)) {
-			data = m_cache.get(deobfClassName);
+		if (m_cache.containsKey(className)) {
+			data = m_cache.get(className);
 		} else {
-			data = loadType(deobfClassName);
-			m_cache.put(deobfClassName, data);
+			data = loadType(className);
+			m_cache.put(className, data);
 		}
 		
 		if (data == null) {
 			// chain to default type loader
-			return m_defaultTypeLoader.tryLoadType(deobfClassName, out);
+			return m_defaultTypeLoader.tryLoadType(className, out);
 		}
 		
 		// send the class to the decompiler
@@ -88,6 +91,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 	}
 	
 	public CtClass loadClass(String deobfClassName) {
+		
 		byte[] data = loadType(deobfClassName);
 		if (data == null) {
 			return null;
@@ -104,40 +108,35 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		}
 	}
 	
-	private byte[] loadType(String deobfClassName) {
+	private byte[] loadType(String className) {
 		
-		ClassEntry deobfClassEntry = new ClassEntry(deobfClassName);
-		ClassEntry obfClassEntry = m_obfuscatingTranslator.translateEntry(deobfClassEntry);
+		// NOTE: don't know if class name is obf or deobf
+		ClassEntry classEntry = new ClassEntry(className);
+		ClassEntry obfClassEntry = m_obfuscatingTranslator.translateEntry(classEntry);
 		
-		// is this an inner class referenced directly?
-		ClassEntry obfOuterClassEntry = m_jarIndex.getOuterClass(obfClassEntry);
-		if (obfOuterClassEntry != null) {
-			// this class doesn't really exist. Reference it by outer$inner instead
-			System.err.println(String.format("WARNING: class %s referenced by bare inner name instead of via outer class %s", deobfClassName, obfOuterClassEntry));
+		// is this an inner class referenced directly? (ie trying to load b instead of a$b)
+		if (!obfClassEntry.isInnerClass()) {
+			List<ClassEntry> classChain = m_jarIndex.getObfClassChain(obfClassEntry);
+			if (classChain.size() > 1) {
+				System.err.println(String.format("WARNING: no class %s after inner class reconstruction. Try %s",
+					className, obfClassEntry.buildClassEntry(classChain)
+				));
+				return null;
+			}
+		}
+		
+		// is this a class we should even know about?
+		if (!m_jarIndex.containsObfClass(obfClassEntry)) {
 			return null;
 		}
 		
-		/* DEBUG
-		if( !Arrays.asList( "java", "org", "io" ).contains( deobfClassName.split( "/" )[0] ) ) {
-			System.out.println( String.format( "Looking for %s (%s)", deobfClassEntry.getName(), obfClassEntry.getName() ) );
-		}
-		*/
-		
-		// get the jar entry
-		String classFileName;
-		if (obfClassEntry.isInnerClass()) {
-			// use just the inner class name for inner classes
-			classFileName = obfClassEntry.getInnerClassName();
-		} else if (obfClassEntry.getPackageName().equals(Constants.NonePackage)) {
-			// use the outer class simple name for classes in the none package
-			classFileName = obfClassEntry.getSimpleName();
-		} else {
-			// otherwise, just use the class name (ie for classes in packages)
-			classFileName = obfClassEntry.getName();
-		}
-		
-		JarEntry entry = m_jar.getJarEntry(classFileName + ".class");
-		if (entry == null) {
+		// DEBUG
+		//System.out.println(String.format("Looking for %s (obf: %s)", classEntry.getName(), obfClassEntry.getName()));
+
+		// find the class in the jar
+		String classInJarName = findClassInJar(obfClassEntry);
+		if (classInJarName == null) {
+			// couldn't find it
 			return null;
 		}
 		
@@ -145,7 +144,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 			// read the class file into a buffer
 			ByteArrayOutputStream data = new ByteArrayOutputStream();
 			byte[] buf = new byte[1024 * 1024]; // 1 KiB
-			InputStream in = m_jar.getInputStream(entry);
+			InputStream in = m_jar.getInputStream(m_jar.getJarEntry(classInJarName + ".class"));
 			while (true) {
 				int bytesRead = in.read(buf);
 				if (bytesRead <= 0) {
@@ -158,15 +157,15 @@ public class TranslatingTypeLoader implements ITypeLoader {
 			buf = data.toByteArray();
 			
 			// load the javassist handle to the raw class
-			String javaClassFileName = Descriptor.toJavaName(classFileName);
 			ClassPool classPool = new ClassPool();
-			classPool.insertClassPath(new ByteArrayClassPath(javaClassFileName, buf));
-			CtClass c = classPool.get(javaClassFileName);
+			String classInJarJavaName = Descriptor.toJavaName(classInJarName);
+			classPool.insertClassPath(new ByteArrayClassPath(classInJarJavaName, buf));
+			CtClass c = classPool.get(classInJarJavaName);
 			
 			c = transformClass(c);
 			
 			// sanity checking
-			assertClassName(c, deobfClassEntry);
+			assertClassName(c, classEntry);
 			
 			// DEBUG
 			//Util.writeClass( c );
@@ -178,6 +177,38 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		}
 	}
 	
+	private String findClassInJar(ClassEntry obfClassEntry) {
+
+		// try to find the class in the jar
+		for (String className : getClassNamesToTry(obfClassEntry)) {
+			JarEntry jarEntry = m_jar.getJarEntry(className + ".class");
+			if (jarEntry != null) {
+				return className;
+			}
+		}
+		
+		// didn't find it  ;_;
+		return null;
+	}
+	
+	public List<String> getClassNamesToTry(String className) {
+		return getClassNamesToTry(m_obfuscatingTranslator.translateEntry(new ClassEntry(className)));
+	}
+	
+	public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
+		List<String> classNamesToTry = Lists.newArrayList();
+		classNamesToTry.add(obfClassEntry.getName());
+		if (obfClassEntry.getPackageName().equals(Constants.NonePackage)) {
+			// taking off the none package, if any
+			classNamesToTry.add(obfClassEntry.getSimpleName());
+		}
+		if (obfClassEntry.isInnerClass()) {
+			// try just the inner class name
+			classNamesToTry.add(obfClassEntry.getInnerClassName());
+		}
+		return classNamesToTry;
+	}
+
 	public CtClass transformClass(CtClass c)
 	throws IOException, NotFoundException, CannotCompileException {
 		

@@ -1,7 +1,5 @@
 package cuchaz.enigma.mapping;
 
-import java.util.List;
-
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -13,7 +11,6 @@ import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
-import com.beust.jcommander.internal.Lists;
 import com.strobel.assembler.metadata.MethodDefinition;
 
 import cuchaz.enigma.analysis.JarIndex;
@@ -25,35 +22,8 @@ public class EntryFactory {
 	}
 	
 	public static ClassEntry getObfClassEntry(JarIndex jarIndex, ClassMapping classMapping) {
-		return getChainedOuterClassName(jarIndex, new ClassEntry(classMapping.getObfFullName()));
-	}
-	
-	public static ClassEntry getChainedOuterClassName(JarIndex jarIndex, ClassEntry obfClassEntry) {
-		
-		// lookup the chain of outer classes
-		List<ClassEntry> obfClassChain = Lists.newArrayList(obfClassEntry);
-		ClassEntry checkClassEntry = obfClassEntry;
-		while (true) {
-			ClassEntry obfOuterClassEntry = jarIndex.getOuterClass(checkClassEntry);
-			if (obfOuterClassEntry != null) {
-				obfClassChain.add(obfOuterClassEntry);
-				checkClassEntry = obfOuterClassEntry;
-			} else {
-				break;
-			}
-		}
-		
-		// build the chained class name
-		StringBuilder buf = new StringBuilder();
-		for (int i=obfClassChain.size()-1; i>=0; i--) {
-			if (buf.length() == 0) {
-				buf.append(obfClassChain.get(i).getName());
-			} else {
-				buf.append("$");
-				buf.append(obfClassChain.get(i).getSimpleName());
-			}
-		}
-		return new ClassEntry(buf.toString());
+		ClassEntry obfClassEntry = new ClassEntry(classMapping.getObfFullName());
+		return obfClassEntry.buildClassEntry(jarIndex.getObfClassChain(obfClassEntry));
 	}
 	
 	public static ClassEntry getDeobfClassEntry(ClassMapping classMapping) {
