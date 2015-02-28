@@ -52,9 +52,10 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassNameReplacer;
 import cuchaz.enigma.mapping.Entry;
-import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.EntryFactory;
+import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Signature;
+import cuchaz.enigma.mapping.Type;
 
 public class ClassIdentity {
 	
@@ -68,7 +69,45 @@ public class ClassIdentity {
 	private Multiset<String> m_implements;
 	private Multiset<String> m_implementations;
 	private Multiset<String> m_references;
-	
+
+	private final ClassNameReplacer m_classNameReplacer = new ClassNameReplacer() {
+		
+		private Map<String,String> m_classNames = Maps.newHashMap();
+		
+		@Override
+		public String replace(String className) {
+			
+			// classes not in the none package can be passed through
+			ClassEntry classEntry = new ClassEntry(className);
+			if (!classEntry.getPackageName().equals(Constants.NonePackage)) {
+				return className;
+			}
+			
+			// is this class ourself?
+			if (className.equals(m_classEntry.getName())) {
+				return "CSelf";
+			}
+			
+			// try the namer
+			if (m_namer != null) {
+				String newName = m_namer.getName(className);
+				if (newName != null) {
+					return newName;
+				}
+			}
+			
+			// otherwise, use local naming
+			if (!m_classNames.containsKey(className)) {
+				m_classNames.put(className, getNewClassName());
+			}
+			return m_classNames.get(className);
+		}
+		
+		private String getNewClassName() {
+			return String.format("C%03d", m_classNames.size());
+		}
+	};
+
 	public ClassIdentity(CtClass c, SidedClassNamer namer, JarIndex index, boolean useReferences) {
 		m_namer = namer;
 		
@@ -77,7 +116,7 @@ public class ClassIdentity {
 		m_classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
 		m_fields = HashMultiset.create();
 		for (CtField field : c.getDeclaredFields()) {
-			m_fields.add(scrubSignature(field.getSignature()));
+			m_fields.add(scrubType(field.getSignature()));
 		}
 		m_methods = HashMultiset.create();
 		for (CtMethod method : c.getDeclaredMethods()) {
@@ -93,11 +132,11 @@ public class ClassIdentity {
 		}
 		m_extends = "";
 		if (c.getClassFile().getSuperclass() != null) {
-			m_extends = scrubClassName(c.getClassFile().getSuperclass());
+			m_extends = scrubClassName(Descriptor.toJvmName(c.getClassFile().getSuperclass()));
 		}
 		m_implements = HashMultiset.create();
 		for (String interfaceName : c.getClassFile().getInterfaces()) {
-			m_implements.add(scrubClassName(interfaceName));
+			m_implements.add(scrubClassName(Descriptor.toJvmName(interfaceName)));
 		}
 		
 		// stuff from the jar index
@@ -132,9 +171,14 @@ public class ClassIdentity {
 	
 	private void addReference(EntryReference<? extends Entry,BehaviorEntry> reference) {
 		if (reference.context.getSignature() != null) {
-			m_references.add(String.format("%s_%s", scrubClassName(reference.context.getClassName()), scrubSignature(reference.context.getSignature())));
+			m_references.add(String.format("%s_%s",
+				scrubClassName(reference.context.getClassName()),
+				scrubSignature(reference.context.getSignature())
+			));
 		} else {
-			m_references.add(String.format("%s_<clinit>", scrubClassName(reference.context.getClassName())));
+			m_references.add(String.format("%s_<clinit>",
+				scrubClassName(reference.context.getClassName())
+			));
 		}
 	}
 	
@@ -194,52 +238,27 @@ public class ClassIdentity {
 	}
 	
 	private String scrubClassName(String className) {
-		return scrubSignature("L" + Descriptor.toJvmName(className) + ";");
+		return m_classNameReplacer.replace(className);
+	}
+	
+	private String scrubType(String typeName) {
+		return scrubType(new Type(typeName)).toString();
+	}
+	
+	private Type scrubType(Type type) {
+		if (type.hasClass()) {
+			return new Type(type, m_classNameReplacer);
+		} else {
+			return type;
+		}
 	}
 	
 	private String scrubSignature(String signature) {
-		return scrubSignature(new Signature(signature));
+		return scrubSignature(new Signature(signature)).toString();
 	}
 	
-	private String scrubSignature(Signature signature) {
-		
-		return new Signature(signature, new ClassNameReplacer() {
-			
-			private Map<String,String> m_classNames = Maps.newHashMap();
-			
-			@Override
-			public String replace(String className) {
-				
-				// classes not in the none package can be passed through
-				ClassEntry classEntry = new ClassEntry(className);
-				if (!classEntry.getPackageName().equals(Constants.NonePackage)) {
-					return className;
-				}
-				
-				// is this class ourself?
-				if (className.equals(m_classEntry.getName())) {
-					return "CSelf";
-				}
-				
-				// try the namer
-				if (m_namer != null) {
-					String newName = m_namer.getName(className);
-					if (newName != null) {
-						return newName;
-					}
-				}
-				
-				// otherwise, use local naming
-				if (!m_classNames.containsKey(className)) {
-					m_classNames.put(className, getNewClassName());
-				}
-				return m_classNames.get(className);
-			}
-			
-			private String getNewClassName() {
-				return String.format("C%03d", m_classNames.size());
-			}
-		}).toString();
+	private Signature scrubSignature(Signature signature) {
+		return new Signature(signature, m_classNameReplacer);
 	}
 	
 	private boolean isClassMatchedUniquely(String className) {
@@ -284,7 +303,7 @@ public class ClassIdentity {
 			behavior.instrument(new ExprEditor() {
 				@Override
 				public void edit(MethodCall call) {
-					updateHashWithString(digest, scrubClassName(call.getClassName()));
+					updateHashWithString(digest, scrubClassName(Descriptor.toJvmName(call.getClassName())));
 					updateHashWithString(digest, scrubSignature(call.getSignature()));
 					if (isClassMatchedUniquely(call.getClassName())) {
 						updateHashWithString(digest, call.getMethodName());
@@ -293,8 +312,8 @@ public class ClassIdentity {
 				
 				@Override
 				public void edit(FieldAccess access) {
-					updateHashWithString(digest, scrubClassName(access.getClassName()));
-					updateHashWithString(digest, scrubSignature(access.getSignature()));
+					updateHashWithString(digest, scrubClassName(Descriptor.toJvmName(access.getClassName())));
+					updateHashWithString(digest, scrubType(access.getSignature()));
 					if (isClassMatchedUniquely(access.getClassName())) {
 						updateHashWithString(digest, access.getFieldName());
 					}
@@ -302,13 +321,13 @@ public class ClassIdentity {
 				
 				@Override
 				public void edit(ConstructorCall call) {
-					updateHashWithString(digest, scrubClassName(call.getClassName()));
+					updateHashWithString(digest, scrubClassName(Descriptor.toJvmName(call.getClassName())));
 					updateHashWithString(digest, scrubSignature(call.getSignature()));
 				}
 				
 				@Override
 				public void edit(NewExpr expr) {
-					updateHashWithString(digest, scrubClassName(expr.getClassName()));
+					updateHashWithString(digest, scrubClassName(Descriptor.toJvmName(expr.getClassName())));
 				}
 			});
 			

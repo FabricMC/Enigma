@@ -27,6 +27,7 @@ public class Translator {
 	public Translator() {
 		m_direction = null;
 		m_classes = Maps.newHashMap();
+		m_index = new TranslationIndex();
 	}
 	
 	public Translator(TranslationDirection direction, Map<String,ClassMapping> classes, TranslationIndex index) {

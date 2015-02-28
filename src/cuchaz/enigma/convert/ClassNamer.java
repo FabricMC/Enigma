@@ -15,6 +15,8 @@ import java.util.Map;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Maps;
 
+import cuchaz.enigma.mapping.ClassEntry;
+
 public class ClassNamer {
 	
 	public interface SidedClassNamer {
@@ -24,15 +26,15 @@ public class ClassNamer {
 	private Map<String,String> m_sourceNames;
 	private Map<String,String> m_destNames;
 	
-	public ClassNamer(BiMap<ClassIdentity,ClassIdentity> mappings) {
+	public ClassNamer(BiMap<ClassEntry,ClassEntry> mappings) {
 		// convert the identity mappings to name maps
 		m_sourceNames = Maps.newHashMap();
 		m_destNames = Maps.newHashMap();
 		int i = 0;
-		for (Map.Entry<ClassIdentity,ClassIdentity> entry : mappings.entrySet()) {
+		for (Map.Entry<ClassEntry,ClassEntry> entry : mappings.entrySet()) {
 			String name = String.format("M%04d", i++);
-			m_sourceNames.put(entry.getKey().getClassEntry().getName(), name);
-			m_destNames.put(entry.getValue().getClassEntry().getName(), name);
+			m_sourceNames.put(entry.getKey().getName(), name);
+			m_destNames.put(entry.getValue().getName(), name);
 		}
 	}
 	
