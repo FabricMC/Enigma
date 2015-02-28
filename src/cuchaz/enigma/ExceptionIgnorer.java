@@ -10,9 +10,9 @@ public class ExceptionIgnorer {
 			StackTraceElement[] stackTrace = t.getStackTrace();
 			if (stackTrace.length > 1) {
 			
-				// does this stack frame match javax.swing.text.DefaultHighlighter.paint() ?
+				// does this stack frame match javax.swing.text.DefaultHighlighter.paint*() ?
 				StackTraceElement frame = stackTrace[1];
-				if (frame.getClassName().equals("javax.swing.text.DefaultHighlighter") && frame.getMethodName().equals("paint")) {
+				if (frame.getClassName().equals("javax.swing.text.DefaultHighlighter") && frame.getMethodName().startsWith("paint")) {
 					return true;
 				}
 			}
