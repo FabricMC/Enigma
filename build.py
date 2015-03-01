@@ -31,7 +31,7 @@ LibDeps = [
 	ssjb.ivy.Dep("org.bitbucket.mstrobel:procyon-decompiler:0.5.28-enigma")
 ]
 StandaloneDeps = LibDeps + [
-	ssjb.ivy.Dep("de.sciss:jsyntaxpane:1.0.0")
+	ssjb.ivy.Dep("de.sciss:syntaxpane:1.1.4")
 ]
 ProguardDep = ssjb.ivy.Dep("net.sf.proguard:proguard-base:5.1")
 TestDeps = [

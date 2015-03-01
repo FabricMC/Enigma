@@ -65,8 +65,6 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import jsyntaxpane.DefaultSyntaxKit;
-
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Constants;
@@ -90,6 +88,7 @@ import cuchaz.enigma.mapping.IllegalNameException;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Signature;
+import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class Gui {
 	
@@ -262,7 +261,7 @@ public class Gui {
 		
 		// turn off token highlighting (it's wrong most of the time anyway...)
 		DefaultSyntaxKit kit = (DefaultSyntaxKit)m_editor.getEditorKit();
-		kit.toggleComponent(m_editor, "jsyntaxpane.components.TokenMarker");
+		kit.toggleComponent(m_editor, "de.sciss.syntaxpane.components.TokenMarker");
 		
 		// init editor popup menu
 		JPopupMenu popupMenu = new JPopupMenu();
