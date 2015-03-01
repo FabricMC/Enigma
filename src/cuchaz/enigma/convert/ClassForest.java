@@ -18,10 +18,6 @@ public class ClassForest {
 		m_forest = HashMultimap.create();
 	}
 
-	public ClassIdentifier getIdentifier() {
-		return m_identifier;
-	}
-
 	public void addAll(Iterable<ClassEntry> entries) {
 		for (ClassEntry entry : entries) {
 			add(entry);

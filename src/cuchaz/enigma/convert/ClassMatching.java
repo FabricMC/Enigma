@@ -125,14 +125,6 @@ public class ClassMatching {
 		return classes;
 	}
 	
-	public ClassIdentifier getSourceIdentifier() {
-		return m_sourceClasses.getIdentifier();
-	}
-	
-	public ClassIdentifier getDestIdentifier() {
-		return m_destClasses.getIdentifier();
-	}
-	
 	@Override
 	public String toString() {
 		
