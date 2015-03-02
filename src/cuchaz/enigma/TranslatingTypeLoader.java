@@ -36,6 +36,7 @@ import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.bytecode.ClassTranslator;
 import cuchaz.enigma.bytecode.InnerClassWriter;
+import cuchaz.enigma.bytecode.LocalVariableRenamer;
 import cuchaz.enigma.bytecode.MethodParameterWriter;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Translator;
@@ -232,6 +233,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		// do all kinds of deobfuscating transformations on the class
 		new BridgeMarker(m_jarIndex).markBridges(c);
 		new MethodParameterWriter(m_deobfuscatingTranslator).writeMethodArguments(c);
+		new LocalVariableRenamer().rename(c);
 		new ClassTranslator(m_deobfuscatingTranslator).translate(c);
 		
 		return c;
