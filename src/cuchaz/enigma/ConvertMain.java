@@ -58,6 +58,7 @@ public class ConvertMain {
 		sourceDeobfuscator.setMappings(mappings);
 		System.out.println("Indexing dest jar...");
 		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
+		destDeobfuscator.setMappings(MappingsConverter.newMappings(matches, mappings, sourceDeobfuscator, destDeobfuscator));
 		System.out.println("Starting GUI...");
 		new MatchingGui(matches, sourceDeobfuscator, destDeobfuscator);
 	}

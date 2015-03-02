@@ -30,6 +30,9 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
 	
 	@Override
 	public String toString() {
+		if (m_classEntry instanceof DecoratedClassEntry) {
+			return ((DecoratedClassEntry)m_classEntry).getDecoration() + m_classEntry.getSimpleName();
+		}
 		return m_classEntry.getSimpleName();
 	}
 }

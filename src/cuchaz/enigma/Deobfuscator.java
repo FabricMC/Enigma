@@ -99,6 +99,10 @@ public class Deobfuscator {
 		setMappings(new Mappings());
 	}
 	
+	public JarFile getJar() {
+		return m_jar;
+	}
+	
 	public String getJarName() {
 		return m_jar.getName();
 	}

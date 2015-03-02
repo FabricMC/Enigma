@@ -17,6 +17,8 @@ import cuchaz.enigma.mapping.ClassEntry;
 public class Matches implements Iterable<ClassMatch> {
 
 	Collection<ClassMatch> m_matches;
+	Map<ClassEntry,ClassMatch> m_matchesBySource;
+	Map<ClassEntry,ClassMatch> m_matchesByDest;
 	BiMap<ClassEntry,ClassEntry> m_uniqueMatches;
 	Map<ClassEntry,ClassMatch> m_ambiguousMatchesBySource;
 	Map<ClassEntry,ClassMatch> m_ambiguousMatchesByDest;
@@ -29,6 +31,8 @@ public class Matches implements Iterable<ClassMatch> {
 	
 	public Matches(Collection<ClassMatch> matches) {
 		m_matches = matches;
+		m_matchesBySource = Maps.newHashMap();
+		m_matchesByDest = Maps.newHashMap();
 		m_uniqueMatches = HashBiMap.create();
 		m_ambiguousMatchesBySource = Maps.newHashMap();
 		m_ambiguousMatchesByDest = Maps.newHashMap();
@@ -73,6 +77,12 @@ public class Matches implements Iterable<ClassMatch> {
 				m_uniqueMatches.put(match.getUniqueSource(), match.getUniqueDest());
 			}
 		}
+		for (ClassEntry entry : match.sourceClasses) {
+			m_matchesBySource.put(entry, match);
+		}
+		for (ClassEntry entry : match.destClasses) {
+			m_matchesByDest.put(entry, match);
+		}
 	}
 	
 	public BiMap<ClassEntry,ClassEntry> getUniqueMatches() {
@@ -85,5 +95,21 @@ public class Matches implements Iterable<ClassMatch> {
 	
 	public Set<ClassEntry> getUnmatchedDestClasses() {
 		return m_unmatchedDestClasses;
+	}
+
+	public Set<ClassEntry> getAmbiguouslyMatchedSourceClasses() {
+		return m_ambiguousMatchesBySource.keySet();
+	}
+	
+	public ClassMatch getAmbiguousMatchBySource(ClassEntry sourceClass) {
+		return m_ambiguousMatchesBySource.get(sourceClass);
+	}
+
+	public ClassMatch getMatchBySource(ClassEntry sourceClass) {
+		return m_matchesBySource.get(sourceClass);
+	}
+	
+	public ClassMatch getMatchByDest(ClassEntry destClass) {
+		return m_matchesByDest.get(destClass);
 	}
 }

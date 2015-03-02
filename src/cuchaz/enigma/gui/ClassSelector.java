@@ -41,21 +41,32 @@ public class ClassSelector extends JTree {
 	public static Comparator<ClassEntry> ObfuscatedClassEntryComparator;
 	public static Comparator<ClassEntry> DeobfuscatedClassEntryComparator;
 	
+	private static String getClassEntryDisplayName(ClassEntry entry) {
+		if (entry instanceof DecoratedClassEntry) {
+			return ((DecoratedClassEntry)entry).getDecoration() + entry.getName();
+		}
+		return entry.getName();
+	}
+	
 	static {
 		ObfuscatedClassEntryComparator = new Comparator<ClassEntry>() {
 			@Override
 			public int compare(ClassEntry a, ClassEntry b) {
-				if (a.getName().length() != b.getName().length()) {
-					return a.getName().length() - b.getName().length();
+				String aname = getClassEntryDisplayName(a);
+				String bname = getClassEntryDisplayName(b);
+				if (aname.length() != bname.length()) {
+					return aname.length() - bname.length();
 				}
-				return a.getName().compareTo(b.getName());
+				return aname.compareTo(bname);
 			}
 		};
 		
 		DeobfuscatedClassEntryComparator = new Comparator<ClassEntry>() {
 			@Override
 			public int compare(ClassEntry a, ClassEntry b) {
-				return a.getName().compareTo(b.getName());
+				String aname = getClassEntryDisplayName(a);
+				String bname = getClassEntryDisplayName(b);
+				return aname.compareTo(bname);
 			}
 		};
 	}

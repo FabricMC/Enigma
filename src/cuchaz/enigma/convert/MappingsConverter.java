@@ -11,17 +11,25 @@
 package cuchaz.enigma.convert;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.jar.JarFile;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
+import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.Mappings;
 
 public class MappingsConverter {
@@ -98,6 +106,59 @@ public class MappingsConverter {
 		}
 		
 		return lastMatching;
+	}
+	
+	public static Mappings newMappings(Matches matches, Mappings oldMappings, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
+		
+		// sort the unique matches by size of inner class chain
+		Multimap<Integer,Entry<ClassEntry,ClassEntry>> matchesByDestChainSize = HashMultimap.create();
+		for (Entry<ClassEntry,ClassEntry> match : matches.getUniqueMatches().entrySet()) {
+			int chainSize = destDeobfuscator.getJarIndex().getObfClassChain(match.getValue()).size();
+			matchesByDestChainSize.put(chainSize, match);
+		}
+		
+		// build the mappings (in order of small-to-large inner chains)
+		Mappings newMappings = new Mappings();
+		List<Integer> chainSizes = Lists.newArrayList(matchesByDestChainSize.keySet());
+		Collections.sort(chainSizes);
+		for (int chainSize : chainSizes) {
+			for (Entry<ClassEntry,ClassEntry> match : matchesByDestChainSize.get(chainSize)) {
+				
+				// get class info
+				ClassEntry sourceClassEntry = match.getKey();
+				ClassEntry deobfClassEntry = sourceDeobfuscator.deobfuscateEntry(sourceClassEntry);
+				ClassEntry destClassEntry = match.getValue();
+				List<ClassEntry> destClassChain = destDeobfuscator.getJarIndex().getObfClassChain(destClassEntry);
+				
+				// find out where to make the dest class mapping
+				if (destClassChain.size() == 1) {
+					// not an inner class, add directly to mappings
+					newMappings.addClassMapping(new ClassMapping(destClassEntry.getName(), deobfClassEntry.getName()));
+				} else {
+					// inner class, find the outer class mapping
+					ClassMapping destMapping = null;
+					for (int i=0; i<destClassChain.size()-1; i++) {
+						ClassEntry destChainClassEntry = destClassChain.get(i);
+						if (destMapping == null) {
+							destMapping = newMappings.getClassByObf(destChainClassEntry);
+							if (destMapping == null) {
+								destMapping = new ClassMapping(destChainClassEntry.getName());
+								newMappings.addClassMapping(destMapping);
+							}
+						} else {
+							destMapping = destMapping.getInnerClassByObf(destChainClassEntry.getInnerClassName());
+							if (destMapping == null) {
+								destMapping = new ClassMapping(destChainClassEntry.getName());
+								destMapping.addInnerClassMapping(destMapping);
+							}
+						}
+					}
+					String deobfName = deobfClassEntry.isInnerClass() ? deobfClassEntry.getInnerClassName() : deobfClassEntry.getSimpleName();
+					destMapping.addInnerClassMapping(new ClassMapping(destClassEntry.getName(), deobfName));
+				}
+			}
+		}
+		return newMappings;
 	}
 	
 	public static void convertMappings(Mappings mappings, BiMap<ClassEntry,ClassEntry> changes) {
