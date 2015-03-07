@@ -3,6 +3,7 @@ package cuchaz.enigma.bytecode;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.bytecode.ByteArray;
+import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.LocalVariableAttribute;
 
@@ -13,7 +14,11 @@ public class LocalVariableRenamer {
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 			
 			// if there's a local variable table, just rename everything to v1, v2, v3, ... for now
-			LocalVariableAttribute table = (LocalVariableAttribute)behavior.getMethodInfo().getCodeAttribute().getAttribute(LocalVariableAttribute.tag);
+			CodeAttribute codeAttribute = behavior.getMethodInfo().getCodeAttribute();
+			if (codeAttribute == null) {
+				continue;
+			}
+			LocalVariableAttribute table = (LocalVariableAttribute)codeAttribute.getAttribute(LocalVariableAttribute.tag);
 			if (table == null) {
 				continue;
 			}

@@ -10,6 +10,7 @@ import cuchaz.enigma.convert.Matches;
 import cuchaz.enigma.convert.MatchesReader;
 import cuchaz.enigma.convert.MatchesWriter;
 import cuchaz.enigma.gui.MatchingGui;
+import cuchaz.enigma.gui.MatchingGui.SaveListener;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsReader;
@@ -49,7 +50,7 @@ public class ConvertMain {
 		System.out.println("Wrote:\n\t" + matchingFile.getAbsolutePath());
 	}
 	
-	private static void editMatches(File matchingFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
+	private static void editMatches(final File matchingFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
 	throws IOException {
 		System.out.println("Reading matches...");
 		Matches matches = MatchesReader.read(matchingFile);
@@ -58,9 +59,17 @@ public class ConvertMain {
 		sourceDeobfuscator.setMappings(mappings);
 		System.out.println("Indexing dest jar...");
 		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
-		destDeobfuscator.setMappings(MappingsConverter.newMappings(matches, mappings, sourceDeobfuscator, destDeobfuscator));
 		System.out.println("Starting GUI...");
-		new MatchingGui(matches, sourceDeobfuscator, destDeobfuscator);
+		new MatchingGui(matches, sourceDeobfuscator, destDeobfuscator).setSaveListener(new SaveListener() {
+			@Override
+			public void save(Matches matches) {
+				try {
+					MatchesWriter.write(matches, matchingFile);
+				} catch (IOException ex) {
+					throw new Error(ex);
+				}
+			}
+		});
 	}
 	
 	private static void convertMappings(File outMappingsFile, Mappings mappings, File matchingFile)

@@ -48,6 +48,22 @@ public class Matches implements Iterable<ClassMatch> {
 		m_matches.add(match);
 		indexMatch(match);
 	}
+	
+	public void remove(ClassMatch match) {
+		for (ClassEntry sourceClass : match.sourceClasses) {
+			m_matchesBySource.remove(sourceClass);
+			m_uniqueMatches.remove(sourceClass);
+			m_ambiguousMatchesBySource.remove(sourceClass);
+			m_unmatchedSourceClasses.remove(sourceClass);
+		}
+		for (ClassEntry destClass : match.sourceClasses) {
+			m_matchesByDest.remove(destClass);
+			m_uniqueMatches.inverse().remove(destClass);
+			m_ambiguousMatchesByDest.remove(destClass);
+			m_unmatchedDestClasses.remove(destClass);
+		}
+		m_matches.remove(match);
+	}
 
 	public int size() {
 		return m_matches.size();
@@ -111,5 +127,27 @@ public class Matches implements Iterable<ClassMatch> {
 	
 	public ClassMatch getMatchByDest(ClassEntry destClass) {
 		return m_matchesByDest.get(destClass);
+	}
+	
+	public void removeSource(ClassEntry sourceClass) {
+		ClassMatch match = m_matchesBySource.get(sourceClass);
+		if (match != null) {
+			remove(match);
+			match.sourceClasses.remove(sourceClass);
+			if (!match.sourceClasses.isEmpty() || !match.destClasses.isEmpty()) {
+				add(match);
+			}
+		}
+	}
+	
+	public void removeDest(ClassEntry destClass) {
+		ClassMatch match = m_matchesByDest.get(destClass);
+		if (match != null) {
+			remove(match);
+			match.destClasses.remove(destClass);
+			if (!match.sourceClasses.isEmpty() || !match.destClasses.isEmpty()) {
+				add(match);
+			}
+		}
 	}
 }

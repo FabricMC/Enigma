@@ -20,10 +20,16 @@ public class ClassMatch {
 	}
 	
 	public ClassMatch(ClassEntry sourceClass, ClassEntry destClass) {
-		this.sourceClasses = Sets.newHashSet(sourceClass);
-		this.destClasses = Sets.newHashSet(destClass);
+		sourceClasses = Sets.newHashSet();
+		if (sourceClass != null) {
+			sourceClasses.add(sourceClass);
+		}
+		destClasses = Sets.newHashSet();
+		if (destClass != null) {
+			destClasses.add(destClass);
+		}
 	}
-
+	
 	public boolean isMatched() {
 		return sourceClasses.size() > 0 && destClasses.size() > 0;
 	}

@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +26,7 @@ import javax.swing.WindowConstants;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.BiMap;
 import com.google.common.collect.Multimap;
 
 import cuchaz.enigma.Constants;
@@ -33,6 +35,7 @@ import cuchaz.enigma.convert.ClassIdentifier;
 import cuchaz.enigma.convert.ClassIdentity;
 import cuchaz.enigma.convert.ClassMatch;
 import cuchaz.enigma.convert.ClassNamer;
+import cuchaz.enigma.convert.MappingsConverter;
 import cuchaz.enigma.convert.Matches;
 import cuchaz.enigma.gui.ClassSelector.ClassSelectionListener;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -79,6 +82,10 @@ public class MatchingGui {
 		}
 	}
 	
+	public static interface SaveListener {
+		public void save(Matches matches);
+	}
+	
 	// controls
 	private JFrame m_frame;
 	private ClassSelector m_sourceClasses;
@@ -94,6 +101,8 @@ public class MatchingGui {
 	private Deobfuscator m_destDeobfuscator;
 	private ClassEntry m_sourceClass;
 	private ClassEntry m_destClass;
+	private SourceType m_sourceType;
+	private SaveListener m_saveListener;
 
 	public MatchingGui(Matches matches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 		
@@ -179,17 +188,13 @@ public class MatchingGui {
 		bottomPanel.setLayout(new FlowLayout());
 		
 		m_sourceClassLabel = new JLabel();
-		m_sourceClassLabel.setPreferredSize(new Dimension(300, 0));
+		m_sourceClassLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+		m_sourceClassLabel.setPreferredSize(new Dimension(300, 24));
 		m_destClassLabel = new JLabel();
-		m_destClassLabel.setPreferredSize(new Dimension(300, 0));
+		m_destClassLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+		m_destClassLabel.setPreferredSize(new Dimension(300, 24));
 		
 		m_matchButton = new JButton();
-		m_matchButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				onMatchClick();
-			}
-		});
 		m_matchButton.setPreferredSize(new Dimension(140, 24));
 		
 		bottomPanel.add(m_sourceClassLabel);
@@ -205,13 +210,29 @@ public class MatchingGui {
 		m_frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		
 		// init state
+		updateMappings();
 		setSourceType(SourceType.getDefault());
 		updateMatchButton();
+		m_saveListener = null;
+	}
+	
+	public void setSaveListener(SaveListener val) {
+		m_saveListener = val;
+	}
+
+	private void updateMappings() {
+		m_destDeobfuscator.setMappings(MappingsConverter.newMappings(
+			m_matches,
+			m_sourceDeobfuscator.getMappings(),
+			m_sourceDeobfuscator,
+			m_destDeobfuscator
+		));
 	}
 
 	protected void setSourceType(SourceType val) {
 		// show the source classes
-		m_sourceClasses.setClasses(deobfuscateClasses(val.getSourceClasses(m_matches), m_sourceDeobfuscator));
+		m_sourceType = val;
+		m_sourceClasses.setClasses(deobfuscateClasses(m_sourceType.getSourceClasses(m_matches), m_sourceDeobfuscator));
 	}
 	
 	private Collection<ClassEntry> deobfuscateClasses(Collection<ClassEntry> in, Deobfuscator deobfuscator) {
@@ -234,11 +255,24 @@ public class MatchingGui {
 			ClassMatch match = m_matches.getMatchBySource(m_sourceDeobfuscator.obfuscateEntry(m_sourceClass));
 			assert(match != null);
 			if (match.destClasses.isEmpty()) {
-				m_destClasses.setClasses(deobfuscateClasses(getLikelyMatches(m_sourceClass), m_destDeobfuscator));
+				
+				m_destClasses.setClasses(null);
+				
+				// run in a separate thread to keep ui responsive
+				new Thread() {
+					@Override
+					public void run() {
+						m_destClasses.setClasses(deobfuscateClasses(getLikelyMatches(m_sourceClass), m_destDeobfuscator));
+						m_destClasses.expandRow(0);
+					}
+				}.start();
+				
 			} else {
+				
 				m_destClasses.setClasses(deobfuscateClasses(match.destClasses, m_destDeobfuscator));
+				m_destClasses.expandRow(0);
+				
 			}
-			m_destClasses.expandRow(0);
 		}
 		
 		setDestClass(null);
@@ -309,7 +343,7 @@ public class MatchingGui {
 		
 		reader.setText("(decompiling...)");
 
-		// run decompiler in a separate thread to keep ui responsive
+		// run in a separate thread to keep ui responsive
 		new Thread() {
 			@Override
 			public void run() {
@@ -327,33 +361,98 @@ public class MatchingGui {
 	
 	private void updateMatchButton() {
 		
-		boolean twoSelected = m_sourceClass != null && m_destClass != null;
-		boolean isMatched = twoSelected && m_matches.getUniqueMatches().containsKey(m_sourceDeobfuscator.obfuscateEntry(m_sourceClass));
+		ClassEntry obfSource = m_sourceDeobfuscator.obfuscateEntry(m_sourceClass);
+		ClassEntry obfDest = m_destDeobfuscator.obfuscateEntry(m_destClass);
 		
-		m_matchButton.setEnabled(twoSelected);
+		BiMap<ClassEntry,ClassEntry> uniqueMatches = m_matches.getUniqueMatches();
+		boolean twoSelected = m_sourceClass != null && m_destClass != null;
+		boolean isMatched = uniqueMatches.containsKey(obfSource) && uniqueMatches.containsValue(obfDest);
+		boolean canMatch = !uniqueMatches.containsKey(obfSource) && ! uniqueMatches.containsValue(obfDest);
+		
+		deactivateButton(m_matchButton);
 		if (twoSelected) {
 			if (isMatched) {
-				m_matchButton.setText("Unmatch");
-			} else {
-				m_matchButton.setText("Match");
+				activateButton(m_matchButton, "Unmatch", new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						onUnmatchClick();
+					}
+				});
+			} else if (canMatch) {
+				activateButton(m_matchButton, "Match", new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						onMatchClick();
+					}
+				});
 			}
-		} else {
-			m_matchButton.setText("");
 		}
 	}
 	
-	protected void onMatchClick() {
-		// TODO
+	private void deactivateButton(JButton button) {
+		button.setEnabled(false);
+		button.setText("");
+		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+			button.removeActionListener(listener);
+		}
 	}
 	
-	/*
-	private static List<String> getClassNames(Collection<ClassEntry> classes) {
-		List<String> out = Lists.newArrayList();
-		for (ClassEntry c : classes) {
-			out.add(c.getName());
+	private void activateButton(JButton button, String text, ActionListener newListener) {
+		button.setText(text);
+		button.setEnabled(true);
+		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+			button.removeActionListener(listener);
 		}
-		Collections.sort(out);
-		return out;
+		button.addActionListener(newListener);
 	}
-	*/
+
+	private void onMatchClick() {
+		// precondition: source and dest classes are set correctly
+		
+		ClassEntry obfSource = m_sourceDeobfuscator.obfuscateEntry(m_sourceClass);
+		ClassEntry obfDest = m_destDeobfuscator.obfuscateEntry(m_destClass);
+		
+		// remove the classes from their match
+		m_matches.removeSource(obfSource);
+		m_matches.removeDest(obfDest);
+		
+		// add them as matched classes
+		m_matches.add(new ClassMatch(obfSource, obfDest));
+		
+		// TEMP
+		System.out.println("Match: " + obfSource + " <-> " + obfDest);
+		
+		//save();
+		updateMappings();
+		setDestClass(null);
+		m_destClasses.setClasses(null);
+		updateMatchButton();
+		setSourceType(m_sourceType);
+	}
+	
+	private void onUnmatchClick() {
+		// precondition: source and dest classes are set to a unique match
+		
+		ClassEntry obfSource = m_sourceDeobfuscator.obfuscateEntry(m_sourceClass);
+		
+		// remove the source to break the match, then add the source back as unmatched
+		m_matches.removeSource(obfSource);
+		m_matches.add(new ClassMatch(obfSource, null));
+		
+		// TEMP
+		System.out.println("Unmatch: " + obfSource + " <-> " + m_destDeobfuscator.obfuscateEntry(m_destClass));
+		
+		//save();
+		updateMappings();
+		setDestClass(null);
+		m_destClasses.setClasses(null);
+		updateMatchButton();
+		setSourceType(m_sourceType);
+	}
+	
+	private void save() {
+		if (m_saveListener != null) {
+			m_saveListener.save(m_matches);
+		}
+	}
 }
