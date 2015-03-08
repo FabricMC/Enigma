@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
@@ -41,19 +42,12 @@ public class ClassSelector extends JTree {
 	public static Comparator<ClassEntry> ObfuscatedClassEntryComparator;
 	public static Comparator<ClassEntry> DeobfuscatedClassEntryComparator;
 	
-	private static String getClassEntryDisplayName(ClassEntry entry) {
-		if (entry instanceof DecoratedClassEntry) {
-			return ((DecoratedClassEntry)entry).getDecoration() + entry.getName();
-		}
-		return entry.getName();
-	}
-	
 	static {
 		ObfuscatedClassEntryComparator = new Comparator<ClassEntry>() {
 			@Override
 			public int compare(ClassEntry a, ClassEntry b) {
-				String aname = getClassEntryDisplayName(a);
-				String bname = getClassEntryDisplayName(b);
+				String aname = a.getName();
+				String bname = a.getName();
 				if (aname.length() != bname.length()) {
 					return aname.length() - bname.length();
 				}
@@ -64,9 +58,13 @@ public class ClassSelector extends JTree {
 		DeobfuscatedClassEntryComparator = new Comparator<ClassEntry>() {
 			@Override
 			public int compare(ClassEntry a, ClassEntry b) {
-				String aname = getClassEntryDisplayName(a);
-				String bname = getClassEntryDisplayName(b);
-				return aname.compareTo(bname);
+				if (a instanceof ScoredClassEntry && b instanceof ScoredClassEntry) {
+					return Float.compare(
+						((ScoredClassEntry)b).getScore(),
+						((ScoredClassEntry)a).getScore()
+					);
+				}
+				return a.getName().compareTo(b.getName());
 			}
 		};
 	}
@@ -171,5 +169,125 @@ public class ClassSelector extends JTree {
 		
 		// finally, update the tree control
 		setModel(new DefaultTreeModel(root));
+	}
+	
+	public ClassEntry getSelectedClass() {
+		if (!isSelectionEmpty()) {
+			Object selectedNode = getSelectionPath().getLastPathComponent();
+			if (selectedNode instanceof ClassSelectorClassNode) {
+				ClassSelectorClassNode classNode = (ClassSelectorClassNode)selectedNode;
+				return classNode.getClassEntry();
+			}
+		}
+		return null;
+	}
+	
+	public String getSelectedPackage() {
+		if (!isSelectionEmpty()) {
+			Object selectedNode = getSelectionPath().getLastPathComponent();
+			if (selectedNode instanceof ClassSelectorPackageNode) {
+				ClassSelectorPackageNode packageNode = (ClassSelectorPackageNode)selectedNode;
+				return packageNode.getPackageName();
+			} else if (selectedNode instanceof ClassSelectorClassNode) {
+				ClassSelectorClassNode classNode = (ClassSelectorClassNode)selectedNode;
+				return classNode.getClassEntry().getPackageName();
+			}
+		}
+		return null;
+	}
+	
+	public Iterable<ClassSelectorPackageNode> packageNodes() {
+		List<ClassSelectorPackageNode> nodes = Lists.newArrayList();
+		DefaultMutableTreeNode root = (DefaultMutableTreeNode)getModel().getRoot();
+		Enumeration<?> children = root.children();
+		while (children.hasMoreElements()) {
+			ClassSelectorPackageNode packageNode = (ClassSelectorPackageNode)children.nextElement();
+			nodes.add(packageNode);
+		}
+		return nodes;
+	}
+	
+	public Iterable<ClassSelectorClassNode> classNodes(ClassSelectorPackageNode packageNode) {
+		List<ClassSelectorClassNode> nodes = Lists.newArrayList();
+		Enumeration<?> children = packageNode.children();
+		while (children.hasMoreElements()) {
+			ClassSelectorClassNode classNode = (ClassSelectorClassNode)children.nextElement();
+			nodes.add(classNode);
+		}
+		return nodes;
+	}
+	
+	public void expandPackage(String packageName) {
+		if (packageName == null) {
+			return;
+		}
+		for (ClassSelectorPackageNode packageNode : packageNodes()) {
+			if (packageNode.getPackageName().equals(packageName)) {
+				expandPath(new TreePath(new Object[] {getModel().getRoot(), packageNode}));
+				return;
+			}
+		}
+	}
+	
+	public void expandAll() {
+		for (ClassSelectorPackageNode packageNode : packageNodes()) {
+			expandPath(new TreePath(new Object[] {getModel().getRoot(), packageNode}));
+		}
+	}
+	
+	public ClassEntry getFirstClass() {
+		for (ClassSelectorPackageNode packageNode : packageNodes()) {
+			for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
+				return classNode.getClassEntry();
+			}
+		}
+		return null;
+	}
+	
+	public ClassSelectorPackageNode getPackageNode(ClassEntry entry) {
+		for (ClassSelectorPackageNode packageNode : packageNodes()) {
+			if (packageNode.getPackageName().equals(entry.getPackageName())) {
+				return packageNode;
+			}
+		}
+		return null;
+	}
+
+	public ClassEntry getNextClass(ClassEntry entry) {
+		boolean foundIt = false;
+		for (ClassSelectorPackageNode packageNode : packageNodes()) {
+			if (!foundIt) {
+				// skip to the package with our target in it
+				if (packageNode.getPackageName().equals(entry.getPackageName())) {
+					for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
+						if (!foundIt) {
+							if (classNode.getClassEntry().equals(entry)) {
+								foundIt = true;
+							}
+						} else {
+							// return the next class
+							return classNode.getClassEntry();
+						}
+					}
+				}
+			} else {
+				// return the next class
+				for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
+					return classNode.getClassEntry();
+				}
+			}
+		}
+		return null;
+	}
+
+	public void setSelectionClass(ClassEntry classEntry) {
+		expandPackage(classEntry.getPackageName());
+		for (ClassSelectorPackageNode packageNode : packageNodes()) {
+			for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
+				if (classNode.getClassEntry().equals(classEntry)) {
+					setSelectionPath(new TreePath(new Object[] {getModel().getRoot(), packageNode, classNode}));
+				}
+			}
+		}
 	}
 }

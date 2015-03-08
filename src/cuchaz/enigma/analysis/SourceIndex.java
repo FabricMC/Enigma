@@ -146,6 +146,10 @@ public class SourceIndex {
 		return m_declarationToToken.values();
 	}
 	
+	public Iterable<Entry> declarations() {
+		return m_declarationToToken.keySet();
+	}
+	
 	public Token getDeclarationToken(Entry deobfEntry) {
 		return m_declarationToToken.get(deobfEntry);
 	}

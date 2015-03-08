@@ -16,7 +16,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -54,8 +53,6 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -740,52 +737,7 @@ public class Gui {
 		if (token == null) {
 			throw new IllegalArgumentException("Token cannot be null!");
 		}
-		
-		// set the caret position to the token
-		m_editor.setCaretPosition(token.start);
-		m_editor.grabFocus();
-		
-		try {
-			// make sure the token is visible in the scroll window
-			Rectangle start = m_editor.modelToView(token.start);
-			Rectangle end = m_editor.modelToView(token.end);
-			final Rectangle show = start.union(end);
-			show.grow(start.width * 10, start.height * 6);
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					m_editor.scrollRectToVisible(show);
-				}
-			});
-		} catch (BadLocationException ex) {
-			throw new Error(ex);
-		}
-		
-		// highlight the token momentarily
-		final Timer timer = new Timer(200, new ActionListener() {
-			private int m_counter = 0;
-			private Object m_highlight = null;
-			
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				if (m_counter % 2 == 0) {
-					try {
-						m_highlight = m_editor.getHighlighter().addHighlight(token.start, token.end, m_selectionHighlightPainter);
-					} catch (BadLocationException ex) {
-						// don't care
-					}
-				} else if (m_highlight != null) {
-					m_editor.getHighlighter().removeHighlight(m_highlight);
-				}
-				
-				if (m_counter++ > 6) {
-					Timer timer = (Timer)event.getSource();
-					timer.stop();
-				}
-			}
-		});
-		timer.start();
-		
+		GuiTricks.navigateToToken(m_editor, token, m_selectionHighlightPainter);
 		redraw();
 	}
 	

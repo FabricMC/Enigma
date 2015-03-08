@@ -69,6 +69,7 @@ public class ClassIdentity {
 	private Multiset<String> m_implements;
 	private Multiset<String> m_implementations;
 	private Multiset<String> m_references;
+	private String m_outer;
 
 	private final ClassNameReplacer m_classNameReplacer = new ClassNameReplacer() {
 		
@@ -167,6 +168,8 @@ public class ClassIdentity {
 				}
 			}
 		}
+		
+		m_outer = EntryFactory.getClassEntry(c).getOuterClassName();
 	}
 	
 	private void addReference(EntryReference<? extends Entry,BehaviorEntry> reference) {
@@ -234,6 +237,9 @@ public class ClassIdentity {
 			buf.append(reference);
 			buf.append("\n");
 		}
+		buf.append("\touter ");
+		buf.append(m_outer);
+		buf.append("\n");
 		return buf.toString();
 	}
 	
@@ -402,13 +408,15 @@ public class ClassIdentity {
 	}
 	
 	public int getMatchScore(ClassIdentity other) {
-		return getNumMatches(m_fields, other.m_fields) 
+		return 2*getNumMatches(m_extends, other.m_extends)
+			+ 2*getNumMatches(m_outer, other.m_outer)
+			+ getNumMatches(m_fields, other.m_fields)
 			+ getNumMatches(m_methods, other.m_methods)
 			+ getNumMatches(m_constructors, other.m_constructors);
 	}
 	
 	public int getMaxMatchScore() {
-		return m_fields.size() + m_methods.size() + m_constructors.size();
+		return 2 + 2 + m_fields.size() + m_methods.size() + m_constructors.size();
 	}
 	
 	public boolean matches(CtClass c) {
@@ -426,5 +434,12 @@ public class ClassIdentity {
 			}
 		}
 		return numMatches;
+	}
+	
+	private int getNumMatches(String a, String b) {
+		if (a.equals(b)) {
+			return 1;
+		}
+		return 0;
 	}
 }
