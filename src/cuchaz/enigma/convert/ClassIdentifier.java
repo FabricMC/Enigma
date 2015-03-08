@@ -29,10 +29,14 @@ public class ClassIdentifier {
 		m_cache = Maps.newHashMap();
 	}
 	
-	public ClassIdentity identify(ClassEntry classEntry) {
+	public ClassIdentity identify(ClassEntry classEntry)
+	throws ClassNotFoundException {
 		ClassIdentity identity = m_cache.get(classEntry);
 		if (identity == null) {
 			CtClass c = m_loader.loadClass(classEntry.getName());
+			if (c == null) {
+				throw new ClassNotFoundException(classEntry.getName());
+			}
 			identity = new ClassIdentity(c, m_namer, m_index, m_useReferences);
 			m_cache.put(classEntry, identity);
 		}

@@ -45,11 +45,11 @@ public class MappingsConverter {
 		destIndex.indexJar(destJar, false);
 		
 		// compute the matching
-		ClassMatching matching = computeMatching(sourceJar, sourceIndex, destJar, destIndex);
+		ClassMatching matching = computeMatching(sourceJar, sourceIndex, destJar, destIndex, null);
 		return new Matches(matching.matches());
 	}
 	
-	public static ClassMatching computeMatching(JarFile sourceJar, JarIndex sourceIndex, JarFile destJar, JarIndex destIndex) {
+	public static ClassMatching computeMatching(JarFile sourceJar, JarIndex sourceIndex, JarFile destJar, JarIndex destIndex, BiMap<ClassEntry,ClassEntry> knownMatches) {
 		
 		System.out.println("Iteratively matching classes");
 		
@@ -74,11 +74,15 @@ public class MappingsConverter {
 					new ClassIdentifier(destJar, destIndex, destNamer, useReferences)
 				);
 				
+				if (knownMatches != null) {
+					matching.addKnownMatches(knownMatches);
+				}
+				
 				if (lastMatching == null) {
 					// search all classes
 					matching.match(sourceIndex.getObfClassEntries(), destIndex.getObfClassEntries());
 				} else {
-					// we already know about these matches
+					// we already know about these matches from last time
 					matching.addKnownMatches(lastMatching.uniqueMatches());
 					
 					// search unmatched and ambiguously-matched classes

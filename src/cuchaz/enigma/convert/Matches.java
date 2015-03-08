@@ -56,7 +56,7 @@ public class Matches implements Iterable<ClassMatch> {
 			m_ambiguousMatchesBySource.remove(sourceClass);
 			m_unmatchedSourceClasses.remove(sourceClass);
 		}
-		for (ClassEntry destClass : match.sourceClasses) {
+		for (ClassEntry destClass : match.destClasses) {
 			m_matchesByDest.remove(destClass);
 			m_uniqueMatches.inverse().remove(destClass);
 			m_ambiguousMatchesByDest.remove(destClass);

@@ -35,4 +35,16 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
 		}
 		return m_classEntry.getSimpleName();
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof ClassSelectorClassNode) {
+			return equals((ClassSelectorClassNode)other);
+		}
+		return false;
+	}
+	
+	public boolean equals(ClassSelectorClassNode other) {
+		return m_classEntry.equals(other.m_classEntry);
+	}
 }

@@ -24,8 +24,12 @@ public class ClassForest {
 		}
 	}
 
-	private void add(ClassEntry entry) {
-		m_forest.put(m_identifier.identify(entry), entry);
+	public void add(ClassEntry entry) {
+		try {
+			m_forest.put(m_identifier.identify(entry), entry);
+		} catch (ClassNotFoundException ex) {
+			throw new Error("Unable to find class " + entry.getName());
+		}
 	}
 
 	public Collection<ClassIdentity> identities() {

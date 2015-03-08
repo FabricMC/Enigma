@@ -30,4 +30,16 @@ public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
 	public String toString() {
 		return m_packageName;
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof ClassSelectorPackageNode) {
+			return equals((ClassSelectorPackageNode)other);
+		}
+		return false;
+	}
+	
+	public boolean equals(ClassSelectorPackageNode other) {
+		return m_packageName.equals(other.m_packageName);
+	}
 }

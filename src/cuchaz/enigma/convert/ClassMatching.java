@@ -40,8 +40,16 @@ public class ClassMatching {
 	}
 	
 	public void match(Iterable<ClassEntry> sourceClasses, Iterable<ClassEntry> destClasses) {
-		m_sourceClasses.addAll(sourceClasses);
-		m_destClasses.addAll(destClasses);
+		for (ClassEntry sourceClass : sourceClasses) {
+			if (!m_knownMatches.containsKey(sourceClass)) {
+				m_sourceClasses.add(sourceClass);
+			}
+		}
+		for (ClassEntry destClass : destClasses) {
+			if (!m_knownMatches.containsValue(destClass)) {
+				m_destClasses.add(destClass);
+			}
+		}
 	}
 	
 	public Collection<ClassMatch> matches() {
