@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import com.beust.jcommander.internal.Lists;
@@ -276,7 +278,7 @@ public class MatchingGui {
 	}
 
 	protected void setSourceClass(ClassEntry classEntry) {
-		
+
 		// update the current source class
 		m_sourceClass = classEntry;
 		m_sourceClassLabel.setText(m_sourceClass != null ? m_sourceClass.getName() : "");
@@ -457,17 +459,11 @@ public class MatchingGui {
 		// add them as matched classes
 		m_matches.add(new ClassMatch(obfSource, obfDest));
 		
-		// remember where we were in the source tree
-		TreePath path = m_sourceClasses.getSelectionPath();
-		
 		save();
 		updateMatches();
 		
-		// put the tree back to where it was
-		m_sourceClasses.expandPath(path);
-		
 		if (m_advanceCheck.isSelected()) {
-			
+			advance();
 		}
 	}
 	
@@ -489,7 +485,33 @@ public class MatchingGui {
 		setDestClass(null);
 		m_destClasses.setClasses(null);
 		updateMatchButton();
+		
+		// remember where we were in the source tree
+		String packageName = null;
+		if (!m_sourceClasses.isSelectionEmpty()) {
+			packageName = m_sourceClasses.getSelectionPath().getParentPath().getLastPathComponent().toString();
+		}
+		
 		setSourceType(m_sourceType);
+		
+		if (packageName != null) {
+			// find the corresponding path in the new tree
+			TreePath path = null;
+			DefaultMutableTreeNode root = (DefaultMutableTreeNode)m_sourceClasses.getModel().getRoot();
+			Enumeration<?> children = root.children();
+			while (children.hasMoreElements()) {
+				Object child = children.nextElement();
+				if (child.toString().equals(packageName)) {
+					path = new TreePath(new Object[] {root, child});
+					break;
+				}
+			}
+			
+			if (path != null) {
+				// put the tree back to where it was
+				m_sourceClasses.expandPath(path);
+			}
+		}
 	}
 	
 	private void save() {
@@ -517,5 +539,9 @@ public class MatchingGui {
 		m_matches = newMatches;
 		save();
 		updateMatches();
+	}
+	
+	private void advance() {
+		// TODO: find a likely match
 	}
 }
