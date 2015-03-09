@@ -37,7 +37,7 @@ import cuchaz.enigma.mapping.MethodMapping;
 
 public class MappingsConverter {
 	
-	public static Matches computeMatches(JarFile sourceJar, JarFile destJar, Mappings mappings) {
+	public static ClassMatches computeMatches(JarFile sourceJar, JarFile destJar, Mappings mappings) {
 		
 		// index jars
 		System.out.println("Indexing source jar...");
@@ -49,7 +49,7 @@ public class MappingsConverter {
 		
 		// compute the matching
 		ClassMatching matching = computeMatching(sourceJar, sourceIndex, destJar, destIndex, null);
-		return new Matches(matching.matches());
+		return new ClassMatches(matching.matches());
 	}
 	
 	public static ClassMatching computeMatching(JarFile sourceJar, JarIndex sourceIndex, JarFile destJar, JarIndex destIndex, BiMap<ClassEntry,ClassEntry> knownMatches) {
@@ -115,7 +115,7 @@ public class MappingsConverter {
 		return lastMatching;
 	}
 	
-	public static Mappings newMappings(Matches matches, Mappings oldMappings, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
+	public static Mappings newMappings(ClassMatches matches, Mappings oldMappings, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 		
 		// sort the unique matches by size of inner class chain
 		Multimap<Integer,Entry<ClassEntry,ClassEntry>> matchesByDestChainSize = HashMultimap.create();
@@ -172,7 +172,7 @@ public class MappingsConverter {
 		return newMappings;
 	}
 	
-	private static ClassMapping migrateClassMapping(ClassEntry newObfClass, ClassMapping mapping, final Matches matches, boolean useSimpleName) {
+	private static ClassMapping migrateClassMapping(ClassEntry newObfClass, ClassMapping mapping, final ClassMatches matches, boolean useSimpleName) {
 		
 		ClassNameReplacer replacer = new ClassNameReplacer() {
 			@Override

@@ -737,7 +737,7 @@ public class Gui {
 		if (token == null) {
 			throw new IllegalArgumentException("Token cannot be null!");
 		}
-		GuiTricks.navigateToToken(m_editor, token, m_selectionHighlightPainter);
+		CodeReader.navigateToToken(m_editor, token, m_selectionHighlightPainter);
 		redraw();
 	}
 	

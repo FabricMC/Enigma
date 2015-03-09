@@ -14,19 +14,19 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class MatchesReader {
 	
-	public static Matches read(File file)
+	public static ClassMatches readClasses(File file)
 	throws IOException {
 		try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-			Matches matches = new Matches();
+			ClassMatches matches = new ClassMatches();
 			String line = null;
 			while ((line = in.readLine()) != null) {
-				matches.add(readMatch(line));
+				matches.add(readClassMatch(line));
 			}
 			return matches;
 		}
 	}
 
-	private static ClassMatch readMatch(String line)
+	private static ClassMatch readClassMatch(String line)
 	throws IOException {
 		String[] sides = line.split(":", 2);
 		return new ClassMatch(readClasses(sides[0]), readClasses(sides[1]));

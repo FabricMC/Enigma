@@ -14,7 +14,7 @@ import com.google.common.collect.Sets;
 import cuchaz.enigma.mapping.ClassEntry;
 
 
-public class Matches implements Iterable<ClassMatch> {
+public class ClassMatches implements Iterable<ClassMatch> {
 
 	Collection<ClassMatch> m_matches;
 	Map<ClassEntry,ClassMatch> m_matchesBySource;
@@ -25,11 +25,11 @@ public class Matches implements Iterable<ClassMatch> {
 	Set<ClassEntry> m_unmatchedSourceClasses;
 	Set<ClassEntry> m_unmatchedDestClasses;
 	
-	public Matches() {
+	public ClassMatches() {
 		this(new ArrayList<ClassMatch>());
 	}
 	
-	public Matches(Collection<ClassMatch> matches) {
+	public ClassMatches(Collection<ClassMatch> matches) {
 		m_matches = matches;
 		m_matchesBySource = Maps.newHashMap();
 		m_matchesByDest = Maps.newHashMap();

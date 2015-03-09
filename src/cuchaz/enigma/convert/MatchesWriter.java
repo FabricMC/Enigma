@@ -9,16 +9,16 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class MatchesWriter {
 	
-	public static void write(Matches matches, File file)
+	public static void writeClasses(ClassMatches matches, File file)
 	throws IOException {
 		try (FileWriter out = new FileWriter(file)) {
 			for (ClassMatch match : matches) {
-				writeMatch(out, match);
+				writeClassMatch(out, match);
 			}
 		}
 	}
 
-	private static void writeMatch(FileWriter out, ClassMatch match)
+	private static void writeClassMatch(FileWriter out, ClassMatch match)
 	throws IOException {
 		writeClasses(out, match.sourceClasses);
 		out.write(":");
