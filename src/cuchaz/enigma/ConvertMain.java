@@ -10,8 +10,8 @@ import cuchaz.enigma.convert.MappingsConverter;
 import cuchaz.enigma.convert.Matches;
 import cuchaz.enigma.convert.MatchesReader;
 import cuchaz.enigma.convert.MatchesWriter;
-import cuchaz.enigma.gui.MatchingGui;
-import cuchaz.enigma.gui.MatchingGui.SaveListener;
+import cuchaz.enigma.gui.ClassMatchingGui;
+import cuchaz.enigma.gui.ClassMatchingGui.SaveListener;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsReader;
@@ -58,11 +58,11 @@ public class ConvertMain {
 		Matches matches = MatchesReader.read(matchingFile);
 		System.out.println("Indexing source jar...");
 		Deobfuscator sourceDeobfuscator = new Deobfuscator(sourceJar);
-		sourceDeobfuscator.setMappings(mappings, false);
+		sourceDeobfuscator.setMappings(mappings);
 		System.out.println("Indexing dest jar...");
 		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
 		System.out.println("Starting GUI...");
-		new MatchingGui(matches, sourceDeobfuscator, destDeobfuscator).setSaveListener(new SaveListener() {
+		new ClassMatchingGui(matches, sourceDeobfuscator, destDeobfuscator).setSaveListener(new SaveListener() {
 			@Override
 			public void save(Matches matches) {
 				try {

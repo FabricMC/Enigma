@@ -44,10 +44,12 @@ import cuchaz.enigma.convert.Matches;
 import cuchaz.enigma.gui.ClassSelector.ClassSelectionListener;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.Mappings;
+import cuchaz.enigma.mapping.MappingsChecker;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 
-public class MatchingGui {
+public class ClassMatchingGui {
 	
 	private static enum SourceType {
 		Matched {
@@ -112,7 +114,7 @@ public class MatchingGui {
 	private SourceType m_sourceType;
 	private SaveListener m_saveListener;
 
-	public MatchingGui(Matches matches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
+	public ClassMatchingGui(Matches matches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 		
 		m_matches = matches;
 		m_sourceDeobfuscator = sourceDeobfuscator;
@@ -263,12 +265,29 @@ public class MatchingGui {
 	}
 
 	private void updateDestMappings() {
-		m_destDeobfuscator.setMappings(MappingsConverter.newMappings(
+		
+		Mappings newMappings = MappingsConverter.newMappings(
 			m_matches,
 			m_sourceDeobfuscator.getMappings(),
 			m_sourceDeobfuscator,
 			m_destDeobfuscator
-		), false);
+		);
+		
+		// look for dropped mappings
+		MappingsChecker checker = new MappingsChecker(m_destDeobfuscator.getJarIndex());
+		checker.dropBrokenMappings(newMappings);
+		
+		// count them
+		int numDroppedFields = checker.getDroppedFieldMappings().size();
+		int numDroppedMethods = checker.getDroppedMethodMappings().size();
+		System.out.println(String.format(
+			"%d mappings from matched classes don't match the dest jar:\n\t%5d fields\n\t%5d methods",
+			numDroppedFields + numDroppedMethods,
+			numDroppedFields,
+			numDroppedMethods
+		));
+		
+		m_destDeobfuscator.setMappings(newMappings);
 	}
 
 	protected void setSourceType(SourceType val) {

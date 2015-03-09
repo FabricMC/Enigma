@@ -26,7 +26,6 @@ import java.util.jar.JarOutputStream;
 import javassist.CtClass;
 import javassist.bytecode.Descriptor;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.strobel.assembler.metadata.MetadataSystem;
@@ -43,7 +42,6 @@ import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarClassIterator;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.analysis.RelatedMethodChecker;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
@@ -53,10 +51,10 @@ import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
-import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.Mappings;
+import cuchaz.enigma.mapping.MappingsChecker;
 import cuchaz.enigma.mapping.MappingsRenamer;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.MethodMapping;
@@ -125,69 +123,31 @@ public class Deobfuscator {
 		}
 		
 		// drop mappings that don't match the jar
-		RelatedMethodChecker relatedMethodChecker = new RelatedMethodChecker(m_jarIndex);
-		for (ClassMapping classMapping : Lists.newArrayList(val.classes())) {
-			if (!checkClassMapping(relatedMethodChecker, classMapping, warnAboutDrops)) {
-				if (warnAboutDrops) {
-					System.err.println("WARNING: unable to find class " + classMapping.getObfFullName() + ". dropping mapping");
-				}
-				val.removeClassMapping(classMapping);
+		MappingsChecker checker = new MappingsChecker(m_jarIndex);
+		checker.dropBrokenMappings(val);
+		if (warnAboutDrops) {
+			for (java.util.Map.Entry<ClassEntry,ClassMapping> mapping : checker.getDroppedClassMappings().entrySet()) {
+				System.out.println("WARNING: Couldn't find class entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ") in jar. Mapping was dropped.");
+			}
+			for (java.util.Map.Entry<ClassEntry,ClassMapping> mapping : checker.getDroppedInnerClassMappings().entrySet()) {
+				System.out.println("WARNING: Couldn't find inner class entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ") in jar. Mapping was dropped.");
+			}
+			for (java.util.Map.Entry<FieldEntry,FieldMapping> mapping : checker.getDroppedFieldMappings().entrySet()) {
+				System.out.println("WARNING: Couldn't find field entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ") in jar. Mapping was dropped.");
+			}
+			for (java.util.Map.Entry<BehaviorEntry,MethodMapping> mapping : checker.getDroppedMethodMappings().entrySet()) {
+				System.out.println("WARNING: Couldn't find behavior entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ") in jar. Mapping was dropped.");
 			}
 		}
 		
 		// check for related method inconsistencies
-		if (relatedMethodChecker.hasProblems()) {
-			throw new Error("Related methods are inconsistent! Need to fix the mappings manually.\n" + relatedMethodChecker.getReport());
+		if (checker.getRelatedMethodChecker().hasProblems()) {
+			throw new Error("Related methods are inconsistent! Need to fix the mappings manually.\n" + checker.getRelatedMethodChecker().getReport());
 		}
 		
 		m_mappings = val;
 		m_renamer = new MappingsRenamer(m_jarIndex, val);
 		m_translatorCache.clear();
-	}
-	
-	private boolean checkClassMapping(RelatedMethodChecker relatedMethodChecker, ClassMapping classMapping, boolean warnAboutDrops) {
-		
-		// check the class
-		ClassEntry classEntry = EntryFactory.getObfClassEntry(m_jarIndex, classMapping);
-		if (!m_jarIndex.getObfClassEntries().contains(classEntry)) {
-			return false;
-		}
-		
-		// check the fields
-		for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
-			FieldEntry fieldEntry = new FieldEntry(classEntry, fieldMapping.getObfName(), fieldMapping.getObfType());
-			if (!m_jarIndex.containsObfField(fieldEntry)) {
-				if (warnAboutDrops) {
-					System.err.println("WARNING: unable to find field " + fieldEntry + ". dropping mapping.");
-				}
-				classMapping.removeFieldMapping(fieldMapping);
-			}
-		}
-		
-		// check methods
-		for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
-			BehaviorEntry obfBehaviorEntry = EntryFactory.getObfBehaviorEntry(classEntry, methodMapping);
-			if (!m_jarIndex.containsObfBehavior(obfBehaviorEntry)) {
-				if (warnAboutDrops) {
-					System.err.println("WARNING: unable to find behavior " + obfBehaviorEntry + ". dropping mapping.");
-				}
-				classMapping.removeMethodMapping(methodMapping);
-			}
-			
-			relatedMethodChecker.checkMethod(classEntry, methodMapping);
-		}
-		
-		// check inner classes
-		for (ClassMapping innerClassMapping : Lists.newArrayList(classMapping.innerClasses())) {
-			if (!checkClassMapping(relatedMethodChecker, innerClassMapping, warnAboutDrops)) {
-				if (warnAboutDrops) {
-					System.err.println("WARNING: unable to find inner class " + EntryFactory.getObfClassEntry(m_jarIndex, classMapping) + ". dropping mapping.");
-				}
-				classMapping.removeInnerClassMapping(innerClassMapping);
-			}
-		}
-		
-		return true;
 	}
 	
 	public Translator getTranslator(TranslationDirection direction) {
