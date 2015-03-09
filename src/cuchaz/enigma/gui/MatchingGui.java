@@ -6,10 +6,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,9 +27,7 @@ import javax.swing.WindowConstants;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.BiMap;
-import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import cuchaz.enigma.Constants;
@@ -272,7 +268,7 @@ public class MatchingGui {
 			m_sourceDeobfuscator.getMappings(),
 			m_sourceDeobfuscator,
 			m_destDeobfuscator
-		));
+		), false);
 	}
 
 	protected void setSourceType(SourceType val) {
@@ -307,7 +303,18 @@ public class MatchingGui {
 	}
 
 	protected void setSourceClass(ClassEntry classEntry) {
-		setSourceClass(classEntry, null);
+		
+		Runnable onGetDestClasses = null;
+		if (m_advanceCheck.isSelected()) {
+			onGetDestClasses = new Runnable() {
+				@Override
+				public void run() {
+					pickBestDestClass();
+				}
+			};
+		}
+		
+		setSourceClass(classEntry, onGetDestClasses);
 	}
 	
 	protected void setSourceClass(ClassEntry classEntry, final Runnable onGetDestClasses) {
@@ -596,36 +603,40 @@ public class MatchingGui {
 		setSourceClass(sourceClass, new Runnable() {
 			@Override
 			public void run() {
-				
-				// then, pick the best dest class
-				ClassEntry firstClass = null;
-				ScoredClassEntry bestDestClass = null;
-				for (ClassSelectorPackageNode packageNode : m_destClasses.packageNodes()) {
-					for (ClassSelectorClassNode classNode : m_destClasses.classNodes(packageNode)) {
-						if (firstClass == null) {
-							firstClass = classNode.getClassEntry();
-						}
-						if (classNode.getClassEntry() instanceof ScoredClassEntry) {
-							ScoredClassEntry scoredClass = (ScoredClassEntry)classNode.getClassEntry();
-							if (bestDestClass == null || bestDestClass.getScore() < scoredClass.getScore()) {
-								bestDestClass = scoredClass;
-							}
-						}
-					}
-				}
-				
-				// pick the entry to show
-				ClassEntry destClass = null;
-				if (bestDestClass != null) {
-					destClass = bestDestClass;
-				} else if (firstClass != null) {
-					destClass = firstClass;
-				}
-				
-				setDestClass(destClass);
-				m_destClasses.setSelectionClass(destClass);
+				pickBestDestClass();
 			}
 		});
 		m_sourceClasses.setSelectionClass(sourceClass);
+	}
+	
+	private void pickBestDestClass() {
+		
+		// then, pick the best dest class
+		ClassEntry firstClass = null;
+		ScoredClassEntry bestDestClass = null;
+		for (ClassSelectorPackageNode packageNode : m_destClasses.packageNodes()) {
+			for (ClassSelectorClassNode classNode : m_destClasses.classNodes(packageNode)) {
+				if (firstClass == null) {
+					firstClass = classNode.getClassEntry();
+				}
+				if (classNode.getClassEntry() instanceof ScoredClassEntry) {
+					ScoredClassEntry scoredClass = (ScoredClassEntry)classNode.getClassEntry();
+					if (bestDestClass == null || bestDestClass.getScore() < scoredClass.getScore()) {
+						bestDestClass = scoredClass;
+					}
+				}
+			}
+		}
+		
+		// pick the entry to show
+		ClassEntry destClass = null;
+		if (bestDestClass != null) {
+			destClass = bestDestClass;
+		} else if (firstClass != null) {
+			destClass = firstClass;
+		}
+		
+		setDestClass(destClass);
+		m_destClasses.setSelectionClass(destClass);
 	}
 }

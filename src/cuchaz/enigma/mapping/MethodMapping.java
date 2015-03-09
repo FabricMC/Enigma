@@ -12,7 +12,9 @@ package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Map.Entry;
+
+import com.google.common.collect.Maps;
 
 public class MethodMapping implements Serializable, Comparable<MethodMapping> {
 	
@@ -37,9 +39,19 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping> {
 		m_obfName = obfName;
 		m_deobfName = NameValidator.validateMethodName(deobfName);
 		m_obfSignature = obfSignature;
-		m_arguments = new TreeMap<Integer,ArgumentMapping>();
+		m_arguments = Maps.newTreeMap();
 	}
 	
+	public MethodMapping(MethodMapping other, ClassNameReplacer obfClassNameReplacer) {
+		m_obfName = other.m_obfName;
+		m_deobfName = other.m_deobfName;
+		m_obfSignature = new Signature(other.m_obfSignature, obfClassNameReplacer);
+		m_arguments = Maps.newTreeMap();
+		for (Entry<Integer,ArgumentMapping> entry : other.m_arguments.entrySet()) {
+			m_arguments.put(entry.getKey(), new ArgumentMapping(entry.getValue()));
+		}
+	}
+
 	public String getObfName() {
 		return m_obfName;
 	}

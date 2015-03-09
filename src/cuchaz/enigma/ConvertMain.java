@@ -2,6 +2,7 @@ package cuchaz.enigma;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.jar.JarFile;
 
@@ -14,6 +15,7 @@ import cuchaz.enigma.gui.MatchingGui.SaveListener;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsReader;
+import cuchaz.enigma.mapping.MappingsWriter;
 
 
 public class ConvertMain {
@@ -32,7 +34,7 @@ public class ConvertMain {
 
 		//computeMatches(matchingFile, sourceJar, destJar, mappings);
 		editMatches(matchingFile, sourceJar, destJar, mappings);
-		//convertMappings(outMappingsFile, mappings, matchingFile);
+		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, matchingFile);
 		
 		/* TODO
 		// write out the converted mappings
@@ -56,7 +58,7 @@ public class ConvertMain {
 		Matches matches = MatchesReader.read(matchingFile);
 		System.out.println("Indexing source jar...");
 		Deobfuscator sourceDeobfuscator = new Deobfuscator(sourceJar);
-		sourceDeobfuscator.setMappings(mappings);
+		sourceDeobfuscator.setMappings(mappings, false);
 		System.out.println("Indexing dest jar...");
 		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
 		System.out.println("Starting GUI...");
@@ -72,9 +74,21 @@ public class ConvertMain {
 		});
 	}
 	
-	private static void convertMappings(File outMappingsFile, Mappings mappings, File matchingFile)
+	private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File matchingFile)
 	throws IOException {
+		System.out.println("Reading matches...");
 		Matches matches = MatchesReader.read(matchingFile);
-		MappingsConverter.convertMappings(mappings, matches.getUniqueMatches());
+		System.out.println("Indexing source jar...");
+		Deobfuscator sourceDeobfuscator = new Deobfuscator(sourceJar);
+		sourceDeobfuscator.setMappings(mappings);
+		System.out.println("Indexing dest jar...");
+		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
+		
+		Mappings newMappings = MappingsConverter.newMappings(matches, mappings, sourceDeobfuscator, destDeobfuscator);
+		
+		try (FileWriter out = new FileWriter(outMappingsFile)) {
+			new MappingsWriter().write(out, newMappings);
+		}
+		System.out.println("Write converted mappings to: " + outMappingsFile.getAbsolutePath());
 	}
 }

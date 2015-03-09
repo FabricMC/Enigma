@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
@@ -38,6 +39,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Util;
@@ -67,6 +69,7 @@ public class ClassIdentity {
 	private String m_staticInitializer;
 	private String m_extends;
 	private Multiset<String> m_implements;
+	private Set<String> m_stringLiterals;
 	private Multiset<String> m_implementations;
 	private Multiset<String> m_references;
 	private String m_outer;
@@ -138,6 +141,14 @@ public class ClassIdentity {
 		m_implements = HashMultiset.create();
 		for (String interfaceName : c.getClassFile().getInterfaces()) {
 			m_implements.add(scrubClassName(Descriptor.toJvmName(interfaceName)));
+		}
+		
+		m_stringLiterals = Sets.newHashSet();
+		ConstPool constants = c.getClassFile().getConstPool();
+		for (int i=1; i<constants.getSize(); i++) {
+			if (constants.getTag(i) == ConstPool.CONST_String) {
+				m_stringLiterals.add(constants.getStringInfo(i));
+			}
 		}
 		
 		// stuff from the jar index
@@ -410,13 +421,15 @@ public class ClassIdentity {
 	public int getMatchScore(ClassIdentity other) {
 		return 2*getNumMatches(m_extends, other.m_extends)
 			+ 2*getNumMatches(m_outer, other.m_outer)
+			+ 2*getNumMatches(m_implements, other.m_implements)
+			 + getNumMatches(m_stringLiterals, other.m_stringLiterals)
 			+ getNumMatches(m_fields, other.m_fields)
 			+ getNumMatches(m_methods, other.m_methods)
 			+ getNumMatches(m_constructors, other.m_constructors);
 	}
 	
 	public int getMaxMatchScore() {
-		return 2 + 2 + m_fields.size() + m_methods.size() + m_constructors.size();
+		return 2 + 2 + 2*m_implements.size() + m_stringLiterals.size() + m_fields.size() + m_methods.size() + m_constructors.size();
 	}
 	
 	public boolean matches(CtClass c) {
@@ -424,6 +437,16 @@ public class ClassIdentity {
 		return m_fields.size() == c.getDeclaredFields().length
 			&& m_methods.size() == c.getDeclaredMethods().length
 			&& m_constructors.size() == c.getDeclaredConstructors().length;
+	}
+	
+	private int getNumMatches(Set<String> a, Set<String> b) {
+		int numMatches = 0;
+		for (String val : a) {
+			if (b.contains(val)) {
+				numMatches++;
+			}
+		}
+		return numMatches;
 	}
 	
 	private int getNumMatches(Multiset<String> a, Multiset<String> b) {

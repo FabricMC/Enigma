@@ -393,6 +393,17 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 			}
 		}
 		
+		// rename field types
+		for (FieldMapping fieldMapping : new ArrayList<FieldMapping>(m_fieldsByObf.values())) {
+			String oldFieldKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
+			if (fieldMapping.renameObfClass(oldObfClassName, newObfClassName)) {
+				boolean wasRemoved = m_fieldsByObf.remove(oldFieldKey) != null;
+				assert (wasRemoved);
+				boolean wasAdded = m_fieldsByObf.put(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType()), fieldMapping) == null;
+				assert (wasAdded);
+			}
+		}
+		
 		// rename method signatures
 		for (MethodMapping methodMapping : new ArrayList<MethodMapping>(m_methodsByObf.values())) {
 			String oldMethodKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());

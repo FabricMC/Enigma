@@ -68,6 +68,11 @@ public class Type implements Serializable {
 		if (c == 'L') {
 			return readClass(in);
 		}
+		
+		// then check for templates
+		if (c == 'T') {
+			return readClass(in);
+		}
 
 		// then check for arrays
 		int dim = countArrayDimension(in);
@@ -83,6 +88,10 @@ public class Type implements Serializable {
 	
 	public Type(String name) {
 		m_name = name;
+	}
+	
+	public Type(Type other) {
+		m_name = other.m_name;
 	}
 	
 	public Type(ClassEntry classEntry) {
@@ -126,6 +135,10 @@ public class Type implements Serializable {
 	
 	public boolean isClass() {
 		return m_name.charAt(0) == 'L' && m_name.charAt(m_name.length() - 1) == ';';
+	}
+	
+	public boolean isTemplate() {
+		return m_name.charAt(0) == 'T' && m_name.charAt(m_name.length() - 1) == ';';
 	}
 	
 	public ClassEntry getClassEntry() {

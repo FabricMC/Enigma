@@ -30,7 +30,10 @@ import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
+import cuchaz.enigma.mapping.ClassNameReplacer;
+import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.Mappings;
+import cuchaz.enigma.mapping.MethodMapping;
 
 public class MappingsConverter {
 	
@@ -129,15 +132,20 @@ public class MappingsConverter {
 			for (Entry<ClassEntry,ClassEntry> match : matchesByDestChainSize.get(chainSize)) {
 				
 				// get class info
-				ClassEntry sourceClassEntry = match.getKey();
-				ClassEntry deobfClassEntry = sourceDeobfuscator.deobfuscateEntry(sourceClassEntry);
-				ClassEntry destClassEntry = match.getValue();
-				List<ClassEntry> destClassChain = destDeobfuscator.getJarIndex().getObfClassChain(destClassEntry);
+				ClassEntry obfSourceClassEntry = match.getKey();
+				ClassEntry obfDestClassEntry = match.getValue();
+				List<ClassEntry> destClassChain = destDeobfuscator.getJarIndex().getObfClassChain(obfDestClassEntry);
+				
+				ClassMapping sourceMapping = sourceDeobfuscator.getMappings().getClassByObf(obfSourceClassEntry);
+				if (sourceMapping == null) {
+					// if this class was never deobfuscated, don't try to match it
+					continue;
+				}
 				
 				// find out where to make the dest class mapping
 				if (destClassChain.size() == 1) {
 					// not an inner class, add directly to mappings
-					newMappings.addClassMapping(new ClassMapping(destClassEntry.getName(), deobfClassEntry.getName()));
+					newMappings.addClassMapping(migrateClassMapping(obfDestClassEntry, sourceMapping, matches, false));
 				} else {
 					// inner class, find the outer class mapping
 					ClassMapping destMapping = null;
@@ -157,14 +165,52 @@ public class MappingsConverter {
 							}
 						}
 					}
-					String deobfName = deobfClassEntry.isInnerClass() ? deobfClassEntry.getInnerClassName() : deobfClassEntry.getSimpleName();
-					destMapping.addInnerClassMapping(new ClassMapping(destClassEntry.getName(), deobfName));
+					destMapping.addInnerClassMapping(migrateClassMapping(obfDestClassEntry, sourceMapping, matches, true));
 				}
 			}
 		}
 		return newMappings;
 	}
 	
+	private static ClassMapping migrateClassMapping(ClassEntry newObfClass, ClassMapping mapping, final Matches matches, boolean useSimpleName) {
+		
+		ClassNameReplacer replacer = new ClassNameReplacer() {
+			@Override
+			public String replace(String className) {
+				ClassEntry newClassEntry = matches.getUniqueMatches().get(new ClassEntry(className));
+				if (newClassEntry != null) {
+					return newClassEntry.getName();
+				}
+				return null;
+			}
+		};
+		
+		ClassMapping newMapping;
+		String deobfName = mapping.getDeobfName();
+		if (deobfName != null) {
+			if (useSimpleName) {
+				deobfName = new ClassEntry(deobfName).getSimpleName();
+			}
+			newMapping = new ClassMapping(newObfClass.getName(), deobfName);
+		} else {
+			newMapping = new ClassMapping(newObfClass.getName());
+		}
+		
+		// copy fields
+		for (FieldMapping fieldMapping : mapping.fields()) {
+			// TODO: map field obf names too...
+			newMapping.addFieldMapping(new FieldMapping(fieldMapping, replacer));
+		}
+		
+		// copy methods
+		for (MethodMapping methodMapping : mapping.methods()) {
+			// TODO: map method obf names too...
+			newMapping.addMethodMapping(new MethodMapping(methodMapping, replacer));
+		}
+		
+		return newMapping;
+	}
+
 	public static void convertMappings(Mappings mappings, BiMap<ClassEntry,ClassEntry> changes) {
 		
 		// sort the changes so classes are renamed in the correct order

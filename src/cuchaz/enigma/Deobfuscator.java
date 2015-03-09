@@ -116,6 +116,10 @@ public class Deobfuscator {
 	}
 	
 	public void setMappings(Mappings val) {
+		setMappings(val, true);
+	}
+	
+	public void setMappings(Mappings val, boolean warnAboutDrops) {
 		if (val == null) {
 			val = new Mappings();
 		}
@@ -123,7 +127,10 @@ public class Deobfuscator {
 		// drop mappings that don't match the jar
 		RelatedMethodChecker relatedMethodChecker = new RelatedMethodChecker(m_jarIndex);
 		for (ClassMapping classMapping : Lists.newArrayList(val.classes())) {
-			if (!checkClassMapping(relatedMethodChecker, classMapping)) {
+			if (!checkClassMapping(relatedMethodChecker, classMapping, warnAboutDrops)) {
+				if (warnAboutDrops) {
+					System.err.println("WARNING: unable to find class " + classMapping.getObfFullName() + ". dropping mapping");
+				}
 				val.removeClassMapping(classMapping);
 			}
 		}
@@ -138,7 +145,7 @@ public class Deobfuscator {
 		m_translatorCache.clear();
 	}
 	
-	private boolean checkClassMapping(RelatedMethodChecker relatedMethodChecker, ClassMapping classMapping) {
+	private boolean checkClassMapping(RelatedMethodChecker relatedMethodChecker, ClassMapping classMapping, boolean warnAboutDrops) {
 		
 		// check the class
 		ClassEntry classEntry = EntryFactory.getObfClassEntry(m_jarIndex, classMapping);
@@ -150,7 +157,9 @@ public class Deobfuscator {
 		for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
 			FieldEntry fieldEntry = new FieldEntry(classEntry, fieldMapping.getObfName(), fieldMapping.getObfType());
 			if (!m_jarIndex.containsObfField(fieldEntry)) {
-				System.err.println("WARNING: unable to find field " + fieldEntry + ". dropping mapping.");
+				if (warnAboutDrops) {
+					System.err.println("WARNING: unable to find field " + fieldEntry + ". dropping mapping.");
+				}
 				classMapping.removeFieldMapping(fieldMapping);
 			}
 		}
@@ -159,7 +168,9 @@ public class Deobfuscator {
 		for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
 			BehaviorEntry obfBehaviorEntry = EntryFactory.getObfBehaviorEntry(classEntry, methodMapping);
 			if (!m_jarIndex.containsObfBehavior(obfBehaviorEntry)) {
-				System.err.println("WARNING: unable to find behavior " + obfBehaviorEntry + ". dropping mapping.");
+				if (warnAboutDrops) {
+					System.err.println("WARNING: unable to find behavior " + obfBehaviorEntry + ". dropping mapping.");
+				}
 				classMapping.removeMethodMapping(methodMapping);
 			}
 			
@@ -168,8 +179,10 @@ public class Deobfuscator {
 		
 		// check inner classes
 		for (ClassMapping innerClassMapping : Lists.newArrayList(classMapping.innerClasses())) {
-			if (!checkClassMapping(relatedMethodChecker, innerClassMapping)) {
-				System.err.println("WARNING: unable to find inner class " + EntryFactory.getObfClassEntry(m_jarIndex, classMapping) + ". dropping mapping.");
+			if (!checkClassMapping(relatedMethodChecker, innerClassMapping, warnAboutDrops)) {
+				if (warnAboutDrops) {
+					System.err.println("WARNING: unable to find inner class " + EntryFactory.getObfClassEntry(m_jarIndex, classMapping) + ". dropping mapping.");
+				}
 				classMapping.removeInnerClassMapping(innerClassMapping);
 			}
 		}

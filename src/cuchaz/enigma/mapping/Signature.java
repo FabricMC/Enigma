@@ -39,6 +39,11 @@ public class Signature implements Serializable {
 		}
 	}
 	
+	public Signature(Signature other) {
+		m_argumentTypes = Lists.newArrayList(other.m_argumentTypes);
+		m_returnType = new Type(other.m_returnType);
+	}
+	
 	public Signature(Signature other, ClassNameReplacer replacer) {
 		m_argumentTypes = Lists.newArrayList(other.m_argumentTypes);
 		for (int i=0; i<m_argumentTypes.size(); i++) {

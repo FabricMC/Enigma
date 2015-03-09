@@ -25,6 +25,11 @@ public class ArgumentMapping implements Serializable, Comparable<ArgumentMapping
 		m_name = NameValidator.validateArgumentName(name);
 	}
 	
+	public ArgumentMapping(ArgumentMapping other) {
+		m_index = other.m_index;
+		m_name = other.m_name;
+	}
+
 	public int getIndex() {
 		return m_index;
 	}

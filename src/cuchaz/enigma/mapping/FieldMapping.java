@@ -26,6 +26,12 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping> {
 		m_obfType = obfType;
 	}
 	
+	public FieldMapping(FieldMapping other, ClassNameReplacer obfClassNameReplacer) {
+		m_obfName = other.m_obfName;
+		m_deobfName = other.m_deobfName;
+		m_obfType = new Type(other.m_obfType, obfClassNameReplacer);
+	}
+
 	public String getObfName() {
 		return m_obfName;
 	}
@@ -45,5 +51,25 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping> {
 	@Override
 	public int compareTo(FieldMapping other) {
 		return (m_obfName + m_obfType).compareTo(other.m_obfName + other.m_obfType);
+	}
+
+	public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
+		
+		// rename obf classes in the type
+		Type newType = new Type(m_obfType, new ClassNameReplacer() {
+			@Override
+			public String replace(String className) {
+				if (className.equals(oldObfClassName)) {
+					return newObfClassName;
+				}
+				return null;
+			}
+		});
+		
+		if (!newType.equals(m_obfType)) {
+			m_obfType = newType;
+			return true;
+		}
+		return false;
 	}
 }
