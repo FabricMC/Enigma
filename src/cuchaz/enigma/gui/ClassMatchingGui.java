@@ -201,13 +201,10 @@ public class ClassMatchingGui {
 		
 		m_sourceClassLabel = new JLabel();
 		m_sourceClassLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		m_sourceClassLabel.setPreferredSize(new Dimension(300, 24));
 		m_destClassLabel = new JLabel();
 		m_destClassLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		m_destClassLabel.setPreferredSize(new Dimension(300, 24));
 		
 		m_matchButton = new JButton();
-		m_matchButton.setPreferredSize(new Dimension(140, 24));
 		
 		m_advanceCheck = new JCheckBox("Advance to next likely match");
 		m_advanceCheck.addActionListener(new ActionListener() {

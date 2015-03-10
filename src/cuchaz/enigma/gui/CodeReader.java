@@ -7,12 +7,15 @@ import java.awt.event.ActionListener;
 import javax.swing.JEditorPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter.HighlightPainter;
 
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -26,8 +29,13 @@ public class CodeReader extends JEditorPane {
 	
 	private static final Object m_lock = new Object();
 	
-	private SelectionHighlightPainter m_highlightPainter;
+	public static interface SelectionListener {
+		void onSelect(EntryReference<Entry,Entry> reference);
+	}
+	
+	private SelectionHighlightPainter m_selectionHighlightPainter;
 	private SourceIndex m_sourceIndex;
+	private SelectionListener m_selectionListener;
 	
 	public CodeReader() {
 		
@@ -38,8 +46,28 @@ public class CodeReader extends JEditorPane {
 		DefaultSyntaxKit kit = (DefaultSyntaxKit)getEditorKit();
 		kit.toggleComponent(this, "de.sciss.syntaxpane.components.TokenMarker");
 		
-		m_highlightPainter = new SelectionHighlightPainter();
+		// hook events
+		addCaretListener(new CaretListener() {
+			@Override
+			public void caretUpdate(CaretEvent event) {
+				if (m_selectionListener != null && m_sourceIndex != null) {
+					Token token = m_sourceIndex.getReferenceToken(event.getDot());
+					if (token != null) {
+						m_selectionListener.onSelect(m_sourceIndex.getDeobfReference(token));
+					} else {
+						m_selectionListener.onSelect(null);
+					}
+				}
+			}
+		});
+		
+		m_selectionHighlightPainter = new SelectionHighlightPainter();
 		m_sourceIndex = null;
+		m_selectionListener = null;
+	}
+	
+	public void setSelectionListener(SelectionListener val) {
+		m_selectionListener = val;
 	}
 	
 	public void setCode(String code) {
@@ -47,6 +75,10 @@ public class CodeReader extends JEditorPane {
 		synchronized (m_lock) {
 			setText(code);
 		}
+	}
+	
+	public SourceIndex getSourceIndex() {
+		return m_sourceIndex;
 	}
 	
 	public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator) {
@@ -110,7 +142,7 @@ public class CodeReader extends JEditorPane {
 	}
 	
 	public void navigateToToken(final Token token) {
-		navigateToToken(this, token, m_highlightPainter);
+		navigateToToken(this, token, m_selectionHighlightPainter);
 	}
 	
 	// HACKHACK: someday we can update the main GUI to use this code reader
@@ -160,5 +192,23 @@ public class CodeReader extends JEditorPane {
 			}
 		});
 		timer.start();
+	}
+	
+	public void setHighlightedTokens(Iterable<Token> tokens, HighlightPainter painter) {
+		for (Token token : tokens) {
+			setHighlightedToken(token, painter);
+		}
+	}
+	
+	public void setHighlightedToken(Token token, HighlightPainter painter) {
+		try {
+			getHighlighter().addHighlight(token.start, token.end, painter);
+		} catch (BadLocationException ex) {
+			throw new IllegalArgumentException(ex);
+		}
+	}
+
+	public void clearHighlights() {
+		getHighlighter().removeAllHighlights();
 	}
 }

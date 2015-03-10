@@ -10,6 +10,8 @@ import java.util.List;
 import com.beust.jcommander.internal.Lists;
 
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.Type;
 
 
 public class MatchesReader {
@@ -41,5 +43,43 @@ public class MatchesReader {
 			}
 		}
 		return entries;
+	}
+
+	public static FieldMatches readFields(File file)
+	throws IOException {
+		try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+			FieldMatches matches = new FieldMatches();
+			String line = null;
+			while ((line = in.readLine()) != null) {
+				readFieldMatch(matches, line);
+			}
+			return matches;
+		}
+	}
+
+	private static void readFieldMatch(FieldMatches matches, String line) {
+		String[] parts = line.split(":", 2);
+		FieldEntry source = readField(parts[0]);
+		FieldEntry dest = readField(parts[1]);
+		if (source != null && dest != null) {
+			matches.addMatch(source, dest);
+		} else if (source != null) {
+			matches.addUnmatchedSourceField(source);
+		} else if (dest != null) {
+			matches.addUnmatchedDestField(dest);
+		}
+	}
+
+	private static FieldEntry readField(String in) {
+		if (in.length() <= 0) {
+			return null;
+		}
+		String[] parts = in.split(" ");
+		assert(parts.length == 3);
+		return new FieldEntry(
+			new ClassEntry(parts[0]),
+			parts[1],
+			new Type(parts[2])
+		);
 	}
 }

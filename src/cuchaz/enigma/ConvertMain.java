@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Set;
 import java.util.jar.JarFile;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.Sets;
 
 import cuchaz.enigma.convert.ClassMatches;
 import cuchaz.enigma.convert.FieldMatches;
@@ -13,11 +17,18 @@ import cuchaz.enigma.convert.MatchesReader;
 import cuchaz.enigma.convert.MatchesWriter;
 import cuchaz.enigma.gui.ClassMatchingGui;
 import cuchaz.enigma.gui.FieldMatchingGui;
+import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ClassMapping;
+import cuchaz.enigma.mapping.ClassNameReplacer;
+import cuchaz.enigma.mapping.EntryFactory;
+import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsChecker;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
+import cuchaz.enigma.mapping.Type;
 
 
 public class ConvertMain {
@@ -32,13 +43,14 @@ public class ConvertMain {
 		File inMappingsFile = new File("../Enigma Mappings/1.8.mappings");
 		File outMappingsFile = new File("../Enigma Mappings/1.8.3.mappings");
 		Mappings mappings = new MappingsReader().read(new FileReader(inMappingsFile));
-		File classMatchingFile = new File(inMappingsFile.getName() + ".class.matching");
-		File fieldMatchingFile = new File(inMappingsFile.getName() + ".field.matching");
+		File classMatchesFile = new File(inMappingsFile.getName() + ".class.matches");
+		File fieldMatchesFile = new File(inMappingsFile.getName() + ".field.matches");
 
-		//computeMatches(classMatchingFile, sourceJar, destJar, mappings);
+		//computeClassMatches(classMatchingFile, sourceJar, destJar, mappings);
 		//editClasssMatches(classMatchingFile, sourceJar, destJar, mappings);
 		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchingFile);
-		editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchingFile, fieldMatchingFile);
+		//computeFieldMatches(fieldMatchesFile, destJar, outMappingsFile, classMatchesFile);
+		editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
 		
 		/* TODO
 		// write out the converted mappings
@@ -49,17 +61,17 @@ public class ConvertMain {
 		*/
 	}
 	
-	private static void computeMatches(File classMatchingFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
+	private static void computeClassMatches(File classMatchesFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
 	throws IOException {
 		ClassMatches classMatches = MappingsConverter.computeMatches(sourceJar, destJar, mappings);
-		MatchesWriter.writeClasses(classMatches, classMatchingFile);
-		System.out.println("Wrote:\n\t" + classMatchingFile.getAbsolutePath());
+		MatchesWriter.writeClasses(classMatches, classMatchesFile);
+		System.out.println("Wrote:\n\t" + classMatchesFile.getAbsolutePath());
 	}
 	
-	private static void editClasssMatches(final File classMatchingFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
+	private static void editClasssMatches(final File classMatchesFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
 	throws IOException {
-		System.out.println("Reading matches...");
-		ClassMatches classMatches = MatchesReader.readClasses(classMatchingFile);
+		System.out.println("Reading class matches...");
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
 		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
 		deobfuscators.source.setMappings(mappings);
 		System.out.println("Starting GUI...");
@@ -67,7 +79,7 @@ public class ConvertMain {
 			@Override
 			public void save(ClassMatches matches) {
 				try {
-					MatchesWriter.writeClasses(matches, classMatchingFile);
+					MatchesWriter.writeClasses(matches, classMatchesFile);
 				} catch (IOException ex) {
 					throw new Error(ex);
 				}
@@ -75,10 +87,10 @@ public class ConvertMain {
 		});
 	}
 	
-	private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchingFile)
+	private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile)
 	throws IOException {
-		System.out.println("Reading matches...");
-		ClassMatches classMatches = MatchesReader.readClasses(classMatchingFile);
+		System.out.println("Reading class matches...");
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
 		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
 		deobfuscators.source.setMappings(mappings);
 		
@@ -90,18 +102,89 @@ public class ConvertMain {
 		System.out.println("Write converted mappings to: " + outMappingsFile.getAbsolutePath());
 	}
 	
-	private static void editFieldMatches(JarFile sourceJar, JarFile destJar, File destMappingsFile, Mappings sourceMappings, File classMatchingFile, final File fieldMatchingFile)
+	private static void computeFieldMatches(File fieldMatchesFile, JarFile destJar, File destMappingsFile, File classMatchesFile)
+	throws IOException, MappingParseException {
+		
+		System.out.println("Reading class matches...");
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
+		System.out.println("Reading mappings...");
+		Mappings destMappings = new MappingsReader().read(new FileReader(destMappingsFile));
+		System.out.println("Indexing dest jar...");
+		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
+		
+		System.out.println("Writing field matches...");
+		
+		// get the matched and unmatched field mappings
+		FieldMatches fieldMatches = new FieldMatches();
+		
+		// unmatched source fields are easy
+		MappingsChecker checker = new MappingsChecker(destDeobfuscator.getJarIndex());
+		checker.dropBrokenMappings(destMappings);
+		for (FieldEntry destObfField : checker.getDroppedFieldMappings().keySet()) {
+			FieldEntry srcObfField = translate(destObfField, classMatches.getUniqueMatches().inverse());
+			fieldMatches.addUnmatchedSourceField(srcObfField);
+		}
+		
+		// get matched fields (anything that's left after the checks/drops is matched(
+		for (ClassMapping classMapping : destMappings.classes()) {
+			collectMatchedFields(fieldMatches, classMapping, classMatches);
+		}
+		
+		// get unmatched dest fields
+		Set<FieldEntry> unmatchedDestFields = Sets.newHashSet();
+		for (FieldEntry destFieldEntry : destDeobfuscator.getJarIndex().getObfFieldEntries()) {
+			if (!fieldMatches.isDestMatched(destFieldEntry)) {
+				unmatchedDestFields.add(destFieldEntry);
+			}
+		}
+		fieldMatches.addUnmatchedDestFields(unmatchedDestFields);
+		
+		MatchesWriter.writeFields(fieldMatches, fieldMatchesFile);
+		System.out.println("Wrote:\n\t" + fieldMatchesFile.getAbsolutePath());
+	}
+	
+	private static void collectMatchedFields(FieldMatches fieldMatches, ClassMapping destClassMapping, ClassMatches classMatches) {
+		
+		// get the fields for this class
+		for (FieldMapping destFieldMapping : destClassMapping.fields()) {
+			FieldEntry destObfField = EntryFactory.getObfFieldEntry(destClassMapping, destFieldMapping);
+			FieldEntry srcObfField = translate(destObfField, classMatches.getUniqueMatches().inverse());
+			fieldMatches.addMatch(srcObfField, destObfField);
+		}
+		
+		// recurse
+		for (ClassMapping destInnerClassMapping : destClassMapping.innerClasses()) {
+			collectMatchedFields(fieldMatches, destInnerClassMapping, classMatches);
+		}
+	}
+
+	private static FieldEntry translate(FieldEntry in, BiMap<ClassEntry,ClassEntry> map) {
+		return new FieldEntry(
+			map.get(in.getClassEntry()),
+			in.getName(),
+			translate(in.getType(), map)
+		);
+	}
+
+	private static Type translate(Type type, final BiMap<ClassEntry,ClassEntry> map) {
+		return new Type(type, new ClassNameReplacer() {
+			@Override
+			public String replace(String inClassName) {
+				ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
+				if (outClassEntry == null) {
+					return null;
+				}
+				return outClassEntry.getName();
+			}
+		});
+	}
+
+	private static void editFieldMatches(JarFile sourceJar, JarFile destJar, File destMappingsFile, Mappings sourceMappings, File classMatchesFile, final File fieldMatchesFile)
 	throws IOException, MappingParseException {
 		
 		System.out.println("Reading matches...");
-		ClassMatches classMatches = MatchesReader.readClasses(classMatchingFile);
-		FieldMatches fieldMatches;
-		if (fieldMatchingFile.exists() /* TEMP */ && false) {
-			// TODO
-			//fieldMatches = MatchesReader.readFields(fieldMatchingFile);
-		} else {
-			fieldMatches = new FieldMatches();
-		}
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
+		FieldMatches fieldMatches = MatchesReader.readFields(fieldMatchesFile);
 		
 		// prep deobfuscators
 		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
@@ -111,16 +194,14 @@ public class ConvertMain {
 		checker.dropBrokenMappings(destMappings);
 		deobfuscators.dest.setMappings(destMappings);
 		
-		new FieldMatchingGui(classMatches, fieldMatches, checker.getDroppedFieldMappings(), deobfuscators.source, deobfuscators.dest).setSaveListener(new FieldMatchingGui.SaveListener() {
+		new FieldMatchingGui(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new FieldMatchingGui.SaveListener() {
 			@Override
 			public void save(FieldMatches matches) {
-				/* TODO
 				try {
-					MatchesWriter.writeFields(matches, fieldMatchingFile);
+					MatchesWriter.writeFields(matches, fieldMatchesFile);
 				} catch (IOException ex) {
 					throw new Error(ex);
 				}
-				*/
 			}
 		});
 	}

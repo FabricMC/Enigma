@@ -26,6 +26,10 @@ public class EntryFactory {
 		return obfClassEntry.buildClassEntry(jarIndex.getObfClassChain(obfClassEntry));
 	}
 	
+	private static ClassEntry getObfClassEntry(ClassMapping classMapping) {
+		return new ClassEntry(classMapping.getObfFullName());
+	}
+	
 	public static ClassEntry getDeobfClassEntry(ClassMapping classMapping) {
 		return new ClassEntry(classMapping.getDeobfName());
 	}
@@ -47,6 +51,14 @@ public class EntryFactory {
 			new ClassEntry(Descriptor.toJvmName(call.getClassName())),
 			call.getFieldName(),
 			new Type(call.getSignature())
+		);
+	}
+	
+	public static FieldEntry getObfFieldEntry(ClassMapping classMapping, FieldMapping fieldMapping) {
+		return new FieldEntry(
+			getObfClassEntry(classMapping),
+			fieldMapping.getObfName(),
+			fieldMapping.getObfType()
 		);
 	}
 	
@@ -147,5 +159,9 @@ public class EntryFactory {
 	
 	public static BehaviorEntry getObfBehaviorEntry(ClassEntry classEntry, MethodMapping methodMapping) {
 		return getBehaviorEntry(classEntry, methodMapping.getObfName(), methodMapping.getObfSignature());
+	}
+	
+	public static BehaviorEntry getObfBehaviorEntry(ClassMapping classMapping, MethodMapping methodMapping) {
+		return getObfBehaviorEntry(getObfClassEntry(classMapping), methodMapping);
 	}
 }

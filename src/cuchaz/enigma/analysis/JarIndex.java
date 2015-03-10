@@ -60,6 +60,8 @@ public class JarIndex {
 	private TranslationIndex m_translationIndex;
 	private Multimap<String,String> m_interfaces;
 	private Map<Entry,Access> m_access;
+	private Multimap<ClassEntry,FieldEntry> m_fields;
+	private Multimap<ClassEntry,BehaviorEntry> m_behaviors;
 	private Multimap<String,MethodEntry> m_methodImplementations;
 	private Multimap<BehaviorEntry,EntryReference<BehaviorEntry,BehaviorEntry>> m_behaviorReferences;
 	private Multimap<FieldEntry,EntryReference<FieldEntry,BehaviorEntry>> m_fieldReferences;
@@ -73,6 +75,8 @@ public class JarIndex {
 		m_translationIndex = new TranslationIndex();
 		m_interfaces = HashMultimap.create();
 		m_access = Maps.newHashMap();
+		m_fields = HashMultimap.create();
+		m_behaviors = HashMultimap.create();
 		m_methodImplementations = HashMultimap.create();
 		m_behaviorReferences = HashMultimap.create();
 		m_fieldReferences = HashMultimap.create();
@@ -97,10 +101,14 @@ public class JarIndex {
 		for (CtClass c : JarClassIterator.classes(jar)) {
 			ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
 			for (CtField field : c.getDeclaredFields()) {
-				m_access.put(EntryFactory.getFieldEntry(field), Access.get(field));
+				FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
+				m_access.put(fieldEntry, Access.get(field));
+				m_fields.put(fieldEntry.getClassEntry(), fieldEntry);
 			}
 			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-				m_access.put(EntryFactory.getBehaviorEntry(behavior), Access.get(behavior));
+				BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
+				m_access.put(behaviorEntry, Access.get(behavior));
+				m_behaviors.put(behaviorEntry.getClassEntry(), behaviorEntry);
 			}
 		}
 		
@@ -518,6 +526,22 @@ public class JarIndex {
 	
 	public Set<ClassEntry> getObfClassEntries() {
 		return m_obfClassEntries;
+	}
+	
+	public Collection<FieldEntry> getObfFieldEntries() {
+		return m_fields.values();
+	}
+	
+	public Collection<FieldEntry> getObfFieldEntries(ClassEntry classEntry) {
+		return m_fields.get(classEntry);
+	}
+	
+	public Collection<BehaviorEntry> getObfBehaviorEntries() {
+		return m_behaviors.values();
+	}
+	
+	public Collection<BehaviorEntry> getObfBehaviorEntries(ClassEntry classEntry) {
+		return m_behaviors.get(classEntry);
 	}
 	
 	public TranslationIndex getTranslationIndex() {

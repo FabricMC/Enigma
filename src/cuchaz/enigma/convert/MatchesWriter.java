@@ -3,8 +3,10 @@ package cuchaz.enigma.convert;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.FieldEntry;
 
 
 public class MatchesWriter {
@@ -37,5 +39,41 @@ public class MatchesWriter {
 			}
 			out.write(entry.toString());
 		}
+	}
+
+	public static void writeFields(FieldMatches fieldMatches, File file)
+	throws IOException {
+		try (FileWriter out = new FileWriter(file)) {
+			for (Map.Entry<FieldEntry,FieldEntry> match : fieldMatches.matches().entrySet()) {
+				writeFieldMatch(out, match.getKey(), match.getValue());
+			}
+			for (FieldEntry fieldEntry : fieldMatches.getUnmatchedSourceFields()) {
+				writeFieldMatch(out, fieldEntry, null);
+			}
+			for (FieldEntry fieldEntry : fieldMatches.getUnmatchedDestFields()) {
+				writeFieldMatch(out, null, fieldEntry);
+			}
+		}
+	}
+
+	private static void writeFieldMatch(FileWriter out, FieldEntry source, FieldEntry dest)
+	throws IOException {
+		if (source != null) {
+			writeField(out, source);
+		}
+		out.write(":");
+		if (dest != null) {
+			writeField(out, dest);
+		}
+		out.write("\n");
+	}
+	
+	private static void writeField(FileWriter out, FieldEntry fieldEntry)
+	throws IOException {
+		out.write(fieldEntry.getClassName());
+		out.write(" ");
+		out.write(fieldEntry.getName());
+		out.write(" ");
+		out.write(fieldEntry.getType().toString());
 	}
 }
