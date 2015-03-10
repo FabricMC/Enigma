@@ -4,11 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Set;
 import java.util.jar.JarFile;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.Sets;
 
 import cuchaz.enigma.convert.ClassMatches;
 import cuchaz.enigma.convert.FieldMatches;
@@ -17,18 +13,11 @@ import cuchaz.enigma.convert.MatchesReader;
 import cuchaz.enigma.convert.MatchesWriter;
 import cuchaz.enigma.gui.ClassMatchingGui;
 import cuchaz.enigma.gui.FieldMatchingGui;
-import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.ClassMapping;
-import cuchaz.enigma.mapping.ClassNameReplacer;
-import cuchaz.enigma.mapping.EntryFactory;
-import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsChecker;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
-import cuchaz.enigma.mapping.Type;
 
 
 public class ConvertMain {
@@ -63,7 +52,7 @@ public class ConvertMain {
 	
 	private static void computeClassMatches(File classMatchesFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
 	throws IOException {
-		ClassMatches classMatches = MappingsConverter.computeMatches(sourceJar, destJar, mappings);
+		ClassMatches classMatches = MappingsConverter.computeClassMatches(sourceJar, destJar, mappings);
 		MatchesWriter.writeClasses(classMatches, classMatchesFile);
 		System.out.println("Wrote:\n\t" + classMatchesFile.getAbsolutePath());
 	}
@@ -115,70 +104,12 @@ public class ConvertMain {
 		System.out.println("Writing field matches...");
 		
 		// get the matched and unmatched field mappings
-		FieldMatches fieldMatches = new FieldMatches();
-		
-		// unmatched source fields are easy
-		MappingsChecker checker = new MappingsChecker(destDeobfuscator.getJarIndex());
-		checker.dropBrokenMappings(destMappings);
-		for (FieldEntry destObfField : checker.getDroppedFieldMappings().keySet()) {
-			FieldEntry srcObfField = translate(destObfField, classMatches.getUniqueMatches().inverse());
-			fieldMatches.addUnmatchedSourceField(srcObfField);
-		}
-		
-		// get matched fields (anything that's left after the checks/drops is matched(
-		for (ClassMapping classMapping : destMappings.classes()) {
-			collectMatchedFields(fieldMatches, classMapping, classMatches);
-		}
-		
-		// get unmatched dest fields
-		Set<FieldEntry> unmatchedDestFields = Sets.newHashSet();
-		for (FieldEntry destFieldEntry : destDeobfuscator.getJarIndex().getObfFieldEntries()) {
-			if (!fieldMatches.isDestMatched(destFieldEntry)) {
-				unmatchedDestFields.add(destFieldEntry);
-			}
-		}
-		fieldMatches.addUnmatchedDestFields(unmatchedDestFields);
+		FieldMatches fieldMatches = MappingsConverter.computeFieldMatches(destDeobfuscator, destMappings, classMatches);
 		
 		MatchesWriter.writeFields(fieldMatches, fieldMatchesFile);
 		System.out.println("Wrote:\n\t" + fieldMatchesFile.getAbsolutePath());
 	}
 	
-	private static void collectMatchedFields(FieldMatches fieldMatches, ClassMapping destClassMapping, ClassMatches classMatches) {
-		
-		// get the fields for this class
-		for (FieldMapping destFieldMapping : destClassMapping.fields()) {
-			FieldEntry destObfField = EntryFactory.getObfFieldEntry(destClassMapping, destFieldMapping);
-			FieldEntry srcObfField = translate(destObfField, classMatches.getUniqueMatches().inverse());
-			fieldMatches.addMatch(srcObfField, destObfField);
-		}
-		
-		// recurse
-		for (ClassMapping destInnerClassMapping : destClassMapping.innerClasses()) {
-			collectMatchedFields(fieldMatches, destInnerClassMapping, classMatches);
-		}
-	}
-
-	private static FieldEntry translate(FieldEntry in, BiMap<ClassEntry,ClassEntry> map) {
-		return new FieldEntry(
-			map.get(in.getClassEntry()),
-			in.getName(),
-			translate(in.getType(), map)
-		);
-	}
-
-	private static Type translate(Type type, final BiMap<ClassEntry,ClassEntry> map) {
-		return new Type(type, new ClassNameReplacer() {
-			@Override
-			public String replace(String inClassName) {
-				ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
-				if (outClassEntry == null) {
-					return null;
-				}
-				return outClassEntry.getName();
-			}
-		});
-	}
-
 	private static void editFieldMatches(JarFile sourceJar, JarFile destJar, File destMappingsFile, Mappings sourceMappings, File classMatchesFile, final File fieldMatchesFile)
 	throws IOException, MappingParseException {
 		

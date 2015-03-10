@@ -53,6 +53,9 @@ public class MatchesWriter {
 			for (FieldEntry fieldEntry : fieldMatches.getUnmatchedDestFields()) {
 				writeFieldMatch(out, null, fieldEntry);
 			}
+			for (FieldEntry fieldEntry : fieldMatches.getUnmatchableSourceFields()) {
+				writeUnmatchableField(out, fieldEntry);
+			}
 		}
 	}
 
@@ -65,6 +68,13 @@ public class MatchesWriter {
 		if (dest != null) {
 			writeField(out, dest);
 		}
+		out.write("\n");
+	}
+	
+	private static void writeUnmatchableField(FileWriter out, FieldEntry fieldEntry)
+	throws IOException {
+		out.write("!");
+		writeField(out, fieldEntry);
 		out.write("\n");
 	}
 	

@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -421,17 +420,17 @@ public class ClassMatchingGui {
 		boolean isMatched = uniqueMatches.containsKey(obfSource) && uniqueMatches.containsValue(obfDest);
 		boolean canMatch = !uniqueMatches.containsKey(obfSource) && ! uniqueMatches.containsValue(obfDest);
 		
-		deactivateButton(m_matchButton);
+		GuiTricks.deactivateButton(m_matchButton);
 		if (twoSelected) {
 			if (isMatched) {
-				activateButton(m_matchButton, "Unmatch", new ActionListener() {
+				GuiTricks.activateButton(m_matchButton, "Unmatch", new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						onUnmatchClick();
 					}
 				});
 			} else if (canMatch) {
-				activateButton(m_matchButton, "Match", new ActionListener() {
+				GuiTricks.activateButton(m_matchButton, "Match", new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						onMatchClick();
@@ -439,23 +438,6 @@ public class ClassMatchingGui {
 				});
 			}
 		}
-	}
-	
-	private void deactivateButton(JButton button) {
-		button.setEnabled(false);
-		button.setText("");
-		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
-			button.removeActionListener(listener);
-		}
-	}
-	
-	private void activateButton(JButton button, String text, ActionListener newListener) {
-		button.setText(text);
-		button.setEnabled(true);
-		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
-			button.removeActionListener(listener);
-		}
-		button.addActionListener(newListener);
 	}
 
 	private void onMatchClick() {

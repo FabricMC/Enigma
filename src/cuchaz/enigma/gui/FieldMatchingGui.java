@@ -6,20 +6,26 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.Collection;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.WindowConstants;
 import javax.swing.text.Highlighter.HighlightPainter;
 
-import com.google.common.collect.Sets;
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
@@ -37,16 +43,49 @@ import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class FieldMatchingGui {
 	
+	private static enum SourceType {
+		Matched {
+			
+			@Override
+			public Collection<ClassEntry> getObfSourceClasses(FieldMatches matches) {
+				return matches.getSourceClassesWithoutUnmatchedFields();
+			}
+		},
+		Unmatched {
+			
+			@Override
+			public Collection<ClassEntry> getObfSourceClasses(FieldMatches matches) {
+				return matches.getSourceClassesWithUnmatchedFields();
+			}
+		};
+		
+		public JRadioButton newRadio(ActionListener listener, ButtonGroup group) {
+			JRadioButton button = new JRadioButton(name(), this == getDefault());
+			button.setActionCommand(name());
+			button.addActionListener(listener);
+			group.add(button);
+			return button;
+		}
+		
+		public abstract Collection<ClassEntry> getObfSourceClasses(FieldMatches matches);
+		
+		public static SourceType getDefault() {
+			return values()[0];
+		}
+	}
+	
 	public static interface SaveListener {
 		public void save(FieldMatches matches);
 	}
 	
 	// controls
 	private JFrame m_frame;
+	private Map<SourceType,JRadioButton> m_sourceTypeButtons;
 	private ClassSelector m_sourceClasses;
 	private CodeReader m_sourceReader;
 	private CodeReader m_destReader;
 	private JButton m_matchButton;
+	private JButton m_unmatchableButton;
 	private JLabel m_sourceLabel;
 	private JLabel m_destLabel;
 	private HighlightPainter m_unmatchedHighlightPainter;
@@ -57,12 +96,11 @@ public class FieldMatchingGui {
 	private Deobfuscator m_sourceDeobfuscator;
 	private Deobfuscator m_destDeobfuscator;
 	private SaveListener m_saveListener;
+	private SourceType m_sourceType;
 	private ClassEntry m_obfSourceClass;
 	private ClassEntry m_obfDestClass;
 	private FieldEntry m_obfSourceField;
 	private FieldEntry m_obfDestField;
-	private Set<FieldEntry> m_obfUnmatchedSourceFields;
-	private Set<FieldEntry> m_obfUnmatchedDestFields;
 
 	public FieldMatchingGui(ClassMatches classMatches, FieldMatches fieldMatches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 		
@@ -82,6 +120,24 @@ public class FieldMatchingGui {
 		classesPanel.setPreferredSize(new Dimension(200, 0));
 		pane.add(classesPanel, BorderLayout.WEST);
 		classesPanel.add(new JLabel("Classes"));
+		
+		// init source type radios
+		JPanel sourceTypePanel = new JPanel();
+		classesPanel.add(sourceTypePanel);
+		sourceTypePanel.setLayout(new BoxLayout(sourceTypePanel, BoxLayout.PAGE_AXIS));
+		ActionListener sourceTypeListener = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				setSourceType(SourceType.valueOf(event.getActionCommand()));
+			}
+		};
+		ButtonGroup sourceTypeButtons = new ButtonGroup();
+		m_sourceTypeButtons = Maps.newHashMap();
+		for (SourceType sourceType : SourceType.values()) {
+			JRadioButton button = sourceType.newRadio(sourceTypeListener, sourceTypeButtons);
+			m_sourceTypeButtons.put(sourceType, button);
+			sourceTypePanel.add(button);
+		}
 		
 		m_sourceClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
 		m_sourceClasses.setListener(new ClassSelectionListener() {
@@ -117,6 +173,20 @@ public class FieldMatchingGui {
 				}
 			}
 		});
+		
+		// add key bindings
+		KeyAdapter keyListener = new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent event) {
+				switch (event.getKeyCode()) {
+					case KeyEvent.VK_M:
+						m_matchButton.doClick();
+					break;
+				}
+			}
+		};
+		m_sourceReader.addKeyListener(keyListener);
+		m_destReader.addKeyListener(keyListener);
 
 		// init all the splits
 		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, new JScrollPane(m_sourceReader), new JScrollPane(m_destReader));
@@ -131,17 +201,13 @@ public class FieldMatchingGui {
 		bottomPanel.setLayout(new FlowLayout());
 		pane.add(bottomPanel, BorderLayout.SOUTH);
 		
-		m_matchButton = new JButton("Match");
-		m_matchButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				match();
-			}
-		});
+		m_matchButton = new JButton();
+		m_unmatchableButton = new JButton();
 		
 		m_sourceLabel = new JLabel();
 		bottomPanel.add(m_sourceLabel);
 		bottomPanel.add(m_matchButton);
+		bottomPanel.add(m_unmatchableButton);
 		m_destLabel = new JLabel();
 		bottomPanel.add(m_destLabel);
 
@@ -161,10 +227,13 @@ public class FieldMatchingGui {
 		m_obfDestClass = null;
 		m_obfSourceField = null;
 		m_obfDestField = null;
-		m_obfUnmatchedSourceFields = null;
-		m_obfUnmatchedDestFields = null;
+		setSourceType(SourceType.getDefault());
+		updateButtons();
+	}
+
+	protected void setSourceType(SourceType val) {
+		m_sourceType = val;
 		updateSourceClasses();
-		updateMatchButton();
 	}
 
 	public void setSaveListener(SaveListener val) {
@@ -172,26 +241,41 @@ public class FieldMatchingGui {
 	}
 	
 	private void updateSourceClasses() {
-		m_sourceClasses.setClasses(m_fieldMatches.getSourceClassesWithUnmatchedFields());
-		m_sourceClasses.expandAll();
+		
+		String selectedPackage = m_sourceClasses.getSelectedPackage();
+		
+		List<ClassEntry> deobfClassEntries = Lists.newArrayList();
+		for (ClassEntry entry : m_sourceType.getObfSourceClasses(m_fieldMatches)) {
+			deobfClassEntries.add(m_sourceDeobfuscator.deobfuscateEntry(entry));
+		}
+		m_sourceClasses.setClasses(deobfClassEntries);
+		
+		if (selectedPackage != null) {
+			m_sourceClasses.expandPackage(selectedPackage);
+		}
+		
+		for (SourceType sourceType : SourceType.values()) {
+			m_sourceTypeButtons.get(sourceType).setText(String.format("%s (%d)",
+				sourceType.name(), sourceType.getObfSourceClasses(m_fieldMatches).size()
+			));
+		}
 	}
 	
-	protected void setSourceClass(ClassEntry obfSourceClass) {
+	protected void setSourceClass(ClassEntry sourceClass) {
 		
-		m_obfSourceClass = obfSourceClass;
-		m_obfDestClass = m_classMatches.getUniqueMatches().get(obfSourceClass);
+		m_obfSourceClass = m_sourceDeobfuscator.obfuscateEntry(sourceClass);
+		m_obfDestClass = m_classMatches.getUniqueMatches().get(m_obfSourceClass);
 		if (m_obfDestClass == null) {
 			throw new Error("No matching dest class for source class: " + m_obfSourceClass);
 		}
 		
-		updateUnmatchedFields();
-		m_sourceReader.decompileClass(m_obfSourceClass, m_sourceDeobfuscator, new Runnable() {
+		m_sourceReader.decompileClass(m_obfSourceClass, m_sourceDeobfuscator, false, new Runnable() {
 			@Override
 			public void run() {
 				updateSourceHighlights();
 			}
 		});
-		m_destReader.decompileClass(m_obfDestClass, m_destDeobfuscator, new Runnable() {
+		m_destReader.decompileClass(m_obfDestClass, m_destDeobfuscator, false, new Runnable() {
 			@Override
 			public void run() {
 				updateDestHighlights();
@@ -199,71 +283,145 @@ public class FieldMatchingGui {
 		});
 	}
 	
-	private void updateUnmatchedFields() {
-		m_obfUnmatchedSourceFields = Sets.newHashSet(m_fieldMatches.getUnmatchedSourceFields(m_obfSourceClass));
-		m_obfUnmatchedDestFields = Sets.newHashSet();
-		for (FieldEntry destFieldEntry : m_destDeobfuscator.getJarIndex().getObfFieldEntries(m_obfDestClass)) {
-			if (!m_fieldMatches.isDestMatched(destFieldEntry)) {
-				m_obfUnmatchedDestFields.add(destFieldEntry);
-			}
-		}
-	}
-
 	protected void updateSourceHighlights() {
-		highlightFields(m_sourceReader, m_sourceDeobfuscator, m_obfUnmatchedSourceFields, m_fieldMatches.matches().keySet());
+		highlightFields(m_sourceReader, m_sourceDeobfuscator, m_fieldMatches.matches().keySet(), m_fieldMatches.getUnmatchedSourceFields());
 	}
 
 	protected void updateDestHighlights() {
-		highlightFields(m_destReader, m_destDeobfuscator, m_obfUnmatchedDestFields, m_fieldMatches.matches().values());
+		highlightFields(m_destReader, m_destDeobfuscator, m_fieldMatches.matches().values(), m_fieldMatches.getUnmatchedDestFields());
 	}
 	
-	private void highlightFields(CodeReader reader, Deobfuscator deobfuscator, Collection<FieldEntry> obfFieldEntries, Collection<FieldEntry> obfMatchedFieldEntries) {
+	private void highlightFields(CodeReader reader, Deobfuscator deobfuscator, Collection<FieldEntry> obfMatchedFields, Collection<FieldEntry> obfUnmatchedFields) {
 		reader.clearHighlights();
 		SourceIndex index = reader.getSourceIndex();
-		for (FieldEntry obfFieldEntry : obfFieldEntries) {
+		
+		// matched fields
+		for (FieldEntry obfFieldEntry : obfMatchedFields) {
 			FieldEntry deobfFieldEntry = deobfuscator.deobfuscateEntry(obfFieldEntry);
 			Token token = index.getDeclarationToken(deobfFieldEntry);
-			if (token == null) {
-				System.err.println("WARNING: Can't find declaration token for " + deobfFieldEntry);
-			} else {
-				reader.setHighlightedToken(
-					token,
-					obfMatchedFieldEntries.contains(obfFieldEntry) ? m_matchedHighlightPainter : m_unmatchedHighlightPainter
-				);
+			if (token != null) {
+				reader.setHighlightedToken(token, m_matchedHighlightPainter);
+			}
+		}
+		
+		// unmatched fields
+		for (FieldEntry obfFieldEntry : obfUnmatchedFields) {
+			FieldEntry deobfFieldEntry = deobfuscator.deobfuscateEntry(obfFieldEntry);
+			Token token = index.getDeclarationToken(deobfFieldEntry);
+			if (token != null) {
+				reader.setHighlightedToken(token, m_unmatchedHighlightPainter);
 			}
 		}
 	}
 	
-	protected void onSelectSource(Entry entry) {
-		m_sourceLabel.setText("");
-		m_obfSourceField = null;
-		if (entry != null && entry instanceof FieldEntry) {
-			FieldEntry fieldEntry = (FieldEntry)entry;
-			FieldEntry obfFieldEntry = m_sourceDeobfuscator.obfuscateEntry(fieldEntry);
-			if (m_obfUnmatchedSourceFields.contains(obfFieldEntry)) {
-				m_obfSourceField = obfFieldEntry;
-				m_sourceLabel.setText(fieldEntry.getName() + " " + fieldEntry.getType().toString());
+	private boolean isSelectionMatched() {
+		return m_obfSourceField != null && m_obfDestField != null
+			&& m_fieldMatches.isMatched(m_obfSourceField, m_obfDestField);
+	}
+	
+	protected void onSelectSource(Entry source) {
+
+		// start with no selection
+		if (isSelectionMatched()) {
+			setDest(null);
+		}
+		setSource(null);
+		
+		// then look for a valid source selection
+		if (source != null && source instanceof FieldEntry) {
+			FieldEntry sourceField = (FieldEntry)source;
+			FieldEntry obfSourceField = m_sourceDeobfuscator.obfuscateEntry(sourceField);
+			if (m_fieldMatches.hasSource(obfSourceField)) {
+				setSource(obfSourceField);
+				
+				// look for a matched dest too
+				FieldEntry obfDestField = m_fieldMatches.matches().get(obfSourceField);
+				if (obfDestField != null) {
+					setDest(obfDestField);
+				}
 			}
 		}
-		updateMatchButton();
+		
+		updateButtons();
 	}
 
-	protected void onSelectDest(Entry entry) {
-		m_destLabel.setText("");
-		m_obfDestField = null;
-		if (entry != null && entry instanceof FieldEntry) {
-			FieldEntry fieldEntry = (FieldEntry)entry;
-			FieldEntry obfFieldEntry = m_destDeobfuscator.obfuscateEntry(fieldEntry);
-			if (m_obfUnmatchedDestFields.contains(obfFieldEntry)) {
-				m_obfDestField = obfFieldEntry;
-				m_destLabel.setText(fieldEntry.getName() + " " + fieldEntry.getType().toString());
+	protected void onSelectDest(Entry dest) {
+		
+		// start with no selection
+		if (isSelectionMatched()) {
+			setSource(null);
+		}
+		setDest(null);
+
+		// then look for a valid dest selection
+		if (dest != null && dest instanceof FieldEntry) {
+			FieldEntry destField = (FieldEntry)dest;
+			FieldEntry obfDestField = m_destDeobfuscator.obfuscateEntry(destField);
+			if (m_fieldMatches.hasDest(obfDestField)) {
+				setDest(obfDestField);
+
+				// look for a matched source too
+				FieldEntry obfSourceField = m_fieldMatches.matches().inverse().get(obfDestField);
+				if (obfSourceField != null) {
+					setSource(obfSourceField);
+				}
 			}
 		}
-		updateMatchButton();
-	}
 		
-	private void updateMatchButton() {
-		m_matchButton.setEnabled(m_obfSourceField != null && m_obfDestField != null);
+		updateButtons();
+	}
+	
+	private void setSource(FieldEntry obfField) {
+		if (obfField == null) {
+			m_obfSourceField = obfField;
+			m_sourceLabel.setText("");
+		} else {
+			m_obfSourceField = obfField;
+			FieldEntry deobfField = m_sourceDeobfuscator.deobfuscateEntry(obfField);
+			m_sourceLabel.setText(deobfField.getName() + " " + deobfField.getType().toString());
+		}
+	}
+	
+	private void setDest(FieldEntry obfField) {
+		if (obfField == null) {
+			m_obfDestField = obfField;
+			m_destLabel.setText("");
+		} else {
+			m_obfDestField = obfField;
+			FieldEntry deobfField = m_destDeobfuscator.deobfuscateEntry(obfField);
+			m_destLabel.setText(deobfField.getName() + " " + deobfField.getType().toString());
+		}
+	}
+
+	private void updateButtons() {
+		
+		GuiTricks.deactivateButton(m_matchButton);
+		GuiTricks.deactivateButton(m_unmatchableButton);
+		
+		if (m_obfSourceField != null && m_obfDestField != null) {
+			if (m_fieldMatches.isMatched(m_obfSourceField, m_obfDestField)) {
+				GuiTricks.activateButton(m_matchButton, "Unmatch", new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						unmatch();
+					}
+				});
+			} else if (!m_fieldMatches.isMatchedSourceField(m_obfSourceField) && !m_fieldMatches.isMatchedDestField(m_obfDestField)) {
+				GuiTricks.activateButton(m_matchButton, "Match", new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						match();
+					}
+				});
+			}
+		} else if (m_obfSourceField != null) {
+			GuiTricks.activateButton(m_unmatchableButton, "Set Unmatchable", new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent event) {
+					unmatchable();
+				}
+			});
+		}
 	}
 	
 	protected void match() {
@@ -275,7 +433,34 @@ public class FieldMatchingGui {
 		// update the ui
 		onSelectSource(null);
 		onSelectDest(null);
-		updateUnmatchedFields();
+		updateSourceHighlights();
+		updateDestHighlights();
+		updateSourceClasses();
+	}
+	
+	protected void unmatch() {
+		
+		// update the field matches
+		m_fieldMatches.unmakeMatch(m_obfSourceField, m_obfDestField);
+		save();
+
+		// update the ui
+		onSelectSource(null);
+		onSelectDest(null);
+		updateSourceHighlights();
+		updateDestHighlights();
+		updateSourceClasses();
+	}
+	
+	protected void unmatchable() {
+		
+		// update the field matches
+		m_fieldMatches.makeSourceUnmatchable(m_obfSourceField);
+		save();
+		
+		// update the ui
+		onSelectSource(null);
+		onSelectDest(null);
 		updateSourceHighlights();
 		updateDestHighlights();
 		updateSourceClasses();

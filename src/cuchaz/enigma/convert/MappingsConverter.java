@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 import com.beust.jcommander.internal.Lists;
@@ -24,6 +25,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.JarIndex;
@@ -31,13 +33,17 @@ import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.ClassNameReplacer;
+import cuchaz.enigma.mapping.EntryFactory;
+import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.Mappings;
+import cuchaz.enigma.mapping.MappingsChecker;
 import cuchaz.enigma.mapping.MethodMapping;
+import cuchaz.enigma.mapping.Type;
 
 public class MappingsConverter {
 	
-	public static ClassMatches computeMatches(JarFile sourceJar, JarFile destJar, Mappings mappings) {
+	public static ClassMatches computeClassMatches(JarFile sourceJar, JarFile destJar, Mappings mappings) {
 		
 		// index jars
 		System.out.println("Indexing source jar...");
@@ -245,47 +251,101 @@ public class MappingsConverter {
 			mappings.renameObfClass(entry.getKey().getName(), entry.getValue().getName());
 		}
 	}
-	
-	/* TODO: after we get a mapping, check to see that the other entries match
-	public static void checkMethods() {
+
+	public static FieldMatches computeFieldMatches(Deobfuscator destDeobfuscator, Mappings destMappings, ClassMatches classMatches) {
 		
-		// check the method matches
-		System.out.println("Checking methods...");
-		for (ClassMapping classMapping : mappings.classes()) {
-			ClassEntry classEntry = new ClassEntry(classMapping.getObfFullName());
-			for (MethodMapping methodMapping : classMapping.methods()) {
+		FieldMatches fieldMatches = new FieldMatches();
+		
+		// unmatched source fields are easy
+		MappingsChecker checker = new MappingsChecker(destDeobfuscator.getJarIndex());
+		checker.dropBrokenMappings(destMappings);
+		for (FieldEntry destObfField : checker.getDroppedFieldMappings().keySet()) {
+			FieldEntry srcObfField = translate(destObfField, classMatches.getUniqueMatches().inverse());
+			fieldMatches.addUnmatchedSourceField(srcObfField);
+		}
+		
+		// get matched fields (anything that's left after the checks/drops is matched(
+		for (ClassMapping classMapping : destMappings.classes()) {
+			collectMatchedFields(fieldMatches, classMapping, classMatches);
+		}
+		
+		// get unmatched dest fields
+		for (FieldEntry destFieldEntry : destDeobfuscator.getJarIndex().getObfFieldEntries()) {
+			if (!fieldMatches.isMatchedDestField(destFieldEntry)) {
+				fieldMatches.addUnmatchedDestField(destFieldEntry);
+			}
+		}
+
+		System.out.println("Automatching " + fieldMatches.getUnmatchedSourceFields().size() + " unmatched source fields...");
+		
+		// go through the unmatched source fields and try to pick out the easy matches
+		for (ClassEntry obfSourceClass : Lists.newArrayList(fieldMatches.getSourceClassesWithUnmatchedFields())) {
+			for (FieldEntry obfSourceField : Lists.newArrayList(fieldMatches.getUnmatchedSourceFields(obfSourceClass))) {
 				
-				// skip constructors
-				if (methodMapping.getObfName().equals("<init>")) {
-					continue;
+				// get the possible dest matches
+				ClassEntry obfDestClass = classMatches.getUniqueMatches().get(obfSourceClass);
+				
+				// filter by type
+				Set<FieldEntry> obfDestFields = Sets.newHashSet();
+				for (FieldEntry obfDestField : fieldMatches.getUnmatchedDestFields(obfDestClass)) {
+					Type translatedDestType = translate(obfDestField.getType(), classMatches.getUniqueMatches().inverse());
+					if (translatedDestType.equals(obfSourceField.getType())) {
+						obfDestFields.add(obfDestField);
+					}
 				}
 				
-				MethodEntry methodEntry = new MethodEntry(
-					classEntry,
-					methodMapping.getObfName(),
-					methodMapping.getObfSignature()
-				);
-				if (!destIndex.containsObfBehavior(methodEntry)) {
-					System.err.println("WARNING: method doesn't match: " + methodEntry);
-					
-					// TODO: show methods if needed
-					// show the available methods
-					System.err.println("\tAvailable dest methods:");
-					CtClass c = destLoader.loadClass(classMapping.getObfFullName());
-					for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-						System.err.println("\t\t" + EntryFactory.getBehaviorEntry(behavior));
-					}
-					
-					System.err.println("\tAvailable source methods:");
-					c = sourceLoader.loadClass(matchedClassNames.inverse().get(classMapping.getObfFullName()));
-					for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-						System.err.println("\t\t" + EntryFactory.getBehaviorEntry(behavior));
-					}
+				if (obfDestFields.size() == 1) {
+					// make the easy match
+					FieldEntry obfDestField = obfDestFields.iterator().next();
+					fieldMatches.makeMatch(obfSourceField, obfDestField);
+				} else if (obfDestFields.isEmpty()) {
+					// no match is possible =(
+					fieldMatches.makeSourceUnmatchable(obfSourceField);
 				}
 			}
 		}
 		
-		System.out.println("Done!");
+		System.out.println(String.format("Ended up with %d ambiguous and %d unmatchable source fields",
+			fieldMatches.getUnmatchedSourceFields().size(),
+			fieldMatches.getUnmatchableSourceFields().size()
+		));
+		
+		return fieldMatches;
 	}
-	*/
+	
+	private static void collectMatchedFields(FieldMatches fieldMatches, ClassMapping destClassMapping, ClassMatches classMatches) {
+		
+		// get the fields for this class
+		for (FieldMapping destFieldMapping : destClassMapping.fields()) {
+			FieldEntry destObfField = EntryFactory.getObfFieldEntry(destClassMapping, destFieldMapping);
+			FieldEntry srcObfField = translate(destObfField, classMatches.getUniqueMatches().inverse());
+			fieldMatches.addMatch(srcObfField, destObfField);
+		}
+		
+		// recurse
+		for (ClassMapping destInnerClassMapping : destClassMapping.innerClasses()) {
+			collectMatchedFields(fieldMatches, destInnerClassMapping, classMatches);
+		}
+	}
+
+	private static FieldEntry translate(FieldEntry in, BiMap<ClassEntry,ClassEntry> map) {
+		return new FieldEntry(
+			map.get(in.getClassEntry()),
+			in.getName(),
+			translate(in.getType(), map)
+		);
+	}
+
+	private static Type translate(Type type, final BiMap<ClassEntry,ClassEntry> map) {
+		return new Type(type, new ClassNameReplacer() {
+			@Override
+			public String replace(String inClassName) {
+				ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
+				if (outClassEntry == null) {
+					return null;
+				}
+				return outClassEntry.getName();
+			}
+		});
+	}
 }

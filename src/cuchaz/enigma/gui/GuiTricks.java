@@ -11,8 +11,11 @@
 package cuchaz.enigma.gui;
 
 import java.awt.Font;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.ToolTipManager;
@@ -32,5 +35,22 @@ public class GuiTricks {
 		manager.setInitialDelay(0);
 		manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
 		manager.setInitialDelay(oldDelay);
+	}
+	
+	public static void deactivateButton(JButton button) {
+		button.setEnabled(false);
+		button.setText("");
+		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+			button.removeActionListener(listener);
+		}
+	}
+	
+	public static void activateButton(JButton button, String text, ActionListener newListener) {
+		button.setText(text);
+		button.setEnabled(true);
+		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+			button.removeActionListener(listener);
+		}
+		button.addActionListener(newListener);
 	}
 }

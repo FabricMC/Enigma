@@ -32,9 +32,15 @@ public class SourceIndex {
 	private Multimap<EntryReference<Entry,Entry>,Token> m_referenceToTokens;
 	private Map<Entry,Token> m_declarationToToken;
 	private List<Integer> m_lineOffsets;
+	private boolean m_ignoreBadTokens;
 	
 	public SourceIndex(String source) {
+		this(source, true);
+	}
+	
+	public SourceIndex(String source, boolean ignoreBadTokens) {
 		m_source = source;
+		m_ignoreBadTokens = ignoreBadTokens;
 		m_tokenToReference = Maps.newTreeMap();
 		m_referenceToTokens = HashMultimap.create();
 		m_declarationToToken = Maps.newHashMap();
@@ -83,7 +89,7 @@ public class SourceIndex {
 		// System.out.println( String.format( "%s \"%s\" region: %s", node.getNodeType(), name, region ) );
 		
 		// if the token has a $ in it, something's wrong. Ignore this token
-		if (name.lastIndexOf('$') >= 0) {
+		if (name.lastIndexOf('$') >= 0 && m_ignoreBadTokens) {
 			// DEBUG
 			System.err.println(String.format("WARNING: %s \"%s\" is probably a bad token. It was ignored", node.getNodeType(), name));
 			return null;

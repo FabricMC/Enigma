@@ -85,7 +85,11 @@ public class CodeReader extends JEditorPane {
 		decompileClass(classEntry, deobfuscator, null);
 	}
 	
-	public void decompileClass(final ClassEntry classEntry, final Deobfuscator deobfuscator, final Runnable callback) {
+	public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator, Runnable callback) {
+		decompileClass(classEntry, deobfuscator, null, callback);
+	}
+	
+	public void decompileClass(final ClassEntry classEntry, final Deobfuscator deobfuscator, final Boolean ignoreBadTokens, final Runnable callback) {
 		
 		if (classEntry == null) {
 			setCode(null);
@@ -109,7 +113,7 @@ public class CodeReader extends JEditorPane {
 				CompilationUnit sourceTree = deobfuscator.getSourceTree(outermostClassEntry.getName());
 				String source = deobfuscator.getSource(sourceTree);
 				setCode(source);
-				m_sourceIndex = deobfuscator.getSourceIndex(sourceTree, source);
+				m_sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);
 				
 				if (callback != null) {
 					callback.run();

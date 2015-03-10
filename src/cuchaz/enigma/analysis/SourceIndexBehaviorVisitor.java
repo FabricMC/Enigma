@@ -111,10 +111,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitParameterDeclaration(ParameterDeclaration node, SourceIndex index) {
 		ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
-		MethodDefinition methodDef = (MethodDefinition)def.getMethod();
-		BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(methodDef);
-		ArgumentEntry argumentEntry = new ArgumentEntry(behaviorEntry, def.getPosition(), node.getName());
-		index.addDeclaration(node.getNameToken(), argumentEntry);
+		if (def.getMethod() instanceof MethodDefinition) {
+			MethodDefinition methodDef = (MethodDefinition)def.getMethod();
+			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(methodDef);
+			ArgumentEntry argumentEntry = new ArgumentEntry(behaviorEntry, def.getPosition(), node.getName());
+			index.addDeclaration(node.getNameToken(), argumentEntry);
+		}
 		
 		return recurse(node, index);
 	}

@@ -225,8 +225,18 @@ public class Deobfuscator {
 	}
 	
 	public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source) {
+		return getSourceIndex(sourceTree, source, null);
+	}
+	
+	public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source, Boolean ignoreBadTokens) {
+		
 		// build the source index
-		SourceIndex index = new SourceIndex(source);
+		SourceIndex index;
+		if (ignoreBadTokens != null) {
+			index = new SourceIndex(source, ignoreBadTokens);
+		} else {
+			index = new SourceIndex(source);
+		}
 		sourceTree.acceptVisitor(new SourceIndexVisitor(), index);
 		
 		// DEBUG
