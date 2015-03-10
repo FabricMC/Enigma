@@ -35,11 +35,11 @@ public class ConvertMain {
 		File classMatchesFile = new File(inMappingsFile.getName() + ".class.matches");
 		File fieldMatchesFile = new File(inMappingsFile.getName() + ".field.matches");
 
-		//computeClassMatches(classMatchingFile, sourceJar, destJar, mappings);
-		//editClasssMatches(classMatchingFile, sourceJar, destJar, mappings);
-		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchingFile);
+		//computeClassMatches(classMatchesFile, sourceJar, destJar, mappings);
+		editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
+		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile);
 		//computeFieldMatches(fieldMatchesFile, destJar, outMappingsFile, classMatchesFile);
-		editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
+		//editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
 		
 		/* TODO
 		// write out the converted mappings
