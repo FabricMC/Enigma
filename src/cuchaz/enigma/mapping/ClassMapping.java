@@ -243,6 +243,15 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		}
 	}
 	
+	public void setFieldObfName(String oldObfName, Type obfType, String newObfName) {
+		assert(newObfName != null);
+		FieldMapping fieldMapping = m_fieldsByObf.remove(getFieldKey(oldObfName, obfType));
+		assert(fieldMapping != null);
+		fieldMapping.setObfName(newObfName);
+		boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(newObfName, obfType), fieldMapping) == null;
+		assert(obfWasAdded);
+	}
+	
 	
 	//// METHODS ////////
 	
@@ -317,6 +326,15 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 			boolean wasAdded = m_methodsByDeobf.put(getMethodKey(deobfName, obfSignature), methodMapping) == null;
 			assert (wasAdded);
 		}
+	}
+	
+	public void setMethodObfName(String oldObfName, Signature obfSignature, String newObfName) {
+		assert(newObfName != null);
+		MethodMapping methodMapping = m_methodsByObf.remove(getMethodKey(oldObfName, obfSignature));
+		assert(methodMapping != null);
+		methodMapping.setObfName(newObfName);
+		boolean obfWasAdded = m_methodsByObf.put(getMethodKey(newObfName, obfSignature), methodMapping) == null;
+		assert(obfWasAdded);
 	}
 	
 	//// ARGUMENTS ////////

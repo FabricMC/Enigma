@@ -262,10 +262,11 @@ public class MappingsConverter {
 		Collection<T> getObfEntries(JarIndex jarIndex);
 		Collection<? extends MemberMapping<T>> getMappings(ClassMapping destClassMapping);
 		Set<T> filterEntries(Collection<T> obfEntries, T obfSourceEntry, ClassMatches classMatches);
+		void setMemberObfName(ClassMapping classMapping, MemberMapping<T> memberMapping, String newObfName);
 	}
 	
-	public static MemberMatches<FieldEntry> computeFieldMatches(Deobfuscator destDeobfuscator, Mappings destMappings, ClassMatches classMatches) {
-		return computeMemberMatches(destDeobfuscator, destMappings, classMatches, new Doer<FieldEntry>() {
+	public static Doer<FieldEntry> getFieldDoer() {
+		return new Doer<FieldEntry>() {
 
 			@Override
 			public Collection<FieldEntry> getDroppedEntries(MappingsChecker checker) {
@@ -293,11 +294,17 @@ public class MappingsConverter {
 				}
 				return out;
 			}
-		});
+
+			@Override
+			public void setMemberObfName(ClassMapping classMapping, MemberMapping<FieldEntry> memberMapping, String newObfName) {
+				FieldMapping fieldMapping = (FieldMapping)memberMapping;
+				classMapping.setFieldObfName(fieldMapping.getObfName(), fieldMapping.getObfType(), newObfName);
+			}
+		};
 	}
 	
-	public static MemberMatches<BehaviorEntry> computeBehaviorMatches(Deobfuscator destDeobfuscator, Mappings destMappings, ClassMatches classMatches) {
-		return computeMemberMatches(destDeobfuscator, destMappings, classMatches, new Doer<BehaviorEntry>() {
+	public static Doer<BehaviorEntry> getMethodDoer() {
+		return new Doer<BehaviorEntry>() {
 
 			@Override
 			public Collection<BehaviorEntry> getDroppedEntries(MappingsChecker checker) {
@@ -329,7 +336,13 @@ public class MappingsConverter {
 				}
 				return out;
 			}
-		});
+
+			@Override
+			public void setMemberObfName(ClassMapping classMapping, MemberMapping<BehaviorEntry> memberMapping, String newObfName) {
+				MethodMapping methodMapping = (MethodMapping)memberMapping;
+				classMapping.setMethodObfName(methodMapping.getObfName(), methodMapping.getObfSignature(), newObfName);
+			}
+		};
 	}
 	
 	public static <T extends Entry> MemberMatches<T> computeMemberMatches(Deobfuscator destDeobfuscator, Mappings destMappings, ClassMatches classMatches, Doer<T> doer) {
@@ -451,5 +464,30 @@ public class MappingsConverter {
 				return outClassEntry.getName();
 			}
 		});
+	}
+
+	public static <T extends Entry> void applyMemberMatches(Mappings mappings, MemberMatches<T> memberMatches, Doer<T> doer) {
+		for (ClassMapping classMapping : mappings.classes()) {
+			applyMemberMatches(classMapping, memberMatches, doer);
+		}
+	}
+	
+	private static <T extends Entry> void applyMemberMatches(ClassMapping classMapping, MemberMatches<T> memberMatches, Doer<T> doer) {
+		ClassEntry classEntry = classMapping.getObfEntry();
+		
+		// apply to this class
+		// TODO: need to sort renames so they happen in the right order!!
+		for (MemberMapping<T> memberMapping : Lists.newArrayList(doer.getMappings(classMapping))) {
+			T obfSourceEntry = memberMapping.getObfEntry(classEntry);
+			T obfDestEntry = memberMatches.matches().get(obfSourceEntry);
+			if (obfDestEntry != null) {
+				doer.setMemberObfName(classMapping, memberMapping, obfDestEntry.getName());
+			}
+		}
+		
+		// recurse
+		for (ClassMapping innerClassMapping : classMapping.innerClasses()) {
+			applyMemberMatches(innerClassMapping, memberMatches, doer);
+		}
 	}
 }

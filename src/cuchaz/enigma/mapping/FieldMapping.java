@@ -36,6 +36,10 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping>, Mem
 		return m_obfName;
 	}
 	
+	public void setObfName(String val) {
+		m_obfName = NameValidator.validateFieldName(val);
+	}
+	
 	public String getDeobfName() {
 		return m_deobfName;
 	}

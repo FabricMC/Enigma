@@ -49,15 +49,10 @@ public class ConvertMain {
 		
 		// match methods/constructors
 		//computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
-		editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
+		//editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
 		
-		/* TODO
-		// write out the converted mappings
-		FileWriter writer = new FileWriter(outMappingsFile);
-		new MappingsWriter().write(writer, mappings);
-		writer.close();
-		System.out.println("Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath());
-		*/
+		// write final converted mappings
+		writeFinalMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
 	}
 	
 	private static void computeClassMatches(File classMatchesFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
@@ -93,7 +88,7 @@ public class ConvertMain {
 		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
 		deobfuscators.source.setMappings(mappings);
 		
-		Mappings newMappings = MappingsConverter.newMappings(classMatches, mappings, deobfuscators.source, deobfuscators.source);
+		Mappings newMappings = MappingsConverter.newMappings(classMatches, mappings, deobfuscators.source, deobfuscators.dest);
 		
 		try (FileWriter out = new FileWriter(outMappingsFile)) {
 			new MappingsWriter().write(out, newMappings);
@@ -114,7 +109,12 @@ public class ConvertMain {
 		System.out.println("Writing matches...");
 		
 		// get the matched and unmatched mappings
-		MemberMatches<FieldEntry> fieldMatches = MappingsConverter.computeFieldMatches(destDeobfuscator, destMappings, classMatches);
+		MemberMatches<FieldEntry> fieldMatches = MappingsConverter.computeMemberMatches(
+			destDeobfuscator,
+			destMappings,
+			classMatches,
+			MappingsConverter.getFieldDoer()
+		);
 		
 		MatchesWriter.writeMembers(fieldMatches, memberMatchesFile);
 		System.out.println("Wrote:\n\t" + memberMatchesFile.getAbsolutePath());
@@ -160,7 +160,12 @@ public class ConvertMain {
 		System.out.println("Writing method matches...");
 		
 		// get the matched and unmatched mappings
-		MemberMatches<BehaviorEntry> methodMatches = MappingsConverter.computeBehaviorMatches(destDeobfuscator, destMappings, classMatches);
+		MemberMatches<BehaviorEntry> methodMatches = MappingsConverter.computeMemberMatches(
+			destDeobfuscator,
+			destMappings,
+			classMatches,
+			MappingsConverter.getMethodDoer()
+		);
 		
 		MatchesWriter.writeMembers(methodMatches, methodMatchesFile);
 		System.out.println("Wrote:\n\t" + methodMatchesFile.getAbsolutePath());
@@ -191,6 +196,29 @@ public class ConvertMain {
 				}
 			}
 		});
+	}
+	
+	private static void writeFinalMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile, File fieldMatchesFile, File methodMatchesFile)
+	throws IOException {
+		
+		System.out.println("Reading matches...");
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
+		MemberMatches<FieldEntry> fieldMatches = MatchesReader.readMembers(fieldMatchesFile);
+		MemberMatches<BehaviorEntry> methodMatches = MatchesReader.readMembers(methodMatchesFile);
+
+		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
+		deobfuscators.source.setMappings(mappings);
+		
+		// apply matches
+		Mappings newMappings = MappingsConverter.newMappings(classMatches, mappings, deobfuscators.source, deobfuscators.dest);
+		MappingsConverter.applyMemberMatches(newMappings, fieldMatches, MappingsConverter.getFieldDoer());
+		MappingsConverter.applyMemberMatches(newMappings, methodMatches, MappingsConverter.getMethodDoer());
+		
+		// write out the converted mappings
+		try (FileWriter out = new FileWriter(outMappingsFile)) {
+			new MappingsWriter().write(out, newMappings);
+		}
+		System.out.println("Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath());
 	}
 
 	private static class Deobfuscators {

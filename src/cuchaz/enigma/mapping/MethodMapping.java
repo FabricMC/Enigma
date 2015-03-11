@@ -56,6 +56,10 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
 		return m_obfName;
 	}
 	
+	public void setObfName(String val) {
+		m_obfName = NameValidator.validateMethodName(val);
+	}
+	
 	public String getDeobfName() {
 		return m_deobfName;
 	}
