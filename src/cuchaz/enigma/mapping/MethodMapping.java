@@ -16,7 +16,7 @@ import java.util.Map.Entry;
 
 import com.google.common.collect.Maps;
 
-public class MethodMapping implements Serializable, Comparable<MethodMapping> {
+public class MethodMapping implements Serializable, Comparable<MethodMapping>, MemberMapping<BehaviorEntry> {
 	
 	private static final long serialVersionUID = -4409570216084263978L;
 	
@@ -169,5 +169,14 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping> {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public BehaviorEntry getObfEntry(ClassEntry classEntry) {
+		if (isConstructor()) {
+			return new ConstructorEntry(classEntry, m_obfSignature);
+		} else {
+			return new MethodEntry(classEntry, m_obfName, m_obfSignature);
+		}
 	}
 }

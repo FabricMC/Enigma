@@ -33,29 +33,28 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.convert.ClassMatches;
-import cuchaz.enigma.convert.FieldMatches;
+import cuchaz.enigma.convert.MemberMatches;
 import cuchaz.enigma.gui.ClassSelector.ClassSelectionListener;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
-import cuchaz.enigma.mapping.FieldEntry;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 
-public class FieldMatchingGui {
+public class MemberMatchingGui<T extends Entry> {
 	
 	private static enum SourceType {
 		Matched {
 			
 			@Override
-			public Collection<ClassEntry> getObfSourceClasses(FieldMatches matches) {
-				return matches.getSourceClassesWithoutUnmatchedFields();
+			public <T extends Entry> Collection<ClassEntry> getObfSourceClasses(MemberMatches<T> matches) {
+				return matches.getSourceClassesWithoutUnmatchedEntries();
 			}
 		},
 		Unmatched {
 			
 			@Override
-			public Collection<ClassEntry> getObfSourceClasses(FieldMatches matches) {
-				return matches.getSourceClassesWithUnmatchedFields();
+			public <T extends Entry> Collection<ClassEntry> getObfSourceClasses(MemberMatches<T> matches) {
+				return matches.getSourceClassesWithUnmatchedEntries();
 			}
 		};
 		
@@ -67,15 +66,15 @@ public class FieldMatchingGui {
 			return button;
 		}
 		
-		public abstract Collection<ClassEntry> getObfSourceClasses(FieldMatches matches);
+		public abstract <T extends Entry> Collection<ClassEntry> getObfSourceClasses(MemberMatches<T> matches);
 		
 		public static SourceType getDefault() {
 			return values()[0];
 		}
 	}
 	
-	public static interface SaveListener {
-		public void save(FieldMatches matches);
+	public static interface SaveListener<T extends Entry> {
+		public void save(MemberMatches<T> matches);
 	}
 	
 	// controls
@@ -92,25 +91,25 @@ public class FieldMatchingGui {
 	private HighlightPainter m_matchedHighlightPainter;
 
 	private ClassMatches m_classMatches;
-	private FieldMatches m_fieldMatches;
+	private MemberMatches<T> m_memberMatches;
 	private Deobfuscator m_sourceDeobfuscator;
 	private Deobfuscator m_destDeobfuscator;
-	private SaveListener m_saveListener;
+	private SaveListener<T> m_saveListener;
 	private SourceType m_sourceType;
 	private ClassEntry m_obfSourceClass;
 	private ClassEntry m_obfDestClass;
-	private FieldEntry m_obfSourceField;
-	private FieldEntry m_obfDestField;
+	private T m_obfSourceEntry;
+	private T m_obfDestEntry;
 
-	public FieldMatchingGui(ClassMatches classMatches, FieldMatches fieldMatches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
+	public MemberMatchingGui(ClassMatches classMatches, MemberMatches<T> fieldMatches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 		
 		m_classMatches = classMatches;
-		m_fieldMatches = fieldMatches;
+		m_memberMatches = fieldMatches;
 		m_sourceDeobfuscator = sourceDeobfuscator;
 		m_destDeobfuscator = destDeobfuscator;
 		
 		// init frame
-		m_frame = new JFrame(Constants.Name + " - Field Matcher");
+		m_frame = new JFrame(Constants.Name + " - Member Matcher");
 		final Container pane = m_frame.getContentPane();
 		pane.setLayout(new BorderLayout());
 		
@@ -225,8 +224,8 @@ public class FieldMatchingGui {
 		m_saveListener = null;
 		m_obfSourceClass = null;
 		m_obfDestClass = null;
-		m_obfSourceField = null;
-		m_obfDestField = null;
+		m_obfSourceEntry = null;
+		m_obfDestEntry = null;
 		setSourceType(SourceType.getDefault());
 		updateButtons();
 	}
@@ -236,7 +235,7 @@ public class FieldMatchingGui {
 		updateSourceClasses();
 	}
 
-	public void setSaveListener(SaveListener val) {
+	public void setSaveListener(SaveListener<T> val) {
 		m_saveListener = val;
 	}
 	
@@ -245,7 +244,7 @@ public class FieldMatchingGui {
 		String selectedPackage = m_sourceClasses.getSelectedPackage();
 		
 		List<ClassEntry> deobfClassEntries = Lists.newArrayList();
-		for (ClassEntry entry : m_sourceType.getObfSourceClasses(m_fieldMatches)) {
+		for (ClassEntry entry : m_sourceType.getObfSourceClasses(m_memberMatches)) {
 			deobfClassEntries.add(m_sourceDeobfuscator.deobfuscateEntry(entry));
 		}
 		m_sourceClasses.setClasses(deobfClassEntries);
@@ -256,7 +255,7 @@ public class FieldMatchingGui {
 		
 		for (SourceType sourceType : SourceType.values()) {
 			m_sourceTypeButtons.get(sourceType).setText(String.format("%s (%d)",
-				sourceType.name(), sourceType.getObfSourceClasses(m_fieldMatches).size()
+				sourceType.name(), sourceType.getObfSourceClasses(m_memberMatches).size()
 			));
 		}
 	}
@@ -284,30 +283,30 @@ public class FieldMatchingGui {
 	}
 	
 	protected void updateSourceHighlights() {
-		highlightFields(m_sourceReader, m_sourceDeobfuscator, m_fieldMatches.matches().keySet(), m_fieldMatches.getUnmatchedSourceFields());
+		highlightEntries(m_sourceReader, m_sourceDeobfuscator, m_memberMatches.matches().keySet(), m_memberMatches.getUnmatchedSourceEntries());
 	}
 
 	protected void updateDestHighlights() {
-		highlightFields(m_destReader, m_destDeobfuscator, m_fieldMatches.matches().values(), m_fieldMatches.getUnmatchedDestFields());
+		highlightEntries(m_destReader, m_destDeobfuscator, m_memberMatches.matches().values(), m_memberMatches.getUnmatchedDestEntries());
 	}
 	
-	private void highlightFields(CodeReader reader, Deobfuscator deobfuscator, Collection<FieldEntry> obfMatchedFields, Collection<FieldEntry> obfUnmatchedFields) {
+	private void highlightEntries(CodeReader reader, Deobfuscator deobfuscator, Collection<T> obfMatchedEntries, Collection<T> obfUnmatchedEntries) {
 		reader.clearHighlights();
 		SourceIndex index = reader.getSourceIndex();
 		
 		// matched fields
-		for (FieldEntry obfFieldEntry : obfMatchedFields) {
-			FieldEntry deobfFieldEntry = deobfuscator.deobfuscateEntry(obfFieldEntry);
-			Token token = index.getDeclarationToken(deobfFieldEntry);
+		for (T obfT : obfMatchedEntries) {
+			T deobfT = deobfuscator.deobfuscateEntry(obfT);
+			Token token = index.getDeclarationToken(deobfT);
 			if (token != null) {
 				reader.setHighlightedToken(token, m_matchedHighlightPainter);
 			}
 		}
 		
 		// unmatched fields
-		for (FieldEntry obfFieldEntry : obfUnmatchedFields) {
-			FieldEntry deobfFieldEntry = deobfuscator.deobfuscateEntry(obfFieldEntry);
-			Token token = index.getDeclarationToken(deobfFieldEntry);
+		for (T obfT : obfUnmatchedEntries) {
+			T deobfT = deobfuscator.deobfuscateEntry(obfT);
+			Token token = index.getDeclarationToken(deobfT);
 			if (token != null) {
 				reader.setHighlightedToken(token, m_unmatchedHighlightPainter);
 			}
@@ -315,8 +314,8 @@ public class FieldMatchingGui {
 	}
 	
 	private boolean isSelectionMatched() {
-		return m_obfSourceField != null && m_obfDestField != null
-			&& m_fieldMatches.isMatched(m_obfSourceField, m_obfDestField);
+		return m_obfSourceEntry != null && m_obfDestEntry != null
+			&& m_memberMatches.isMatched(m_obfSourceEntry, m_obfDestEntry);
 	}
 	
 	protected void onSelectSource(Entry source) {
@@ -328,16 +327,22 @@ public class FieldMatchingGui {
 		setSource(null);
 		
 		// then look for a valid source selection
-		if (source != null && source instanceof FieldEntry) {
-			FieldEntry sourceField = (FieldEntry)source;
-			FieldEntry obfSourceField = m_sourceDeobfuscator.obfuscateEntry(sourceField);
-			if (m_fieldMatches.hasSource(obfSourceField)) {
-				setSource(obfSourceField);
+		if (source != null) {
+			
+			// this looks really scary, but it's actually ok
+			// Deobfuscator.obfuscateEntry can handle all implementations of Entry
+			// and MemberMatches.hasSource() will only pass entries that actually match T
+			@SuppressWarnings("unchecked")
+			T sourceEntry = (T)source;
+
+			T obfSourceEntry = m_sourceDeobfuscator.obfuscateEntry(sourceEntry);
+			if (m_memberMatches.hasSource(obfSourceEntry)) {
+				setSource(obfSourceEntry);
 				
 				// look for a matched dest too
-				FieldEntry obfDestField = m_fieldMatches.matches().get(obfSourceField);
-				if (obfDestField != null) {
-					setDest(obfDestField);
+				T obfDestEntry = m_memberMatches.matches().get(obfSourceEntry);
+				if (obfDestEntry != null) {
+					setDest(obfDestEntry);
 				}
 			}
 		}
@@ -354,16 +359,22 @@ public class FieldMatchingGui {
 		setDest(null);
 
 		// then look for a valid dest selection
-		if (dest != null && dest instanceof FieldEntry) {
-			FieldEntry destField = (FieldEntry)dest;
-			FieldEntry obfDestField = m_destDeobfuscator.obfuscateEntry(destField);
-			if (m_fieldMatches.hasDest(obfDestField)) {
-				setDest(obfDestField);
+		if (dest != null) {
+			
+			// this looks really scary, but it's actually ok
+			// Deobfuscator.obfuscateEntry can handle all implementations of Entry
+			// and MemberMatches.hasSource() will only pass entries that actually match T
+			@SuppressWarnings("unchecked")
+			T destEntry = (T)dest;
+			
+			T obfDestEntry = m_destDeobfuscator.obfuscateEntry(destEntry);
+			if (m_memberMatches.hasDest(obfDestEntry)) {
+				setDest(obfDestEntry);
 
 				// look for a matched source too
-				FieldEntry obfSourceField = m_fieldMatches.matches().inverse().get(obfDestField);
-				if (obfSourceField != null) {
-					setSource(obfSourceField);
+				T obfSourceEntry = m_memberMatches.matches().inverse().get(obfDestEntry);
+				if (obfSourceEntry != null) {
+					setSource(obfSourceEntry);
 				}
 			}
 		}
@@ -371,26 +382,30 @@ public class FieldMatchingGui {
 		updateButtons();
 	}
 	
-	private void setSource(FieldEntry obfField) {
-		if (obfField == null) {
-			m_obfSourceField = obfField;
+	private void setSource(T obfEntry) {
+		if (obfEntry == null) {
+			m_obfSourceEntry = obfEntry;
 			m_sourceLabel.setText("");
 		} else {
-			m_obfSourceField = obfField;
-			FieldEntry deobfField = m_sourceDeobfuscator.deobfuscateEntry(obfField);
-			m_sourceLabel.setText(deobfField.getName() + " " + deobfField.getType().toString());
+			m_obfSourceEntry = obfEntry;
+			m_sourceLabel.setText(getEntryLabel(obfEntry, m_sourceDeobfuscator));
 		}
 	}
 	
-	private void setDest(FieldEntry obfField) {
-		if (obfField == null) {
-			m_obfDestField = obfField;
+	private void setDest(T obfEntry) {
+		if (obfEntry == null) {
+			m_obfDestEntry = obfEntry;
 			m_destLabel.setText("");
 		} else {
-			m_obfDestField = obfField;
-			FieldEntry deobfField = m_destDeobfuscator.deobfuscateEntry(obfField);
-			m_destLabel.setText(deobfField.getName() + " " + deobfField.getType().toString());
+			m_obfDestEntry = obfEntry;
+			m_destLabel.setText(getEntryLabel(obfEntry, m_destDeobfuscator));
 		}
+	}
+
+	private String getEntryLabel(T obfEntry, Deobfuscator deobfuscator) {
+		// deobfuscate, then take off the class name
+		T deobfEntry = deobfuscator.deobfuscateEntry(obfEntry);
+		return deobfEntry.toString().substring(deobfEntry.getClassName().length() + 1);
 	}
 
 	private void updateButtons() {
@@ -398,15 +413,15 @@ public class FieldMatchingGui {
 		GuiTricks.deactivateButton(m_matchButton);
 		GuiTricks.deactivateButton(m_unmatchableButton);
 		
-		if (m_obfSourceField != null && m_obfDestField != null) {
-			if (m_fieldMatches.isMatched(m_obfSourceField, m_obfDestField)) {
+		if (m_obfSourceEntry != null && m_obfDestEntry != null) {
+			if (m_memberMatches.isMatched(m_obfSourceEntry, m_obfDestEntry)) {
 				GuiTricks.activateButton(m_matchButton, "Unmatch", new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						unmatch();
 					}
 				});
-			} else if (!m_fieldMatches.isMatchedSourceField(m_obfSourceField) && !m_fieldMatches.isMatchedDestField(m_obfDestField)) {
+			} else if (!m_memberMatches.isMatchedSourceEntry(m_obfSourceEntry) && !m_memberMatches.isMatchedDestEntry(m_obfDestEntry)) {
 				GuiTricks.activateButton(m_matchButton, "Match", new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent event) {
@@ -414,7 +429,7 @@ public class FieldMatchingGui {
 					}
 				});
 			}
-		} else if (m_obfSourceField != null) {
+		} else if (m_obfSourceEntry != null) {
 			GuiTricks.activateButton(m_unmatchableButton, "Set Unmatchable", new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent event) {
@@ -427,7 +442,7 @@ public class FieldMatchingGui {
 	protected void match() {
 		
 		// update the field matches
-		m_fieldMatches.makeMatch(m_obfSourceField, m_obfDestField);
+		m_memberMatches.makeMatch(m_obfSourceEntry, m_obfDestEntry);
 		save();
 
 		// update the ui
@@ -441,7 +456,7 @@ public class FieldMatchingGui {
 	protected void unmatch() {
 		
 		// update the field matches
-		m_fieldMatches.unmakeMatch(m_obfSourceField, m_obfDestField);
+		m_memberMatches.unmakeMatch(m_obfSourceEntry, m_obfDestEntry);
 		save();
 
 		// update the ui
@@ -455,7 +470,7 @@ public class FieldMatchingGui {
 	protected void unmatchable() {
 		
 		// update the field matches
-		m_fieldMatches.makeSourceUnmatchable(m_obfSourceField);
+		m_memberMatches.makeSourceUnmatchable(m_obfSourceEntry);
 		save();
 		
 		// update the ui
@@ -468,7 +483,7 @@ public class FieldMatchingGui {
 
 	private void save() {
 		if (m_saveListener != null) {
-			m_saveListener.save(m_fieldMatches);
+			m_saveListener.save(m_memberMatches);
 		}
 	}
 }

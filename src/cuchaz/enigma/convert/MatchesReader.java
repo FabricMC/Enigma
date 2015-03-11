@@ -10,6 +10,8 @@ import java.util.List;
 import com.beust.jcommander.internal.Lists;
 
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Type;
 
@@ -45,45 +47,57 @@ public class MatchesReader {
 		return entries;
 	}
 
-	public static FieldMatches readFields(File file)
+	public static <T extends Entry> MemberMatches<T> readMembers(File file)
 	throws IOException {
 		try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-			FieldMatches matches = new FieldMatches();
+			MemberMatches<T> matches = new MemberMatches<T>();
 			String line = null;
 			while ((line = in.readLine()) != null) {
-				readFieldMatch(matches, line);
+				readMemberMatch(matches, line);
 			}
 			return matches;
 		}
 	}
 
-	private static void readFieldMatch(FieldMatches matches, String line) {
+	private static <T extends Entry> void readMemberMatch(MemberMatches<T> matches, String line) {
 		if (line.startsWith("!")) {
-			matches.addUnmatchableSourceField(readField(line.substring(1)));
+			T source = readEntry(line.substring(1));
+			matches.addUnmatchableSourceEntry(source);
 		} else {
 			String[] parts = line.split(":", 2);
-			FieldEntry source = readField(parts[0]);
-			FieldEntry dest = readField(parts[1]);
+			T source = readEntry(parts[0]);
+			T dest = readEntry(parts[1]);
 			if (source != null && dest != null) {
 				matches.addMatch(source, dest);
 			} else if (source != null) {
-				matches.addUnmatchedSourceField(source);
+				matches.addUnmatchedSourceEntry(source);
 			} else if (dest != null) {
-				matches.addUnmatchedDestField(dest);
+				matches.addUnmatchedDestEntry(dest);
 			}
 		}
 	}
 
-	private static FieldEntry readField(String in) {
+	@SuppressWarnings("unchecked")
+	private static <T extends Entry> T readEntry(String in) {
 		if (in.length() <= 0) {
 			return null;
 		}
 		String[] parts = in.split(" ");
-		assert(parts.length == 3);
-		return new FieldEntry(
-			new ClassEntry(parts[0]),
-			parts[1],
-			new Type(parts[2])
-		);
+		if (parts.length == 3 && parts[2].indexOf('(') < 0) {
+			return (T)new FieldEntry(
+				new ClassEntry(parts[0]),
+				parts[1],
+				new Type(parts[2])
+			);
+		} else {
+			assert(parts.length == 2 || parts.length == 3);
+			if (parts.length == 2) {
+				return (T)EntryFactory.getBehaviorEntry(parts[0], parts[1]);
+			} else if (parts.length == 3) {
+				return (T)EntryFactory.getBehaviorEntry(parts[0], parts[1], parts[2]);
+			} else {
+				throw new Error("Malformed behavior entry: " + in);
+			}
+		}
 	}
 }

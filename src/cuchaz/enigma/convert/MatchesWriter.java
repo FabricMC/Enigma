@@ -5,7 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
 
+import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.FieldEntry;
 
 
@@ -41,41 +43,50 @@ public class MatchesWriter {
 		}
 	}
 
-	public static void writeFields(FieldMatches fieldMatches, File file)
+	public static <T extends Entry> void writeMembers(MemberMatches<T> matches, File file)
 	throws IOException {
 		try (FileWriter out = new FileWriter(file)) {
-			for (Map.Entry<FieldEntry,FieldEntry> match : fieldMatches.matches().entrySet()) {
-				writeFieldMatch(out, match.getKey(), match.getValue());
+			for (Map.Entry<T,T> match : matches.matches().entrySet()) {
+				writeMemberMatch(out, match.getKey(), match.getValue());
 			}
-			for (FieldEntry fieldEntry : fieldMatches.getUnmatchedSourceFields()) {
-				writeFieldMatch(out, fieldEntry, null);
+			for (T entry : matches.getUnmatchedSourceEntries()) {
+				writeMemberMatch(out, entry, null);
 			}
-			for (FieldEntry fieldEntry : fieldMatches.getUnmatchedDestFields()) {
-				writeFieldMatch(out, null, fieldEntry);
+			for (T entry : matches.getUnmatchedDestEntries()) {
+				writeMemberMatch(out, null, entry);
 			}
-			for (FieldEntry fieldEntry : fieldMatches.getUnmatchableSourceFields()) {
-				writeUnmatchableField(out, fieldEntry);
+			for (T entry : matches.getUnmatchableSourceEntries()) {
+				writeUnmatchableEntry(out, entry);
 			}
 		}
 	}
 
-	private static void writeFieldMatch(FileWriter out, FieldEntry source, FieldEntry dest)
+	private static <T extends Entry> void writeMemberMatch(FileWriter out, T source, T dest)
 	throws IOException {
 		if (source != null) {
-			writeField(out, source);
+			writeEntry(out, source);
 		}
 		out.write(":");
 		if (dest != null) {
-			writeField(out, dest);
+			writeEntry(out, dest);
 		}
 		out.write("\n");
 	}
 	
-	private static void writeUnmatchableField(FileWriter out, FieldEntry fieldEntry)
+	private static <T extends Entry> void writeUnmatchableEntry(FileWriter out, T entry)
 	throws IOException {
 		out.write("!");
-		writeField(out, fieldEntry);
+		writeEntry(out, entry);
 		out.write("\n");
+	}
+	
+	private static <T extends Entry> void writeEntry(FileWriter out, T entry)
+	throws IOException {
+		if (entry instanceof FieldEntry) {
+			writeField(out, (FieldEntry)entry);
+		} else if (entry instanceof BehaviorEntry) {
+			writeBehavior(out, (BehaviorEntry)entry);
+		}
 	}
 	
 	private static void writeField(FileWriter out, FieldEntry fieldEntry)
@@ -85,5 +96,16 @@ public class MatchesWriter {
 		out.write(fieldEntry.getName());
 		out.write(" ");
 		out.write(fieldEntry.getType().toString());
+	}
+	
+	private static void writeBehavior(FileWriter out, BehaviorEntry behaviorEntry)
+	throws IOException {
+		out.write(behaviorEntry.getClassName());
+		out.write(" ");
+		out.write(behaviorEntry.getName());
+		out.write(" ");
+		if (behaviorEntry.getSignature() != null) {
+			out.write(behaviorEntry.getSignature().toString());
+		}
 	}
 }

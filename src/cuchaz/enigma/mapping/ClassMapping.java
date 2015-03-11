@@ -434,4 +434,8 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 	public static boolean isSimpleClassName(String name) {
 		return name.indexOf('/') < 0 && name.indexOf('$') < 0;
 	}
+
+	public ClassEntry getObfEntry() {
+		return new ClassEntry(m_obfFullName);
+	}
 }

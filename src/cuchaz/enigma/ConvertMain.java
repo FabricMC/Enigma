@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.util.jar.JarFile;
 
 import cuchaz.enigma.convert.ClassMatches;
-import cuchaz.enigma.convert.FieldMatches;
 import cuchaz.enigma.convert.MappingsConverter;
 import cuchaz.enigma.convert.MatchesReader;
 import cuchaz.enigma.convert.MatchesWriter;
+import cuchaz.enigma.convert.MemberMatches;
 import cuchaz.enigma.gui.ClassMatchingGui;
-import cuchaz.enigma.gui.FieldMatchingGui;
+import cuchaz.enigma.gui.MemberMatchingGui;
+import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsChecker;
@@ -34,12 +36,20 @@ public class ConvertMain {
 		Mappings mappings = new MappingsReader().read(new FileReader(inMappingsFile));
 		File classMatchesFile = new File(inMappingsFile.getName() + ".class.matches");
 		File fieldMatchesFile = new File(inMappingsFile.getName() + ".field.matches");
+		File methodMatchesFile = new File(inMappingsFile.getName() + ".method.matches");
 
+		// match classes
 		//computeClassMatches(classMatchesFile, sourceJar, destJar, mappings);
-		editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
+		//editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
 		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile);
+		
+		// match fields
 		//computeFieldMatches(fieldMatchesFile, destJar, outMappingsFile, classMatchesFile);
 		//editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
+		
+		// match methods/constructors
+		//computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
+		editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
 		
 		/* TODO
 		// write out the converted mappings
@@ -91,7 +101,7 @@ public class ConvertMain {
 		System.out.println("Write converted mappings to: " + outMappingsFile.getAbsolutePath());
 	}
 	
-	private static void computeFieldMatches(File fieldMatchesFile, JarFile destJar, File destMappingsFile, File classMatchesFile)
+	private static void computeFieldMatches(File memberMatchesFile, JarFile destJar, File destMappingsFile, File classMatchesFile)
 	throws IOException, MappingParseException {
 		
 		System.out.println("Reading class matches...");
@@ -101,13 +111,13 @@ public class ConvertMain {
 		System.out.println("Indexing dest jar...");
 		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
 		
-		System.out.println("Writing field matches...");
+		System.out.println("Writing matches...");
 		
-		// get the matched and unmatched field mappings
-		FieldMatches fieldMatches = MappingsConverter.computeFieldMatches(destDeobfuscator, destMappings, classMatches);
+		// get the matched and unmatched mappings
+		MemberMatches<FieldEntry> fieldMatches = MappingsConverter.computeFieldMatches(destDeobfuscator, destMappings, classMatches);
 		
-		MatchesWriter.writeFields(fieldMatches, fieldMatchesFile);
-		System.out.println("Wrote:\n\t" + fieldMatchesFile.getAbsolutePath());
+		MatchesWriter.writeMembers(fieldMatches, memberMatchesFile);
+		System.out.println("Wrote:\n\t" + memberMatchesFile.getAbsolutePath());
 	}
 	
 	private static void editFieldMatches(JarFile sourceJar, JarFile destJar, File destMappingsFile, Mappings sourceMappings, File classMatchesFile, final File fieldMatchesFile)
@@ -115,7 +125,7 @@ public class ConvertMain {
 		
 		System.out.println("Reading matches...");
 		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
-		FieldMatches fieldMatches = MatchesReader.readFields(fieldMatchesFile);
+		MemberMatches<FieldEntry> fieldMatches = MatchesReader.readMembers(fieldMatchesFile);
 		
 		// prep deobfuscators
 		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
@@ -125,18 +135,64 @@ public class ConvertMain {
 		checker.dropBrokenMappings(destMappings);
 		deobfuscators.dest.setMappings(destMappings);
 		
-		new FieldMatchingGui(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new FieldMatchingGui.SaveListener() {
+		new MemberMatchingGui<FieldEntry>(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<FieldEntry>() {
 			@Override
-			public void save(FieldMatches matches) {
+			public void save(MemberMatches<FieldEntry> matches) {
 				try {
-					MatchesWriter.writeFields(matches, fieldMatchesFile);
+					MatchesWriter.writeMembers(matches, fieldMatchesFile);
 				} catch (IOException ex) {
 					throw new Error(ex);
 				}
 			}
 		});
 	}
+
+	private static void computeMethodMatches(File methodMatchesFile, JarFile destJar, File destMappingsFile, File classMatchesFile)
+	throws IOException, MappingParseException {
+		
+		System.out.println("Reading class matches...");
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
+		System.out.println("Reading mappings...");
+		Mappings destMappings = new MappingsReader().read(new FileReader(destMappingsFile));
+		System.out.println("Indexing dest jar...");
+		Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
+		
+		System.out.println("Writing method matches...");
+		
+		// get the matched and unmatched mappings
+		MemberMatches<BehaviorEntry> methodMatches = MappingsConverter.computeBehaviorMatches(destDeobfuscator, destMappings, classMatches);
+		
+		MatchesWriter.writeMembers(methodMatches, methodMatchesFile);
+		System.out.println("Wrote:\n\t" + methodMatchesFile.getAbsolutePath());
+	}
 	
+	private static void editMethodMatches(JarFile sourceJar, JarFile destJar, File destMappingsFile, Mappings sourceMappings, File classMatchesFile, final File methodMatchesFile)
+	throws IOException, MappingParseException {
+		
+		System.out.println("Reading matches...");
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
+		MemberMatches<BehaviorEntry> methodMatches = MatchesReader.readMembers(methodMatchesFile);
+		
+		// prep deobfuscators
+		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
+		deobfuscators.source.setMappings(sourceMappings);
+		Mappings destMappings = new MappingsReader().read(new FileReader(destMappingsFile));
+		MappingsChecker checker = new MappingsChecker(deobfuscators.dest.getJarIndex());
+		checker.dropBrokenMappings(destMappings);
+		deobfuscators.dest.setMappings(destMappings);
+		
+		new MemberMatchingGui<BehaviorEntry>(classMatches, methodMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<BehaviorEntry>() {
+			@Override
+			public void save(MemberMatches<BehaviorEntry> matches) {
+				try {
+					MatchesWriter.writeMembers(matches, methodMatchesFile);
+				} catch (IOException ex) {
+					throw new Error(ex);
+				}
+			}
+		});
+	}
+
 	private static class Deobfuscators {
 		
 		public Deobfuscator source;

@@ -12,7 +12,7 @@ package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
 
-public class FieldMapping implements Serializable, Comparable<FieldMapping> {
+public class FieldMapping implements Serializable, Comparable<FieldMapping>, MemberMapping<FieldEntry> {
 	
 	private static final long serialVersionUID = 8610742471440861315L;
 	
@@ -71,5 +71,10 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping> {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public FieldEntry getObfEntry(ClassEntry classEntry) {
+		return new FieldEntry(classEntry, m_obfName, new Type(m_obfType));
 	}
 }

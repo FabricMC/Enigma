@@ -138,6 +138,10 @@ public class EntryFactory {
 	public static BehaviorEntry getBehaviorEntry(String className, String behaviorName, String behaviorSignature) {
 		return getBehaviorEntry(new ClassEntry(className), behaviorName, new Signature(behaviorSignature));
 	}
+
+	public static BehaviorEntry getBehaviorEntry(String className, String behaviorName) {
+		return getBehaviorEntry(new ClassEntry(className), behaviorName);
+	}
 	
 	public static BehaviorEntry getBehaviorEntry(ClassEntry classEntry, String behaviorName, Signature behaviorSignature) {
 		if (behaviorName.equals("<init>")) {
@@ -146,6 +150,14 @@ public class EntryFactory {
 			return new ConstructorEntry(classEntry);
 		} else {
 			return new MethodEntry(classEntry, behaviorName, behaviorSignature);
+		}
+	}
+	
+	public static BehaviorEntry getBehaviorEntry(ClassEntry classEntry, String behaviorName) {
+		if(behaviorName.equals("<clinit>")) {
+			return new ConstructorEntry(classEntry);
+		} else {
+			throw new IllegalArgumentException("Only class initializers don't have signatures");
 		}
 	}
 	
