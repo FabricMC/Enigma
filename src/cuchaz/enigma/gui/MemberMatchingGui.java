@@ -403,9 +403,9 @@ public class MemberMatchingGui<T extends Entry> {
 	}
 
 	private String getEntryLabel(T obfEntry, Deobfuscator deobfuscator) {
-		// deobfuscate, then take off the class name
+		// show obfuscated and deobfuscated names, but no types/signatures
 		T deobfEntry = deobfuscator.deobfuscateEntry(obfEntry);
-		return deobfEntry.toString().substring(deobfEntry.getClassName().length() + 1);
+		return String.format("%s (%s)", deobfEntry.getName(), obfEntry.getName());
 	}
 
 	private void updateButtons() {

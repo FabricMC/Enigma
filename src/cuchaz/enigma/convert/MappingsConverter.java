@@ -263,6 +263,7 @@ public class MappingsConverter {
 		Collection<? extends MemberMapping<T>> getMappings(ClassMapping destClassMapping);
 		Set<T> filterEntries(Collection<T> obfEntries, T obfSourceEntry, ClassMatches classMatches);
 		void setMemberObfName(ClassMapping classMapping, MemberMapping<T> memberMapping, String newObfName);
+		boolean hasObfMember(ClassMapping classMapping, T obfEntry);
 	}
 	
 	public static Doer<FieldEntry> getFieldDoer() {
@@ -299,6 +300,11 @@ public class MappingsConverter {
 			public void setMemberObfName(ClassMapping classMapping, MemberMapping<FieldEntry> memberMapping, String newObfName) {
 				FieldMapping fieldMapping = (FieldMapping)memberMapping;
 				classMapping.setFieldObfName(fieldMapping.getObfName(), fieldMapping.getObfType(), newObfName);
+			}
+			
+			@Override
+			public boolean hasObfMember(ClassMapping classMapping, FieldEntry obfField) {
+				return classMapping.getFieldByObf(obfField.getName(), obfField.getType()) != null;
 			}
 		};
 	}
@@ -341,6 +347,11 @@ public class MappingsConverter {
 			public void setMemberObfName(ClassMapping classMapping, MemberMapping<BehaviorEntry> memberMapping, String newObfName) {
 				MethodMapping methodMapping = (MethodMapping)memberMapping;
 				classMapping.setMethodObfName(methodMapping.getObfName(), methodMapping.getObfSignature(), newObfName);
+			}
+			
+			@Override
+			public boolean hasObfMember(ClassMapping classMapping, BehaviorEntry obfBehavior) {
+				return classMapping.getMethodByObf(obfBehavior.getName(), obfBehavior.getSignature()) != null;
 			}
 		};
 	}
@@ -475,13 +486,41 @@ public class MappingsConverter {
 	private static <T extends Entry> void applyMemberMatches(ClassMapping classMapping, MemberMatches<T> memberMatches, Doer<T> doer) {
 		ClassEntry classEntry = classMapping.getObfEntry();
 		
-		// apply to this class
-		// TODO: need to sort renames so they happen in the right order!!
+		// make a map of all the renames we need to make
+		Map<T,T> renames = Maps.newHashMap();
 		for (MemberMapping<T> memberMapping : Lists.newArrayList(doer.getMappings(classMapping))) {
 			T obfSourceEntry = memberMapping.getObfEntry(classEntry);
 			T obfDestEntry = memberMatches.matches().get(obfSourceEntry);
 			if (obfDestEntry != null) {
-				doer.setMemberObfName(classMapping, memberMapping, obfDestEntry.getName());
+				if (obfDestEntry.getName().equals(obfSourceEntry.getName())) {
+					// same name, don't need to change anything
+					continue;
+				}
+				renames.put(obfSourceEntry, obfDestEntry);
+			}
+		}
+		
+		// apply to this class (should never need more than n passes)
+		int numRenames = renames.size();
+		for (int i=0; i<numRenames && !renames.isEmpty(); i++) {
+			for (MemberMapping<T> memberMapping : Lists.newArrayList(doer.getMappings(classMapping))) {
+				T obfSourceEntry = memberMapping.getObfEntry(classEntry);
+				T obfDestEntry = renames.get(obfSourceEntry);
+				if (obfDestEntry != null) {
+					// make sure this rename won't cause a collision
+					if (!doer.hasObfMember(classMapping, obfDestEntry)) {
+						doer.setMemberObfName(classMapping, memberMapping, obfDestEntry.getName());
+						renames.remove(obfSourceEntry);
+					}
+				}
+			}
+		}
+		if (!renames.isEmpty()) {
+			System.err.println(String.format("WARNING: Couldn't apply all the renames for class %s. %d/%d renames left.",
+				classMapping.getObfFullName(), renames.size(), numRenames
+			));
+			for (Map.Entry<T,T> entry : renames.entrySet()) {
+				System.err.println(String.format("\t%s -> %s", entry.getKey(), entry.getValue()));
 			}
 		}
 		

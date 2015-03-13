@@ -46,13 +46,12 @@ public class ConvertMain {
 		// match fields
 		//computeFieldMatches(fieldMatchesFile, destJar, outMappingsFile, classMatchesFile);
 		//editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
+		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile);
 		
 		// match methods/constructors
 		//computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
 		//editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
-		
-		// write final converted mappings
-		writeFinalMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
+		convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
 	}
 	
 	private static void computeClassMatches(File classMatchesFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
@@ -146,6 +145,28 @@ public class ConvertMain {
 			}
 		});
 	}
+	
+	private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile, File fieldMatchesFile)
+	throws IOException {
+		
+		System.out.println("Reading matches...");
+		ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
+		MemberMatches<FieldEntry> fieldMatches = MatchesReader.readMembers(fieldMatchesFile);
+
+		Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
+		deobfuscators.source.setMappings(mappings);
+		
+		// apply matches
+		Mappings newMappings = MappingsConverter.newMappings(classMatches, mappings, deobfuscators.source, deobfuscators.dest);
+		MappingsConverter.applyMemberMatches(newMappings, fieldMatches, MappingsConverter.getFieldDoer());
+		
+		// write out the converted mappings
+		try (FileWriter out = new FileWriter(outMappingsFile)) {
+			new MappingsWriter().write(out, newMappings);
+		}
+		System.out.println("Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath());
+	}
+
 
 	private static void computeMethodMatches(File methodMatchesFile, JarFile destJar, File destMappingsFile, File classMatchesFile)
 	throws IOException, MappingParseException {
@@ -198,7 +219,7 @@ public class ConvertMain {
 		});
 	}
 	
-	private static void writeFinalMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile, File fieldMatchesFile, File methodMatchesFile)
+	private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile, File fieldMatchesFile, File methodMatchesFile)
 	throws IOException {
 		
 		System.out.println("Reading matches...");
