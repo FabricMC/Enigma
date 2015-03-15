@@ -11,6 +11,7 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
+import java.io.File;
 import java.util.Set;
 import java.util.jar.JarFile;
 
@@ -23,11 +24,13 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class TestSourceIndex {
 	
-	// TEMP
 	@Test
 	public void indexEverything()
 	throws Exception {
-		Deobfuscator deobfuscator = new Deobfuscator(new JarFile("input/1.8.jar"));
+		
+		File home = new File(System.getProperty("user.home"));
+		File jarFile = new File(home, "/.minecraft/versions/1.8.3/1.8.3.jar");
+		Deobfuscator deobfuscator = new Deobfuscator(new JarFile(jarFile));
 		
 		// get all classes that aren't inner classes
 		Set<ClassEntry> classEntries = Sets.newHashSet();

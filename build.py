@@ -18,8 +18,8 @@ import ssjb
 import ssjb.ivy
 
 
-ArtifactStandalone = ssjb.ivy.Dep("cuchaz:enigma:0.8b")
-ArtifactLib = ssjb.ivy.Dep("cuchaz:enigma-lib:0.8b")
+ArtifactStandalone = ssjb.ivy.Dep("cuchaz:enigma:0.9b")
+ArtifactLib = ssjb.ivy.Dep("cuchaz:enigma-lib:0.9b")
 
 # dependencies
 ExtraRepos = [
