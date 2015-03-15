@@ -32,6 +32,7 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping>, Mem
 		m_obfType = new Type(other.m_obfType, obfClassNameReplacer);
 	}
 
+	@Override
 	public String getObfName() {
 		return m_obfName;
 	}
@@ -50,6 +51,10 @@ public class FieldMapping implements Serializable, Comparable<FieldMapping>, Mem
 	
 	public Type getObfType() {
 		return m_obfType;
+	}
+	
+	public void setObfType(Type val) {
+		m_obfType = val;
 	}
 	
 	@Override

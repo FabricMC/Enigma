@@ -52,6 +52,7 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
 		}
 	}
 
+	@Override
 	public String getObfName() {
 		return m_obfName;
 	}
@@ -70,6 +71,10 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
 	
 	public Signature getObfSignature() {
 		return m_obfSignature;
+	}
+	
+	public void setObfSignature(Signature val) {
+		m_obfSignature = val;
 	}
 	
 	public Iterable<ArgumentMapping> arguments() {

@@ -243,12 +243,13 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		}
 	}
 	
-	public void setFieldObfName(String oldObfName, Type obfType, String newObfName) {
+	public void setFieldObfNameAndType(String oldObfName, Type obfType, String newObfName, Type newObfType) {
 		assert(newObfName != null);
 		FieldMapping fieldMapping = m_fieldsByObf.remove(getFieldKey(oldObfName, obfType));
 		assert(fieldMapping != null);
 		fieldMapping.setObfName(newObfName);
-		boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(newObfName, obfType), fieldMapping) == null;
+		fieldMapping.setObfType(newObfType);
+		boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(newObfName, newObfType), fieldMapping) == null;
 		assert(obfWasAdded);
 	}
 	
@@ -328,12 +329,13 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		}
 	}
 	
-	public void setMethodObfName(String oldObfName, Signature obfSignature, String newObfName) {
+	public void setMethodObfNameAndSignature(String oldObfName, Signature obfSignature, String newObfName, Signature newObfSignature) {
 		assert(newObfName != null);
 		MethodMapping methodMapping = m_methodsByObf.remove(getMethodKey(oldObfName, obfSignature));
 		assert(methodMapping != null);
 		methodMapping.setObfName(newObfName);
-		boolean obfWasAdded = m_methodsByObf.put(getMethodKey(newObfName, obfSignature), methodMapping) == null;
+		methodMapping.setObfSignature(newObfSignature);
+		boolean obfWasAdded = m_methodsByObf.put(getMethodKey(newObfName, newObfSignature), methodMapping) == null;
 		assert(obfWasAdded);
 	}
 	

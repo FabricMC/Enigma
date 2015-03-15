@@ -14,12 +14,16 @@ import cuchaz.enigma.convert.MemberMatches;
 import cuchaz.enigma.gui.ClassMatchingGui;
 import cuchaz.enigma.gui.MemberMatchingGui;
 import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.ClassMapping;
 import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.FieldMapping;
 import cuchaz.enigma.mapping.MappingParseException;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.MappingsChecker;
 import cuchaz.enigma.mapping.MappingsReader;
 import cuchaz.enigma.mapping.MappingsWriter;
+import cuchaz.enigma.mapping.MethodMapping;
 
 
 public class ConvertMain {
@@ -158,7 +162,7 @@ public class ConvertMain {
 		
 		// apply matches
 		Mappings newMappings = MappingsConverter.newMappings(classMatches, mappings, deobfuscators.source, deobfuscators.dest);
-		MappingsConverter.applyMemberMatches(newMappings, fieldMatches, MappingsConverter.getFieldDoer());
+		MappingsConverter.applyMemberMatches(newMappings, classMatches, fieldMatches, MappingsConverter.getFieldDoer());
 		
 		// write out the converted mappings
 		try (FileWriter out = new FileWriter(outMappingsFile)) {
@@ -232,8 +236,25 @@ public class ConvertMain {
 		
 		// apply matches
 		Mappings newMappings = MappingsConverter.newMappings(classMatches, mappings, deobfuscators.source, deobfuscators.dest);
-		MappingsConverter.applyMemberMatches(newMappings, fieldMatches, MappingsConverter.getFieldDoer());
-		MappingsConverter.applyMemberMatches(newMappings, methodMatches, MappingsConverter.getMethodDoer());
+		MappingsConverter.applyMemberMatches(newMappings, classMatches, fieldMatches, MappingsConverter.getFieldDoer());
+		MappingsConverter.applyMemberMatches(newMappings, classMatches, methodMatches, MappingsConverter.getMethodDoer());
+		
+		// check the final mappings
+		MappingsChecker checker = new MappingsChecker(deobfuscators.dest.getJarIndex());
+		checker.dropBrokenMappings(newMappings);
+		
+		for (java.util.Map.Entry<ClassEntry,ClassMapping> mapping : checker.getDroppedClassMappings().entrySet()) {
+			System.out.println("WARNING: Broken class entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ")");
+		}
+		for (java.util.Map.Entry<ClassEntry,ClassMapping> mapping : checker.getDroppedInnerClassMappings().entrySet()) {
+			System.out.println("WARNING: Broken inner class entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ")");
+		}
+		for (java.util.Map.Entry<FieldEntry,FieldMapping> mapping : checker.getDroppedFieldMappings().entrySet()) {
+			System.out.println("WARNING: Broken field entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ")");
+		}
+		for (java.util.Map.Entry<BehaviorEntry,MethodMapping> mapping : checker.getDroppedMethodMappings().entrySet()) {
+			System.out.println("WARNING: Broken behavior entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ")");
+		}
 		
 		// write out the converted mappings
 		try (FileWriter out = new FileWriter(outMappingsFile)) {

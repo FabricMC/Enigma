@@ -113,6 +113,10 @@ public class MemberMatches<T extends Entry> {
 	public boolean isMatchedDestEntry(T destEntry) {
 		return m_matches.containsValue(destEntry);
 	}
+	
+	public boolean isUnmatchableSourceEntry(T sourceEntry) {
+		return m_unmatchableSourceEntries.containsEntry(sourceEntry.getClassEntry(), sourceEntry);
+	}
 
 	public void makeMatch(T sourceEntry, T destEntry) {
 		boolean wasRemoved = m_unmatchedSourceEntries.remove(sourceEntry.getClassEntry(), sourceEntry);
