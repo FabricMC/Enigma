@@ -79,16 +79,6 @@ public class Signature implements Serializable {
 		return types;
 	}
 	
-	public Iterable<ClassEntry> classes() {
-		List<ClassEntry> out = Lists.newArrayList();
-		for (Type type : types()) {
-			if (type.isClass()) {
-				out.add(type.getClassEntry());
-			}
-		}
-		return out;
-	}
-	
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Signature) {

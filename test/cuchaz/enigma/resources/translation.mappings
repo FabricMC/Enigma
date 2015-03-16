@@ -29,4 +29,13 @@ CLASS none/g deobf/G_OuterClass
 		CLASS none/g$b$a A_NamedInnerClass
 			FIELD a f4 I
 CLASS none/h
-CLASS none/i I_Generics
+CLASS none/i deobf/I_Generics
+	CLASS none/i$a A_Type
+	CLASS none/i$b B_Generic
+		FIELD a f4 Ljava/lang/Object;
+		METHOD a m1 ()Ljava/lang/Object;
+	FIELD a f1 Ljava/util/List;
+	FIELD b f2 Ljava/util/List;
+	FIELD a f3 Ljava/util/Map;
+	FIELD a f5 Lnone/i$b;
+	FIELD b f6 Lnone/i$b;

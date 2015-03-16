@@ -10,8 +10,6 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode;
 
-import java.util.Map;
-
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtField;
@@ -19,9 +17,6 @@ import javassist.CtMethod;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.SourceFileAttribute;
-
-import com.google.common.collect.Maps;
-
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.EntryFactory;
@@ -50,20 +45,15 @@ public class ClassTranslator {
 				
 				case ConstPool.CONST_Fieldref: {
 					
-					// translate the name
-					FieldEntry entry = new FieldEntry(
-						new ClassEntry(Descriptor.toJvmName(constants.getFieldrefClassName(i))),
+					// translate the name and type
+					FieldEntry entry = EntryFactory.getFieldEntry(
+						Descriptor.toJvmName(constants.getFieldrefClassName(i)),
 						constants.getFieldrefName(i),
-						new Type(constants.getFieldrefType(i))
+						constants.getFieldrefType(i)
 					);
 					FieldEntry translatedEntry = m_translator.translateEntry(entry);
-					
-					// translate the type
-					Type type = new Type(constants.getFieldrefType(i));
-					Type translatedType = m_translator.translateType(type);
-					
-					if (!entry.equals(translatedEntry) || !type.equals(translatedType)) {
-						editor.changeMemberrefNameAndType(i, translatedEntry.getName(), translatedType.toString());
+					if (!entry.equals(translatedEntry)) {
+						editor.changeMemberrefNameAndType(i, translatedEntry.getName(), translatedEntry.getType().toString());
 					}
 				}
 				break;
@@ -71,15 +61,14 @@ public class ClassTranslator {
 				case ConstPool.CONST_Methodref:
 				case ConstPool.CONST_InterfaceMethodref: {
 					
-					// translate the name and type
+					// translate the name and type (ie signature)
 					BehaviorEntry entry = EntryFactory.getBehaviorEntry(
 						Descriptor.toJvmName(editor.getMemberrefClassname(i)),
 						editor.getMemberrefName(i),
 						editor.getMemberrefType(i)
 					);
 					BehaviorEntry translatedEntry = m_translator.translateEntry(entry);
-					
-					if (!entry.getName().equals(translatedEntry.getName()) || !entry.getSignature().equals(translatedEntry.getSignature())) {
+					if (!entry.equals(translatedEntry)) {
 						editor.changeMemberrefNameAndType(i, translatedEntry.getName(), translatedEntry.getSignature().toString());
 					}
 				}
@@ -120,25 +109,18 @@ public class ClassTranslator {
 			}
 			
 			if (entry.getSignature() != null) {
-				// translate the type
+				// translate the signature
 				Signature translatedSignature = m_translator.translateSignature(entry.getSignature());
 				behavior.getMethodInfo().setDescriptor(translatedSignature.toString());
 			}
 		}
 		
 		// translate all the class names referenced in the code
-		// the above code only changed method/field/reference names and types, but not the class names themselves
-		Map<ClassEntry,ClassEntry> map = Maps.newHashMap();
-		for (ClassEntry obfClassEntry : ClassRenamer.getAllClassEntries(c)) {
-			ClassEntry deobfClassEntry = m_translator.translateEntry(obfClassEntry);
-			if (!obfClassEntry.equals(deobfClassEntry)) {
-				map.put(obfClassEntry, deobfClassEntry);
-			}
-		}
-		ClassRenamer.renameClasses(c, map);
+		// the above code only changed method/field/reference names and types, but not the rest of the class references
+		ClassRenamer.renameClasses(c, m_translator);
 		
 		// translate the source file attribute too
-		ClassEntry deobfClassEntry = map.get(classEntry);
+		ClassEntry deobfClassEntry = m_translator.translateEntry(classEntry);
 		if (deobfClassEntry != null) {
 			String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassName()) + ".java";
 			c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));

@@ -66,7 +66,15 @@ public class MappingsRenamer {
 	}
 	
 	public void markClassAsDeobfuscated(ClassEntry obf) {
-		setClassName(obf, obf.isInnerClass() ? obf.getInnermostClassName() : obf.getSimpleName());
+		String deobfName = obf.isInnerClass() ? obf.getInnermostClassName() : obf.getName();
+		List<ClassMapping> mappingChain = getOrCreateClassMappingChain(obf);
+		if (mappingChain.size() == 1) {
+			ClassMapping classMapping = mappingChain.get(0);
+			m_mappings.setClassDeobfName(classMapping, deobfName);
+		} else {
+			ClassMapping outerClassMapping = mappingChain.get(mappingChain.size() - 2);
+			outerClassMapping.setInnerClassName(obf, deobfName);
+		}
 	}
 	
 	public void setFieldName(FieldEntry obf, String deobfName) {

@@ -11,6 +11,7 @@ import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
+import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MethodDefinition;
 
 import cuchaz.enigma.analysis.JarIndex;
@@ -54,6 +55,18 @@ public class EntryFactory {
 		);
 	}
 	
+	public static FieldEntry getFieldEntry(FieldDefinition def) {
+		return new FieldEntry(
+			new ClassEntry(def.getDeclaringType().getInternalName()),
+			def.getName(),
+			new Type(def.getErasedSignature())
+		);
+	}
+	
+	public static FieldEntry getFieldEntry(String className, String name, String type) {
+		return new FieldEntry(new ClassEntry(className), name, new Type(type));
+	}
+	
 	public static FieldEntry getObfFieldEntry(ClassMapping classMapping, FieldMapping fieldMapping) {
 		return new FieldEntry(
 			getObfClassEntry(classMapping),
@@ -82,7 +95,7 @@ public class EntryFactory {
 		return new MethodEntry(
 			new ClassEntry(def.getDeclaringType().getInternalName()),
 			def.getName(),
-			new Signature(def.getSignature())
+			new Signature(def.getErasedSignature())
 		);
 	}
 	
@@ -121,7 +134,7 @@ public class EntryFactory {
 		} else {
 			return new ConstructorEntry(
 				new ClassEntry(def.getDeclaringType().getInternalName()),
-				new Signature(def.getSignature())
+				new Signature(def.getErasedSignature())
 			);
 		}
 	}

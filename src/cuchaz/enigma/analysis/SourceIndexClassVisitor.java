@@ -30,7 +30,6 @@ import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.Type;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	
@@ -93,8 +92,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitFieldDeclaration(FieldDeclaration node, SourceIndex index) {
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
-		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
-		FieldEntry fieldEntry = new FieldEntry(classEntry, def.getName(), new Type(def.getErasedSignature()));
+		FieldEntry fieldEntry = EntryFactory.getFieldEntry(def);
 		assert (node.getVariables().size() == 1);
 		VariableInitializer variable = node.getVariables().firstOrNullObject();
 		index.addDeclaration(variable.getNameToken(), fieldEntry);
@@ -106,8 +104,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	public Void visitEnumValueDeclaration(EnumValueDeclaration node, SourceIndex index) {
 		// treat enum declarations as field declarations
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
-		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
-		FieldEntry fieldEntry = new FieldEntry(classEntry, def.getName(), new Type(def.getErasedSignature()));
+		FieldEntry fieldEntry = EntryFactory.getFieldEntry(def);
 		index.addDeclaration(node.getNameToken(), fieldEntry);
 		
 		return recurse(node, index);

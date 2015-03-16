@@ -125,7 +125,22 @@ public class TestTranslator {
 	
 	@Test
 	public void testGenerics() {
-		// TODO
+		
+		// classes
+		assertMapping(newClass("none/i"), newClass("deobf/I_Generics"));
+		assertMapping(newClass("none/i$a"), newClass("deobf/I_Generics$A_Type"));
+		assertMapping(newClass("none/i$b"), newClass("deobf/I_Generics$B_Generic"));
+		
+		// fields
+		assertMapping(newField("none/i", "a", "Ljava/util/List;"), newField("deobf/I_Generics", "f1", "Ljava/util/List;"));
+		assertMapping(newField("none/i", "b", "Ljava/util/List;"), newField("deobf/I_Generics", "f2", "Ljava/util/List;"));
+		assertMapping(newField("none/i", "a", "Ljava/util/Map;"), newField("deobf/I_Generics", "f3", "Ljava/util/Map;"));
+		assertMapping(newField("none/i$b", "a", "Ljava/lang/Object;"), newField("deobf/I_Generics$B_Generic", "f4", "Ljava/lang/Object;"));
+		assertMapping(newField("none/i", "a", "Lnone/i$b;"), newField("deobf/I_Generics", "f5", "Ldeobf/I_Generics$B_Generic;"));
+		assertMapping(newField("none/i", "b", "Lnone/i$b;"), newField("deobf/I_Generics", "f6", "Ldeobf/I_Generics$B_Generic;"));
+		
+		// methods
+		assertMapping(newMethod("none/i$b", "a", "()Ljava/lang/Object;"), newMethod("deobf/I_Generics$B_Generic", "m1", "()Ljava/lang/Object;"));
 	}
 	
 	private void assertMapping(Entry obf, Entry deobf) {

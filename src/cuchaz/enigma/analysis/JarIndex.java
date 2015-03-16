@@ -28,6 +28,7 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.EnclosingMethodAttribute;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.InnerClassesAttribute;
 import javassist.expr.ConstructorCall;
@@ -314,15 +315,6 @@ public class JarIndex {
 		if (classEntry.isInnerClass()) {
 			return classEntry.getOuterClassEntry();
 		}
-		InnerClassesAttribute innerClassesAttribute = (InnerClassesAttribute)c.getClassFile().getAttribute(InnerClassesAttribute.tag);
-		if (innerClassesAttribute != null) {
-			for (int i=0; i<innerClassesAttribute.tableLength(); i++) {
-				ClassEntry innerClassEntry = new ClassEntry(Descriptor.toJvmName(innerClassesAttribute.innerClass(i)));
-				if (classEntry.equals(innerClassEntry)) {
-					return new ClassEntry(Descriptor.toJvmName(innerClassesAttribute.outerClass(i)));
-				}
-			}
-		}
 		
 		// inner classes:
 		// have constructors that can (illegally) set synthetic fields
@@ -480,6 +472,27 @@ public class JarIndex {
 	}
 	
 	private BehaviorEntry isAnonymousClass(CtClass c, ClassEntry outerClassEntry) {
+		
+		// is this class already marked anonymous?
+		EnclosingMethodAttribute enclosingMethodAttribute = (EnclosingMethodAttribute)c.getClassFile().getAttribute(EnclosingMethodAttribute.tag);
+		if (enclosingMethodAttribute != null) {
+			if (enclosingMethodAttribute.methodIndex() > 0) {
+				return EntryFactory.getBehaviorEntry(
+					Descriptor.toJvmName(enclosingMethodAttribute.className()),
+					enclosingMethodAttribute.methodName(),
+					enclosingMethodAttribute.methodDescriptor()
+				);
+			} else {
+				// an attribute but no method? assume not anonymous
+				return null;
+			}
+		}
+		
+		// if there's an inner class attribute, but not an enclosing method attribute, then it's not anonymous
+		InnerClassesAttribute innerClassesAttribute = (InnerClassesAttribute)c.getClassFile().getAttribute(InnerClassesAttribute.tag);
+		if (innerClassesAttribute != null) {
+			return null;
+		}
 		
 		ClassEntry innerClassEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
 		

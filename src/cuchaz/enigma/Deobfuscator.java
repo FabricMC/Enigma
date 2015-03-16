@@ -439,12 +439,9 @@ public class Deobfuscator {
 		Translator translator = getTranslator(TranslationDirection.Deobfuscating);
 		if (obfEntry instanceof ClassEntry) {
 			ClassEntry obfClass = (ClassEntry)obfEntry;
-			ClassEntry translated = translator.translateEntry(obfClass);
-			if (obfClass.isInnerClass()) {
-				return !obfClass.getInnermostClassName().equals(translated.getInnermostClassName());
-			} else {
-				return !obfClass.equals(translated);
-			}
+			List<ClassMapping> mappingChain = m_mappings.getClassMappingChain(obfClass);
+			ClassMapping classMapping = mappingChain.get(mappingChain.size() - 1);
+			return classMapping != null && classMapping.getDeobfName() != null;
 		} else if (obfEntry instanceof FieldEntry) {
 			return translator.translate((FieldEntry)obfEntry) != null;
 		} else if (obfEntry instanceof MethodEntry) {

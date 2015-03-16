@@ -66,7 +66,7 @@ public class MappingsChecker {
 		
 		// check the fields
 		for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
-			FieldEntry obfFieldEntry = new FieldEntry(classEntry, fieldMapping.getObfName(), fieldMapping.getObfType());
+			FieldEntry obfFieldEntry = EntryFactory.getObfFieldEntry(classMapping, fieldMapping);
 			if (!m_index.containsObfField(obfFieldEntry)) {
 				classMapping.removeFieldMapping(fieldMapping);
 				m_droppedFieldMappings.put(obfFieldEntry, fieldMapping);
