@@ -27,7 +27,7 @@ ExtraRepos = [
 ]
 LibDeps = [
 	ssjb.ivy.Dep("com.google.guava:guava:17.0"),
-	ssjb.ivy.Dep("org.javassist:javassist:3.18.1-GA"),
+	ssjb.ivy.Dep("org.javassist:javassist:3.19.0-GA"),
 	ssjb.ivy.Dep("org.bitbucket.mstrobel:procyon-decompiler:0.5.28-enigma")
 ]
 StandaloneDeps = LibDeps + [
