@@ -257,7 +257,7 @@ public class GuiController {
 		
 		// get the reference target class
 		EntryReference<Entry,Entry> obfReference = m_deobfuscator.obfuscateReference(deobfReference);
-		ClassEntry obfClassEntry = obfReference.getLocationClassEntry().getOuterClassEntry();
+		ClassEntry obfClassEntry = obfReference.getLocationClassEntry().getOutermostClassEntry();
 		if (!m_deobfuscator.isObfuscatedIdentifier(obfClassEntry)) {
 			throw new IllegalArgumentException("Obfuscated class " + obfClassEntry + " was not found in the jar!");
 		}

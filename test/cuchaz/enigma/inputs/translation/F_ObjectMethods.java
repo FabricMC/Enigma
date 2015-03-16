@@ -1,6 +1,6 @@
 package cuchaz.enigma.inputs.translation;
 
-public class G_ObjectMethods {
+public class F_ObjectMethods {
 	
 	public void callEmAll()
 	throws Throwable {

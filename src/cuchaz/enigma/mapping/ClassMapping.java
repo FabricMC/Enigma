@@ -23,22 +23,23 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 	private String m_obfFullName;
 	private String m_obfSimpleName;
 	private String m_deobfName;
-	private Map<String,ClassMapping> m_innerClassesByObf;
+	private Map<String,ClassMapping> m_innerClassesByObfSimple;
 	private Map<String,ClassMapping> m_innerClassesByDeobf;
 	private Map<String,FieldMapping> m_fieldsByObf;
 	private Map<String,FieldMapping> m_fieldsByDeobf;
 	private Map<String,MethodMapping> m_methodsByObf;
 	private Map<String,MethodMapping> m_methodsByDeobf;
 	
-	public ClassMapping(String obfName) {
-		this(obfName, null);
+	public ClassMapping(String obfFullName) {
+		this(obfFullName, null);
 	}
 	
-	public ClassMapping(String obfName, String deobfName) {
-		m_obfFullName = obfName;
-		m_obfSimpleName = new ClassEntry(obfName).getSimpleName();
+	public ClassMapping(String obfFullName, String deobfName) {
+		m_obfFullName = obfFullName;
+		ClassEntry classEntry = new ClassEntry(obfFullName);
+		m_obfSimpleName = classEntry.isInnerClass() ? classEntry.getInnermostClassName() : classEntry.getSimpleName();
 		m_deobfName = NameValidator.validateClassName(deobfName, false);
-		m_innerClassesByObf = Maps.newHashMap();
+		m_innerClassesByObfSimple = Maps.newHashMap();
 		m_innerClassesByDeobf = Maps.newHashMap();
 		m_fieldsByObf = Maps.newHashMap();
 		m_fieldsByDeobf = Maps.newHashMap();
@@ -65,12 +66,12 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 	//// INNER CLASSES ////////
 	
 	public Iterable<ClassMapping> innerClasses() {
-		assert (m_innerClassesByObf.size() >= m_innerClassesByDeobf.size());
-		return m_innerClassesByObf.values();
+		assert (m_innerClassesByObfSimple.size() >= m_innerClassesByDeobf.size());
+		return m_innerClassesByObfSimple.values();
 	}
 	
 	public void addInnerClassMapping(ClassMapping classMapping) {
-		boolean obfWasAdded = m_innerClassesByObf.put(classMapping.getObfSimpleName(), classMapping) == null;
+		boolean obfWasAdded = m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping) == null;
 		assert (obfWasAdded);
 		if (classMapping.getDeobfName() != null) {
 			assert (isSimpleClassName(classMapping.getDeobfName()));
@@ -80,7 +81,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 	}
 	
 	public void removeInnerClassMapping(ClassMapping classMapping) {
-		boolean obfWasRemoved = m_innerClassesByObf.remove(classMapping.getObfSimpleName()) != null;
+		boolean obfWasRemoved = m_innerClassesByObfSimple.remove(classMapping.getObfSimpleName()) != null;
 		assert (obfWasRemoved);
 		if (classMapping.getDeobfName() != null) {
 			boolean deobfWasRemoved = m_innerClassesByDeobf.remove(classMapping.getDeobfName()) != null;
@@ -88,20 +89,19 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		}
 	}
 	
-	public ClassMapping getOrCreateInnerClass(String obfName) {
-		assert (isSimpleClassName(obfName));
-		ClassMapping classMapping = m_innerClassesByObf.get(obfName);
+	public ClassMapping getOrCreateInnerClass(ClassEntry obfInnerClass) {
+		ClassMapping classMapping = m_innerClassesByObfSimple.get(obfInnerClass.getInnermostClassName());
 		if (classMapping == null) {
-			classMapping = new ClassMapping(obfName);
-			boolean wasAdded = m_innerClassesByObf.put(obfName, classMapping) == null;
+			classMapping = new ClassMapping(obfInnerClass.getName());
+			boolean wasAdded = m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping) == null;
 			assert (wasAdded);
 		}
 		return classMapping;
 	}
 	
-	public ClassMapping getInnerClassByObf(String obfName) {
-		assert (isSimpleClassName(obfName));
-		return m_innerClassesByObf.get(obfName);
+	public ClassMapping getInnerClassByObfSimple(String obfSimpleName) {
+		assert (isSimpleClassName(obfSimpleName));
+		return m_innerClassesByObfSimple.get(obfSimpleName);
 	}
 	
 	public ClassMapping getInnerClassByDeobf(String deobfName) {
@@ -109,35 +109,25 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 		return m_innerClassesByDeobf.get(deobfName);
 	}
 	
-	public ClassMapping getInnerClassByDeobfThenObf(String name) {
+	public ClassMapping getInnerClassByDeobfThenObfSimple(String name) {
 		ClassMapping classMapping = getInnerClassByDeobf(name);
 		if (classMapping == null) {
-			classMapping = getInnerClassByObf(name);
+			classMapping = getInnerClassByObfSimple(name);
 		}
 		return classMapping;
 	}
 	
-	public String getObfInnerClassSimpleName(String deobfName) {
-		assert (isSimpleClassName(deobfName));
-		ClassMapping classMapping = m_innerClassesByDeobf.get(deobfName);
-		if (classMapping != null) {
-			return classMapping.getObfSimpleName();
-		}
-		return null;
-	}
-	
-	public String getDeobfInnerClassName(String obfName) {
-		assert (isSimpleClassName(obfName));
-		ClassMapping classMapping = m_innerClassesByObf.get(obfName);
+	public String getDeobfInnerClassName(String obfSimpleName) {
+		assert (isSimpleClassName(obfSimpleName));
+		ClassMapping classMapping = m_innerClassesByObfSimple.get(obfSimpleName);
 		if (classMapping != null) {
 			return classMapping.getDeobfName();
 		}
 		return null;
 	}
 	
-	public void setInnerClassName(String obfName, String deobfName) {
-		assert (isSimpleClassName(obfName));
-		ClassMapping classMapping = getOrCreateInnerClass(obfName);
+	public void setInnerClassName(ClassEntry obfInnerClass, String deobfName) {
+		ClassMapping classMapping = getOrCreateInnerClass(obfInnerClass);
 		if (classMapping.getDeobfName() != null) {
 			boolean wasRemoved = m_innerClassesByDeobf.remove(classMapping.getDeobfName()) != null;
 			assert (wasRemoved);
@@ -149,6 +139,15 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 			assert (wasAdded);
 		}
 	}
+	
+	public boolean hasInnerClassByObfSimple(String obfSimpleName) {
+		return m_innerClassesByObfSimple.containsKey(obfSimpleName);
+	}
+	
+	public boolean hasInnerClassByDeobf(String deobfName) {
+		return m_innerClassesByDeobf.containsKey(deobfName);
+	}
+	
 	
 	//// FIELDS ////////
 	
@@ -382,7 +381,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 			buf.append("\n");
 		}
 		buf.append("Inner Classes:\n");
-		for (ClassMapping classMapping : m_innerClassesByObf.values()) {
+		for (ClassMapping classMapping : m_innerClassesByObfSimple.values()) {
 			buf.append("\t");
 			buf.append(classMapping.getObfSimpleName());
 			buf.append(" <-> ");
@@ -404,11 +403,11 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 	public boolean renameObfClass(String oldObfClassName, String newObfClassName) {
 		
 		// rename inner classes
-		for (ClassMapping innerClassMapping : new ArrayList<ClassMapping>(m_innerClassesByObf.values())) {
+		for (ClassMapping innerClassMapping : new ArrayList<ClassMapping>(m_innerClassesByObfSimple.values())) {
 			if (innerClassMapping.renameObfClass(oldObfClassName, newObfClassName)) {
-				boolean wasRemoved = m_innerClassesByObf.remove(oldObfClassName) != null;
+				boolean wasRemoved = m_innerClassesByObfSimple.remove(oldObfClassName) != null;
 				assert (wasRemoved);
-				boolean wasAdded = m_innerClassesByObf.put(newObfClassName, innerClassMapping) == null;
+				boolean wasAdded = m_innerClassesByObfSimple.put(newObfClassName, innerClassMapping) == null;
 				assert (wasAdded);
 			}
 		}

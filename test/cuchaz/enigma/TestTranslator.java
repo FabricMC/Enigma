@@ -101,26 +101,31 @@ public class TestTranslator {
 	public void innerClasses() {
 		
 		// classes
-		assertMapping(newClass("none/h"), newClass("deobf/H_OuterClass"));
-		assertMapping(newClass("none/h$i"), newClass("deobf/H_OuterClass$I_InnerClass"));
-		assertMapping(newClass("none/h$i$j"), newClass("deobf/H_OuterClass$I_InnerClass$J_InnerInnerClass"));
-		assertMapping(newClass("none/h$k"), newClass("deobf/H_OuterClass$k"));
-		assertMapping(newClass("none/h$k$l"), newClass("deobf/H_OuterClass$k$L_NamedInnerClass"));
+		assertMapping(newClass("none/g"), newClass("deobf/G_OuterClass"));
+		assertMapping(newClass("none/g$a"), newClass("deobf/G_OuterClass$A_InnerClass"));
+		assertMapping(newClass("none/g$a$a"), newClass("deobf/G_OuterClass$A_InnerClass$A_InnerInnerClass"));
+		assertMapping(newClass("none/g$b"), newClass("deobf/G_OuterClass$b"));
+		assertMapping(newClass("none/g$b$a"), newClass("deobf/G_OuterClass$b$A_NamedInnerClass"));
 		
 		// fields
-		assertMapping(newField("none/h$i", "a", "I"), newField("deobf/H_OuterClass$I_InnerClass", "f1", "I"));
-		assertMapping(newField("none/h$i", "a", "Ljava/lang/String;"), newField("deobf/H_OuterClass$I_InnerClass", "f2", "Ljava/lang/String;"));
-		assertMapping(newField("none/h$i$j", "a", "I"), newField("deobf/H_OuterClass$I_InnerClass$J_InnerInnerClass", "f3", "I"));
-		assertMapping(newField("none/h$k$l", "a", "I"), newField("deobf/H_OuterClass$k$L_NamedInnerClass", "f4", "I"));
+		assertMapping(newField("none/g$a", "a", "I"), newField("deobf/G_OuterClass$A_InnerClass", "f1", "I"));
+		assertMapping(newField("none/g$a", "a", "Ljava/lang/String;"), newField("deobf/G_OuterClass$A_InnerClass", "f2", "Ljava/lang/String;"));
+		assertMapping(newField("none/g$a$a", "a", "I"), newField("deobf/G_OuterClass$A_InnerClass$A_InnerInnerClass", "f3", "I"));
+		assertMapping(newField("none/g$b$a", "a", "I"), newField("deobf/G_OuterClass$b$A_NamedInnerClass", "f4", "I"));
 		
 		// methods
-		assertMapping(newMethod("none/h$i", "a", "()V"), newMethod("deobf/H_OuterClass$I_InnerClass", "m1", "()V"));
-		assertMapping(newMethod("none/h$i$j", "a", "()V"), newMethod("deobf/H_OuterClass$I_InnerClass$J_InnerInnerClass", "m2", "()V"));
+		assertMapping(newMethod("none/g$a", "a", "()V"), newMethod("deobf/G_OuterClass$A_InnerClass", "m1", "()V"));
+		assertMapping(newMethod("none/g$a$a", "a", "()V"), newMethod("deobf/G_OuterClass$A_InnerClass$A_InnerInnerClass", "m2", "()V"));
 	}
 	
 	@Test
 	public void namelessClass() {
-		assertMapping(newClass("none/m"), newClass("none/m"));
+		assertMapping(newClass("none/h"), newClass("none/h"));
+	}
+	
+	@Test
+	public void testGenerics() {
+		// TODO
 	}
 	
 	private void assertMapping(Entry obf, Entry deobf) {

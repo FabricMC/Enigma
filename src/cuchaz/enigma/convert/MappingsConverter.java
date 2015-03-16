@@ -169,7 +169,7 @@ public class MappingsConverter {
 								newMappings.addClassMapping(destMapping);
 							}
 						} else {
-							destMapping = destMapping.getInnerClassByObf(destChainClassEntry.getInnerClassName());
+							destMapping = destMapping.getInnerClassByObfSimple(destChainClassEntry.getInnermostClassName());
 							if (destMapping == null) {
 								destMapping = new ClassMapping(destChainClassEntry.getName());
 								destMapping.addInnerClassMapping(destMapping);

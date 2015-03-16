@@ -205,7 +205,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		}
 		if (obfClassEntry.isInnerClass()) {
 			// try just the inner class name
-			classNamesToTry.add(obfClassEntry.getInnerClassName());
+			classNamesToTry.add(obfClassEntry.getInnermostClassName());
 		}
 		return classNamesToTry;
 	}

@@ -13,6 +13,8 @@ package cuchaz.enigma.mapping;
 import java.io.Serializable;
 import java.util.List;
 
+import com.beust.jcommander.internal.Lists;
+
 public class ClassEntry implements Entry, Serializable {
 	
 	private static final long serialVersionUID = 4235460580973955811L;
@@ -29,7 +31,7 @@ public class ClassEntry implements Entry, Serializable {
 		
 		m_name = className;
 		
-		if (isInnerClass() && getInnerClassName().indexOf('/') >= 0) {
+		if (isInnerClass() && getInnermostClassName().indexOf('/') >= 0) {
 			throw new IllegalArgumentException("Inner class must not have a package: " + className);
 		}
 	}
@@ -84,22 +86,39 @@ public class ClassEntry implements Entry, Serializable {
 		return m_name.lastIndexOf('$') >= 0;
 	}
 	
-	public String getOuterClassName() {
+	public List<String> getClassChainNames() {
+		return Lists.newArrayList(m_name.split("\\$"));
+	}
+	
+	public List<ClassEntry> getClassChain() {
+		List<ClassEntry> entries = Lists.newArrayList();
+		StringBuilder buf = new StringBuilder();
+		for (String name : getClassChainNames()) {
+			if (buf.length() > 0) {
+				buf.append("$");
+			}
+			buf.append(name);
+			entries.add(new ClassEntry(buf.toString()));
+		}
+		return entries;
+	}
+	
+	public String getOutermostClassName() {
 		if (isInnerClass()) {
 			return m_name.substring(0, m_name.lastIndexOf('$'));
 		}
 		return m_name;
 	}
 	
-	public String getInnerClassName() {
+	public String getInnermostClassName() {
 		if (!isInnerClass()) {
 			throw new Error("This is not an inner class!");
 		}
 		return m_name.substring(m_name.lastIndexOf('$') + 1);
 	}
 	
-	public ClassEntry getOuterClassEntry() {
-		return new ClassEntry(getOuterClassName());
+	public ClassEntry getOutermostClassEntry() {
+		return new ClassEntry(getOutermostClassName());
 	}
 	
 	public boolean isInDefaultPackage() {
@@ -130,7 +149,7 @@ public class ClassEntry implements Entry, Serializable {
 				buf.append(chainEntry.getName());
 			} else {
 				buf.append("$");
-				buf.append(chainEntry.isInnerClass() ? chainEntry.getInnerClassName() : chainEntry.getSimpleName());
+				buf.append(chainEntry.isInnerClass() ? chainEntry.getInnermostClassName() : chainEntry.getSimpleName());
 			}
 			
 			if (chainEntry == this) {

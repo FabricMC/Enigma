@@ -13,9 +13,11 @@ package cuchaz.enigma.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -87,6 +89,18 @@ public class Mappings implements Serializable {
 	
 	public ClassMapping getClassByDeobf(String deobfName) {
 		return m_classesByDeobf.get(deobfName);
+	}
+	
+	public void setClassDeobfName(ClassMapping classMapping, String deobfName) {
+		if (classMapping.getDeobfName() != null) {
+			boolean wasRemoved = m_classesByDeobf.remove(classMapping.getDeobfName()) != null;
+			assert (wasRemoved);
+		}
+		classMapping.setDeobfName(deobfName);
+		if (deobfName != null) {
+			boolean wasAdded = m_classesByDeobf.put(deobfName, classMapping) == null;
+			assert (wasAdded);
+		}
 	}
 	
 	public Translator getTranslator(TranslationDirection direction, TranslationIndex index) {
@@ -184,5 +198,19 @@ public class Mappings implements Serializable {
 			return classMapping.containsArgument(obfBehaviorEntry, name);
 		}
 		return false;
+	}
+	
+	public List<ClassMapping> getClassMappingChain(ClassEntry obfClass) {
+		List<ClassMapping> mappingChain = Lists.newArrayList();
+		ClassMapping classMapping = null;
+		for (ClassEntry obfClassEntry : obfClass.getClassChain()) {
+			if (mappingChain.isEmpty()) {
+				classMapping = m_classesByObf.get(obfClassEntry.getName());
+			} else if (classMapping != null) {
+				classMapping = classMapping.getInnerClassByObfSimple(obfClassEntry.getInnermostClassName());
+			}
+			mappingChain.add(classMapping);
+		}
+		return mappingChain;
 	}
 }

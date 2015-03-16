@@ -29,19 +29,19 @@ public class TestInnerClasses {
 	private Deobfuscator m_deobfuscator;
 	
 	private static final ClassEntry AnonymousOuter = newClass("none/a");
-	private static final ClassEntry AnonymousInner = newClass("none/b");
-	private static final ClassEntry SimpleOuter = newClass("none/g");
-	private static final ClassEntry SimpleInner = newClass("none/h");
-	private static final ClassEntry ConstructorArgsOuter = newClass("none/e");
-	private static final ClassEntry ConstructorArgsInner = newClass("none/f");
-	private static final ClassEntry AnonymousWithScopeArgsOuter = newClass("none/c");
-	private static final ClassEntry AnonymousWithScopeArgsInner = newClass("none/d");
-	private static final ClassEntry AnonymousWithOuterAccessOuter = newClass("none/i");
-	private static final ClassEntry AnonymousWithOuterAccessInner = newClass("none/j");
-	private static final ClassEntry ClassTreeRoot = newClass("none/k");
-	private static final ClassEntry ClassTreeLevel1 = newClass("none/l");
-	private static final ClassEntry ClassTreeLevel2 = newClass("none/m");
-	private static final ClassEntry ClassTreeLevel3 = newClass("none/n");
+	private static final ClassEntry AnonymousInner = newClass("none/a$1");
+	private static final ClassEntry SimpleOuter = newClass("none/d");
+	private static final ClassEntry SimpleInner = newClass("none/d$a");
+	private static final ClassEntry ConstructorArgsOuter = newClass("none/c");
+	private static final ClassEntry ConstructorArgsInner = newClass("none/c$a");
+	private static final ClassEntry AnonymousWithScopeArgsOuter = newClass("none/b");
+	private static final ClassEntry AnonymousWithScopeArgsInner = newClass("none/b$1");
+	private static final ClassEntry AnonymousWithOuterAccessOuter = newClass("none/e");
+	private static final ClassEntry AnonymousWithOuterAccessInner = newClass("none/e$1");
+	private static final ClassEntry ClassTreeRoot = newClass("none/f");
+	private static final ClassEntry ClassTreeLevel1 = newClass("none/f$a");
+	private static final ClassEntry ClassTreeLevel2 = newClass("none/f$a$a");
+	private static final ClassEntry ClassTreeLevel3 = newClass("none/f$a$a$a");
 	
 	public TestInnerClasses()
 	throws Exception {
@@ -101,7 +101,7 @@ public class TestInnerClasses {
 		
 		// level 1
 		ClassEntry fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
-			+ "$" + ClassTreeLevel1.getSimpleName()
+			+ "$" + ClassTreeLevel1.getInnermostClassName()
 		);
 		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
 		assertThat(m_index.getOuterClass(ClassTreeLevel1), is(ClassTreeRoot));
@@ -109,8 +109,8 @@ public class TestInnerClasses {
 		
 		// level 2
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
-			+ "$" + ClassTreeLevel1.getSimpleName()
-			+ "$" + ClassTreeLevel2.getSimpleName()
+			+ "$" + ClassTreeLevel1.getInnermostClassName()
+			+ "$" + ClassTreeLevel2.getInnermostClassName()
 		);
 		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
 		assertThat(m_index.getOuterClass(ClassTreeLevel2), is(ClassTreeLevel1));
@@ -118,9 +118,9 @@ public class TestInnerClasses {
 		
 		// level 3
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
-			+ "$" + ClassTreeLevel1.getSimpleName()
-			+ "$" + ClassTreeLevel2.getSimpleName()
-			+ "$" + ClassTreeLevel3.getSimpleName()
+			+ "$" + ClassTreeLevel1.getInnermostClassName()
+			+ "$" + ClassTreeLevel2.getInnermostClassName()
+			+ "$" + ClassTreeLevel3.getInnermostClassName()
 		);
 		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
 		assertThat(m_index.getOuterClass(ClassTreeLevel3), is(ClassTreeLevel2));

@@ -34,21 +34,24 @@ public class TestDeobfed {
 			newClass("none/b"),
 			newClass("none/c"),
 			newClass("none/d"),
-			newClass("none/d$e"),
+			newClass("none/d$1"),
+			newClass("none/e"),
 			newClass("none/f"),
 			newClass("none/g"),
+			newClass("none/g$a"),
+			newClass("none/g$a$a"),
+			newClass("none/g$b"),
+			newClass("none/g$b$a"),
 			newClass("none/h"),
-			newClass("none/h$i"),
-			newClass("none/h$i$j"),
-			newClass("none/h$k"),
-			newClass("none/h$k$l"),
-			newClass("none/m"),
-			newClass("none/m$n"),
-			newClass("none/m$n$o"),
-			newClass("none/m$p"),
-			newClass("none/m$p$q"),
-			newClass("none/m$p$q$r"),
-			newClass("none/m$p$q$s")
+			newClass("none/h$a"),
+			newClass("none/h$a$a"),
+			newClass("none/h$b"),
+			newClass("none/h$b$a"),
+			newClass("none/h$b$a$a"),
+			newClass("none/h$b$a$b"),
+			newClass("none/i"),
+			newClass("none/i$a"),
+			newClass("none/i$b")
 		));
 	}
 	
@@ -60,20 +63,23 @@ public class TestDeobfed {
 		deobfuscator.getSourceTree("none/b");
 		deobfuscator.getSourceTree("none/c");
 		deobfuscator.getSourceTree("none/d");
-		deobfuscator.getSourceTree("none/d$e");
+		deobfuscator.getSourceTree("none/d$1");
+		deobfuscator.getSourceTree("none/e");
 		deobfuscator.getSourceTree("none/f");
 		deobfuscator.getSourceTree("none/g");
+		deobfuscator.getSourceTree("none/g$a");
+		deobfuscator.getSourceTree("none/g$a$a");
+		deobfuscator.getSourceTree("none/g$b");
+		deobfuscator.getSourceTree("none/g$b$a");
 		deobfuscator.getSourceTree("none/h");
-		deobfuscator.getSourceTree("none/h$i");
-		deobfuscator.getSourceTree("none/h$i$j");
-		deobfuscator.getSourceTree("none/h$k");
-		deobfuscator.getSourceTree("none/h$k$l");
-		deobfuscator.getSourceTree("none/m");
-		deobfuscator.getSourceTree("none/m$n");
-		deobfuscator.getSourceTree("none/m$n$o");
-		deobfuscator.getSourceTree("none/m$p");
-		deobfuscator.getSourceTree("none/m$p$q");
-		deobfuscator.getSourceTree("none/m$p$q$r");
-		deobfuscator.getSourceTree("none/m$p$q$s");
+		deobfuscator.getSourceTree("none/h$a");
+		deobfuscator.getSourceTree("none/h$a$a");
+		deobfuscator.getSourceTree("none/h$b");
+		deobfuscator.getSourceTree("none/h$b$a");
+		deobfuscator.getSourceTree("none/h$b$a$a");
+		deobfuscator.getSourceTree("none/h$b$a$b");
+		deobfuscator.getSourceTree("none/i");
+		deobfuscator.getSourceTree("none/i$a");
+		deobfuscator.getSourceTree("none/i$b");
 	}
 }

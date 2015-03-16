@@ -26,7 +26,6 @@ import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Translator;
 import cuchaz.enigma.mapping.Type;
@@ -101,26 +100,30 @@ public class ClassTranslator {
 			}
 			
 			// translate the type
-			Type translatedType = m_translator.translateType(new Type(field.getFieldInfo().getDescriptor()));
+			Type translatedType = m_translator.translateType(entry.getType());
 			field.getFieldInfo().setDescriptor(translatedType.toString());
 		}
 		
 		// translate all the methods and constructors
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
+			
+			BehaviorEntry entry = EntryFactory.getBehaviorEntry(behavior);
+			
 			if (behavior instanceof CtMethod) {
 				CtMethod method = (CtMethod)behavior;
 				
 				// translate the name
-				MethodEntry entry = EntryFactory.getMethodEntry(method);
 				String translatedName = m_translator.translate(entry);
 				if (translatedName != null) {
 					method.setName(translatedName);
 				}
 			}
 			
-			// translate the type
-			Signature translatedSignature = m_translator.translateSignature(new Signature(behavior.getMethodInfo().getDescriptor()));
-			behavior.getMethodInfo().setDescriptor(translatedSignature.toString());
+			if (entry.getSignature() != null) {
+				// translate the type
+				Signature translatedSignature = m_translator.translateSignature(entry.getSignature());
+				behavior.getMethodInfo().setDescriptor(translatedSignature.toString());
+			}
 		}
 		
 		// translate all the class names referenced in the code
@@ -137,7 +140,7 @@ public class ClassTranslator {
 		// translate the source file attribute too
 		ClassEntry deobfClassEntry = map.get(classEntry);
 		if (deobfClassEntry != null) {
-			String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOuterClassName()) + ".java";
+			String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassName()) + ".java";
 			c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));
 		}
 	}

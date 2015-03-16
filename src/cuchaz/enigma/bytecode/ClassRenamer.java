@@ -43,7 +43,7 @@ public class ClassRenamer {
 			for (int i = 0; i < attr.tableLength(); i++) {
 				ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(attr.innerClass(i)));
 				if (attr.innerNameIndex(i) != 0) {
-					attr.setInnerNameIndex(i, constants.addUtf8Info(classEntry.getInnerClassName()));
+					attr.setInnerNameIndex(i, constants.addUtf8Info(classEntry.getInnermostClassName()));
 				}
 				
 				/* DEBUG

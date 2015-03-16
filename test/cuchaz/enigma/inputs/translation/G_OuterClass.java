@@ -1,16 +1,16 @@
 package cuchaz.enigma.inputs.translation;
 
 
-public class H_OuterClass {
+public class G_OuterClass {
 	
-	public class I_InnerClass {
+	public class A_InnerClass {
 		
 		public int f1;
 		public String f2;
 		
 		public void m1() {}
 		
-		public class J_InnerInnerClass {
+		public class A_InnerInnerClass {
 			
 			public int f3;
 			
@@ -18,8 +18,8 @@ public class H_OuterClass {
 		}
 	}
 	
-	public class K_NamelessClass {
-		public class L_NamedInnerClass {
+	public class B_NamelessClass {
+		public class A_NamedInnerClass {
 			public int f4;
 		}
 	}

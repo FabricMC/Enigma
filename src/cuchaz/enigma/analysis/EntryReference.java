@@ -74,7 +74,7 @@ public class EntryReference<E extends Entry,C extends Entry> {
 			ClassEntry classEntry = (ClassEntry)getNameableEntry();
 			if (classEntry.isInnerClass()) {
 				// make sure we only rename the inner class name
-				return classEntry.getInnerClassName();
+				return classEntry.getInnermostClassName();
 			}
 		}
 		

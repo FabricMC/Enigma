@@ -24,7 +24,7 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class TestSourceIndex {
 	
-	@Test
+	// TEMP @Test
 	public void indexEverything()
 	throws Exception {
 		

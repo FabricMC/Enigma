@@ -106,7 +106,7 @@ public class CodeReader extends JEditorPane {
 				// get the outermost class
 				ClassEntry outermostClassEntry = classEntry;
 				while (outermostClassEntry.isInnerClass()) {
-					outermostClassEntry = outermostClassEntry.getOuterClassEntry();
+					outermostClassEntry = outermostClassEntry.getOutermostClassEntry();
 				}
 				
 				// decompile it

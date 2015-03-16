@@ -24,6 +24,13 @@ public class Translator {
 	private Map<String,ClassMapping> m_classes;
 	private TranslationIndex m_index;
 	
+	private ClassNameReplacer m_classNameReplacer = new ClassNameReplacer() {
+		@Override
+		public String replace(String className) {
+			return translateEntry(new ClassEntry(className)).getName();
+		}
+	};
+	
 	public Translator() {
 		m_direction = null;
 		m_classes = Maps.newHashMap();
@@ -69,48 +76,16 @@ public class Translator {
 		}
 	}
 	
-	public String translateClass(String className) {
-		return translate(new ClassEntry(className));
+	public String translate(ClassEntry in) {
+		ClassEntry translated = translateEntry(in);
+		if (translated.equals(in)) {
+			return null;
+		}
+		return translated.getName();
 	}
 	
-	public String translate(ClassEntry in) {
-
-		if (in.isInnerClass()) {
-			
-			// translate everything in the class chain, or return null
-			List<ClassMapping> mappingsChain = getClassMappingChain(in);
-			StringBuilder buf = new StringBuilder();
-			for (ClassMapping classMapping : mappingsChain) {
-				if (classMapping == null) {
-					return null;
-				}
-				boolean isFirstClass = buf.length() == 0;
-				String name = m_direction.choose(
-					classMapping.getDeobfName(),
-					isFirstClass ? classMapping.getObfFullName() : classMapping.getObfSimpleName()
-				);
-				if (name == null) {
-					return null;
-				}
-				if (!isFirstClass) {
-					buf.append("$");
-				}
-				buf.append(name);
-			}
-			return buf.toString();
-			
-		} else {
-			
-			// normal classes are easier
-			ClassMapping classMapping = m_classes.get(in.getName());
-			if (classMapping == null) {
-				return null;
-			}
-			return m_direction.choose(
-				classMapping.getDeobfName(),
-				classMapping.getObfFullName()
-			);
-		}
+	public String translateClass(String className) {
+		return translate(new ClassEntry(className));
 	}
 	
 	public ClassEntry translateEntry(ClassEntry in) {
@@ -264,21 +239,11 @@ public class Translator {
 	}
 	
 	public Type translateType(Type type) {
-		return new Type(type, new ClassNameReplacer() {
-			@Override
-			public String replace(String className) {
-				return translateClass(className);
-			}
-		});
+		return new Type(type, m_classNameReplacer);
 	}
 	
 	public Signature translateSignature(Signature signature) {
-		return new Signature(signature, new ClassNameReplacer() {
-			@Override
-			public String replace(String className) {
-				return translateClass(className);
-			}
-		});
+		return new Signature(signature, m_classNameReplacer);
 	}
 	
 	private ClassMapping findClassMapping(ClassEntry in) {
@@ -302,8 +267,8 @@ public class Translator {
 			ClassMapping innerClassMapping = null;
 			if (outerClassMapping != null) {
 				innerClassMapping = m_direction.choose(
-					outerClassMapping.getInnerClassByObf(parts[i]),
-					outerClassMapping.getInnerClassByDeobfThenObf(parts[i])
+					outerClassMapping.getInnerClassByObfSimple(parts[i]),
+					outerClassMapping.getInnerClassByDeobfThenObfSimple(parts[i])
 				);
 			}
 			mappingsChain.add(innerClassMapping);

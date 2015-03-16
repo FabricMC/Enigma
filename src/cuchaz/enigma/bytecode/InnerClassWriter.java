@@ -93,7 +93,7 @@ public class InnerClassWriter {
 		
 		// get the new inner class name
 		ClassEntry obfInnerClassEntry = obfClassEntry.buildClassEntry(obfClassChain);
-		ClassEntry obfOuterClassEntry = obfInnerClassEntry.getOuterClassEntry();
+		ClassEntry obfOuterClassEntry = obfInnerClassEntry.getOutermostClassEntry();
 		
 		// here's what the JVM spec says about the InnerClasses attribute
 		// append(inner, parent, 0 if anonymous else simple name, flags);
@@ -105,7 +105,7 @@ public class InnerClassWriter {
 		int innerClassNameIndex = 0;
 		int accessFlags = 0;
 		if (!m_index.isAnonymousClass(obfClassEntry)) {
-			innerClassNameIndex = constPool.addUtf8Info(obfInnerClassEntry.getInnerClassName());
+			innerClassNameIndex = constPool.addUtf8Info(obfInnerClassEntry.getInnermostClassName());
 		}
 		
 		attr.append(innerClassIndex, parentClassIndex, innerClassNameIndex, accessFlags);

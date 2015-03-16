@@ -438,7 +438,13 @@ public class Deobfuscator {
 	public boolean hasDeobfuscatedName(Entry obfEntry) {
 		Translator translator = getTranslator(TranslationDirection.Deobfuscating);
 		if (obfEntry instanceof ClassEntry) {
-			return translator.translate((ClassEntry)obfEntry) != null;
+			ClassEntry obfClass = (ClassEntry)obfEntry;
+			ClassEntry translated = translator.translateEntry(obfClass);
+			if (obfClass.isInnerClass()) {
+				return !obfClass.getInnermostClassName().equals(translated.getInnermostClassName());
+			} else {
+				return !obfClass.equals(translated);
+			}
 		} else if (obfEntry instanceof FieldEntry) {
 			return translator.translate((FieldEntry)obfEntry) != null;
 		} else if (obfEntry instanceof MethodEntry) {

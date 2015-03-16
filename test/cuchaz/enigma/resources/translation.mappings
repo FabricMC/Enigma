@@ -17,15 +17,16 @@ CLASS none/c deobf/C_SubClass
 	FIELD c f4 I
 	METHOD a m1 ()I
 	METHOD c m3 ()I
-CLASS none/h deobf/H_OuterClass
-	CLASS none/i I_InnerClass
-		CLASS none/j J_InnerInnerClass
+CLASS none/g deobf/G_OuterClass
+	CLASS none/g$a A_InnerClass
+		CLASS none/g$a$a A_InnerInnerClass
 			FIELD a f3 I
 			METHOD a m2 ()V
 		FIELD a f1 I
 		FIELD a f2 Ljava/lang/String;
 		METHOD a m1 ()V
-	CLASS none/k
-		CLASS none/l L_NamedInnerClass
+	CLASS none/g$b
+		CLASS none/g$b$a A_NamedInnerClass
 			FIELD a f4 I
-CLASS none/m
+CLASS none/h
+CLASS none/i I_Generics
