@@ -180,7 +180,7 @@ public class ClassIdentity {
 			}
 		}
 		
-		m_outer = EntryFactory.getClassEntry(c).getOutermostClassName();
+		m_outer = EntryFactory.getClassEntry(c).getOuterClassName();
 	}
 	
 	private void addReference(EntryReference<? extends Entry,BehaviorEntry> reference) {

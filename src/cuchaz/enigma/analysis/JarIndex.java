@@ -312,7 +312,7 @@ public class JarIndex {
 		
 		// does this class already have an outer class?
 		if (classEntry.isInnerClass()) {
-			return classEntry.getOutermostClassEntry();
+			return classEntry.getOuterClassEntry();
 		}
 		InnerClassesAttribute innerClassesAttribute = (InnerClassesAttribute)c.getClassFile().getAttribute(InnerClassesAttribute.tag);
 		if (innerClassesAttribute != null) {

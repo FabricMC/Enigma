@@ -105,9 +105,24 @@ public class ClassEntry implements Entry, Serializable {
 	
 	public String getOutermostClassName() {
 		if (isInnerClass()) {
-			return m_name.substring(0, m_name.lastIndexOf('$'));
+			return m_name.substring(0, m_name.indexOf('$'));
 		}
 		return m_name;
+	}
+	
+	public ClassEntry getOutermostClassEntry() {
+		return new ClassEntry(getOutermostClassName());
+	}
+	
+	public String getOuterClassName() {
+		if (!isInnerClass()) {
+			throw new Error("This is not an inner class!");
+		}
+		return m_name.substring(0, m_name.lastIndexOf('$'));
+	}
+	
+	public ClassEntry getOuterClassEntry() {
+		return new ClassEntry(getOuterClassName());
 	}
 	
 	public String getInnermostClassName() {
@@ -115,10 +130,6 @@ public class ClassEntry implements Entry, Serializable {
 			throw new Error("This is not an inner class!");
 		}
 		return m_name.substring(m_name.lastIndexOf('$') + 1);
-	}
-	
-	public ClassEntry getOutermostClassEntry() {
-		return new ClassEntry(getOutermostClassName());
 	}
 	
 	public boolean isInDefaultPackage() {

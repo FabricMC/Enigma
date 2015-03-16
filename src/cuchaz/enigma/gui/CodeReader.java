@@ -103,14 +103,8 @@ public class CodeReader extends JEditorPane {
 			@Override
 			public void run() {
 				
-				// get the outermost class
-				ClassEntry outermostClassEntry = classEntry;
-				while (outermostClassEntry.isInnerClass()) {
-					outermostClassEntry = outermostClassEntry.getOutermostClassEntry();
-				}
-				
 				// decompile it
-				CompilationUnit sourceTree = deobfuscator.getSourceTree(outermostClassEntry.getName());
+				CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClassName());
 				String source = deobfuscator.getSource(sourceTree);
 				setCode(source);
 				m_sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);

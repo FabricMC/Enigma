@@ -93,7 +93,7 @@ public class InnerClassWriter {
 		
 		// get the new inner class name
 		ClassEntry obfInnerClassEntry = obfClassEntry.buildClassEntry(obfClassChain);
-		ClassEntry obfOuterClassEntry = obfInnerClassEntry.getOutermostClassEntry();
+		ClassEntry obfOuterClassEntry = obfInnerClassEntry.getOuterClassEntry();
 		
 		// here's what the JVM spec says about the InnerClasses attribute
 		// append(inner, parent, 0 if anonymous else simple name, flags);
