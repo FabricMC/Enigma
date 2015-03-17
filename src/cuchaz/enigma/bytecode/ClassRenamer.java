@@ -10,18 +10,28 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import javassist.ClassMap;
 import javassist.CtClass;
+import javassist.bytecode.AttributeInfo;
+import javassist.bytecode.BadBytecode;
+import javassist.bytecode.ByteArray;
+import javassist.bytecode.ClassFile;
+import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.FieldInfo;
 import javassist.bytecode.InnerClassesAttribute;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
+import javassist.bytecode.LocalVariableTypeAttribute;
+import javassist.bytecode.MethodInfo;
+import javassist.bytecode.SignatureAttribute;
+import javassist.bytecode.SignatureAttribute.ClassSignature;
+import javassist.bytecode.SignatureAttribute.MethodSignature;
+import javassist.bytecode.SignatureAttribute.ObjectType;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassNameReplacer;
 import cuchaz.enigma.mapping.ParameterizedType;
@@ -29,6 +39,107 @@ import cuchaz.enigma.mapping.Translator;
 import cuchaz.enigma.mapping.Type;
 
 public class ClassRenamer {
+	
+	private static enum SignatureType {
+		Class {
+			
+			@Override
+			public void rename(SignatureAttribute attribute, ReplacerClassMap map) {
+				renameClassSignatureAttribute(attribute, map);
+			}
+		},
+		Field {
+			
+			@Override
+			public void rename(SignatureAttribute attribute, ReplacerClassMap map) {
+				renameFieldSignatureAttribute(attribute, map);
+			}
+		},
+		Method {
+			
+			@Override
+			public void rename(SignatureAttribute attribute, ReplacerClassMap map) {
+				renameMethodSignatureAttribute(attribute, map);
+			}
+		};
+		
+		public abstract void rename(SignatureAttribute attribute, ReplacerClassMap map);
+	}
+	
+	private static class ReplacerClassMap extends HashMap<String,String> {
+		
+		private static final long serialVersionUID = 317915213205066168L;
+		
+		private ClassNameReplacer m_replacer;
+		
+		public ReplacerClassMap(ClassNameReplacer replacer) {
+			m_replacer = replacer;
+		}
+		
+		@Override
+		public String get(Object obj) {
+			if (obj instanceof String) {
+				return get((String)obj);
+			} else if (obj instanceof ObjectType) {
+				return get((ObjectType)obj);
+			}
+			return null;
+		}
+		
+		public String get(String typeName) {
+			
+			// javassist doesn't give us the class framing, add it
+			typeName = "L" + typeName + ";";
+			
+			String out = getFramed(typeName);
+			if (out == null) {
+				return null;
+			}
+
+			// javassist doesn't want the class framing, so remove it
+			out = out.substring(1, out.length() - 1);
+			
+			return out;
+		}
+		
+		public String getFramed(String typeName) {
+			ParameterizedType type = new ParameterizedType(new Type(typeName));
+			ParameterizedType renamedType = new ParameterizedType(type, m_replacer);
+			if (!type.equals(renamedType)) {
+				return renamedType.toString();
+			}
+			return null;
+		}
+		
+		public String get(ObjectType type) {
+			
+			// we can deal with the ones that start with a class
+			String signature = type.encode();
+			if (signature.startsWith("L") || signature.startsWith("[")) {
+				
+				// TEMP: skip special characters for now
+				if (signature.indexOf('*') >= 0 || signature.indexOf('+') >= 0 || signature.indexOf('-') >= 0) {
+					System.out.println("Skipping translating: " + signature);
+					return null;
+				}
+				
+				// replace inner class / with $
+				int pos = signature.indexOf("$");
+				if (pos >= 0) {
+					signature = signature.substring(0, pos + 1) + signature.substring(pos, signature.length()).replace('/', '$');
+				}
+				
+				return getFramed(signature);
+			} else if (signature.startsWith("T")) {
+				// don't need to care about template names
+				return null;
+			} else {
+				// TEMP
+				System.out.println("Skipping translating: " + signature);
+				return null;
+			}
+		}
+	}
 	
 	public static void renameClasses(CtClass c, final Translator translator) {
 		renameClasses(c, new ClassNameReplacer() {
@@ -69,86 +180,42 @@ public class ClassRenamer {
 		});
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static void renameClasses(CtClass c, ClassNameReplacer replacer) {
-		Map<ParameterizedType,ParameterizedType> map = Maps.newHashMap();
-		for (ParameterizedType type : ClassRenamer.getAllClassTypes(c)) {
-			ParameterizedType renamedType = new ParameterizedType(type, replacer);
-			if (!type.equals(renamedType)) {
-				map.put(type, renamedType);
-			}
-		}
-		renameTypes(c, map);
-	}
-
-	public static Set<ParameterizedType> getAllClassTypes(final CtClass c) {
 		
-		// TODO: might have to scan SignatureAttributes directly because javassist is buggy
+		// sadly, we can't use CtClass.renameClass() because SignatureAttribute.renameClass() is extremely buggy =(
 		
-		// get the class types that javassist knows about
-		final Set<ParameterizedType> types = Sets.newHashSet();
-		ClassMap map = new ClassMap() {
-			@Override
-			public Object get(Object obj) {
-				if (obj instanceof String) {
-					String str = (String)obj;
-					
-					// sometimes javasist gives us dot-separated classes... whadda hell?
-					str = str.replace('.', '/');
-					
-					// skip weird types
-					boolean hasNestedParams = str.indexOf('<') >= 0 && str.indexOf('<', str.indexOf('<')+1) >= 0;
-					boolean hasWeirdChars = str.indexOf('*') >= 0 || str.indexOf('-') >= 0 || str.indexOf('+') >= 0;
-					if (hasNestedParams || hasWeirdChars) {
-						// TEMP
-						System.out.println("Skipped translating: " + str);
-						return null;
-					}
-					
-					ParameterizedType type = new ParameterizedType(new Type("L" + str + ";"));
-					assert(type.isClass());
-					// TEMP
-					try {
-						type.getClassEntry();
-					} catch (Throwable t) {
-						// bad type
-						// TEMP
-						System.out.println("Skipped translating: " + str);
-						return null;
-					}
-					
-					types.add(type);
-				}
-				return null;
-			}
-			
-			private static final long serialVersionUID = -202160293602070641L;
-		};
-		c.replaceClassName(map);
+		ReplacerClassMap map = new ReplacerClassMap(replacer);
+		ClassFile classFile = c.getClassFile();
 		
-		return types;
-	}
-
-	public static void renameTypes(CtClass c, Map<ParameterizedType,ParameterizedType> map) {
+		// rename the constant pool (covers ClassInfo, MethodTypeInfo, and NameAndTypeInfo)
+		ConstPool constPool = c.getClassFile().getConstPool();
+		constPool.renameClass(map);
 		
-		// convert the type map to a javassist class map
-		ClassMap nameMap = new ClassMap();
-		for (Map.Entry<ParameterizedType,ParameterizedType> entry : map.entrySet()) {
-			String source = entry.getKey().toString();
-			String dest = entry.getValue().toString();
-			
-			// don't forget to chop off the L ... ;
-			// javassist doesn't want it there
-			source = source.substring(1, source.length() - 1);
-			dest = dest.substring(1, dest.length() - 1);
-			
-			nameMap.put(source, dest);
+		// rename class attributes
+		renameAttributes(classFile.getAttributes(), map, SignatureType.Class);
+		
+		// rename methods
+		for (MethodInfo methodInfo : (List<MethodInfo>)classFile.getMethods()) {
+			methodInfo.setDescriptor(Descriptor.rename(methodInfo.getDescriptor(), map));
+			renameAttributes(methodInfo.getAttributes(), map, SignatureType.Method);
 		}
 		
-		// replace!!
-		c.replaceClassName(nameMap);
-
+		// rename fields
+		for (FieldInfo fieldInfo : (List<FieldInfo>)classFile.getFields()) {
+			fieldInfo.setDescriptor(Descriptor.rename(fieldInfo.getDescriptor(), map));
+			renameAttributes(fieldInfo.getAttributes(), map, SignatureType.Field);
+		}
+		
+		// rename the class name itself last
+		// NOTE: don't use the map here, because setName() calls the buggy SignatureAttribute.renameClass()
+		// we only want to replace exactly this class name
+		String newName = replacer.replace(Descriptor.toJvmName(c.getName()));
+		if (newName != null) {
+			c.setName(Descriptor.toJavaName(newName));
+		}
+		
 		// replace simple names in the InnerClasses attribute too
-		ConstPool constants = c.getClassFile().getConstPool();
 		InnerClassesAttribute attr = (InnerClassesAttribute)c.getClassFile().getAttribute(InnerClassesAttribute.tag);
 		if (attr != null) {
 			for (int i = 0; i < attr.tableLength(); i++) {
@@ -158,12 +225,96 @@ public class ClassRenamer {
 				
 				if (attr.innerNameIndex(i) != 0) {
 					// update the inner name
-					attr.setInnerNameIndex(i, constants.addUtf8Info(classEntry.getInnermostClassName()));
+					attr.setInnerNameIndex(i, constPool.addUtf8Info(classEntry.getInnermostClassName()));
 				}
 				
 				/* DEBUG
 				System.out.println(String.format("\tDEOBF: %s-> ATTR: %s,%s,%s", classEntry, attr.outerClass(i), attr.innerClass(i), attr.innerName(i)));
 				*/
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static void renameAttributes(List<AttributeInfo> attributes, ReplacerClassMap map, SignatureType type) {
+		try {
+			
+			// make the rename class method accessible
+			Method renameClassMethod = AttributeInfo.class.getDeclaredMethod("renameClass", Map.class);
+			renameClassMethod.setAccessible(true);
+			
+			for (AttributeInfo attribute : attributes) {
+				if (attribute instanceof SignatureAttribute) {
+					// this has to be handled specially because SignatureAttribute.renameClass() is buggy as hell
+					SignatureAttribute signatureAttribute = (SignatureAttribute)attribute;
+					type.rename(signatureAttribute, map);
+				} else if (attribute instanceof CodeAttribute) {
+					// code attributes have signature attributes too (indirectly)
+					CodeAttribute codeAttribute = (CodeAttribute)attribute;
+					renameAttributes(codeAttribute.getAttributes(), map, type);
+				} else if (attribute instanceof LocalVariableTypeAttribute) {
+					// lvt attributes have signature attributes too
+					LocalVariableTypeAttribute localVariableAttribute = (LocalVariableTypeAttribute)attribute;
+					renameLocalVariableTypeAttribute(localVariableAttribute, map);
+				} else {
+					renameClassMethod.invoke(attribute, map);
+				}
+			}
+			
+		} catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+			throw new Error("Unable to call javassist methods by reflection!", ex);
+		}
+	}
+
+	private static void renameClassSignatureAttribute(SignatureAttribute attribute, ReplacerClassMap map) {
+		try {
+			ClassSignature classSignature = SignatureAttribute.toClassSignature(attribute.getSignature());
+			// TODO: do class signatures
+		} catch (BadBytecode ex) {
+			throw new Error("Unable to parse class signature: " + attribute.getSignature(), ex);
+		}
+	}
+	
+	private static void renameFieldSignatureAttribute(SignatureAttribute attribute, ReplacerClassMap map) {
+		try {
+			ObjectType fieldSignature = SignatureAttribute.toFieldSignature(attribute.getSignature());
+			String newSignature = map.get(fieldSignature);
+			if (newSignature != null) {
+				attribute.setSignature(newSignature);
+			}
+		} catch (BadBytecode ex) {
+			throw new Error("Unable to parse field signature: " + attribute.getSignature(), ex);
+		}
+	}
+	
+	private static void renameMethodSignatureAttribute(SignatureAttribute attribute, ReplacerClassMap map) {
+		try {
+			MethodSignature methodSignature = SignatureAttribute.toMethodSignature(attribute.getSignature());
+			// TODO: do method signatures
+		} catch (BadBytecode ex) {
+			throw new Error("Unable to parse method signature: " + attribute.getSignature(), ex);
+		}
+	}
+	
+	private static void renameLocalVariableTypeAttribute(LocalVariableTypeAttribute attribute, ReplacerClassMap map) {
+		// adapted from LocalVariableAttribute.renameClass()
+		ConstPool cp = attribute.getConstPool();
+		int n = attribute.tableLength();
+		byte[] info = attribute.get();
+		for (int i = 0; i < n; ++i) {
+			int pos = i * 10 + 2;
+			int index = ByteArray.readU16bit(info, pos + 6);
+			if (index != 0) {
+				String desc = cp.getUtf8Info(index);
+				try {
+					ObjectType fieldSignature = SignatureAttribute.toFieldSignature(desc);
+					String newDesc = map.get(fieldSignature);
+					if (newDesc != null) {
+						ByteArray.write16bit(cp.addUtf8Info(newDesc), info, pos + 6);
+					}
+				} catch (BadBytecode ex) {
+					throw new Error("Unable to parse field signature: " + desc, ex);
+				}
 			}
 		}
 	}
