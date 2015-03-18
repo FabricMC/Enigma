@@ -12,6 +12,7 @@ package cuchaz.enigma.bytecode;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +30,19 @@ import javassist.bytecode.InnerClassesAttribute;
 import javassist.bytecode.LocalVariableTypeAttribute;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.SignatureAttribute;
+import javassist.bytecode.SignatureAttribute.ArrayType;
+import javassist.bytecode.SignatureAttribute.BaseType;
 import javassist.bytecode.SignatureAttribute.ClassSignature;
+import javassist.bytecode.SignatureAttribute.ClassType;
 import javassist.bytecode.SignatureAttribute.MethodSignature;
+import javassist.bytecode.SignatureAttribute.NestedClassType;
 import javassist.bytecode.SignatureAttribute.ObjectType;
+import javassist.bytecode.SignatureAttribute.Type;
+import javassist.bytecode.SignatureAttribute.TypeArgument;
+import javassist.bytecode.SignatureAttribute.TypeVariable;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassNameReplacer;
 import cuchaz.enigma.mapping.Translator;
-import cuchaz.enigma.mapping.Type;
 
 public class ClassRenamer {
 	
@@ -43,26 +50,26 @@ public class ClassRenamer {
 		Class {
 			
 			@Override
-			public void rename(SignatureAttribute attribute, ReplacerClassMap map) {
-				renameClassSignatureAttribute(attribute, map);
+			public String rename(String signature, ReplacerClassMap map) {
+				return renameClassSignature(signature, map);
 			}
 		},
 		Field {
 			
 			@Override
-			public void rename(SignatureAttribute attribute, ReplacerClassMap map) {
-				renameFieldSignatureAttribute(attribute, map);
+			public String rename(String signature, ReplacerClassMap map) {
+				return renameFieldSignature(signature, map);
 			}
 		},
 		Method {
 			
 			@Override
-			public void rename(SignatureAttribute attribute, ReplacerClassMap map) {
-				renameMethodSignatureAttribute(attribute, map);
+			public String rename(String signature, ReplacerClassMap map) {
+				return renameMethodSignature(signature, map);
 			}
 		};
 		
-		public abstract void rename(SignatureAttribute attribute, ReplacerClassMap map);
+		public abstract String rename(String signature, ReplacerClassMap map);
 	}
 	
 	private static class ReplacerClassMap extends HashMap<String,String> {
@@ -79,66 +86,12 @@ public class ClassRenamer {
 		public String get(Object obj) {
 			if (obj instanceof String) {
 				return get((String)obj);
-			} else if (obj instanceof ObjectType) {
-				return get((ObjectType)obj);
 			}
 			return null;
 		}
 		
-		public String get(String typeName) {
-			
-			// javassist doesn't give us the class framing, add it
-			typeName = "L" + typeName + ";";
-			
-			String out = getFramed(typeName);
-			if (out == null) {
-				return null;
-			}
-
-			// javassist doesn't want the class framing, so remove it
-			out = out.substring(1, out.length() - 1);
-			
-			return out;
-		}
-		
-		public String getFramed(String typeName) {
-			Type type = new Type(typeName);
-			Type renamedType = new Type(type, m_replacer);
-			if (!type.equals(renamedType)) {
-				return renamedType.toString();
-			}
-			return null;
-		}
-		
-		public String get(ObjectType type) {
-			
-			// we can deal with the ones that start with a class
-			String signature = type.encode();
-			/*
-			if (signature.startsWith("L") || signature.startsWith("[")) {
-				
-				// TEMP: skip special characters for now
-				if (signature.indexOf('*') >= 0 || signature.indexOf('+') >= 0 || signature.indexOf('-') >= 0) {
-					System.out.println("Skipping translating: " + signature);
-					return null;
-				}
-				
-				// replace inner class / with $
-				int pos = signature.indexOf("$");
-				if (pos >= 0) {
-					signature = signature.substring(0, pos + 1) + signature.substring(pos, signature.length()).replace('/', '$');
-				}
-				
-				return getFramed(signature);
-			} else if (signature.startsWith("T")) {
-				// don't need to care about template names
-				return null;
-			} else {
-			*/
-				// TEMP
-				System.out.println("Skipping translating: " + signature);
-				return null;
-			//}
+		public String get(String className) {
+			return m_replacer.replace(className);
 		}
 	}
 	
@@ -248,7 +201,10 @@ public class ClassRenamer {
 				if (attribute instanceof SignatureAttribute) {
 					// this has to be handled specially because SignatureAttribute.renameClass() is buggy as hell
 					SignatureAttribute signatureAttribute = (SignatureAttribute)attribute;
-					type.rename(signatureAttribute, map);
+					String newSignature = type.rename(signatureAttribute.getSignature(), map);
+					if (newSignature != null) {
+						signatureAttribute.setSignature(newSignature);
+					}
 				} else if (attribute instanceof CodeAttribute) {
 					// code attributes have signature attributes too (indirectly)
 					CodeAttribute codeAttribute = (CodeAttribute)attribute;
@@ -267,37 +223,8 @@ public class ClassRenamer {
 		}
 	}
 
-	private static void renameClassSignatureAttribute(SignatureAttribute attribute, ReplacerClassMap map) {
-		try {
-			ClassSignature classSignature = SignatureAttribute.toClassSignature(attribute.getSignature());
-			// TODO: do class signatures
-		} catch (BadBytecode ex) {
-			throw new Error("Unable to parse class signature: " + attribute.getSignature(), ex);
-		}
-	}
-	
-	private static void renameFieldSignatureAttribute(SignatureAttribute attribute, ReplacerClassMap map) {
-		try {
-			ObjectType fieldSignature = SignatureAttribute.toFieldSignature(attribute.getSignature());
-			String newSignature = map.get(fieldSignature);
-			if (newSignature != null) {
-				attribute.setSignature(newSignature);
-			}
-		} catch (BadBytecode ex) {
-			throw new Error("Unable to parse field signature: " + attribute.getSignature(), ex);
-		}
-	}
-	
-	private static void renameMethodSignatureAttribute(SignatureAttribute attribute, ReplacerClassMap map) {
-		try {
-			MethodSignature methodSignature = SignatureAttribute.toMethodSignature(attribute.getSignature());
-			// TODO: do method signatures
-		} catch (BadBytecode ex) {
-			throw new Error("Unable to parse method signature: " + attribute.getSignature(), ex);
-		}
-	}
-	
 	private static void renameLocalVariableTypeAttribute(LocalVariableTypeAttribute attribute, ReplacerClassMap map) {
+		
 		// adapted from LocalVariableAttribute.renameClass()
 		ConstPool cp = attribute.getConstPool();
 		int n = attribute.tableLength();
@@ -306,17 +233,272 @@ public class ClassRenamer {
 			int pos = i * 10 + 2;
 			int index = ByteArray.readU16bit(info, pos + 6);
 			if (index != 0) {
-				String desc = cp.getUtf8Info(index);
-				try {
-					ObjectType fieldSignature = SignatureAttribute.toFieldSignature(desc);
-					String newDesc = map.get(fieldSignature);
-					if (newDesc != null) {
-						ByteArray.write16bit(cp.addUtf8Info(newDesc), info, pos + 6);
-					}
-				} catch (BadBytecode ex) {
-					throw new Error("Unable to parse field signature: " + desc, ex);
+				String signature = cp.getUtf8Info(index);
+				String newSignature = renameLocalVariableSignature(signature, map);
+				if (newSignature != null) {
+					ByteArray.write16bit(cp.addUtf8Info(newSignature), info, pos + 6);
 				}
 			}
 		}
+	}
+
+	private static String renameLocalVariableSignature(String signature, ReplacerClassMap map) {
+		
+		// for some reason, signatures with . in them don't count as field signatures
+		// looks like anonymous classes delimit with . in stead of $
+		// convert the . to $, but keep track of how many we replace
+		// we need to put them back after we translate
+		int start = signature.lastIndexOf('$') + 1;
+		int numConverted = 0;
+		StringBuilder buf = new StringBuilder(signature);
+		for (int i=buf.length()-1; i>=start; i--) {
+			char c = buf.charAt(i);
+			if (c == '.') {
+				buf.setCharAt(i, '$');
+				numConverted++;
+			}
+		}
+		signature = buf.toString();
+		
+		// translate
+		String newSignature = renameFieldSignature(signature, map);
+		if (newSignature != null) {
+			
+			// put the delimiters back
+			buf = new StringBuilder(newSignature);
+			for (int i=buf.length()-1; i>=0 && numConverted > 0; i--) {
+				char c = buf.charAt(i);
+				if (c == '$') {
+					buf.setCharAt(i, '.');
+					numConverted--;
+				}
+			}
+			assert(numConverted == 0);
+			newSignature = buf.toString();
+			
+			return newSignature;
+		}
+		
+		return null;
+	}
+
+	private static String renameClassSignature(String signature, ReplacerClassMap map) {
+		try {
+			return getSignature(renameType(SignatureAttribute.toClassSignature(signature), map));
+		} catch (BadBytecode ex) {
+			throw new Error("Can't parse field signature: " + signature);
+		}
+	}
+	
+	private static String renameFieldSignature(String signature, ReplacerClassMap map) {
+		try {
+			return getSignature(renameType(SignatureAttribute.toFieldSignature(signature), map));
+		} catch (BadBytecode ex) {
+			throw new Error("Can't parse class signature: " + signature);
+		}
+	}
+	
+	private static String renameMethodSignature(String signature, ReplacerClassMap map) {
+		try {
+			return getSignature(renameType(SignatureAttribute.toMethodSignature(signature), map));
+		} catch (BadBytecode ex) {
+			throw new Error("Can't parse method signature: " + signature);
+		}
+	}
+	
+	private static ClassSignature renameType(ClassSignature type, ReplacerClassMap map) {
+		
+		// NOTE: don't have to translate type parameters
+		
+		// translate superclass
+		ClassType superclassType = type.getSuperClass();
+		if (superclassType != ClassType.OBJECT) {
+			ClassType newSuperclassType = renameType(superclassType, map);
+			if (newSuperclassType != null) {
+				superclassType = newSuperclassType;
+			}
+		}
+		
+		// translate interfaces
+		ClassType[] interfaceTypes = type.getInterfaces();
+		if (interfaceTypes != null) {
+			interfaceTypes = Arrays.copyOf(interfaceTypes, interfaceTypes.length);
+			for (int i=0; i<interfaceTypes.length; i++) {
+				ClassType newInterfaceType = renameType(interfaceTypes[i], map);
+				if (newInterfaceType != null) {
+					interfaceTypes[i] = newInterfaceType;
+				}
+			}
+		}
+		
+		return new ClassSignature(type.getParameters(), superclassType, interfaceTypes);
+	}
+	
+	private static MethodSignature renameType(MethodSignature type, ReplacerClassMap map) {
+		
+		// don't need to rename type params here either
+		
+		Type[] paramTypes = type.getParameterTypes();
+		if (paramTypes != null) {
+			paramTypes = Arrays.copyOf(paramTypes, paramTypes.length);
+			for (int i=0; i<paramTypes.length; i++) {
+				Type newParamType = renameType(paramTypes[i], map);
+				if (newParamType != null) {
+					paramTypes[i] = newParamType;
+				}
+			}
+		}
+
+		Type returnType = type.getReturnType();
+		if (returnType != null) {
+			Type newReturnType = renameType(returnType, map);
+			if (newReturnType != null) {
+				returnType = newReturnType;
+			}
+		}
+		
+		ObjectType[] exceptionTypes = type.getExceptionTypes();
+		if (exceptionTypes != null) {
+			exceptionTypes = Arrays.copyOf(exceptionTypes, exceptionTypes.length);
+			for (int i=0; i<exceptionTypes.length; i++) {
+				ObjectType newExceptionType = renameType(exceptionTypes[i], map);
+				if (newExceptionType != null) {
+					exceptionTypes[i] = newExceptionType;
+				}
+			}
+		}
+		
+		return new MethodSignature(type.getTypeParameters(), paramTypes, returnType, exceptionTypes);
+	}
+
+	private static Type renameType(Type type, ReplacerClassMap map) {
+		if (type instanceof ObjectType) {
+			return renameType((ObjectType)type, map);
+		} else if (type instanceof BaseType) {
+			return renameType((BaseType)type, map);
+		} else {
+			throw new Error("Don't know how to rename type " + type.getClass());
+		}
+	}
+	
+	private static ObjectType renameType(ObjectType type, ReplacerClassMap map) {
+		if (type instanceof ArrayType) {
+			return renameType((ArrayType)type, map);
+		} else if (type instanceof ClassType) {
+			return renameType((ClassType)type, map);
+		} else if (type instanceof TypeVariable) {
+			return renameType((TypeVariable)type, map);
+		} else {
+			throw new Error("Don't know how to rename type " + type.getClass());
+		}
+	}
+	
+	private static BaseType renameType(BaseType type, ReplacerClassMap map) {
+		// don't have to rename primitives
+		return null;
+	}
+
+	private static TypeVariable renameType(TypeVariable type, ReplacerClassMap map) {
+		// don't have to rename template args
+		return null;
+	}
+
+	private static ClassType renameType(ClassType type, ReplacerClassMap map) {
+		
+		// translate type args
+		TypeArgument[] args = type.getTypeArguments();
+		if (args != null) {
+			args = Arrays.copyOf(args, args.length);
+			for (int i=0; i<args.length; i++) {
+				TypeArgument newType = renameType(args[i], map);
+				if (newType != null) {
+					args[i] = newType;
+				}
+			}
+		}
+		
+		if (type instanceof NestedClassType) {
+			NestedClassType nestedType = (NestedClassType)type;
+			
+			// translate the name
+			String name = nestedType.getName();
+			String newName = map.get(getClassName(type));
+			if (newName != null) {
+				name = new ClassEntry(newName).getInnermostClassName();
+			}
+			
+			// translate the parent class too
+			ClassType parent = renameType(nestedType.getDeclaringClass(), map);
+			if (parent == null) {
+				parent = nestedType.getDeclaringClass();
+			}
+			
+			return new NestedClassType(parent, name, args);
+		} else {
+			
+			// translate the name
+			String name = Descriptor.toJvmName(type.getName());
+			String newName = map.get(name);
+			if (newName != null) {
+				name = Descriptor.toJavaName(newName);
+			}
+			
+			return new ClassType(name, args);
+		}
+	}
+
+	private static String getClassName(ClassType type) {
+		if (type instanceof NestedClassType) {
+			NestedClassType nestedType = (NestedClassType)type;
+			return getClassName(nestedType.getDeclaringClass()) + "$" + Descriptor.toJvmName(type.getName());
+		} else {
+			return Descriptor.toJvmName(type.getName());
+		}
+	}
+
+	private static TypeArgument renameType(TypeArgument type, ReplacerClassMap map) {
+		ObjectType subType = type.getType();
+		if (subType != null) {
+			ObjectType newSubType = renameType(subType, map);
+			if (newSubType != null) {
+				switch (type.getKind()) {
+					case ' ': return new TypeArgument(newSubType);
+					case '+': return TypeArgument.subclassOf(newSubType);
+					case '-': return TypeArgument.superOf(newSubType);
+					default:
+						throw new Error("Unknown type kind: " + type.getKind());
+				}
+			}
+		}
+		return null;
+	}
+
+	private static ArrayType renameType(ArrayType type, ReplacerClassMap map) {
+		Type newSubType = renameType(type.getComponentType(), map);
+		if (newSubType != null) {
+			return new ArrayType(type.getDimension(), newSubType);
+		}
+		return null;
+	}
+	
+	private static String getSignature(ObjectType type) {
+		if (type == null) {
+			return null;
+		}
+		return type.encode();
+	}
+	
+	private static String getSignature(ClassSignature type) {
+		if (type == null) {
+			return null;
+		}
+		return type.encode();
+	}
+	
+	private static String getSignature(MethodSignature type) {
+		if (type == null) {
+			return null;
+		}
+		return type.encode();
 	}
 }
