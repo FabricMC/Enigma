@@ -1,10 +1,8 @@
 package cuchaz.enigma.mapping;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Maps;
 
 public class Type implements Serializable {
@@ -85,43 +83,22 @@ public class Type implements Serializable {
 		
 		throw new IllegalArgumentException("don't know how to parse: " + in);
 	}
-		
+	
 	protected String m_name;
-	protected List<Type> m_parameters;
 	
 	public Type(String name) {
-		m_name = null;
-		m_parameters = Lists.newArrayList();
 		
-		int start = name.indexOf('<');
-		int stop = name.lastIndexOf('>');
-		if (start > 0 && stop > start) {
-			
-			// deal with generic parameters
-			m_name = name.substring(0, start) + name.substring(stop + 1);
-			
-			String parameters = name.substring(start + 1, stop);
-			int i=0;
-			while (i<parameters.length()) {
-				String typeName = Type.parseFirst(parameters.substring(i));
-				if (typeName == null) {
-					throw new Error("Don't know how to parse parameters: " + name);
-				}
-				m_parameters.add(new Type(typeName));
-				i += typeName.length();
-			}
-			
-		} else {
-			m_name = name;
+		// don't deal with generics
+		// this is just for raw jvm types
+		if (name.charAt(0) == 'T' || name.indexOf('<') >= 0 || name.indexOf('>') >= 0) {
+			throw new IllegalArgumentException("don't use with generic types or templates: " + name);
 		}
+		
+		m_name = name;
 	}
 	
 	public Type(Type other) {
 		m_name = other.m_name;
-		m_parameters = Lists.newArrayList();
-		for (Type parameter : other.m_parameters) {
-			m_parameters.add(new Type(parameter));
-		}
 	}
 	
 	public Type(ClassEntry classEntry) {
@@ -140,11 +117,6 @@ public class Type implements Serializable {
 			if (replacedName != null) {
 				m_name = Type.getArrayPrefix(other.getArrayDimension()) + "L" + replacedName + ";";
 			}
-		}
-		
-		m_parameters = Lists.newArrayList();
-		for (Type parameter : other.m_parameters) {
-			m_parameters.add(new Type(parameter, replacer));
 		}
 	}
 	
@@ -191,17 +163,6 @@ public class Type implements Serializable {
 		}
 	}
 	
-	public boolean isTemplate() {
-		return m_name.charAt(0) == 'T' && m_name.charAt(m_name.length() - 1) == ';';
-	}
-
-	public String getTemplate() {
-		if (!isTemplate()) {
-			throw new IllegalStateException("not an template");
-		}
-		return m_name.substring(1, m_name.length() - 1);
-	}
-	
 	public boolean isArray() {
 		return m_name.charAt(0) == '[';
 	}
@@ -230,14 +191,6 @@ public class Type implements Serializable {
 	
 	public boolean hasClass() {
 		return isClass() || (isArray() && getArrayType().hasClass());
-	}
-	
-	public boolean hasParameters() {
-		return !m_parameters.isEmpty();
-	}
-	
-	public Iterable<Type> parameters() {
-		return m_parameters;
 	}
 	
 	@Override

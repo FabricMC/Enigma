@@ -34,7 +34,6 @@ import javassist.bytecode.SignatureAttribute.MethodSignature;
 import javassist.bytecode.SignatureAttribute.ObjectType;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassNameReplacer;
-import cuchaz.enigma.mapping.ParameterizedType;
 import cuchaz.enigma.mapping.Translator;
 import cuchaz.enigma.mapping.Type;
 
@@ -103,8 +102,8 @@ public class ClassRenamer {
 		}
 		
 		public String getFramed(String typeName) {
-			ParameterizedType type = new ParameterizedType(new Type(typeName));
-			ParameterizedType renamedType = new ParameterizedType(type, m_replacer);
+			Type type = new Type(typeName);
+			Type renamedType = new Type(type, m_replacer);
 			if (!type.equals(renamedType)) {
 				return renamedType.toString();
 			}
@@ -115,6 +114,7 @@ public class ClassRenamer {
 			
 			// we can deal with the ones that start with a class
 			String signature = type.encode();
+			/*
 			if (signature.startsWith("L") || signature.startsWith("[")) {
 				
 				// TEMP: skip special characters for now
@@ -134,10 +134,11 @@ public class ClassRenamer {
 				// don't need to care about template names
 				return null;
 			} else {
+			*/
 				// TEMP
 				System.out.println("Skipping translating: " + signature);
 				return null;
-			}
+			//}
 		}
 	}
 	
