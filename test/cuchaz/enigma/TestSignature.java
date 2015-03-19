@@ -71,14 +71,6 @@ public class TestSignature {
 			));
 			assertThat(sig.getReturnType(), is(new Type("LBar;")));
 		}
-		{
-			final Signature sig = new Signature("(LFoo<LParm;>;LMoo<LParm;>;)LBar<LParm;>;");
-			assertThat(sig.getArgumentTypes(), contains(
-				new Type("LFoo<LParm;>;"),
-				new Type("LMoo<LParm;>;")
-			));
-			assertThat(sig.getReturnType(), is(new Type("LBar<LParm;>;")));
-		}
 	}
 	
 	@Test
