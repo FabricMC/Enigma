@@ -39,6 +39,7 @@ import javassist.bytecode.SignatureAttribute.NestedClassType;
 import javassist.bytecode.SignatureAttribute.ObjectType;
 import javassist.bytecode.SignatureAttribute.Type;
 import javassist.bytecode.SignatureAttribute.TypeArgument;
+import javassist.bytecode.SignatureAttribute.TypeParameter;
 import javassist.bytecode.SignatureAttribute.TypeVariable;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassNameReplacer;
@@ -164,9 +165,9 @@ public class ClassRenamer {
 		// rename the class name itself last
 		// NOTE: don't use the map here, because setName() calls the buggy SignatureAttribute.renameClass()
 		// we only want to replace exactly this class name
-		String newName = replacer.replace(Descriptor.toJvmName(c.getName()));
+		String newName = renameClassName(c.getName(), map);
 		if (newName != null) {
-			c.setName(Descriptor.toJavaName(newName));
+			c.setName(newName);
 		}
 		
 		// replace simple names in the InnerClasses attribute too
@@ -284,7 +285,11 @@ public class ClassRenamer {
 
 	private static String renameClassSignature(String signature, ReplacerClassMap map) {
 		try {
-			return getSignature(renameType(SignatureAttribute.toClassSignature(signature), map));
+			ClassSignature type = renameType(SignatureAttribute.toClassSignature(signature), map);
+			if (type != null) {
+				return type.encode();
+			}
+			return null;
 		} catch (BadBytecode ex) {
 			throw new Error("Can't parse field signature: " + signature);
 		}
@@ -292,7 +297,11 @@ public class ClassRenamer {
 	
 	private static String renameFieldSignature(String signature, ReplacerClassMap map) {
 		try {
-			return getSignature(renameType(SignatureAttribute.toFieldSignature(signature), map));
+			ObjectType type = renameType(SignatureAttribute.toFieldSignature(signature), map);
+			if (type != null) {
+				return type.encode();
+			}
+			return null;
 		} catch (BadBytecode ex) {
 			throw new Error("Can't parse class signature: " + signature);
 		}
@@ -300,7 +309,11 @@ public class ClassRenamer {
 	
 	private static String renameMethodSignature(String signature, ReplacerClassMap map) {
 		try {
-			return getSignature(renameType(SignatureAttribute.toMethodSignature(signature), map));
+			MethodSignature type = renameType(SignatureAttribute.toMethodSignature(signature), map);
+			if (type != null) {
+				return type.encode();
+			}
+			return null;
 		} catch (BadBytecode ex) {
 			throw new Error("Can't parse method signature: " + signature);
 		}
@@ -308,9 +321,17 @@ public class ClassRenamer {
 	
 	private static ClassSignature renameType(ClassSignature type, ReplacerClassMap map) {
 		
-		// NOTE: don't have to translate type parameters
+		TypeParameter[] typeParamTypes = type.getParameters();
+		if (typeParamTypes != null) {
+			typeParamTypes = Arrays.copyOf(typeParamTypes, typeParamTypes.length);
+			for (int i=0; i<typeParamTypes.length; i++) {
+				TypeParameter newParamType = renameType(typeParamTypes[i], map);
+				if (newParamType != null) {
+					typeParamTypes[i] = newParamType;
+				}
+			}
+		}
 		
-		// translate superclass
 		ClassType superclassType = type.getSuperClass();
 		if (superclassType != ClassType.OBJECT) {
 			ClassType newSuperclassType = renameType(superclassType, map);
@@ -319,7 +340,6 @@ public class ClassRenamer {
 			}
 		}
 		
-		// translate interfaces
 		ClassType[] interfaceTypes = type.getInterfaces();
 		if (interfaceTypes != null) {
 			interfaceTypes = Arrays.copyOf(interfaceTypes, interfaceTypes.length);
@@ -331,12 +351,21 @@ public class ClassRenamer {
 			}
 		}
 		
-		return new ClassSignature(type.getParameters(), superclassType, interfaceTypes);
+		return new ClassSignature(typeParamTypes, superclassType, interfaceTypes);
 	}
 	
 	private static MethodSignature renameType(MethodSignature type, ReplacerClassMap map) {
 		
-		// don't need to rename type params here either
+		TypeParameter[] typeParamTypes = type.getTypeParameters();
+		if (typeParamTypes != null) {
+			typeParamTypes = Arrays.copyOf(typeParamTypes, typeParamTypes.length);
+			for (int i=0; i<typeParamTypes.length; i++) {
+				TypeParameter newParamType = renameType(typeParamTypes[i], map);
+				if (newParamType != null) {
+					typeParamTypes[i] = newParamType;
+				}
+			}
+		}
 		
 		Type[] paramTypes = type.getParameterTypes();
 		if (paramTypes != null) {
@@ -368,7 +397,7 @@ public class ClassRenamer {
 			}
 		}
 		
-		return new MethodSignature(type.getTypeParameters(), paramTypes, returnType, exceptionTypes);
+		return new MethodSignature(typeParamTypes, paramTypes, returnType, exceptionTypes);
 	}
 
 	private static Type renameType(Type type, ReplacerClassMap map) {
@@ -437,10 +466,10 @@ public class ClassRenamer {
 		} else {
 			
 			// translate the name
-			String name = Descriptor.toJvmName(type.getName());
-			String newName = map.get(name);
+			String name = type.getName();
+			String newName = renameClassName(name, map);
 			if (newName != null) {
-				name = Descriptor.toJavaName(newName);
+				name = newName;
 			}
 			
 			return new ClassType(name, args);
@@ -454,6 +483,14 @@ public class ClassRenamer {
 		} else {
 			return Descriptor.toJvmName(type.getName());
 		}
+	}
+
+	private static String renameClassName(String name, ReplacerClassMap map) {
+		String newName = map.get(Descriptor.toJvmName(name));
+		if (newName != null) {
+			return Descriptor.toJavaName(newName);
+		}
+		return null;
 	}
 
 	private static TypeArgument renameType(TypeArgument type, ReplacerClassMap map) {
@@ -481,24 +518,27 @@ public class ClassRenamer {
 		return null;
 	}
 	
-	private static String getSignature(ObjectType type) {
-		if (type == null) {
-			return null;
+	private static TypeParameter renameType(TypeParameter type, ReplacerClassMap map) {
+		
+		ObjectType superclassType = type.getClassBound();
+		if (superclassType != null) {
+			ObjectType newSuperclassType = renameType(superclassType, map);
+			if (newSuperclassType != null) {
+				superclassType = newSuperclassType;
+			}
 		}
-		return type.encode();
-	}
-	
-	private static String getSignature(ClassSignature type) {
-		if (type == null) {
-			return null;
+		
+		ObjectType[] interfaceTypes = type.getInterfaceBound();
+		if (interfaceTypes != null) {
+			interfaceTypes = Arrays.copyOf(interfaceTypes, interfaceTypes.length);
+			for (int i=0; i<interfaceTypes.length; i++) {
+				ObjectType newInterfaceType = renameType(interfaceTypes[i], map);
+				if (newInterfaceType != null) {
+					interfaceTypes[i] = newInterfaceType;
+				}
+			}
 		}
-		return type.encode();
-	}
-	
-	private static String getSignature(MethodSignature type) {
-		if (type == null) {
-			return null;
-		}
-		return type.encode();
+		
+		return new TypeParameter(type.getName(), superclassType, interfaceTypes);
 	}
 }
