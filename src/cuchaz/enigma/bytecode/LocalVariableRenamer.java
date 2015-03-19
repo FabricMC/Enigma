@@ -6,9 +6,20 @@ import javassist.bytecode.ByteArray;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.LocalVariableAttribute;
+import javassist.bytecode.LocalVariableTypeAttribute;
+import cuchaz.enigma.mapping.ArgumentEntry;
+import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.EntryFactory;
+import cuchaz.enigma.mapping.Translator;
 
 
 public class LocalVariableRenamer {
+	
+	private Translator m_translator;
+	
+	public LocalVariableRenamer(Translator translator) {
+		m_translator = translator;
+	}
 
 	public void rename(CtClass c) {
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
@@ -18,18 +29,67 @@ public class LocalVariableRenamer {
 			if (codeAttribute == null) {
 				continue;
 			}
+			
+			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
+			ConstPool constants = c.getClassFile().getConstPool();
+			
 			LocalVariableAttribute table = (LocalVariableAttribute)codeAttribute.getAttribute(LocalVariableAttribute.tag);
-			if (table == null) {
-				continue;
+			if (table != null) {
+				renameTable(behaviorEntry, constants, table);
 			}
 			
-			ConstPool constants = c.getClassFile().getConstPool();
-			for (int i=0; i<table.tableLength(); i++) {
-				renameVariable(table, i, constants.addUtf8Info("v" + i));
+			LocalVariableTypeAttribute typeTable = (LocalVariableTypeAttribute)codeAttribute.getAttribute(LocalVariableAttribute.typeTag);
+			if (typeTable != null) {
+				renameTable(behaviorEntry, constants, typeTable);
 			}
 		}
 	}
 
+	// DEBUG
+	@SuppressWarnings("unused")
+	private void dumpTable(LocalVariableAttribute table) {
+		for (int i=0; i<table.tableLength(); i++) {
+			System.out.println(String.format("\t%d (%d): %s %s",
+				i, table.index(i), table.variableName(i), table.descriptor(i)
+			));
+		}
+	}
+
+	private void renameTable(BehaviorEntry behaviorEntry, ConstPool constants, LocalVariableAttribute table) {
+		
+		// skip empty tables
+		if (table.tableLength() <= 0) {
+			return;
+		}
+		
+		// where do we start counting variables?
+		int starti = 0;
+		if (table.variableName(0).equals("this")) {
+			// skip the "this" variable
+			starti = 1;
+		}
+		
+		// rename method arguments first
+		int numArgs = 0;
+		if (behaviorEntry.getSignature() != null) {
+			numArgs = behaviorEntry.getSignature().getArgumentTypes().size();
+			for (int i=starti; i<starti + numArgs && i<table.tableLength(); i++) {
+				int argi = i - starti;
+				String argName = m_translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
+				if (argName == null) {
+					argName = "a" + (argi + 1);
+				}
+				renameVariable(table, i, constants.addUtf8Info(argName));
+			}
+		}
+		
+		// then rename the rest of the args, if any
+		for (int i=starti + numArgs; i<table.tableLength(); i++) {
+			int firstIndex = table.index(starti + numArgs);
+			renameVariable(table, i, constants.addUtf8Info("v" + (table.index(i) - firstIndex + 1)));
+		}
+	}
+	
 	private void renameVariable(LocalVariableAttribute table, int i, int stringId) {
 		// based off of LocalVariableAttribute.nameIndex()
 		ByteArray.write16bit(stringId, table.get(), i*10 + 6);

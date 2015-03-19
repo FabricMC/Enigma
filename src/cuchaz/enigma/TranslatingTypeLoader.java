@@ -233,7 +233,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		// do all kinds of deobfuscating transformations on the class
 		new BridgeMarker(m_jarIndex).markBridges(c);
 		new MethodParameterWriter(m_deobfuscatingTranslator).writeMethodArguments(c);
-		new LocalVariableRenamer().rename(c);
+		new LocalVariableRenamer(m_deobfuscatingTranslator).rename(c);
 		new ClassTranslator(m_deobfuscatingTranslator).translate(c);
 		
 		return c;

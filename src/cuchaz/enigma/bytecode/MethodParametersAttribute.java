@@ -27,6 +27,7 @@ public class MethodParametersAttribute extends AttributeInfo {
 	}
 	
 	public static void updateClass(MethodInfo info, List<String> names) {
+		
 		// add the names to the class const pool
 		ConstPool constPool = info.getConstPool();
 		List<Integer> parameterNameIndices = new ArrayList<Integer>();
@@ -44,7 +45,7 @@ public class MethodParametersAttribute extends AttributeInfo {
 	
 	private static byte[] writeStruct(List<Integer> parameterNameIndices) {
 		// JVM 8 Spec says the struct looks like this:
-		// http://cr.openjdk.java.net/~mr/se/8/java-se-8-fr-spec-01/java-se-8-jvms-fr-diffs.pdf
+		// http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.24
 		// uint8 num_params
 		// for each param:
 		// uint16 name_index -> points to UTF8 entry in constant pool, or 0 for no entry

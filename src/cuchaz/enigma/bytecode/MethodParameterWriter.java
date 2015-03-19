@@ -15,6 +15,8 @@ import java.util.List;
 
 import javassist.CtBehavior;
 import javassist.CtClass;
+import javassist.bytecode.CodeAttribute;
+import javassist.bytecode.LocalVariableAttribute;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.EntryFactory;
@@ -33,6 +35,15 @@ public class MethodParameterWriter {
 		
 		// Procyon will read method arguments from the "MethodParameters" attribute, so write those
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
+			
+			// if there's a local variable table here, don't write a MethodParameters attribute
+			// let the local variable writer deal with it instead
+			// procyon starts doing really weird things if we give it both attributes
+			CodeAttribute codeAttribute = behavior.getMethodInfo().getCodeAttribute();
+			if (codeAttribute != null && codeAttribute.getAttribute(LocalVariableAttribute.tag) != null) {
+				continue;
+			}
+			
 			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
 
 			// get the number of arguments
@@ -53,6 +64,9 @@ public class MethodParameterWriter {
 			}
 			
 			// save the mappings to the class
+			for (String name : names) {
+				System.out.println("\t" + name);
+			}
 			MethodParametersAttribute.updateClass(behavior.getMethodInfo(), names);
 		}
 	}
