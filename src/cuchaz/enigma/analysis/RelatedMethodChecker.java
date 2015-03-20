@@ -3,7 +3,7 @@ package cuchaz.enigma.analysis;
 import java.util.Map;
 import java.util.Set;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import cuchaz.enigma.mapping.BehaviorEntry;

@@ -13,7 +13,7 @@ package cuchaz.enigma.mapping;
 import java.util.List;
 import java.util.Map;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import cuchaz.enigma.analysis.TranslationIndex;

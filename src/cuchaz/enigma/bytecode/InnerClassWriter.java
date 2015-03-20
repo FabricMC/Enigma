@@ -13,13 +13,12 @@ package cuchaz.enigma.bytecode;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
 import javassist.CtClass;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.EnclosingMethodAttribute;
 import javassist.bytecode.InnerClassesAttribute;
-
-import com.beust.jcommander.internal.Lists;
-
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;

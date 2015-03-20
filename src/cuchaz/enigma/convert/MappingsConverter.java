@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;

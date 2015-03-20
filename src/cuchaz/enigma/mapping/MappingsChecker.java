@@ -2,8 +2,8 @@ package cuchaz.enigma.mapping;
 
 import java.util.Map;
 
-import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.RelatedMethodChecker;

@@ -13,7 +13,7 @@ package cuchaz.enigma.mapping;
 import java.io.Serializable;
 import java.util.List;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 public class ClassEntry implements Entry, Serializable {
 	

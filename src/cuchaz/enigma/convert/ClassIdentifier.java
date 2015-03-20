@@ -3,10 +3,9 @@ package cuchaz.enigma.convert;
 import java.util.Map;
 import java.util.jar.JarFile;
 
+import com.google.common.collect.Maps;
+
 import javassist.CtClass;
-
-import com.beust.jcommander.internal.Maps;
-
 import cuchaz.enigma.TranslatingTypeLoader;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;

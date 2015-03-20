@@ -24,8 +24,8 @@ import javax.swing.JSplitPane;
 import javax.swing.WindowConstants;
 import javax.swing.text.Highlighter.HighlightPainter;
 
-import com.beust.jcommander.internal.Lists;
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
