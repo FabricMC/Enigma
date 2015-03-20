@@ -5,6 +5,7 @@ import sys
 # settings
 PathSsjb = "../ssjb"
 Author = "Cuchaz"
+Version = "0.10.2b"
 
 DirBin = "bin"
 DirLib = "lib"
@@ -18,8 +19,8 @@ import ssjb
 import ssjb.ivy
 
 
-ArtifactStandalone = ssjb.ivy.Dep("cuchaz:enigma:0.10.1b")
-ArtifactLib = ssjb.ivy.Dep("cuchaz:enigma-lib:0.10.1b")
+ArtifactStandalone = ssjb.ivy.Dep("cuchaz:enigma:%s" % Version)
+ArtifactLib = ssjb.ivy.Dep("cuchaz:enigma-lib:%s" % Version)
 
 # dependencies
 ExtraRepos = [
