@@ -64,9 +64,6 @@ public class MethodParameterWriter {
 			}
 			
 			// save the mappings to the class
-			for (String name : names) {
-				System.out.println("\t" + name);
-			}
 			MethodParametersAttribute.updateClass(behavior.getMethodInfo(), names);
 		}
 	}
