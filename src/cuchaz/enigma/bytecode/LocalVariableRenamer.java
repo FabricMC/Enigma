@@ -35,12 +35,12 @@ public class LocalVariableRenamer {
 			
 			LocalVariableAttribute table = (LocalVariableAttribute)codeAttribute.getAttribute(LocalVariableAttribute.tag);
 			if (table != null) {
-				renameTable(behaviorEntry, constants, table);
+				renameLVT(behaviorEntry, constants, table);
 			}
 			
 			LocalVariableTypeAttribute typeTable = (LocalVariableTypeAttribute)codeAttribute.getAttribute(LocalVariableAttribute.typeTag);
 			if (typeTable != null) {
-				renameTable(behaviorEntry, constants, typeTable);
+				renameLVTT(typeTable, table);
 			}
 		}
 	}
@@ -55,7 +55,7 @@ public class LocalVariableRenamer {
 		}
 	}
 
-	private void renameTable(BehaviorEntry behaviorEntry, ConstPool constants, LocalVariableAttribute table) {
+	private void renameLVT(BehaviorEntry behaviorEntry, ConstPool constants, LocalVariableAttribute table) {
 		
 		// skip empty tables
 		if (table.tableLength() <= 0) {
@@ -90,8 +90,24 @@ public class LocalVariableRenamer {
 		}
 	}
 	
+	private void renameLVTT(LocalVariableTypeAttribute typeTable, LocalVariableAttribute table) {
+		// rename args to the same names as in the LVT
+		for (int i=0; i<typeTable.tableLength(); i++) {
+			renameVariable(typeTable, i, getNameIndex(table, typeTable.index(i)));
+		}
+	}
+
 	private void renameVariable(LocalVariableAttribute table, int i, int stringId) {
 		// based off of LocalVariableAttribute.nameIndex()
 		ByteArray.write16bit(stringId, table.get(), i*10 + 6);
+	}
+	
+	private int getNameIndex(LocalVariableAttribute table, int index) {
+		for (int i=0; i<table.tableLength(); i++) {
+			if (table.index(i) == index) {
+				return table.nameIndex(i);
+			}
+		}
+		return 0;
 	}
 }
