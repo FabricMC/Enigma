@@ -16,6 +16,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.EnclosingMethodAttribute;
 import javassist.bytecode.SourceFileAttribute;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -112,6 +113,33 @@ public class ClassTranslator {
 				// translate the signature
 				Signature translatedSignature = m_translator.translateSignature(entry.getSignature());
 				behavior.getMethodInfo().setDescriptor(translatedSignature.toString());
+			}
+		}
+		
+		// translate the EnclosingMethod attribute
+		EnclosingMethodAttribute enclosingMethodAttr = (EnclosingMethodAttribute)c.getClassFile().getAttribute(EnclosingMethodAttribute.tag);
+		if (enclosingMethodAttr != null) {
+			
+			if (enclosingMethodAttr.methodIndex() == 0) {
+				BehaviorEntry obfBehaviorEntry = EntryFactory.getBehaviorEntry(Descriptor.toJvmName(enclosingMethodAttr.className()));
+				BehaviorEntry deobfBehaviorEntry = m_translator.translateEntry(obfBehaviorEntry);
+				c.getClassFile().addAttribute(new EnclosingMethodAttribute(
+					constants,
+					deobfBehaviorEntry.getClassName()
+				));
+			} else {
+				BehaviorEntry obfBehaviorEntry = EntryFactory.getBehaviorEntry(
+					Descriptor.toJvmName(enclosingMethodAttr.className()),
+					enclosingMethodAttr.methodName(),
+					enclosingMethodAttr.methodDescriptor()
+				);
+				BehaviorEntry deobfBehaviorEntry = m_translator.translateEntry(obfBehaviorEntry);
+				c.getClassFile().addAttribute(new EnclosingMethodAttribute(
+					constants,
+					deobfBehaviorEntry.getClassName(),
+					deobfBehaviorEntry.getName(),
+					deobfBehaviorEntry.getSignature().toString()
+				));
 			}
 		}
 		

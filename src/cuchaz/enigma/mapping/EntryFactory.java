@@ -156,6 +156,10 @@ public class EntryFactory {
 		return getBehaviorEntry(new ClassEntry(className), behaviorName);
 	}
 	
+	public static BehaviorEntry getBehaviorEntry(String className) {
+		return new ConstructorEntry(new ClassEntry(className));
+	}
+	
 	public static BehaviorEntry getBehaviorEntry(ClassEntry classEntry, String behaviorName, Signature behaviorSignature) {
 		if (behaviorName.equals("<init>")) {
 			return new ConstructorEntry(classEntry, behaviorSignature);
