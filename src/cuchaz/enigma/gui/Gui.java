@@ -839,7 +839,9 @@ public class Gui {
 	
 	private void showConstructorEntry(ConstructorEntry entry) {
 		addNameValue(m_infoPanel, "Constructor", entry.getClassEntry().getName());
-		addNameValue(m_infoPanel, "Signature", entry.getSignature().toString());
+		if (!entry.isStatic()) {
+			addNameValue(m_infoPanel, "Signature", entry.getSignature().toString());
+		}
 	}
 	
 	private void showArgumentEntry(ArgumentEntry entry) {
