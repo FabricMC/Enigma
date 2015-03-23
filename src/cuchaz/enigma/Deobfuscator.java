@@ -45,6 +45,7 @@ import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
+import cuchaz.enigma.bytecode.ClassProtectifier;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -345,6 +346,37 @@ public class Deobfuscator {
 					outJar.closeEntry();
 				} catch (Throwable t) {
 					throw new Error("Unable to deobfuscate class " + c.getName(), t);
+				}
+			}
+			if (progress != null) {
+				progress.onProgress(i, "Done!");
+			}
+			
+			outJar.close();
+		} catch (IOException ex) {
+			throw new Error("Unable to write to Jar file!");
+		}
+	}
+	
+	public void protectifyJar(File out, ProgressListener progress) {
+		try (JarOutputStream outJar = new JarOutputStream(new FileOutputStream(out))) {
+			if (progress != null) {
+				progress.init(JarClassIterator.getClassEntries(m_jar).size(), "Protectifying classes...");
+			}
+			
+			int i = 0;
+			for (CtClass c : JarClassIterator.classes(m_jar)) {
+				if (progress != null) {
+					progress.onProgress(i++, c.getName());
+				}
+				
+				try {
+					c = ClassProtectifier.protectify(c);
+					outJar.putNextEntry(new JarEntry(c.getName().replace('.', '/') + ".class"));
+					outJar.write(c.toBytecode());
+					outJar.closeEntry();
+				} catch (Throwable t) {
+					throw new Error("Unable to protectify class " + c.getName(), t);
 				}
 			}
 			if (progress != null) {

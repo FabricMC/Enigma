@@ -54,8 +54,10 @@ public class CommandMain {
 			String command = getArg(args, 0, "command", true);
 			if (command.equalsIgnoreCase("deobfuscate")) {
 				deobfuscate(args);
-			} else if(command.equalsIgnoreCase("decompile")) {
+			} else if (command.equalsIgnoreCase("decompile")) {
 				decompile(args);
+			} else if (command.equalsIgnoreCase("protectify")) {
+				protectify(args);
 			} else {
 				throw new IllegalArgumentException("Command not recognized: " + command);
 			}
@@ -72,6 +74,7 @@ public class CommandMain {
 		System.out.println("\twhere <command> is one of:");
 		System.out.println("\t\tdeobfuscate <in jar> <out jar> [<mappings file>]");
 		System.out.println("\t\tdecompile <in jar> <out folder> [<mappings file>]");
+		System.out.println("\t\tprotectify <in jar> <out jar>");
 	}
 	
 	private static void decompile(String[] args)
@@ -90,6 +93,14 @@ public class CommandMain {
 		File fileMappings = getReadableFile(getArg(args, 3, "mappings file", false));
 		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeJar(fileJarOut, new ConsoleProgressListener());
+	}
+	
+	private static void protectify(String[] args)
+	throws Exception {
+		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
+		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
+		Deobfuscator deobfuscator = getDeobfuscator(null, new JarFile(fileJarIn));
+		deobfuscator.protectifyJar(fileJarOut, new ConsoleProgressListener());
 	}
 	
 	private static Deobfuscator getDeobfuscator(File fileMappings, JarFile jar)
