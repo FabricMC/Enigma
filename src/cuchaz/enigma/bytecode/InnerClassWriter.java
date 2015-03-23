@@ -16,6 +16,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 import javassist.CtClass;
+import javassist.bytecode.AccessFlag;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.EnclosingMethodAttribute;
 import javassist.bytecode.InnerClassesAttribute;
@@ -33,6 +34,13 @@ public class InnerClassWriter {
 	}
 	
 	public void write(CtClass c) {
+		
+		// don't change anything if there's already an attribute there
+		InnerClassesAttribute oldAttr = (InnerClassesAttribute)c.getClassFile().getAttribute(InnerClassesAttribute.tag);
+		if (oldAttr != null) {
+			// bail!
+			return;
+		}
 		
 		ClassEntry obfClassEntry = EntryFactory.getClassEntry(c);
 		List<ClassEntry> obfClassChain = m_index.getObfClassChain(obfClassEntry);
@@ -102,7 +110,8 @@ public class InnerClassWriter {
 		int innerClassIndex = constPool.addClassInfo(obfInnerClassEntry.getName());
 		int parentClassIndex = constPool.addClassInfo(obfOuterClassEntry.getName());
 		int innerClassNameIndex = 0;
-		int accessFlags = 0;
+		int accessFlags = AccessFlag.PUBLIC;
+		// TODO: need to figure out if we can put static or not
 		if (!m_index.isAnonymousClass(obfClassEntry)) {
 			innerClassNameIndex = constPool.addUtf8Info(obfInnerClassEntry.getInnermostClassName());
 		}
