@@ -150,7 +150,7 @@ public class ClassTranslator {
 		// translate the source file attribute too
 		ClassEntry deobfClassEntry = m_translator.translateEntry(classEntry);
 		if (deobfClassEntry != null) {
-			String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassName()) + ".java";
+			String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassEntry().getSimpleName()) + ".java";
 			c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));
 		}
 	}
