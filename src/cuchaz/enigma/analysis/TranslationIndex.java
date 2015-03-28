@@ -84,6 +84,10 @@ public class TranslationIndex implements Serializable {
 	}
 	
 	public void indexClass(CtClass c) {
+		indexClass(c, true);
+	}
+	
+	public void indexClass(CtClass c, boolean indexMembers) {
 		
 		ClassEntry classEntry = EntryFactory.getClassEntry(c);
 		
@@ -93,16 +97,18 @@ public class TranslationIndex implements Serializable {
 			m_superclasses.put(classEntry, superclassEntry);
 		}
 		
-		// add fields
-		for (CtField field : c.getDeclaredFields()) {
-			FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
-			m_fieldEntries.put(fieldEntry.getClassEntry(), fieldEntry);
-		}
-		
-		// add behaviors
-		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
-			m_behaviorEntries.put(behaviorEntry.getClassEntry(), behaviorEntry);
+		if (indexMembers) {
+			// add fields
+			for (CtField field : c.getDeclaredFields()) {
+				FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
+				m_fieldEntries.put(fieldEntry.getClassEntry(), fieldEntry);
+			}
+			
+			// add behaviors
+			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
+				BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
+				m_behaviorEntries.put(behaviorEntry.getClassEntry(), behaviorEntry);
+			}
 		}
 	}
 	
