@@ -31,9 +31,9 @@ import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
-import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.MethodEntry;
+import cuchaz.enigma.mapping.ProcyonEntryFactory;
 import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Type;
 
@@ -113,7 +113,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
 		if (def.getMethod() instanceof MethodDefinition) {
 			MethodDefinition methodDef = (MethodDefinition)def.getMethod();
-			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(methodDef);
+			BehaviorEntry behaviorEntry = ProcyonEntryFactory.getBehaviorEntry(methodDef);
 			ArgumentEntry argumentEntry = new ArgumentEntry(behaviorEntry, def.getPosition(), node.getName());
 			index.addDeclaration(node.getNameToken(), argumentEntry);
 		}

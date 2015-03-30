@@ -11,9 +11,6 @@ import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
-import com.strobel.assembler.metadata.FieldDefinition;
-import com.strobel.assembler.metadata.MethodDefinition;
-
 import cuchaz.enigma.analysis.JarIndex;
 
 public class EntryFactory {
@@ -55,14 +52,6 @@ public class EntryFactory {
 		);
 	}
 	
-	public static FieldEntry getFieldEntry(FieldDefinition def) {
-		return new FieldEntry(
-			new ClassEntry(def.getDeclaringType().getInternalName()),
-			def.getName(),
-			new Type(def.getErasedSignature())
-		);
-	}
-	
 	public static FieldEntry getFieldEntry(String className, String name, String type) {
 		return new FieldEntry(new ClassEntry(className), name, new Type(type));
 	}
@@ -91,14 +80,6 @@ public class EntryFactory {
 		);
 	}
 	
-	public static MethodEntry getMethodEntry(MethodDefinition def) {
-		return new MethodEntry(
-			new ClassEntry(def.getDeclaringType().getInternalName()),
-			def.getName(),
-			new Signature(def.getErasedSignature())
-		);
-	}
-	
 	public static ConstructorEntry getConstructorEntry(CtConstructor constructor) {
 		if (constructor.isClassInitializer()) {
 			return new ConstructorEntry(
@@ -124,19 +105,6 @@ public class EntryFactory {
 			new ClassEntry(Descriptor.toJvmName(call.getClassName())),
 			new Signature(call.getSignature())
 		);
-	}
-	
-	public static ConstructorEntry getConstructorEntry(MethodDefinition def) {
-		if (def.isTypeInitializer()) {
-			return new ConstructorEntry(
-				new ClassEntry(def.getDeclaringType().getInternalName())
-			);
-		} else {
-			return new ConstructorEntry(
-				new ClassEntry(def.getDeclaringType().getInternalName()),
-				new Signature(def.getErasedSignature())
-			);
-		}
 	}
 	
 	public static BehaviorEntry getBehaviorEntry(CtBehavior behavior) {
@@ -175,14 +143,6 @@ public class EntryFactory {
 			return new ConstructorEntry(classEntry);
 		} else {
 			throw new IllegalArgumentException("Only class initializers don't have signatures");
-		}
-	}
-	
-	public static BehaviorEntry getBehaviorEntry(MethodDefinition def) {
-		if (def.isConstructor() || def.isTypeInitializer()) {
-			return getConstructorEntry(def);
-		} else {
-			return getMethodEntry(def);
 		}
 	}
 	

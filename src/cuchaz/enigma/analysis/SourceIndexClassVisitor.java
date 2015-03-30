@@ -28,8 +28,8 @@ import com.strobel.decompiler.languages.java.ast.VariableInitializer;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
-import cuchaz.enigma.mapping.EntryFactory;
 import cuchaz.enigma.mapping.FieldEntry;
+import cuchaz.enigma.mapping.ProcyonEntryFactory;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	
@@ -67,7 +67,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitMethodDeclaration(MethodDeclaration node, SourceIndex index) {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
-		BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(def);
+		BehaviorEntry behaviorEntry = ProcyonEntryFactory.getBehaviorEntry(def);
 		AstNode tokenNode = node.getNameToken();
 		
 		if (behaviorEntry instanceof ConstructorEntry) {
@@ -84,7 +84,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitConstructorDeclaration(ConstructorDeclaration node, SourceIndex index) {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
-		ConstructorEntry constructorEntry = EntryFactory.getConstructorEntry(def);
+		ConstructorEntry constructorEntry = ProcyonEntryFactory.getConstructorEntry(def);
 		index.addDeclaration(node.getNameToken(), constructorEntry);
 		return node.acceptVisitor(new SourceIndexBehaviorVisitor(constructorEntry), index);
 	}
@@ -92,7 +92,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitFieldDeclaration(FieldDeclaration node, SourceIndex index) {
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
-		FieldEntry fieldEntry = EntryFactory.getFieldEntry(def);
+		FieldEntry fieldEntry = ProcyonEntryFactory.getFieldEntry(def);
 		assert (node.getVariables().size() == 1);
 		VariableInitializer variable = node.getVariables().firstOrNullObject();
 		index.addDeclaration(variable.getNameToken(), fieldEntry);
@@ -104,7 +104,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	public Void visitEnumValueDeclaration(EnumValueDeclaration node, SourceIndex index) {
 		// treat enum declarations as field declarations
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
-		FieldEntry fieldEntry = EntryFactory.getFieldEntry(def);
+		FieldEntry fieldEntry = ProcyonEntryFactory.getFieldEntry(def);
 		index.addDeclaration(node.getNameToken(), fieldEntry);
 		
 		return recurse(node, index);
