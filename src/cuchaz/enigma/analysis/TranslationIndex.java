@@ -16,6 +16,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.zip.GZIPOutputStream;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtField;
+import javassist.bytecode.Descriptor;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -36,8 +38,8 @@ import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
-import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.EntryFactory;
+import cuchaz.enigma.mapping.FieldEntry;
 import cuchaz.enigma.mapping.Translator;
 
 public class TranslationIndex implements Serializable {
@@ -47,11 +49,13 @@ public class TranslationIndex implements Serializable {
 	private Map<ClassEntry,ClassEntry> m_superclasses;
 	private Multimap<ClassEntry,FieldEntry> m_fieldEntries;
 	private Multimap<ClassEntry,BehaviorEntry> m_behaviorEntries;
+	private Multimap<ClassEntry,ClassEntry> m_interfaces;
 	
 	public TranslationIndex() {
 		m_superclasses = Maps.newHashMap();
 		m_fieldEntries = HashMultimap.create();
 		m_behaviorEntries = HashMultimap.create();
+		m_interfaces = HashMultimap.create();
 	}
 	
 	public TranslationIndex(TranslationIndex other, Translator translator) {
@@ -60,6 +64,15 @@ public class TranslationIndex implements Serializable {
 		m_superclasses = Maps.newHashMap();
 		for (Map.Entry<ClassEntry,ClassEntry> mapEntry : other.m_superclasses.entrySet()) {
 			m_superclasses.put(
+				translator.translateEntry(mapEntry.getKey()),
+				translator.translateEntry(mapEntry.getValue())
+			);
+		}
+		
+		// translate the interfaces
+		m_interfaces = HashMultimap.create();
+		for (Map.Entry<ClassEntry,ClassEntry> mapEntry : other.m_interfaces.entries()) {
+			m_interfaces.put(
 				translator.translateEntry(mapEntry.getKey()),
 				translator.translateEntry(mapEntry.getValue())
 			);
@@ -90,11 +103,22 @@ public class TranslationIndex implements Serializable {
 	public void indexClass(CtClass c, boolean indexMembers) {
 		
 		ClassEntry classEntry = EntryFactory.getClassEntry(c);
+		if (isJre(classEntry)) {
+			return;
+		}
 		
 		// add the superclass
 		ClassEntry superclassEntry = EntryFactory.getSuperclassEntry(c);
-		if (!isJre(classEntry) && superclassEntry != null && !isJre(superclassEntry)) {
+		if (superclassEntry != null && !isJre(superclassEntry)) {
 			m_superclasses.put(classEntry, superclassEntry);
+		}
+		
+		// add the interfaces
+		for (String interfaceClassName : c.getClassFile().getInterfaces()) {
+			ClassEntry interfaceClassEntry = new ClassEntry(Descriptor.toJvmName(interfaceClassName));
+			if (!isJre(interfaceClassEntry)) {
+				m_interfaces.put(classEntry, interfaceClassEntry);
+			}
 		}
 		
 		if (indexMembers) {
@@ -134,6 +158,7 @@ public class TranslationIndex implements Serializable {
 	}
 	
 	public List<ClassEntry> getSubclass(ClassEntry classEntry) {
+		
 		// linear search is fast enough for now
 		List<ClassEntry> subclasses = Lists.newArrayList();
 		for (Map.Entry<ClassEntry,ClassEntry> entry : m_superclasses.entrySet()) {
@@ -158,6 +183,18 @@ public class TranslationIndex implements Serializable {
 			out.add(subclassEntry.getName());
 			getSubclassNamesRecursively(out, subclassEntry);
 		}
+	}
+	
+	public Collection<Map.Entry<ClassEntry,ClassEntry>> getClassInterfaces() {
+		return m_interfaces.entries();
+	}
+	
+	public Collection<ClassEntry> getInterfaces(ClassEntry classEntry) {
+		return m_interfaces.get(classEntry);
+	}
+	
+	public boolean isInterface(ClassEntry classEntry) {
+		return m_interfaces.containsValue(classEntry);
 	}
 	
 	public boolean entryExists(Entry entry) {
@@ -185,6 +222,21 @@ public class TranslationIndex implements Serializable {
 			return (ClassEntry)entry;
 		}
 		
+		ClassEntry superclassEntry = resolveSuperclass(entry);
+		if (superclassEntry != null) {
+			return superclassEntry;
+		}
+		
+		ClassEntry interfaceEntry = resolveInterface(entry);
+		if (interfaceEntry != null) {
+			return interfaceEntry;
+		}
+		
+		return null;
+	}
+	
+	public ClassEntry resolveSuperclass(Entry entry) {
+		
 		// this entry could refer to a method on a class where the method is not actually implemented
 		// travel up the inheritance tree to find the closest implementation
 		while (!entryExists(entry)) {
@@ -201,6 +253,19 @@ public class TranslationIndex implements Serializable {
 			entry = entry.cloneToNewClass(superclassEntry);
 		}
 		return entry.getClassEntry();
+	}
+	
+	public ClassEntry resolveInterface(Entry entry) {
+		
+		// the interfaces for any class is a forest
+		// so let's look at all the trees
+		for (ClassEntry interfaceEntry : m_interfaces.get(entry.getClassEntry())) {
+			ClassEntry resolvedClassEntry = resolveSuperclass(entry.cloneToNewClass(interfaceEntry));
+			if (resolvedClassEntry != null) {
+				return resolvedClassEntry;
+			}
+		}
+		return null;
 	}
 	
 	private boolean isJre(ClassEntry classEntry) {

@@ -59,7 +59,6 @@ public class JarIndex {
 	
 	private Set<ClassEntry> m_obfClassEntries;
 	private TranslationIndex m_translationIndex;
-	private Multimap<String,String> m_interfaces;
 	private Map<Entry,Access> m_access;
 	private Multimap<ClassEntry,FieldEntry> m_fields;
 	private Multimap<ClassEntry,BehaviorEntry> m_behaviors;
@@ -74,7 +73,6 @@ public class JarIndex {
 	public JarIndex() {
 		m_obfClassEntries = Sets.newHashSet();
 		m_translationIndex = new TranslationIndex();
-		m_interfaces = HashMultimap.create();
 		m_access = Maps.newHashMap();
 		m_fields = HashMultimap.create();
 		m_behaviors = HashMultimap.create();
@@ -124,7 +122,6 @@ public class JarIndex {
 				if (className.equals(interfaceName)) {
 					throw new IllegalArgumentException("Class cannot be its own interface! " + className);
 				}
-				m_interfaces.put(className, interfaceName);
 			}
 			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 				indexBehavior(behavior);
@@ -176,7 +173,6 @@ public class JarIndex {
 			}
 			EntryRenamer.renameClassesInSet(renames, m_obfClassEntries);
 			m_translationIndex.renameClasses(renames);
-			EntryRenamer.renameClassesInMultimap(renames, m_interfaces);
 			EntryRenamer.renameClassesInMultimap(renames, m_methodImplementations);
 			EntryRenamer.renameClassesInMultimap(renames, m_behaviorReferences);
 			EntryRenamer.renameClassesInMultimap(renames, m_fieldReferences);
@@ -637,11 +633,11 @@ public class JarIndex {
 			interfaceMethodEntries.add(obfMethodEntry);
 		} else {
 			// get the interface class
-			for (String interfaceName : getInterfaces(obfMethodEntry.getClassName())) {
+			for (ClassEntry interfaceEntry : getInterfaces(obfMethodEntry.getClassName())) {
 				
 				// is this method defined in this interface?
 				MethodEntry methodInterface = new MethodEntry(
-					new ClassEntry(interfaceName),
+					interfaceEntry,
 					obfMethodEntry.getName(),
 					obfMethodEntry.getSignature()
 				);
@@ -745,31 +741,33 @@ public class JarIndex {
 		return m_anonymousClasses.get(obfInnerClassName);
 	}
 	
-	public Set<String> getInterfaces(String className) {
-		Set<String> interfaceNames = new HashSet<String>();
-		interfaceNames.addAll(m_interfaces.get(className));
-		for (ClassEntry ancestor : m_translationIndex.getAncestry(new ClassEntry(className))) {
-			interfaceNames.addAll(m_interfaces.get(ancestor.getName()));
+	public Set<ClassEntry> getInterfaces(String className) {
+		ClassEntry classEntry = new ClassEntry(className);
+		Set<ClassEntry> interfaces = new HashSet<ClassEntry>();
+		interfaces.addAll(m_translationIndex.getInterfaces(classEntry));
+		for (ClassEntry ancestor : m_translationIndex.getAncestry(classEntry)) {
+			interfaces.addAll(m_translationIndex.getInterfaces(ancestor));
 		}
-		return interfaceNames;
+		return interfaces;
 	}
 	
 	public Set<String> getImplementingClasses(String targetInterfaceName) {
+		
 		// linear search is fast enough for now
 		Set<String> classNames = Sets.newHashSet();
-		for (Map.Entry<String,String> entry : m_interfaces.entries()) {
-			String className = entry.getKey();
-			String interfaceName = entry.getValue();
-			if (interfaceName.equals(targetInterfaceName)) {
-				classNames.add(className);
-				m_translationIndex.getSubclassNamesRecursively(classNames, new ClassEntry(className));
+		for (Map.Entry<ClassEntry,ClassEntry> entry : m_translationIndex.getClassInterfaces()) {
+			ClassEntry classEntry = entry.getKey();
+			ClassEntry interfaceEntry = entry.getValue();
+			if (interfaceEntry.getName().equals(targetInterfaceName)) {
+				classNames.add(classEntry.getClassName());
+				m_translationIndex.getSubclassNamesRecursively(classNames, classEntry);
 			}
 		}
 		return classNames;
 	}
 	
 	public boolean isInterface(String className) {
-		return m_interfaces.containsValue(className);
+		return m_translationIndex.isInterface(new ClassEntry(className));
 	}
 	
 	public boolean containsObfClass(ClassEntry obfClassEntry) {
