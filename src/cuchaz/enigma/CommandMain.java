@@ -58,6 +58,8 @@ public class CommandMain {
 				decompile(args);
 			} else if (command.equalsIgnoreCase("protectify")) {
 				protectify(args);
+			} else if (command.equalsIgnoreCase("publify")) {
+				publify(args);
 			} else {
 				throw new IllegalArgumentException("Command not recognized: " + command);
 			}
@@ -101,6 +103,14 @@ public class CommandMain {
 		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
 		Deobfuscator deobfuscator = getDeobfuscator(null, new JarFile(fileJarIn));
 		deobfuscator.protectifyJar(fileJarOut, new ConsoleProgressListener());
+	}
+	
+	private static void publify(String[] args)
+	throws Exception {
+		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
+		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
+		Deobfuscator deobfuscator = getDeobfuscator(null, new JarFile(fileJarIn));
+		deobfuscator.publifyJar(fileJarOut, new ConsoleProgressListener());
 	}
 	
 	private static Deobfuscator getDeobfuscator(File fileMappings, JarFile jar)

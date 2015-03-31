@@ -46,6 +46,7 @@ import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.SourceIndexVisitor;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.bytecode.ClassProtectifier;
+import cuchaz.enigma.bytecode.ClassPublifier;
 import cuchaz.enigma.mapping.ArgumentEntry;
 import cuchaz.enigma.mapping.BehaviorEntry;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -321,48 +322,48 @@ public class Deobfuscator {
 	}
 	
 	public void writeJar(File out, ProgressListener progress) {
-		try (JarOutputStream outJar = new JarOutputStream(new FileOutputStream(out))) {
-			if (progress != null) {
-				progress.init(JarClassIterator.getClassEntries(m_jar).size(), "Translating classes...");
+		final TranslatingTypeLoader loader = new TranslatingTypeLoader(
+			m_jar,
+			m_jarIndex,
+			getTranslator(TranslationDirection.Obfuscating),
+			getTranslator(TranslationDirection.Deobfuscating)
+		);
+		transformJar(out, progress, new ClassTransformer() {
+
+			@Override
+			public CtClass transform(CtClass c) throws Exception {
+				return loader.transformClass(c);
 			}
-			
-			// prep the loader
-			TranslatingTypeLoader loader = new TranslatingTypeLoader(
-				m_jar,
-				m_jarIndex,
-				getTranslator(TranslationDirection.Obfuscating),
-				getTranslator(TranslationDirection.Deobfuscating)
-			);
-			
-			int i = 0;
-			for (CtClass c : JarClassIterator.classes(m_jar)) {
-				if (progress != null) {
-					progress.onProgress(i++, c.getName());
-				}
-				
-				try {
-					c = loader.transformClass(c);
-					outJar.putNextEntry(new JarEntry(c.getName().replace('.', '/') + ".class"));
-					outJar.write(c.toBytecode());
-					outJar.closeEntry();
-				} catch (Throwable t) {
-					throw new Error("Unable to deobfuscate class " + c.getName(), t);
-				}
-			}
-			if (progress != null) {
-				progress.onProgress(i, "Done!");
-			}
-			
-			outJar.close();
-		} catch (IOException ex) {
-			throw new Error("Unable to write to Jar file!");
-		}
+		});
 	}
 	
 	public void protectifyJar(File out, ProgressListener progress) {
+		transformJar(out, progress, new ClassTransformer() {
+
+			@Override
+			public CtClass transform(CtClass c) throws Exception {
+				return ClassProtectifier.protectify(c);
+			}
+		});
+	}
+	
+	public void publifyJar(File out, ProgressListener progress) {
+		transformJar(out, progress, new ClassTransformer() {
+
+			@Override
+			public CtClass transform(CtClass c) throws Exception {
+				return ClassPublifier.publify(c);
+			}
+		});
+	}
+	
+	private interface ClassTransformer {
+		public CtClass transform(CtClass c) throws Exception;
+	}
+	private void transformJar(File out, ProgressListener progress, ClassTransformer transformer) {
 		try (JarOutputStream outJar = new JarOutputStream(new FileOutputStream(out))) {
 			if (progress != null) {
-				progress.init(JarClassIterator.getClassEntries(m_jar).size(), "Protectifying classes...");
+				progress.init(JarClassIterator.getClassEntries(m_jar).size(), "Transforming classes...");
 			}
 			
 			int i = 0;
@@ -372,12 +373,12 @@ public class Deobfuscator {
 				}
 				
 				try {
-					c = ClassProtectifier.protectify(c);
+					c = transformer.transform(c);
 					outJar.putNextEntry(new JarEntry(c.getName().replace('.', '/') + ".class"));
 					outJar.write(c.toBytecode());
 					outJar.closeEntry();
 				} catch (Throwable t) {
-					throw new Error("Unable to protectify class " + c.getName(), t);
+					throw new Error("Unable to transform class " + c.getName(), t);
 				}
 			}
 			if (progress != null) {
