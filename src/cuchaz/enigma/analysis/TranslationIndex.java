@@ -109,7 +109,7 @@ public class TranslationIndex implements Serializable {
 		
 		// add the superclass
 		ClassEntry superclassEntry = EntryFactory.getSuperclassEntry(c);
-		if (superclassEntry != null && !isJre(superclassEntry)) {
+		if (superclassEntry != null) {
 			m_superclasses.put(classEntry, superclassEntry);
 		}
 		
