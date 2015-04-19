@@ -68,7 +68,7 @@ def buildDeobfTestJar(outPath, inPath):
 
 def applyReadme(dirTemp):
 	ssjb.file.copy(dirTemp, "license.APL2.txt")
-	ssjb.file.copy(dirTemp, "license.GPL3.txt")
+	ssjb.file.copy(dirTemp, "license.LGPL3.txt")
 	ssjb.file.copy(dirTemp, "readme.txt")
 
 def buildStandaloneJar(dirOut):
