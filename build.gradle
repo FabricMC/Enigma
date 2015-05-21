@@ -1,0 +1,176 @@
+// Do it this way so people with older Gradle can hopefully still build.
+buildscript {
+	repositories { jcenter() }
+
+	dependencies {
+		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.1'
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'maven'
+
+group = 'cuchaz'
+version = '0.10.4b'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+// Custom source layout
+sourceSets {
+	main {
+		java { srcDir 'src' }
+		resources { srcDir 'conf' }
+	}
+	test {
+		java { srcDir 'test' }
+		resources { srcDir 'test' }
+	}
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+
+	maven {
+		name "Cuchaz Custom Repository"
+		url 'http://maven.cuchazinteractive.com'
+	}
+}
+
+configurations {
+	proGuard // used to download ProGuard
+	application // used for JSyntaxPane so it's not in the library POM
+	
+	compile.extendsFrom application
+}
+
+dependencies {
+	compile 'com.google.guava:guava:17.+'
+	compile 'org.javassist:javassist:3.+'
+	compile 'org.bitbucket.mstrobel:procyon-decompiler:0.5.28-enigma'
+	application 'de.sciss:syntaxpane:1.1.+'
+	
+	testCompile 'junit:junit:4.+'
+	testCompile 'org.hamcrest:hamcrest-all:1.+'
+	
+	proGuard 'net.sf.proguard:proguard-base:5.+'
+}
+
+// For each set of test inputs, create an output jar and obfuscate it.
+file('test/cuchaz/enigma/inputs').listFiles().each {theFile ->
+	if (theFile.directory) {
+		task("${theFile.name}TestJar", type: Jar, dependsOn: testClasses) {
+			from ('build/classes/test') {
+				include 'cuchaz/enigma/inputs/$theFile.name/**/*.class'
+				include 'cuchaz/enigma/inputs/Keep.class'
+			}
+			
+			archiveName = theFile.name + '.jar'
+			destinationDir = file('build/test-inputs')
+		}
+		
+		task ("${theFile.name}TestObf", type: JavaExec,
+				dependsOn: "${theFile.name}TestJar") {
+			main 'proguard.ProGuard'
+			classpath configurations.proGuard
+			
+			args '@proguard-test.conf', '-injars', file('build/test-inputs/' +
+					"${theFile.name}.jar"), '-outjars', file('build/test-obf/' +
+							"${theFile.name}.jar")
+		}
+		
+		test.dependsOn "${theFile.name}TestObf"
+	}
+}
+
+// We also semi-deobfuscate translation.jar to then test it... yeah... oh well.
+task ('deobfTranslationInput', type: JavaExec, dependsOn: 'translationTestObf')
+{
+	classpath sourceSets.main.runtimeClasspath
+	main 'cuchaz.enigma.CommandMain'
+	args 'deobfuscate', file('build/test-obf/translation.jar'),
+			file('build/test-deobf/translation.jar')
+}
+test.dependsOn 'deobfTranslationInput'
+
+test {
+	// Since the Minecraft test is really long (like 10 minutes D:) we turn it
+	// off by default.
+	if (!System.getProperty('enableExtremelySlowMinecraftTest', '')
+			.equalsIgnoreCase('true')) {
+		exclude 'cuchaz/enigma/TestSourceIndex.class'
+	}
+
+	// Allow people to specify a custom path to their Minecraft directory.
+	// (Example: `gradle build -Denigma.test.minecraftdir=./`)
+	systemProperties = [
+		'enigma.test.minecraftdir': System.getProperty('test.minecraftdir')
+	]
+}
+
+// Set the main class.
+jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.Main'
+
+// Make the "fat" application jar. This is useful to just throw in a classpath
+// for tests, though it includes some slightly useless stuff.
+shadowJar {
+	append 'license.LGPL3.txt'
+	append 'license.APL2.txt'
+	append 'readme.txt'
+	
+	exclude 'META-INF/maven/**'
+}
+
+// Now make the deployable application jar with extra classes stripped out using
+// ProGuard (don't use JavaExec because we want to redirect output to a file).
+task('thinJar', dependsOn: shadowJar) << {
+	javaexec {
+		main 'proguard.ProGuard'
+		classpath configurations.proGuard
+		
+		args '@proguard-build.conf', '-injars', shadowJar.archivePath,
+				// well this works...
+				'-outjars', file("build/libs/$project.name-${version}-thin.jar")
+		
+		// Cut down on console spam
+		standardOutput new File(buildDir, 'proguard.log').newOutputStream();
+	}
+	println 'Saved ProGuard output to build/proguard.log'
+}
+
+// Create a library jar, containing only the deobfuscation code, for use at
+// runtime. This will be deployed to Maven Local with a POM, and can be uploaded
+// to a remote server manually (for now anyway).
+task('libJar', type: Jar, dependsOn: classes) {
+	baseName = 'enigma-lib'
+	
+	from("$buildDir/classes/main") {
+		exclude 'cuchaz/enigma/gui/**'
+		exclude 'cuchaz/enigma/convert/**'
+		
+		// Main classes + inner classes (keep CommandMain)
+		exclude 'cuchaz/enigma/Main.class'
+		exclude 'cuchaz/enigma/Main.class'
+		exclude 'cuchaz/enigma/ConvertMain*.class'
+	}
+}
+artifacts.archives libJar { name 'enigma-lib' }
+
+// Here we need a bit of hackery to remove the default Maven deployment and just
+// deploy enigma-lib. Works, but not ideal :(
+configurations.archives {	
+	artifacts.iterator().with {
+		while(it.hasNext()) {
+			if (it.next().name == 'enigma') {
+				it.remove()
+			}
+		}
+	}
+}
+
+// And finally, make the build generate / install the jars.
+assemble.dependsOn thinJar
+build.dependsOn install

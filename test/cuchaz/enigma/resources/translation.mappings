@@ -1,0 +1,41 @@
+CLASS none/a deobf/A_Basic
+	FIELD a f1 I
+	FIELD a f2 F
+	FIELD a f3 Ljava/lang/String;
+	METHOD a m1 ()V
+	METHOD a m2 ()I
+	METHOD a m3 (I)V
+	METHOD a m4 (I)I
+CLASS none/b deobf/B_BaseClass
+	FIELD a f1 I
+	FIELD a f2 C
+	METHOD a m1 ()I
+	METHOD b m2 ()I
+CLASS none/c deobf/C_SubClass
+	FIELD b f2 C
+	FIELD b f3 I
+	FIELD c f4 I
+	METHOD a m1 ()I
+	METHOD c m3 ()I
+CLASS none/g deobf/G_OuterClass
+	CLASS none/g$a A_InnerClass
+		CLASS none/g$a$a A_InnerInnerClass
+			FIELD a f3 I
+			METHOD a m2 ()V
+		FIELD a f1 I
+		FIELD a f2 Ljava/lang/String;
+		METHOD a m1 ()V
+	CLASS none/g$b
+		CLASS none/g$b$a A_NamedInnerClass
+			FIELD a f4 I
+CLASS none/h
+CLASS none/i deobf/I_Generics
+	CLASS none/i$a A_Type
+	CLASS none/i$b B_Generic
+		FIELD a f4 Ljava/lang/Object;
+		METHOD a m1 ()Ljava/lang/Object;
+	FIELD a f1 Ljava/util/List;
+	FIELD b f2 Ljava/util/List;
+	FIELD a f3 Ljava/util/Map;
+	FIELD a f5 Lnone/i$b;
+	FIELD b f6 Lnone/i$b;
