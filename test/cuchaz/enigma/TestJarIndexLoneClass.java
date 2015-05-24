@@ -52,10 +52,10 @@ public class TestJarIndexLoneClass {
 	
 	@Test
 	public void translationIndex() {
-		assertThat(m_index.getTranslationIndex().getSuperclass(new ClassEntry("none/a")), is(nullValue()));
-		assertThat(m_index.getTranslationIndex().getSuperclass(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(nullValue()));
-		assertThat(m_index.getTranslationIndex().getAncestry(new ClassEntry("none/a")), is(empty()));
-		assertThat(m_index.getTranslationIndex().getAncestry(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(empty()));
+		assertThat(m_index.getTranslationIndex().getSuperclass(new ClassEntry("none/a")), is(new ClassEntry("java/lang/Object")));
+		assertThat(m_index.getTranslationIndex().getSuperclass(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(new ClassEntry("java/lang/Object")));
+		assertThat(m_index.getTranslationIndex().getAncestry(new ClassEntry("none/a")), contains(new ClassEntry("java/lang/Object")));
+		assertThat(m_index.getTranslationIndex().getAncestry(new ClassEntry("cuchaz/enigma/inputs/Keep")), contains(new ClassEntry("java/lang/Object")));
 		assertThat(m_index.getTranslationIndex().getSubclass(new ClassEntry("none/a")), is(empty()));
 		assertThat(m_index.getTranslationIndex().getSubclass(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(empty()));
 	}
@@ -152,7 +152,7 @@ public class TestJarIndexLoneClass {
 	}
 	
 	@Test
-	public void contains() {
+	public void testContains() {
 		assertThat(m_index.containsObfClass(newClass("none/a")), is(true));
 		assertThat(m_index.containsObfClass(newClass("none/b")), is(false));
 		assertThat(m_index.containsObfField(newField("none/a", "a", "Ljava/lang/String;")), is(true));
