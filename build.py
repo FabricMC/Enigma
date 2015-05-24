@@ -44,6 +44,8 @@ TestDeps = [
 
 def buildTestJar(name, glob):
 
+	ssjb.file.mkdir(os.path.join(DirBuild, "test-inputs"))
+	ssjb.file.mkdir(os.path.join(DirBuild, "test-obf"))
 	pathJar = os.path.join(DirBuild, "test-inputs/%s.jar" % name)
 	pathObfJar = os.path.join(DirBuild, "test-obf/%s.jar" % name)
 
@@ -85,9 +87,19 @@ def buildStandaloneJar(dirOut):
 			Author,
 			"cuchaz.enigma.Main"
 		)
-		pathJar = os.path.join(DirBuild, "%s.jar" % ArtifactStandalone.getName()) 
-		ssjb.jar.makeJar(pathJar, dirTemp, manifest=manifest)
-		ssjb.ivy.deployJarToLocalMavenRepo(PathLocalMavenRepo, pathJar, ArtifactStandalone)
+		pathFatJar = os.path.join(DirBuild, "%s-fat.jar" % ArtifactStandalone.getName()) 
+		ssjb.jar.makeJar(pathFatJar, dirTemp, manifest=manifest)
+
+		# proguard the jar (without obfuscating) to remove some bloat
+		# the guava library is particularly bad...
+		pathDietJar = os.path.join(DirBuild, "%s.jar" % ArtifactStandalone.getName())
+		ssjb.callJavaJar(
+			os.path.join(DirLib, "proguard.jar"),
+			["@proguard-build.conf", "-injars", pathFatJar, "-outjars", pathDietJar]
+		)
+
+		ssjb.ivy.deployJarToLocalMavenRepo(PathLocalMavenRepo, pathDietJar, ArtifactStandalone)
+
 
 def buildLibJar(dirOut):
 	with ssjb.file.TempDir(os.path.join(dirOut, "tmp")) as dirTemp:
