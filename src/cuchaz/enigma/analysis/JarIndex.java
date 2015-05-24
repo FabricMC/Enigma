@@ -567,7 +567,9 @@ public class JarIndex {
 		List<String> ancestry = Lists.newArrayList();
 		ancestry.add(obfClassEntry.getName());
 		for (ClassEntry classEntry : m_translationIndex.getAncestry(obfClassEntry)) {
-			ancestry.add(classEntry.getName());
+			if (containsObfClass(classEntry)) {
+				ancestry.add(classEntry.getName());
+			}
 		}
 		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode(
 			deobfuscatingTranslator,

@@ -10,9 +10,19 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
-import static cuchaz.enigma.TestEntryFactory.*;
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
+import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByConstructor;
+import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByMethod;
+import static cuchaz.enigma.TestEntryFactory.newClass;
+import static cuchaz.enigma.TestEntryFactory.newConstructor;
+import static cuchaz.enigma.TestEntryFactory.newField;
+import static cuchaz.enigma.TestEntryFactory.newFieldReferenceByConstructor;
+import static cuchaz.enigma.TestEntryFactory.newFieldReferenceByMethod;
+import static cuchaz.enigma.TestEntryFactory.newMethod;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
 
 import java.util.Collection;
 import java.util.Set;
@@ -33,6 +43,7 @@ public class TestJarIndexInheritanceTree {
 	
 	private JarIndex m_index;
 	
+	private ClassEntry m_objectClass = newClass("java/lang/Object");
 	private ClassEntry m_baseClass = newClass("none/a");
 	private ClassEntry m_subClassA = newClass("none/b");
 	private ClassEntry m_subClassAA = newClass("none/d");
@@ -63,8 +74,8 @@ public class TestJarIndexInheritanceTree {
 		TranslationIndex index = m_index.getTranslationIndex();
 		
 		// base class
-		assertThat(index.getSuperclass(m_baseClass), is(nullValue()));
-		assertThat(index.getAncestry(m_baseClass), is(empty()));
+		assertThat(index.getSuperclass(m_baseClass), is(m_objectClass));
+		assertThat(index.getAncestry(m_baseClass), contains(m_objectClass));
 		assertThat(index.getSubclass(m_baseClass), containsInAnyOrder(
 			m_subClassA,
 			m_subClassB
@@ -72,17 +83,17 @@ public class TestJarIndexInheritanceTree {
 		
 		// subclass a
 		assertThat(index.getSuperclass(m_subClassA), is(m_baseClass));
-		assertThat(index.getAncestry(m_subClassA), contains(m_baseClass));
+		assertThat(index.getAncestry(m_subClassA), contains(m_baseClass, m_objectClass));
 		assertThat(index.getSubclass(m_subClassA), contains(m_subClassAA));
 		
 		// subclass aa
 		assertThat(index.getSuperclass(m_subClassAA), is(m_subClassA));
-		assertThat(index.getAncestry(m_subClassAA), contains(m_subClassA, m_baseClass));
+		assertThat(index.getAncestry(m_subClassAA), contains(m_subClassA, m_baseClass, m_objectClass));
 		assertThat(index.getSubclass(m_subClassAA), is(empty()));
 		
 		// subclass b
 		assertThat(index.getSuperclass(m_subClassB), is(m_baseClass));
-		assertThat(index.getAncestry(m_subClassB), contains(m_baseClass));
+		assertThat(index.getAncestry(m_subClassB), contains(m_baseClass, m_objectClass));
 		assertThat(index.getSubclass(m_subClassB), is(empty()));
 	}
 	
