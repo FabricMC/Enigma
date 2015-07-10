@@ -64,7 +64,7 @@ file('test/cuchaz/enigma/inputs').listFiles().each {theFile ->
 	if (theFile.directory) {
 		task("${theFile.name}TestJar", type: Jar, dependsOn: testClasses) {
 			from ('build/classes/test') {
-				include 'cuchaz/enigma/inputs/$theFile.name/**/*.class'
+				include "cuchaz/enigma/inputs/$theFile.name/**/*.class"
 				include 'cuchaz/enigma/inputs/Keep.class'
 			}
 			
