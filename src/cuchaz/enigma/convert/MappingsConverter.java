@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
@@ -208,33 +209,58 @@ public class MappingsConverter {
 		}
 		
 		// migrate fields
-		for (FieldMapping fieldMapping : oldClassMapping.fields()) {
-			if (canMigrate(fieldMapping.getObfType(), replacer)) {
-				newClassMapping.addFieldMapping(new FieldMapping(fieldMapping, replacer));
+		for (FieldMapping oldFieldMapping : oldClassMapping.fields()) {
+			if (canMigrate(oldFieldMapping.getObfType(), matches)) {
+				newClassMapping.addFieldMapping(new FieldMapping(oldFieldMapping, replacer));
+			} else {
+				System.out.println(String.format("Can't map field, dropping: %s.%s %s",
+					oldClassMapping.getDeobfName(),
+					oldFieldMapping.getDeobfName(),
+					oldFieldMapping.getObfType()
+				));
 			}
 		}
 		
 		// migrate methods
 		for (MethodMapping oldMethodMapping : oldClassMapping.methods()) {
-			if (canMigrate(oldMethodMapping.getObfSignature(), replacer)) {
+			if (canMigrate(oldMethodMapping.getObfSignature(), matches)) {
 				newClassMapping.addMethodMapping(new MethodMapping(oldMethodMapping, replacer));
+			} else {
+				System.out.println(String.format("Can't map method, dropping: %s.%s %s",
+					oldClassMapping.getDeobfName(),
+					oldMethodMapping.getDeobfName(),
+					oldMethodMapping.getObfSignature()
+				));
 			}
 		}
 		
 		return newClassMapping;
 	}
 	
-	private static boolean canMigrate(Signature obfSignature, ClassNameReplacer replacer) {
-		for (Type type : obfSignature.types()) {
-			if (!canMigrate(type, replacer)) {
+	private static boolean canMigrate(Signature oldObfSignature, ClassMatches classMatches) {
+		for (Type oldObfType : oldObfSignature.types()) {
+			if (!canMigrate(oldObfType, classMatches)) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private static boolean canMigrate(Type type, ClassNameReplacer replacer) {
-		return !type.hasClass() || replacer.replace(type.getClassEntry().getClassName()) != null;
+	private static boolean canMigrate(Type oldObfType, ClassMatches classMatches) {
+		
+		// non classes can be migrated
+		if (!oldObfType.hasClass()) {
+			return true;
+		}
+		
+		// non obfuscated classes can be migrated
+		ClassEntry classEntry = oldObfType.getClassEntry();
+		if (!classEntry.getPackageName().equals(Constants.NonePackage)) {
+			return true;
+		}
+		
+		// obfuscated classes with mappings can be migrated
+		return classMatches.getUniqueMatches().containsKey(classEntry);
 	}
 
 	public static void convertMappings(Mappings mappings, BiMap<ClassEntry,ClassEntry> changes) {
