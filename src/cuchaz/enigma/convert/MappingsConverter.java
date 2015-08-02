@@ -207,17 +207,34 @@ public class MappingsConverter {
 			newClassMapping = new ClassMapping(newObfClass.getName());
 		}
 		
-		// copy fields
+		// migrate fields
 		for (FieldMapping fieldMapping : oldClassMapping.fields()) {
-			newClassMapping.addFieldMapping(new FieldMapping(fieldMapping, replacer));
+			if (canMigrate(fieldMapping.getObfType(), replacer)) {
+				newClassMapping.addFieldMapping(new FieldMapping(fieldMapping, replacer));
+			}
 		}
 		
-		// copy methods
-		for (MethodMapping methodMapping : oldClassMapping.methods()) {
-			newClassMapping.addMethodMapping(new MethodMapping(methodMapping, replacer));
+		// migrate methods
+		for (MethodMapping oldMethodMapping : oldClassMapping.methods()) {
+			if (canMigrate(oldMethodMapping.getObfSignature(), replacer)) {
+				newClassMapping.addMethodMapping(new MethodMapping(oldMethodMapping, replacer));
+			}
 		}
 		
 		return newClassMapping;
+	}
+	
+	private static boolean canMigrate(Signature obfSignature, ClassNameReplacer replacer) {
+		for (Type type : obfSignature.types()) {
+			if (!canMigrate(type, replacer)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean canMigrate(Type type, ClassNameReplacer replacer) {
+		return !type.hasClass() || replacer.replace(type.getClassEntry().getClassName()) != null;
 	}
 
 	public static void convertMappings(Mappings mappings, BiMap<ClassEntry,ClassEntry> changes) {

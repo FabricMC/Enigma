@@ -42,19 +42,21 @@ public class ConvertMain {
 	throws IOException, MappingParseException {
 		
 		// init files
+		String inVer = "1.8.3";
+		String outVer = "1.8.8";
 		File home = new File(System.getProperty("user.home"));
-		JarFile sourceJar = new JarFile(new File(home, ".minecraft/versions/1.8/1.8.jar"));
-		JarFile destJar = new JarFile(new File(home, ".minecraft/versions/1.8.3/1.8.3.jar"));
-		File inMappingsFile = new File("../Enigma Mappings/1.8.mappings");
-		File outMappingsFile = new File("../Enigma Mappings/1.8.3.mappings");
+		JarFile sourceJar = new JarFile(new File(home, ".minecraft/versions/" + inVer + "/" + inVer + ".jar"));
+		JarFile destJar = new JarFile(new File(home, ".minecraft/versions/" + outVer + "/" + outVer + ".jar"));
+		File inMappingsFile = new File("../minecraft-mappings/" + inVer + ".mappings");
+		File outMappingsFile = new File("../minecraft-mappings/" + outVer + ".mappings");
 		Mappings mappings = new MappingsReader().read(new FileReader(inMappingsFile));
-		File classMatchesFile = new File(inMappingsFile.getName() + ".class.matches");
-		File fieldMatchesFile = new File(inMappingsFile.getName() + ".field.matches");
-		File methodMatchesFile = new File(inMappingsFile.getName() + ".method.matches");
+		File classMatchesFile = new File(inVer + "to" + outVer + ".class.matches");
+		File fieldMatchesFile = new File(inVer + "to" + outVer + ".field.matches");
+		File methodMatchesFile = new File(inVer + "to" + outVer + ".method.matches");
 
 		// match classes
 		//computeClassMatches(classMatchesFile, sourceJar, destJar, mappings);
-		//editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
+		editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
 		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile);
 		
 		// match fields
@@ -65,7 +67,7 @@ public class ConvertMain {
 		// match methods/constructors
 		//computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
 		//editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
-		convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
+		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
 	}
 	
 	private static void computeClassMatches(File classMatchesFile, JarFile sourceJar, JarFile destJar, Mappings mappings)

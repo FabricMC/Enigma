@@ -117,7 +117,7 @@ public class ClassIdentity {
 		
 		// stuff from the bytecode
 		
-		m_classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
+		m_classEntry = EntryFactory.getClassEntry(c);
 		m_fields = HashMultiset.create();
 		for (CtField field : c.getDeclaredFields()) {
 			m_fields.add(scrubType(field.getSignature()));
@@ -180,7 +180,10 @@ public class ClassIdentity {
 			}
 		}
 		
-		m_outer = EntryFactory.getClassEntry(c).getOuterClassName();
+		m_outer = null;
+		if (m_classEntry.isInnerClass()) {
+			m_outer = m_classEntry.getOuterClassName();
+		}
 	}
 	
 	private void addReference(EntryReference<? extends Entry,BehaviorEntry> reference) {
@@ -460,7 +463,9 @@ public class ClassIdentity {
 	}
 	
 	private int getNumMatches(String a, String b) {
-		if (a.equals(b)) {
+		if (a == null && b == null) {
+			return 1;
+		} else if (a != null && b != null && a.equals(b)) {
 			return 1;
 		}
 		return 0;
