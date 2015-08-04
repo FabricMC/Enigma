@@ -42,14 +42,16 @@ public class ConvertMain {
 	throws IOException, MappingParseException {
 		
 		// init files
-		String inVer = "1.8.3";
-		String outVer = "1.8.8";
+		String inVer = "1.8.8";
+		String inSnapshot = null;
+		String outVer = "1.9";
+		String outSnapshot = "15w31c";
 		String side = "client";
 		File home = new File(System.getProperty("user.home"));
-		JarFile sourceJar = new JarFile(new File(home, ".minecraft/versions/" + inVer + "/" + inVer + ".jar"));
-		JarFile destJar = new JarFile(new File(home, ".minecraft/versions/" + outVer + "/" + outVer + ".jar"));
-		File inMappingsFile = new File("../Enigma Mappings/" + inVer + "-" + side + ".mappings");
-		File outMappingsFile = new File("../Enigma Mappings/" + outVer + "-" + side + ".mappings");
+		JarFile sourceJar = new JarFile(new File(home, getJarPath(inVer, inSnapshot)));
+		JarFile destJar = new JarFile(new File(home, getJarPath(outVer, outSnapshot)));
+		File inMappingsFile = new File("../Enigma Mappings/" + getVersionKey(inVer, inSnapshot, side) + ".mappings");
+		File outMappingsFile = new File("../Enigma Mappings/" + getVersionKey(outVer, outSnapshot, side) + ".mappings");
 		Mappings mappings = new MappingsReader().read(new FileReader(inMappingsFile));
 		File classMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".class.matches");
 		File fieldMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".field.matches");
@@ -57,7 +59,7 @@ public class ConvertMain {
 
 		// match classes
 		//computeClassMatches(classMatchesFile, sourceJar, destJar, mappings);
-		//editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
+		editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
 		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile);
 		
 		// match fields
@@ -68,7 +70,21 @@ public class ConvertMain {
 		// match methods/constructors
 		//computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
 		//editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
-		convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
+		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
+	}
+	
+	private static String getJarPath(String version, String snapshot) {
+		if (snapshot != null) {
+			return ".minecraft/versions/" + snapshot + "/" + snapshot + ".jar";
+		}
+		return ".minecraft/versions/" + version + "/" + version + ".jar";
+	}
+	
+	private static String getVersionKey(String version, String snapshot, String side) {
+		if (snapshot == null) {
+			return version + "-" + side;
+		}
+		return version + "." + snapshot + "-" + side;
 	}
 	
 	private static void computeClassMatches(File classMatchesFile, JarFile sourceJar, JarFile destJar, Mappings mappings)
