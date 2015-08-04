@@ -17,6 +17,8 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -108,6 +110,7 @@ public class ClassMatchingGui {
 	private JButton m_matchButton;
 	private Map<SourceType,JRadioButton> m_sourceTypeButtons;
 	private JCheckBox m_advanceCheck;
+	private JCheckBox m_top10Matches;
 	
 	private ClassMatches m_classMatches;
 	private Deobfuscator m_sourceDeobfuscator;
@@ -169,6 +172,15 @@ public class ClassMatchingGui {
 		destPanel.setPreferredSize(new Dimension(200, 0));
 		pane.add(destPanel, BorderLayout.WEST);
 		destPanel.add(new JLabel("Destination Classes"));
+		
+		m_top10Matches = new JCheckBox("Show only top 10 matches");
+		destPanel.add(m_top10Matches);
+		m_top10Matches.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				toggleTop10Matches();
+			}
+		});
 		
 		m_destClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
 		m_destClasses.setListener(new ClassSelectionListener() {
@@ -397,6 +409,19 @@ public class ClassMatchingGui {
 					/(sourceIdentity.getMaxMatchScore() + destIdentity.getMaxMatchScore());
 				scoredDestClasses.add(new ScoredClassEntry(unmatchedDestClass, score));
 			}
+			
+			if (m_top10Matches.isSelected() && scoredDestClasses.size() > 10) {
+				Collections.sort(scoredDestClasses, new Comparator<ClassEntry>() {
+					@Override
+					public int compare(ClassEntry a, ClassEntry b) {
+						ScoredClassEntry sa = (ScoredClassEntry)a;
+						ScoredClassEntry sb = (ScoredClassEntry)b;
+						return -Float.compare(sa.getScore(), sb.getScore());
+					}
+				});
+				scoredDestClasses = scoredDestClasses.subList(0, 10);
+			}
+			
 			return scoredDestClasses;
 			
 		} catch (ClassNotFoundException ex) {
@@ -585,5 +610,13 @@ public class ClassMatchingGui {
 		
 		setDestClass(destClass);
 		m_destClasses.setSelectionClass(destClass);
+	}
+	
+	private void toggleTop10Matches() {
+		if (m_sourceClass != null) {
+			m_destClasses.clearSelection();
+			m_destClasses.setClasses(deobfuscateClasses(getLikelyMatches(m_sourceClass), m_destDeobfuscator));
+			m_destClasses.expandAll();
+		}
 	}
 }
