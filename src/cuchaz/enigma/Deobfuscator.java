@@ -312,7 +312,10 @@ public class Deobfuscator {
 					out.write(source);
 				}
 			} catch (Throwable t) {
-				throw new Error("Unable to deobfuscate class " + deobfClassEntry.toString() + " (" + obfClassEntry.toString() + ")", t);
+				// don't crash the whole world here, just log the error and keep going
+				// TODO: set up logback via log4j
+				System.err.println("Unable to deobfuscate class " + deobfClassEntry.toString() + " (" + obfClassEntry.toString() + ")");
+				t.printStackTrace(System.err);
 			}
 		}
 		if (progress != null) {
