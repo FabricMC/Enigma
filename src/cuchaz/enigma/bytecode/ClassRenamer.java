@@ -450,8 +450,8 @@ public class ClassRenamer {
 			NestedClassType nestedType = (NestedClassType)type;
 			
 			// translate the name
-			String name = nestedType.getName();
-			String newName = map.get(getClassName(type));
+			String name = getClassName(type);
+			String newName = map.get(name);
 			if (newName != null) {
 				name = new ClassEntry(newName).getInnermostClassName();
 			}
@@ -479,7 +479,7 @@ public class ClassRenamer {
 	private static String getClassName(ClassType type) {
 		if (type instanceof NestedClassType) {
 			NestedClassType nestedType = (NestedClassType)type;
-			return getClassName(nestedType.getDeclaringClass()) + "$" + Descriptor.toJvmName(type.getName());
+			return getClassName(nestedType.getDeclaringClass()) + "$" + Descriptor.toJvmName(type.getName().replace('.', '$'));
 		} else {
 			return Descriptor.toJvmName(type.getName());
 		}
