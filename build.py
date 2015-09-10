@@ -5,7 +5,7 @@ import sys
 # settings
 PathSsjb = "../ssjb"
 Author = "Cuchaz"
-Version = "0.10.4b"
+Version = "0.11b"
 
 DirBin = "bin"
 DirLib = "lib"
