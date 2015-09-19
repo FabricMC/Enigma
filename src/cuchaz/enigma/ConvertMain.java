@@ -40,44 +40,97 @@ public class ConvertMain {
 
 	public static void main(String[] args)
 	throws IOException, MappingParseException {
-		
-		// init files
-		String inVer = "1.8.8";
-		String inSnapshot = null;
-		String outVer = "1.9";
-		String outSnapshot = "15w31c";
-		String side = "client";
-		File home = new File(System.getProperty("user.home"));
-		JarFile sourceJar = new JarFile(new File(home, getJarPath(inVer, inSnapshot)));
-		JarFile destJar = new JarFile(new File(home, getJarPath(outVer, outSnapshot)));
-		File inMappingsFile = new File("../Enigma Mappings/" + getVersionKey(inVer, inSnapshot, side) + ".mappings");
-		File outMappingsFile = new File("../Enigma Mappings/" + getVersionKey(outVer, outSnapshot, side) + ".mappings");
-		Mappings mappings = new MappingsReader().read(new FileReader(inMappingsFile));
-		File classMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".class.matches");
-		File fieldMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".field.matches");
-		File methodMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".method.matches");
+		try{
+			//Get all are args
+			String inVer = getArg(args, 1, "Old Version", true);
+			String inSnapshot = getArg(args, 2, "Old Shapshot", true);
+			String outVer = getArg(args, 3, "New Version", true);
+			String outSnapshot = getArg(args, 4, "New Snapshot", true);
+			String side = getArg(args, 5, "Side", true);
+			if(inSnapshot.equalsIgnoreCase("none"){
+				inSnapshot = null;
+			}
+			if(outSnapshot.equalsIgnoreCase("none"){
+				outSnapshot = null;
+			}
+			//Get the home Directory
+			File home = new File(System.getProperty("user.home"));
+			//Find the minecraft jars.
+			JarFile sourceJar = new JarFile(new File(home, getJarPath(inVer, inSnapshot)));
+			JarFile destJar = new JarFile(new File(home, getJarPath(outVer, outSnapshot)));
+			//Get the mapping files
+			File inMappingsFile = new File("../Enigma Mappings/" + getVersionKey(inVer, inSnapshot, side) + ".mappings");
+			File outMappingsFile = new File("../Enigma Mappings/" + getVersionKey(outVer, outSnapshot, side) + ".mappings");
+			Mappings mappings = new MappingsReader().read(new FileReader(inMappingsFile));
+			//Make the Match Files..
+			File classMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".class.matches");
+			File fieldMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".field.matches");
+			File methodMatchesFile = new File(inVer + "to" + outVer + "-" + side + ".method.matches");
 
-		// match classes
-		//computeClassMatches(classMatchesFile, sourceJar, destJar, mappings);
-		editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
-		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile);
-		
-		// match fields
-		//computeFieldMatches(fieldMatchesFile, destJar, outMappingsFile, classMatchesFile);
-		//editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
-		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile);
-		
-		// match methods/constructors
-		//computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
-		//editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
-		//convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
-	}
-	
-	private static String getJarPath(String version, String snapshot) {
-		if (snapshot != null) {
-			return ".minecraft/versions/" + snapshot + "/" + snapshot + ".jar";
+			String command = getArg(args, 0, "command", true);
+
+			if(command.equalsIgnoreCase("computeClassMatches")){
+				computeClassMatches(classMatchesFile, sourceJar, destJar, mappings);
+			}else if(command.equalsIgnoreCase("editClassMatches")){
+				editClasssMatches(classMatchesFile, sourceJar, destJar, mappings);
+			}else if(command.equalsIgnoreCase("computeFieldMatches")){
+				computeFieldMatches(fieldMatchesFile, destJar, outMappingsFile, classMatchesFile);
+			}else if(command.equalsIgnoreCase("editFieldMatches")){
+				editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
+			}else if(command.equalsIgnoreCase("computeMethodMatches")){
+				computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
+			}else if(command.equalsIgnoreCase("editMethodMatches")){
+				editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
+			}else if(command.equalsIgnoreCase("convertMappings")){
+				convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
+			}
+		}catch (IllegalArgumentException ex) {
+			System.out.println(ex.getMessage());
+			printHelp();
 		}
-		return ".minecraft/versions/" + version + "/" + version + ".jar";
+	}
+
+	private static void printHelp() {
+		System.out.println(String.format("%s - %s", Constants.Name, Constants.Version));
+		System.out.println("Usage:");
+		System.out.println("\tjava -cp enigma.jar cuchaz.enigma.ConvertMain <command> <old-version> <old-snapshot> <new-version> <new-snapshot> <side>");
+		System.out.println("\twhere <command> is one of:");
+		System.out.println("\t\tcomputeClassMatches");
+		System.out.println("\t\teditClassMatches");
+		System.out.println("\t\tcomputeFieldMatches");
+		System.out.println("\t\teditFieldMatches");
+		System.out.println("\t\teditMethodMatches");
+		System.out.println("\t\tconvertMappings");
+		System.out.println("\twhere <old-version> is the version of Minecraft (1.8 for example)");
+		System.out.println("\twhere <old-snapshpt> is the snapshot of Minecraft (14w32a for example) if it is not snapshot use 'none'");
+		System.out.println("\twhere <new-version> is the version of Minecraft (1.9 for example)");
+		System.out.println("\twhere <new-snapshpt> is the snapshot of Minecraft (15w32a for example) if it is not snapshot use 'none'");
+		System.out.println("\twhere <side> is ether client or server");
+	}
+
+	//Copy of getArg from CommandMain.... Should make a utils class.
+	private static String getArg(String[] args, int i, String name, boolean required) {
+		if (i >= args.length) {
+			if (required) {
+				throw new IllegalArgumentException(name + " is required");
+			} else {
+				return null;
+			}
+		}
+		return args[i];
+	}
+
+
+	private static String getJarPath(String version, String snapshot) {
+		String os = System.getProperty("os.name");
+		String osSpecific = "";
+		if(os.toLowerCase().contains("win")){
+			osSpecific = "AppData\\Roaming\\";
+		}
+		if (snapshot != null) {
+			return osSpecific + ".minecraft/versions/" + snapshot + "/" + snapshot + ".jar";
+		}
+		return osSpecific + ".minecraft/versions/" + version + "/" + version + ".jar";
 	}
 	
 	private static String getVersionKey(String version, String snapshot, String side) {
