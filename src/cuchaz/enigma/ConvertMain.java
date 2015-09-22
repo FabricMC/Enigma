@@ -47,10 +47,10 @@ public class ConvertMain {
 			String outVer = getArg(args, 3, "New Version", true);
 			String outSnapshot = getArg(args, 4, "New Snapshot", true);
 			String side = getArg(args, 5, "Side", true);
-			if(inSnapshot.equalsIgnoreCase("none"){
+			if(inSnapshot.equalsIgnoreCase("none")){
 				inSnapshot = null;
 			}
-			if(outSnapshot.equalsIgnoreCase("none"){
+			if(outSnapshot.equalsIgnoreCase("none")){
 				outSnapshot = null;
 			}
 			//Get the home Directory
@@ -166,6 +166,7 @@ public class ConvertMain {
 		});
 	}
 	
+	@SuppressWarnings("unused")
 	private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile)
 	throws IOException {
 		System.out.println("Reading class matches...");
@@ -232,6 +233,7 @@ public class ConvertMain {
 		});
 	}
 	
+	@SuppressWarnings("unused")
 	private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile, File fieldMatchesFile)
 	throws IOException {
 		
