@@ -113,12 +113,14 @@ def buildLibJar(dirOut):
 # tasks
 
 def taskGetDeps():
+	"""Get all the Deps."""
 	ssjb.file.mkdir(DirLib)
 	ssjb.ivy.makeLibsJar(os.path.join(DirLib, "deps.jar"), StandaloneDeps, extraRepos=ExtraRepos)
 	ssjb.ivy.makeLibsJar(os.path.join(DirLib, "test-deps.jar"), TestDeps)
 	ssjb.ivy.makeJar(os.path.join(DirLib, "proguard.jar"), ProguardDep)
 
 def taskBuildTestJars():
+	"""Build the test jar."""
 	buildTestJar("loneClass", "cuchaz/enigma/inputs/loneClass/*.class")
 	buildTestJar("constructors", "cuchaz/enigma/inputs/constructors/*.class")
 	buildTestJar("inheritanceTree", "cuchaz/enigma/inputs/inheritanceTree/*.class")
@@ -126,10 +128,12 @@ def taskBuildTestJars():
 	taskBuildTranslationTestJar()
 
 def taskBuildTranslationTestJar():
+	"""Build the Translation test jar."""
 	buildTestJar("translation", "cuchaz/enigma/inputs/translation/*.class")
 	buildDeobfTestJar(os.path.join(DirBuild, "test-deobf/translation.jar"), os.path.join(DirBuild, "test-obf/translation.jar"))
 
 def taskBuild():
+	"""Build the engima jar."""
 	ssjb.file.delete(DirBuild)
 	ssjb.file.mkdir(DirBuild)
 	buildStandaloneJar(DirBuild)
