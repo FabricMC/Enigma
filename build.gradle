@@ -19,7 +19,12 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.10.4b'
+version = '0.11.0'
+
+def ENV = System.getenv()
+if (ENV.BUILD_NUMBER) {
+    version = version + "." + "${System.getenv().BUILD_NUMBER}"
+}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
