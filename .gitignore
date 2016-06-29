@@ -3,3 +3,7 @@
 /build
 /.gradle
 /.idea
+.classpath
+.project
+*.ipr
+*.iws
