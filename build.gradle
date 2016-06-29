@@ -70,7 +70,7 @@ dependencies {
 }
 
 // For each set of test inputs, create an output jar and obfuscate it.
-file('test/cuchaz/enigma/inputs').listFiles().each { theFile ->
+file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
     if (theFile.directory) {
         task("${theFile.name}TestJar", type: Jar, dependsOn: testClasses) {
             from('build/classes/test') {
