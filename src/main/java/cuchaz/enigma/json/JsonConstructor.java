@@ -12,4 +12,16 @@ public class JsonConstructor {
         this.args = args;
         this.statics = statics;
     }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public List<JsonArgument> getArgs() {
+        return args;
+    }
+
+    public boolean isStatics() {
+        return statics;
+    }
 }

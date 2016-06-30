@@ -62,6 +62,12 @@ public class MappingsReader {
         }
         jsonClass.getField().forEach(jsonField -> classMapping.addFieldMapping(readField(jsonField.getObf(), jsonField.getName(), jsonField.getType())));
 
+        jsonClass.getConstructors().forEach(jsonConstructor -> {
+           MethodMapping methodMapping = readMethod(jsonConstructor.isStatics() ? "<clinit>" : "<init>", null, jsonConstructor.getSignature());
+                     jsonConstructor.getArgs().forEach(jsonArgument -> methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName())));
+                        classMapping.addMethodMapping(methodMapping);
+                    });
+
         jsonClass.getMethod().forEach(jsonMethod -> {
             MethodMapping methodMapping = readMethod(jsonMethod.getObf(), jsonMethod.getName(), jsonMethod.getSignature());
             jsonMethod.getArgs().forEach(jsonArgument -> methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName())));
