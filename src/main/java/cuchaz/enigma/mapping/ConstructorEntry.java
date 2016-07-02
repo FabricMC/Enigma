@@ -87,10 +87,7 @@ public class ConstructorEntry implements BehaviorEntry, Serializable {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof ConstructorEntry) {
-            return equals((ConstructorEntry) other);
-        }
-        return false;
+        return other instanceof ConstructorEntry && equals((ConstructorEntry) other);
     }
 
     public boolean equals(ConstructorEntry other) {

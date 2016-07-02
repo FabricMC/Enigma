@@ -76,7 +76,7 @@ public class MappingsWriter {
     }
 
     private <T extends Comparable<T>> List<T> sorted(Iterable<T> classes) {
-        List<T> out = new ArrayList<T>();
+        List<T> out = new ArrayList<>();
         for (T t : classes) {
             out.add(t);
         }

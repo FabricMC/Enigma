@@ -444,10 +444,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 
     public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {
         MethodMapping methodMapping = m_methodsByObf.get(getMethodKey(obfBehaviorEntry.getName(), obfBehaviorEntry.getSignature()));
-        if (methodMapping != null) {
-            return methodMapping.containsArgument(name);
-        }
-        return false;
+        return methodMapping != null && methodMapping.containsArgument(name);
     }
 
     public static boolean isSimpleClassName(String name) {

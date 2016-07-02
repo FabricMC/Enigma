@@ -45,9 +45,7 @@ public class ClassMatches implements Iterable<ClassMatch> {
         m_unmatchedSourceClasses = Sets.newHashSet();
         m_unmatchedDestClasses = Sets.newHashSet();
 
-        for (ClassMatch match : matches) {
-            indexMatch(match);
-        }
+        matches.forEach(this::indexMatch);
     }
 
     public void add(ClassMatch match) {

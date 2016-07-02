@@ -191,7 +191,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
     public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
         List<String> classNamesToTry = Lists.newArrayList();
         classNamesToTry.add(obfClassEntry.getName());
-        if (obfClassEntry.getPackageName().equals(Constants.NonePackage)) {
+        if (obfClassEntry.getPackageName().equals(Constants.NONE_PACKAGE)) {
             // taking off the none package, if any
             classNamesToTry.add(obfClassEntry.getSimpleName());
         }
@@ -207,7 +207,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 
         // we moved a lot of classes out of the default package into the none package
         // make sure all the class references are consistent
-        ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
+        ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
 
         // reconstruct inner classes
         new InnerClassWriter(m_jarIndex).write(c);

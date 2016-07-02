@@ -22,63 +22,63 @@ import cuchaz.enigma.Deobfuscator.ProgressListener;
 
 public class ProgressDialog implements ProgressListener, AutoCloseable {
 
-    private JFrame m_frame;
-    private JLabel m_title;
-    private JLabel m_text;
-    private JProgressBar m_progress;
+    private JFrame frame;
+    private JLabel labelTitle;
+    private JLabel labelText;
+    private JProgressBar progress;
 
     public ProgressDialog(JFrame parent) {
 
         // init frame
-        m_frame = new JFrame(Constants.Name + " - Operation in progress");
-        final Container pane = m_frame.getContentPane();
+        this.frame = new JFrame(Constants.NAME + " - Operation in progress");
+        final Container pane = this.frame.getContentPane();
         FlowLayout layout = new FlowLayout();
         layout.setAlignment(FlowLayout.LEFT);
         pane.setLayout(layout);
 
-        m_title = new JLabel();
-        pane.add(m_title);
+        this.labelTitle = new JLabel();
+        pane.add(this.labelTitle);
 
         // set up the progress bar
         JPanel panel = new JPanel();
         pane.add(panel);
         panel.setLayout(new BorderLayout());
-        m_text = GuiTricks.unboldLabel(new JLabel());
-        m_progress = new JProgressBar();
-        m_text.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        panel.add(m_text, BorderLayout.NORTH);
-        panel.add(m_progress, BorderLayout.CENTER);
+        this.labelText = GuiTricks.unboldLabel(new JLabel());
+        this.progress = new JProgressBar();
+        this.labelText.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        panel.add(this.labelText, BorderLayout.NORTH);
+        panel.add(this.progress, BorderLayout.CENTER);
         panel.setPreferredSize(new Dimension(360, 50));
 
         // show the frame
         pane.doLayout();
-        m_frame.setSize(400, 120);
-        m_frame.setResizable(false);
-        m_frame.setLocationRelativeTo(parent);
-        m_frame.setVisible(true);
-        m_frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        this.frame.setSize(400, 120);
+        this.frame.setResizable(false);
+        this.frame.setLocationRelativeTo(parent);
+        this.frame.setVisible(true);
+        this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
     }
 
     public void close() {
-        m_frame.dispose();
+        this.frame.dispose();
     }
 
     @Override
     public void init(int totalWork, String title) {
-        m_title.setText(title);
-        m_progress.setMinimum(0);
-        m_progress.setMaximum(totalWork);
-        m_progress.setValue(0);
+        this.labelTitle.setText(title);
+        this.progress.setMinimum(0);
+        this.progress.setMaximum(totalWork);
+        this.progress.setValue(0);
     }
 
     @Override
     public void onProgress(int numDone, String message) {
-        m_text.setText(message);
-        m_progress.setValue(numDone);
+        this.labelText.setText(message);
+        this.progress.setValue(numDone);
 
         // update the frame
-        m_frame.validate();
-        m_frame.repaint();
+        this.frame.validate();
+        this.frame.repaint();
     }
 
     public interface ProgressRunnable {

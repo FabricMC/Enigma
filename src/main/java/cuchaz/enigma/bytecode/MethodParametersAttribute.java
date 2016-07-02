@@ -30,7 +30,7 @@ public class MethodParametersAttribute extends AttributeInfo {
 
         // add the names to the class const pool
         ConstPool constPool = info.getConstPool();
-        List<Integer> parameterNameIndices = new ArrayList<Integer>();
+        List<Integer> parameterNameIndices = new ArrayList<>();
         for (String name : names) {
             if (name != null) {
                 parameterNameIndices.add(constPool.addUtf8Info(name));

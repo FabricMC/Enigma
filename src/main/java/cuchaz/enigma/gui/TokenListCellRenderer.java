@@ -21,18 +21,18 @@ import cuchaz.enigma.analysis.Token;
 
 public class TokenListCellRenderer implements ListCellRenderer<Token> {
 
-    private GuiController m_controller;
-    private DefaultListCellRenderer m_defaultRenderer;
+    private GuiController controller;
+    private DefaultListCellRenderer defaultRenderer;
 
     public TokenListCellRenderer(GuiController controller) {
-        m_controller = controller;
-        m_defaultRenderer = new DefaultListCellRenderer();
+        this.controller = controller;
+        this.defaultRenderer = new DefaultListCellRenderer();
     }
 
     @Override
     public Component getListCellRendererComponent(JList<? extends Token> list, Token token, int index, boolean isSelected, boolean hasFocus) {
-        JLabel label = (JLabel) m_defaultRenderer.getListCellRendererComponent(list, token, index, isSelected, hasFocus);
-        label.setText(m_controller.getReadableToken(token).toString());
+        JLabel label = (JLabel) this.defaultRenderer.getListCellRendererComponent(list, token, index, isSelected, hasFocus);
+        label.setText(this.controller.getReadableToken(token).toString());
         return label;
     }
 }

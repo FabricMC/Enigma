@@ -79,9 +79,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
         }
 
         // add them to this node
-        for (MethodInheritanceTreeNode node : nodes) {
-            this.add(node);
-        }
+        nodes.forEach(this::add);
 
         if (recurse) {
             for (MethodInheritanceTreeNode node : nodes) {

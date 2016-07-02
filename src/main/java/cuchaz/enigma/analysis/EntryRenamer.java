@@ -36,10 +36,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entrySet()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
-                    renameClassesInThing(renames, entry.getKey()),
-                    renameClassesInThing(renames, entry.getValue())
-            ));
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameClassesInThing(renames, entry.getKey()), renameClassesInThing(renames, entry.getValue())));
         }
         map.clear();
         for (Map.Entry<Key, Val> entry : entriesToAdd) {
@@ -51,10 +48,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entries()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
-                    renameClassesInThing(renames, entry.getKey()),
-                    renameClassesInThing(renames, entry.getValue())
-            ));
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameClassesInThing(renames, entry.getKey()), renameClassesInThing(renames, entry.getValue())));
         }
         map.clear();
         for (Map.Entry<Key, Val> entry : entriesToAdd) {
@@ -66,10 +60,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entries()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
-                    renameMethodsInThing(renames, entry.getKey()),
-                    renameMethodsInThing(renames, entry.getValue())
-            ));
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameMethodsInThing(renames, entry.getKey()), renameMethodsInThing(renames, entry.getValue())));
         }
         map.clear();
         for (Map.Entry<Key, Val> entry : entriesToAdd) {
@@ -81,10 +72,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entrySet()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
-                    renameMethodsInThing(renames, entry.getKey()),
-                    renameMethodsInThing(renames, entry.getValue())
-            ));
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameMethodsInThing(renames, entry.getKey()), renameMethodsInThing(renames, entry.getValue())));
         }
         map.clear();
         for (Map.Entry<Key, Val> entry : entriesToAdd) {

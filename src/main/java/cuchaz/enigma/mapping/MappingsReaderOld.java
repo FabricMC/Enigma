@@ -18,7 +18,7 @@ public class MappingsReaderOld {
         Deque<Object> mappingStack = Queues.newArrayDeque();
 
         int lineNumber = 0;
-        String line = null;
+        String line;
         while ((line = in.readLine()) != null) {
             lineNumber++;
 

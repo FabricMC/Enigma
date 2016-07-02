@@ -120,11 +120,6 @@ public class Deobfuscator {
             }
         }
 
-        // check for related method inconsistencies
-        if (checker.getRelatedMethodChecker().hasProblems()) {
-            throw new Error("Related methods are inconsistent! Need to fix the mappings manually.\n" + checker.getRelatedMethodChecker().getReport());
-        }
-
         m_mappings = val;
         m_renamer = new MappingsRenamer(m_jarIndex, val);
         m_translatorCache.clear();
@@ -151,7 +146,7 @@ public class Deobfuscator {
             if (!deobfClassEntry.equals(obfClassEntry)) {
                 // if the class has a mapping, clearly it's deobfuscated
                 deobfClasses.add(deobfClassEntry);
-            } else if (!obfClassEntry.getPackageName().equals(Constants.NonePackage)) {
+            } else if (!obfClassEntry.getPackageName().equals(Constants.NONE_PACKAGE)) {
                 // also call it deobufscated if it's not in the none package
                 deobfClasses.add(obfClassEntry);
             } else {
@@ -308,33 +303,15 @@ public class Deobfuscator {
                 getTranslator(TranslationDirection.Obfuscating),
                 getTranslator(TranslationDirection.Deobfuscating)
         );
-        transformJar(out, progress, new ClassTransformer() {
-
-            @Override
-            public CtClass transform(CtClass c) throws Exception {
-                return loader.transformClass(c);
-            }
-        });
+        transformJar(out, progress, loader::transformClass);
     }
 
     public void protectifyJar(File out, ProgressListener progress) {
-        transformJar(out, progress, new ClassTransformer() {
-
-            @Override
-            public CtClass transform(CtClass c) throws Exception {
-                return ClassProtectifier.protectify(c);
-            }
-        });
+        transformJar(out, progress, ClassProtectifier::protectify);
     }
 
     public void publifyJar(File out, ProgressListener progress) {
-        transformJar(out, progress, new ClassTransformer() {
-
-            @Override
-            public CtClass transform(CtClass c) throws Exception {
-                return ClassPublifier.publify(c);
-            }
-        });
+        transformJar(out, progress, ClassPublifier::publify);
     }
 
     private interface ClassTransformer {
@@ -390,22 +367,14 @@ public class Deobfuscator {
         if (deobfReference == null) {
             return null;
         }
-        return new EntryReference<E, C>(
-                obfuscateEntry(deobfReference.entry),
-                obfuscateEntry(deobfReference.context),
-                deobfReference
-        );
+        return new EntryReference<>(obfuscateEntry(deobfReference.entry), obfuscateEntry(deobfReference.context), deobfReference);
     }
 
     public <E extends Entry, C extends Entry> EntryReference<E, C> deobfuscateReference(EntryReference<E, C> obfReference) {
         if (obfReference == null) {
             return null;
         }
-        return new EntryReference<E, C>(
-                deobfuscateEntry(obfReference.entry),
-                deobfuscateEntry(obfReference.context),
-                obfReference
-        );
+        return new EntryReference<>(deobfuscateEntry(obfReference.entry), deobfuscateEntry(obfReference.context), obfReference);
     }
 
     public boolean isObfuscatedIdentifier(Entry obfEntry) {

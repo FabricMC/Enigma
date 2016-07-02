@@ -97,10 +97,7 @@ public class ArgumentEntry implements Entry, Serializable {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof ArgumentEntry) {
-            return equals((ArgumentEntry) other);
-        }
-        return false;
+        return other instanceof ArgumentEntry && equals((ArgumentEntry) other);
     }
 
     public boolean equals(ArgumentEntry other) {

@@ -54,7 +54,7 @@ public class MethodParameterWriter {
             }
 
             // get the list of argument names
-            List<String> names = new ArrayList<String>(numParams);
+            List<String> names = new ArrayList<>(numParams);
             for (int i = 0; i < numParams; i++) {
                 names.add(this.translator.translate(new ArgumentEntry(behaviorEntry, i, "")));
             }

@@ -16,7 +16,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -24,8 +23,6 @@ import java.util.Vector;
 import java.util.jar.JarFile;
 
 import javax.swing.*;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
 import javax.swing.tree.DefaultTreeModel;
@@ -35,7 +32,6 @@ import javax.swing.tree.TreePath;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
-import cuchaz.enigma.gui.ClassSelector.ClassSelectionListener;
 import cuchaz.enigma.mapping.*;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
@@ -90,20 +86,17 @@ public class Gui {
     public Gui() {
 
         // init frame
-        m_frame = new JFrame(Constants.Name);
+        m_frame = new JFrame(Constants.NAME);
         final Container pane = m_frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
         if (Boolean.parseBoolean(System.getProperty("enigma.catchExceptions", "true"))) {
             // install a global exception handler to the event thread
             CrashDialog.init(m_frame);
-            Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-                @Override
-                public void uncaughtException(Thread thread, Throwable t) {
-                    t.printStackTrace(System.err);
-                    if (!ExceptionIgnorer.shouldIgnore(t)) {
-                        CrashDialog.show(t);
-                    }
+            Thread.setDefaultUncaughtExceptionHandler((thread, t) -> {
+                t.printStackTrace(System.err);
+                if (!ExceptionIgnorer.shouldIgnore(t)) {
+                    CrashDialog.show(t);
                 }
             });
         }
@@ -116,19 +109,14 @@ public class Gui {
         m_mappingsFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         m_mappingsFileChooser.setAcceptAllFileFilterUsed(false);
 
-        m_oldMappingsFileChooser= new JFileChooser();
+        m_oldMappingsFileChooser = new JFileChooser();
         m_exportSourceFileChooser = new JFileChooser();
         m_exportSourceFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         m_exportJarFileChooser = new JFileChooser();
 
         // init obfuscated classes list
         m_obfClasses = new ClassSelector(ClassSelector.ObfuscatedClassEntryComparator);
-        m_obfClasses.setListener(new ClassSelectionListener() {
-            @Override
-            public void onSelectClass(ClassEntry classEntry) {
-                navigateTo(classEntry);
-            }
-        });
+        m_obfClasses.setListener(this::navigateTo);
         JScrollPane obfScroller = new JScrollPane(m_obfClasses);
         JPanel obfPanel = new JPanel();
         obfPanel.setLayout(new BorderLayout());
@@ -137,12 +125,7 @@ public class Gui {
 
         // init deobfuscated classes list
         m_deobfClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
-        m_deobfClasses.setListener(new ClassSelectionListener() {
-            @Override
-            public void onSelectClass(ClassEntry classEntry) {
-                navigateTo(classEntry);
-            }
-        });
+        m_deobfClasses.setListener(this::navigateTo);
         JScrollPane deobfScroller = new JScrollPane(m_deobfClasses);
         JPanel deobfPanel = new JPanel();
         deobfPanel.setLayout(new BorderLayout());
@@ -174,12 +157,7 @@ public class Gui {
         m_editor.setCaret(new BrowserCaret());
         JScrollPane sourceScroller = new JScrollPane(m_editor);
         m_editor.setContentType("text/java");
-        m_editor.addCaretListener(new CaretListener() {
-            @Override
-            public void caretUpdate(CaretEvent event) {
-                onCaretMove(event.getDot());
-            }
-        });
+        m_editor.addCaretListener(event -> onCaretMove(event.getDot()));
         m_editor.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {
@@ -224,12 +202,7 @@ public class Gui {
         m_editor.setComponentPopupMenu(popupMenu);
         {
             JMenuItem menu = new JMenuItem("Rename");
-            menu.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    startRename();
-                }
-            });
+            menu.addActionListener(event -> startRename());
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0));
             menu.setEnabled(false);
             popupMenu.add(menu);
@@ -237,12 +210,7 @@ public class Gui {
         }
         {
             JMenuItem menu = new JMenuItem("Show Inheritance");
-            menu.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    showInheritance();
-                }
-            });
+            menu.addActionListener(event -> showInheritance());
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, 0));
             menu.setEnabled(false);
             popupMenu.add(menu);
@@ -250,12 +218,7 @@ public class Gui {
         }
         {
             JMenuItem menu = new JMenuItem("Show Implementations");
-            menu.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    showImplementations();
-                }
-            });
+            menu.addActionListener(event -> showImplementations());
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, 0));
             menu.setEnabled(false);
             popupMenu.add(menu);
@@ -263,12 +226,7 @@ public class Gui {
         }
         {
             JMenuItem menu = new JMenuItem("Show Calls");
-            menu.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    showCalls();
-                }
-            });
+            menu.addActionListener(event -> showCalls());
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
             menu.setEnabled(false);
             popupMenu.add(menu);
@@ -276,12 +234,7 @@ public class Gui {
         }
         {
             JMenuItem menu = new JMenuItem("Go to Declaration");
-            menu.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    navigateTo(m_reference.entry);
-                }
-            });
+            menu.addActionListener(event -> navigateTo(m_reference.entry));
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, 0));
             menu.setEnabled(false);
             popupMenu.add(menu);
@@ -289,12 +242,7 @@ public class Gui {
         }
         {
             JMenuItem menu = new JMenuItem("Go to previous");
-            menu.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    m_controller.openPreviousReference();
-                }
-            });
+            menu.addActionListener(event -> m_controller.openPreviousReference());
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0));
             menu.setEnabled(false);
             popupMenu.add(menu);
@@ -302,12 +250,7 @@ public class Gui {
         }
         {
             JMenuItem menu = new JMenuItem("Mark as deobfuscated");
-            menu.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    toggleMapping();
-                }
-            });
+            menu.addActionListener(event -> toggleMapping());
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0));
             menu.setEnabled(false);
             popupMenu.add(menu);
@@ -398,7 +341,7 @@ public class Gui {
                 }
             }
         });
-        m_tokens = new JList<Token>();
+        m_tokens = new JList<>();
         m_tokens.setCellRenderer(new TokenListCellRenderer(m_controller));
         m_tokens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_tokens.setLayoutOrientation(JList.VERTICAL);
@@ -450,51 +393,40 @@ public class Gui {
             {
                 JMenuItem item = new JMenuItem("Open Jar...");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        if (m_jarFileChooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                            // load the jar in a separate thread
-                            new Thread() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        m_controller.openJar(new JarFile(m_jarFileChooser.getSelectedFile()));
-                                    } catch (IOException ex) {
-                                        throw new Error(ex);
-                                    }
+                item.addActionListener(event -> {
+                    if (m_jarFileChooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
+                        // load the jar in a separate thread
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    m_controller.openJar(new JarFile(m_jarFileChooser.getSelectedFile()));
+                                } catch (IOException ex) {
+                                    throw new Error(ex);
                                 }
-                            }.start();
-                        }
+                            }
+                        }.start();
                     }
                 });
             }
             {
                 JMenuItem item = new JMenuItem("Close Jar");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        m_controller.closeJar();
-                    }
-                });
+                item.addActionListener(event -> m_controller.closeJar());
                 m_closeJarMenu = item;
             }
             menu.addSeparator();
             {
                 JMenuItem item = new JMenuItem("Open Mappings...");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        if (m_mappingsFileChooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                            try {
-                                m_controller.openMappings(m_mappingsFileChooser.getSelectedFile());
-                            } catch (IOException ex) {
-                                throw new Error(ex);
-                            } catch (MappingParseException ex) {
-                                JOptionPane.showMessageDialog(m_frame, ex.getMessage());
-                            }
+                item.addActionListener(event -> {
+                    if (m_mappingsFileChooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            m_controller.openMappings(m_mappingsFileChooser.getSelectedFile());
+                        } catch (IOException ex) {
+                            throw new Error(ex);
+                        } catch (MappingParseException ex) {
+                            JOptionPane.showMessageDialog(m_frame, ex.getMessage());
                         }
                     }
                 });
@@ -520,14 +452,11 @@ public class Gui {
             {
                 JMenuItem item = new JMenuItem("Save Mappings");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        try {
-                            m_controller.saveMappings(m_mappingsFileChooser.getSelectedFile());
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        }
+                item.addActionListener(event -> {
+                    try {
+                        m_controller.saveMappings(m_mappingsFileChooser.getSelectedFile());
+                    } catch (IOException ex) {
+                        throw new Error(ex);
                     }
                 });
                 item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
@@ -536,16 +465,13 @@ public class Gui {
             {
                 JMenuItem item = new JMenuItem("Save Mappings As...");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        if (m_mappingsFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                            try {
-                                m_controller.saveMappings(m_mappingsFileChooser.getSelectedFile());
-                                m_saveMappingsMenu.setEnabled(true);
-                            } catch (IOException ex) {
-                                throw new Error(ex);
-                            }
+                item.addActionListener(event -> {
+                    if (m_mappingsFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            m_controller.saveMappings(m_mappingsFileChooser.getSelectedFile());
+                            m_saveMappingsMenu.setEnabled(true);
+                        } catch (IOException ex) {
+                            throw new Error(ex);
                         }
                     }
                 });
@@ -555,24 +481,16 @@ public class Gui {
             {
                 JMenuItem item = new JMenuItem("Close Mappings");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        m_controller.closeMappings();
-                    }
-                });
+                item.addActionListener(event -> m_controller.closeMappings());
                 m_closeMappingsMenu = item;
             }
             menu.addSeparator();
             {
                 JMenuItem item = new JMenuItem("Export Source...");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        if (m_exportSourceFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                            m_controller.exportSource(m_exportSourceFileChooser.getSelectedFile());
-                        }
+                item.addActionListener(event -> {
+                    if (m_exportSourceFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
+                        m_controller.exportSource(m_exportSourceFileChooser.getSelectedFile());
                     }
                 });
                 m_exportSourceMenu = item;
@@ -580,12 +498,9 @@ public class Gui {
             {
                 JMenuItem item = new JMenuItem("Export Jar...");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        if (m_exportJarFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                            m_controller.exportJar(m_exportJarFileChooser.getSelectedFile());
-                        }
+                item.addActionListener(event -> {
+                    if (m_exportJarFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
+                        m_controller.exportJar(m_exportJarFileChooser.getSelectedFile());
                     }
                 });
                 m_exportJarMenu = item;
@@ -594,12 +509,7 @@ public class Gui {
             {
                 JMenuItem item = new JMenuItem("Exit");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        close();
-                    }
-                });
+                item.addActionListener(event -> close());
             }
         }
         {
@@ -608,12 +518,7 @@ public class Gui {
             {
                 JMenuItem item = new JMenuItem("About");
                 menu.add(item);
-                item.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        AboutDialog.show(m_frame);
-                    }
-                });
+                item.addActionListener(event -> AboutDialog.show(m_frame));
             }
         }
 
@@ -654,7 +559,7 @@ public class Gui {
 
     public void onFinishOpenJar(String jarName) {
         // update gui
-        m_frame.setTitle(Constants.Name + " - " + jarName);
+        m_frame.setTitle(Constants.NAME + " - " + jarName);
         m_classesPanel.removeAll();
         m_classesPanel.add(m_splitClasses);
         setSource(null);
@@ -674,7 +579,7 @@ public class Gui {
 
     public void onCloseJar() {
         // update gui
-        m_frame.setTitle(Constants.Name);
+        m_frame.setTitle(Constants.NAME);
         setObfClasses(null);
         setDeobfClasses(null);
         setSource(null);
@@ -720,14 +625,14 @@ public class Gui {
     }
 
     public void showTokens(Collection<Token> tokens) {
-        Vector<Token> sortedTokens = new Vector<Token>(tokens);
+        Vector<Token> sortedTokens = new Vector<>(tokens);
         Collections.sort(sortedTokens);
         if (sortedTokens.size() > 1) {
             // sort the tokens and update the tokens panel
             m_tokens.setListData(sortedTokens);
             m_tokens.setSelectedIndex(0);
         } else {
-            m_tokens.setListData(new Vector<Token>());
+            m_tokens.setListData(new Vector<>());
         }
 
         // show the first token

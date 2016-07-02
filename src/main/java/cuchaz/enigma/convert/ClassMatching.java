@@ -55,23 +55,14 @@ public class ClassMatching {
     public Collection<ClassMatch> matches() {
         List<ClassMatch> matches = Lists.newArrayList();
         for (Entry<ClassEntry, ClassEntry> entry : m_knownMatches.entrySet()) {
-            matches.add(new ClassMatch(
-                    entry.getKey(),
-                    entry.getValue()
-            ));
+            matches.add(new ClassMatch(entry.getKey(), entry.getValue()));
         }
         for (ClassIdentity identity : m_sourceClasses.identities()) {
-            matches.add(new ClassMatch(
-                    m_sourceClasses.getClasses(identity),
-                    m_destClasses.getClasses(identity)
-            ));
+            matches.add(new ClassMatch(m_sourceClasses.getClasses(identity), m_destClasses.getClasses(identity)));
         }
         for (ClassIdentity identity : m_destClasses.identities()) {
             if (!m_sourceClasses.containsIdentity(identity)) {
-                matches.add(new ClassMatch(
-                        new ArrayList<>(),
-                        m_destClasses.getClasses(identity)
-                ));
+                matches.add(new ClassMatch(new ArrayList<>(), m_destClasses.getClasses(identity)));
             }
         }
         return matches;

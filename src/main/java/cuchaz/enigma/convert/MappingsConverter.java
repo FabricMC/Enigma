@@ -151,7 +151,9 @@ public class MappingsConverter {
                             }
                         }
                     }
-                    destMapping.addInnerClassMapping(migrateClassMapping(obfDestClassEntry, sourceMapping, matches, true));
+                    if (destMapping != null) {
+                        destMapping.addInnerClassMapping(migrateClassMapping(obfDestClassEntry, sourceMapping, matches, true));
+                    }
                 }
             }
         }
@@ -160,15 +162,12 @@ public class MappingsConverter {
 
     private static ClassMapping migrateClassMapping(ClassEntry newObfClass, ClassMapping oldClassMapping, final ClassMatches matches, boolean useSimpleName) {
 
-        ClassNameReplacer replacer = new ClassNameReplacer() {
-            @Override
-            public String replace(String className) {
-                ClassEntry newClassEntry = matches.getUniqueMatches().get(new ClassEntry(className));
-                if (newClassEntry != null) {
-                    return newClassEntry.getName();
-                }
-                return null;
+        ClassNameReplacer replacer = className -> {
+            ClassEntry newClassEntry = matches.getUniqueMatches().get(new ClassEntry(className));
+            if (newClassEntry != null) {
+                return newClassEntry.getName();
             }
+            return null;
         };
 
         ClassMapping newClassMapping;
@@ -229,7 +228,7 @@ public class MappingsConverter {
 
         // non obfuscated classes can be migrated
         ClassEntry classEntry = oldObfType.getClassEntry();
-        if (!classEntry.getPackageName().equals(Constants.NonePackage)) {
+        if (!classEntry.getPackageName().equals(Constants.NONE_PACKAGE)) {
             return true;
         }
 
@@ -390,7 +389,7 @@ public class MappingsConverter {
 
     public static <T extends Entry> MemberMatches<T> computeMemberMatches(Deobfuscator destDeobfuscator, Mappings destMappings, ClassMatches classMatches, Doer<T> doer) {
 
-        MemberMatches<T> memberMatches = new MemberMatches<T>();
+        MemberMatches<T> memberMatches = new MemberMatches<>();
 
         // unmatched source fields are easy
         MappingsChecker checker = new MappingsChecker(destDeobfuscator.getJarIndex());
@@ -481,15 +480,12 @@ public class MappingsConverter {
     }
 
     private static Type translate(Type type, final BiMap<ClassEntry, ClassEntry> map) {
-        return new Type(type, new ClassNameReplacer() {
-            @Override
-            public String replace(String inClassName) {
-                ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
-                if (outClassEntry == null) {
-                    return null;
-                }
-                return outClassEntry.getName();
+        return new Type(type, inClassName -> {
+            ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
+            if (outClassEntry == null) {
+                return null;
             }
+            return outClassEntry.getName();
         });
     }
 
@@ -497,15 +493,12 @@ public class MappingsConverter {
         if (signature == null) {
             return null;
         }
-        return new Signature(signature, new ClassNameReplacer() {
-            @Override
-            public String replace(String inClassName) {
-                ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
-                if (outClassEntry == null) {
-                    return null;
-                }
-                return outClassEntry.getName();
+        return new Signature(signature, inClassName -> {
+            ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
+            if (outClassEntry == null) {
+                return null;
             }
+            return outClassEntry.getName();
         });
     }
 

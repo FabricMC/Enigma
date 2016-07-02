@@ -18,33 +18,30 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
 
     private static final long serialVersionUID = -8956754339813257380L;
 
-    private ClassEntry m_classEntry;
+    private ClassEntry classEntry;
 
     public ClassSelectorClassNode(ClassEntry classEntry) {
-        m_classEntry = classEntry;
+        this.classEntry = classEntry;
     }
 
     public ClassEntry getClassEntry() {
-        return m_classEntry;
+        return this.classEntry;
     }
 
     @Override
     public String toString() {
-        if (m_classEntry instanceof ScoredClassEntry) {
-            return String.format("%d%% %s", (int) ((ScoredClassEntry) m_classEntry).getScore(), m_classEntry.getSimpleName());
+        if (this.classEntry instanceof ScoredClassEntry) {
+            return String.format("%d%% %s", (int) ((ScoredClassEntry) this.classEntry).getScore(), this.classEntry.getSimpleName());
         }
-        return m_classEntry.getSimpleName();
+        return this.classEntry.getSimpleName();
     }
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof ClassSelectorClassNode) {
-            return equals((ClassSelectorClassNode) other);
-        }
-        return false;
+        return other instanceof ClassSelectorClassNode && equals((ClassSelectorClassNode) other);
     }
 
     public boolean equals(ClassSelectorClassNode other) {
-        return m_classEntry.equals(other.m_classEntry);
+        return this.classEntry.equals(other.classEntry);
     }
 }

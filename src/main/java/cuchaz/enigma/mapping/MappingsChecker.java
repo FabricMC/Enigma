@@ -16,13 +16,11 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.analysis.RelatedMethodChecker;
 
 
 public class MappingsChecker {
 
     private JarIndex m_index;
-    private RelatedMethodChecker m_relatedMethodChecker;
     private Map<ClassEntry, ClassMapping> m_droppedClassMappings;
     private Map<ClassEntry, ClassMapping> m_droppedInnerClassMappings;
     private Map<FieldEntry, FieldMapping> m_droppedFieldMappings;
@@ -30,15 +28,10 @@ public class MappingsChecker {
 
     public MappingsChecker(JarIndex index) {
         m_index = index;
-        m_relatedMethodChecker = new RelatedMethodChecker(m_index);
         m_droppedClassMappings = Maps.newHashMap();
         m_droppedInnerClassMappings = Maps.newHashMap();
         m_droppedFieldMappings = Maps.newHashMap();
         m_droppedMethodMappings = Maps.newHashMap();
-    }
-
-    public RelatedMethodChecker getRelatedMethodChecker() {
-        return m_relatedMethodChecker;
     }
 
     public Map<ClassEntry, ClassMapping> getDroppedClassMappings() {

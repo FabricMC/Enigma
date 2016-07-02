@@ -12,19 +12,18 @@ package cuchaz.enigma.gui;
 
 import cuchaz.enigma.mapping.ClassEntry;
 
-
 public class ScoredClassEntry extends ClassEntry {
 
     private static final long serialVersionUID = -8798725308554217105L;
 
-    private float m_score;
+    private float score;
 
     public ScoredClassEntry(ClassEntry other, float score) {
         super(other);
-        m_score = score;
+        this.score = score;
     }
 
     public float getScore() {
-        return m_score;
+        return this.score;
     }
 }

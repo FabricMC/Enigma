@@ -76,7 +76,7 @@ public class ConvertMain {
     }
 
     private static void printHelp() {
-        System.out.println(String.format("%s - %s", Constants.Name, Constants.Version));
+        System.out.println(String.format("%s - %s", Constants.NAME, Constants.VERSION));
         System.out.println("Usage:");
         System.out.println("\tjava -cp enigma.jar cuchaz.enigma.ConvertMain <command> <old-jar> <new-jar> <old-mappings> <new-mappings> <class-matches> <field-matches> <method-matches>");
         System.out.println("\tWhere <command> is one of:");
@@ -121,14 +121,11 @@ public class ConvertMain {
         Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
         deobfuscators.source.setMappings(mappings);
         System.out.println("Starting GUI...");
-        new ClassMatchingGui(classMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new ClassMatchingGui.SaveListener() {
-            @Override
-            public void save(ClassMatches matches) {
-                try {
-                    MatchesWriter.writeClasses(matches, classMatchesFile);
-                } catch (IOException ex) {
-                    throw new Error(ex);
-                }
+        new ClassMatchingGui(classMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(matches -> {
+            try {
+                MatchesWriter.writeClasses(matches, classMatchesFile);
+            } catch (IOException ex) {
+                throw new Error(ex);
             }
         });
     }
@@ -185,14 +182,11 @@ public class ConvertMain {
         checker.dropBrokenMappings(destMappings);
         deobfuscators.dest.setMappings(destMappings);
 
-        new MemberMatchingGui<>(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<FieldEntry>() {
-            @Override
-            public void save(MemberMatches<FieldEntry> matches) {
-                try {
-                    MatchesWriter.writeMembers(matches, fieldMatchesFile);
-                } catch (IOException ex) {
-                    throw new Error(ex);
-                }
+        new MemberMatchingGui<>(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(matches -> {
+            try {
+                MatchesWriter.writeMembers(matches, fieldMatchesFile);
+            } catch (IOException ex) {
+                throw new Error(ex);
             }
         });
     }
@@ -258,14 +252,11 @@ public class ConvertMain {
         checker.dropBrokenMappings(destMappings);
         deobfuscators.dest.setMappings(destMappings);
 
-        new MemberMatchingGui<>(classMatches, methodMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<BehaviorEntry>() {
-            @Override
-            public void save(MemberMatches<BehaviorEntry> matches) {
-                try {
-                    MatchesWriter.writeMembers(matches, methodMatchesFile);
-                } catch (IOException ex) {
-                    throw new Error(ex);
-                }
+        new MemberMatchingGui<>(classMatches, methodMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(matches -> {
+            try {
+                MatchesWriter.writeMembers(matches, methodMatchesFile);
+            } catch (IOException ex) {
+                throw new Error(ex);
             }
         });
     }
@@ -303,11 +294,8 @@ public class ConvertMain {
             System.out.println("WARNING: Broken behavior entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ")");
         }
 
-        //TODO Fix
         // write out the converted mappings
-//        try (FileWriter out = new FileWriter(outMappingsFile)) {
-//            new MappingsWriter().write(out, newMappings);
-//        }
+        new MappingsWriter().write(outMappingsFile, newMappings);
         System.out.println("Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath());
     }
 

@@ -91,10 +91,7 @@ public class Signature implements Serializable {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof Signature) {
-            return equals((Signature) other);
-        }
-        return false;
+        return other instanceof Signature && equals((Signature) other);
     }
 
     public boolean equals(Signature other) {

@@ -28,7 +28,7 @@ public class SignatureUpdater {
 
             // read the signature character-by-character
             StringReader reader = new StringReader(signature);
-            int i = -1;
+            int i;
             while ((i = reader.read()) != -1) {
                 char c = (char) i;
 
@@ -60,7 +60,7 @@ public class SignatureUpdater {
         // remember to treat generics correctly
         StringBuilder buf = new StringBuilder();
         int depth = 0;
-        int i = -1;
+        int i;
         while ((i = reader.read()) != -1) {
             char c = (char) i;
 
@@ -82,12 +82,9 @@ public class SignatureUpdater {
 
     public static List<String> getClasses(String signature) {
         final List<String> classNames = Lists.newArrayList();
-        update(signature, new ClassNameUpdater() {
-            @Override
-            public String update(String className) {
-                classNames.add(className);
-                return className;
-            }
+        update(signature, className -> {
+            classNames.add(className);
+            return className;
         });
         return classNames;
     }

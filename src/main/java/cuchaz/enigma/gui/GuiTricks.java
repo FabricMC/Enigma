@@ -40,17 +40,13 @@ public class GuiTricks {
     public static void deactivateButton(JButton button) {
         button.setEnabled(false);
         button.setText("");
-        for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
-            button.removeActionListener(listener);
-        }
+        Arrays.asList(button.getActionListeners()).forEach(button::removeActionListener);
     }
 
     public static void activateButton(JButton button, String text, ActionListener newListener) {
         button.setText(text);
         button.setEnabled(true);
-        for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
-            button.removeActionListener(listener);
-        }
+        Arrays.asList(button.getActionListeners()).forEach(button::removeActionListener);
         button.addActionListener(newListener);
     }
 }

@@ -75,9 +75,7 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
         }
 
         // add them to this node
-        for (MethodImplementationsTreeNode node : nodes) {
-            this.add(node);
-        }
+        nodes.forEach(this::add);
     }
 
     public static MethodImplementationsTreeNode findNode(MethodImplementationsTreeNode node, MethodEntry entry) {

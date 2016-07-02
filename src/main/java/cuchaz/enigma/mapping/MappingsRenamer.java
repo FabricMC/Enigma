@@ -129,9 +129,7 @@ public class MappingsRenamer {
     }
 
     public void removeMethodTreeMapping(MethodEntry obf) {
-        for (MethodEntry implementation : m_index.getRelatedMethodImplementations(obf)) {
-            removeMethodMapping(implementation);
-        }
+        m_index.getRelatedMethodImplementations(obf).forEach(this::removeMethodMapping);
     }
 
     public void removeMethodMapping(MethodEntry obf) {
@@ -140,9 +138,7 @@ public class MappingsRenamer {
     }
 
     public void markMethodTreeAsDeobfuscated(MethodEntry obf) {
-        for (MethodEntry implementation : m_index.getRelatedMethodImplementations(obf)) {
-            markMethodAsDeobfuscated(implementation);
-        }
+        m_index.getRelatedMethodImplementations(obf).forEach(this::markMethodAsDeobfuscated);
     }
 
     public void markMethodAsDeobfuscated(MethodEntry obf) {

@@ -13,8 +13,6 @@ package cuchaz.enigma.gui;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -31,11 +29,11 @@ public class CrashDialog {
 
     private CrashDialog(JFrame parent) {
         // init frame
-        m_frame = new JFrame(Constants.Name + " - Crash Report");
+        m_frame = new JFrame(Constants.NAME + " - Crash Report");
         final Container pane = m_frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
-        JLabel label = new JLabel(Constants.Name + " has crashed! =(");
+        JLabel label = new JLabel(Constants.NAME + " has crashed! =(");
         label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         pane.add(label, BorderLayout.NORTH);
 
@@ -51,21 +49,15 @@ public class CrashDialog {
         buttonsPanel.setLayout(buttonsLayout);
         buttonsPanel.add(GuiTricks.unboldLabel(new JLabel("If you choose exit, you will lose any unsaved work.")));
         JButton ignoreButton = new JButton("Ignore");
-        ignoreButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                // close (hide) the dialog
-                m_frame.setVisible(false);
-            }
+        ignoreButton.addActionListener(event -> {
+            // close (hide) the dialog
+            m_frame.setVisible(false);
         });
         buttonsPanel.add(ignoreButton);
         JButton exitButton = new JButton("Exit");
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                // exit enigma
-                System.exit(1);
-            }
+        exitButton.addActionListener(event -> {
+            // exit enigma
+            System.exit(1);
         });
         buttonsPanel.add(exitButton);
         pane.add(buttonsPanel, BorderLayout.SOUTH);

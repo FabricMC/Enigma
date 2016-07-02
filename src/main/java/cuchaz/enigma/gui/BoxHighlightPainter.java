@@ -21,12 +21,12 @@ import javax.swing.text.JTextComponent;
 
 public abstract class BoxHighlightPainter implements Highlighter.HighlightPainter {
 
-    private Color m_fillColor;
-    private Color m_borderColor;
+    private Color fillColor;
+    private Color borderColor;
 
     protected BoxHighlightPainter(Color fillColor, Color borderColor) {
-        m_fillColor = fillColor;
-        m_borderColor = borderColor;
+        this.fillColor = fillColor;
+        this.borderColor = borderColor;
     }
 
     @Override
@@ -34,17 +34,17 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
         Rectangle bounds = getBounds(text, start, end);
 
         // fill the area
-        if (m_fillColor != null) {
-            g.setColor(m_fillColor);
+        if (this.fillColor != null) {
+            g.setColor(this.fillColor);
             g.fillRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
         }
 
         // draw a box around the area
-        g.setColor(m_borderColor);
+        g.setColor(this.borderColor);
         g.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
     }
 
-    protected static Rectangle getBounds(JTextComponent text, int start, int end) {
+    public static Rectangle getBounds(JTextComponent text, int start, int end) {
         try {
             // determine the bounds of the text
             Rectangle bounds = text.modelToView(start).union(text.modelToView(end));

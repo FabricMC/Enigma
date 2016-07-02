@@ -17,7 +17,6 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -30,12 +29,10 @@ import javax.swing.text.Highlighter.HighlightPainter;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
-import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.convert.ClassMatches;
 import cuchaz.enigma.convert.MemberMatches;
-import cuchaz.enigma.gui.ClassSelector.ClassSelectionListener;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
@@ -108,7 +105,7 @@ public class MemberMatchingGui<T extends Entry> {
         m_destDeobfuscator = destDeobfuscator;
 
         // init frame
-        m_frame = new JFrame(Constants.Name + " - Member Matcher");
+        m_frame = new JFrame(Constants.NAME + " - Member Matcher");
         final Container pane = m_frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
@@ -123,12 +120,7 @@ public class MemberMatchingGui<T extends Entry> {
         JPanel sourceTypePanel = new JPanel();
         classesPanel.add(sourceTypePanel);
         sourceTypePanel.setLayout(new BoxLayout(sourceTypePanel, BoxLayout.PAGE_AXIS));
-        ActionListener sourceTypeListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                setSourceType(SourceType.valueOf(event.getActionCommand()));
-            }
-        };
+        ActionListener sourceTypeListener = event -> setSourceType(SourceType.valueOf(event.getActionCommand()));
         ButtonGroup sourceTypeButtons = new ButtonGroup();
         m_sourceTypeButtons = Maps.newHashMap();
         for (SourceType sourceType : SourceType.values()) {
@@ -138,37 +130,26 @@ public class MemberMatchingGui<T extends Entry> {
         }
 
         m_sourceClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
-        m_sourceClasses.setListener(new ClassSelectionListener() {
-            @Override
-            public void onSelectClass(ClassEntry classEntry) {
-                setSourceClass(classEntry);
-            }
-        });
+        m_sourceClasses.setListener(this::setSourceClass);
         JScrollPane sourceScroller = new JScrollPane(m_sourceClasses);
         classesPanel.add(sourceScroller);
 
         // init readers
         DefaultSyntaxKit.initKit();
         m_sourceReader = new CodeReader();
-        m_sourceReader.setSelectionListener(new CodeReader.SelectionListener() {
-            @Override
-            public void onSelect(EntryReference<Entry, Entry> reference) {
-                if (reference != null) {
-                    onSelectSource(reference.entry);
-                } else {
-                    onSelectSource(null);
-                }
+        m_sourceReader.setSelectionListener(reference -> {
+            if (reference != null) {
+                onSelectSource(reference.entry);
+            } else {
+                onSelectSource(null);
             }
         });
         m_destReader = new CodeReader();
-        m_destReader.setSelectionListener(new CodeReader.SelectionListener() {
-            @Override
-            public void onSelect(EntryReference<Entry, Entry> reference) {
-                if (reference != null) {
-                    onSelectDest(reference.entry);
-                } else {
-                    onSelectDest(null);
-                }
+        m_destReader.setSelectionListener(reference -> {
+            if (reference != null) {
+                onSelectDest(reference.entry);
+            } else {
+                onSelectDest(null);
             }
         });
 
@@ -267,18 +248,8 @@ public class MemberMatchingGui<T extends Entry> {
             throw new Error("No matching dest class for source class: " + m_obfSourceClass);
         }
 
-        m_sourceReader.decompileClass(m_obfSourceClass, m_sourceDeobfuscator, false, new Runnable() {
-            @Override
-            public void run() {
-                updateSourceHighlights();
-            }
-        });
-        m_destReader.decompileClass(m_obfDestClass, m_destDeobfuscator, false, new Runnable() {
-            @Override
-            public void run() {
-                updateDestHighlights();
-            }
-        });
+        m_sourceReader.decompileClass(m_obfSourceClass, m_sourceDeobfuscator, false, this::updateSourceHighlights);
+        m_destReader.decompileClass(m_obfDestClass, m_destDeobfuscator, false, this::updateDestHighlights);
     }
 
     protected void updateSourceHighlights() {
@@ -382,21 +353,19 @@ public class MemberMatchingGui<T extends Entry> {
     }
 
     private void setSource(T obfEntry) {
+        m_obfSourceEntry = obfEntry;
         if (obfEntry == null) {
-            m_obfSourceEntry = obfEntry;
             m_sourceLabel.setText("");
         } else {
-            m_obfSourceEntry = obfEntry;
             m_sourceLabel.setText(getEntryLabel(obfEntry, m_sourceDeobfuscator));
         }
     }
 
     private void setDest(T obfEntry) {
+        m_obfDestEntry = obfEntry;
         if (obfEntry == null) {
-            m_obfDestEntry = obfEntry;
             m_destLabel.setText("");
         } else {
-            m_obfDestEntry = obfEntry;
             m_destLabel.setText(getEntryLabel(obfEntry, m_destDeobfuscator));
         }
     }
@@ -414,27 +383,12 @@ public class MemberMatchingGui<T extends Entry> {
 
         if (m_obfSourceEntry != null && m_obfDestEntry != null) {
             if (m_memberMatches.isMatched(m_obfSourceEntry, m_obfDestEntry)) {
-                GuiTricks.activateButton(m_matchButton, "Unmatch", new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        unmatch();
-                    }
-                });
+                GuiTricks.activateButton(m_matchButton, "Unmatch", event -> unmatch());
             } else if (!m_memberMatches.isMatchedSourceEntry(m_obfSourceEntry) && !m_memberMatches.isMatchedDestEntry(m_obfDestEntry)) {
-                GuiTricks.activateButton(m_matchButton, "Match", new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        match();
-                    }
-                });
+                GuiTricks.activateButton(m_matchButton, "Match", event -> match());
             }
         } else if (m_obfSourceEntry != null) {
-            GuiTricks.activateButton(m_unmatchableButton, "Set Unmatchable", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    unmatchable();
-                }
-            });
+            GuiTricks.activateButton(m_unmatchableButton, "Set Unmatchable", event -> unmatchable());
         }
     }
 

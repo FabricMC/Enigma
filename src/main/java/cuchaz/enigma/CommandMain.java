@@ -79,7 +79,7 @@ public class CommandMain {
     }
 
     private static void printHelp() {
-        System.out.println(String.format("%s - %s", Constants.Name, Constants.Version));
+        System.out.println(String.format("%s - %s", Constants.NAME, Constants.VERSION));
         System.out.println("Usage:");
         System.out.println("\tjava -cp enigma.jar cuchaz.enigma.CommandMain <command>");
         System.out.println("\twhere <command> is one of:");

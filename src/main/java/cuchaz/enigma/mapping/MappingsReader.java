@@ -31,19 +31,21 @@ public class MappingsReader {
     public void readDirectory(Mappings mappings, File in) throws IOException, MappingParseException {
 
         File[] fList = in.listFiles();
-        for (File file : fList) {
-            if (file.isFile()) {
-                readFile(mappings, new BufferedReader(new FileReader(file)));
-            } else if (file.isDirectory()) {
-                readDirectory(mappings, file.getAbsoluteFile());
+        if (fList != null) {
+            for (File file : fList) {
+                if (file.isFile()) {
+                    readFile(mappings, new BufferedReader(new FileReader(file)));
+                } else if (file.isDirectory()) {
+                    readDirectory(mappings, file.getAbsoluteFile());
+                }
             }
         }
     }
 
     public void readFile(Mappings mappings, BufferedReader in) throws IOException, MappingParseException {
 
-        StringBuffer buf = new StringBuffer();
-        String line = null;
+        StringBuilder buf = new StringBuilder();
+        String line;
         while ((line = in.readLine()) != null) {
             buf.append(line);
         }
@@ -63,10 +65,10 @@ public class MappingsReader {
         jsonClass.getField().forEach(jsonField -> classMapping.addFieldMapping(readField(jsonField.getObf(), jsonField.getName(), jsonField.getType())));
 
         jsonClass.getConstructors().forEach(jsonConstructor -> {
-           MethodMapping methodMapping = readMethod(jsonConstructor.isStatics() ? "<clinit>" : "<init>", null, jsonConstructor.getSignature());
-                     jsonConstructor.getArgs().forEach(jsonArgument -> methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName())));
-                        classMapping.addMethodMapping(methodMapping);
-                    });
+            MethodMapping methodMapping = readMethod(jsonConstructor.isStatics() ? "<clinit>" : "<init>", null, jsonConstructor.getSignature());
+            jsonConstructor.getArgs().forEach(jsonArgument -> methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName())));
+            classMapping.addMethodMapping(methodMapping);
+        });
 
         jsonClass.getMethod().forEach(jsonMethod -> {
             MethodMapping methodMapping = readMethod(jsonMethod.getObf(), jsonMethod.getName(), jsonMethod.getSignature());

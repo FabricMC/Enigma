@@ -98,7 +98,7 @@ public class SourceIndex {
     public void addReference(AstNode node, Entry deobfEntry, Entry deobfContext) {
         Token token = getToken(node);
         if (token != null) {
-            EntryReference<Entry, Entry> deobfReference = new EntryReference<Entry, Entry>(deobfEntry, token.text, deobfContext);
+            EntryReference<Entry, Entry> deobfReference = new EntryReference<>(deobfEntry, token.text, deobfContext);
             this.tokenToReference.put(token, deobfReference);
             this.referenceToTokens.put(deobfReference, token);
         }
@@ -107,7 +107,7 @@ public class SourceIndex {
     public void addDeclaration(AstNode node, Entry deobfEntry) {
         Token token = getToken(node);
         if (token != null) {
-            EntryReference<Entry, Entry> reference = new EntryReference<Entry, Entry>(deobfEntry, token.text);
+            EntryReference<Entry, Entry> reference = new EntryReference<>(deobfEntry, token.text);
             this.tokenToReference.put(token, reference);
             this.referenceToTokens.put(reference, token);
             this.declarationToToken.put(deobfEntry, token);

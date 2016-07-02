@@ -205,10 +205,7 @@ public class Type implements Serializable {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof Type) {
-            return equals((Type) other);
-        }
-        return false;
+        return other instanceof Type && equals((Type) other);
     }
 
     public boolean equals(Type other) {
@@ -222,7 +219,6 @@ public class Type implements Serializable {
     private static int countArrayDimension(String in) {
         int i = 0;
         for (; i < in.length() && in.charAt(i) == '['; i++) {
-            ;
         }
         return i;
     }

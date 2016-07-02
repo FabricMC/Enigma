@@ -28,7 +28,7 @@ public class MatchesReader {
             throws IOException {
         try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             ClassMatches matches = new ClassMatches();
-            String line = null;
+            String line;
             while ((line = in.readLine()) != null) {
                 matches.add(readClassMatch(line));
             }
@@ -56,8 +56,8 @@ public class MatchesReader {
     public static <T extends Entry> MemberMatches<T> readMembers(File file)
             throws IOException {
         try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-            MemberMatches<T> matches = new MemberMatches<T>();
-            String line = null;
+            MemberMatches<T> matches = new MemberMatches<>();
+            String line;
             while ((line = in.readLine()) != null) {
                 readMemberMatch(matches, line);
             }
@@ -90,13 +90,8 @@ public class MatchesReader {
         }
         String[] parts = in.split(" ");
         if (parts.length == 3 && parts[2].indexOf('(') < 0) {
-            return (T) new FieldEntry(
-                    new ClassEntry(parts[0]),
-                    parts[1],
-                    new Type(parts[2])
-            );
+            return (T) new FieldEntry(new ClassEntry(parts[0]), parts[1], new Type(parts[2]));
         } else {
-            assert (parts.length == 2 || parts.length == 3);
             if (parts.length == 2) {
                 return (T) EntryFactory.getBehaviorEntry(parts[0], parts[1]);
             } else if (parts.length == 3) {

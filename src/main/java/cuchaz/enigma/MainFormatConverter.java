@@ -59,24 +59,18 @@ public class MainFormatConverter {
 
         System.out.println("Saving mappings...");
 
-        //TODO Fix
-//        try (FileWriter writer = new FileWriter(fileMappings)) {
-//            new MappingsWriter().write(writer, mappings);
-//        }
+        new MappingsWriter().write(fileMappings, mappings);
 
         System.out.println("Done!");
     }
 
     private static Type moveClasssesOutOfDefaultPackage(Type type) {
-        return new Type(type, new ClassNameReplacer() {
-            @Override
-            public String replace(String className) {
-                ClassEntry entry = new ClassEntry(className);
-                if (entry.isInDefaultPackage()) {
-                    return Constants.NonePackage + "/" + className;
-                }
-                return null;
+        return new Type(type, className -> {
+            ClassEntry entry = new ClassEntry(className);
+            if (entry.isInDefaultPackage()) {
+                return Constants.NONE_PACKAGE + "/" + className;
             }
+            return null;
         });
     }
 

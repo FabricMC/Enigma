@@ -60,14 +60,14 @@ public class JarIndex {
         for (ClassEntry classEntry : JarClassIterator.getClassEntries(jar)) {
             if (classEntry.isInDefaultPackage()) {
                 // move out of default package
-                classEntry = new ClassEntry(Constants.NonePackage + "/" + classEntry.getName());
+                classEntry = new ClassEntry(Constants.NONE_PACKAGE + "/" + classEntry.getName());
             }
             this.obfClassEntries.add(classEntry);
         }
 
         // step 2: index field/method/constructor access
         for (CtClass c : JarClassIterator.classes(jar)) {
-            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
+            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
             for (CtField field : c.getDeclaredFields()) {
                 FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
                 this.access.put(fieldEntry, Access.get(field));
@@ -82,7 +82,7 @@ public class JarIndex {
 
         // step 3: index extends, implements, fields, and methods
         for (CtClass c : JarClassIterator.classes(jar)) {
-            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
+            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
             this.translationIndex.indexClass(c);
             String className = Descriptor.toJvmName(c.getName());
             for (String interfaceName : c.getClassFile().getInterfaces()) {
@@ -99,7 +99,7 @@ public class JarIndex {
 
         // step 4: index field, method, constructor references
         for (CtClass c : JarClassIterator.classes(jar)) {
-            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
+            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
             for (CtBehavior behavior : c.getDeclaredBehaviors()) {
                 indexBehaviorReferences(behavior);
             }
@@ -109,7 +109,7 @@ public class JarIndex {
 
             // step 5: index inner classes and anonymous classes
             for (CtClass c : JarClassIterator.classes(jar)) {
-                ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
+                ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
                 ClassEntry innerClassEntry = EntryFactory.getClassEntry(c);
                 ClassEntry outerClassEntry = findOuterClass(c);
                 if (outerClassEntry != null) {
@@ -183,7 +183,7 @@ public class JarIndex {
                                 calledMethodEntry.getSignature()
                         );
                     }
-                    EntryReference<BehaviorEntry, BehaviorEntry> reference = new EntryReference<BehaviorEntry, BehaviorEntry>(
+                    EntryReference<BehaviorEntry, BehaviorEntry> reference = new EntryReference<>(
                             calledMethodEntry,
                             call.getMethodName(),
                             behaviorEntry
@@ -198,7 +198,7 @@ public class JarIndex {
                     if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledFieldEntry.getClassEntry())) {
                         calledFieldEntry = new FieldEntry(calledFieldEntry, resolvedClassEntry);
                     }
-                    EntryReference<FieldEntry, BehaviorEntry> reference = new EntryReference<FieldEntry, BehaviorEntry>(
+                    EntryReference<FieldEntry, BehaviorEntry> reference = new EntryReference<>(
                             calledFieldEntry,
                             call.getFieldName(),
                             behaviorEntry
@@ -209,7 +209,7 @@ public class JarIndex {
                 @Override
                 public void edit(ConstructorCall call) {
                     ConstructorEntry calledConstructorEntry = EntryFactory.getConstructorEntry(call);
-                    EntryReference<BehaviorEntry, BehaviorEntry> reference = new EntryReference<BehaviorEntry, BehaviorEntry>(
+                    EntryReference<BehaviorEntry, BehaviorEntry> reference = new EntryReference<>(
                             calledConstructorEntry,
                             call.getMethodName(),
                             behaviorEntry
@@ -220,7 +220,7 @@ public class JarIndex {
                 @Override
                 public void edit(NewExpr call) {
                     ConstructorEntry calledConstructorEntry = EntryFactory.getConstructorEntry(call);
-                    EntryReference<BehaviorEntry, BehaviorEntry> reference = new EntryReference<BehaviorEntry, BehaviorEntry>(
+                    EntryReference<BehaviorEntry, BehaviorEntry> reference = new EntryReference<>(
                             calledConstructorEntry,
                             call.getClassName(),
                             behaviorEntry
@@ -711,7 +711,7 @@ public class JarIndex {
 
     public Set<ClassEntry> getInterfaces(String className) {
         ClassEntry classEntry = new ClassEntry(className);
-        Set<ClassEntry> interfaces = new HashSet<ClassEntry>();
+        Set<ClassEntry> interfaces = new HashSet<>();
         interfaces.addAll(this.translationIndex.getInterfaces(classEntry));
         for (ClassEntry ancestor : this.translationIndex.getAncestry(classEntry)) {
             interfaces.addAll(this.translationIndex.getInterfaces(ancestor));

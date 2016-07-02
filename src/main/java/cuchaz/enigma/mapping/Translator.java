@@ -24,12 +24,7 @@ public class Translator {
     private Map<String, ClassMapping> m_classes;
     private TranslationIndex m_index;
 
-    private ClassNameReplacer m_classNameReplacer = new ClassNameReplacer() {
-        @Override
-        public String replace(String className) {
-            return translateEntry(new ClassEntry(className)).getName();
-        }
-    };
+    private ClassNameReplacer m_classNameReplacer = className -> translateEntry(new ClassEntry(className)).getName();
 
     public Translator() {
         m_direction = null;
@@ -76,7 +71,7 @@ public class Translator {
         } else if (entry instanceof MethodEntry) {
             return translate((MethodEntry) entry);
         } else if (entry instanceof ConstructorEntry) {
-            return translate((ConstructorEntry) entry);
+            return translate(entry);
         } else if (entry instanceof ArgumentEntry) {
             return translate((ArgumentEntry) entry);
         } else {

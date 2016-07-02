@@ -58,11 +58,11 @@ public class ClassSelector extends JTree {
         };
     }
 
-    private ClassSelectionListener m_listener;
-    private Comparator<ClassEntry> m_comparator;
+    private ClassSelectionListener listener;
+    private Comparator<ClassEntry> comparator;
 
     public ClassSelector(Comparator<ClassEntry> comparator) {
-        m_comparator = comparator;
+        this.comparator = comparator;
 
         // configure the tree control
         setRootVisible(false);
@@ -73,23 +73,23 @@ public class ClassSelector extends JTree {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
-                if (m_listener != null && event.getClickCount() == 2) {
+                if (listener != null && event.getClickCount() == 2) {
                     // get the selected node
                     TreePath path = getSelectionPath();
                     if (path != null && path.getLastPathComponent() instanceof ClassSelectorClassNode) {
                         ClassSelectorClassNode node = (ClassSelectorClassNode) path.getLastPathComponent();
-                        m_listener.onSelectClass(node.getClassEntry());
+                        listener.onSelectClass(node.getClassEntry());
                     }
                 }
             }
         });
 
         // init defaults
-        m_listener = null;
+        this.listener = null;
     }
 
     public void setListener(ClassSelectionListener val) {
-        m_listener = val;
+        this.listener = val;
     }
 
     public void setClasses(Collection<ClassEntry> classEntries) {
@@ -144,7 +144,7 @@ public class ClassSelector extends JTree {
         for (String packageName : packagedClassEntries.keySet()) {
             // sort the class entries
             List<ClassEntry> classEntriesInPackage = Lists.newArrayList(packagedClassEntries.get(packageName));
-            Collections.sort(classEntriesInPackage, m_comparator);
+            Collections.sort(classEntriesInPackage, this.comparator);
 
             // create the nodes in order
             for (ClassEntry classEntry : classEntriesInPackage) {

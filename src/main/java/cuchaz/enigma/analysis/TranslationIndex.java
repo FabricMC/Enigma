@@ -119,7 +119,7 @@ public class TranslationIndex implements Serializable {
 
     public void renameClasses(Map<String, String> renames) {
         EntryRenamer.renameClassesInMap(renames, this.superclasses);
-        EntryRenamer.renameClassesInMultimap(renames,this.fieldEntries);
+        EntryRenamer.renameClassesInMultimap(renames, this.fieldEntries);
         EntryRenamer.renameClassesInMultimap(renames, this.behaviorEntries);
     }
 

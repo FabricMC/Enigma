@@ -253,10 +253,7 @@ public enum InfoType {
 
     public boolean selfIndexIsValid(ConstInfoAccessor entry, ConstPoolEditor pool) {
         ConstInfoAccessor entryCheck = pool.getItem(entry.getIndex());
-        if (entryCheck == null) {
-            return false;
-        }
-        return entryCheck.getItem().equals(entry.getItem());
+        return entryCheck != null && entryCheck.getItem().equals(entry.getItem());
     }
 
     public static InfoType getByTag(int tag) {

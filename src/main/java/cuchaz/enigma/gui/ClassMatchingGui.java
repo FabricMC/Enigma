@@ -77,35 +77,35 @@ public class ClassMatchingGui {
     }
 
     // controls
-    private JFrame m_frame;
-    private ClassSelector m_sourceClasses;
-    private ClassSelector m_destClasses;
-    private CodeReader m_sourceReader;
-    private CodeReader m_destReader;
-    private JLabel m_sourceClassLabel;
-    private JLabel m_destClassLabel;
-    private JButton m_matchButton;
-    private Map<SourceType, JRadioButton> m_sourceTypeButtons;
-    private JCheckBox m_advanceCheck;
-    private JCheckBox m_top10Matches;
+    private JFrame frame;
+    private ClassSelector sourceClasses;
+    private ClassSelector destClasses;
+    private CodeReader sourceReader;
+    private CodeReader destReader;
+    private JLabel sourceClassLabel;
+    private JLabel destClassLabel;
+    private JButton matchButton;
+    private Map<SourceType, JRadioButton> sourceTypeButtons;
+    private JCheckBox advanceCheck;
+    private JCheckBox top10Matches;
 
-    private ClassMatches m_classMatches;
-    private Deobfuscator m_sourceDeobfuscator;
-    private Deobfuscator m_destDeobfuscator;
-    private ClassEntry m_sourceClass;
-    private ClassEntry m_destClass;
-    private SourceType m_sourceType;
-    private SaveListener m_saveListener;
+    private ClassMatches classMatches;
+    private Deobfuscator sourceDeobfuscator;
+    private Deobfuscator destDeobfuscator;
+    private ClassEntry sourceClass;
+    private ClassEntry destClass;
+    private SourceType sourceType;
+    private SaveListener saveListener;
 
     public ClassMatchingGui(ClassMatches matches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 
-        m_classMatches = matches;
-        m_sourceDeobfuscator = sourceDeobfuscator;
-        m_destDeobfuscator = destDeobfuscator;
+        this.classMatches = matches;
+        this.sourceDeobfuscator = sourceDeobfuscator;
+        this.destDeobfuscator = destDeobfuscator;
 
         // init frame
-        m_frame = new JFrame(Constants.Name + " - Class Matcher");
-        final Container pane = m_frame.getContentPane();
+        this.frame = new JFrame(Constants.NAME + " - Class Matcher");
+        final Container pane = this.frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
         // init source side
@@ -121,16 +121,16 @@ public class ClassMatchingGui {
         sourceTypePanel.setLayout(new BoxLayout(sourceTypePanel, BoxLayout.PAGE_AXIS));
         ActionListener sourceTypeListener = event -> setSourceType(SourceType.valueOf(event.getActionCommand()));
         ButtonGroup sourceTypeButtons = new ButtonGroup();
-        m_sourceTypeButtons = Maps.newHashMap();
+        this.sourceTypeButtons = Maps.newHashMap();
         for (SourceType sourceType : SourceType.values()) {
             JRadioButton button = sourceType.newRadio(sourceTypeListener, sourceTypeButtons);
-            m_sourceTypeButtons.put(sourceType, button);
+            this.sourceTypeButtons.put(sourceType, button);
             sourceTypePanel.add(button);
         }
 
-        m_sourceClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
-        m_sourceClasses.setListener(classEntry -> setSourceClass(classEntry));
-        JScrollPane sourceScroller = new JScrollPane(m_sourceClasses);
+        this.sourceClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
+        this.sourceClasses.setListener(this::setSourceClass);
+        JScrollPane sourceScroller = new JScrollPane(this.sourceClasses);
         sourcePanel.add(sourceScroller);
 
         // init dest side
@@ -140,13 +140,13 @@ public class ClassMatchingGui {
         pane.add(destPanel, BorderLayout.WEST);
         destPanel.add(new JLabel("Destination Classes"));
 
-        m_top10Matches = new JCheckBox("Show only top 10 matches");
-        destPanel.add(m_top10Matches);
-        m_top10Matches.addActionListener(event -> toggleTop10Matches());
+        this.top10Matches = new JCheckBox("Show only top 10 matches");
+        destPanel.add(this.top10Matches);
+        this.top10Matches.addActionListener(event -> toggleTop10Matches());
 
-        m_destClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
-        m_destClasses.setListener(this::setDestClass);
-        JScrollPane destScroller = new JScrollPane(m_destClasses);
+        this.destClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
+        this.destClasses.setListener(this::setDestClass);
+        JScrollPane destScroller = new JScrollPane(this.destClasses);
         destPanel.add(destScroller);
 
         JButton autoMatchButton = new JButton("AutoMatch");
@@ -155,13 +155,13 @@ public class ClassMatchingGui {
 
         // init source panels
         DefaultSyntaxKit.initKit();
-        m_sourceReader = new CodeReader();
-        m_destReader = new CodeReader();
+        this.sourceReader = new CodeReader();
+        this.destReader = new CodeReader();
 
         // init all the splits
-        JSplitPane splitLeft = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, sourcePanel, new JScrollPane(m_sourceReader));
+        JSplitPane splitLeft = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, sourcePanel, new JScrollPane(this.sourceReader));
         splitLeft.setResizeWeight(0); // let the right side take all the slack
-        JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, new JScrollPane(m_destReader), destPanel);
+        JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, new JScrollPane(this.destReader), destPanel);
         splitRight.setResizeWeight(1); // let the left side take all the slack
         JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, splitLeft, splitRight);
         splitCenter.setResizeWeight(0.5); // resize 50:50
@@ -172,81 +172,75 @@ public class ClassMatchingGui {
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new FlowLayout());
 
-        m_sourceClassLabel = new JLabel();
-        m_sourceClassLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        m_destClassLabel = new JLabel();
-        m_destClassLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        this.sourceClassLabel = new JLabel();
+        this.sourceClassLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        this.destClassLabel = new JLabel();
+        this.destClassLabel.setHorizontalAlignment(SwingConstants.LEFT);
 
-        m_matchButton = new JButton();
+        this.matchButton = new JButton();
 
-        m_advanceCheck = new JCheckBox("Advance to next likely match");
-        m_advanceCheck.addActionListener(event -> {
-            if (m_advanceCheck.isSelected()) {
+        this.advanceCheck = new JCheckBox("Advance to next likely match");
+        this.advanceCheck.addActionListener(event -> {
+            if (this.advanceCheck.isSelected()) {
                 advance();
             }
         });
 
-        bottomPanel.add(m_sourceClassLabel);
-        bottomPanel.add(m_matchButton);
-        bottomPanel.add(m_destClassLabel);
-        bottomPanel.add(m_advanceCheck);
+        bottomPanel.add(this.sourceClassLabel);
+        bottomPanel.add(this.matchButton);
+        bottomPanel.add(this.destClassLabel);
+        bottomPanel.add(this.advanceCheck);
         pane.add(bottomPanel, BorderLayout.SOUTH);
 
         // show the frame
         pane.doLayout();
-        m_frame.setSize(1024, 576);
-        m_frame.setMinimumSize(new Dimension(640, 480));
-        m_frame.setVisible(true);
-        m_frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        this.frame.setSize(1024, 576);
+        this.frame.setMinimumSize(new Dimension(640, 480));
+        this.frame.setVisible(true);
+        this.frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         // init state
         updateDestMappings();
         setSourceType(SourceType.getDefault());
         updateMatchButton();
-        m_saveListener = null;
+        this.saveListener = null;
     }
 
     public void setSaveListener(SaveListener val) {
-        m_saveListener = val;
+        this.saveListener = val;
     }
 
     private void updateDestMappings() {
 
-        Mappings newMappings = MappingsConverter.newMappings(
-                m_classMatches,
-                m_sourceDeobfuscator.getMappings(),
-                m_sourceDeobfuscator,
-                m_destDeobfuscator
-        );
+        Mappings newMappings = MappingsConverter.newMappings(this.classMatches, this.sourceDeobfuscator.getMappings(), this.sourceDeobfuscator, this.destDeobfuscator);
 
         // look for dropped mappings
-        MappingsChecker checker = new MappingsChecker(m_destDeobfuscator.getJarIndex());
+        MappingsChecker checker = new MappingsChecker(this.destDeobfuscator.getJarIndex());
         checker.dropBrokenMappings(newMappings);
 
         // count them
         int numDroppedFields = checker.getDroppedFieldMappings().size();
         int numDroppedMethods = checker.getDroppedMethodMappings().size();
-        System.out.println(String.format(
-                "%d mappings from matched classes don't match the dest jar:\n\t%5d fields\n\t%5d methods",
+        System.out.println(String.format("%d mappings from matched classes don't match the dest jar:\n\t%5d fields\n\t%5d methods",
                 numDroppedFields + numDroppedMethods,
                 numDroppedFields,
                 numDroppedMethods
         ));
 
-        m_destDeobfuscator.setMappings(newMappings);
+        this.destDeobfuscator.setMappings(newMappings);
     }
 
     protected void setSourceType(SourceType val) {
 
         // show the source classes
-        m_sourceType = val;
-        m_sourceClasses.setClasses(deobfuscateClasses(m_sourceType.getSourceClasses(m_classMatches), m_sourceDeobfuscator));
+        this.sourceType = val;
+        this.sourceClasses.setClasses(deobfuscateClasses(this.sourceType.getSourceClasses(this.classMatches), this.sourceDeobfuscator));
 
         // update counts
         for (SourceType sourceType : SourceType.values()) {
-            m_sourceTypeButtons.get(sourceType).setText(String.format("%s (%d)",
+            this.sourceTypeButtons.get(sourceType).setText(String.format("%s (%d)",
                     sourceType.name(),
-                    sourceType.getSourceClasses(m_classMatches).size()
+                    sourceType.getSourceClasses(this.classMatches).size()
             ));
         }
     }
@@ -270,7 +264,7 @@ public class ClassMatchingGui {
     protected void setSourceClass(ClassEntry classEntry) {
 
         Runnable onGetDestClasses = null;
-        if (m_advanceCheck.isSelected()) {
+        if (this.advanceCheck.isSelected()) {
             onGetDestClasses = this::pickBestDestClass;
         }
 
@@ -280,24 +274,24 @@ public class ClassMatchingGui {
     protected void setSourceClass(ClassEntry classEntry, final Runnable onGetDestClasses) {
 
         // update the current source class
-        m_sourceClass = classEntry;
-        m_sourceClassLabel.setText(m_sourceClass != null ? m_sourceClass.getName() : "");
+        this.sourceClass = classEntry;
+        this.sourceClassLabel.setText(this.sourceClass != null ? this.sourceClass.getName() : "");
 
-        if (m_sourceClass != null) {
+        if (this.sourceClass != null) {
 
             // show the dest class(es)
-            ClassMatch match = m_classMatches.getMatchBySource(m_sourceDeobfuscator.obfuscateEntry(m_sourceClass));
+            ClassMatch match = this.classMatches.getMatchBySource(this.sourceDeobfuscator.obfuscateEntry(this.sourceClass));
             assert (match != null);
             if (match.destClasses.isEmpty()) {
 
-                m_destClasses.setClasses(null);
+                this.destClasses.setClasses(null);
 
                 // run in a separate thread to keep ui responsive
                 new Thread() {
                     @Override
                     public void run() {
-                        m_destClasses.setClasses(deobfuscateClasses(getLikelyMatches(m_sourceClass), m_destDeobfuscator));
-                        m_destClasses.expandAll();
+                        destClasses.setClasses(deobfuscateClasses(getLikelyMatches(sourceClass), destDeobfuscator));
+                        destClasses.expandAll();
 
                         if (onGetDestClasses != null) {
                             onGetDestClasses.run();
@@ -307,8 +301,8 @@ public class ClassMatchingGui {
 
             } else {
 
-                m_destClasses.setClasses(deobfuscateClasses(match.destClasses, m_destDeobfuscator));
-                m_destClasses.expandAll();
+                this.destClasses.setClasses(deobfuscateClasses(match.destClasses, this.destDeobfuscator));
+                this.destClasses.expandAll();
 
                 if (onGetDestClasses != null) {
                     onGetDestClasses.run();
@@ -317,39 +311,33 @@ public class ClassMatchingGui {
         }
 
         setDestClass(null);
-        m_sourceReader.decompileClass(m_sourceClass, m_sourceDeobfuscator, () -> m_sourceReader.navigateToClassDeclaration(m_sourceClass));
+        this.sourceReader.decompileClass(this.sourceClass, this.sourceDeobfuscator, () -> this.sourceReader.navigateToClassDeclaration(this.sourceClass));
 
         updateMatchButton();
     }
 
     private Collection<ClassEntry> getLikelyMatches(ClassEntry sourceClass) {
 
-        ClassEntry obfSourceClass = m_sourceDeobfuscator.obfuscateEntry(sourceClass);
+        ClassEntry obfSourceClass = this.sourceDeobfuscator.obfuscateEntry(sourceClass);
 
         // set up identifiers
-        ClassNamer namer = new ClassNamer(m_classMatches.getUniqueMatches());
-        ClassIdentifier sourceIdentifier = new ClassIdentifier(
-                m_sourceDeobfuscator.getJar(), m_sourceDeobfuscator.getJarIndex(),
-                namer.getSourceNamer(), true
-        );
-        ClassIdentifier destIdentifier = new ClassIdentifier(
-                m_destDeobfuscator.getJar(), m_destDeobfuscator.getJarIndex(),
-                namer.getDestNamer(), true
-        );
+        ClassNamer namer = new ClassNamer(this.classMatches.getUniqueMatches());
+        ClassIdentifier sourceIdentifier = new ClassIdentifier(this.sourceDeobfuscator.getJar(), this.sourceDeobfuscator.getJarIndex(), namer.getSourceNamer(), true);
+        ClassIdentifier destIdentifier = new ClassIdentifier(this.destDeobfuscator.getJar(), this.destDeobfuscator.getJarIndex(), namer.getDestNamer(), true);
 
         try {
 
             // rank all the unmatched dest classes against the source class
             ClassIdentity sourceIdentity = sourceIdentifier.identify(obfSourceClass);
             List<ClassEntry> scoredDestClasses = Lists.newArrayList();
-            for (ClassEntry unmatchedDestClass : m_classMatches.getUnmatchedDestClasses()) {
+            for (ClassEntry unmatchedDestClass : this.classMatches.getUnmatchedDestClasses()) {
                 ClassIdentity destIdentity = destIdentifier.identify(unmatchedDestClass);
                 float score = 100.0f * (sourceIdentity.getMatchScore(destIdentity) + destIdentity.getMatchScore(sourceIdentity))
                         / (sourceIdentity.getMaxMatchScore() + destIdentity.getMaxMatchScore());
                 scoredDestClasses.add(new ScoredClassEntry(unmatchedDestClass, score));
             }
 
-            if (m_top10Matches.isSelected() && scoredDestClasses.size() > 10) {
+            if (this.top10Matches.isSelected() && scoredDestClasses.size() > 10) {
                 Collections.sort(scoredDestClasses, (a, b) -> {
                     ScoredClassEntry sa = (ScoredClassEntry) a;
                     ScoredClassEntry sb = (ScoredClassEntry) b;
@@ -368,30 +356,30 @@ public class ClassMatchingGui {
     protected void setDestClass(ClassEntry classEntry) {
 
         // update the current source class
-        m_destClass = classEntry;
-        m_destClassLabel.setText(m_destClass != null ? m_destClass.getName() : "");
+        this.destClass = classEntry;
+        this.destClassLabel.setText(this.destClass != null ? this.destClass.getName() : "");
 
-        m_destReader.decompileClass(m_destClass, m_destDeobfuscator, () -> m_destReader.navigateToClassDeclaration(m_destClass));
+        this.destReader.decompileClass(this.destClass, this.destDeobfuscator, () -> this.destReader.navigateToClassDeclaration(this.destClass));
 
         updateMatchButton();
     }
 
     private void updateMatchButton() {
 
-        ClassEntry obfSource = m_sourceDeobfuscator.obfuscateEntry(m_sourceClass);
-        ClassEntry obfDest = m_destDeobfuscator.obfuscateEntry(m_destClass);
+        ClassEntry obfSource = this.sourceDeobfuscator.obfuscateEntry(this.sourceClass);
+        ClassEntry obfDest = this.destDeobfuscator.obfuscateEntry(this.destClass);
 
-        BiMap<ClassEntry, ClassEntry> uniqueMatches = m_classMatches.getUniqueMatches();
-        boolean twoSelected = m_sourceClass != null && m_destClass != null;
+        BiMap<ClassEntry, ClassEntry> uniqueMatches = this.classMatches.getUniqueMatches();
+        boolean twoSelected = this.sourceClass != null && this.destClass != null;
         boolean isMatched = uniqueMatches.containsKey(obfSource) && uniqueMatches.containsValue(obfDest);
         boolean canMatch = !uniqueMatches.containsKey(obfSource) && !uniqueMatches.containsValue(obfDest);
 
-        GuiTricks.deactivateButton(m_matchButton);
+        GuiTricks.deactivateButton(this.matchButton);
         if (twoSelected) {
             if (isMatched) {
-                GuiTricks.activateButton(m_matchButton, "Unmatch", event -> onUnmatchClick());
+                GuiTricks.activateButton(this.matchButton, "Unmatch", event -> onUnmatchClick());
             } else if (canMatch) {
-                GuiTricks.activateButton(m_matchButton, "Match", event -> onMatchClick());
+                GuiTricks.activateButton(this.matchButton, "Match", event -> onMatchClick());
             }
         }
     }
@@ -399,19 +387,19 @@ public class ClassMatchingGui {
     private void onMatchClick() {
         // precondition: source and dest classes are set correctly
 
-        ClassEntry obfSource = m_sourceDeobfuscator.obfuscateEntry(m_sourceClass);
-        ClassEntry obfDest = m_destDeobfuscator.obfuscateEntry(m_destClass);
+        ClassEntry obfSource = this.sourceDeobfuscator.obfuscateEntry(this.sourceClass);
+        ClassEntry obfDest = this.destDeobfuscator.obfuscateEntry(this.destClass);
 
         // remove the classes from their match
-        m_classMatches.removeSource(obfSource);
-        m_classMatches.removeDest(obfDest);
+        this.classMatches.removeSource(obfSource);
+        this.classMatches.removeDest(obfDest);
 
         // add them as matched classes
-        m_classMatches.add(new ClassMatch(obfSource, obfDest));
+        this.classMatches.add(new ClassMatch(obfSource, obfDest));
 
         ClassEntry nextClass = null;
-        if (m_advanceCheck.isSelected()) {
-            nextClass = m_sourceClasses.getNextClass(m_sourceClass);
+        if (this.advanceCheck.isSelected()) {
+            nextClass = this.sourceClasses.getNextClass(this.sourceClass);
         }
 
         save();
@@ -425,11 +413,11 @@ public class ClassMatchingGui {
     private void onUnmatchClick() {
         // precondition: source and dest classes are set to a unique match
 
-        ClassEntry obfSource = m_sourceDeobfuscator.obfuscateEntry(m_sourceClass);
+        ClassEntry obfSource = this.sourceDeobfuscator.obfuscateEntry(this.sourceClass);
 
         // remove the source to break the match, then add the source back as unmatched
-        m_classMatches.removeSource(obfSource);
-        m_classMatches.add(new ClassMatch(obfSource, null));
+        this.classMatches.removeSource(obfSource);
+        this.classMatches.add(new ClassMatch(obfSource, null));
 
         save();
         updateMatches();
@@ -438,20 +426,20 @@ public class ClassMatchingGui {
     private void updateMatches() {
         updateDestMappings();
         setDestClass(null);
-        m_destClasses.setClasses(null);
+        this.destClasses.setClasses(null);
         updateMatchButton();
 
         // remember where we were in the source tree
-        String packageName = m_sourceClasses.getSelectedPackage();
+        String packageName = this.sourceClasses.getSelectedPackage();
 
-        setSourceType(m_sourceType);
+        setSourceType(this.sourceType);
 
-        m_sourceClasses.expandPackage(packageName);
+        this.sourceClasses.expandPackage(packageName);
     }
 
     private void save() {
-        if (m_saveListener != null) {
-            m_saveListener.save(m_classMatches);
+        if (this.saveListener != null) {
+            this.saveListener.save(this.classMatches);
         }
     }
 
@@ -460,18 +448,13 @@ public class ClassMatchingGui {
         System.out.println("Automatching...");
 
         // compute a new matching
-        ClassMatching matching = MappingsConverter.computeMatching(
-                m_sourceDeobfuscator.getJar(), m_sourceDeobfuscator.getJarIndex(),
-                m_destDeobfuscator.getJar(), m_destDeobfuscator.getJarIndex(),
-                m_classMatches.getUniqueMatches()
-        );
+        ClassMatching matching = MappingsConverter.computeMatching(this.sourceDeobfuscator.getJar(), this.sourceDeobfuscator.getJarIndex(),
+                this.destDeobfuscator.getJar(), this.destDeobfuscator.getJarIndex(), this.classMatches.getUniqueMatches());
         ClassMatches newMatches = new ClassMatches(matching.matches());
-        System.out.println(String.format("Automatch found %d new matches",
-                newMatches.getUniqueMatches().size() - m_classMatches.getUniqueMatches().size()
-        ));
+        System.out.println(String.format("Automatch found %d new matches", newMatches.getUniqueMatches().size() - this.classMatches.getUniqueMatches().size()));
 
         // update the current matches
-        m_classMatches = newMatches;
+        this.classMatches = newMatches;
         save();
         updateMatches();
     }
@@ -484,17 +467,17 @@ public class ClassMatchingGui {
 
         // make sure we have a source class
         if (sourceClass == null) {
-            sourceClass = m_sourceClasses.getSelectedClass();
+            sourceClass = this.sourceClasses.getSelectedClass();
             if (sourceClass != null) {
-                sourceClass = m_sourceClasses.getNextClass(sourceClass);
+                sourceClass = this.sourceClasses.getNextClass(sourceClass);
             } else {
-                sourceClass = m_sourceClasses.getFirstClass();
+                sourceClass = this.sourceClasses.getFirstClass();
             }
         }
 
         // set the source class
         setSourceClass(sourceClass, this::pickBestDestClass);
-        m_sourceClasses.setSelectionClass(sourceClass);
+        this.sourceClasses.setSelectionClass(sourceClass);
     }
 
     private void pickBestDestClass() {
@@ -502,8 +485,8 @@ public class ClassMatchingGui {
         // then, pick the best dest class
         ClassEntry firstClass = null;
         ScoredClassEntry bestDestClass = null;
-        for (ClassSelectorPackageNode packageNode : m_destClasses.packageNodes()) {
-            for (ClassSelectorClassNode classNode : m_destClasses.classNodes(packageNode)) {
+        for (ClassSelectorPackageNode packageNode : this.destClasses.packageNodes()) {
+            for (ClassSelectorClassNode classNode : this.destClasses.classNodes(packageNode)) {
                 if (firstClass == null) {
                     firstClass = classNode.getClassEntry();
                 }
@@ -525,14 +508,14 @@ public class ClassMatchingGui {
         }
 
         setDestClass(destClass);
-        m_destClasses.setSelectionClass(destClass);
+        this.destClasses.setSelectionClass(destClass);
     }
 
     private void toggleTop10Matches() {
-        if (m_sourceClass != null) {
-            m_destClasses.clearSelection();
-            m_destClasses.setClasses(deobfuscateClasses(getLikelyMatches(m_sourceClass), m_destDeobfuscator));
-            m_destClasses.expandAll();
+        if (this.sourceClass != null) {
+            this.destClasses.clearSelection();
+            this.destClasses.setClasses(deobfuscateClasses(getLikelyMatches(this.sourceClass), this.destDeobfuscator));
+            this.destClasses.expandAll();
         }
     }
 }
