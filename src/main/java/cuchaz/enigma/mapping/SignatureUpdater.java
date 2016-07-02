@@ -79,13 +79,4 @@ public class SignatureUpdater {
 
         return null;
     }
-
-    public static List<String> getClasses(String signature) {
-        final List<String> classNames = Lists.newArrayList();
-        update(signature, className -> {
-            classNames.add(className);
-            return className;
-        });
-        return classNames;
-    }
 }

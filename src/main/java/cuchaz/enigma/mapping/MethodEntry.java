@@ -89,9 +89,7 @@ public class MethodEntry implements BehaviorEntry, Serializable {
     }
 
     public boolean equals(MethodEntry other) {
-        return m_classEntry.equals(other.m_classEntry)
-                && m_name.equals(other.m_name)
-                && m_signature.equals(other.m_signature);
+        return m_classEntry.equals(other.m_classEntry) && m_name.equals(other.m_name) && m_signature.equals(other.m_signature);
     }
 
     @Override

@@ -507,16 +507,8 @@ public class JarIndex {
         return this.fields.values();
     }
 
-    public Collection<FieldEntry> getObfFieldEntries(ClassEntry classEntry) {
-        return this.fields.get(classEntry);
-    }
-
     public Collection<BehaviorEntry> getObfBehaviorEntries() {
         return this.behaviors.values();
-    }
-
-    public Collection<BehaviorEntry> getObfBehaviorEntries(ClassEntry classEntry) {
-        return this.behaviors.get(classEntry);
     }
 
     public TranslationIndex getTranslationIndex() {

@@ -55,10 +55,6 @@ public class TranslatingTypeLoader implements ITypeLoader {
         m_defaultTypeLoader = new ClasspathTypeLoader();
     }
 
-    public void clearCache() {
-        m_cache.clear();
-    }
-
     @Override
     public boolean tryLoadType(String className, Buffer out) {
 

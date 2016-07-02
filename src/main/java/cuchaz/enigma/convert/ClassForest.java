@@ -28,12 +28,6 @@ public class ClassForest {
         this.forest = HashMultimap.create();
     }
 
-    public void addAll(Iterable<ClassEntry> entries) {
-        for (ClassEntry entry : entries) {
-            add(entry);
-        }
-    }
-
     public void add(ClassEntry entry) {
         try {
             this.forest.put(this.identifier.identify(entry), entry);

@@ -56,7 +56,7 @@ public class MappingsReaderOld {
                     ClassMapping classMapping;
                     if (indent <= 0) {
                         // outer class
-                        classMapping = readClass(parts, false);
+                        classMapping = readClass(parts);
                         mappings.addClassMapping(classMapping);
                     } else {
 
@@ -65,7 +65,7 @@ public class MappingsReaderOld {
                             throw new MappingParseException(lineNumber, "Unexpected CLASS entry here!");
                         }
 
-                        classMapping = readClass(parts, true);
+                        classMapping = readClass(parts);
                         ((ClassMapping) mappingStack.peek()).addInnerClassMapping(classMapping);
                     }
                     mappingStack.push(classMapping);
@@ -99,7 +99,7 @@ public class MappingsReaderOld {
         return new ArgumentMapping(Integer.parseInt(parts[1]), parts[2]);
     }
 
-    private ClassMapping readClass(String[] parts, boolean makeSimple) {
+    private ClassMapping readClass(String[] parts) {
         if (parts.length == 2) {
             return new ClassMapping(parts[1]);
         } else {

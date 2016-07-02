@@ -117,15 +117,6 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
         return classMapping;
     }
 
-    public String getDeobfInnerClassName(String obfSimpleName) {
-        assert (isSimpleClassName(obfSimpleName));
-        ClassMapping classMapping = m_innerClassesByObfSimple.get(obfSimpleName);
-        if (classMapping != null) {
-            return classMapping.getDeobfName();
-        }
-        return null;
-    }
-
     public void setInnerClassName(ClassEntry obfInnerClass, String deobfName) {
         ClassMapping classMapping = getOrCreateInnerClass(obfInnerClass);
         if (classMapping.getDeobfName() != null) {
@@ -154,10 +145,6 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
     public Iterable<FieldMapping> fields() {
         assert (m_fieldsByObf.size() == m_fieldsByDeobf.size());
         return m_fieldsByObf.values();
-    }
-
-    public boolean containsObfField(String obfName, Type obfType) {
-        return m_fieldsByObf.containsKey(getFieldKey(obfName, obfType));
     }
 
     public boolean containsDeobfField(String deobfName, Type deobfType) {
@@ -191,10 +178,6 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
 
     public FieldMapping getFieldByObf(String obfName, Type obfType) {
         return m_fieldsByObf.get(getFieldKey(obfName, obfType));
-    }
-
-    public FieldMapping getFieldByDeobf(String deobfName, Type obfType) {
-        return m_fieldsByDeobf.get(getFieldKey(deobfName, obfType));
     }
 
     public String getObfFieldName(String deobfName, Type obfType) {
@@ -258,10 +241,6 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
     public Iterable<MethodMapping> methods() {
         assert (m_methodsByObf.size() >= m_methodsByDeobf.size());
         return m_methodsByObf.values();
-    }
-
-    public boolean containsObfMethod(String obfName, Signature obfSignature) {
-        return m_methodsByObf.containsKey(getMethodKey(obfName, obfSignature));
     }
 
     public boolean containsDeobfMethod(String deobfName, Signature obfSignature) {
@@ -398,48 +377,6 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
             return m_obfFullName.length() - other.m_obfFullName.length();
         }
         return m_obfFullName.compareTo(other.m_obfFullName);
-    }
-
-    public boolean renameObfClass(String oldObfClassName, String newObfClassName) {
-
-        // rename inner classes
-        for (ClassMapping innerClassMapping : new ArrayList<>(m_innerClassesByObfSimple.values())) {
-            if (innerClassMapping.renameObfClass(oldObfClassName, newObfClassName)) {
-                boolean wasRemoved = m_innerClassesByObfSimple.remove(oldObfClassName) != null;
-                assert (wasRemoved);
-                boolean wasAdded = m_innerClassesByObfSimple.put(newObfClassName, innerClassMapping) == null;
-                assert (wasAdded);
-            }
-        }
-
-        // rename field types
-        for (FieldMapping fieldMapping : new ArrayList<>(m_fieldsByObf.values())) {
-            String oldFieldKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
-            if (fieldMapping.renameObfClass(oldObfClassName, newObfClassName)) {
-                boolean wasRemoved = m_fieldsByObf.remove(oldFieldKey) != null;
-                assert (wasRemoved);
-                boolean wasAdded = m_fieldsByObf.put(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType()), fieldMapping) == null;
-                assert (wasAdded);
-            }
-        }
-
-        // rename method signatures
-        for (MethodMapping methodMapping : new ArrayList<>(m_methodsByObf.values())) {
-            String oldMethodKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());
-            if (methodMapping.renameObfClass(oldObfClassName, newObfClassName)) {
-                boolean wasRemoved = m_methodsByObf.remove(oldMethodKey) != null;
-                assert (wasRemoved);
-                boolean wasAdded = m_methodsByObf.put(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature()), methodMapping) == null;
-                assert (wasAdded);
-            }
-        }
-
-        if (m_obfFullName.equals(oldObfClassName)) {
-            // rename this class
-            m_obfFullName = newObfClassName;
-            return true;
-        }
-        return false;
     }
 
     public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {

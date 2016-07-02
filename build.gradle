@@ -61,7 +61,7 @@ configurations {
 dependencies {
     compile 'com.google.guava:guava:17.+'
     compile 'org.javassist:javassist:3.+'
-    compile 'org.bitbucket.mstrobel:procyon-decompiler:0.5.28-enigma'
+    compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.32'
     compile 'org.javassist:javassist:3.20.0-GA'
 
     compile 'com.google.code.gson:gson:2.3.1'

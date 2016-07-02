@@ -18,7 +18,7 @@ import javassist.bytecode.AccessFlag;
 
 public class BridgeMarker {
 
-    private JarIndex m_jarIndex;
+    private final JarIndex m_jarIndex;
 
     public BridgeMarker(JarIndex jarIndex) {
         this.m_jarIndex = jarIndex;

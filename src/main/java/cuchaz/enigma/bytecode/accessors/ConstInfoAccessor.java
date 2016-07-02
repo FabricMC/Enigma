@@ -80,29 +80,6 @@ public class ConstInfoAccessor {
         }
     }
 
-    public ConstInfoAccessor copy() {
-        return new ConstInfoAccessor(copyItem());
-    }
-
-    public Object copyItem() {
-        // I don't know of a simpler way to copy one of these silly things...
-        try {
-            // serialize the item
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(buf);
-            write(out);
-
-            // deserialize the item
-            DataInputStream in = new DataInputStream(new ByteArrayInputStream(buf.toByteArray()));
-            Object item = new ConstInfoAccessor(in).getItem();
-            in.close();
-
-            return item;
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
     public void write(DataOutputStream out) throws IOException {
         try {
             out.writeUTF(this.item.getClass().getName());

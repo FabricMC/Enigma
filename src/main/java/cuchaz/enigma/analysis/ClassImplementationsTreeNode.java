@@ -17,7 +17,6 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
 
 public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
@@ -58,21 +57,5 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
         // add them to this node
         nodes.forEach(this::add);
-    }
-
-    public static ClassImplementationsTreeNode findNode(ClassImplementationsTreeNode node, MethodEntry entry) {
-        // is this the node?
-        if (node.entry.equals(entry)) {
-            return node;
-        }
-
-        // recurse
-        for (int i = 0; i < node.getChildCount(); i++) {
-            ClassImplementationsTreeNode foundNode = findNode((ClassImplementationsTreeNode) node.getChildAt(i), entry);
-            if (foundNode != null) {
-                return foundNode;
-            }
-        }
-        return null;
     }
 }

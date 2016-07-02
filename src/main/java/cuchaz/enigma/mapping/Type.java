@@ -218,8 +218,7 @@ public class Type implements Serializable {
 
     private static int countArrayDimension(String in) {
         int i = 0;
-        for (; i < in.length() && in.charAt(i) == '['; i++) {
-        }
+        for (; i < in.length() && in.charAt(i) == '['; i++) {}
         return i;
     }
 

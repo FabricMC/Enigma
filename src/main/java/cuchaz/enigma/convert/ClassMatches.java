@@ -121,16 +121,8 @@ public class ClassMatches implements Iterable<ClassMatch> {
         return m_ambiguousMatchesBySource.keySet();
     }
 
-    public ClassMatch getAmbiguousMatchBySource(ClassEntry sourceClass) {
-        return m_ambiguousMatchesBySource.get(sourceClass);
-    }
-
     public ClassMatch getMatchBySource(ClassEntry sourceClass) {
         return m_matchesBySource.get(sourceClass);
-    }
-
-    public ClassMatch getMatchByDest(ClassEntry destClass) {
-        return m_matchesByDest.get(destClass);
     }
 
     public void removeSource(ClassEntry sourceClass) {

@@ -33,7 +33,7 @@ public class ArgumentEntry implements Entry, Serializable {
             throw new IllegalArgumentException("Argument name cannot be null!");
         }
 
-        m_behaviorEntry = behaviorEntry;
+       m_behaviorEntry = behaviorEntry;
         m_index = index;
         m_name = name;
     }
@@ -101,9 +101,7 @@ public class ArgumentEntry implements Entry, Serializable {
     }
 
     public boolean equals(ArgumentEntry other) {
-        return m_behaviorEntry.equals(other.m_behaviorEntry)
-                && m_index == other.m_index
-                && m_name.equals(other.m_name);
+        return m_behaviorEntry.equals(other.m_behaviorEntry) && m_index == other.m_index && m_name.equals(other.m_name);
     }
 
     @Override

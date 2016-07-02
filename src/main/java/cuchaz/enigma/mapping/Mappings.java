@@ -79,10 +79,6 @@ public class Mappings implements Serializable {
         return m_classesByObf.get(obfName);
     }
 
-    public ClassMapping getClassByDeobf(ClassEntry entry) {
-        return getClassByDeobf(entry.getName());
-    }
-
     public ClassMapping getClassByDeobf(String deobfName) {
         return m_classesByDeobf.get(deobfName);
     }
@@ -136,34 +132,6 @@ public class Mappings implements Serializable {
             buf.append("\n");
         }
         return buf.toString();
-    }
-
-    public void renameObfClass(String oldObfName, String newObfName) {
-        new ArrayList<>(classes()).stream().filter(classMapping -> classMapping.renameObfClass(oldObfName, newObfName)).forEach(classMapping -> {
-            boolean wasRemoved = m_classesByObf.remove(oldObfName) != null;
-            assert (wasRemoved);
-            boolean wasAdded = m_classesByObf.put(newObfName, classMapping) == null;
-            assert (wasAdded);
-        });
-    }
-
-    public Set<String> getAllObfClassNames() {
-        final Set<String> classNames = Sets.newHashSet();
-        for (ClassMapping classMapping : classes()) {
-
-            // add the class name
-            classNames.add(classMapping.getObfFullName());
-
-            // add classes from method signatures
-            for (MethodMapping methodMapping : classMapping.methods()) {
-                for (Type type : methodMapping.getObfSignature().types()) {
-                    if (type.hasClass()) {
-                        classNames.add(type.getClassEntry().getClassName());
-                    }
-                }
-            }
-        }
-        return classNames;
     }
 
     public boolean containsDeobfClass(String deobfName) {

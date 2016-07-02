@@ -56,30 +56,6 @@ public class EntryRenamer {
         }
     }
 
-    public static <Key, Val> void renameMethodsInMultimap(Map<MethodEntry, MethodEntry> renames, Multimap<Key, Val> map) {
-        // for each key/value pair...
-        Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
-        for (Map.Entry<Key, Val> entry : map.entries()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameMethodsInThing(renames, entry.getKey()), renameMethodsInThing(renames, entry.getValue())));
-        }
-        map.clear();
-        for (Map.Entry<Key, Val> entry : entriesToAdd) {
-            map.put(entry.getKey(), entry.getValue());
-        }
-    }
-
-    public static <Key, Val> void renameMethodsInMap(Map<MethodEntry, MethodEntry> renames, Map<Key, Val> map) {
-        // for each key/value pair...
-        Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
-        for (Map.Entry<Key, Val> entry : map.entrySet()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameMethodsInThing(renames, entry.getKey()), renameMethodsInThing(renames, entry.getValue())));
-        }
-        map.clear();
-        for (Map.Entry<Key, Val> entry : entriesToAdd) {
-            map.put(entry.getKey(), entry.getValue());
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public static <T> T renameMethodsInThing(Map<MethodEntry, MethodEntry> renames, T thing) {
         if (thing instanceof MethodEntry) {

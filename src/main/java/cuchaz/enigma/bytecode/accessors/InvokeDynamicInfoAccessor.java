@@ -57,10 +57,6 @@ public class InvokeDynamicInfoAccessor {
         }
     }
 
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return clazz.isAssignableFrom(accessor.getItem().getClass());
-    }
-
     static {
         try {
             clazz = Class.forName("javassist.bytecode.InvokeDynamicInfo");

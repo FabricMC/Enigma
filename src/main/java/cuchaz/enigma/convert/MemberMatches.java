@@ -47,21 +47,9 @@ public class MemberMatches<T extends Entry> {
         assert (wasAdded);
     }
 
-    public void addUnmatchedSourceEntries(Iterable<T> sourceEntries) {
-        for (T sourceEntry : sourceEntries) {
-            addUnmatchedSourceEntry(sourceEntry);
-        }
-    }
-
     public void addUnmatchedDestEntry(T destEntry) {
         boolean wasAdded = m_unmatchedDestEntries.put(destEntry.getClassEntry(), destEntry);
         assert (wasAdded);
-    }
-
-    public void addUnmatchedDestEntries(Iterable<T> destEntriesntries) {
-        for (T entry : destEntriesntries) {
-            addUnmatchedDestEntry(entry);
-        }
     }
 
     public void addUnmatchableSourceEntry(T sourceEntry) {

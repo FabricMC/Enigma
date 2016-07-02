@@ -33,10 +33,6 @@ public class EntryFactory {
         return new ClassEntry(classMapping.getObfFullName());
     }
 
-    public static ClassEntry getDeobfClassEntry(ClassMapping classMapping) {
-        return new ClassEntry(classMapping.getDeobfName());
-    }
-
     public static ClassEntry getSuperclassEntry(CtClass c) {
         return new ClassEntry(Descriptor.toJvmName(c.getClassFile().getSuperclass()));
     }
@@ -154,9 +150,5 @@ public class EntryFactory {
 
     public static BehaviorEntry getObfBehaviorEntry(ClassEntry classEntry, MethodMapping methodMapping) {
         return getBehaviorEntry(classEntry, methodMapping.getObfName(), methodMapping.getObfSignature());
-    }
-
-    public static BehaviorEntry getObfBehaviorEntry(ClassMapping classMapping, MethodMapping methodMapping) {
-        return getObfBehaviorEntry(getObfClassEntry(classMapping), methodMapping);
     }
 }

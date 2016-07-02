@@ -31,17 +31,6 @@ public class NameValidator {
     static {
 
         // java allows all kinds of weird characters...
-        StringBuilder startChars = new StringBuilder();
-        StringBuilder partChars = new StringBuilder();
-        for (int i = Character.MIN_CODE_POINT; i <= Character.MAX_CODE_POINT; i++) {
-            if (Character.isJavaIdentifierStart(i)) {
-                startChars.appendCodePoint(i);
-            }
-            if (Character.isJavaIdentifierPart(i)) {
-                partChars.appendCodePoint(i);
-            }
-        }
-
         String identifierRegex = "[A-Za-z_<][A-Za-z0-9_>]*";
         IdentifierPattern = Pattern.compile(identifierRegex);
         ClassPattern = Pattern.compile(String.format("^(%s(\\.|/))*(%s)$", identifierRegex, identifierRegex));

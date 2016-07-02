@@ -38,14 +38,6 @@ public class Translator {
         m_index = index;
     }
 
-    public TranslationDirection getDirection() {
-        return m_direction;
-    }
-
-    public TranslationIndex getTranslationIndex() {
-        return m_index;
-    }
-
     @SuppressWarnings("unchecked")
     public <T extends Entry> T translateEntry(T entry) {
         if (entry instanceof ClassEntry) {

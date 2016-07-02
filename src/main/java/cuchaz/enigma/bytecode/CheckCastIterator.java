@@ -22,8 +22,8 @@ public class CheckCastIterator implements Iterator<CheckCast> {
 
     public static class CheckCast {
 
-        public String className;
-        public MethodEntry prevMethodEntry;
+        public final String className;
+        public final MethodEntry prevMethodEntry;
 
         public CheckCast(String className, MethodEntry prevMethodEntry) {
             this.className = className;
@@ -31,9 +31,9 @@ public class CheckCastIterator implements Iterator<CheckCast> {
         }
     }
 
-    private ConstPool constants;
-    private CodeAttribute attribute;
-    private CodeIterator iter;
+    private final ConstPool constants;
+    private final CodeAttribute attribute;
+    private final CodeIterator iter;
     private CheckCast next;
 
     public CheckCastIterator(CodeAttribute codeAttribute) throws BadBytecode {
@@ -109,9 +109,5 @@ public class CheckCastIterator implements Iterator<CheckCast> {
             }
         }
         return null;
-    }
-
-    public Iterable<CheckCast> casts() {
-        return () -> CheckCastIterator.this;
     }
 }

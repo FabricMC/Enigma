@@ -30,9 +30,7 @@ public enum Access {
     }
 
     public static Access get(int modifiers) {
-        if (Modifier.isPublic(modifiers)) {
-            return Public;
-        } else if (Modifier.isProtected(modifiers)) {
+        if (Modifier.isProtected(modifiers)) {
             return Protected;
         } else if (Modifier.isPrivate(modifiers)) {
             return Private;

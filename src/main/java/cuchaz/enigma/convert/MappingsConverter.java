@@ -236,41 +236,6 @@ public class MappingsConverter {
         return classMatches.getUniqueMatches().containsKey(classEntry);
     }
 
-    public static void convertMappings(Mappings mappings, BiMap<ClassEntry, ClassEntry> changes) {
-
-        // sort the changes so classes are renamed in the correct order
-        // ie. if we have the mappings a->b, b->c, we have to apply b->c before a->b
-        LinkedHashMap<ClassEntry, ClassEntry> sortedChanges = Maps.newLinkedHashMap();
-        int numChangesLeft = changes.size();
-        while (!changes.isEmpty()) {
-            Iterator<Map.Entry<ClassEntry, ClassEntry>> iter = changes.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry<ClassEntry, ClassEntry> change = iter.next();
-                if (changes.containsKey(change.getValue())) {
-                    sortedChanges.put(change.getKey(), change.getValue());
-                    iter.remove();
-                }
-            }
-
-            // did we remove any changes?
-            if (numChangesLeft - changes.size() > 0) {
-                // keep going
-                numChangesLeft = changes.size();
-            } else {
-                // can't sort anymore. There must be a loop
-                break;
-            }
-        }
-        if (!changes.isEmpty()) {
-            throw new Error("Unable to sort class changes! There must be a cycle.");
-        }
-
-        // convert the mappings in the correct class order
-        for (Map.Entry<ClassEntry, ClassEntry> entry : sortedChanges.entrySet()) {
-            mappings.renameObfClass(entry.getKey().getName(), entry.getValue().getName());
-        }
-    }
-
     public interface Doer<T extends Entry> {
         Collection<T> getDroppedEntries(MappingsChecker checker);
 

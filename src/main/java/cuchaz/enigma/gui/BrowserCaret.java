@@ -32,6 +32,6 @@ public class BrowserCaret extends DefaultCaret {
 
     @Override
     public Highlighter.HighlightPainter getSelectionPainter() {
-        return this.selectionPainter;
+        return selectionPainter;
     }
 }

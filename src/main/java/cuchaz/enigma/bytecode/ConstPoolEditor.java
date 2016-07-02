@@ -78,22 +78,6 @@ public class ConstPoolEditor {
         this.pool = pool;
     }
 
-    public void writePool(DataOutputStream out) {
-        try {
-            methodWritePool.invoke(this.pool, out);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public static ConstPool readPool(DataInputStream in) {
-        try {
-            return constructorPool.newInstance(in);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
     public String getMemberrefClassname(int memberrefIndex) {
         return Descriptor.toJvmName(this.pool.getClassInfo(this.pool.getMemberClass(memberrefIndex)));
     }
@@ -117,23 +101,6 @@ public class ConstPoolEditor {
             throw new Error(ex);
         }
     }
-
-    public int addItem(Object item) {
-        try {
-            return (Integer) addItem.invoke(this.pool, item);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public int addItemForceNew(Object item) {
-        try {
-            return (Integer) addItem0.invoke(this.pool, item);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
     @SuppressWarnings("rawtypes")
     public void removeLastItem() {
         try {
@@ -196,68 +163,5 @@ public class ConstPoolEditor {
         // make sure the change worked
         assert (newName.equals(getMemberrefName(memberrefIndex)));
         assert (newType.equals(getMemberrefType(memberrefIndex)));
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public void changeClassName(int classNameIndex, String newName) {
-        // NOTE: when changing values, we always need to copy-on-write
-        try {
-            // get the class item
-            Object item = getItem(classNameIndex).getItem();
-
-            // update the cache
-            HashMap cache = getCache();
-            if (cache != null) {
-                cache.remove(item);
-            }
-
-            // add the new name and repoint the name-and-type to it
-            new ClassInfoAccessor(item).setNameIndex(this.pool.addUtf8Info(newName));
-
-            // update the cache
-            if (cache != null) {
-                cache.put(item, item);
-            }
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public static ConstPool newConstPool() {
-        // const pool expects the name of a class to initialize itself
-        // but we want an empty pool
-        // so give it a bogus name, and then clear the entries afterwards
-        ConstPool pool = new ConstPool("a");
-
-        ConstPoolEditor editor = new ConstPoolEditor(pool);
-        int size = pool.getSize();
-        for (int i = 0; i < size - 1; i++) {
-            editor.removeLastItem();
-        }
-
-        // make sure the pool is actually empty
-        // although, in this case "empty" means one thing in it
-        // the JVM spec says index 0 should be reserved
-        assert (pool.getSize() == 1);
-        assert (editor.getItem(0) == null);
-        assert (editor.getItem(1) == null);
-        assert (editor.getItem(2) == null);
-        assert (editor.getItem(3) == null);
-
-        // also, clear the cache
-        editor.getCache().clear();
-
-        return pool;
-    }
-
-    public String dump() {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 1; i < this.pool.getSize(); i++) {
-            buf.append(String.format("%4d", i));
-            buf.append("   ");
-            buf.append(getItem(i).toString());
-            buf.append("\n");
-        }
-        return buf.toString();
     }
 }
