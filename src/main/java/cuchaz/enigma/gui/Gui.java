@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
-import java.util.jar.JarFile;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -32,21 +31,33 @@ import javax.swing.tree.TreePath;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.gui.dialog.CrashDialog;
+import cuchaz.enigma.gui.elements.MenuBar;
+import cuchaz.enigma.gui.elements.PopupMenuBar;
+import cuchaz.enigma.gui.filechooser.FileChooserFile;
+import cuchaz.enigma.gui.filechooser.FileChooserFolder;
+import cuchaz.enigma.gui.panels.PanelDeobf;
+import cuchaz.enigma.gui.panels.PanelEditor;
+import cuchaz.enigma.gui.panels.PanelIdentifier;
+import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.mapping.*;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class Gui {
 
-    private GuiController m_controller;
+    private GuiController controller;
 
-    // controls
-    private JFrame m_frame;
-    private ClassSelector m_obfClasses;
-    private ClassSelector m_deobfClasses;
-    private JEditorPane m_editor;
-    private JPanel m_classesPanel;
+    private final PanelObf obfPanel;
+    private final PanelDeobf deobfPanel;
+
+    private final MenuBar menuBar;
+    public final PopupMenuBar popupMenu;
+
+    private JFrame frame;
+    private PanelEditor editor;
+    private JPanel classesPanel;
     private JSplitPane m_splitClasses;
-    private JPanel m_infoPanel;
+    private PanelIdentifier m_infoPanel;
     private ObfuscatedHighlightPainter m_obfuscatedHighlightPainter;
     private DeobfuscatedHighlightPainter m_deobfuscatedHighlightPainter;
     private OtherHighlightPainter m_otherHighlightPainter;
@@ -57,42 +68,26 @@ public class Gui {
     private JList<Token> m_tokens;
     private JTabbedPane m_tabs;
 
-    // dynamic menu items
-    private JMenuItem m_closeJarMenu;
-    private JMenuItem m_openMappingsMenu;
-    private JMenuItem m_openOldMappingsMenu;
-    private JMenuItem m_saveMappingsMenu;
-    private JMenuItem m_saveMappingsAsMenu;
-    private JMenuItem m_closeMappingsMenu;
-    private JMenuItem m_renameMenu;
-    private JMenuItem m_showInheritanceMenu;
-    private JMenuItem m_openEntryMenu;
-    private JMenuItem m_openPreviousMenu;
-    private JMenuItem m_showCallsMenu;
-    private JMenuItem m_showImplementationsMenu;
-    private JMenuItem m_toggleMappingMenu;
-    private JMenuItem m_exportSourceMenu;
-    private JMenuItem m_exportJarMenu;
-
     // state
-    private EntryReference<Entry, Entry> m_reference;
-    private JFileChooser m_jarFileChooser;
-    private JFileChooser m_mappingsFileChooser;
-    private JFileChooser m_oldMappingsFileChooser;
+    public EntryReference<Entry, Entry> m_reference;
 
-    private JFileChooser m_exportSourceFileChooser;
-    private JFileChooser m_exportJarFileChooser;
+    public JFileChooser jarFileChooser;
+    public JFileChooser mappingsFileChooser;
+    public JFileChooser oldMappingsFileChooser;
+
+    public JFileChooser exportSourceFileChooser;
+    public JFileChooser exportJarFileChooser;
 
     public Gui() {
 
         // init frame
-        m_frame = new JFrame(Constants.NAME);
-        final Container pane = m_frame.getContentPane();
+        this.frame = new JFrame(Constants.NAME);
+        final Container pane = this.frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
         if (Boolean.parseBoolean(System.getProperty("enigma.catchExceptions", "true"))) {
             // install a global exception handler to the event thread
-            CrashDialog.init(m_frame);
+            CrashDialog.init(this.frame);
             Thread.setDefaultUncaughtExceptionHandler((thread, t) -> {
                 t.printStackTrace(System.err);
                 if (!ExceptionIgnorer.shouldIgnore(t)) {
@@ -101,50 +96,30 @@ public class Gui {
             });
         }
 
-        m_controller = new GuiController(this);
+        this.controller = new GuiController(this);
 
         // init file choosers
-        m_jarFileChooser = new JFileChooser();
-        m_mappingsFileChooser = new JFileChooser();
-        m_mappingsFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        m_mappingsFileChooser.setAcceptAllFileFilterUsed(false);
+        this.jarFileChooser = new FileChooserFile();
+        this.mappingsFileChooser = new FileChooserFolder();
 
-        m_oldMappingsFileChooser = new JFileChooser();
-        m_exportSourceFileChooser = new JFileChooser();
-        m_exportSourceFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        m_exportJarFileChooser = new JFileChooser();
 
-        // init obfuscated classes list
-        m_obfClasses = new ClassSelector(ClassSelector.ObfuscatedClassEntryComparator);
-        m_obfClasses.setListener(this::navigateTo);
-        JScrollPane obfScroller = new JScrollPane(m_obfClasses);
-        JPanel obfPanel = new JPanel();
-        obfPanel.setLayout(new BorderLayout());
-        obfPanel.add(new JLabel("Obfuscated Classes"), BorderLayout.NORTH);
-        obfPanel.add(obfScroller, BorderLayout.CENTER);
+        this.oldMappingsFileChooser = new FileChooserFile();
+        this.exportSourceFileChooser = new FileChooserFolder();
+        this.exportJarFileChooser = new FileChooserFile();
 
-        // init deobfuscated classes list
-        m_deobfClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
-        m_deobfClasses.setListener(this::navigateTo);
-        JScrollPane deobfScroller = new JScrollPane(m_deobfClasses);
-        JPanel deobfPanel = new JPanel();
-        deobfPanel.setLayout(new BorderLayout());
-        deobfPanel.add(new JLabel("De-obfuscated Classes"), BorderLayout.NORTH);
-        deobfPanel.add(deobfScroller, BorderLayout.CENTER);
+        this.obfPanel = new PanelObf(this);
+        this.deobfPanel = new PanelDeobf(this);
 
         // set up classes panel (don't add the splitter yet)
-        m_splitClasses = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, obfPanel, deobfPanel);
+        m_splitClasses = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, this.obfPanel, this.deobfPanel);
         m_splitClasses.setResizeWeight(0.3);
-        m_classesPanel = new JPanel();
-        m_classesPanel.setLayout(new BorderLayout());
-        m_classesPanel.setPreferredSize(new Dimension(250, 0));
+        this.classesPanel = new JPanel();
+        this.classesPanel.setLayout(new BorderLayout());
+        this.classesPanel.setPreferredSize(new Dimension(250, 0));
 
         // init info panel
-        m_infoPanel = new JPanel();
-        m_infoPanel.setLayout(new GridLayout(4, 1, 0, 0));
-        m_infoPanel.setPreferredSize(new Dimension(0, 100));
-        m_infoPanel.setBorder(BorderFactory.createTitledBorder("Identifier Info"));
-        clearReference();
+        m_infoPanel = new PanelIdentifier(this);
+        m_infoPanel.clearReference();
 
         // init editor
         DefaultSyntaxKit.initKit();
@@ -152,110 +127,12 @@ public class Gui {
         m_deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
         m_otherHighlightPainter = new OtherHighlightPainter();
         m_selectionHighlightPainter = new SelectionHighlightPainter();
-        m_editor = new JEditorPane();
-        m_editor.setEditable(false);
-        m_editor.setCaret(new BrowserCaret());
-        JScrollPane sourceScroller = new JScrollPane(m_editor);
-        m_editor.setContentType("text/java");
-        m_editor.addCaretListener(event -> onCaretMove(event.getDot()));
-        m_editor.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent event) {
-                switch (event.getKeyCode()) {
-                    case KeyEvent.VK_R:
-                        m_renameMenu.doClick();
-                        break;
-
-                    case KeyEvent.VK_I:
-                        m_showInheritanceMenu.doClick();
-                        break;
-
-                    case KeyEvent.VK_M:
-                        m_showImplementationsMenu.doClick();
-                        break;
-
-                    case KeyEvent.VK_N:
-                        m_openEntryMenu.doClick();
-                        break;
-
-                    case KeyEvent.VK_P:
-                        m_openPreviousMenu.doClick();
-                        break;
-
-                    case KeyEvent.VK_C:
-                        m_showCallsMenu.doClick();
-                        break;
-
-                    case KeyEvent.VK_T:
-                        m_toggleMappingMenu.doClick();
-                        break;
-                }
-            }
-        });
-
-        // turn off token highlighting (it's wrong most of the time anyway...)
-        DefaultSyntaxKit kit = (DefaultSyntaxKit) m_editor.getEditorKit();
-        kit.toggleComponent(m_editor, "de.sciss.syntaxpane.components.TokenMarker");
+        this.editor = new PanelEditor(this);
+        JScrollPane sourceScroller = new JScrollPane(this.editor);
 
         // init editor popup menu
-        JPopupMenu popupMenu = new JPopupMenu();
-        m_editor.setComponentPopupMenu(popupMenu);
-        {
-            JMenuItem menu = new JMenuItem("Rename");
-            menu.addActionListener(event -> startRename());
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0));
-            menu.setEnabled(false);
-            popupMenu.add(menu);
-            m_renameMenu = menu;
-        }
-        {
-            JMenuItem menu = new JMenuItem("Show Inheritance");
-            menu.addActionListener(event -> showInheritance());
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, 0));
-            menu.setEnabled(false);
-            popupMenu.add(menu);
-            m_showInheritanceMenu = menu;
-        }
-        {
-            JMenuItem menu = new JMenuItem("Show Implementations");
-            menu.addActionListener(event -> showImplementations());
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, 0));
-            menu.setEnabled(false);
-            popupMenu.add(menu);
-            m_showImplementationsMenu = menu;
-        }
-        {
-            JMenuItem menu = new JMenuItem("Show Calls");
-            menu.addActionListener(event -> showCalls());
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
-            menu.setEnabled(false);
-            popupMenu.add(menu);
-            m_showCallsMenu = menu;
-        }
-        {
-            JMenuItem menu = new JMenuItem("Go to Declaration");
-            menu.addActionListener(event -> navigateTo(m_reference.entry));
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, 0));
-            menu.setEnabled(false);
-            popupMenu.add(menu);
-            m_openEntryMenu = menu;
-        }
-        {
-            JMenuItem menu = new JMenuItem("Go to previous");
-            menu.addActionListener(event -> m_controller.openPreviousReference());
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0));
-            menu.setEnabled(false);
-            popupMenu.add(menu);
-            m_openPreviousMenu = menu;
-        }
-        {
-            JMenuItem menu = new JMenuItem("Mark as deobfuscated");
-            menu.addActionListener(event -> toggleMapping());
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0));
-            menu.setEnabled(false);
-            popupMenu.add(menu);
-            m_toggleMappingMenu = menu;
-        }
+        this.popupMenu = new PopupMenuBar(this);
+        this.editor.setComponentPopupMenu(this.popupMenu);
 
         // init inheritance panel
         m_inheritanceTree = new JTree();
@@ -342,7 +219,7 @@ public class Gui {
             }
         });
         m_tokens = new JList<>();
-        m_tokens.setCellRenderer(new TokenListCellRenderer(m_controller));
+        m_tokens.setCellRenderer(new TokenListCellRenderer(this.controller));
         m_tokens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_tokens.setLayoutOrientation(JList.VERTICAL);
         m_tokens.addMouseListener(new MouseAdapter() {
@@ -380,152 +257,18 @@ public class Gui {
         JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, m_tabs);
         splitRight.setResizeWeight(1); // let the left side take all the slack
         splitRight.resetToPreferredSizes();
-        JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, m_classesPanel, splitRight);
+        JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
         splitCenter.setResizeWeight(0); // let the right side take all the slack
         pane.add(splitCenter, BorderLayout.CENTER);
 
         // init menus
-        JMenuBar menuBar = new JMenuBar();
-        m_frame.setJMenuBar(menuBar);
-        {
-            JMenu menu = new JMenu("File");
-            menuBar.add(menu);
-            {
-                JMenuItem item = new JMenuItem("Open Jar...");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    if (m_jarFileChooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                        // load the jar in a separate thread
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    m_controller.openJar(new JarFile(m_jarFileChooser.getSelectedFile()));
-                                } catch (IOException ex) {
-                                    throw new Error(ex);
-                                }
-                            }
-                        }.start();
-                    }
-                });
-            }
-            {
-                JMenuItem item = new JMenuItem("Close Jar");
-                menu.add(item);
-                item.addActionListener(event -> m_controller.closeJar());
-                m_closeJarMenu = item;
-            }
-            menu.addSeparator();
-            {
-                JMenuItem item = new JMenuItem("Open Mappings...");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    if (m_mappingsFileChooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                        try {
-                            m_controller.openMappings(m_mappingsFileChooser.getSelectedFile());
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        } catch (MappingParseException ex) {
-                            JOptionPane.showMessageDialog(m_frame, ex.getMessage());
-                        }
-                    }
-                });
-                m_openMappingsMenu = item;
-            }
-            {
-                JMenuItem item = new JMenuItem("Open Old Mappings...");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    if (m_oldMappingsFileChooser.showOpenDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                        try {
-                            m_controller.openOldMappings(m_oldMappingsFileChooser.getSelectedFile());
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        } catch (MappingParseException ex) {
-                            JOptionPane.showMessageDialog(m_frame, ex.getMessage());
-                        }
-                    }
-                });
-                m_openOldMappingsMenu = item;
-            }
-            menu.addSeparator();
-            {
-                JMenuItem item = new JMenuItem("Save Mappings");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    try {
-                        m_controller.saveMappings(m_mappingsFileChooser.getSelectedFile());
-                    } catch (IOException ex) {
-                        throw new Error(ex);
-                    }
-                });
-                item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-                m_saveMappingsMenu = item;
-            }
-            {
-                JMenuItem item = new JMenuItem("Save Mappings As...");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    if (m_mappingsFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                        try {
-                            m_controller.saveMappings(m_mappingsFileChooser.getSelectedFile());
-                            m_saveMappingsMenu.setEnabled(true);
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        }
-                    }
-                });
-                item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-                m_saveMappingsAsMenu = item;
-            }
-            {
-                JMenuItem item = new JMenuItem("Close Mappings");
-                menu.add(item);
-                item.addActionListener(event -> m_controller.closeMappings());
-                m_closeMappingsMenu = item;
-            }
-            menu.addSeparator();
-            {
-                JMenuItem item = new JMenuItem("Export Source...");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    if (m_exportSourceFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                        m_controller.exportSource(m_exportSourceFileChooser.getSelectedFile());
-                    }
-                });
-                m_exportSourceMenu = item;
-            }
-            {
-                JMenuItem item = new JMenuItem("Export Jar...");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    if (m_exportJarFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
-                        m_controller.exportJar(m_exportJarFileChooser.getSelectedFile());
-                    }
-                });
-                m_exportJarMenu = item;
-            }
-            menu.addSeparator();
-            {
-                JMenuItem item = new JMenuItem("Exit");
-                menu.add(item);
-                item.addActionListener(event -> close());
-            }
-        }
-        {
-            JMenu menu = new JMenu("Help");
-            menuBar.add(menu);
-            {
-                JMenuItem item = new JMenuItem("About");
-                menu.add(item);
-                item.addActionListener(event -> AboutDialog.show(m_frame));
-            }
-        }
+        this.menuBar = new MenuBar(this);
+        this.frame.setJMenuBar(this.menuBar);
 
         // init state
         onCloseJar();
 
-        m_frame.addWindowListener(new WindowAdapter() {
+        this.frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
                 close();
@@ -534,93 +277,93 @@ public class Gui {
 
         // show the frame
         pane.doLayout();
-        m_frame.setSize(1024, 576);
-        m_frame.setMinimumSize(new Dimension(640, 480));
-        m_frame.setVisible(true);
-        m_frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        this.frame.setSize(1024, 576);
+        this.frame.setMinimumSize(new Dimension(640, 480));
+        this.frame.setVisible(true);
+        this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
     }
 
     public JFrame getFrame() {
-        return m_frame;
+        return this.frame;
     }
 
     public GuiController getController() {
-        return m_controller;
+        return this.controller;
     }
 
     public void onStartOpenJar() {
-        m_classesPanel.removeAll();
+        this.classesPanel.removeAll();
         JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout());
         panel.add(new JLabel("Loading..."));
-        m_classesPanel.add(panel);
+        this.classesPanel.add(panel);
         redraw();
     }
 
     public void onFinishOpenJar(String jarName) {
         // update gui
-        m_frame.setTitle(Constants.NAME + " - " + jarName);
-        m_classesPanel.removeAll();
-        m_classesPanel.add(m_splitClasses);
+        this.frame.setTitle(Constants.NAME + " - " + jarName);
+        this.classesPanel.removeAll();
+        this.classesPanel.add(m_splitClasses);
         setSource(null);
 
         // update menu
-        m_closeJarMenu.setEnabled(true);
-        m_openOldMappingsMenu.setEnabled(true);
-        m_openMappingsMenu.setEnabled(true);
-        m_saveMappingsMenu.setEnabled(false);
-        m_saveMappingsAsMenu.setEnabled(true);
-        m_closeMappingsMenu.setEnabled(true);
-        m_exportSourceMenu.setEnabled(true);
-        m_exportJarMenu.setEnabled(true);
+        this.menuBar.closeJarMenu.setEnabled(true);
+        this.menuBar.openOldMappingsMenu.setEnabled(true);
+        this.menuBar.openMappingsMenu.setEnabled(true);
+        this.menuBar.saveMappingsMenu.setEnabled(false);
+        this.menuBar.saveMappingsAsMenu.setEnabled(true);
+        this.menuBar.closeMappingsMenu.setEnabled(true);
+        this.menuBar.exportSourceMenu.setEnabled(true);
+        this.menuBar.exportJarMenu.setEnabled(true);
 
         redraw();
     }
 
     public void onCloseJar() {
         // update gui
-        m_frame.setTitle(Constants.NAME);
+        this.frame.setTitle(Constants.NAME);
         setObfClasses(null);
         setDeobfClasses(null);
         setSource(null);
-        m_classesPanel.removeAll();
+        this.classesPanel.removeAll();
 
         // update menu
-        m_closeJarMenu.setEnabled(false);
-        m_openOldMappingsMenu.setEnabled(false);
-        m_openMappingsMenu.setEnabled(false);
-        m_saveMappingsMenu.setEnabled(false);
-        m_saveMappingsAsMenu.setEnabled(false);
-        m_closeMappingsMenu.setEnabled(false);
-        m_exportSourceMenu.setEnabled(false);
-        m_exportJarMenu.setEnabled(false);
+        this.menuBar.closeJarMenu.setEnabled(false);
+        this.menuBar.openOldMappingsMenu.setEnabled(false);
+        this.menuBar.openMappingsMenu.setEnabled(false);
+        this.menuBar.saveMappingsMenu.setEnabled(false);
+        this.menuBar.saveMappingsAsMenu.setEnabled(false);
+        this.menuBar.closeMappingsMenu.setEnabled(false);
+        this.menuBar.exportSourceMenu.setEnabled(false);
+        this.menuBar.exportJarMenu.setEnabled(false);
 
         redraw();
     }
 
     public void setObfClasses(Collection<ClassEntry> obfClasses) {
-        m_obfClasses.setClasses(obfClasses);
+        this.obfPanel.obfClasses.setClasses(obfClasses);
     }
 
     public void setDeobfClasses(Collection<ClassEntry> deobfClasses) {
-        m_deobfClasses.setClasses(deobfClasses);
+        this.deobfPanel.deobfClasses.setClasses(deobfClasses);
     }
 
     public void setMappingsFile(File file) {
-        m_mappingsFileChooser.setSelectedFile(file);
-        m_saveMappingsMenu.setEnabled(file != null);
+        this.mappingsFileChooser.setSelectedFile(file);
+        this.menuBar.saveMappingsMenu.setEnabled(file != null);
     }
 
     public void setSource(String source) {
-        m_editor.getHighlighter().removeAllHighlights();
-        m_editor.setText(source);
+        this.editor.getHighlighter().removeAllHighlights();
+        this.editor.setText(source);
     }
 
     public void showToken(final Token token) {
         if (token == null) {
             throw new IllegalArgumentException("Token cannot be null!");
         }
-        CodeReader.navigateToToken(m_editor, token, m_selectionHighlightPainter);
+        CodeReader.navigateToToken(this.editor, token, m_selectionHighlightPainter);
         redraw();
     }
 
@@ -642,7 +385,7 @@ public class Gui {
     public void setHighlightedTokens(Iterable<Token> obfuscatedTokens, Iterable<Token> deobfuscatedTokens, Iterable<Token> otherTokens) {
 
         // remove any old highlighters
-        m_editor.getHighlighter().removeAllHighlights();
+        this.editor.getHighlighter().removeAllHighlights();
 
         // color things based on the index
         if (obfuscatedTokens != null) {
@@ -661,26 +404,16 @@ public class Gui {
     private void setHighlightedTokens(Iterable<Token> tokens, Highlighter.HighlightPainter painter) {
         for (Token token : tokens) {
             try {
-                m_editor.getHighlighter().addHighlight(token.start, token.end, painter);
+                this.editor.getHighlighter().addHighlight(token.start, token.end, painter);
             } catch (BadLocationException ex) {
                 throw new IllegalArgumentException(ex);
             }
         }
     }
 
-    private void clearReference() {
-        m_infoPanel.removeAll();
-        JLabel label = new JLabel("No identifier selected");
-        GuiTricks.unboldLabel(label);
-        label.setHorizontalAlignment(JLabel.CENTER);
-        m_infoPanel.add(label);
-
-        redraw();
-    }
-
     private void showReference(EntryReference<Entry, Entry> reference) {
         if (reference == null) {
-            clearReference();
+            m_infoPanel.clearReference();
             return;
         }
 
@@ -746,63 +479,63 @@ public class Gui {
         panel.add(GuiTricks.unboldLabel(new JLabel(value, JLabel.LEFT)));
     }
 
-    private void onCaretMove(int pos) {
+    public void onCaretMove(int pos) {
 
-        Token token = m_controller.getToken(pos);
+        Token token = this.controller.getToken(pos);
         boolean isToken = token != null;
 
-        m_reference = m_controller.getDeobfReference(token);
+        m_reference = this.controller.getDeobfReference(token);
         boolean isClassEntry = isToken && m_reference.entry instanceof ClassEntry;
         boolean isFieldEntry = isToken && m_reference.entry instanceof FieldEntry;
         boolean isMethodEntry = isToken && m_reference.entry instanceof MethodEntry;
         boolean isConstructorEntry = isToken && m_reference.entry instanceof ConstructorEntry;
-        boolean isInJar = isToken && m_controller.entryIsInJar(m_reference.entry);
-        boolean isRenameable = isToken && m_controller.referenceIsRenameable(m_reference);
+        boolean isInJar = isToken && this.controller.entryIsInJar(m_reference.entry);
+        boolean isRenameable = isToken && this.controller.referenceIsRenameable(m_reference);
 
         if (isToken) {
             showReference(m_reference);
         } else {
-            clearReference();
+            m_infoPanel.clearReference();
         }
 
-        m_renameMenu.setEnabled(isRenameable && isToken);
-        m_showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
-        m_showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
-        m_showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
-        m_openEntryMenu.setEnabled(isInJar && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
-        m_openPreviousMenu.setEnabled(m_controller.hasPreviousLocation());
-        m_toggleMappingMenu.setEnabled(isRenameable && isToken);
+        this.popupMenu.renameMenu.setEnabled(isRenameable && isToken);
+        this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
+        this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
+        this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
+        this.popupMenu.openEntryMenu.setEnabled(isInJar && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
+        this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
+        this.popupMenu.toggleMappingMenu.setEnabled(isRenameable && isToken);
 
-        if (isToken && m_controller.entryHasDeobfuscatedName(m_reference.entry)) {
-            m_toggleMappingMenu.setText("Reset to obfuscated");
+        if (isToken && this.controller.entryHasDeobfuscatedName(m_reference.entry)) {
+            this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
         } else {
-            m_toggleMappingMenu.setText("Mark as deobfuscated");
+            this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
         }
     }
 
-    private void navigateTo(Entry entry) {
-        if (!m_controller.entryIsInJar(entry)) {
+    public void navigateTo(Entry entry) {
+        if (!this.controller.entryIsInJar(entry)) {
             // entry is not in the jar. Ignore it
             return;
         }
         if (m_reference != null) {
-            m_controller.savePreviousReference(m_reference);
+            this.controller.savePreviousReference(m_reference);
         }
-        m_controller.openDeclaration(entry);
+        this.controller.openDeclaration(entry);
     }
 
     private void navigateTo(EntryReference<Entry, Entry> reference) {
-        if (!m_controller.entryIsInJar(reference.getLocationClassEntry())) {
+        if (!this.controller.entryIsInJar(reference.getLocationClassEntry())) {
             // reference is not in the jar. Ignore it
             return;
         }
         if (m_reference != null) {
-            m_controller.savePreviousReference(m_reference);
+            this.controller.savePreviousReference(m_reference);
         }
-        m_controller.openReference(reference);
+        this.controller.openReference(reference);
     }
 
-    private void startRename() {
+    public void startRename() {
 
         // init the text box
         final JTextField text = new JTextField();
@@ -837,7 +570,7 @@ public class Gui {
         String newName = text.getText();
         if (saveName && newName != null && newName.length() > 0) {
             try {
-                m_controller.rename(m_reference, newName);
+                this.controller.rename(m_reference, newName);
             } catch (IllegalNameException ex) {
                 text.setBorder(BorderFactory.createLineBorder(Color.red, 1));
                 text.setToolTipText(ex.getReason());
@@ -851,12 +584,12 @@ public class Gui {
         panel.remove(panel.getComponentCount() - 1);
         panel.add(GuiTricks.unboldLabel(new JLabel(m_reference.getNamableName(), JLabel.LEFT)));
 
-        m_editor.grabFocus();
+        this.editor.grabFocus();
 
         redraw();
     }
 
-    private void showInheritance() {
+    public void showInheritance() {
 
         if (m_reference == null) {
             return;
@@ -866,7 +599,7 @@ public class Gui {
 
         if (m_reference.entry instanceof ClassEntry) {
             // get the class inheritance
-            ClassInheritanceTreeNode classNode = m_controller.getClassInheritance((ClassEntry) m_reference.entry);
+            ClassInheritanceTreeNode classNode = this.controller.getClassInheritance((ClassEntry) m_reference.entry);
 
             // show the tree at the root
             TreePath path = getPathToRoot(classNode);
@@ -875,7 +608,7 @@ public class Gui {
             m_inheritanceTree.setSelectionRow(m_inheritanceTree.getRowForPath(path));
         } else if (m_reference.entry instanceof MethodEntry) {
             // get the method inheritance
-            MethodInheritanceTreeNode classNode = m_controller.getMethodInheritance((MethodEntry) m_reference.entry);
+            MethodInheritanceTreeNode classNode = this.controller.getMethodInheritance((MethodEntry) m_reference.entry);
 
             // show the tree at the root
             TreePath path = getPathToRoot(classNode);
@@ -888,7 +621,7 @@ public class Gui {
         redraw();
     }
 
-    private void showImplementations() {
+    public void showImplementations() {
 
         if (m_reference == null) {
             return;
@@ -898,7 +631,7 @@ public class Gui {
 
         if (m_reference.entry instanceof ClassEntry) {
             // get the class implementations
-            ClassImplementationsTreeNode node = m_controller.getClassImplementations((ClassEntry) m_reference.entry);
+            ClassImplementationsTreeNode node = this.controller.getClassImplementations((ClassEntry) m_reference.entry);
             if (node != null) {
                 // show the tree at the root
                 TreePath path = getPathToRoot(node);
@@ -908,7 +641,7 @@ public class Gui {
             }
         } else if (m_reference.entry instanceof MethodEntry) {
             // get the method implementations
-            MethodImplementationsTreeNode node = m_controller.getMethodImplementations((MethodEntry) m_reference.entry);
+            MethodImplementationsTreeNode node = this.controller.getMethodImplementations((MethodEntry) m_reference.entry);
             if (node != null) {
                 // show the tree at the root
                 TreePath path = getPathToRoot(node);
@@ -922,7 +655,7 @@ public class Gui {
         redraw();
     }
 
-    private void showCalls() {
+    public void showCalls() {
 
         if (m_reference == null) {
             return;
@@ -931,16 +664,16 @@ public class Gui {
         if (m_reference.entry instanceof ClassEntry) {
             // look for calls to the default constructor
             // TODO: get a list of all the constructors and find calls to all of them
-            BehaviorReferenceTreeNode node = m_controller.getMethodReferences(new ConstructorEntry((ClassEntry) m_reference.entry, new Signature("()V")));
+            BehaviorReferenceTreeNode node = this.controller.getMethodReferences(new ConstructorEntry((ClassEntry) m_reference.entry, new Signature("()V")));
             m_callsTree.setModel(new DefaultTreeModel(node));
         } else if (m_reference.entry instanceof FieldEntry) {
-            FieldReferenceTreeNode node = m_controller.getFieldReferences((FieldEntry) m_reference.entry);
+            FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) m_reference.entry);
             m_callsTree.setModel(new DefaultTreeModel(node));
         } else if (m_reference.entry instanceof MethodEntry) {
-            BehaviorReferenceTreeNode node = m_controller.getMethodReferences((MethodEntry) m_reference.entry);
+            BehaviorReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) m_reference.entry);
             m_callsTree.setModel(new DefaultTreeModel(node));
         } else if (m_reference.entry instanceof ConstructorEntry) {
-            BehaviorReferenceTreeNode node = m_controller.getMethodReferences((ConstructorEntry) m_reference.entry);
+            BehaviorReferenceTreeNode node = this.controller.getMethodReferences((ConstructorEntry) m_reference.entry);
             m_callsTree.setModel(new DefaultTreeModel(node));
         }
 
@@ -948,11 +681,11 @@ public class Gui {
         redraw();
     }
 
-    private void toggleMapping() {
-        if (m_controller.entryHasDeobfuscatedName(m_reference.entry)) {
-            m_controller.removeMapping(m_reference);
+    public void toggleMapping() {
+        if (this.controller.entryHasDeobfuscatedName(m_reference.entry)) {
+            this.controller.removeMapping(m_reference);
         } else {
-            m_controller.markAsDeobfuscated(m_reference);
+            this.controller.markAsDeobfuscated(m_reference);
         }
     }
 
@@ -967,21 +700,21 @@ public class Gui {
         return new TreePath(nodes.toArray());
     }
 
-    private void close() {
-        if (!m_controller.isDirty()) {
+    public void close() {
+        if (!this.controller.isDirty()) {
             // everything is saved, we can exit safely
-            m_frame.dispose();
+            this.frame.dispose();
         } else {
             // ask to save before closing
             String[] options = {"Save and exit", "Discard changes", "Cancel"};
-            int response = JOptionPane.showOptionDialog(m_frame, "Your mappings have not been saved yet. Do you want to save?", "Save your changes?", JOptionPane.YES_NO_CANCEL_OPTION,
+            int response = JOptionPane.showOptionDialog(this.frame, "Your mappings have not been saved yet. Do you want to save?", "Save your changes?", JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
             switch (response) {
                 case JOptionPane.YES_OPTION: // save and exit
-                    if (m_mappingsFileChooser.getSelectedFile() != null || m_mappingsFileChooser.showSaveDialog(m_frame) == JFileChooser.APPROVE_OPTION) {
+                    if (this.mappingsFileChooser.getSelectedFile() != null || this.mappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            m_controller.saveMappings(m_mappingsFileChooser.getCurrentDirectory());
-                            m_frame.dispose();
+                            this.controller.saveMappings(this.mappingsFileChooser.getCurrentDirectory());
+                            this.frame.dispose();
                         } catch (IOException ex) {
                             throw new Error(ex);
                         }
@@ -990,7 +723,7 @@ public class Gui {
 
                 case JOptionPane.NO_OPTION:
                     // don't save, exit
-                    m_frame.dispose();
+                    this.frame.dispose();
                     break;
 
                 // cancel means do nothing
@@ -998,8 +731,8 @@ public class Gui {
         }
     }
 
-    private void redraw() {
-        m_frame.validate();
-        m_frame.repaint();
+    public void redraw() {
+        this.frame.validate();
+        this.frame.repaint();
     }
 }

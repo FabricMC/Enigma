@@ -25,6 +25,7 @@ import java.util.jar.JarFile;
 
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.mapping.*;
 
 public class GuiController {

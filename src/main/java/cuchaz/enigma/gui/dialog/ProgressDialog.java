@@ -8,7 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.gui.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -19,6 +19,7 @@ import javax.swing.*;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator.ProgressListener;
+import cuchaz.enigma.gui.GuiTricks;
 
 public class ProgressDialog implements ProgressListener, AutoCloseable {
 
