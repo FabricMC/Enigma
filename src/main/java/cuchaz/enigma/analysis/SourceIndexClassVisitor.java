@@ -21,10 +21,10 @@ import cuchaz.enigma.mapping.*;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
 
-    private ClassEntry m_classEntry;
+    private ClassEntry classEntry;
 
     public SourceIndexClassVisitor(ClassEntry classEntry) {
-        m_classEntry = classEntry;
+        this.classEntry = classEntry;
     }
 
     @Override
@@ -32,7 +32,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
         // is this this class, or a subtype?
         TypeDefinition def = node.getUserData(Keys.TYPE_DEFINITION);
         ClassEntry classEntry = new ClassEntry(def.getInternalName());
-        if (!classEntry.equals(m_classEntry)) {
+        if (!classEntry.equals(this.classEntry)) {
             // it's a sub-type, recurse
             index.addDeclaration(node.getNameToken(), classEntry);
             return node.acceptVisitor(new SourceIndexClassVisitor(classEntry), index);
@@ -46,7 +46,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
         TypeReference ref = node.getUserData(Keys.TYPE_REFERENCE);
         if (node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY) {
             ClassEntry classEntry = new ClassEntry(ref.getInternalName());
-            index.addReference(node.getIdentifierToken(), classEntry, m_classEntry);
+            index.addReference(node.getIdentifierToken(), classEntry, this.classEntry);
         }
 
         return recurse(node, index);

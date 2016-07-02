@@ -22,10 +22,10 @@ import javassist.bytecode.SourceFileAttribute;
 
 public class ClassTranslator {
 
-    private Translator m_translator;
+    private Translator translator;
 
     public ClassTranslator(Translator translator) {
-        m_translator = translator;
+        this.translator = translator;
     }
 
     public void translate(CtClass c) {
@@ -46,7 +46,7 @@ public class ClassTranslator {
                             constants.getFieldrefName(i),
                             constants.getFieldrefType(i)
                     );
-                    FieldEntry translatedEntry = m_translator.translateEntry(entry);
+                    FieldEntry translatedEntry = this.translator.translateEntry(entry);
                     if (!entry.equals(translatedEntry)) {
                         editor.changeMemberrefNameAndType(i, translatedEntry.getName(), translatedEntry.getType().toString());
                     }
@@ -62,7 +62,7 @@ public class ClassTranslator {
                             editor.getMemberrefName(i),
                             editor.getMemberrefType(i)
                     );
-                    BehaviorEntry translatedEntry = m_translator.translateEntry(entry);
+                    BehaviorEntry translatedEntry = this.translator.translateEntry(entry);
                     if (!entry.equals(translatedEntry)) {
                         editor.changeMemberrefNameAndType(i, translatedEntry.getName(), translatedEntry.getSignature().toString());
                     }
@@ -78,13 +78,13 @@ public class ClassTranslator {
 
             // translate the name
             FieldEntry entry = EntryFactory.getFieldEntry(field);
-            String translatedName = m_translator.translate(entry);
+            String translatedName = this.translator.translate(entry);
             if (translatedName != null) {
                 field.setName(translatedName);
             }
 
             // translate the type
-            Type translatedType = m_translator.translateType(entry.getType());
+            Type translatedType = this.translator.translateType(entry.getType());
             field.getFieldInfo().setDescriptor(translatedType.toString());
         }
 
@@ -97,7 +97,7 @@ public class ClassTranslator {
                 CtMethod method = (CtMethod) behavior;
 
                 // translate the name
-                String translatedName = m_translator.translate(entry);
+                String translatedName = this.translator.translate(entry);
                 if (translatedName != null) {
                     method.setName(translatedName);
                 }
@@ -105,7 +105,7 @@ public class ClassTranslator {
 
             if (entry.getSignature() != null) {
                 // translate the signature
-                Signature translatedSignature = m_translator.translateSignature(entry.getSignature());
+                Signature translatedSignature = this.translator.translateSignature(entry.getSignature());
                 behavior.getMethodInfo().setDescriptor(translatedSignature.toString());
             }
         }
@@ -116,7 +116,7 @@ public class ClassTranslator {
 
             if (enclosingMethodAttr.methodIndex() == 0) {
                 BehaviorEntry obfBehaviorEntry = EntryFactory.getBehaviorEntry(Descriptor.toJvmName(enclosingMethodAttr.className()));
-                BehaviorEntry deobfBehaviorEntry = m_translator.translateEntry(obfBehaviorEntry);
+                BehaviorEntry deobfBehaviorEntry = this.translator.translateEntry(obfBehaviorEntry);
                 c.getClassFile().addAttribute(new EnclosingMethodAttribute(
                         constants,
                         deobfBehaviorEntry.getClassName()
@@ -127,7 +127,7 @@ public class ClassTranslator {
                         enclosingMethodAttr.methodName(),
                         enclosingMethodAttr.methodDescriptor()
                 );
-                BehaviorEntry deobfBehaviorEntry = m_translator.translateEntry(obfBehaviorEntry);
+                BehaviorEntry deobfBehaviorEntry = this.translator.translateEntry(obfBehaviorEntry);
                 c.getClassFile().addAttribute(new EnclosingMethodAttribute(
                         constants,
                         deobfBehaviorEntry.getClassName(),
@@ -139,10 +139,10 @@ public class ClassTranslator {
 
         // translate all the class names referenced in the code
         // the above code only changed method/field/reference names and types, but not the rest of the class references
-        ClassRenamer.renameClasses(c, m_translator);
+        ClassRenamer.renameClasses(c, this.translator);
 
         // translate the source file attribute too
-        ClassEntry deobfClassEntry = m_translator.translateEntry(classEntry);
+        ClassEntry deobfClassEntry = this.translator.translateEntry(classEntry);
         if (deobfClassEntry != null) {
             String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassEntry().getSimpleName()) + ".java";
             c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));

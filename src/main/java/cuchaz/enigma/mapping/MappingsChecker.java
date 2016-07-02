@@ -90,8 +90,6 @@ public class MappingsChecker {
                 classMapping.removeMethodMapping(methodMapping);
                 m_droppedMethodMappings.put(obfBehaviorEntry, methodMapping);
             }
-
-            m_relatedMethodChecker.checkMethod(classEntry, methodMapping);
         }
 
         // check inner classes

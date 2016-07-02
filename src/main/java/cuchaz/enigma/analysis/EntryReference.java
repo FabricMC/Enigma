@@ -24,7 +24,7 @@ public class EntryReference<E extends Entry, C extends Entry> {
     public E entry;
     public C context;
 
-    private boolean m_isNamed;
+    private boolean sourceName;
 
     public EntryReference(E entry, String sourceName) {
         this(entry, sourceName, null);
@@ -38,16 +38,16 @@ public class EntryReference<E extends Entry, C extends Entry> {
         this.entry = entry;
         this.context = context;
 
-        m_isNamed = sourceName != null && sourceName.length() > 0;
+        this.sourceName = sourceName != null && sourceName.length() > 0;
         if (entry instanceof ConstructorEntry && ConstructorNonNames.contains(sourceName)) {
-            m_isNamed = false;
+            this.sourceName = false;
         }
     }
 
     public EntryReference(E entry, C context, EntryReference<E, C> other) {
         this.entry = entry;
         this.context = context;
-        m_isNamed = other.m_isNamed;
+        this.sourceName = other.sourceName;
     }
 
     public ClassEntry getLocationClassEntry() {
@@ -58,7 +58,7 @@ public class EntryReference<E extends Entry, C extends Entry> {
     }
 
     public boolean isNamed() {
-        return m_isNamed;
+        return this.sourceName;
     }
 
     public Entry getNameableEntry() {
@@ -91,10 +91,7 @@ public class EntryReference<E extends Entry, C extends Entry> {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof EntryReference) {
-            return equals((EntryReference<?, ?>) other);
-        }
-        return false;
+        return other instanceof EntryReference && equals((EntryReference<?, ?>) other);
     }
 
     public boolean equals(EntryReference<?, ?> other) {

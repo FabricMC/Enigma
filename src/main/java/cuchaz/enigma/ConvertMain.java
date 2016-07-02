@@ -11,8 +11,6 @@
 package cuchaz.enigma;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.jar.JarFile;
 
@@ -42,7 +40,7 @@ public class ConvertMain {
             //Get the mapping files
             File inMappingsFile = new File(OldMappings);
             File outMappingsFile = new File(NewMappings);
-            Mappings mappings = new MappingsReader().read( inMappingsFile);
+            Mappings mappings = new MappingsReader().read(inMappingsFile);
             //Make the Match Files..
             File classMatchesFile = new File(ClassMatches);
             File fieldMatchesFile = new File(FieldMatches);
@@ -187,7 +185,7 @@ public class ConvertMain {
         checker.dropBrokenMappings(destMappings);
         deobfuscators.dest.setMappings(destMappings);
 
-        new MemberMatchingGui<FieldEntry>(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<FieldEntry>() {
+        new MemberMatchingGui<>(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<FieldEntry>() {
             @Override
             public void save(MemberMatches<FieldEntry> matches) {
                 try {
@@ -260,7 +258,7 @@ public class ConvertMain {
         checker.dropBrokenMappings(destMappings);
         deobfuscators.dest.setMappings(destMappings);
 
-        new MemberMatchingGui<BehaviorEntry>(classMatches, methodMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<BehaviorEntry>() {
+        new MemberMatchingGui<>(classMatches, methodMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<BehaviorEntry>() {
             @Override
             public void save(MemberMatches<BehaviorEntry> matches) {
                 try {

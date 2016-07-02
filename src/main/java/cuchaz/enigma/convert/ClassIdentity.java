@@ -36,18 +36,18 @@ import javassist.expr.*;
 
 public class ClassIdentity {
 
-    private ClassEntry m_classEntry;
-    private SidedClassNamer m_namer;
-    private Multiset<String> m_fields;
-    private Multiset<String> m_methods;
-    private Multiset<String> m_constructors;
-    private String m_staticInitializer;
-    private String m_extends;
-    private Multiset<String> m_implements;
-    private Set<String> m_stringLiterals;
-    private Multiset<String> m_implementations;
-    private Multiset<String> m_references;
-    private String m_outer;
+    private ClassEntry classEntry;
+    private SidedClassNamer namer;
+    private Multiset<String> fields;
+    private Multiset<String> methods;
+    private Multiset<String> constructors;
+    private String staticInitializer;
+    private String extendz;
+    private Multiset<String> implementz;
+    private Set<String> stringLiterals;
+    private Multiset<String> implementations;
+    private Multiset<String> references;
+    private String outer;
 
     private final ClassNameReplacer m_classNameReplacer = new ClassNameReplacer() {
 
@@ -63,13 +63,13 @@ public class ClassIdentity {
             }
 
             // is this class ourself?
-            if (className.equals(m_classEntry.getName())) {
+            if (className.equals(classEntry.getName())) {
                 return "CSelf";
             }
 
             // try the namer
-            if (m_namer != null) {
-                String newName = m_namer.getName(className);
+            if (namer != null) {
+                String newName = namer.getName(className);
                 if (newName != null) {
                     return newName;
                 }
@@ -88,58 +88,58 @@ public class ClassIdentity {
     };
 
     public ClassIdentity(CtClass c, SidedClassNamer namer, JarIndex index, boolean useReferences) {
-        m_namer = namer;
+        this.namer = namer;
 
         // stuff from the bytecode
 
-        m_classEntry = EntryFactory.getClassEntry(c);
-        m_fields = HashMultiset.create();
+        this.classEntry = EntryFactory.getClassEntry(c);
+        this.fields = HashMultiset.create();
         for (CtField field : c.getDeclaredFields()) {
-            m_fields.add(scrubType(field.getSignature()));
+            this.fields.add(scrubType(field.getSignature()));
         }
-        m_methods = HashMultiset.create();
+        this.methods = HashMultiset.create();
         for (CtMethod method : c.getDeclaredMethods()) {
-            m_methods.add(scrubSignature(method.getSignature()) + "0x" + getBehaviorSignature(method));
+            this.methods.add(scrubSignature(method.getSignature()) + "0x" + getBehaviorSignature(method));
         }
-        m_constructors = HashMultiset.create();
+        this.constructors = HashMultiset.create();
         for (CtConstructor constructor : c.getDeclaredConstructors()) {
-            m_constructors.add(scrubSignature(constructor.getSignature()) + "0x" + getBehaviorSignature(constructor));
+            this.constructors.add(scrubSignature(constructor.getSignature()) + "0x" + getBehaviorSignature(constructor));
         }
-        m_staticInitializer = "";
+        this.staticInitializer = "";
         if (c.getClassInitializer() != null) {
-            m_staticInitializer = getBehaviorSignature(c.getClassInitializer());
+            this.staticInitializer = getBehaviorSignature(c.getClassInitializer());
         }
-        m_extends = "";
+        this.extendz = "";
         if (c.getClassFile().getSuperclass() != null) {
-            m_extends = scrubClassName(Descriptor.toJvmName(c.getClassFile().getSuperclass()));
+            this.extendz = scrubClassName(Descriptor.toJvmName(c.getClassFile().getSuperclass()));
         }
-        m_implements = HashMultiset.create();
+        this.implementz = HashMultiset.create();
         for (String interfaceName : c.getClassFile().getInterfaces()) {
-            m_implements.add(scrubClassName(Descriptor.toJvmName(interfaceName)));
+            this.implementz.add(scrubClassName(Descriptor.toJvmName(interfaceName)));
         }
 
-        m_stringLiterals = Sets.newHashSet();
+        this.stringLiterals = Sets.newHashSet();
         ConstPool constants = c.getClassFile().getConstPool();
         for (int i = 1; i < constants.getSize(); i++) {
             if (constants.getTag(i) == ConstPool.CONST_String) {
-                m_stringLiterals.add(constants.getStringInfo(i));
+                this.stringLiterals.add(constants.getStringInfo(i));
             }
         }
 
         // stuff from the jar index
 
-        m_implementations = HashMultiset.create();
-        ClassImplementationsTreeNode implementationsNode = index.getClassImplementations(null, m_classEntry);
+        this.implementations = HashMultiset.create();
+        ClassImplementationsTreeNode implementationsNode = index.getClassImplementations(null, this.classEntry);
         if (implementationsNode != null) {
             @SuppressWarnings("unchecked")
             Enumeration<ClassImplementationsTreeNode> implementations = implementationsNode.children();
             while (implementations.hasMoreElements()) {
                 ClassImplementationsTreeNode node = implementations.nextElement();
-                m_implementations.add(scrubClassName(node.getClassEntry().getName()));
+                this.implementations.add(scrubClassName(node.getClassEntry().getName()));
             }
         }
 
-        m_references = HashMultiset.create();
+        this.references = HashMultiset.create();
         if (useReferences) {
             for (CtField field : c.getDeclaredFields()) {
                 FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
@@ -151,79 +151,79 @@ public class ClassIdentity {
             }
         }
 
-        m_outer = null;
-        if (m_classEntry.isInnerClass()) {
-            m_outer = m_classEntry.getOuterClassName();
+        this.outer = null;
+        if (this.classEntry.isInnerClass()) {
+            this.outer = this.classEntry.getOuterClassName();
         }
     }
 
     private void addReference(EntryReference<? extends Entry, BehaviorEntry> reference) {
         if (reference.context.getSignature() != null) {
-            m_references.add(String.format("%s_%s",
+            this.references.add(String.format("%s_%s",
                     scrubClassName(reference.context.getClassName()),
                     scrubSignature(reference.context.getSignature())
             ));
         } else {
-            m_references.add(String.format("%s_<clinit>",
+            this.references.add(String.format("%s_<clinit>",
                     scrubClassName(reference.context.getClassName())
             ));
         }
     }
 
     public ClassEntry getClassEntry() {
-        return m_classEntry;
+        return this.classEntry;
     }
 
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         buf.append("class: ");
-        buf.append(m_classEntry.getName());
+        buf.append(this.classEntry.getName());
         buf.append(" ");
         buf.append(hashCode());
         buf.append("\n");
-        for (String field : m_fields) {
+        for (String field : this.fields) {
             buf.append("\tfield ");
             buf.append(field);
             buf.append("\n");
         }
-        for (String method : m_methods) {
+        for (String method : this.methods) {
             buf.append("\tmethod ");
             buf.append(method);
             buf.append("\n");
         }
-        for (String constructor : m_constructors) {
+        for (String constructor : this.constructors) {
             buf.append("\tconstructor ");
             buf.append(constructor);
             buf.append("\n");
         }
-        if (m_staticInitializer.length() > 0) {
+        if (this.staticInitializer.length() > 0) {
             buf.append("\tinitializer ");
-            buf.append(m_staticInitializer);
+            buf.append(this.staticInitializer);
             buf.append("\n");
         }
-        if (m_extends.length() > 0) {
+        if (this.extendz.length() > 0) {
             buf.append("\textends ");
-            buf.append(m_extends);
+            buf.append(this.extendz);
             buf.append("\n");
         }
-        for (String interfaceName : m_implements) {
+        for (String interfaceName : this.implementz) {
             buf.append("\timplements ");
             buf.append(interfaceName);
             buf.append("\n");
         }
-        for (String implementation : m_implementations) {
+        for (String implementation : this.implementations) {
             buf.append("\timplemented by ");
             buf.append(implementation);
             buf.append("\n");
         }
-        for (String reference : m_references) {
+        for (String reference : this.references) {
             buf.append("\treference ");
             buf.append(reference);
             buf.append("\n");
         }
         buf.append("\touter ");
-        buf.append(m_outer);
+        buf.append(this.outer);
         buf.append("\n");
         return buf.toString();
     }
@@ -253,7 +253,7 @@ public class ClassIdentity {
     }
 
     private boolean isClassMatchedUniquely(String className) {
-        return m_namer != null && m_namer.getName(Descriptor.toJvmName(className)) != null;
+        return this.namer != null && this.namer.getName(Descriptor.toJvmName(className)) != null;
     }
 
     private String getBehaviorSignature(CtBehavior behavior) {
@@ -361,56 +361,53 @@ public class ClassIdentity {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof ClassIdentity) {
-            return equals((ClassIdentity) other);
-        }
-        return false;
+        return other instanceof ClassIdentity && equals((ClassIdentity) other);
     }
 
     public boolean equals(ClassIdentity other) {
-        return m_fields.equals(other.m_fields)
-                && m_methods.equals(other.m_methods)
-                && m_constructors.equals(other.m_constructors)
-                && m_staticInitializer.equals(other.m_staticInitializer)
-                && m_extends.equals(other.m_extends)
-                && m_implements.equals(other.m_implements)
-                && m_implementations.equals(other.m_implementations)
-                && m_references.equals(other.m_references);
+        return this.fields.equals(other.fields)
+                && this.methods.equals(other.methods)
+                && this.constructors.equals(other.constructors)
+                && this.staticInitializer.equals(other.staticInitializer)
+                && this.extendz.equals(other.extendz)
+                && this.implementz.equals(other.implementz)
+                && this.implementations.equals(other.implementations)
+                && this.references.equals(other.references);
     }
 
     @Override
     public int hashCode() {
         List<Object> objs = Lists.newArrayList();
-        objs.addAll(m_fields);
-        objs.addAll(m_methods);
-        objs.addAll(m_constructors);
-        objs.add(m_staticInitializer);
-        objs.add(m_extends);
-        objs.addAll(m_implements);
-        objs.addAll(m_implementations);
-        objs.addAll(m_references);
+        objs.addAll(this.fields);
+        objs.addAll(this.methods);
+        objs.addAll(this.constructors);
+        objs.add(this.staticInitializer);
+        objs.add(this.extendz);
+        objs.addAll(this.implementz);
+        objs.addAll(this.implementations);
+        objs.addAll(this.references);
         return Util.combineHashesOrdered(objs);
     }
 
     public int getMatchScore(ClassIdentity other) {
-        return 2 * getNumMatches(m_extends, other.m_extends)
-                + 2 * getNumMatches(m_outer, other.m_outer)
-                + 2 * getNumMatches(m_implements, other.m_implements)
-                + getNumMatches(m_stringLiterals, other.m_stringLiterals)
-                + getNumMatches(m_fields, other.m_fields)
-                + getNumMatches(m_methods, other.m_methods)
-                + getNumMatches(m_constructors, other.m_constructors);
+        return 2 * getNumMatches(this.extendz, other.extendz)
+                + 2 * getNumMatches(this.outer, other.outer)
+                + 2 * getNumMatches(this.implementz, other.implementz)
+                + getNumMatches(this.stringLiterals, other.stringLiterals)
+                + getNumMatches(this.fields, other.fields)
+                + getNumMatches(this.methods, other.methods)
+                + getNumMatches(this.constructors, other.constructors);
     }
 
     public int getMaxMatchScore() {
-        return 2 + 2 + 2 * m_implements.size() + m_stringLiterals.size() + m_fields.size() + m_methods.size() + m_constructors.size();
+        return 2 + 2 + 2 * this.implementz.size() + this.stringLiterals.size() + this.fields.size() + this.methods.size() + this.constructors.size();
     }
 
     public boolean matches(CtClass c) {
         // just compare declaration counts
-        return m_fields.size() == c.getDeclaredFields().length
-                && m_methods.size() == c.getDeclaredMethods().length
-                && m_constructors.size() == c.getDeclaredConstructors().length;
+        return this.fields.size() == c.getDeclaredFields().length
+                && this.methods.size() == c.getDeclaredMethods().length
+                && this.constructors.size() == c.getDeclaredConstructors().length;
     }
 
     private int getNumMatches(Set<String> a, Set<String> b) {

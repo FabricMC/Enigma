@@ -23,27 +23,27 @@ public class ClassNamer {
         String getName(String name);
     }
 
-    private Map<String, String> m_sourceNames;
-    private Map<String, String> m_destNames;
+    private Map<String, String> sourceNames;
+    private Map<String, String> destNames;
 
     public ClassNamer(BiMap<ClassEntry, ClassEntry> mappings) {
         // convert the identity mappings to name maps
-        m_sourceNames = Maps.newHashMap();
-        m_destNames = Maps.newHashMap();
+        this.sourceNames = Maps.newHashMap();
+        this.destNames = Maps.newHashMap();
         int i = 0;
         for (Map.Entry<ClassEntry, ClassEntry> entry : mappings.entrySet()) {
             String name = String.format("M%04d", i++);
-            m_sourceNames.put(entry.getKey().getName(), name);
-            m_destNames.put(entry.getValue().getName(), name);
+            this.sourceNames.put(entry.getKey().getName(), name);
+            this.destNames.put(entry.getValue().getName(), name);
         }
     }
 
     public String getSourceName(String name) {
-        return m_sourceNames.get(name);
+        return this.sourceNames.get(name);
     }
 
     public String getDestName(String name) {
-        return m_destNames.get(name);
+        return this.destNames.get(name);
     }
 
     public SidedClassNamer getSourceNamer() {

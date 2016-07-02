@@ -24,27 +24,27 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
     private static final long serialVersionUID = 3112703459157851912L;
 
-    private Translator m_deobfuscatingTranslator;
-    private ClassEntry m_entry;
+    private Translator deobfuscatingTranslator;
+    private ClassEntry entry;
 
     public ClassImplementationsTreeNode(Translator deobfuscatingTranslator, ClassEntry entry) {
-        m_deobfuscatingTranslator = deobfuscatingTranslator;
-        m_entry = entry;
+        this.deobfuscatingTranslator = deobfuscatingTranslator;
+        this.entry = entry;
     }
 
     public ClassEntry getClassEntry() {
-        return m_entry;
+        return this.entry;
     }
 
     public String getDeobfClassName() {
-        return m_deobfuscatingTranslator.translateClass(m_entry.getClassName());
+        return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
     }
 
     @Override
     public String toString() {
         String className = getDeobfClassName();
         if (className == null) {
-            className = m_entry.getClassName();
+            className = this.entry.getClassName();
         }
         return className;
     }
@@ -52,8 +52,8 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
     public void load(JarIndex index) {
         // get all method implementations
         List<ClassImplementationsTreeNode> nodes = Lists.newArrayList();
-        for (String implementingClassName : index.getImplementingClasses(m_entry.getClassName())) {
-            nodes.add(new ClassImplementationsTreeNode(m_deobfuscatingTranslator, new ClassEntry(implementingClassName)));
+        for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {
+            nodes.add(new ClassImplementationsTreeNode(this.deobfuscatingTranslator, new ClassEntry(implementingClassName)));
         }
 
         // add them to this node
@@ -62,7 +62,7 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
     public static ClassImplementationsTreeNode findNode(ClassImplementationsTreeNode node, MethodEntry entry) {
         // is this the node?
-        if (node.m_entry.equals(entry)) {
+        if (node.entry.equals(entry)) {
             return node;
         }
 

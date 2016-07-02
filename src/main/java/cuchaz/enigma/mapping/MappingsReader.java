@@ -42,14 +42,14 @@ public class MappingsReader {
 
     public void readFile(Mappings mappings, BufferedReader in) throws IOException, MappingParseException {
 
-        String builder = "";
+        StringBuffer buf = new StringBuffer();
         String line = null;
         while ((line = in.readLine()) != null) {
-            builder += line;
+            buf.append(line);
         }
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        JsonClass jsonClass = gson.fromJson(builder, JsonClass.class);
+        JsonClass jsonClass = gson.fromJson(buf.toString(), JsonClass.class);
         load(null, jsonClass, mappings);
     }
 

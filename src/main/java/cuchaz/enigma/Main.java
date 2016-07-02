@@ -12,6 +12,7 @@ package cuchaz.enigma;
 
 import java.io.File;
 import java.util.jar.JarFile;
+
 import javax.swing.UIManager;
 
 import cuchaz.enigma.gui.Gui;

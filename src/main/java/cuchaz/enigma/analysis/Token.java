@@ -39,10 +39,7 @@ public class Token implements Comparable<Token> {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof Token) {
-            return equals((Token) other);
-        }
-        return false;
+        return other instanceof Token && equals((Token) other);
     }
 
     public boolean equals(Token other) {

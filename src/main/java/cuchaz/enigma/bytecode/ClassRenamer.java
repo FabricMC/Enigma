@@ -51,8 +51,6 @@ public class ClassRenamer {
 
     private static class ReplacerClassMap extends HashMap<String, String> {
 
-        private static final long serialVersionUID = 317915213205066168L;
-
         private ClassNameReplacer m_replacer;
 
         public ReplacerClassMap(ClassNameReplacer replacer) {
@@ -151,7 +149,7 @@ public class ClassRenamer {
                 }
 
 				/* DEBUG
-				System.out.println(String.format("\tDEOBF: %s-> ATTR: %s,%s,%s", classEntry, attr.outerClass(i), attr.innerClass(i), attr.innerName(i)));
+                System.out.println(String.format("\tDEOBF: %s-> ATTR: %s,%s,%s", classEntry, attr.outerClass(i), attr.innerClass(i), attr.innerName(i)));
 				*/
             }
         }

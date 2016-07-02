@@ -8,7 +8,7 @@ public class JsonConstructor {
     private boolean statics;
 
     public JsonConstructor(String signature, List<JsonArgument> args, boolean statics) {
-        this.signature=signature;
+        this.signature = signature;
         this.args = args;
         this.statics = statics;
     }

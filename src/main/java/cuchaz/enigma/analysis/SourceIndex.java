@@ -28,36 +28,36 @@ import cuchaz.enigma.mapping.Entry;
 
 public class SourceIndex {
 
-    private String m_source;
-    private TreeMap<Token, EntryReference<Entry, Entry>> m_tokenToReference;
-    private Multimap<EntryReference<Entry, Entry>, Token> m_referenceToTokens;
-    private Map<Entry, Token> m_declarationToToken;
-    private List<Integer> m_lineOffsets;
-    private boolean m_ignoreBadTokens;
+    private String source;
+    private TreeMap<Token, EntryReference<Entry, Entry>> tokenToReference;
+    private Multimap<EntryReference<Entry, Entry>, Token> referenceToTokens;
+    private Map<Entry, Token> declarationToToken;
+    private List<Integer> lineOffsets;
+    private boolean ignoreBadTokens;
 
     public SourceIndex(String source) {
         this(source, true);
     }
 
     public SourceIndex(String source, boolean ignoreBadTokens) {
-        m_source = source;
-        m_ignoreBadTokens = ignoreBadTokens;
-        m_tokenToReference = Maps.newTreeMap();
-        m_referenceToTokens = HashMultimap.create();
-        m_declarationToToken = Maps.newHashMap();
-        m_lineOffsets = Lists.newArrayList();
+        this.source = source;
+        this.ignoreBadTokens = ignoreBadTokens;
+        this.tokenToReference = Maps.newTreeMap();
+        this.referenceToTokens = HashMultimap.create();
+        this.declarationToToken = Maps.newHashMap();
+        this.lineOffsets = Lists.newArrayList();
 
         // count the lines
-        m_lineOffsets.add(0);
+        this.lineOffsets.add(0);
         for (int i = 0; i < source.length(); i++) {
             if (source.charAt(i) == '\n') {
-                m_lineOffsets.add(i + 1);
+                this.lineOffsets.add(i + 1);
             }
         }
     }
 
     public String getSource() {
-        return m_source;
+        return this.source;
     }
 
     public Token getToken(AstNode node) {
@@ -75,11 +75,7 @@ public class SourceIndex {
             System.err.println(String.format("WARNING: %s \"%s\" has invalid region: %s", node.getNodeType(), name, region));
             return null;
         }
-        Token token = new Token(
-                toPos(region.getBeginLine(), region.getBeginColumn()),
-                toPos(region.getEndLine(), region.getEndColumn()),
-                m_source
-        );
+        Token token = new Token(toPos(region.getBeginLine(), region.getBeginColumn()), toPos(region.getEndLine(), region.getEndColumn()), this.source);
         if (token.start == 0) {
             // DEBUG
             System.err.println(String.format("WARNING: %s \"%s\" has invalid start: %s", node.getNodeType(), name, region));
@@ -90,7 +86,7 @@ public class SourceIndex {
         // System.out.println( String.format( "%s \"%s\" region: %s", node.getNodeType(), name, region ) );
 
         // if the token has a $ in it, something's wrong. Ignore this token
-        if (name.lastIndexOf('$') >= 0 && m_ignoreBadTokens) {
+        if (name.lastIndexOf('$') >= 0 && this.ignoreBadTokens) {
             // DEBUG
             System.err.println(String.format("WARNING: %s \"%s\" is probably a bad token. It was ignored", node.getNodeType(), name));
             return null;
@@ -103,8 +99,8 @@ public class SourceIndex {
         Token token = getToken(node);
         if (token != null) {
             EntryReference<Entry, Entry> deobfReference = new EntryReference<Entry, Entry>(deobfEntry, token.text, deobfContext);
-            m_tokenToReference.put(token, deobfReference);
-            m_referenceToTokens.put(deobfReference, token);
+            this.tokenToReference.put(token, deobfReference);
+            this.referenceToTokens.put(deobfReference, token);
         }
     }
 
@@ -112,14 +108,14 @@ public class SourceIndex {
         Token token = getToken(node);
         if (token != null) {
             EntryReference<Entry, Entry> reference = new EntryReference<Entry, Entry>(deobfEntry, token.text);
-            m_tokenToReference.put(token, reference);
-            m_referenceToTokens.put(reference, token);
-            m_declarationToToken.put(deobfEntry, token);
+            this.tokenToReference.put(token, reference);
+            this.referenceToTokens.put(reference, token);
+            this.declarationToToken.put(deobfEntry, token);
         }
     }
 
     public Token getReferenceToken(int pos) {
-        Token token = m_tokenToReference.floorKey(new Token(pos, pos, null));
+        Token token = this.tokenToReference.floorKey(new Token(pos, pos, null));
         if (token != null && token.contains(pos)) {
             return token;
         }
@@ -127,44 +123,44 @@ public class SourceIndex {
     }
 
     public Collection<Token> getReferenceTokens(EntryReference<Entry, Entry> deobfReference) {
-        return m_referenceToTokens.get(deobfReference);
+        return this.referenceToTokens.get(deobfReference);
     }
 
     public EntryReference<Entry, Entry> getDeobfReference(Token token) {
         if (token == null) {
             return null;
         }
-        return m_tokenToReference.get(token);
+        return this.tokenToReference.get(token);
     }
 
     public void replaceDeobfReference(Token token, EntryReference<Entry, Entry> newDeobfReference) {
-        EntryReference<Entry, Entry> oldDeobfReference = m_tokenToReference.get(token);
-        m_tokenToReference.put(token, newDeobfReference);
-        Collection<Token> tokens = m_referenceToTokens.get(oldDeobfReference);
-        m_referenceToTokens.removeAll(oldDeobfReference);
-        m_referenceToTokens.putAll(newDeobfReference, tokens);
+        EntryReference<Entry, Entry> oldDeobfReference = this.tokenToReference.get(token);
+        this.tokenToReference.put(token, newDeobfReference);
+        Collection<Token> tokens = this.referenceToTokens.get(oldDeobfReference);
+        this.referenceToTokens.removeAll(oldDeobfReference);
+        this.referenceToTokens.putAll(newDeobfReference, tokens);
     }
 
     public Iterable<Token> referenceTokens() {
-        return m_tokenToReference.keySet();
+        return this.tokenToReference.keySet();
     }
 
     public Iterable<Token> declarationTokens() {
-        return m_declarationToToken.values();
+        return this.declarationToToken.values();
     }
 
     public Iterable<Entry> declarations() {
-        return m_declarationToToken.keySet();
+        return this.declarationToToken.keySet();
     }
 
     public Token getDeclarationToken(Entry deobfEntry) {
-        return m_declarationToToken.get(deobfEntry);
+        return this.declarationToToken.get(deobfEntry);
     }
 
     public int getLineNumber(int pos) {
         // line number is 1-based
         int line = 0;
-        for (Integer offset : m_lineOffsets) {
+        for (Integer offset : this.lineOffsets) {
             if (offset > pos) {
                 break;
             }
@@ -175,11 +171,11 @@ public class SourceIndex {
 
     public int getColumnNumber(int pos) {
         // column number is 1-based
-        return pos - m_lineOffsets.get(getLineNumber(pos) - 1) + 1;
+        return pos - this.lineOffsets.get(getLineNumber(pos) - 1) + 1;
     }
 
     private int toPos(int line, int col) {
         // line and col are 1-based
-        return m_lineOffsets.get(line - 1) + col - 1;
+        return this.lineOffsets.get(line - 1) + col - 1;
     }
 }

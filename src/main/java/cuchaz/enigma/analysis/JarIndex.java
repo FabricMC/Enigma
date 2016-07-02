@@ -26,32 +26,32 @@ import javassist.expr.*;
 
 public class JarIndex {
 
-    private Set<ClassEntry> m_obfClassEntries;
-    private TranslationIndex m_translationIndex;
-    private Map<Entry, Access> m_access;
-    private Multimap<ClassEntry, FieldEntry> m_fields;
-    private Multimap<ClassEntry, BehaviorEntry> m_behaviors;
-    private Multimap<String, MethodEntry> m_methodImplementations;
-    private Multimap<BehaviorEntry, EntryReference<BehaviorEntry, BehaviorEntry>> m_behaviorReferences;
-    private Multimap<FieldEntry, EntryReference<FieldEntry, BehaviorEntry>> m_fieldReferences;
-    private Multimap<ClassEntry, ClassEntry> m_innerClassesByOuter;
-    private Map<ClassEntry, ClassEntry> m_outerClassesByInner;
-    private Map<ClassEntry, BehaviorEntry> m_anonymousClasses;
-    private Map<MethodEntry, MethodEntry> m_bridgedMethods;
+    private Set<ClassEntry> obfClassEntries;
+    private TranslationIndex translationIndex;
+    private Map<Entry, Access> access;
+    private Multimap<ClassEntry, FieldEntry> fields;
+    private Multimap<ClassEntry, BehaviorEntry> behaviors;
+    private Multimap<String, MethodEntry> methodImplementations;
+    private Multimap<BehaviorEntry, EntryReference<BehaviorEntry, BehaviorEntry>> behaviorReferences;
+    private Multimap<FieldEntry, EntryReference<FieldEntry, BehaviorEntry>> fieldReferences;
+    private Multimap<ClassEntry, ClassEntry> innerClassesByOuter;
+    private Map<ClassEntry, ClassEntry> outerClassesByInner;
+    private Map<ClassEntry, BehaviorEntry> anonymousClasses;
+    private Map<MethodEntry, MethodEntry> bridgedMethods;
 
     public JarIndex() {
-        m_obfClassEntries = Sets.newHashSet();
-        m_translationIndex = new TranslationIndex();
-        m_access = Maps.newHashMap();
-        m_fields = HashMultimap.create();
-        m_behaviors = HashMultimap.create();
-        m_methodImplementations = HashMultimap.create();
-        m_behaviorReferences = HashMultimap.create();
-        m_fieldReferences = HashMultimap.create();
-        m_innerClassesByOuter = HashMultimap.create();
-        m_outerClassesByInner = Maps.newHashMap();
-        m_anonymousClasses = Maps.newHashMap();
-        m_bridgedMethods = Maps.newHashMap();
+        this.obfClassEntries = Sets.newHashSet();
+        this.translationIndex = new TranslationIndex();
+        this.access = Maps.newHashMap();
+        this.fields = HashMultimap.create();
+        this.behaviors = HashMultimap.create();
+        this.methodImplementations = HashMultimap.create();
+        this.behaviorReferences = HashMultimap.create();
+        this.fieldReferences = HashMultimap.create();
+        this.innerClassesByOuter = HashMultimap.create();
+        this.outerClassesByInner = Maps.newHashMap();
+        this.anonymousClasses = Maps.newHashMap();
+        this.bridgedMethods = Maps.newHashMap();
     }
 
     public void indexJar(JarFile jar, boolean buildInnerClasses) {
@@ -62,7 +62,7 @@ public class JarIndex {
                 // move out of default package
                 classEntry = new ClassEntry(Constants.NonePackage + "/" + classEntry.getName());
             }
-            m_obfClassEntries.add(classEntry);
+            this.obfClassEntries.add(classEntry);
         }
 
         // step 2: index field/method/constructor access
@@ -70,20 +70,20 @@ public class JarIndex {
             ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
             for (CtField field : c.getDeclaredFields()) {
                 FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
-                m_access.put(fieldEntry, Access.get(field));
-                m_fields.put(fieldEntry.getClassEntry(), fieldEntry);
+                this.access.put(fieldEntry, Access.get(field));
+                this.fields.put(fieldEntry.getClassEntry(), fieldEntry);
             }
             for (CtBehavior behavior : c.getDeclaredBehaviors()) {
                 BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
-                m_access.put(behaviorEntry, Access.get(behavior));
-                m_behaviors.put(behaviorEntry.getClassEntry(), behaviorEntry);
+                this.access.put(behaviorEntry, Access.get(behavior));
+                this.behaviors.put(behaviorEntry.getClassEntry(), behaviorEntry);
             }
         }
 
         // step 3: index extends, implements, fields, and methods
         for (CtClass c : JarClassIterator.classes(jar)) {
             ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NonePackage);
-            m_translationIndex.indexClass(c);
+            this.translationIndex.indexClass(c);
             String className = Descriptor.toJvmName(c.getName());
             for (String interfaceName : c.getClassFile().getInterfaces()) {
                 className = Descriptor.toJvmName(className);
@@ -113,13 +113,13 @@ public class JarIndex {
                 ClassEntry innerClassEntry = EntryFactory.getClassEntry(c);
                 ClassEntry outerClassEntry = findOuterClass(c);
                 if (outerClassEntry != null) {
-                    m_innerClassesByOuter.put(outerClassEntry, innerClassEntry);
-                    boolean innerWasAdded = m_outerClassesByInner.put(innerClassEntry, outerClassEntry) == null;
+                    this.innerClassesByOuter.put(outerClassEntry, innerClassEntry);
+                    boolean innerWasAdded = this.outerClassesByInner.put(innerClassEntry, outerClassEntry) == null;
                     assert (innerWasAdded);
 
                     BehaviorEntry enclosingBehavior = isAnonymousClass(c, outerClassEntry);
                     if (enclosingBehavior != null) {
-                        m_anonymousClasses.put(innerClassEntry, enclosingBehavior);
+                        this.anonymousClasses.put(innerClassEntry, enclosingBehavior);
 
                         // DEBUG
                         //System.out.println("ANONYMOUS: " + outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName());
@@ -132,7 +132,7 @@ public class JarIndex {
 
             // step 6: update other indices with inner class info
             Map<String, String> renames = Maps.newHashMap();
-            for (ClassEntry innerClassEntry : m_innerClassesByOuter.values()) {
+            for (ClassEntry innerClassEntry : this.innerClassesByOuter.values()) {
                 String newName = innerClassEntry.buildClassEntry(getObfClassChain(innerClassEntry)).getName();
                 if (!innerClassEntry.getName().equals(newName)) {
                     // DEBUG
@@ -140,12 +140,12 @@ public class JarIndex {
                     renames.put(innerClassEntry.getName(), newName);
                 }
             }
-            EntryRenamer.renameClassesInSet(renames, m_obfClassEntries);
-            m_translationIndex.renameClasses(renames);
-            EntryRenamer.renameClassesInMultimap(renames, m_methodImplementations);
-            EntryRenamer.renameClassesInMultimap(renames, m_behaviorReferences);
-            EntryRenamer.renameClassesInMultimap(renames, m_fieldReferences);
-            EntryRenamer.renameClassesInMap(renames, m_access);
+            EntryRenamer.renameClassesInSet(renames, this.obfClassEntries);
+            this.translationIndex.renameClasses(renames);
+            EntryRenamer.renameClassesInMultimap(renames, this.methodImplementations);
+            EntryRenamer.renameClassesInMultimap(renames, this.behaviorReferences);
+            EntryRenamer.renameClassesInMultimap(renames, this.fieldReferences);
+            EntryRenamer.renameClassesInMap(renames, this.access);
         }
     }
 
@@ -156,12 +156,12 @@ public class JarIndex {
             MethodEntry methodEntry = (MethodEntry) behaviorEntry;
 
             // index implementation
-            m_methodImplementations.put(behaviorEntry.getClassName(), methodEntry);
+            this.methodImplementations.put(behaviorEntry.getClassName(), methodEntry);
 
             // look for bridge and bridged methods
             CtMethod bridgedMethod = getBridgedMethod((CtMethod) behavior);
             if (bridgedMethod != null) {
-                m_bridgedMethods.put(methodEntry, EntryFactory.getMethodEntry(bridgedMethod));
+                this.bridgedMethods.put(methodEntry, EntryFactory.getMethodEntry(bridgedMethod));
             }
         }
         // looks like we don't care about constructors here
@@ -175,7 +175,7 @@ public class JarIndex {
                 @Override
                 public void edit(MethodCall call) {
                     MethodEntry calledMethodEntry = EntryFactory.getMethodEntry(call);
-                    ClassEntry resolvedClassEntry = m_translationIndex.resolveEntryClass(calledMethodEntry);
+                    ClassEntry resolvedClassEntry = translationIndex.resolveEntryClass(calledMethodEntry);
                     if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledMethodEntry.getClassEntry())) {
                         calledMethodEntry = new MethodEntry(
                                 resolvedClassEntry,
@@ -188,13 +188,13 @@ public class JarIndex {
                             call.getMethodName(),
                             behaviorEntry
                     );
-                    m_behaviorReferences.put(calledMethodEntry, reference);
+                    behaviorReferences.put(calledMethodEntry, reference);
                 }
 
                 @Override
                 public void edit(FieldAccess call) {
                     FieldEntry calledFieldEntry = EntryFactory.getFieldEntry(call);
-                    ClassEntry resolvedClassEntry = m_translationIndex.resolveEntryClass(calledFieldEntry);
+                    ClassEntry resolvedClassEntry = translationIndex.resolveEntryClass(calledFieldEntry);
                     if (resolvedClassEntry != null && !resolvedClassEntry.equals(calledFieldEntry.getClassEntry())) {
                         calledFieldEntry = new FieldEntry(calledFieldEntry, resolvedClassEntry);
                     }
@@ -203,7 +203,7 @@ public class JarIndex {
                             call.getFieldName(),
                             behaviorEntry
                     );
-                    m_fieldReferences.put(calledFieldEntry, reference);
+                    fieldReferences.put(calledFieldEntry, reference);
                 }
 
                 @Override
@@ -214,7 +214,7 @@ public class JarIndex {
                             call.getMethodName(),
                             behaviorEntry
                     );
-                    m_behaviorReferences.put(calledConstructorEntry, reference);
+                    behaviorReferences.put(calledConstructorEntry, reference);
                 }
 
                 @Override
@@ -225,7 +225,7 @@ public class JarIndex {
                             call.getClassName(),
                             behaviorEntry
                     );
-                    m_behaviorReferences.put(calledConstructorEntry, reference);
+                    behaviorReferences.put(calledConstructorEntry, reference);
                 }
             });
         } catch (CannotCompileException ex) {
@@ -314,7 +314,7 @@ public class JarIndex {
 
                     // is the entry a superclass of the context?
                     ClassEntry calledClassEntry = reference.entry.getClassEntry();
-                    ClassEntry superclassEntry = m_translationIndex.getSuperclass(reference.context.getClassEntry());
+                    ClassEntry superclassEntry = this.translationIndex.getSuperclass(reference.context.getClassEntry());
                     if (superclassEntry != null && superclassEntry.equals(calledClassEntry)) {
                         // it's a super call, skip
                         continue;
@@ -360,7 +360,7 @@ public class JarIndex {
         }
 
         // is the outer class in the jar?
-        return m_obfClassEntries.contains(outerClassEntry);
+        return this.obfClassEntries.contains(outerClassEntry);
 
     }
 
@@ -500,31 +500,31 @@ public class JarIndex {
     }
 
     public Set<ClassEntry> getObfClassEntries() {
-        return m_obfClassEntries;
+        return this.obfClassEntries;
     }
 
     public Collection<FieldEntry> getObfFieldEntries() {
-        return m_fields.values();
+        return this.fields.values();
     }
 
     public Collection<FieldEntry> getObfFieldEntries(ClassEntry classEntry) {
-        return m_fields.get(classEntry);
+        return this.fields.get(classEntry);
     }
 
     public Collection<BehaviorEntry> getObfBehaviorEntries() {
-        return m_behaviors.values();
+        return this.behaviors.values();
     }
 
     public Collection<BehaviorEntry> getObfBehaviorEntries(ClassEntry classEntry) {
-        return m_behaviors.get(classEntry);
+        return this.behaviors.get(classEntry);
     }
 
     public TranslationIndex getTranslationIndex() {
-        return m_translationIndex;
+        return this.translationIndex;
     }
 
     public Access getAccess(Entry entry) {
-        return m_access.get(entry);
+        return this.access.get(entry);
     }
 
     public ClassInheritanceTreeNode getClassInheritance(Translator deobfuscatingTranslator, ClassEntry obfClassEntry) {
@@ -532,7 +532,7 @@ public class JarIndex {
         // get the root node
         List<String> ancestry = Lists.newArrayList();
         ancestry.add(obfClassEntry.getName());
-        for (ClassEntry classEntry : m_translationIndex.getAncestry(obfClassEntry)) {
+        for (ClassEntry classEntry : this.translationIndex.getAncestry(obfClassEntry)) {
             if (containsObfClass(classEntry)) {
                 ancestry.add(classEntry.getName());
             }
@@ -543,7 +543,7 @@ public class JarIndex {
         );
 
         // expand all children recursively
-        rootNode.load(m_translationIndex, true);
+        rootNode.load(this.translationIndex, true);
 
         return rootNode;
     }
@@ -563,7 +563,7 @@ public class JarIndex {
 
         // travel to the ancestor implementation
         ClassEntry baseImplementationClassEntry = obfMethodEntry.getClassEntry();
-        for (ClassEntry ancestorClassEntry : m_translationIndex.getAncestry(obfMethodEntry.getClassEntry())) {
+        for (ClassEntry ancestorClassEntry : this.translationIndex.getAncestry(obfMethodEntry.getClassEntry())) {
             MethodEntry ancestorMethodEntry = new MethodEntry(
                     new ClassEntry(ancestorClassEntry),
                     obfMethodEntry.getName(),
@@ -664,13 +664,13 @@ public class JarIndex {
     }
 
     public Collection<EntryReference<FieldEntry, BehaviorEntry>> getFieldReferences(FieldEntry fieldEntry) {
-        return m_fieldReferences.get(fieldEntry);
+        return this.fieldReferences.get(fieldEntry);
     }
 
     public Collection<FieldEntry> getReferencedFields(BehaviorEntry behaviorEntry) {
         // linear search is fast enough for now
         Set<FieldEntry> fieldEntries = Sets.newHashSet();
-        for (EntryReference<FieldEntry, BehaviorEntry> reference : m_fieldReferences.values()) {
+        for (EntryReference<FieldEntry, BehaviorEntry> reference : this.fieldReferences.values()) {
             if (reference.context == behaviorEntry) {
                 fieldEntries.add(reference.entry);
             }
@@ -679,13 +679,13 @@ public class JarIndex {
     }
 
     public Collection<EntryReference<BehaviorEntry, BehaviorEntry>> getBehaviorReferences(BehaviorEntry behaviorEntry) {
-        return m_behaviorReferences.get(behaviorEntry);
+        return this.behaviorReferences.get(behaviorEntry);
     }
 
     public Collection<BehaviorEntry> getReferencedBehaviors(BehaviorEntry behaviorEntry) {
         // linear search is fast enough for now
         Set<BehaviorEntry> behaviorEntries = Sets.newHashSet();
-        for (EntryReference<BehaviorEntry, BehaviorEntry> reference : m_behaviorReferences.values()) {
+        for (EntryReference<BehaviorEntry, BehaviorEntry> reference : this.behaviorReferences.values()) {
             if (reference.context == behaviorEntry) {
                 behaviorEntries.add(reference.entry);
             }
@@ -694,27 +694,27 @@ public class JarIndex {
     }
 
     public Collection<ClassEntry> getInnerClasses(ClassEntry obfOuterClassEntry) {
-        return m_innerClassesByOuter.get(obfOuterClassEntry);
+        return this.innerClassesByOuter.get(obfOuterClassEntry);
     }
 
     public ClassEntry getOuterClass(ClassEntry obfInnerClassEntry) {
-        return m_outerClassesByInner.get(obfInnerClassEntry);
+        return this.outerClassesByInner.get(obfInnerClassEntry);
     }
 
     public boolean isAnonymousClass(ClassEntry obfInnerClassEntry) {
-        return m_anonymousClasses.containsKey(obfInnerClassEntry);
+        return this.anonymousClasses.containsKey(obfInnerClassEntry);
     }
 
     public BehaviorEntry getAnonymousClassCaller(ClassEntry obfInnerClassName) {
-        return m_anonymousClasses.get(obfInnerClassName);
+        return this.anonymousClasses.get(obfInnerClassName);
     }
 
     public Set<ClassEntry> getInterfaces(String className) {
         ClassEntry classEntry = new ClassEntry(className);
         Set<ClassEntry> interfaces = new HashSet<ClassEntry>();
-        interfaces.addAll(m_translationIndex.getInterfaces(classEntry));
-        for (ClassEntry ancestor : m_translationIndex.getAncestry(classEntry)) {
-            interfaces.addAll(m_translationIndex.getInterfaces(ancestor));
+        interfaces.addAll(this.translationIndex.getInterfaces(classEntry));
+        for (ClassEntry ancestor : this.translationIndex.getAncestry(classEntry)) {
+            interfaces.addAll(this.translationIndex.getInterfaces(ancestor));
         }
         return interfaces;
     }
@@ -723,31 +723,31 @@ public class JarIndex {
 
         // linear search is fast enough for now
         Set<String> classNames = Sets.newHashSet();
-        for (Map.Entry<ClassEntry, ClassEntry> entry : m_translationIndex.getClassInterfaces()) {
+        for (Map.Entry<ClassEntry, ClassEntry> entry : this.translationIndex.getClassInterfaces()) {
             ClassEntry classEntry = entry.getKey();
             ClassEntry interfaceEntry = entry.getValue();
             if (interfaceEntry.getName().equals(targetInterfaceName)) {
                 classNames.add(classEntry.getClassName());
-                m_translationIndex.getSubclassNamesRecursively(classNames, classEntry);
+                this.translationIndex.getSubclassNamesRecursively(classNames, classEntry);
             }
         }
         return classNames;
     }
 
     public boolean isInterface(String className) {
-        return m_translationIndex.isInterface(new ClassEntry(className));
+        return this.translationIndex.isInterface(new ClassEntry(className));
     }
 
     public boolean containsObfClass(ClassEntry obfClassEntry) {
-        return m_obfClassEntries.contains(obfClassEntry);
+        return this.obfClassEntries.contains(obfClassEntry);
     }
 
     public boolean containsObfField(FieldEntry obfFieldEntry) {
-        return m_access.containsKey(obfFieldEntry);
+        return this.access.containsKey(obfFieldEntry);
     }
 
     public boolean containsObfBehavior(BehaviorEntry obfBehaviorEntry) {
-        return m_access.containsKey(obfBehaviorEntry);
+        return this.access.containsKey(obfBehaviorEntry);
     }
 
     public boolean containsObfArgument(ArgumentEntry obfArgumentEntry) {
@@ -776,7 +776,7 @@ public class JarIndex {
     }
 
     public MethodEntry getBridgedMethod(MethodEntry bridgeMethodEntry) {
-        return m_bridgedMethods.get(bridgeMethodEntry);
+        return this.bridgedMethods.get(bridgeMethodEntry);
     }
 
     public List<ClassEntry> getObfClassChain(ClassEntry obfClassEntry) {

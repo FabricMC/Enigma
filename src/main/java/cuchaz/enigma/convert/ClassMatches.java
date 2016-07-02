@@ -32,7 +32,7 @@ public class ClassMatches implements Iterable<ClassMatch> {
     Set<ClassEntry> m_unmatchedDestClasses;
 
     public ClassMatches() {
-        this(new ArrayList<ClassMatch>());
+        this(new ArrayList<>());
     }
 
     public ClassMatches(Collection<ClassMatch> matches) {

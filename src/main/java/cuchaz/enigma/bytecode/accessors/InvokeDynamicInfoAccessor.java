@@ -14,35 +14,20 @@ import java.lang.reflect.Field;
 
 public class InvokeDynamicInfoAccessor {
 
-    private static Class<?> m_class;
-    private static Field m_bootstrapIndex;
-    private static Field m_nameAndTypeIndex;
+    private static Class<?> clazz;
+    private static Field bootstrapIndex;
+    private static Field nameAndTypeIndex;
 
-    static {
-        try {
-            m_class = Class.forName("javassist.bytecode.InvokeDynamicInfo");
-            m_bootstrapIndex = m_class.getDeclaredField("bootstrap");
-            m_bootstrapIndex.setAccessible(true);
-            m_nameAndTypeIndex = m_class.getDeclaredField("nameAndType");
-            m_nameAndTypeIndex.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
 
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return m_class.isAssignableFrom(accessor.getItem().getClass());
-    }
-
-    private Object m_item;
+    private Object item;
 
     public InvokeDynamicInfoAccessor(Object item) {
-        m_item = item;
+        this.item = item;
     }
 
     public int getBootstrapIndex() {
         try {
-            return (Integer) m_bootstrapIndex.get(m_item);
+            return (Integer) bootstrapIndex.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -50,7 +35,7 @@ public class InvokeDynamicInfoAccessor {
 
     public void setBootstrapIndex(int val) {
         try {
-            m_bootstrapIndex.set(m_item, val);
+            bootstrapIndex.set(this.item, val);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -58,7 +43,7 @@ public class InvokeDynamicInfoAccessor {
 
     public int getNameAndTypeIndex() {
         try {
-            return (Integer) m_nameAndTypeIndex.get(m_item);
+            return (Integer) nameAndTypeIndex.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -66,7 +51,23 @@ public class InvokeDynamicInfoAccessor {
 
     public void setNameAndTypeIndex(int val) {
         try {
-            m_nameAndTypeIndex.set(m_item, val);
+            nameAndTypeIndex.set(this.item, val);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
+    }
+
+    public static boolean isType(ConstInfoAccessor accessor) {
+        return clazz.isAssignableFrom(accessor.getItem().getClass());
+    }
+
+    static {
+        try {
+            clazz = Class.forName("javassist.bytecode.InvokeDynamicInfo");
+            bootstrapIndex = clazz.getDeclaredField("bootstrap");
+            bootstrapIndex.setAccessible(true);
+            nameAndTypeIndex = clazz.getDeclaredField("nameAndType");
+            nameAndTypeIndex.setAccessible(true);
         } catch (Exception ex) {
             throw new Error(ex);
         }

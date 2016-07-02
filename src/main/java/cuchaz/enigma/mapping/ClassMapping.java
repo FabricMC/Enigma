@@ -403,7 +403,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
     public boolean renameObfClass(String oldObfClassName, String newObfClassName) {
 
         // rename inner classes
-        for (ClassMapping innerClassMapping : new ArrayList<ClassMapping>(m_innerClassesByObfSimple.values())) {
+        for (ClassMapping innerClassMapping : new ArrayList<>(m_innerClassesByObfSimple.values())) {
             if (innerClassMapping.renameObfClass(oldObfClassName, newObfClassName)) {
                 boolean wasRemoved = m_innerClassesByObfSimple.remove(oldObfClassName) != null;
                 assert (wasRemoved);
@@ -413,7 +413,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
         }
 
         // rename field types
-        for (FieldMapping fieldMapping : new ArrayList<FieldMapping>(m_fieldsByObf.values())) {
+        for (FieldMapping fieldMapping : new ArrayList<>(m_fieldsByObf.values())) {
             String oldFieldKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
             if (fieldMapping.renameObfClass(oldObfClassName, newObfClassName)) {
                 boolean wasRemoved = m_fieldsByObf.remove(oldFieldKey) != null;
@@ -424,7 +424,7 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
         }
 
         // rename method signatures
-        for (MethodMapping methodMapping : new ArrayList<MethodMapping>(m_methodsByObf.values())) {
+        for (MethodMapping methodMapping : new ArrayList<>(m_methodsByObf.values())) {
             String oldMethodKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());
             if (methodMapping.renameObfClass(oldObfClassName, newObfClassName)) {
                 boolean wasRemoved = m_methodsByObf.remove(oldMethodKey) != null;

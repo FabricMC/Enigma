@@ -24,7 +24,6 @@ import cuchaz.enigma.json.*;
 
 public class MappingsWriter {
 
-
     public void write(File file, Mappings mappings) throws IOException {
         if (!file.isDirectory()) {
             return;

@@ -24,40 +24,40 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
     private static final long serialVersionUID = 3781080657461899915L;
 
-    private Translator m_deobfuscatingTranslator;
-    private MethodEntry m_entry;
+    private Translator deobfuscatingTranslator;
+    private MethodEntry entry;
 
     public MethodImplementationsTreeNode(Translator deobfuscatingTranslator, MethodEntry entry) {
         if (entry == null) {
-            throw new IllegalArgumentException("entry cannot be null!");
+            throw new IllegalArgumentException("Entry cannot be null!");
         }
 
-        m_deobfuscatingTranslator = deobfuscatingTranslator;
-        m_entry = entry;
+        this.deobfuscatingTranslator = deobfuscatingTranslator;
+        this.entry = entry;
     }
 
     public MethodEntry getMethodEntry() {
-        return m_entry;
+        return this.entry;
     }
 
     public String getDeobfClassName() {
-        return m_deobfuscatingTranslator.translateClass(m_entry.getClassName());
+        return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
     }
 
     public String getDeobfMethodName() {
-        return m_deobfuscatingTranslator.translate(m_entry);
+        return this.deobfuscatingTranslator.translate(this.entry);
     }
 
     @Override
     public String toString() {
         String className = getDeobfClassName();
         if (className == null) {
-            className = m_entry.getClassName();
+            className = this.entry.getClassName();
         }
 
         String methodName = getDeobfMethodName();
         if (methodName == null) {
-            methodName = m_entry.getName();
+            methodName = this.entry.getName();
         }
         return className + "." + methodName + "()";
     }
@@ -66,14 +66,11 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
         // get all method implementations
         List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
-        for (String implementingClassName : index.getImplementingClasses(m_entry.getClassName())) {
-            MethodEntry methodEntry = new MethodEntry(
-                    new ClassEntry(implementingClassName),
-                    m_entry.getName(),
-                    m_entry.getSignature()
+        for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {
+            MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getSignature()
             );
             if (index.containsObfBehavior(methodEntry)) {
-                nodes.add(new MethodImplementationsTreeNode(m_deobfuscatingTranslator, methodEntry));
+                nodes.add(new MethodImplementationsTreeNode(this.deobfuscatingTranslator, methodEntry));
             }
         }
 

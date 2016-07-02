@@ -8,18 +8,18 @@ public class JsonField {
     public JsonField(String obf, String name, String type) {
         this.obf = obf;
         this.name = name;
-        this.type=type;
+        this.type = type;
     }
 
     public String getObf() {
-        return obf;
+        return this.obf;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getType() {
-        return type;
+        return this.type;
     }
 }

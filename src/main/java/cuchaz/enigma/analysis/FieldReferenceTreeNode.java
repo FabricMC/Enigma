@@ -20,51 +20,51 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 
     private static final long serialVersionUID = -7934108091928699835L;
 
-    private Translator m_deobfuscatingTranslator;
-    private FieldEntry m_entry;
-    private EntryReference<FieldEntry, BehaviorEntry> m_reference;
-    private Access m_access;
+    private Translator deobfuscatingTranslator;
+    private FieldEntry entry;
+    private EntryReference<FieldEntry, BehaviorEntry> reference;
+    private Access access;
 
     public FieldReferenceTreeNode(Translator deobfuscatingTranslator, FieldEntry entry) {
-        m_deobfuscatingTranslator = deobfuscatingTranslator;
-        m_entry = entry;
-        m_reference = null;
+        this.deobfuscatingTranslator = deobfuscatingTranslator;
+        this.entry = entry;
+        this.reference = null;
     }
 
     private FieldReferenceTreeNode(Translator deobfuscatingTranslator, EntryReference<FieldEntry, BehaviorEntry> reference, Access access) {
-        m_deobfuscatingTranslator = deobfuscatingTranslator;
-        m_entry = reference.entry;
-        m_reference = reference;
-        m_access = access;
+        this.deobfuscatingTranslator = deobfuscatingTranslator;
+        this.entry = reference.entry;
+        this.reference = reference;
+        this.access = access;
     }
 
     @Override
     public FieldEntry getEntry() {
-        return m_entry;
+        return this.entry;
     }
 
     @Override
     public EntryReference<FieldEntry, BehaviorEntry> getReference() {
-        return m_reference;
+        return this.reference;
     }
 
     @Override
     public String toString() {
-        if (m_reference != null) {
-            return String.format("%s (%s)", m_deobfuscatingTranslator.translateEntry(m_reference.context), m_access);
+        if (this.reference != null) {
+            return String.format("%s (%s)", this.deobfuscatingTranslator.translateEntry(this.reference.context), this.access);
         }
-        return m_deobfuscatingTranslator.translateEntry(m_entry).toString();
+        return this.deobfuscatingTranslator.translateEntry(this.entry).toString();
     }
 
     public void load(JarIndex index, boolean recurse) {
         // get all the child nodes
-        if (m_reference == null) {
-            for (EntryReference<FieldEntry, BehaviorEntry> reference : index.getFieldReferences(m_entry)) {
-                add(new FieldReferenceTreeNode(m_deobfuscatingTranslator, reference, index.getAccess(m_entry)));
+        if (this.reference == null) {
+            for (EntryReference<FieldEntry, BehaviorEntry> reference : index.getFieldReferences(this.entry)) {
+                add(new FieldReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
             }
         } else {
-            for (EntryReference<BehaviorEntry, BehaviorEntry> reference : index.getBehaviorReferences(m_reference.context)) {
-                add(new BehaviorReferenceTreeNode(m_deobfuscatingTranslator, reference, index.getAccess(m_reference.context)));
+            for (EntryReference<BehaviorEntry, BehaviorEntry> reference : index.getBehaviorReferences(this.reference.context)) {
+                add(new BehaviorReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.reference.context)));
             }
         }
 

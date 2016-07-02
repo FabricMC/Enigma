@@ -20,12 +20,12 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class ClassForest {
 
-    private ClassIdentifier m_identifier;
-    private Multimap<ClassIdentity, ClassEntry> m_forest;
+    private ClassIdentifier identifier;
+    private Multimap<ClassIdentity, ClassEntry> forest;
 
     public ClassForest(ClassIdentifier identifier) {
-        m_identifier = identifier;
-        m_forest = HashMultimap.create();
+        this.identifier = identifier;
+        this.forest = HashMultimap.create();
     }
 
     public void addAll(Iterable<ClassEntry> entries) {
@@ -36,25 +36,25 @@ public class ClassForest {
 
     public void add(ClassEntry entry) {
         try {
-            m_forest.put(m_identifier.identify(entry), entry);
+            this.forest.put(this.identifier.identify(entry), entry);
         } catch (ClassNotFoundException ex) {
             throw new Error("Unable to find class " + entry.getName());
         }
     }
 
     public Collection<ClassIdentity> identities() {
-        return m_forest.keySet();
+        return this.forest.keySet();
     }
 
     public Collection<ClassEntry> classes() {
-        return m_forest.values();
+        return this.forest.values();
     }
 
     public Collection<ClassEntry> getClasses(ClassIdentity identity) {
-        return m_forest.get(identity);
+        return this.forest.get(identity);
     }
 
     public boolean containsIdentity(ClassIdentity identity) {
-        return m_forest.containsKey(identity);
+        return this.forest.containsKey(identity);
     }
 }

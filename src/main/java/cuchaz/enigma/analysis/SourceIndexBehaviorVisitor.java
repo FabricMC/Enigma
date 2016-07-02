@@ -14,16 +14,16 @@ import com.strobel.assembler.metadata.*;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
 
-import cuchaz.enigma.mapping.*;
-
 import java.lang.Error;
+
+import cuchaz.enigma.mapping.*;
 
 public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 
-    private BehaviorEntry m_behaviorEntry;
+    private BehaviorEntry behaviorEntry;
 
     public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry) {
-        m_behaviorEntry = behaviorEntry;
+        this.behaviorEntry = behaviorEntry;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
                 tokenNode = node.getTarget();
             }
             if (tokenNode != null) {
-                index.addReference(tokenNode, behaviorEntry, m_behaviorEntry);
+                index.addReference(tokenNode, behaviorEntry, this.behaviorEntry);
             }
         }
 
@@ -72,7 +72,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 
             ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
             FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
-            index.addReference(node.getMemberNameToken(), fieldEntry, m_behaviorEntry);
+            index.addReference(node.getMemberNameToken(), fieldEntry, this.behaviorEntry);
         }
 
         return recurse(node, index);
@@ -83,7 +83,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
         TypeReference ref = node.getUserData(Keys.TYPE_REFERENCE);
         if (node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY) {
             ClassEntry classEntry = new ClassEntry(ref.getInternalName());
-            index.addReference(node.getIdentifierToken(), classEntry, m_behaviorEntry);
+            index.addReference(node.getIdentifierToken(), classEntry, this.behaviorEntry);
         }
 
         return recurse(node, index);
@@ -108,7 +108,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
         if (ref != null) {
             ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
             FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
-            index.addReference(node.getIdentifierToken(), fieldEntry, m_behaviorEntry);
+            index.addReference(node.getIdentifierToken(), fieldEntry, this.behaviorEntry);
         }
 
         return recurse(node, index);
@@ -122,7 +122,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
             ConstructorEntry constructorEntry = new ConstructorEntry(classEntry, new Signature(ref.getErasedSignature()));
             if (node.getType() instanceof SimpleType) {
                 SimpleType simpleTypeNode = (SimpleType) node.getType();
-                index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, m_behaviorEntry);
+                index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, this.behaviorEntry);
             }
         }
 

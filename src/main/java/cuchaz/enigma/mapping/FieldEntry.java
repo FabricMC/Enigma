@@ -80,10 +80,7 @@ public class FieldEntry implements Entry, Serializable {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof FieldEntry) {
-            return equals((FieldEntry) other);
-        }
-        return false;
+        return other instanceof FieldEntry && equals((FieldEntry) other);
     }
 
     public boolean equals(FieldEntry other) {

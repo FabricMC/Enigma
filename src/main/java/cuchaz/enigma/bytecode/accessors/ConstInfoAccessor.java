@@ -19,29 +19,17 @@ import cuchaz.enigma.bytecode.InfoType;
 
 public class ConstInfoAccessor {
 
-    private static Class<?> m_class;
-    private static Field m_index;
-    private static Method m_getTag;
+    private static Class<?> clazz;
+    private static Field index;
+    private static Method getTag;
 
-    static {
-        try {
-            m_class = Class.forName("javassist.bytecode.ConstInfo");
-            m_index = m_class.getDeclaredField("index");
-            m_index.setAccessible(true);
-            m_getTag = m_class.getMethod("getTag");
-            m_getTag.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    private Object m_item;
+    private Object item;
 
     public ConstInfoAccessor(Object item) {
         if (item == null) {
             throw new IllegalArgumentException("item cannot be null!");
         }
-        m_item = item;
+        this.item = item;
     }
 
     public ConstInfoAccessor(DataInputStream in) throws IOException {
@@ -56,7 +44,7 @@ public class ConstInfoAccessor {
 
             Constructor<?> constructor = Class.forName(className).getConstructor(DataInputStream.class, int.class);
             constructor.setAccessible(true);
-            m_item = constructor.newInstance(in, oldIndex);
+            this.item = constructor.newInstance(in, oldIndex);
         } catch (IOException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -65,12 +53,12 @@ public class ConstInfoAccessor {
     }
 
     public Object getItem() {
-        return m_item;
+        return this.item;
     }
 
     public int getIndex() {
         try {
-            return (Integer) m_index.get(m_item);
+            return (Integer) index.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -78,7 +66,7 @@ public class ConstInfoAccessor {
 
     public void setIndex(int val) {
         try {
-            m_index.set(m_item, val);
+            index.set(this.item, val);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -86,7 +74,7 @@ public class ConstInfoAccessor {
 
     public int getTag() {
         try {
-            return (Integer) m_getTag.invoke(m_item);
+            return (Integer) getTag.invoke(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -117,12 +105,12 @@ public class ConstInfoAccessor {
 
     public void write(DataOutputStream out) throws IOException {
         try {
-            out.writeUTF(m_item.getClass().getName());
+            out.writeUTF(this.item.getClass().getName());
             out.writeInt(getIndex());
 
-            Method method = m_item.getClass().getMethod("write", DataOutputStream.class);
+            Method method = this.item.getClass().getMethod("write", DataOutputStream.class);
             method.setAccessible(true);
-            method.invoke(m_item, out);
+            method.invoke(this.item, out);
         } catch (IOException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -135,9 +123,9 @@ public class ConstInfoAccessor {
         try {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             PrintWriter out = new PrintWriter(buf);
-            Method print = m_item.getClass().getMethod("print", PrintWriter.class);
+            Method print = this.item.getClass().getMethod("print", PrintWriter.class);
             print.setAccessible(true);
-            print.invoke(m_item, out);
+            print.invoke(this.item, out);
             out.close();
             return buf.toString().replace("\n", "");
         } catch (Exception ex) {
@@ -147,5 +135,17 @@ public class ConstInfoAccessor {
 
     public InfoType getType() {
         return InfoType.getByTag(getTag());
+    }
+
+    static {
+        try {
+            clazz = Class.forName("javassist.bytecode.ConstInfo");
+            index = clazz.getDeclaredField("index");
+            index.setAccessible(true);
+            getTag = clazz.getMethod("getTag");
+            getTag.setAccessible(true);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
     }
 }

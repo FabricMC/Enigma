@@ -67,10 +67,7 @@ public class ClassEntry implements Entry, Serializable {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof ClassEntry) {
-            return equals((ClassEntry) other);
-        }
-        return false;
+        return other instanceof ClassEntry && equals((ClassEntry) other);
     }
 
     public boolean equals(ClassEntry other) {

@@ -27,10 +27,10 @@ import javassist.bytecode.InnerClassesAttribute;
 
 public class InnerClassWriter {
 
-    private JarIndex m_index;
+    private JarIndex index;
 
     public InnerClassWriter(JarIndex index) {
-        m_index = index;
+        this.index = index;
     }
 
     public void write(CtClass c) {
@@ -43,7 +43,7 @@ public class InnerClassWriter {
         }
 
         ClassEntry obfClassEntry = EntryFactory.getClassEntry(c);
-        List<ClassEntry> obfClassChain = m_index.getObfClassChain(obfClassEntry);
+        List<ClassEntry> obfClassChain = this.index.getObfClassChain(obfClassEntry);
 
         boolean isInnerClass = obfClassChain.size() > 1;
         if (isInnerClass) {
@@ -51,7 +51,7 @@ public class InnerClassWriter {
             // it's an inner class, rename it to the fully qualified name
             c.setName(obfClassEntry.buildClassEntry(obfClassChain).getName());
 
-            BehaviorEntry caller = m_index.getAnonymousClassCaller(obfClassEntry);
+            BehaviorEntry caller = this.index.getAnonymousClassCaller(obfClassEntry);
             if (caller != null) {
 
                 // write the enclosing method attribute
@@ -64,7 +64,7 @@ public class InnerClassWriter {
         }
 
         // does this class have any inner classes?
-        Collection<ClassEntry> obfInnerClassEntries = m_index.getInnerClasses(obfClassEntry);
+        Collection<ClassEntry> obfInnerClassEntries = this.index.getInnerClasses(obfClassEntry);
 
         if (isInnerClass || !obfInnerClassEntries.isEmpty()) {
 
@@ -112,14 +112,14 @@ public class InnerClassWriter {
         int innerClassNameIndex = 0;
         int accessFlags = AccessFlag.PUBLIC;
         // TODO: need to figure out if we can put static or not
-        if (!m_index.isAnonymousClass(obfClassEntry)) {
+        if (!this.index.isAnonymousClass(obfClassEntry)) {
             innerClassNameIndex = constPool.addUtf8Info(obfInnerClassEntry.getInnermostClassName());
         }
 
         attr.append(innerClassIndex, parentClassIndex, innerClassNameIndex, accessFlags);
 
 		/* DEBUG 
-		System.out.println(String.format("\tOBF: %s -> ATTR: %s,%s,%s (replace %s with %s)",
+        System.out.println(String.format("\tOBF: %s -> ATTR: %s,%s,%s (replace %s with %s)",
 			obfClassEntry,
 			attr.innerClass(attr.tableLength() - 1),
 			attr.outerClass(attr.tableLength() - 1),

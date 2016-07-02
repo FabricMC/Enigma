@@ -36,62 +36,62 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
         if (obfSignature == null) {
             throw new IllegalArgumentException("obf signature cannot be null!");
         }
-        m_obfName = obfName;
-        m_deobfName = NameValidator.validateMethodName(deobfName);
-        m_obfSignature = obfSignature;
-        m_arguments = Maps.newTreeMap();
+        this.m_obfName = obfName;
+        this.m_deobfName = NameValidator.validateMethodName(deobfName);
+        this.m_obfSignature = obfSignature;
+        this.m_arguments = Maps.newTreeMap();
     }
 
     public MethodMapping(MethodMapping other, ClassNameReplacer obfClassNameReplacer) {
-        m_obfName = other.m_obfName;
-        m_deobfName = other.m_deobfName;
-        m_obfSignature = new Signature(other.m_obfSignature, obfClassNameReplacer);
-        m_arguments = Maps.newTreeMap();
+        this.m_obfName = other.m_obfName;
+        this.m_deobfName = other.m_deobfName;
+        this.m_obfSignature = new Signature(other.m_obfSignature, obfClassNameReplacer);
+        this.m_arguments = Maps.newTreeMap();
         for (Entry<Integer, ArgumentMapping> entry : other.m_arguments.entrySet()) {
-            m_arguments.put(entry.getKey(), new ArgumentMapping(entry.getValue()));
+            this.m_arguments.put(entry.getKey(), new ArgumentMapping(entry.getValue()));
         }
     }
 
     @Override
     public String getObfName() {
-        return m_obfName;
+        return this.m_obfName;
     }
 
     public void setObfName(String val) {
-        m_obfName = NameValidator.validateMethodName(val);
+        this.m_obfName = NameValidator.validateMethodName(val);
     }
 
     public String getDeobfName() {
-        return m_deobfName;
+        return this.m_deobfName;
     }
 
     public void setDeobfName(String val) {
-        m_deobfName = NameValidator.validateMethodName(val);
+        this.m_deobfName = NameValidator.validateMethodName(val);
     }
 
     public Signature getObfSignature() {
-        return m_obfSignature;
+        return this.m_obfSignature;
     }
 
     public void setObfSignature(Signature val) {
-        m_obfSignature = val;
+        this.m_obfSignature = val;
     }
 
     public Iterable<ArgumentMapping> arguments() {
-        return m_arguments.values();
+        return this.m_arguments.values();
     }
 
     public boolean isConstructor() {
-        return m_obfName.startsWith("<");
+        return this.m_obfName.startsWith("<");
     }
 
     public void addArgumentMapping(ArgumentMapping argumentMapping) {
-        boolean wasAdded = m_arguments.put(argumentMapping.getIndex(), argumentMapping) == null;
+        boolean wasAdded = this.m_arguments.put(argumentMapping.getIndex(), argumentMapping) == null;
         assert (wasAdded);
     }
 
     public String getObfArgumentName(int index) {
-        ArgumentMapping argumentMapping = m_arguments.get(index);
+        ArgumentMapping argumentMapping = this.m_arguments.get(index);
         if (argumentMapping != null) {
             return argumentMapping.getName();
         }
@@ -100,7 +100,7 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
     }
 
     public String getDeobfArgumentName(int index) {
-        ArgumentMapping argumentMapping = m_arguments.get(index);
+        ArgumentMapping argumentMapping = this.m_arguments.get(index);
         if (argumentMapping != null) {
             return argumentMapping.getName();
         }
@@ -109,10 +109,10 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
     }
 
     public void setArgumentName(int index, String name) {
-        ArgumentMapping argumentMapping = m_arguments.get(index);
+        ArgumentMapping argumentMapping = this.m_arguments.get(index);
         if (argumentMapping == null) {
             argumentMapping = new ArgumentMapping(index, name);
-            boolean wasAdded = m_arguments.put(index, argumentMapping) == null;
+            boolean wasAdded = this.m_arguments.put(index, argumentMapping) == null;
             assert (wasAdded);
         } else {
             argumentMapping.setName(name);
@@ -120,7 +120,7 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
     }
 
     public void removeArgumentName(int index) {
-        boolean wasRemoved = m_arguments.remove(index) != null;
+        boolean wasRemoved = this.m_arguments.remove(index) != null;
         assert (wasRemoved);
     }
 
@@ -136,7 +136,7 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
         buf.append(m_obfSignature);
         buf.append("\n");
         buf.append("\tArguments:\n");
-        for (ArgumentMapping argumentMapping : m_arguments.values()) {
+        for (ArgumentMapping argumentMapping : this.m_arguments.values()) {
             buf.append("\t\t");
             buf.append(argumentMapping.getIndex());
             buf.append(" -> ");
@@ -148,31 +148,28 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
 
     @Override
     public int compareTo(MethodMapping other) {
-        return (m_obfName + m_obfSignature).compareTo(other.m_obfName + other.m_obfSignature);
+        return (this.m_obfName + this.m_obfSignature).compareTo(other.m_obfName + other.m_obfSignature);
     }
 
     public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
 
         // rename obf classes in the signature
-        Signature newSignature = new Signature(m_obfSignature, new ClassNameReplacer() {
-            @Override
-            public String replace(String className) {
-                if (className.equals(oldObfClassName)) {
-                    return newObfClassName;
-                }
-                return null;
+        Signature newSignature = new Signature(this.m_obfSignature, className -> {
+            if (className.equals(oldObfClassName)) {
+                return newObfClassName;
             }
+            return null;
         });
 
-        if (!newSignature.equals(m_obfSignature)) {
-            m_obfSignature = newSignature;
+        if (!newSignature.equals(this.m_obfSignature)) {
+            this.m_obfSignature = newSignature;
             return true;
         }
         return false;
     }
 
     public boolean containsArgument(String name) {
-        for (ArgumentMapping argumentMapping : m_arguments.values()) {
+        for (ArgumentMapping argumentMapping : this.m_arguments.values()) {
             if (argumentMapping.getName().equals(name)) {
                 return true;
             }
@@ -183,9 +180,9 @@ public class MethodMapping implements Serializable, Comparable<MethodMapping>, M
     @Override
     public BehaviorEntry getObfEntry(ClassEntry classEntry) {
         if (isConstructor()) {
-            return new ConstructorEntry(classEntry, m_obfSignature);
+            return new ConstructorEntry(classEntry, this.m_obfSignature);
         } else {
-            return new MethodEntry(classEntry, m_obfName, m_obfSignature);
+            return new MethodEntry(classEntry, this.m_obfName, this.m_obfSignature);
         }
     }
 }

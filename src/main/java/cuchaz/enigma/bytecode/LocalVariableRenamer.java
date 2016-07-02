@@ -21,10 +21,10 @@ import javassist.bytecode.*;
 
 public class LocalVariableRenamer {
 
-    private Translator m_translator;
+    private Translator translator;
 
     public LocalVariableRenamer(Translator translator) {
-        m_translator = translator;
+        this.translator = translator;
     }
 
     public void rename(CtClass c) {
@@ -81,7 +81,7 @@ public class LocalVariableRenamer {
             numArgs = behaviorEntry.getSignature().getArgumentTypes().size();
             for (int i = starti; i < starti + numArgs && i < table.tableLength(); i++) {
                 int argi = i - starti;
-                String argName = m_translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
+                String argName = this.translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
                 if (argName == null) {
                     argName = "a" + (argi + 1);
                 }

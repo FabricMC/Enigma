@@ -36,7 +36,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entrySet()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<Key, Val>(
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
                     renameClassesInThing(renames, entry.getKey()),
                     renameClassesInThing(renames, entry.getValue())
             ));
@@ -51,7 +51,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entries()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<Key, Val>(
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
                     renameClassesInThing(renames, entry.getKey()),
                     renameClassesInThing(renames, entry.getValue())
             ));
@@ -66,7 +66,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entries()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<Key, Val>(
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
                     renameMethodsInThing(renames, entry.getKey()),
                     renameMethodsInThing(renames, entry.getValue())
             ));
@@ -81,7 +81,7 @@ public class EntryRenamer {
         // for each key/value pair...
         Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
         for (Map.Entry<Key, Val> entry : map.entrySet()) {
-            entriesToAdd.add(new AbstractMap.SimpleEntry<Key, Val>(
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(
                     renameMethodsInThing(renames, entry.getKey()),
                     renameMethodsInThing(renames, entry.getValue())
             ));
@@ -164,19 +164,9 @@ public class EntryRenamer {
             reference.context = renameClassesInThing(renames, reference.context);
             return thing;
         } else if (thing instanceof Signature) {
-            return (T) new Signature((Signature) thing, new ClassNameReplacer() {
-                @Override
-                public String replace(String className) {
-                    return renameClassesInThing(renames, className);
-                }
-            });
+            return (T) new Signature((Signature) thing, className -> renameClassesInThing(renames, className));
         } else if (thing instanceof Type) {
-            return (T) new Type((Type) thing, new ClassNameReplacer() {
-                @Override
-                public String replace(String className) {
-                    return renameClassesInThing(renames, className);
-                }
-            });
+            return (T) new Type((Type) thing, className -> renameClassesInThing(renames, className));
         }
 
         return thing;

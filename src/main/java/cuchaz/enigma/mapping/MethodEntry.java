@@ -85,10 +85,7 @@ public class MethodEntry implements BehaviorEntry, Serializable {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof MethodEntry) {
-            return equals((MethodEntry) other);
-        }
-        return false;
+        return other instanceof MethodEntry && equals((MethodEntry) other);
     }
 
     public boolean equals(MethodEntry other) {

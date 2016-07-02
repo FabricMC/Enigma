@@ -14,35 +14,19 @@ import java.lang.reflect.Field;
 
 public class NameAndTypeInfoAccessor {
 
-    private static Class<?> m_class;
-    private static Field m_nameIndex;
-    private static Field m_typeIndex;
+    private static Class<?> clazz;
+    private static Field nameIndex;
+    private static Field typeIndex;
 
-    static {
-        try {
-            m_class = Class.forName("javassist.bytecode.NameAndTypeInfo");
-            m_nameIndex = m_class.getDeclaredField("memberName");
-            m_nameIndex.setAccessible(true);
-            m_typeIndex = m_class.getDeclaredField("typeDescriptor");
-            m_typeIndex.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return m_class.isAssignableFrom(accessor.getItem().getClass());
-    }
-
-    private Object m_item;
+    private Object item;
 
     public NameAndTypeInfoAccessor(Object item) {
-        m_item = item;
+        this.item = item;
     }
 
     public int getNameIndex() {
         try {
-            return (Integer) m_nameIndex.get(m_item);
+            return (Integer) nameIndex.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -50,7 +34,7 @@ public class NameAndTypeInfoAccessor {
 
     public void setNameIndex(int val) {
         try {
-            m_nameIndex.set(m_item, val);
+            nameIndex.set(this.item, val);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -58,7 +42,7 @@ public class NameAndTypeInfoAccessor {
 
     public int getTypeIndex() {
         try {
-            return (Integer) m_typeIndex.get(m_item);
+            return (Integer) typeIndex.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -66,7 +50,23 @@ public class NameAndTypeInfoAccessor {
 
     public void setTypeIndex(int val) {
         try {
-            m_typeIndex.set(m_item, val);
+            typeIndex.set(this.item, val);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
+    }
+
+    public static boolean isType(ConstInfoAccessor accessor) {
+        return clazz.isAssignableFrom(accessor.getItem().getClass());
+    }
+
+    static {
+        try {
+            clazz = Class.forName("javassist.bytecode.NameAndTypeInfo");
+            nameIndex = clazz.getDeclaredField("memberName");
+            nameIndex.setAccessible(true);
+            typeIndex = clazz.getDeclaredField("typeDescriptor");
+            typeIndex.setAccessible(true);
         } catch (Exception ex) {
             throw new Error(ex);
         }

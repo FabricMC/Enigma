@@ -25,62 +25,62 @@ import javassist.bytecode.Descriptor;
 
 public class ConstPoolEditor {
 
-    private static Method m_getItem;
-    private static Method m_addItem;
-    private static Method m_addItem0;
-    private static Field m_items;
-    private static Field m_cache;
-    private static Field m_numItems;
-    private static Field m_objects;
-    private static Field m_elements;
-    private static Method m_methodWritePool;
-    private static Constructor<ConstPool> m_constructorPool;
+    private static Method getItem;
+    private static Method addItem;
+    private static Method addItem0;
+    private static Field items;
+    private static Field cache;
+    private static Field numItems;
+    private static Field objects;
+    private static Field elements;
+    private static Method methodWritePool;
+    private static Constructor<ConstPool> constructorPool;
 
     static {
         try {
-            m_getItem = ConstPool.class.getDeclaredMethod("getItem", int.class);
-            m_getItem.setAccessible(true);
+            getItem = ConstPool.class.getDeclaredMethod("getItem", int.class);
+            getItem.setAccessible(true);
 
-            m_addItem = ConstPool.class.getDeclaredMethod("addItem", Class.forName("javassist.bytecode.ConstInfo"));
-            m_addItem.setAccessible(true);
+            addItem = ConstPool.class.getDeclaredMethod("addItem", Class.forName("javassist.bytecode.ConstInfo"));
+            addItem.setAccessible(true);
 
-            m_addItem0 = ConstPool.class.getDeclaredMethod("addItem0", Class.forName("javassist.bytecode.ConstInfo"));
-            m_addItem0.setAccessible(true);
+            addItem0 = ConstPool.class.getDeclaredMethod("addItem0", Class.forName("javassist.bytecode.ConstInfo"));
+            addItem0.setAccessible(true);
 
-            m_items = ConstPool.class.getDeclaredField("items");
-            m_items.setAccessible(true);
+            items = ConstPool.class.getDeclaredField("items");
+            items.setAccessible(true);
 
-            m_cache = ConstPool.class.getDeclaredField("itemsCache");
-            m_cache.setAccessible(true);
+            cache = ConstPool.class.getDeclaredField("itemsCache");
+            cache.setAccessible(true);
 
-            m_numItems = ConstPool.class.getDeclaredField("numOfItems");
-            m_numItems.setAccessible(true);
+            numItems = ConstPool.class.getDeclaredField("numOfItems");
+            numItems.setAccessible(true);
 
-            m_objects = Class.forName("javassist.bytecode.LongVector").getDeclaredField("objects");
-            m_objects.setAccessible(true);
+            objects = Class.forName("javassist.bytecode.LongVector").getDeclaredField("objects");
+            objects.setAccessible(true);
 
-            m_elements = Class.forName("javassist.bytecode.LongVector").getDeclaredField("elements");
-            m_elements.setAccessible(true);
+            elements = Class.forName("javassist.bytecode.LongVector").getDeclaredField("elements");
+            elements.setAccessible(true);
 
-            m_methodWritePool = ConstPool.class.getDeclaredMethod("write", DataOutputStream.class);
-            m_methodWritePool.setAccessible(true);
+            methodWritePool = ConstPool.class.getDeclaredMethod("write", DataOutputStream.class);
+            methodWritePool.setAccessible(true);
 
-            m_constructorPool = ConstPool.class.getDeclaredConstructor(DataInputStream.class);
-            m_constructorPool.setAccessible(true);
+            constructorPool = ConstPool.class.getDeclaredConstructor(DataInputStream.class);
+            constructorPool.setAccessible(true);
         } catch (Exception ex) {
             throw new Error(ex);
         }
     }
 
-    private ConstPool m_pool;
+    private ConstPool pool;
 
     public ConstPoolEditor(ConstPool pool) {
-        m_pool = pool;
+        this.pool = pool;
     }
 
     public void writePool(DataOutputStream out) {
         try {
-            m_methodWritePool.invoke(m_pool, out);
+            methodWritePool.invoke(this.pool, out);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -88,27 +88,27 @@ public class ConstPoolEditor {
 
     public static ConstPool readPool(DataInputStream in) {
         try {
-            return m_constructorPool.newInstance(in);
+            return constructorPool.newInstance(in);
         } catch (Exception ex) {
             throw new Error(ex);
         }
     }
 
     public String getMemberrefClassname(int memberrefIndex) {
-        return Descriptor.toJvmName(m_pool.getClassInfo(m_pool.getMemberClass(memberrefIndex)));
+        return Descriptor.toJvmName(this.pool.getClassInfo(this.pool.getMemberClass(memberrefIndex)));
     }
 
     public String getMemberrefName(int memberrefIndex) {
-        return m_pool.getUtf8Info(m_pool.getNameAndTypeName(m_pool.getMemberNameAndType(memberrefIndex)));
+        return this.pool.getUtf8Info(this.pool.getNameAndTypeName(this.pool.getMemberNameAndType(memberrefIndex)));
     }
 
     public String getMemberrefType(int memberrefIndex) {
-        return m_pool.getUtf8Info(m_pool.getNameAndTypeDescriptor(m_pool.getMemberNameAndType(memberrefIndex)));
+        return this.pool.getUtf8Info(this.pool.getNameAndTypeDescriptor(this.pool.getMemberNameAndType(memberrefIndex)));
     }
 
     public ConstInfoAccessor getItem(int index) {
         try {
-            Object entry = m_getItem.invoke(m_pool, index);
+            Object entry = getItem.invoke(this.pool, index);
             if (entry == null) {
                 return null;
             }
@@ -120,7 +120,7 @@ public class ConstPoolEditor {
 
     public int addItem(Object item) {
         try {
-            return (Integer) m_addItem.invoke(m_pool, item);
+            return (Integer) addItem.invoke(this.pool, item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -128,7 +128,7 @@ public class ConstPoolEditor {
 
     public int addItemForceNew(Object item) {
         try {
-            return (Integer) m_addItem0.invoke(m_pool, item);
+            return (Integer) addItem0.invoke(this.pool, item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -140,22 +140,22 @@ public class ConstPoolEditor {
             // remove the item from the cache
             HashMap cache = getCache();
             if (cache != null) {
-                Object item = getItem(m_pool.getSize() - 1);
+                Object item = getItem(this.pool.getSize() - 1);
                 cache.remove(item);
             }
 
             // remove the actual item
             // based off of LongVector.addElement()
-            Object items = m_items.get(m_pool);
-            Object[][] objects = (Object[][]) m_objects.get(items);
-            int numElements = (Integer) m_elements.get(items) - 1;
+            Object item = items.get(this.pool);
+            Object[][] object = (Object[][]) objects.get(items);
+            int numElements = (Integer) elements.get(items) - 1;
             int nth = numElements >> 7;
             int offset = numElements & (128 - 1);
-            objects[nth][offset] = null;
+            object[nth][offset] = null;
 
             // decrement the number of items
-            m_elements.set(items, numElements);
-            m_numItems.set(m_pool, (Integer) m_numItems.get(m_pool) - 1);
+            elements.set(item, numElements);
+            numItems.set(this.pool, (Integer) numItems.get(this.pool) - 1);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -164,7 +164,7 @@ public class ConstPoolEditor {
     @SuppressWarnings("rawtypes")
     public HashMap getCache() {
         try {
-            return (HashMap) m_cache.get(m_pool);
+            return (HashMap) cache.get(this.pool);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -183,7 +183,7 @@ public class ConstPoolEditor {
                 cache.remove(item);
             }
 
-            new MemberRefInfoAccessor(item).setNameAndTypeIndex(m_pool.addNameAndTypeInfo(newName, newType));
+            new MemberRefInfoAccessor(item).setNameAndTypeIndex(this.pool.addNameAndTypeInfo(newName, newType));
 
             // update the cache
             if (cache != null) {
@@ -212,7 +212,7 @@ public class ConstPoolEditor {
             }
 
             // add the new name and repoint the name-and-type to it
-            new ClassInfoAccessor(item).setNameIndex(m_pool.addUtf8Info(newName));
+            new ClassInfoAccessor(item).setNameIndex(this.pool.addUtf8Info(newName));
 
             // update the cache
             if (cache != null) {
@@ -252,7 +252,7 @@ public class ConstPoolEditor {
 
     public String dump() {
         StringBuilder buf = new StringBuilder();
-        for (int i = 1; i < m_pool.getSize(); i++) {
+        for (int i = 1; i < this.pool.getSize(); i++) {
             buf.append(String.format("%4d", i));
             buf.append("   ");
             buf.append(getItem(i).toString());

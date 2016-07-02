@@ -24,30 +24,30 @@ import javassist.CtClass;
 
 public class ClassIdentifier {
 
-    private JarIndex m_index;
-    private SidedClassNamer m_namer;
-    private boolean m_useReferences;
-    private TranslatingTypeLoader m_loader;
-    private Map<ClassEntry, ClassIdentity> m_cache;
+    private JarIndex index;
+    private SidedClassNamer namer;
+    private boolean useReferences;
+    private TranslatingTypeLoader loader;
+    private Map<ClassEntry, ClassIdentity> cache;
 
     public ClassIdentifier(JarFile jar, JarIndex index, SidedClassNamer namer, boolean useReferences) {
-        m_index = index;
-        m_namer = namer;
-        m_useReferences = useReferences;
-        m_loader = new TranslatingTypeLoader(jar, index);
-        m_cache = Maps.newHashMap();
+        this.index = index;
+        this.namer = namer;
+        this.useReferences = useReferences;
+        this.loader = new TranslatingTypeLoader(jar, index);
+        this.cache = Maps.newHashMap();
     }
 
     public ClassIdentity identify(ClassEntry classEntry)
             throws ClassNotFoundException {
-        ClassIdentity identity = m_cache.get(classEntry);
+        ClassIdentity identity = this.cache.get(classEntry);
         if (identity == null) {
-            CtClass c = m_loader.loadClass(classEntry.getName());
+            CtClass c = this.loader.loadClass(classEntry.getName());
             if (c == null) {
                 throw new ClassNotFoundException(classEntry.getName());
             }
-            identity = new ClassIdentity(c, m_namer, m_index, m_useReferences);
-            m_cache.put(classEntry, identity);
+            identity = new ClassIdentity(c, this.namer, this.index, this.useReferences);
+            this.cache.put(classEntry, identity);
         }
         return identity;
     }

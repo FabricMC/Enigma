@@ -31,15 +31,15 @@ import javassist.bytecode.Descriptor;
 
 public class JarClassIterator implements Iterator<CtClass> {
 
-    private JarFile m_jar;
-    private Iterator<JarEntry> m_iter;
+    private JarFile jar;
+    private Iterator<JarEntry> iter;
 
     public JarClassIterator(JarFile jar) {
-        m_jar = jar;
+        this.jar = jar;
 
         // get the jar entries that correspond to classes
         List<JarEntry> classEntries = Lists.newArrayList();
-        Enumeration<JarEntry> entries = m_jar.entries();
+        Enumeration<JarEntry> entries = this.jar.entries();
         while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
 
@@ -48,19 +48,19 @@ public class JarClassIterator implements Iterator<CtClass> {
                 classEntries.add(entry);
             }
         }
-        m_iter = classEntries.iterator();
+        this.iter = classEntries.iterator();
     }
 
     @Override
     public boolean hasNext() {
-        return m_iter.hasNext();
+        return this.iter.hasNext();
     }
 
     @Override
     public CtClass next() {
-        JarEntry entry = m_iter.next();
+        JarEntry entry = this.iter.next();
         try {
-            return getClass(m_jar, entry);
+            return getClass(this.jar, entry);
         } catch (IOException | NotFoundException ex) {
             throw new Error("Unable to load class: " + entry.getName());
         }
@@ -86,12 +86,7 @@ public class JarClassIterator implements Iterator<CtClass> {
     }
 
     public static Iterable<CtClass> classes(final JarFile jar) {
-        return new Iterable<CtClass>() {
-            @Override
-            public Iterator<CtClass> iterator() {
-                return new JarClassIterator(jar);
-            }
-        };
+        return () -> new JarClassIterator(jar);
     }
 
     public static CtClass getClass(JarFile jar, ClassEntry classEntry) {

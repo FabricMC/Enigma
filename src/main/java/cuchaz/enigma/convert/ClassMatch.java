@@ -75,14 +75,10 @@ public class ClassMatch {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof ClassMatch) {
-            return equals((ClassMatch) other);
-        }
-        return false;
+        return other instanceof ClassMatch && equals((ClassMatch) other);
     }
 
     public boolean equals(ClassMatch other) {
-        return this.sourceClasses.equals(other.sourceClasses)
-                && this.destClasses.equals(other.destClasses);
+        return this.sourceClasses.equals(other.sourceClasses) && this.destClasses.equals(other.destClasses);
     }
 }

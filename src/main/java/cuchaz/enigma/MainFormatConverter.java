@@ -13,8 +13,6 @@ package cuchaz.enigma;
 import com.google.common.collect.Maps;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.jar.JarFile;

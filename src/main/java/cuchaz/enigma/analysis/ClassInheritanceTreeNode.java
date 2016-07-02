@@ -23,20 +23,20 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 
     private static final long serialVersionUID = 4432367405826178490L;
 
-    private Translator m_deobfuscatingTranslator;
-    private String m_obfClassName;
+    private Translator deobfuscatingTranslator;
+    private String obfClassName;
 
     public ClassInheritanceTreeNode(Translator deobfuscatingTranslator, String obfClassName) {
-        m_deobfuscatingTranslator = deobfuscatingTranslator;
-        m_obfClassName = obfClassName;
+        this.deobfuscatingTranslator = deobfuscatingTranslator;
+        this.obfClassName = obfClassName;
     }
 
     public String getObfClassName() {
-        return m_obfClassName;
+        return this.obfClassName;
     }
 
     public String getDeobfClassName() {
-        return m_deobfuscatingTranslator.translateClass(m_obfClassName);
+        return this.deobfuscatingTranslator.translateClass(this.obfClassName);
     }
 
     @Override
@@ -45,14 +45,14 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
         if (deobfClassName != null) {
             return deobfClassName;
         }
-        return m_obfClassName;
+        return this.obfClassName;
     }
 
     public void load(TranslationIndex ancestries, boolean recurse) {
         // get all the child nodes
         List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
-        for (ClassEntry subclassEntry : ancestries.getSubclass(new ClassEntry(m_obfClassName))) {
-            nodes.add(new ClassInheritanceTreeNode(m_deobfuscatingTranslator, subclassEntry.getName()));
+        for (ClassEntry subclassEntry : ancestries.getSubclass(new ClassEntry(this.obfClassName))) {
+            nodes.add(new ClassInheritanceTreeNode(this.deobfuscatingTranslator, subclassEntry.getName()));
         }
 
         // add them to this node

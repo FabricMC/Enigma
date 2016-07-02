@@ -11,7 +11,6 @@
 package cuchaz.enigma;
 
 import java.io.File;
-import java.io.FileReader;
 import java.util.jar.JarFile;
 
 import cuchaz.enigma.Deobfuscator.ProgressListener;

@@ -213,29 +213,29 @@ public enum InfoType {
         }
     };
 
-    private static Map<Integer, InfoType> m_types;
+    private static Map<Integer, InfoType> types;
 
     static {
-        m_types = Maps.newTreeMap();
+        types = Maps.newTreeMap();
         for (InfoType type : values()) {
-            m_types.put(type.getTag(), type);
+            types.put(type.getTag(), type);
         }
     }
 
-    private int m_tag;
-    private int m_level;
+    private int tag;
+    private int level;
 
     InfoType(int tag, int level) {
-        m_tag = tag;
-        m_level = level;
+        this.tag = tag;
+        this.level = level;
     }
 
     public int getTag() {
-        return m_tag;
+        return this.tag;
     }
 
     public int getLevel() {
-        return m_level;
+        return this.level;
     }
 
     public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
@@ -260,7 +260,7 @@ public enum InfoType {
     }
 
     public static InfoType getByTag(int tag) {
-        return m_types.get(tag);
+        return types.get(tag);
     }
 
     public static List<InfoType> getByLevel(int level) {

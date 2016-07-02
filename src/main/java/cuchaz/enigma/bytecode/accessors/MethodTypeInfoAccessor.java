@@ -14,32 +14,18 @@ import java.lang.reflect.Field;
 
 public class MethodTypeInfoAccessor {
 
-    private static Class<?> m_class;
-    private static Field m_descriptorIndex;
+    private static Class<?> clazz;
+    private static Field descriptorIndex;
 
-    static {
-        try {
-            m_class = Class.forName("javassist.bytecode.MethodTypeInfo");
-            m_descriptorIndex = m_class.getDeclaredField("descriptor");
-            m_descriptorIndex.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return m_class.isAssignableFrom(accessor.getItem().getClass());
-    }
-
-    private Object m_item;
+    private Object item;
 
     public MethodTypeInfoAccessor(Object item) {
-        m_item = item;
+        this.item = item;
     }
 
     public int getTypeIndex() {
         try {
-            return (Integer) m_descriptorIndex.get(m_item);
+            return (Integer) descriptorIndex.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -47,9 +33,24 @@ public class MethodTypeInfoAccessor {
 
     public void setTypeIndex(int val) {
         try {
-            m_descriptorIndex.set(m_item, val);
+            descriptorIndex.set(this.item, val);
         } catch (Exception ex) {
             throw new Error(ex);
         }
     }
+
+    public static boolean isType(ConstInfoAccessor accessor) {
+        return clazz.isAssignableFrom(accessor.getItem().getClass());
+    }
+
+    static {
+        try {
+            clazz = Class.forName("javassist.bytecode.MethodTypeInfo");
+            descriptorIndex = clazz.getDeclaredField("descriptor");
+            descriptorIndex.setAccessible(true);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
+    }
+
 }

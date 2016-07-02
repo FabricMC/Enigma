@@ -17,7 +17,6 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;

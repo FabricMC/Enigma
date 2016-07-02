@@ -14,35 +14,19 @@ import java.lang.reflect.Field;
 
 public class MethodHandleInfoAccessor {
 
-    private static Class<?> m_class;
-    private static Field m_kindIndex;
-    private static Field m_indexIndex;
+    private static Class<?> clazz;
+    private static Field kindIndex;
+    private static Field indexIndex;
 
-    static {
-        try {
-            m_class = Class.forName("javassist.bytecode.MethodHandleInfo");
-            m_kindIndex = m_class.getDeclaredField("refKind");
-            m_kindIndex.setAccessible(true);
-            m_indexIndex = m_class.getDeclaredField("refIndex");
-            m_indexIndex.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return m_class.isAssignableFrom(accessor.getItem().getClass());
-    }
-
-    private Object m_item;
+    private Object item;
 
     public MethodHandleInfoAccessor(Object item) {
-        m_item = item;
+        this.item = item;
     }
 
     public int getTypeIndex() {
         try {
-            return (Integer) m_kindIndex.get(m_item);
+            return (Integer) kindIndex.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -50,7 +34,7 @@ public class MethodHandleInfoAccessor {
 
     public void setTypeIndex(int val) {
         try {
-            m_kindIndex.set(m_item, val);
+            kindIndex.set(this.item, val);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -58,7 +42,7 @@ public class MethodHandleInfoAccessor {
 
     public int getMethodRefIndex() {
         try {
-            return (Integer) m_indexIndex.get(m_item);
+            return (Integer) indexIndex.get(this.item);
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -66,7 +50,23 @@ public class MethodHandleInfoAccessor {
 
     public void setMethodRefIndex(int val) {
         try {
-            m_indexIndex.set(m_item, val);
+            indexIndex.set(this.item, val);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
+    }
+
+    public static boolean isType(ConstInfoAccessor accessor) {
+        return clazz.isAssignableFrom(accessor.getItem().getClass());
+    }
+
+    static {
+        try {
+            clazz = Class.forName("javassist.bytecode.MethodHandleInfo");
+            kindIndex = clazz.getDeclaredField("refKind");
+            kindIndex.setAccessible(true);
+            indexIndex = clazz.getDeclaredField("refIndex");
+            indexIndex.setAccessible(true);
         } catch (Exception ex) {
             throw new Error(ex);
         }

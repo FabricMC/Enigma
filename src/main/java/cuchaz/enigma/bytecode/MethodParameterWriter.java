@@ -21,10 +21,10 @@ import javassist.bytecode.LocalVariableAttribute;
 
 public class MethodParameterWriter {
 
-    private Translator m_translator;
+    private Translator translator;
 
     public MethodParameterWriter(Translator translator) {
-        m_translator = translator;
+        this.translator = translator;
     }
 
     public void writeMethodArguments(CtClass c) {
@@ -56,7 +56,7 @@ public class MethodParameterWriter {
             // get the list of argument names
             List<String> names = new ArrayList<String>(numParams);
             for (int i = 0; i < numParams; i++) {
-                names.add(m_translator.translate(new ArgumentEntry(behaviorEntry, i, "")));
+                names.add(this.translator.translate(new ArgumentEntry(behaviorEntry, i, "")));
             }
 
             // save the mappings to the class

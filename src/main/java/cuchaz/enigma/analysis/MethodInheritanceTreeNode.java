@@ -24,45 +24,45 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
     private static final long serialVersionUID = 1096677030991810007L;
 
-    private Translator m_deobfuscatingTranslator;
-    private MethodEntry m_entry;
-    private boolean m_isImplemented;
+    private Translator deobfuscatingTranslator;
+    private MethodEntry entry;
+    private boolean isImplemented;
 
     public MethodInheritanceTreeNode(Translator deobfuscatingTranslator, MethodEntry entry, boolean isImplemented) {
-        m_deobfuscatingTranslator = deobfuscatingTranslator;
-        m_entry = entry;
-        m_isImplemented = isImplemented;
+        this.deobfuscatingTranslator = deobfuscatingTranslator;
+        this.entry = entry;
+        this.isImplemented = isImplemented;
     }
 
     public MethodEntry getMethodEntry() {
-        return m_entry;
+        return this.entry;
     }
 
     public String getDeobfClassName() {
-        return m_deobfuscatingTranslator.translateClass(m_entry.getClassName());
+        return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
     }
 
     public String getDeobfMethodName() {
-        return m_deobfuscatingTranslator.translate(m_entry);
+        return this.deobfuscatingTranslator.translate(this.entry);
     }
 
     public boolean isImplemented() {
-        return m_isImplemented;
+        return this.isImplemented;
     }
 
     @Override
     public String toString() {
         String className = getDeobfClassName();
         if (className == null) {
-            className = m_entry.getClassName();
+            className = this.entry.getClassName();
         }
 
-        if (!m_isImplemented) {
+        if (!this.isImplemented) {
             return className;
         } else {
             String methodName = getDeobfMethodName();
             if (methodName == null) {
-                methodName = m_entry.getName();
+                methodName = this.entry.getName();
             }
             return className + "." + methodName + "()";
         }
@@ -71,16 +71,10 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
     public void load(JarIndex index, boolean recurse) {
         // get all the child nodes
         List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-        for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(m_entry.getClassEntry())) {
-            MethodEntry methodEntry = new MethodEntry(
-                    subclassEntry,
-                    m_entry.getName(),
-                    m_entry.getSignature()
+        for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(this.entry.getClassEntry())) {
+            MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getSignature()
             );
-            nodes.add(new MethodInheritanceTreeNode(
-                    m_deobfuscatingTranslator,
-                    methodEntry,
-                    index.containsObfBehavior(methodEntry)
+            nodes.add(new MethodInheritanceTreeNode(this.deobfuscatingTranslator, methodEntry, index.containsObfBehavior(methodEntry)
             ));
         }
 

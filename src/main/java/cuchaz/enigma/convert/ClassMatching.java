@@ -69,7 +69,7 @@ public class ClassMatching {
         for (ClassIdentity identity : m_destClasses.identities()) {
             if (!m_sourceClasses.containsIdentity(identity)) {
                 matches.add(new ClassMatch(
-                        new ArrayList<ClassEntry>(),
+                        new ArrayList<>(),
                         m_destClasses.getClasses(identity)
                 ));
             }
