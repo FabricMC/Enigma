@@ -32,7 +32,7 @@ public class MappingsWriter {
         String[] entries = file.list();
         for (String s : entries) {
             File currentFile = new File(file.getPath(), s);
-            currentFile.delete();
+            deleteDirectory(currentFile);
         }
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -82,5 +82,22 @@ public class MappingsWriter {
         }
         Collections.sort(out);
         return out;
+    }
+
+    public static boolean deleteDirectory(File directory) {
+        if(directory.exists()){
+            File[] files = directory.listFiles();
+            if(null!=files){
+                for(int i=0; i<files.length; i++) {
+                    if(files[i].isDirectory()) {
+                        deleteDirectory(files[i]);
+                    }
+                    else {
+                        files[i].delete();
+                    }
+                }
+            }
+        }
+        return(directory.delete());
     }
 }

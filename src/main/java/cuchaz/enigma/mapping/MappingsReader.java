@@ -53,6 +53,7 @@ public class MappingsReader {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonClass jsonClass = gson.fromJson(buf.toString(), JsonClass.class);
         load(null, jsonClass, mappings);
+        in.close();
     }
 
     public void load(ClassMapping parent, JsonClass jsonClass, Mappings mappings) {
