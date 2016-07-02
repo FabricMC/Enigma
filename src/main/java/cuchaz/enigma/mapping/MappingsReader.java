@@ -74,9 +74,7 @@ public class MappingsReader {
             classMapping.addMethodMapping(methodMapping);
         });
 
-        jsonClass.getInnerClass().forEach(jsonInnerClasses -> {
-            load(classMapping, jsonInnerClasses, mappings);
-        });
+        jsonClass.getInnerClass().forEach(jsonInnerClasses -> load(classMapping, jsonInnerClasses, mappings));
     }
 
     private ArgumentMapping readArgument(int index, String name) {
