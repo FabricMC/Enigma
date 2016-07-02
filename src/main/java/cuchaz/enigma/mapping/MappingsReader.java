@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -33,7 +34,7 @@ public class MappingsReader {
         File[] fList = in.listFiles();
         if (fList != null) {
             for (File file : fList) {
-                if (file.isFile()) {
+                if (file.isFile()&& Files.getFileExtension(file.getName()).equalsIgnoreCase("json")) {
                     readFile(mappings, new BufferedReader(new FileReader(file)));
                 } else if (file.isDirectory()) {
                     readDirectory(mappings, file.getAbsoluteFile());
