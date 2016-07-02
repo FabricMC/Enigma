@@ -74,38 +74,23 @@ public class EntryFactory {
     }
 
     public static MethodEntry getMethodEntry(MethodCall call) {
-        return new MethodEntry(
-                new ClassEntry(Descriptor.toJvmName(call.getClassName())),
-                call.getMethodName(),
-                new Signature(call.getSignature())
-        );
+        return new MethodEntry(new ClassEntry(Descriptor.toJvmName(call.getClassName())), call.getMethodName(), new Signature(call.getSignature()));
     }
 
     public static ConstructorEntry getConstructorEntry(CtConstructor constructor) {
         if (constructor.isClassInitializer()) {
-            return new ConstructorEntry(
-                    getClassEntry(constructor.getDeclaringClass())
-            );
+            return new ConstructorEntry(getClassEntry(constructor.getDeclaringClass()));
         } else {
-            return new ConstructorEntry(
-                    getClassEntry(constructor.getDeclaringClass()),
-                    new Signature(constructor.getMethodInfo().getDescriptor())
-            );
+            return new ConstructorEntry(getClassEntry(constructor.getDeclaringClass()), new Signature(constructor.getMethodInfo().getDescriptor()));
         }
     }
 
     public static ConstructorEntry getConstructorEntry(ConstructorCall call) {
-        return new ConstructorEntry(
-                new ClassEntry(Descriptor.toJvmName(call.getClassName())),
-                new Signature(call.getSignature())
-        );
+        return new ConstructorEntry(new ClassEntry(Descriptor.toJvmName(call.getClassName())), new Signature(call.getSignature()));
     }
 
     public static ConstructorEntry getConstructorEntry(NewExpr call) {
-        return new ConstructorEntry(
-                new ClassEntry(Descriptor.toJvmName(call.getClassName())),
-                new Signature(call.getSignature())
-        );
+        return new ConstructorEntry(new ClassEntry(Descriptor.toJvmName(call.getClassName())), new Signature(call.getSignature()));
     }
 
     public static BehaviorEntry getBehaviorEntry(CtBehavior behavior) {
