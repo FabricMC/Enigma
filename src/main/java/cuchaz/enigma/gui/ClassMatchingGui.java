@@ -128,7 +128,7 @@ public class ClassMatchingGui {
             sourceTypePanel.add(button);
         }
 
-        this.sourceClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
+        this.sourceClasses = new ClassSelector(ClassSelector.DEOBF_CLASS_COMPARATOR);
         this.sourceClasses.setListener(this::setSourceClass);
         JScrollPane sourceScroller = new JScrollPane(this.sourceClasses);
         sourcePanel.add(sourceScroller);
@@ -144,7 +144,7 @@ public class ClassMatchingGui {
         destPanel.add(this.top10Matches);
         this.top10Matches.addActionListener(event -> toggleTop10Matches());
 
-        this.destClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
+        this.destClasses = new ClassSelector(ClassSelector.DEOBF_CLASS_COMPARATOR);
         this.destClasses.setListener(this::setDestClass);
         JScrollPane destScroller = new JScrollPane(this.destClasses);
         destPanel.add(destScroller);

@@ -17,7 +17,7 @@ public class PanelDeobf extends JPanel {
     public PanelDeobf(Gui gui) {
         this.gui = gui;
 
-        this.deobfClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
+        this.deobfClasses = new ClassSelector(ClassSelector.DEOBF_CLASS_COMPARATOR);
         this.deobfClasses.setListener(gui::navigateTo);
 
         this.setLayout(new BorderLayout());

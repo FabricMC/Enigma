@@ -29,33 +29,15 @@ import cuchaz.enigma.mapping.ClassEntry;
 public class ClassSelector extends JTree {
 
     private static final long serialVersionUID = -7632046902384775977L;
+    public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = (a, b) -> {
+        if (a instanceof ScoredClassEntry && b instanceof ScoredClassEntry) {
+            return Float.compare(((ScoredClassEntry) b).getScore(), ((ScoredClassEntry) a).getScore());
+        }
+        return a.getName().compareTo(b.getName());
+    };
 
     public interface ClassSelectionListener {
         void onSelectClass(ClassEntry classEntry);
-    }
-
-    public static Comparator<ClassEntry> ObfuscatedClassEntryComparator;
-    public static Comparator<ClassEntry> DeobfuscatedClassEntryComparator;
-
-    static {
-        ObfuscatedClassEntryComparator = (a, b) -> {
-            String aname = a.getName();
-            String bname = a.getName();
-            if (aname.length() != bname.length()) {
-                return aname.length() - bname.length();
-            }
-            return aname.compareTo(bname);
-        };
-
-        DeobfuscatedClassEntryComparator = (a, b) -> {
-            if (a instanceof ScoredClassEntry && b instanceof ScoredClassEntry) {
-                return Float.compare(
-                        ((ScoredClassEntry) b).getScore(),
-                        ((ScoredClassEntry) a).getScore()
-                );
-            }
-            return a.getName().compareTo(b.getName());
-        };
     }
 
     private ClassSelectionListener listener;

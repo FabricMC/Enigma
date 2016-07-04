@@ -1,6 +1,7 @@
 package cuchaz.enigma.gui.panels;
 
 import java.awt.BorderLayout;
+import java.util.Comparator;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -8,6 +9,7 @@ import javax.swing.JScrollPane;
 
 import cuchaz.enigma.gui.ClassSelector;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.mapping.ClassEntry;
 
 public class PanelObf extends JPanel {
 
@@ -17,7 +19,16 @@ public class PanelObf extends JPanel {
     public PanelObf(Gui gui) {
         this.gui = gui;
 
-        this.obfClasses = new ClassSelector(ClassSelector.ObfuscatedClassEntryComparator);
+        Comparator<ClassEntry>  obfClassComparator = (a, b) -> {
+            String aname = a.getName();
+            String bname = b.getName();
+            if (aname.length() != bname.length()) {
+                return aname.length() - bname.length();
+            }
+            return aname.compareTo(bname);
+        };
+
+        this.obfClasses = new ClassSelector(obfClassComparator);
         this.obfClasses.setListener(gui::navigateTo);
 
         this.setLayout(new BorderLayout());

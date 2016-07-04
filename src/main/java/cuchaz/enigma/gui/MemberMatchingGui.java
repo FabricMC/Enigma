@@ -129,7 +129,7 @@ public class MemberMatchingGui<T extends Entry> {
             sourceTypePanel.add(button);
         }
 
-        m_sourceClasses = new ClassSelector(ClassSelector.DeobfuscatedClassEntryComparator);
+        m_sourceClasses = new ClassSelector(ClassSelector.DEOBF_CLASS_COMPARATOR);
         m_sourceClasses.setListener(this::setSourceClass);
         JScrollPane sourceScroller = new JScrollPane(m_sourceClasses);
         classesPanel.add(sourceScroller);
