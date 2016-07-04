@@ -10,17 +10,13 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import java.io.Serializable;
+import cuchaz.enigma.utils.Utils;
 
-import cuchaz.enigma.Util;
+public class MethodEntry implements BehaviorEntry {
 
-public class MethodEntry implements BehaviorEntry, Serializable {
-
-    private static final long serialVersionUID = 4770915224467247458L;
-
-    private ClassEntry m_classEntry;
-    private String m_name;
-    private Signature m_signature;
+    private ClassEntry classEntry;
+    private String name;
+    private Signature signature;
 
     public MethodEntry(ClassEntry classEntry, String name, Signature signature) {
         if (classEntry == null) {
@@ -36,41 +32,35 @@ public class MethodEntry implements BehaviorEntry, Serializable {
             throw new IllegalArgumentException("Don't use MethodEntry for a constructor!");
         }
 
-        m_classEntry = classEntry;
-        m_name = name;
-        m_signature = signature;
-    }
-
-    public MethodEntry(MethodEntry other) {
-        m_classEntry = new ClassEntry(other.m_classEntry);
-        m_name = other.m_name;
-        m_signature = other.m_signature;
+        this.classEntry = classEntry;
+        this.name = name;
+        this.signature = signature;
     }
 
     public MethodEntry(MethodEntry other, String newClassName) {
-        m_classEntry = new ClassEntry(newClassName);
-        m_name = other.m_name;
-        m_signature = other.m_signature;
+        this.classEntry = new ClassEntry(newClassName);
+        this.name = other.name;
+        this.signature = other.signature;
     }
 
     @Override
     public ClassEntry getClassEntry() {
-        return m_classEntry;
+        return this.classEntry;
     }
 
     @Override
     public String getName() {
-        return m_name;
+        return this.name;
     }
 
     @Override
     public Signature getSignature() {
-        return m_signature;
+        return this.signature;
     }
 
     @Override
     public String getClassName() {
-        return m_classEntry.getName();
+        return this.classEntry.getName();
     }
 
     @Override
@@ -80,7 +70,7 @@ public class MethodEntry implements BehaviorEntry, Serializable {
 
     @Override
     public int hashCode() {
-        return Util.combineHashesOrdered(m_classEntry, m_name, m_signature);
+        return Utils.combineHashesOrdered(this.classEntry, this.name, this.signature);
     }
 
     @Override
@@ -89,11 +79,11 @@ public class MethodEntry implements BehaviorEntry, Serializable {
     }
 
     public boolean equals(MethodEntry other) {
-        return m_classEntry.equals(other.m_classEntry) && m_name.equals(other.m_name) && m_signature.equals(other.m_signature);
+        return this.classEntry.equals(other.classEntry) && this.name.equals(other.name) && this.signature.equals(other.signature);
     }
 
     @Override
     public String toString() {
-        return m_classEntry.getName() + "." + m_name + m_signature;
+        return this.classEntry.getName() + "." + this.name + this.signature;
     }
 }

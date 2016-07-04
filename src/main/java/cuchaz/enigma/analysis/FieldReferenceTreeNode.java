@@ -18,8 +18,6 @@ import cuchaz.enigma.mapping.Translator;
 
 public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<FieldEntry, BehaviorEntry> {
 
-    private static final long serialVersionUID = -7934108091928699835L;
-
     private Translator deobfuscatingTranslator;
     private FieldEntry entry;
     private EntryReference<FieldEntry, BehaviorEntry> reference;

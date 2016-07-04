@@ -10,14 +10,12 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.GZIPOutputStream;
 
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.throwables.IllegalNameException;
+import cuchaz.enigma.throwables.MappingConflict;
 
 public class MappingsRenamer {
 
@@ -167,14 +165,6 @@ public class MappingsRenamer {
         classMapping.setArgumentName(obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), obf.getName());
     }
 
-    public void write(OutputStream out) throws IOException {
-        // TEMP: just use the object output for now. We can find a more efficient storage format later
-        GZIPOutputStream gzipout = new GZIPOutputStream(out);
-        ObjectOutputStream oout = new ObjectOutputStream(gzipout);
-        oout.writeObject(this);
-        gzipout.finish();
-    }
-
     private ClassMapping getOrCreateClassMapping(ClassEntry obfClassEntry) {
         List<ClassMapping> mappingChain = getOrCreateClassMappingChain(obfClassEntry);
         return mappingChain.get(mappingChain.size() - 1);
@@ -193,10 +183,14 @@ public class MappingsRenamer {
                 mappingChain.set(i, classMapping);
 
                 // add it to the right parent
-                if (i == 0) {
-                    m_mappings.addClassMapping(classMapping);
-                } else {
-                    mappingChain.get(i - 1).addInnerClassMapping(classMapping);
+                try {
+                    if (i == 0) {
+                        m_mappings.addClassMapping(classMapping);
+                    } else {
+                        mappingChain.get(i - 1).addInnerClassMapping(classMapping);
+                    }
+                } catch (MappingConflict mappingConflict) {
+                    mappingConflict.printStackTrace();
                 }
             }
         }

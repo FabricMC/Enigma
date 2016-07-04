@@ -19,7 +19,7 @@ public class PanelObf extends JPanel {
     public PanelObf(Gui gui) {
         this.gui = gui;
 
-        Comparator<ClassEntry>  obfClassComparator = (a, b) -> {
+        Comparator<ClassEntry> obfClassComparator = (a, b) -> {
             String aname = a.getName();
             String bname = b.getName();
             if (aname.length() != bname.length()) {

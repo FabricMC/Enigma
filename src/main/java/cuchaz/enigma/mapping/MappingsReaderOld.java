@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Deque;
 
+import cuchaz.enigma.throwables.MappingConflict;
+import cuchaz.enigma.throwables.MappingParseException;
+
 public class MappingsReaderOld {
 
     public Mappings read(Reader in) throws IOException, MappingParseException {
@@ -89,6 +92,8 @@ public class MappingsReaderOld {
                 }
             } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) {
                 throw new MappingParseException(lineNumber, "Malformed line:\n" + line);
+            } catch (MappingConflict e) {
+                e.printStackTrace();
             }
         }
 

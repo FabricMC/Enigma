@@ -8,7 +8,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.GuiTricks;
+import cuchaz.enigma.utils.Utils;
 
 public class PanelIdentifier extends JPanel {
 
@@ -25,7 +25,7 @@ public class PanelIdentifier extends JPanel {
     public void clearReference() {
         this.removeAll();
         JLabel label = new JLabel("No identifier selected");
-        GuiTricks.unboldLabel(label);
+        Utils.unboldLabel(label);
         label.setHorizontalAlignment(JLabel.CENTER);
         this.add(label);
 

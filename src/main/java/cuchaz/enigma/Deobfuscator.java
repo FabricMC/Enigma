@@ -47,50 +47,46 @@ public class Deobfuscator {
         void onProgress(int numDone, String message);
     }
 
-    private JarFile m_jar;
-    private DecompilerSettings m_settings;
-    private JarIndex m_jarIndex;
-    private Mappings m_mappings;
-    private MappingsRenamer m_renamer;
-    private Map<TranslationDirection, Translator> m_translatorCache;
+    private JarFile jar;
+    private DecompilerSettings settings;
+    private JarIndex jarIndex;
+    private Mappings mappings;
+    private MappingsRenamer renamer;
+    private Map<TranslationDirection, Translator> translatorCache;
 
-    public Deobfuscator(JarFile jar) throws IOException {
-        m_jar = jar;
+    public Deobfuscator(JarFile jar) {
+        this.jar = jar;
 
         // build the jar index
-        m_jarIndex = new JarIndex();
-        m_jarIndex.indexJar(m_jar, true);
+        this.jarIndex = new JarIndex();
+        this.jarIndex.indexJar(this.jar, true);
 
         // config the decompiler
-        m_settings = DecompilerSettings.javaDefaults();
-        m_settings.setMergeVariables(true);
-        m_settings.setForceExplicitImports(true);
-        m_settings.setForceExplicitTypeArguments(true);
-        m_settings.setShowDebugLineNumbers(true);
+        this.settings = DecompilerSettings.javaDefaults();
+        this.settings.setMergeVariables(true);
+        this.settings.setForceExplicitImports(true);
+        this.settings.setForceExplicitTypeArguments(true);
+        this.settings.setShowDebugLineNumbers(true);
         // DEBUG
-        //m_settings.setShowSyntheticMembers(true);
+        //this.settings.setShowSyntheticMembers(true);
 
         // init defaults
-        m_translatorCache = Maps.newTreeMap();
+        this.translatorCache = Maps.newTreeMap();
 
         // init mappings
         setMappings(new Mappings());
     }
 
-    public JarFile getJar() {
-        return m_jar;
-    }
-
     public String getJarName() {
-        return m_jar.getName();
+        return this.jar.getName();
     }
 
     public JarIndex getJarIndex() {
-        return m_jarIndex;
+        return this.jarIndex;
     }
 
     public Mappings getMappings() {
-        return m_mappings;
+        return this.mappings;
     }
 
     public void setMappings(Mappings val) {
@@ -103,7 +99,7 @@ public class Deobfuscator {
         }
 
         // drop mappings that don't match the jar
-        MappingsChecker checker = new MappingsChecker(m_jarIndex);
+        MappingsChecker checker = new MappingsChecker(this.jarIndex);
         checker.dropBrokenMappings(val);
         if (warnAboutDrops) {
             for (java.util.Map.Entry<ClassEntry, ClassMapping> mapping : checker.getDroppedClassMappings().entrySet()) {
@@ -120,22 +116,22 @@ public class Deobfuscator {
             }
         }
 
-        m_mappings = val;
-        m_renamer = new MappingsRenamer(m_jarIndex, val);
-        m_translatorCache.clear();
+        this.mappings = val;
+        this.renamer = new MappingsRenamer(this.jarIndex, val);
+        this.translatorCache.clear();
     }
 
     public Translator getTranslator(TranslationDirection direction) {
-        Translator translator = m_translatorCache.get(direction);
+        Translator translator = this.translatorCache.get(direction);
         if (translator == null) {
-            translator = m_mappings.getTranslator(direction, m_jarIndex.getTranslationIndex());
-            m_translatorCache.put(direction, translator);
+            translator = this.mappings.getTranslator(direction, this.jarIndex.getTranslationIndex());
+            this.translatorCache.put(direction, translator);
         }
         return translator;
     }
 
     public void getSeparatedClasses(List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses) {
-        for (ClassEntry obfClassEntry : m_jarIndex.getObfClassEntries()) {
+        for (ClassEntry obfClassEntry : this.jarIndex.getObfClassEntries()) {
             // skip inner classes
             if (obfClassEntry.isInnerClass()) {
                 continue;
@@ -166,19 +162,19 @@ public class Deobfuscator {
         String deobfClassName = className;
 
         // if it wasn't actually deobf, then we can find a mapping for it and get the deobf name
-        ClassMapping classMapping = m_mappings.getClassByObf(className);
+        ClassMapping classMapping = this.mappings.getClassByObf(className);
         if (classMapping != null && classMapping.getDeobfName() != null) {
             deobfClassName = classMapping.getDeobfName();
         }
 
         // set the type loader
         TranslatingTypeLoader loader = new TranslatingTypeLoader(
-                m_jar,
-                m_jarIndex,
+                this.jar,
+                this.jarIndex,
                 getTranslator(TranslationDirection.Obfuscating),
                 getTranslator(TranslationDirection.Deobfuscating)
         );
-        m_settings.setTypeLoader(loader);
+        this.settings.setTypeLoader(loader);
 
         // see if procyon can find the type
         TypeReference type = new MetadataSystem(loader).lookupType(deobfClassName);
@@ -192,7 +188,7 @@ public class Deobfuscator {
         // decompile it!
         DecompilerContext context = new DecompilerContext();
         context.setCurrentType(resolvedType);
-        context.setSettings(m_settings);
+        context.setSettings(this.settings);
         AstBuilder builder = new AstBuilder(context);
         builder.addType(resolvedType);
         builder.runTransformations(null);
@@ -225,7 +221,7 @@ public class Deobfuscator {
             Entry obfEntry = obfuscateEntry(deobfReference.entry);
 
             // try to resolve the class
-            ClassEntry resolvedObfClassEntry = m_jarIndex.getTranslationIndex().resolveEntryClass(obfEntry);
+            ClassEntry resolvedObfClassEntry = this.jarIndex.getTranslationIndex().resolveEntryClass(obfEntry);
             if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(obfEntry.getClassEntry())) {
                 // change the class of the entry
                 obfEntry = obfEntry.cloneToNewClass(resolvedObfClassEntry);
@@ -246,14 +242,14 @@ public class Deobfuscator {
         // render the AST into source
         StringWriter buf = new StringWriter();
         sourceTree.acceptVisitor(new InsertParenthesesVisitor(), null);
-        sourceTree.acceptVisitor(new JavaOutputVisitor(new PlainTextOutput(buf), m_settings), null);
+        sourceTree.acceptVisitor(new JavaOutputVisitor(new PlainTextOutput(buf), this.settings), null);
         return buf.toString();
     }
 
-    public void writeSources(File dirOut, ProgressListener progress) throws IOException {
+    public void writeSources(File dirOut, ProgressListener progress) {
         // get the classes to decompile
         Set<ClassEntry> classEntries = Sets.newHashSet();
-        for (ClassEntry obfClassEntry : m_jarIndex.getObfClassEntries()) {
+        for (ClassEntry obfClassEntry : this.jarIndex.getObfClassEntries()) {
             // skip inner classes
             if (obfClassEntry.isInnerClass()) {
                 continue;
@@ -298,8 +294,8 @@ public class Deobfuscator {
 
     public void writeJar(File out, ProgressListener progress) {
         final TranslatingTypeLoader loader = new TranslatingTypeLoader(
-                m_jar,
-                m_jarIndex,
+                this.jar,
+                this.jarIndex,
                 getTranslator(TranslationDirection.Obfuscating),
                 getTranslator(TranslationDirection.Deobfuscating)
         );
@@ -321,11 +317,11 @@ public class Deobfuscator {
     private void transformJar(File out, ProgressListener progress, ClassTransformer transformer) {
         try (JarOutputStream outJar = new JarOutputStream(new FileOutputStream(out))) {
             if (progress != null) {
-                progress.init(JarClassIterator.getClassEntries(m_jar).size(), "Transforming classes...");
+                progress.init(JarClassIterator.getClassEntries(this.jar).size(), "Transforming classes...");
             }
 
             int i = 0;
-            for (CtClass c : JarClassIterator.classes(m_jar)) {
+            for (CtClass c : JarClassIterator.classes(this.jar)) {
                 if (progress != null) {
                     progress.onProgress(i++, c.getName());
                 }
@@ -410,7 +406,7 @@ public class Deobfuscator {
             }
         }
 
-        return m_jarIndex.containsObfEntry(obfEntry);
+        return this.jarIndex.containsObfEntry(obfEntry);
     }
 
     public boolean isRenameable(EntryReference<Entry, Entry> obfReference) {
@@ -423,7 +419,7 @@ public class Deobfuscator {
         Translator translator = getTranslator(TranslationDirection.Deobfuscating);
         if (obfEntry instanceof ClassEntry) {
             ClassEntry obfClass = (ClassEntry) obfEntry;
-            List<ClassMapping> mappingChain = m_mappings.getClassMappingChain(obfClass);
+            List<ClassMapping> mappingChain = this.mappings.getClassMappingChain(obfClass);
             ClassMapping classMapping = mappingChain.get(mappingChain.size() - 1);
             return classMapping != null && classMapping.getDeobfName() != null;
         } else if (obfEntry instanceof FieldEntry) {
@@ -442,58 +438,58 @@ public class Deobfuscator {
 
     public void rename(Entry obfEntry, String newName) {
         if (obfEntry instanceof ClassEntry) {
-            m_renamer.setClassName((ClassEntry) obfEntry, Descriptor.toJvmName(newName));
+            this.renamer.setClassName((ClassEntry) obfEntry, Descriptor.toJvmName(newName));
         } else if (obfEntry instanceof FieldEntry) {
-            m_renamer.setFieldName((FieldEntry) obfEntry, newName);
+            this.renamer.setFieldName((FieldEntry) obfEntry, newName);
         } else if (obfEntry instanceof MethodEntry) {
-            m_renamer.setMethodTreeName((MethodEntry) obfEntry, newName);
+            this.renamer.setMethodTreeName((MethodEntry) obfEntry, newName);
         } else if (obfEntry instanceof ConstructorEntry) {
             throw new IllegalArgumentException("Cannot rename constructors");
         } else if (obfEntry instanceof ArgumentEntry) {
-            m_renamer.setArgumentName((ArgumentEntry) obfEntry, newName);
+            this.renamer.setArgumentName((ArgumentEntry) obfEntry, newName);
         } else {
             throw new Error("Unknown entry type: " + obfEntry.getClass().getName());
         }
 
         // clear caches
-        m_translatorCache.clear();
+        this.translatorCache.clear();
     }
 
     public void removeMapping(Entry obfEntry) {
         if (obfEntry instanceof ClassEntry) {
-            m_renamer.removeClassMapping((ClassEntry) obfEntry);
+            this.renamer.removeClassMapping((ClassEntry) obfEntry);
         } else if (obfEntry instanceof FieldEntry) {
-            m_renamer.removeFieldMapping((FieldEntry) obfEntry);
+            this.renamer.removeFieldMapping((FieldEntry) obfEntry);
         } else if (obfEntry instanceof MethodEntry) {
-            m_renamer.removeMethodTreeMapping((MethodEntry) obfEntry);
+            this.renamer.removeMethodTreeMapping((MethodEntry) obfEntry);
         } else if (obfEntry instanceof ConstructorEntry) {
             throw new IllegalArgumentException("Cannot rename constructors");
         } else if (obfEntry instanceof ArgumentEntry) {
-            m_renamer.removeArgumentMapping((ArgumentEntry) obfEntry);
+            this.renamer.removeArgumentMapping((ArgumentEntry) obfEntry);
         } else {
             throw new Error("Unknown entry type: " + obfEntry);
         }
 
         // clear caches
-        m_translatorCache.clear();
+        this.translatorCache.clear();
     }
 
     public void markAsDeobfuscated(Entry obfEntry) {
         if (obfEntry instanceof ClassEntry) {
-            m_renamer.markClassAsDeobfuscated((ClassEntry) obfEntry);
+            this.renamer.markClassAsDeobfuscated((ClassEntry) obfEntry);
         } else if (obfEntry instanceof FieldEntry) {
-            m_renamer.markFieldAsDeobfuscated((FieldEntry) obfEntry);
+            this.renamer.markFieldAsDeobfuscated((FieldEntry) obfEntry);
         } else if (obfEntry instanceof MethodEntry) {
-            m_renamer.markMethodTreeAsDeobfuscated((MethodEntry) obfEntry);
+            this.renamer.markMethodTreeAsDeobfuscated((MethodEntry) obfEntry);
         } else if (obfEntry instanceof ConstructorEntry) {
             throw new IllegalArgumentException("Cannot rename constructors");
         } else if (obfEntry instanceof ArgumentEntry) {
-            m_renamer.markArgumentAsDeobfuscated((ArgumentEntry) obfEntry);
+            this.renamer.markArgumentAsDeobfuscated((ArgumentEntry) obfEntry);
         } else {
             throw new Error("Unknown entry type: " + obfEntry);
         }
 
         // clear caches
-        m_translatorCache.clear();
+        this.translatorCache.clear();
     }
 }

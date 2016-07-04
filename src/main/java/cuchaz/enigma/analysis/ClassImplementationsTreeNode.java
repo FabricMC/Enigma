@@ -21,8 +21,6 @@ import cuchaz.enigma.mapping.Translator;
 
 public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
-    private static final long serialVersionUID = 3112703459157851912L;
-
     private Translator deobfuscatingTranslator;
     private ClassEntry entry;
 

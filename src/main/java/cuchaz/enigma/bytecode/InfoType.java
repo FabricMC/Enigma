@@ -10,23 +10,21 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import cuchaz.enigma.bytecode.accessors.*;
 
 public enum InfoType {
 
-    Utf8Info(1, 0),
-    IntegerInfo(3, 0),
-    FloatInfo(4, 0),
-    LongInfo(5, 0),
-    DoubleInfo(6, 0),
-    ClassInfo(7, 1) {
+    Utf8Info(1),
+    IntegerInfo(3),
+    FloatInfo(4),
+    LongInfo(5),
+    DoubleInfo(6),
+    ClassInfo(7) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             ClassInfoAccessor accessor = new ClassInfoAccessor(entry.getItem());
@@ -46,7 +44,7 @@ public enum InfoType {
             return nameEntry != null && nameEntry.getTag() == Utf8Info.getTag();
         }
     },
-    StringInfo(8, 1) {
+    StringInfo(8) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             StringInfoAccessor accessor = new StringInfoAccessor(entry.getItem());
@@ -66,7 +64,7 @@ public enum InfoType {
             return stringEntry != null && stringEntry.getTag() == Utf8Info.getTag();
         }
     },
-    FieldRefInfo(9, 2) {
+    FieldRefInfo(9) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             MemberRefInfoAccessor accessor = new MemberRefInfoAccessor(entry.getItem());
@@ -90,7 +88,7 @@ public enum InfoType {
         }
     },
     // same as FieldRefInfo
-    MethodRefInfo(10, 2) {
+    MethodRefInfo(10) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             FieldRefInfo.gatherIndexTree(indices, editor, entry);
@@ -107,7 +105,7 @@ public enum InfoType {
         }
     },
     // same as FieldRefInfo
-    InterfaceMethodRefInfo(11, 2) {
+    InterfaceMethodRefInfo(11) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             FieldRefInfo.gatherIndexTree(indices, editor, entry);
@@ -123,7 +121,7 @@ public enum InfoType {
             return FieldRefInfo.subIndicesAreValid(entry, pool);
         }
     },
-    NameAndTypeInfo(12, 1) {
+    NameAndTypeInfo(12) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             NameAndTypeInfoAccessor accessor = new NameAndTypeInfoAccessor(entry.getItem());
@@ -146,7 +144,7 @@ public enum InfoType {
             return nameEntry != null && nameEntry.getTag() == Utf8Info.getTag() && typeEntry != null && typeEntry.getTag() == Utf8Info.getTag();
         }
     },
-    MethodHandleInfo(15, 3) {
+    MethodHandleInfo(15) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             MethodHandleInfoAccessor accessor = new MethodHandleInfoAccessor(entry.getItem());
@@ -169,7 +167,7 @@ public enum InfoType {
             return typeEntry != null && typeEntry.getTag() == Utf8Info.getTag() && methodRefEntry != null && methodRefEntry.getTag() == MethodRefInfo.getTag();
         }
     },
-    MethodTypeInfo(16, 1) {
+    MethodTypeInfo(16) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             MethodTypeInfoAccessor accessor = new MethodTypeInfoAccessor(entry.getItem());
@@ -189,7 +187,7 @@ public enum InfoType {
             return typeEntry != null && typeEntry.getTag() == Utf8Info.getTag();
         }
     },
-    InvokeDynamicInfo(18, 2) {
+    InvokeDynamicInfo(18) {
         @Override
         public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
             InvokeDynamicInfoAccessor accessor = new InvokeDynamicInfoAccessor(entry.getItem());
@@ -223,19 +221,13 @@ public enum InfoType {
     }
 
     private int tag;
-    private int level;
 
-    InfoType(int tag, int level) {
+    InfoType(int tag) {
         this.tag = tag;
-        this.level = level;
     }
 
     public int getTag() {
         return this.tag;
-    }
-
-    public int getLevel() {
-        return this.level;
     }
 
     public void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, ConstInfoAccessor entry) {
@@ -251,32 +243,8 @@ public enum InfoType {
         return true;
     }
 
-    public boolean selfIndexIsValid(ConstInfoAccessor entry, ConstPoolEditor pool) {
-        ConstInfoAccessor entryCheck = pool.getItem(entry.getIndex());
-        return entryCheck != null && entryCheck.getItem().equals(entry.getItem());
-    }
-
     public static InfoType getByTag(int tag) {
         return types.get(tag);
-    }
-
-    public static List<InfoType> getByLevel(int level) {
-        List<InfoType> types = Lists.newArrayList();
-        for (InfoType type : values()) {
-            if (type.getLevel() == level) {
-                types.add(type);
-            }
-        }
-        return types;
-    }
-
-    public static List<InfoType> getSortedByLevel() {
-        List<InfoType> types = Lists.newArrayList();
-        types.addAll(getByLevel(0));
-        types.addAll(getByLevel(1));
-        types.addAll(getByLevel(2));
-        types.addAll(getByLevel(3));
-        return types;
     }
 
     public static void gatherIndexTree(Collection<Integer> indices, ConstPoolEditor editor, int index) {

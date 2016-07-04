@@ -12,80 +12,72 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Lists;
 
-import java.io.Serializable;
 import java.util.List;
 
-import cuchaz.enigma.Util;
+import cuchaz.enigma.utils.Utils;
 
-public class Signature implements Serializable {
+public class Signature {
 
-    private static final long serialVersionUID = -5843719505729497539L;
-
-    private List<Type> m_argumentTypes;
-    private Type m_returnType;
+    private List<Type> argumentTypes;
+    private Type returnType;
 
     public Signature(String signature) {
         try {
-            m_argumentTypes = Lists.newArrayList();
+            this.argumentTypes = Lists.newArrayList();
             int i = 0;
             while (i < signature.length()) {
                 char c = signature.charAt(i);
                 if (c == '(') {
-                    assert (m_argumentTypes.isEmpty());
-                    assert (m_returnType == null);
+                    assert (this.argumentTypes.isEmpty());
+                    assert (this.returnType == null);
                     i++;
                 } else if (c == ')') {
                     i++;
                     break;
                 } else {
                     String type = Type.parseFirst(signature.substring(i));
-                    m_argumentTypes.add(new Type(type));
+                    this.argumentTypes.add(new Type(type));
                     i += type.length();
                 }
             }
-            m_returnType = new Type(Type.parseFirst(signature.substring(i)));
+            this.returnType = new Type(Type.parseFirst(signature.substring(i)));
         } catch (Exception ex) {
             throw new IllegalArgumentException("Unable to parse signature: " + signature, ex);
         }
     }
 
-    public Signature(Signature other) {
-        m_argumentTypes = Lists.newArrayList(other.m_argumentTypes);
-        m_returnType = new Type(other.m_returnType);
-    }
-
     public Signature(Signature other, ClassNameReplacer replacer) {
-        m_argumentTypes = Lists.newArrayList(other.m_argumentTypes);
-        for (int i = 0; i < m_argumentTypes.size(); i++) {
-            m_argumentTypes.set(i, new Type(m_argumentTypes.get(i), replacer));
+        this.argumentTypes = Lists.newArrayList(other.argumentTypes);
+        for (int i = 0; i < this.argumentTypes.size(); i++) {
+            this.argumentTypes.set(i, new Type(this.argumentTypes.get(i), replacer));
         }
-        m_returnType = new Type(other.m_returnType, replacer);
+        this.returnType = new Type(other.returnType, replacer);
     }
 
     public List<Type> getArgumentTypes() {
-        return m_argumentTypes;
+        return this.argumentTypes;
     }
 
     public Type getReturnType() {
-        return m_returnType;
+        return this.returnType;
     }
 
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         buf.append("(");
-        for (Type type : m_argumentTypes) {
+        for (Type type : this.argumentTypes) {
             buf.append(type.toString());
         }
         buf.append(")");
-        buf.append(m_returnType.toString());
+        buf.append(this.returnType.toString());
         return buf.toString();
     }
 
     public Iterable<Type> types() {
         List<Type> types = Lists.newArrayList();
-        types.addAll(m_argumentTypes);
-        types.add(m_returnType);
+        types.addAll(this.argumentTypes);
+        types.add(this.returnType);
         return types;
     }
 
@@ -95,12 +87,12 @@ public class Signature implements Serializable {
     }
 
     public boolean equals(Signature other) {
-        return m_argumentTypes.equals(other.m_argumentTypes) && m_returnType.equals(other.m_returnType);
+        return this.argumentTypes.equals(other.argumentTypes) && this.returnType.equals(other.returnType);
     }
 
     @Override
     public int hashCode() {
-        return Util.combineHashesOrdered(m_argumentTypes.hashCode(), m_returnType.hashCode());
+        return Utils.combineHashesOrdered(this.argumentTypes.hashCode(), this.returnType.hashCode());
     }
 
     public boolean hasClass(ClassEntry classEntry) {

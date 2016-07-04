@@ -23,8 +23,6 @@ import cuchaz.enigma.mapping.Translator;
 
 public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<BehaviorEntry, BehaviorEntry> {
 
-    private static final long serialVersionUID = -3658163700783307520L;
-
     private Translator m_deobfuscatingTranslator;
     private BehaviorEntry m_entry;
     private EntryReference<BehaviorEntry, BehaviorEntry> m_reference;

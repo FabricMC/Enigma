@@ -20,17 +20,17 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import cuchaz.enigma.json.JsonClass;
+import cuchaz.enigma.throwables.MappingConflict;
 
 public class MappingsReader {
 
-    public Mappings read(File in) throws IOException, MappingParseException {
+    public Mappings read(File in) throws IOException {
         Mappings mappings = new Mappings();
         readDirectory(mappings, in);
         return mappings;
     }
 
-    public void readDirectory(Mappings mappings, File in) throws IOException, MappingParseException {
-
+    public void readDirectory(Mappings mappings, File in) throws IOException {
         File[] fList = in.listFiles();
         if (fList != null) {
             for (File file : fList) {
@@ -43,8 +43,7 @@ public class MappingsReader {
         }
     }
 
-    public void readFile(Mappings mappings, BufferedReader in) throws IOException, MappingParseException {
-
+    public void readFile(Mappings mappings, BufferedReader in) throws IOException {
         StringBuilder buf = new StringBuilder();
         String line;
         while ((line = in.readLine()) != null) {
@@ -53,11 +52,15 @@ public class MappingsReader {
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonClass jsonClass = gson.fromJson(buf.toString(), JsonClass.class);
-        load(null, jsonClass, mappings);
+        try {
+            load(null, jsonClass, mappings);
+        } catch (MappingConflict e) {
+            e.printStackTrace();
+        }
         in.close();
     }
 
-    public void load(ClassMapping parent, JsonClass jsonClass, Mappings mappings) {
+    public void load(ClassMapping parent, JsonClass jsonClass, Mappings mappings) throws MappingConflict {
         ClassMapping classMapping = readClass(jsonClass.getObf(), jsonClass.getName());
         if (parent != null) {
             parent.addInnerClassMapping(classMapping);
@@ -68,17 +71,35 @@ public class MappingsReader {
 
         jsonClass.getConstructors().forEach(jsonConstructor -> {
             MethodMapping methodMapping = readMethod(jsonConstructor.isStatics() ? "<clinit>" : "<init>", null, jsonConstructor.getSignature());
-            jsonConstructor.getArgs().forEach(jsonArgument -> methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName())));
+            jsonConstructor.getArgs().forEach(jsonArgument -> {
+                try {
+                    methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName()));
+                } catch (MappingConflict e) {
+                    e.printStackTrace();
+                }
+            });
             classMapping.addMethodMapping(methodMapping);
         });
 
         jsonClass.getMethod().forEach(jsonMethod -> {
             MethodMapping methodMapping = readMethod(jsonMethod.getObf(), jsonMethod.getName(), jsonMethod.getSignature());
-            jsonMethod.getArgs().forEach(jsonArgument -> methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName())));
+            jsonMethod.getArgs().forEach(jsonArgument -> {
+                try {
+                    methodMapping.addArgumentMapping(readArgument(jsonArgument.getIndex(), jsonArgument.getName()));
+                } catch (MappingConflict e) {
+                    e.printStackTrace();
+                }
+            });
             classMapping.addMethodMapping(methodMapping);
         });
 
-        jsonClass.getInnerClass().forEach(jsonInnerClasses -> load(classMapping, jsonInnerClasses, mappings));
+        jsonClass.getInnerClass().forEach(jsonInnerClasses -> {
+            try {
+                load(classMapping, jsonInnerClasses, mappings);
+            } catch (MappingConflict e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private ArgumentMapping readArgument(int index, String name) {

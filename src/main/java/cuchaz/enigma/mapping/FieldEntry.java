@@ -10,17 +10,13 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import java.io.Serializable;
+import cuchaz.enigma.utils.Utils;
 
-import cuchaz.enigma.Util;
+public class FieldEntry implements Entry {
 
-public class FieldEntry implements Entry, Serializable {
-
-    private static final long serialVersionUID = 3004663582802885451L;
-
-    private ClassEntry m_classEntry;
-    private String m_name;
-    private Type m_type;
+    private ClassEntry classEntry;
+    private String name;
+    private Type type;
 
     // NOTE: this argument order is important for the MethodReader/MethodWriter
     public FieldEntry(ClassEntry classEntry, String name, Type type) {
@@ -34,38 +30,34 @@ public class FieldEntry implements Entry, Serializable {
             throw new IllegalArgumentException("Field type cannot be null!");
         }
 
-        m_classEntry = classEntry;
-        m_name = name;
-        m_type = type;
-    }
-
-    public FieldEntry(FieldEntry other) {
-        this(other, new ClassEntry(other.m_classEntry));
+        this.classEntry = classEntry;
+        this.name = name;
+        this.type = type;
     }
 
     public FieldEntry(FieldEntry other, ClassEntry newClassEntry) {
-        m_classEntry = newClassEntry;
-        m_name = other.m_name;
-        m_type = other.m_type;
+        this.classEntry = newClassEntry;
+        this.name = other.name;
+        this.type = other.type;
     }
 
     @Override
     public ClassEntry getClassEntry() {
-        return m_classEntry;
+        return this.classEntry;
     }
 
     @Override
     public String getName() {
-        return m_name;
+        return this.name;
     }
 
     @Override
     public String getClassName() {
-        return m_classEntry.getName();
+        return this.classEntry.getName();
     }
 
     public Type getType() {
-        return m_type;
+        return this.type;
     }
 
     @Override
@@ -75,7 +67,7 @@ public class FieldEntry implements Entry, Serializable {
 
     @Override
     public int hashCode() {
-        return Util.combineHashesOrdered(m_classEntry, m_name, m_type);
+        return Utils.combineHashesOrdered(this.classEntry, this.name, this.type);
     }
 
     @Override
@@ -84,13 +76,11 @@ public class FieldEntry implements Entry, Serializable {
     }
 
     public boolean equals(FieldEntry other) {
-        return m_classEntry.equals(other.m_classEntry)
-                && m_name.equals(other.m_name)
-                && m_type.equals(other.m_type);
+        return this.classEntry.equals(other.classEntry) && this.name.equals(other.name) && this.type.equals(other.type);
     }
 
     @Override
     public String toString() {
-        return m_classEntry.getName() + "." + m_name + ":" + m_type;
+        return this.classEntry.getName() + "." + this.name + ":" + this.type;
     }
 }

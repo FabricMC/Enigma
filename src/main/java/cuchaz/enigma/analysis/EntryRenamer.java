@@ -57,35 +57,6 @@ public class EntryRenamer {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T renameMethodsInThing(Map<MethodEntry, MethodEntry> renames, T thing) {
-        if (thing instanceof MethodEntry) {
-            MethodEntry methodEntry = (MethodEntry) thing;
-            MethodEntry newMethodEntry = renames.get(methodEntry);
-            if (newMethodEntry != null) {
-                return (T) new MethodEntry(
-                        methodEntry.getClassEntry(),
-                        newMethodEntry.getName(),
-                        methodEntry.getSignature()
-                );
-            }
-            return thing;
-        } else if (thing instanceof ArgumentEntry) {
-            ArgumentEntry argumentEntry = (ArgumentEntry) thing;
-            return (T) new ArgumentEntry(
-                    renameMethodsInThing(renames, argumentEntry.getBehaviorEntry()),
-                    argumentEntry.getIndex(),
-                    argumentEntry.getName()
-            );
-        } else if (thing instanceof EntryReference) {
-            EntryReference<Entry, Entry> reference = (EntryReference<Entry, Entry>) thing;
-            reference.entry = renameMethodsInThing(renames, reference.entry);
-            reference.context = renameMethodsInThing(renames, reference.context);
-            return thing;
-        }
-        return thing;
-    }
-
-    @SuppressWarnings("unchecked")
     public static <T> T renameClassesInThing(final Map<String, String> renames, T thing) {
         if (thing instanceof String) {
             String stringEntry = (String) thing;
@@ -97,31 +68,16 @@ public class EntryRenamer {
             return (T) new ClassEntry(renameClassesInThing(renames, classEntry.getClassName()));
         } else if (thing instanceof FieldEntry) {
             FieldEntry fieldEntry = (FieldEntry) thing;
-            return (T) new FieldEntry(
-                    renameClassesInThing(renames, fieldEntry.getClassEntry()),
-                    fieldEntry.getName(),
-                    renameClassesInThing(renames, fieldEntry.getType())
-            );
+            return (T) new FieldEntry(renameClassesInThing(renames, fieldEntry.getClassEntry()), fieldEntry.getName(), renameClassesInThing(renames, fieldEntry.getType()));
         } else if (thing instanceof ConstructorEntry) {
             ConstructorEntry constructorEntry = (ConstructorEntry) thing;
-            return (T) new ConstructorEntry(
-                    renameClassesInThing(renames, constructorEntry.getClassEntry()),
-                    renameClassesInThing(renames, constructorEntry.getSignature())
-            );
+            return (T) new ConstructorEntry(renameClassesInThing(renames, constructorEntry.getClassEntry()), renameClassesInThing(renames, constructorEntry.getSignature()));
         } else if (thing instanceof MethodEntry) {
             MethodEntry methodEntry = (MethodEntry) thing;
-            return (T) new MethodEntry(
-                    renameClassesInThing(renames, methodEntry.getClassEntry()),
-                    methodEntry.getName(),
-                    renameClassesInThing(renames, methodEntry.getSignature())
-            );
+            return (T) new MethodEntry(renameClassesInThing(renames, methodEntry.getClassEntry()), methodEntry.getName(), renameClassesInThing(renames, methodEntry.getSignature()));
         } else if (thing instanceof ArgumentEntry) {
             ArgumentEntry argumentEntry = (ArgumentEntry) thing;
-            return (T) new ArgumentEntry(
-                    renameClassesInThing(renames, argumentEntry.getBehaviorEntry()),
-                    argumentEntry.getIndex(),
-                    argumentEntry.getName()
-            );
+            return (T) new ArgumentEntry(renameClassesInThing(renames, argumentEntry.getBehaviorEntry()), argumentEntry.getIndex(), argumentEntry.getName());
         } else if (thing instanceof EntryReference) {
             EntryReference<Entry, Entry> reference = (EntryReference<Entry, Entry>) thing;
             reference.entry = renameClassesInThing(renames, reference.entry);

@@ -8,36 +8,30 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.throwables;
 
 public class IllegalNameException extends RuntimeException {
 
-    private static final long serialVersionUID = -2279910052561114323L;
-
-    private String m_name;
-    private String m_reason;
-
-    public IllegalNameException(String name) {
-        this(name, null);
-    }
+    private String name;
+    private String reason;
 
     public IllegalNameException(String name, String reason) {
-        m_name = name;
-        m_reason = reason;
+        this.name = name;
+        this.reason = reason;
     }
 
     public String getReason() {
-        return m_reason;
+        return this.reason;
     }
 
     @Override
     public String getMessage() {
         StringBuilder buf = new StringBuilder();
         buf.append("Illegal name: ");
-        buf.append(m_name);
-        if (m_reason != null) {
+        buf.append(this.name);
+        if (this.reason != null) {
             buf.append(" because ");
-            buf.append(m_reason);
+            buf.append(this.reason);
         }
         return buf.toString();
     }

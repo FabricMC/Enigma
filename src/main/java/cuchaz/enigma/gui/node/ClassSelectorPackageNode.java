@@ -8,22 +8,16 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.gui.node;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
 
-    private static final long serialVersionUID = -3730868701219548043L;
-
     private String packageName;
 
     public ClassSelectorPackageNode(String packageName) {
         this.packageName = packageName;
-    }
-
-    public String getPackageName() {
-        return this.packageName;
     }
 
     @Override

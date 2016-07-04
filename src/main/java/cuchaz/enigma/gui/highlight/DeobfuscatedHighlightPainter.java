@@ -8,22 +8,13 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.gui.highlight;
 
-import cuchaz.enigma.mapping.ClassEntry;
+import java.awt.Color;
 
-public class ScoredClassEntry extends ClassEntry {
+public class DeobfuscatedHighlightPainter extends BoxHighlightPainter {
 
-    private static final long serialVersionUID = -8798725308554217105L;
-
-    private float score;
-
-    public ScoredClassEntry(ClassEntry other, float score) {
-        super(other);
-        this.score = score;
-    }
-
-    public float getScore() {
-        return this.score;
+    public DeobfuscatedHighlightPainter() {
+        super(new Color(220, 255, 220), new Color(80, 160, 80));
     }
 }

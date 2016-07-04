@@ -12,14 +12,11 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Lists;
 
-import java.io.Serializable;
 import java.util.List;
 
-public class ClassEntry implements Entry, Serializable {
+public class ClassEntry implements Entry {
 
-    private static final long serialVersionUID = 4235460580973955811L;
-
-    private String m_name;
+    private String name;
 
     public ClassEntry(String className) {
         if (className == null) {
@@ -29,7 +26,7 @@ public class ClassEntry implements Entry, Serializable {
             throw new IllegalArgumentException("Class name must be in JVM format. ie, path/to/package/class$inner : " + className);
         }
 
-        m_name = className;
+        this.name = className;
 
         if (isInnerClass() && getInnermostClassName().indexOf('/') >= 0) {
             throw new IllegalArgumentException("Inner class must not have a package: " + className);
@@ -37,17 +34,17 @@ public class ClassEntry implements Entry, Serializable {
     }
 
     public ClassEntry(ClassEntry other) {
-        m_name = other.m_name;
+        this.name = other.name;
     }
 
     @Override
     public String getName() {
-        return m_name;
+        return this.name;
     }
 
     @Override
     public String getClassName() {
-        return m_name;
+        return this.name;
     }
 
     @Override
@@ -62,7 +59,7 @@ public class ClassEntry implements Entry, Serializable {
 
     @Override
     public int hashCode() {
-        return m_name.hashCode();
+        return this.name.hashCode();
     }
 
     @Override
@@ -71,20 +68,20 @@ public class ClassEntry implements Entry, Serializable {
     }
 
     public boolean equals(ClassEntry other) {
-        return m_name.equals(other.m_name);
+        return this.name.equals(other.name);
     }
 
     @Override
     public String toString() {
-        return m_name;
+        return this.name;
     }
 
     public boolean isInnerClass() {
-        return m_name.lastIndexOf('$') >= 0;
+        return this.name.lastIndexOf('$') >= 0;
     }
 
     public List<String> getClassChainNames() {
-        return Lists.newArrayList(m_name.split("\\$"));
+        return Lists.newArrayList(this.name.split("\\$"));
     }
 
     public List<ClassEntry> getClassChain() {
@@ -102,9 +99,9 @@ public class ClassEntry implements Entry, Serializable {
 
     public String getOutermostClassName() {
         if (isInnerClass()) {
-            return m_name.substring(0, m_name.indexOf('$'));
+            return this.name.substring(0, this.name.indexOf('$'));
         }
-        return m_name;
+        return this.name;
     }
 
     public ClassEntry getOutermostClassEntry() {
@@ -115,7 +112,7 @@ public class ClassEntry implements Entry, Serializable {
         if (!isInnerClass()) {
             throw new Error("This is not an inner class!");
         }
-        return m_name.substring(0, m_name.lastIndexOf('$'));
+        return this.name.substring(0, this.name.lastIndexOf('$'));
     }
 
     public ClassEntry getOuterClassEntry() {
@@ -126,27 +123,27 @@ public class ClassEntry implements Entry, Serializable {
         if (!isInnerClass()) {
             throw new Error("This is not an inner class!");
         }
-        return m_name.substring(m_name.lastIndexOf('$') + 1);
+        return this.name.substring(this.name.lastIndexOf('$') + 1);
     }
 
     public boolean isInDefaultPackage() {
-        return m_name.indexOf('/') < 0;
+        return this.name.indexOf('/') < 0;
     }
 
     public String getPackageName() {
-        int pos = m_name.lastIndexOf('/');
+        int pos = this.name.lastIndexOf('/');
         if (pos > 0) {
-            return m_name.substring(0, pos);
+            return this.name.substring(0, pos);
         }
         return null;
     }
 
     public String getSimpleName() {
-        int pos = m_name.lastIndexOf('/');
+        int pos = this.name.lastIndexOf('/');
         if (pos > 0) {
-            return m_name.substring(pos + 1);
+            return this.name.substring(pos + 1);
         }
-        return m_name;
+        return this.name;
     }
 
     public ClassEntry buildClassEntry(List<ClassEntry> classChain) {

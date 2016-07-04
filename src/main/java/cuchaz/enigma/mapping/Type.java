@@ -12,12 +12,9 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Maps;
 
-import java.io.Serializable;
 import java.util.Map;
 
-public class Type implements Serializable {
-
-    private static final long serialVersionUID = 7862257669347104063L;
+public class Type {
 
     public enum Primitive {
         Byte('B'),
@@ -29,27 +26,27 @@ public class Type implements Serializable {
         Double('D'),
         Boolean('Z');
 
-        private static final Map<Character, Primitive> m_lookup;
+        private static final Map<Character, Primitive> lookup;
 
         static {
-            m_lookup = Maps.newTreeMap();
+            lookup = Maps.newTreeMap();
             for (Primitive val : values()) {
-                m_lookup.put(val.getCode(), val);
+                lookup.put(val.getCode(), val);
             }
         }
 
         public static Primitive get(char code) {
-            return m_lookup.get(code);
+            return lookup.get(code);
         }
 
-        private char m_code;
+        private char code;
 
         Primitive(char code) {
-            m_code = code;
+            this.code = code;
         }
 
         public char getCode() {
-            return m_code;
+            return this.code;
         }
     }
 
@@ -94,7 +91,7 @@ public class Type implements Serializable {
         throw new IllegalArgumentException("don't know how to parse: " + in);
     }
 
-    protected String m_name;
+    protected String name;
 
     public Type(String name) {
 
@@ -104,59 +101,51 @@ public class Type implements Serializable {
             throw new IllegalArgumentException("don't use with generic types or templates: " + name);
         }
 
-        m_name = name;
-    }
-
-    public Type(Type other) {
-        m_name = other.m_name;
-    }
-
-    public Type(ClassEntry classEntry) {
-        m_name = "L" + classEntry.getClassName() + ";";
+        this.name = name;
     }
 
     public Type(Type other, ClassNameReplacer replacer) {
-        m_name = other.m_name;
+        this.name = other.name;
         if (other.isClass()) {
             String replacedName = replacer.replace(other.getClassEntry().getClassName());
             if (replacedName != null) {
-                m_name = "L" + replacedName + ";";
+                this.name = "L" + replacedName + ";";
             }
         } else if (other.isArray() && other.hasClass()) {
             String replacedName = replacer.replace(other.getClassEntry().getClassName());
             if (replacedName != null) {
-                m_name = Type.getArrayPrefix(other.getArrayDimension()) + "L" + replacedName + ";";
+                this.name = Type.getArrayPrefix(other.getArrayDimension()) + "L" + replacedName + ";";
             }
         }
     }
 
     @Override
     public String toString() {
-        return m_name;
+        return this.name;
     }
 
     public boolean isVoid() {
-        return m_name.length() == 1 && m_name.charAt(0) == 'V';
+        return this.name.length() == 1 && this.name.charAt(0) == 'V';
     }
 
     public boolean isPrimitive() {
-        return m_name.length() == 1 && Primitive.get(m_name.charAt(0)) != null;
+        return this.name.length() == 1 && Primitive.get(this.name.charAt(0)) != null;
     }
 
     public Primitive getPrimitive() {
         if (!isPrimitive()) {
             throw new IllegalStateException("not a primitive");
         }
-        return Primitive.get(m_name.charAt(0));
+        return Primitive.get(this.name.charAt(0));
     }
 
     public boolean isClass() {
-        return m_name.charAt(0) == 'L' && m_name.charAt(m_name.length() - 1) == ';';
+        return this.name.charAt(0) == 'L' && this.name.charAt(this.name.length() - 1) == ';';
     }
 
     public ClassEntry getClassEntry() {
         if (isClass()) {
-            String name = m_name.substring(1, m_name.length() - 1);
+            String name = this.name.substring(1, this.name.length() - 1);
 
             int pos = name.indexOf('<');
             if (pos >= 0) {
@@ -174,21 +163,21 @@ public class Type implements Serializable {
     }
 
     public boolean isArray() {
-        return m_name.charAt(0) == '[';
+        return this.name.charAt(0) == '[';
     }
 
     public int getArrayDimension() {
         if (!isArray()) {
             throw new IllegalStateException("not an array");
         }
-        return countArrayDimension(m_name);
+        return countArrayDimension(this.name);
     }
 
     public Type getArrayType() {
         if (!isArray()) {
             throw new IllegalStateException("not an array");
         }
-        return new Type(m_name.substring(getArrayDimension(), m_name.length()));
+        return new Type(this.name.substring(getArrayDimension(), this.name.length()));
     }
 
     private static String getArrayPrefix(int dimension) {
@@ -209,16 +198,17 @@ public class Type implements Serializable {
     }
 
     public boolean equals(Type other) {
-        return m_name.equals(other.m_name);
+        return this.name.equals(other.name);
     }
 
     public int hashCode() {
-        return m_name.hashCode();
+        return this.name.hashCode();
     }
 
     private static int countArrayDimension(String in) {
         int i = 0;
-        for (; i < in.length() && in.charAt(i) == '['; i++) {}
+        for (; i < in.length() && in.charAt(i) == '['; i++) {
+        }
         return i;
     }
 

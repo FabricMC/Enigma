@@ -12,13 +12,11 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Maps;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Map;
 
-public class ClassMapping implements Serializable, Comparable<ClassMapping> {
+import cuchaz.enigma.throwables.MappingConflict;
 
-    private static final long serialVersionUID = -5148491146902340107L;
+public class ClassMapping implements Comparable<ClassMapping> {
 
     private String m_obfFullName;
     private String m_obfSimpleName;
@@ -70,13 +68,17 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
         return m_innerClassesByObfSimple.values();
     }
 
-    public void addInnerClassMapping(ClassMapping classMapping) {
-        boolean obfWasAdded = m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping) == null;
-        assert (obfWasAdded);
+    public void addInnerClassMapping(ClassMapping classMapping) throws MappingConflict {
+        if (this.m_innerClassesByObfSimple.containsKey(classMapping.getObfSimpleName())) {
+            throw new MappingConflict("classes", classMapping.getObfSimpleName(), this.m_innerClassesByObfSimple.get(classMapping.getObfSimpleName()).getObfSimpleName());
+        }
+        m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping);
+
         if (classMapping.getDeobfName() != null) {
-            assert (isSimpleClassName(classMapping.getDeobfName()));
-            boolean deobfWasAdded = m_innerClassesByDeobf.put(classMapping.getDeobfName(), classMapping) == null;
-            assert (deobfWasAdded);
+            if (this.m_innerClassesByDeobf.containsKey(classMapping.getDeobfName())) {
+                throw new MappingConflict("classes", classMapping.getDeobfName(), this.m_innerClassesByDeobf.get(classMapping.getDeobfName()).getDeobfName());
+            }
+            m_innerClassesByDeobf.put(classMapping.getDeobfName(), classMapping);
         }
     }
 
@@ -225,17 +227,6 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
         }
     }
 
-    public void setFieldObfNameAndType(String oldObfName, Type obfType, String newObfName, Type newObfType) {
-        assert (newObfName != null);
-        FieldMapping fieldMapping = m_fieldsByObf.remove(getFieldKey(oldObfName, obfType));
-        assert (fieldMapping != null);
-        fieldMapping.setObfName(newObfName);
-        fieldMapping.setObfType(newObfType);
-        boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(newObfName, newObfType), fieldMapping) == null;
-        assert (obfWasAdded);
-    }
-
-
     //// METHODS ////////
 
     public Iterable<MethodMapping> methods() {
@@ -305,16 +296,6 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
             boolean wasAdded = m_methodsByDeobf.put(getMethodKey(deobfName, obfSignature), methodMapping) == null;
             assert (wasAdded);
         }
-    }
-
-    public void setMethodObfNameAndSignature(String oldObfName, Signature obfSignature, String newObfName, Signature newObfSignature) {
-        assert (newObfName != null);
-        MethodMapping methodMapping = m_methodsByObf.remove(getMethodKey(oldObfName, obfSignature));
-        assert (methodMapping != null);
-        methodMapping.setObfName(newObfName);
-        methodMapping.setObfSignature(newObfSignature);
-        boolean obfWasAdded = m_methodsByObf.put(getMethodKey(newObfName, newObfSignature), methodMapping) == null;
-        assert (obfWasAdded);
     }
 
     //// ARGUMENTS ////////
@@ -388,7 +369,4 @@ public class ClassMapping implements Serializable, Comparable<ClassMapping> {
         return name.indexOf('/') < 0 && name.indexOf('$') < 0;
     }
 
-    public ClassEntry getObfEntry() {
-        return new ClassEntry(m_obfFullName);
-    }
 }

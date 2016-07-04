@@ -24,17 +24,13 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import cuchaz.enigma.gui.node.ClassSelectorClassNode;
+import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.mapping.ClassEntry;
 
 public class ClassSelector extends JTree {
 
-    private static final long serialVersionUID = -7632046902384775977L;
-    public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = (a, b) -> {
-        if (a instanceof ScoredClassEntry && b instanceof ScoredClassEntry) {
-            return Float.compare(((ScoredClassEntry) b).getScore(), ((ScoredClassEntry) a).getScore());
-        }
-        return a.getName().compareTo(b.getName());
-    };
+    public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = (a, b) -> a.getName().compareTo(b.getName());
 
     public interface ClassSelectionListener {
         void onSelectClass(ClassEntry classEntry);
@@ -75,6 +71,7 @@ public class ClassSelector extends JTree {
     }
 
     public void setClasses(Collection<ClassEntry> classEntries) {
+        String state = getExpansionState(this, 0);
         if (classEntries == null) {
             setModel(null);
             return;
@@ -137,125 +134,45 @@ public class ClassSelector extends JTree {
 
         // finally, update the tree control
         setModel(new DefaultTreeModel(root));
+
+        restoreExpanstionState(this, 0, state);
     }
 
-    public ClassEntry getSelectedClass() {
-        if (!isSelectionEmpty()) {
-            Object selectedNode = getSelectionPath().getLastPathComponent();
-            if (selectedNode instanceof ClassSelectorClassNode) {
-                ClassSelectorClassNode classNode = (ClassSelectorClassNode) selectedNode;
-                return classNode.getClassEntry();
-            }
+    public boolean isDescendant(TreePath path1, TreePath path2) {
+        int count1 = path1.getPathCount();
+        int count2 = path2.getPathCount();
+        if (count1 <= count2) {
+            return false;
         }
-        return null;
+        while (count1 != count2) {
+            path1 = path1.getParentPath();
+            count1--;
+        }
+        return path1.equals(path2);
     }
 
-    public String getSelectedPackage() {
-        if (!isSelectionEmpty()) {
-            Object selectedNode = getSelectionPath().getLastPathComponent();
-            if (selectedNode instanceof ClassSelectorPackageNode) {
-                ClassSelectorPackageNode packageNode = (ClassSelectorPackageNode) selectedNode;
-                return packageNode.getPackageName();
-            } else if (selectedNode instanceof ClassSelectorClassNode) {
-                ClassSelectorClassNode classNode = (ClassSelectorClassNode) selectedNode;
-                return classNode.getClassEntry().getPackageName();
-            }
-        }
-        return null;
-    }
-
-    public Iterable<ClassSelectorPackageNode> packageNodes() {
-        List<ClassSelectorPackageNode> nodes = Lists.newArrayList();
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) getModel().getRoot();
-        Enumeration<?> children = root.children();
-        while (children.hasMoreElements()) {
-            ClassSelectorPackageNode packageNode = (ClassSelectorPackageNode) children.nextElement();
-            nodes.add(packageNode);
-        }
-        return nodes;
-    }
-
-    public Iterable<ClassSelectorClassNode> classNodes(ClassSelectorPackageNode packageNode) {
-        List<ClassSelectorClassNode> nodes = Lists.newArrayList();
-        Enumeration<?> children = packageNode.children();
-        while (children.hasMoreElements()) {
-            ClassSelectorClassNode classNode = (ClassSelectorClassNode) children.nextElement();
-            nodes.add(classNode);
-        }
-        return nodes;
-    }
-
-    public void expandPackage(String packageName) {
-        if (packageName == null) {
-            return;
-        }
-        for (ClassSelectorPackageNode packageNode : packageNodes()) {
-            if (packageNode.getPackageName().equals(packageName)) {
-                expandPath(new TreePath(new Object[]{getModel().getRoot(), packageNode}));
-                return;
-            }
-        }
-    }
-
-    public void expandAll() {
-        for (ClassSelectorPackageNode packageNode : packageNodes()) {
-            expandPath(new TreePath(new Object[]{getModel().getRoot(), packageNode}));
-        }
-    }
-
-    public ClassEntry getFirstClass() {
-        for (ClassSelectorPackageNode packageNode : packageNodes()) {
-            for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
-                return classNode.getClassEntry();
-            }
-        }
-        return null;
-    }
-
-    public ClassSelectorPackageNode getPackageNode(ClassEntry entry) {
-        for (ClassSelectorPackageNode packageNode : packageNodes()) {
-            if (packageNode.getPackageName().equals(entry.getPackageName())) {
-                return packageNode;
-            }
-        }
-        return null;
-    }
-
-    public ClassEntry getNextClass(ClassEntry entry) {
-        boolean foundIt = false;
-        for (ClassSelectorPackageNode packageNode : packageNodes()) {
-            if (!foundIt) {
-                // skip to the package with our target in it
-                if (packageNode.getPackageName().equals(entry.getPackageName())) {
-                    for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
-                        if (!foundIt) {
-                            if (classNode.getClassEntry().equals(entry)) {
-                                foundIt = true;
-                            }
-                        } else {
-                            // return the next class
-                            return classNode.getClassEntry();
-                        }
-                    }
+    public String getExpansionState(JTree tree, int row) {
+        TreePath rowPath = tree.getPathForRow(row);
+        StringBuffer buf = new StringBuffer();
+        int rowCount = tree.getRowCount();
+        for (int i = row; i < rowCount; i++) {
+            TreePath path = tree.getPathForRow(i);
+            if (i == row || isDescendant(path, rowPath)) {
+                if (tree.isExpanded(path)) {
+                    buf.append("," + String.valueOf(i - row));
                 }
             } else {
-                // return the next class
-                for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
-                    return classNode.getClassEntry();
-                }
+                break;
             }
         }
-        return null;
+        return buf.toString();
     }
 
-    public void setSelectionClass(ClassEntry classEntry) {
-        expandPackage(classEntry.getPackageName());
-        for (ClassSelectorPackageNode packageNode : packageNodes()) {
-            for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
-                if (classNode.getClassEntry().equals(classEntry)) {
-                    setSelectionPath(new TreePath(new Object[]{getModel().getRoot(), packageNode, classNode}));
-                }
-            }
+    public void restoreExpanstionState(JTree tree, int row, String expansionState) {
+        StringTokenizer stok = new StringTokenizer(expansionState, ",");
+        while (stok.hasMoreTokens()) {
+            int token = row + Integer.parseInt(stok.nextToken());
+            tree.expandRow(token);
         }
     }
 }

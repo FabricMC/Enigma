@@ -35,24 +35,20 @@ import javassist.bytecode.Descriptor;
 
 public class TranslatingTypeLoader implements ITypeLoader {
 
-    private JarFile m_jar;
-    private JarIndex m_jarIndex;
-    private Translator m_obfuscatingTranslator;
-    private Translator m_deobfuscatingTranslator;
-    private Map<String, byte[]> m_cache;
-    private ClasspathTypeLoader m_defaultTypeLoader;
-
-    public TranslatingTypeLoader(JarFile jar, JarIndex jarIndex) {
-        this(jar, jarIndex, new Translator(), new Translator());
-    }
+    private JarFile jar;
+    private JarIndex jarIndex;
+    private Translator obfuscatingTranslator;
+    private Translator deobfuscatingTranslator;
+    private Map<String, byte[]> cache;
+    private ClasspathTypeLoader defaultTypeLoader;
 
     public TranslatingTypeLoader(JarFile jar, JarIndex jarIndex, Translator obfuscatingTranslator, Translator deobfuscatingTranslator) {
-        m_jar = jar;
-        m_jarIndex = jarIndex;
-        m_obfuscatingTranslator = obfuscatingTranslator;
-        m_deobfuscatingTranslator = deobfuscatingTranslator;
-        m_cache = Maps.newHashMap();
-        m_defaultTypeLoader = new ClasspathTypeLoader();
+        this.jar = jar;
+        this.jarIndex = jarIndex;
+        this.obfuscatingTranslator = obfuscatingTranslator;
+        this.deobfuscatingTranslator = deobfuscatingTranslator;
+        this.cache = Maps.newHashMap();
+        this.defaultTypeLoader = new ClasspathTypeLoader();
     }
 
     @Override
@@ -60,16 +56,16 @@ public class TranslatingTypeLoader implements ITypeLoader {
 
         // check the cache
         byte[] data;
-        if (m_cache.containsKey(className)) {
-            data = m_cache.get(className);
+        if (this.cache.containsKey(className)) {
+            data = this.cache.get(className);
         } else {
             data = loadType(className);
-            m_cache.put(className, data);
+            this.cache.put(className, data);
         }
 
         if (data == null) {
             // chain to default type loader
-            return m_defaultTypeLoader.tryLoadType(className, out);
+            return this.defaultTypeLoader.tryLoadType(className, out);
         }
 
         // send the class to the decompiler
@@ -79,33 +75,15 @@ public class TranslatingTypeLoader implements ITypeLoader {
         return true;
     }
 
-    public CtClass loadClass(String deobfClassName) {
-
-        byte[] data = loadType(deobfClassName);
-        if (data == null) {
-            return null;
-        }
-
-        // return a javassist handle for the class
-        String javaClassFileName = Descriptor.toJavaName(deobfClassName);
-        ClassPool classPool = new ClassPool();
-        classPool.insertClassPath(new ByteArrayClassPath(javaClassFileName, data));
-        try {
-            return classPool.get(javaClassFileName);
-        } catch (NotFoundException ex) {
-            throw new Error(ex);
-        }
-    }
-
     private byte[] loadType(String className) {
 
         // NOTE: don't know if class name is obf or deobf
         ClassEntry classEntry = new ClassEntry(className);
-        ClassEntry obfClassEntry = m_obfuscatingTranslator.translateEntry(classEntry);
+        ClassEntry obfClassEntry = this.obfuscatingTranslator.translateEntry(classEntry);
 
         // is this an inner class referenced directly? (ie trying to load b instead of a$b)
         if (!obfClassEntry.isInnerClass()) {
-            List<ClassEntry> classChain = m_jarIndex.getObfClassChain(obfClassEntry);
+            List<ClassEntry> classChain = this.jarIndex.getObfClassChain(obfClassEntry);
             if (classChain.size() > 1) {
                 System.err.println(String.format("WARNING: no class %s after inner class reconstruction. Try %s",
                         className, obfClassEntry.buildClassEntry(classChain)
@@ -115,7 +93,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
         }
 
         // is this a class we should even know about?
-        if (!m_jarIndex.containsObfClass(obfClassEntry)) {
+        if (!this.jarIndex.containsObfClass(obfClassEntry)) {
             return null;
         }
 
@@ -133,7 +111,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
             // read the class file into a buffer
             ByteArrayOutputStream data = new ByteArrayOutputStream();
             byte[] buf = new byte[1024 * 1024]; // 1 KiB
-            InputStream in = m_jar.getInputStream(m_jar.getJarEntry(classInJarName + ".class"));
+            InputStream in = this.jar.getInputStream(this.jar.getJarEntry(classInJarName + ".class"));
             while (true) {
                 int bytesRead = in.read(buf);
                 if (bytesRead <= 0) {
@@ -170,7 +148,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 
         // try to find the class in the jar
         for (String className : getClassNamesToTry(obfClassEntry)) {
-            JarEntry jarEntry = m_jar.getJarEntry(className + ".class");
+            JarEntry jarEntry = this.jar.getJarEntry(className + ".class");
             if (jarEntry != null) {
                 return className;
             }
@@ -181,7 +159,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
     }
 
     public List<String> getClassNamesToTry(String className) {
-        return getClassNamesToTry(m_obfuscatingTranslator.translateEntry(new ClassEntry(className)));
+        return getClassNamesToTry(this.obfuscatingTranslator.translateEntry(new ClassEntry(className)));
     }
 
     public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
@@ -206,7 +184,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
         ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
 
         // reconstruct inner classes
-        new InnerClassWriter(m_jarIndex).write(c);
+        new InnerClassWriter(this.jarIndex).write(c);
 
         // re-get the javassist handle since we changed class names
         ClassEntry obfClassEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
@@ -219,10 +197,10 @@ public class TranslatingTypeLoader implements ITypeLoader {
         assertClassName(c, obfClassEntry);
 
         // do all kinds of deobfuscating transformations on the class
-        new BridgeMarker(m_jarIndex).markBridges(c);
-        new MethodParameterWriter(m_deobfuscatingTranslator).writeMethodArguments(c);
-        new LocalVariableRenamer(m_deobfuscatingTranslator).rename(c);
-        new ClassTranslator(m_deobfuscatingTranslator).translate(c);
+        new BridgeMarker(this.jarIndex).markBridges(c);
+        new MethodParameterWriter(this.deobfuscatingTranslator).writeMethodArguments(c);
+        new LocalVariableRenamer(this.deobfuscatingTranslator).rename(c);
+        new ClassTranslator(this.deobfuscatingTranslator).translate(c);
 
         return c;
     }

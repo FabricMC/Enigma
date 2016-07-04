@@ -8,11 +8,9 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.throwables;
 
 public class MappingParseException extends Exception {
-
-    private static final long serialVersionUID = -5487280332892507236L;
 
     private int m_line;
     private String m_message;

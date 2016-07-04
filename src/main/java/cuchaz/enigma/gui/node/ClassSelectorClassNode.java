@@ -8,15 +8,13 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.gui.node;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import cuchaz.enigma.mapping.ClassEntry;
 
 public class ClassSelectorClassNode extends DefaultMutableTreeNode {
-
-    private static final long serialVersionUID = -8956754339813257380L;
 
     private ClassEntry classEntry;
 
@@ -30,9 +28,6 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
 
     @Override
     public String toString() {
-        if (this.classEntry instanceof ScoredClassEntry) {
-            return String.format("%d%% %s", (int) ((ScoredClassEntry) this.classEntry).getScore(), this.classEntry.getSimpleName());
-        }
         return this.classEntry.getSimpleName();
     }
 

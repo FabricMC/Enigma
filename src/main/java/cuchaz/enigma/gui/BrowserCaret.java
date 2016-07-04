@@ -15,8 +15,6 @@ import javax.swing.text.Highlighter;
 
 public class BrowserCaret extends DefaultCaret {
 
-    private static final long serialVersionUID = 1158977422507969940L;
-
     private static final Highlighter.HighlightPainter selectionPainter = (g, p0, p1, bounds, c) -> {
     };
 

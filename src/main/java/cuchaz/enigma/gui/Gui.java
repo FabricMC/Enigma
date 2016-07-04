@@ -36,11 +36,17 @@ import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserFile;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
+import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
+import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
+import cuchaz.enigma.gui.highlight.OtherHighlightPainter;
+import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
 import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.throwables.IllegalNameException;
+import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class Gui {
@@ -363,7 +369,7 @@ public class Gui {
         if (token == null) {
             throw new IllegalArgumentException("Token cannot be null!");
         }
-        CodeReader.navigateToToken(this.editor, token, m_selectionHighlightPainter);
+        Utils.navigateToToken(this.editor, token, m_selectionHighlightPainter);
         redraw();
     }
 
@@ -476,7 +482,7 @@ public class Gui {
         label.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
         panel.add(label);
 
-        panel.add(GuiTricks.unboldLabel(new JLabel(value, JLabel.LEFT)));
+        panel.add(Utils.unboldLabel(new JLabel(value, JLabel.LEFT)));
     }
 
     public void onCaretMove(int pos) {
@@ -498,13 +504,13 @@ public class Gui {
             m_infoPanel.clearReference();
         }
 
-        this.popupMenu.renameMenu.setEnabled(isRenameable && isToken);
+        this.popupMenu.renameMenu.setEnabled(isRenameable);
         this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
         this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
         this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
         this.popupMenu.openEntryMenu.setEnabled(isInJar && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
         this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
-        this.popupMenu.toggleMappingMenu.setEnabled(isRenameable && isToken);
+        this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
 
         if (isToken && this.controller.entryHasDeobfuscatedName(m_reference.entry)) {
             this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
@@ -526,7 +532,6 @@ public class Gui {
 
     private void navigateTo(EntryReference<Entry, Entry> reference) {
         if (!this.controller.entryIsInJar(reference.getLocationClassEntry())) {
-            // reference is not in the jar. Ignore it
             return;
         }
         if (m_reference != null) {
@@ -574,7 +579,7 @@ public class Gui {
             } catch (IllegalNameException ex) {
                 text.setBorder(BorderFactory.createLineBorder(Color.red, 1));
                 text.setToolTipText(ex.getReason());
-                GuiTricks.showToolTipNow(text);
+                Utils.showToolTipNow(text);
             }
             return;
         }
@@ -582,7 +587,7 @@ public class Gui {
         // abort the rename
         JPanel panel = (JPanel) m_infoPanel.getComponent(0);
         panel.remove(panel.getComponentCount() - 1);
-        panel.add(GuiTricks.unboldLabel(new JLabel(m_reference.getNamableName(), JLabel.LEFT)));
+        panel.add(Utils.unboldLabel(new JLabel(m_reference.getNamableName(), JLabel.LEFT)));
 
         this.editor.grabFocus();
 
@@ -704,6 +709,7 @@ public class Gui {
         if (!this.controller.isDirty()) {
             // everything is saved, we can exit safely
             this.frame.dispose();
+            System.exit(0);
         } else {
             // ask to save before closing
             String[] options = {"Save and exit", "Discard changes", "Cancel"};

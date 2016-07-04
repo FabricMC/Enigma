@@ -19,7 +19,7 @@ import java.io.IOException;
 import javax.swing.*;
 
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.Util;
+import cuchaz.enigma.utils.Utils;
 
 public class AboutDialog {
 
@@ -31,7 +31,7 @@ public class AboutDialog {
 
         // load the content
         try {
-            String html = Util.readResourceToString("/about.html");
+            String html = Utils.readResourceToString("/about.html");
             html = String.format(html, Constants.NAME, Constants.VERSION);
             JLabel label = new JLabel(html);
             label.setHorizontalAlignment(JLabel.CENTER);
@@ -44,7 +44,7 @@ public class AboutDialog {
         String html = "<html><a href=\"%s\">%s</a></html>";
         html = String.format(html, Constants.URL, Constants.URL);
         JButton link = new JButton(html);
-        link.addActionListener(event -> Util.openUrl(Constants.URL));
+        link.addActionListener(event -> Utils.openUrl(Constants.URL));
         link.setBorderPainted(false);
         link.setOpaque(false);
         link.setBackground(Color.WHITE);

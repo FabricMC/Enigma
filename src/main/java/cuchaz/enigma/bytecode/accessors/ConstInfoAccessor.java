@@ -10,8 +10,8 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode.accessors;
 
-import java.io.*;
-import java.lang.reflect.Constructor;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -32,26 +32,6 @@ public class ConstInfoAccessor {
         this.item = item;
     }
 
-    public ConstInfoAccessor(DataInputStream in) throws IOException {
-        try {
-            // read the entry
-            String className = in.readUTF();
-            int oldIndex = in.readInt();
-
-            // NOTE: ConstInfo instances write a type id (a "tag"), but they don't read it back
-            // so we have to read it here
-            in.readByte();
-
-            Constructor<?> constructor = Class.forName(className).getConstructor(DataInputStream.class, int.class);
-            constructor.setAccessible(true);
-            this.item = constructor.newInstance(in, oldIndex);
-        } catch (IOException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
     public Object getItem() {
         return this.item;
     }
@@ -64,32 +44,9 @@ public class ConstInfoAccessor {
         }
     }
 
-    public void setIndex(int val) {
-        try {
-            index.set(this.item, val);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
     public int getTag() {
         try {
             return (Integer) getTag.invoke(this.item);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public void write(DataOutputStream out) throws IOException {
-        try {
-            out.writeUTF(this.item.getClass().getName());
-            out.writeInt(getIndex());
-
-            Method method = this.item.getClass().getMethod("write", DataOutputStream.class);
-            method.setAccessible(true);
-            method.invoke(this.item, out);
-        } catch (IOException ex) {
-            throw ex;
         } catch (Exception ex) {
             throw new Error(ex);
         }

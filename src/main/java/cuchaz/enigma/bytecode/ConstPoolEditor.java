@@ -17,7 +17,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import cuchaz.enigma.bytecode.accessors.ClassInfoAccessor;
 import cuchaz.enigma.bytecode.accessors.ConstInfoAccessor;
 import cuchaz.enigma.bytecode.accessors.MemberRefInfoAccessor;
 import javassist.bytecode.ConstPool;
@@ -101,32 +100,7 @@ public class ConstPoolEditor {
             throw new Error(ex);
         }
     }
-    @SuppressWarnings("rawtypes")
-    public void removeLastItem() {
-        try {
-            // remove the item from the cache
-            HashMap cache = getCache();
-            if (cache != null) {
-                Object item = getItem(this.pool.getSize() - 1);
-                cache.remove(item);
-            }
 
-            // remove the actual item
-            // based off of LongVector.addElement()
-            Object item = items.get(this.pool);
-            Object[][] object = (Object[][]) objects.get(items);
-            int numElements = (Integer) elements.get(items) - 1;
-            int nth = numElements >> 7;
-            int offset = numElements & (128 - 1);
-            object[nth][offset] = null;
-
-            // decrement the number of items
-            elements.set(item, numElements);
-            numItems.set(this.pool, (Integer) numItems.get(this.pool) - 1);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
 
     @SuppressWarnings("rawtypes")
     public HashMap getCache() {

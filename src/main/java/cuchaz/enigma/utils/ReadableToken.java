@@ -8,7 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui;
+package cuchaz.enigma.utils;
 
 public class ReadableToken {
 

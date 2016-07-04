@@ -19,7 +19,7 @@ import javax.swing.*;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator.ProgressListener;
-import cuchaz.enigma.gui.GuiTricks;
+import cuchaz.enigma.utils.Utils;
 
 public class ProgressDialog implements ProgressListener, AutoCloseable {
 
@@ -44,7 +44,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
         JPanel panel = new JPanel();
         pane.add(panel);
         panel.setLayout(new BorderLayout());
-        this.labelText = GuiTricks.unboldLabel(new JLabel());
+        this.labelText = Utils.unboldLabel(new JLabel());
         this.progress = new JProgressBar();
         this.labelText.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         panel.add(this.labelText, BorderLayout.NORTH);

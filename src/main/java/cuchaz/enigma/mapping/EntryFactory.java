@@ -38,19 +38,11 @@ public class EntryFactory {
     }
 
     public static FieldEntry getFieldEntry(CtField field) {
-        return new FieldEntry(
-                getClassEntry(field.getDeclaringClass()),
-                field.getName(),
-                new Type(field.getFieldInfo().getDescriptor())
-        );
+        return new FieldEntry(getClassEntry(field.getDeclaringClass()), field.getName(), new Type(field.getFieldInfo().getDescriptor()));
     }
 
     public static FieldEntry getFieldEntry(FieldAccess call) {
-        return new FieldEntry(
-                new ClassEntry(Descriptor.toJvmName(call.getClassName())),
-                call.getFieldName(),
-                new Type(call.getSignature())
-        );
+        return new FieldEntry(new ClassEntry(Descriptor.toJvmName(call.getClassName())), call.getFieldName(), new Type(call.getSignature()));
     }
 
     public static FieldEntry getFieldEntry(String className, String name, String type) {
@@ -58,19 +50,11 @@ public class EntryFactory {
     }
 
     public static FieldEntry getObfFieldEntry(ClassMapping classMapping, FieldMapping fieldMapping) {
-        return new FieldEntry(
-                getObfClassEntry(classMapping),
-                fieldMapping.getObfName(),
-                fieldMapping.getObfType()
-        );
+        return new FieldEntry(getObfClassEntry(classMapping), fieldMapping.getObfName(), fieldMapping.getObfType());
     }
 
     public static MethodEntry getMethodEntry(CtMethod method) {
-        return new MethodEntry(
-                getClassEntry(method.getDeclaringClass()),
-                method.getName(),
-                new Signature(method.getMethodInfo().getDescriptor())
-        );
+        return new MethodEntry(getClassEntry(method.getDeclaringClass()), method.getName(), new Signature(method.getMethodInfo().getDescriptor()));
     }
 
     public static MethodEntry getMethodEntry(MethodCall call) {
@@ -106,10 +90,6 @@ public class EntryFactory {
         return getBehaviorEntry(new ClassEntry(className), behaviorName, new Signature(behaviorSignature));
     }
 
-    public static BehaviorEntry getBehaviorEntry(String className, String behaviorName) {
-        return getBehaviorEntry(new ClassEntry(className), behaviorName);
-    }
-
     public static BehaviorEntry getBehaviorEntry(String className) {
         return new ConstructorEntry(new ClassEntry(className));
     }
@@ -122,14 +102,6 @@ public class EntryFactory {
                 return new ConstructorEntry(classEntry);
             default:
                 return new MethodEntry(classEntry, behaviorName, behaviorSignature);
-        }
-    }
-
-    public static BehaviorEntry getBehaviorEntry(ClassEntry classEntry, String behaviorName) {
-        if (behaviorName.equals("<clinit>")) {
-            return new ConstructorEntry(classEntry);
-        } else {
-            throw new IllegalArgumentException("Only class initializers don't have signatures");
         }
     }
 

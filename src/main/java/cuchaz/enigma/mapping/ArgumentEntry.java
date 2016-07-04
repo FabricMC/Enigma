@@ -10,17 +10,13 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import java.io.Serializable;
+import cuchaz.enigma.utils.Utils;
 
-import cuchaz.enigma.Util;
+public class ArgumentEntry implements Entry {
 
-public class ArgumentEntry implements Entry, Serializable {
-
-    private static final long serialVersionUID = 4472172468162696006L;
-
-    private BehaviorEntry m_behaviorEntry;
-    private int m_index;
-    private String m_name;
+    private BehaviorEntry behaviorEntry;
+    private int index;
+    private String name;
 
     public ArgumentEntry(BehaviorEntry behaviorEntry, int index, String name) {
         if (behaviorEntry == null) {
@@ -33,44 +29,38 @@ public class ArgumentEntry implements Entry, Serializable {
             throw new IllegalArgumentException("Argument name cannot be null!");
         }
 
-       m_behaviorEntry = behaviorEntry;
-        m_index = index;
-        m_name = name;
-    }
-
-    public ArgumentEntry(ArgumentEntry other) {
-        m_behaviorEntry = (BehaviorEntry) m_behaviorEntry.cloneToNewClass(getClassEntry());
-        m_index = other.m_index;
-        m_name = other.m_name;
+        this.behaviorEntry = behaviorEntry;
+        this.index = index;
+        this.name = name;
     }
 
     public ArgumentEntry(ArgumentEntry other, String newClassName) {
-        m_behaviorEntry = (BehaviorEntry) other.m_behaviorEntry.cloneToNewClass(new ClassEntry(newClassName));
-        m_index = other.m_index;
-        m_name = other.m_name;
+        this.behaviorEntry = (BehaviorEntry) other.behaviorEntry.cloneToNewClass(new ClassEntry(newClassName));
+        this.index = other.index;
+        this.name = other.name;
     }
 
     public BehaviorEntry getBehaviorEntry() {
-        return m_behaviorEntry;
+        return this.behaviorEntry;
     }
 
     public int getIndex() {
-        return m_index;
+        return this.index;
     }
 
     @Override
     public String getName() {
-        return m_name;
+        return this.name;
     }
 
     @Override
     public ClassEntry getClassEntry() {
-        return m_behaviorEntry.getClassEntry();
+        return this.behaviorEntry.getClassEntry();
     }
 
     @Override
     public String getClassName() {
-        return m_behaviorEntry.getClassName();
+        return this.behaviorEntry.getClassName();
     }
 
     @Override
@@ -79,20 +69,16 @@ public class ArgumentEntry implements Entry, Serializable {
     }
 
     public String getMethodName() {
-        return m_behaviorEntry.getName();
+        return this.behaviorEntry.getName();
     }
 
     public Signature getMethodSignature() {
-        return m_behaviorEntry.getSignature();
+        return this.behaviorEntry.getSignature();
     }
 
     @Override
     public int hashCode() {
-        return Util.combineHashesOrdered(
-                m_behaviorEntry,
-                Integer.valueOf(m_index).hashCode(),
-                m_name.hashCode()
-        );
+        return Utils.combineHashesOrdered(this.behaviorEntry, Integer.valueOf(this.index).hashCode(), this.name.hashCode());
     }
 
     @Override
@@ -101,11 +87,11 @@ public class ArgumentEntry implements Entry, Serializable {
     }
 
     public boolean equals(ArgumentEntry other) {
-        return m_behaviorEntry.equals(other.m_behaviorEntry) && m_index == other.m_index && m_name.equals(other.m_name);
+        return this.behaviorEntry.equals(other.behaviorEntry) && this.index == other.index && this.name.equals(other.name);
     }
 
     @Override
     public String toString() {
-        return m_behaviorEntry.toString() + "(" + m_index + ":" + m_name + ")";
+        return this.behaviorEntry.toString() + "(" + this.index + ":" + this.name + ")";
     }
 }

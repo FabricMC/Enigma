@@ -16,10 +16,6 @@ public class Token implements Comparable<Token> {
     public int end;
     public String text;
 
-    public Token(int start, int end) {
-        this(start, end, null);
-    }
-
     public Token(int start, int end, String source) {
         this.start = start;
         this.end = end;

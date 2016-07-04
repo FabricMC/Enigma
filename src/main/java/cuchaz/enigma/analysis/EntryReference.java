@@ -13,10 +13,10 @@ package cuchaz.enigma.analysis;
 import java.util.Arrays;
 import java.util.List;
 
-import cuchaz.enigma.Util;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ConstructorEntry;
 import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.utils.Utils;
 
 public class EntryReference<E extends Entry, C extends Entry> {
 
@@ -84,7 +84,7 @@ public class EntryReference<E extends Entry, C extends Entry> {
     @Override
     public int hashCode() {
         if (context != null) {
-            return Util.combineHashesOrdered(entry.hashCode(), context.hashCode());
+            return Utils.combineHashesOrdered(entry.hashCode(), context.hashCode());
         }
         return entry.hashCode();
     }

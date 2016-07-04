@@ -19,7 +19,7 @@ import java.io.StringWriter;
 import javax.swing.*;
 
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.gui.GuiTricks;
+import cuchaz.enigma.utils.Utils;
 
 public class CrashDialog {
 
@@ -48,7 +48,7 @@ public class CrashDialog {
         FlowLayout buttonsLayout = new FlowLayout();
         buttonsLayout.setAlignment(FlowLayout.RIGHT);
         buttonsPanel.setLayout(buttonsLayout);
-        buttonsPanel.add(GuiTricks.unboldLabel(new JLabel("If you choose exit, you will lose any unsaved work.")));
+        buttonsPanel.add(Utils.unboldLabel(new JLabel("If you choose exit, you will lose any unsaved work.")));
         JButton ignoreButton = new JButton("Ignore");
         ignoreButton.addActionListener(event -> {
             // close (hide) the dialog

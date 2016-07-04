@@ -23,6 +23,5 @@ public class PanelDeobf extends JPanel {
         this.setLayout(new BorderLayout());
         this.add(new JLabel("De-obfuscated Classes"), BorderLayout.NORTH);
         this.add(new JScrollPane(this.deobfClasses), BorderLayout.CENTER);
-
     }
 }

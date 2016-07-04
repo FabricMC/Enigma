@@ -20,22 +20,22 @@ import cuchaz.enigma.analysis.TranslationIndex;
 
 public class Translator {
 
-    private TranslationDirection m_direction;
-    private Map<String, ClassMapping> m_classes;
-    private TranslationIndex m_index;
+    private TranslationDirection direction;
+    private Map<String, ClassMapping> classes;
+    private TranslationIndex index;
 
-    private ClassNameReplacer m_classNameReplacer = className -> translateEntry(new ClassEntry(className)).getName();
+    private ClassNameReplacer classNameReplacer = className -> translateEntry(new ClassEntry(className)).getName();
 
     public Translator() {
-        m_direction = null;
-        m_classes = Maps.newHashMap();
-        m_index = new TranslationIndex();
+        this.direction = null;
+        this.classes = Maps.newHashMap();
+        this.index = new TranslationIndex();
     }
 
     public Translator(TranslationDirection direction, Map<String, ClassMapping> classes, TranslationIndex index) {
-        m_direction = direction;
-        m_classes = classes;
-        m_index = index;
+        this.direction = direction;
+        this.classes = classes;
+        this.index = index;
     }
 
     @SuppressWarnings("unchecked")
@@ -96,7 +96,7 @@ public class Translator {
                 String className = null;
                 ClassMapping classMapping = mappingsChain.get(i);
                 if (classMapping != null) {
-                    className = m_direction.choose(
+                    className = this.direction.choose(
                             classMapping.getDeobfName(),
                             isFirstClass ? classMapping.getObfFullName() : classMapping.getObfSimpleName()
                     );
@@ -114,11 +114,11 @@ public class Translator {
         } else {
 
             // normal classes are easy
-            ClassMapping classMapping = m_classes.get(in.getName());
+            ClassMapping classMapping = this.classes.get(in.getName());
             if (classMapping == null) {
                 return in;
             }
-            return m_direction.choose(
+            return this.direction.choose(
                     classMapping.getDeobfName() != null ? new ClassEntry(classMapping.getDeobfName()) : in,
                     new ClassEntry(classMapping.getObfFullName())
             );
@@ -128,7 +128,7 @@ public class Translator {
     public String translate(FieldEntry in) {
 
         // resolve the class entry
-        ClassEntry resolvedClassEntry = m_index.resolveEntryClass(in);
+        ClassEntry resolvedClassEntry = this.index.resolveEntryClass(in);
         if (resolvedClassEntry != null) {
 
             // look for the class
@@ -136,7 +136,7 @@ public class Translator {
             if (classMapping != null) {
 
                 // look for the field
-                String translatedName = m_direction.choose(
+                String translatedName = this.direction.choose(
                         classMapping.getDeobfFieldName(in.getName(), in.getType()),
                         classMapping.getObfFieldName(in.getName(), translateType(in.getType()))
                 );
@@ -159,7 +159,7 @@ public class Translator {
     public String translate(MethodEntry in) {
 
         // resolve the class entry
-        ClassEntry resolvedClassEntry = m_index.resolveEntryClass(in);
+        ClassEntry resolvedClassEntry = this.index.resolveEntryClass(in);
         if (resolvedClassEntry != null) {
 
             // look for class
@@ -167,12 +167,12 @@ public class Translator {
             if (classMapping != null) {
 
                 // look for the method
-                MethodMapping methodMapping = m_direction.choose(
+                MethodMapping methodMapping = this.direction.choose(
                         classMapping.getMethodByObf(in.getName(), in.getSignature()),
                         classMapping.getMethodByDeobf(in.getName(), translateSignature(in.getSignature()))
                 );
                 if (methodMapping != null) {
-                    return m_direction.choose(methodMapping.getDeobfName(), methodMapping.getObfName());
+                    return this.direction.choose(methodMapping.getDeobfName(), methodMapping.getObfName());
                 }
             }
         }
@@ -211,12 +211,12 @@ public class Translator {
         if (classMapping != null) {
 
             // look for the method
-            MethodMapping methodMapping = m_direction.choose(
+            MethodMapping methodMapping = this.direction.choose(
                     classMapping.getMethodByObf(in.getMethodName(), in.getMethodSignature()),
                     classMapping.getMethodByDeobf(in.getMethodName(), translateSignature(in.getMethodSignature()))
             );
             if (methodMapping != null) {
-                return m_direction.choose(
+                return this.direction.choose(
                         methodMapping.getDeobfArgumentName(in.getIndex()),
                         methodMapping.getObfArgumentName(in.getIndex())
                 );
@@ -234,11 +234,11 @@ public class Translator {
     }
 
     public Type translateType(Type type) {
-        return new Type(type, m_classNameReplacer);
+        return new Type(type, this.classNameReplacer);
     }
 
     public Signature translateSignature(Signature signature) {
-        return new Signature(signature, m_classNameReplacer);
+        return new Signature(signature, this.classNameReplacer);
     }
 
     private ClassMapping findClassMapping(ClassEntry in) {
@@ -253,7 +253,7 @@ public class Translator {
         List<ClassMapping> mappingsChain = Lists.newArrayList();
 
         // get mappings for the outer class
-        ClassMapping outerClassMapping = m_classes.get(parts[0]);
+        ClassMapping outerClassMapping = this.classes.get(parts[0]);
         mappingsChain.add(outerClassMapping);
 
         for (int i = 1; i < parts.length; i++) {
@@ -261,7 +261,7 @@ public class Translator {
             // get mappings for the inner class
             ClassMapping innerClassMapping = null;
             if (outerClassMapping != null) {
-                innerClassMapping = m_direction.choose(
+                innerClassMapping = this.direction.choose(
                         outerClassMapping.getInnerClassByObfSimple(parts[i]),
                         outerClassMapping.getInnerClassByDeobfThenObfSimple(parts[i])
                 );

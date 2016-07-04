@@ -27,6 +27,8 @@ import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.throwables.MappingParseException;
+import cuchaz.enigma.utils.ReadableToken;
 
 public class GuiController {
 
@@ -72,7 +74,7 @@ public class GuiController {
         refreshCurrentClass();
     }
 
-    public void openMappings(File file) throws IOException, MappingParseException {
+    public void openMappings(File file) throws IOException {
         this.deobfuscator.setMappings(new MappingsReader().read(file));
         this.isDirty = false;
         this.gui.setMappingsFile(file);

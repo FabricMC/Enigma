@@ -12,85 +12,64 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
-import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import cuchaz.enigma.analysis.TranslationIndex;
+import cuchaz.enigma.throwables.MappingConflict;
 
-public class Mappings implements Serializable {
+public class Mappings {
 
-    private static final long serialVersionUID = 4649790259460259026L;
-
-    protected Map<String, ClassMapping> m_classesByObf;
-    protected Map<String, ClassMapping> m_classesByDeobf;
+    protected Map<String, ClassMapping> classesByObf;
+    protected Map<String, ClassMapping> classesByDeobf;
 
     public Mappings() {
-        m_classesByObf = Maps.newHashMap();
-        m_classesByDeobf = Maps.newHashMap();
-    }
-
-    public Mappings(Iterable<ClassMapping> classes) {
-        this();
-
-        for (ClassMapping classMapping : classes) {
-            m_classesByObf.put(classMapping.getObfFullName(), classMapping);
-            if (classMapping.getDeobfName() != null) {
-                m_classesByDeobf.put(classMapping.getDeobfName(), classMapping);
-            }
-        }
+        this.classesByObf = Maps.newHashMap();
+        this.classesByDeobf = Maps.newHashMap();
     }
 
     public Collection<ClassMapping> classes() {
-        assert (m_classesByObf.size() >= m_classesByDeobf.size());
-        return m_classesByObf.values();
+        assert (this.classesByObf.size() >= this.classesByDeobf.size());
+        return this.classesByObf.values();
     }
 
-    public void addClassMapping(ClassMapping classMapping) {
-        if (m_classesByObf.containsKey(classMapping.getObfFullName())) {
-            throw new Error("Already have mapping for " + classMapping.getObfFullName());
+    public void addClassMapping(ClassMapping classMapping) throws MappingConflict {
+        if (this.classesByObf.containsKey(classMapping.getObfFullName())) {
+            throw new MappingConflict("class", classMapping.getObfFullName(), this.classesByObf.get(classMapping.getObfFullName()).getObfFullName());
         }
-        boolean obfWasAdded = m_classesByObf.put(classMapping.getObfFullName(), classMapping) == null;
-        assert (obfWasAdded);
+        this.classesByObf.put(classMapping.getObfFullName(), classMapping);
+
         if (classMapping.getDeobfName() != null) {
-            if (m_classesByDeobf.containsKey(classMapping.getDeobfName())) {
-                throw new Error("Already have mapping for " + classMapping.getDeobfName());
+            if (this.classesByDeobf.containsKey(classMapping.getDeobfName())) {
+                throw new MappingConflict("class", classMapping.getDeobfName(), this.classesByDeobf.get(classMapping.getDeobfName()).getDeobfName());
             }
-            boolean deobfWasAdded = m_classesByDeobf.put(classMapping.getDeobfName(), classMapping) == null;
-            assert (deobfWasAdded);
+            this.classesByDeobf.put(classMapping.getDeobfName(), classMapping);
         }
     }
 
     public void removeClassMapping(ClassMapping classMapping) {
-        boolean obfWasRemoved = m_classesByObf.remove(classMapping.getObfFullName()) != null;
+        boolean obfWasRemoved = this.classesByObf.remove(classMapping.getObfFullName()) != null;
         assert (obfWasRemoved);
         if (classMapping.getDeobfName() != null) {
-            boolean deobfWasRemoved = m_classesByDeobf.remove(classMapping.getDeobfName()) != null;
+            boolean deobfWasRemoved = this.classesByDeobf.remove(classMapping.getDeobfName()) != null;
             assert (deobfWasRemoved);
         }
     }
 
-    public ClassMapping getClassByObf(ClassEntry entry) {
-        return getClassByObf(entry.getName());
-    }
-
     public ClassMapping getClassByObf(String obfName) {
-        return m_classesByObf.get(obfName);
-    }
-
-    public ClassMapping getClassByDeobf(String deobfName) {
-        return m_classesByDeobf.get(deobfName);
+        return this.classesByObf.get(obfName);
     }
 
     public void setClassDeobfName(ClassMapping classMapping, String deobfName) {
         if (classMapping.getDeobfName() != null) {
-            boolean wasRemoved = m_classesByDeobf.remove(classMapping.getDeobfName()) != null;
+            boolean wasRemoved = this.classesByDeobf.remove(classMapping.getDeobfName()) != null;
             assert (wasRemoved);
         }
         classMapping.setDeobfName(deobfName);
         if (deobfName != null) {
-            boolean wasAdded = m_classesByDeobf.put(deobfName, classMapping) == null;
+            boolean wasAdded = this.classesByDeobf.put(deobfName, classMapping) == null;
             assert (wasAdded);
         }
     }
@@ -99,7 +78,7 @@ public class Mappings implements Serializable {
         switch (direction) {
             case Deobfuscating:
 
-                return new Translator(direction, m_classesByObf, index);
+                return new Translator(direction, this.classesByObf, index);
 
             case Obfuscating:
 
@@ -127,7 +106,7 @@ public class Mappings implements Serializable {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        for (ClassMapping classMapping : m_classesByObf.values()) {
+        for (ClassMapping classMapping : this.classesByObf.values()) {
             buf.append(classMapping.toString());
             buf.append("\n");
         }
@@ -135,21 +114,21 @@ public class Mappings implements Serializable {
     }
 
     public boolean containsDeobfClass(String deobfName) {
-        return m_classesByDeobf.containsKey(deobfName);
+        return this.classesByDeobf.containsKey(deobfName);
     }
 
     public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName, Type obfType) {
-        ClassMapping classMapping = m_classesByObf.get(obfClassEntry.getName());
+        ClassMapping classMapping = this.classesByObf.get(obfClassEntry.getName());
         return classMapping != null && classMapping.containsDeobfField(deobfName, obfType);
     }
 
     public boolean containsDeobfMethod(ClassEntry obfClassEntry, String deobfName, Signature deobfSignature) {
-        ClassMapping classMapping = m_classesByObf.get(obfClassEntry.getName());
+        ClassMapping classMapping = this.classesByObf.get(obfClassEntry.getName());
         return classMapping != null && classMapping.containsDeobfMethod(deobfName, deobfSignature);
     }
 
     public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {
-        ClassMapping classMapping = m_classesByObf.get(obfBehaviorEntry.getClassName());
+        ClassMapping classMapping = this.classesByObf.get(obfBehaviorEntry.getClassName());
         return classMapping != null && classMapping.containsArgument(obfBehaviorEntry, name);
     }
 
@@ -158,7 +137,7 @@ public class Mappings implements Serializable {
         ClassMapping classMapping = null;
         for (ClassEntry obfClassEntry : obfClass.getClassChain()) {
             if (mappingChain.isEmpty()) {
-                classMapping = m_classesByObf.get(obfClassEntry.getName());
+                classMapping = this.classesByObf.get(obfClassEntry.getName());
             } else if (classMapping != null) {
                 classMapping = classMapping.getInnerClassByObfSimple(obfClassEntry.getInnermostClassName());
             }

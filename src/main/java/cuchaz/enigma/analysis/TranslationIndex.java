@@ -15,10 +15,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-import java.io.*;
-import java.util.*;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import cuchaz.enigma.mapping.*;
 import javassist.CtBehavior;
@@ -26,9 +26,7 @@ import javassist.CtClass;
 import javassist.CtField;
 import javassist.bytecode.Descriptor;
 
-public class TranslationIndex implements Serializable {
-
-    private static final long serialVersionUID = 738687982126844179L;
+public class TranslationIndex {
 
     private Map<ClassEntry, ClassEntry> superclasses;
     private Multimap<ClassEntry, FieldEntry> fieldEntries;
@@ -43,7 +41,6 @@ public class TranslationIndex implements Serializable {
     }
 
     public TranslationIndex(TranslationIndex other, Translator translator) {
-
         // translate the superclasses
         this.superclasses = Maps.newHashMap();
         for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.superclasses.entrySet()) {
@@ -82,7 +79,6 @@ public class TranslationIndex implements Serializable {
     }
 
     public void indexClass(CtClass c, boolean indexMembers) {
-
         ClassEntry classEntry = EntryFactory.getClassEntry(c);
         if (isJre(classEntry)) {
             return;
@@ -139,7 +135,6 @@ public class TranslationIndex implements Serializable {
     }
 
     public List<ClassEntry> getSubclass(ClassEntry classEntry) {
-
         // linear search is fast enough for now
         List<ClassEntry> subclasses = Lists.newArrayList();
         for (Map.Entry<ClassEntry, ClassEntry> entry : this.superclasses.entrySet()) {
@@ -191,7 +186,6 @@ public class TranslationIndex implements Serializable {
     }
 
     public ClassEntry resolveEntryClass(Entry entry) {
-
         if (entry instanceof ClassEntry) {
             return (ClassEntry) entry;
         }
@@ -210,7 +204,6 @@ public class TranslationIndex implements Serializable {
     }
 
     public ClassEntry resolveSuperclass(Entry entry) {
-
         // this entry could refer to a method on a class where the method is not actually implemented
         // travel up the inheritance tree to find the closest implementation
         while (!entryExists(entry)) {
@@ -230,7 +223,6 @@ public class TranslationIndex implements Serializable {
     }
 
     public ClassEntry resolveInterface(Entry entry) {
-
         // the interfaces for any class is a forest
         // so let's look at all the trees
         for (ClassEntry interfaceEntry : this.interfaces.get(entry.getClassEntry())) {
@@ -245,28 +237,5 @@ public class TranslationIndex implements Serializable {
     private boolean isJre(ClassEntry classEntry) {
         String packageName = classEntry.getPackageName();
         return packageName != null && (packageName.startsWith("java") || packageName.startsWith("javax"));
-    }
-
-    public void write(OutputStream out)
-            throws IOException {
-        GZIPOutputStream gzipout = new GZIPOutputStream(out);
-        ObjectOutputStream oout = new ObjectOutputStream(gzipout);
-        oout.writeObject(this.superclasses);
-        oout.writeObject(this.fieldEntries);
-        oout.writeObject(this.behaviorEntries);
-        gzipout.finish();
-    }
-
-    @SuppressWarnings("unchecked")
-    public void read(InputStream in)
-            throws IOException {
-        try {
-            ObjectInputStream oin = new ObjectInputStream(new GZIPInputStream(in));
-            this.superclasses = (HashMap<ClassEntry, ClassEntry>) oin.readObject();
-            this.fieldEntries = (HashMultimap<ClassEntry, FieldEntry>) oin.readObject();
-            this.behaviorEntries = (HashMultimap<ClassEntry, BehaviorEntry>) oin.readObject();
-        } catch (ClassNotFoundException ex) {
-            throw new Error(ex);
-        }
     }
 }

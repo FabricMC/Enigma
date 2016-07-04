@@ -10,16 +10,12 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import java.io.Serializable;
+import cuchaz.enigma.utils.Utils;
 
-import cuchaz.enigma.Util;
+public class ConstructorEntry implements BehaviorEntry {
 
-public class ConstructorEntry implements BehaviorEntry, Serializable {
-
-    private static final long serialVersionUID = -868346075317366758L;
-
-    private ClassEntry m_classEntry;
-    private Signature m_signature;
+    private ClassEntry classEntry;
+    private Signature signature;
 
     public ConstructorEntry(ClassEntry classEntry) {
         this(classEntry, null);
@@ -30,23 +26,18 @@ public class ConstructorEntry implements BehaviorEntry, Serializable {
             throw new IllegalArgumentException("Class cannot be null!");
         }
 
-        m_classEntry = classEntry;
-        m_signature = signature;
-    }
-
-    public ConstructorEntry(ConstructorEntry other) {
-        m_classEntry = new ClassEntry(other.m_classEntry);
-        m_signature = other.m_signature;
+        this.classEntry = classEntry;
+        this.signature = signature;
     }
 
     public ConstructorEntry(ConstructorEntry other, String newClassName) {
-        m_classEntry = new ClassEntry(newClassName);
-        m_signature = other.m_signature;
+        this.classEntry = new ClassEntry(newClassName);
+        this.signature = other.signature;
     }
 
     @Override
     public ClassEntry getClassEntry() {
-        return m_classEntry;
+        return this.classEntry;
     }
 
     @Override
@@ -58,17 +49,17 @@ public class ConstructorEntry implements BehaviorEntry, Serializable {
     }
 
     public boolean isStatic() {
-        return m_signature == null;
+        return this.signature == null;
     }
 
     @Override
     public Signature getSignature() {
-        return m_signature;
+        return this.signature;
     }
 
     @Override
     public String getClassName() {
-        return m_classEntry.getName();
+        return this.classEntry.getName();
     }
 
     @Override
@@ -79,9 +70,9 @@ public class ConstructorEntry implements BehaviorEntry, Serializable {
     @Override
     public int hashCode() {
         if (isStatic()) {
-            return Util.combineHashesOrdered(m_classEntry);
+            return Utils.combineHashesOrdered(this.classEntry);
         } else {
-            return Util.combineHashesOrdered(m_classEntry, m_signature);
+            return Utils.combineHashesOrdered(this.classEntry, this.signature);
         }
     }
 
@@ -96,18 +87,18 @@ public class ConstructorEntry implements BehaviorEntry, Serializable {
         }
 
         if (isStatic()) {
-            return m_classEntry.equals(other.m_classEntry);
+            return this.classEntry.equals(other.classEntry);
         } else {
-            return m_classEntry.equals(other.m_classEntry) && m_signature.equals(other.m_signature);
+            return this.classEntry.equals(other.classEntry) && this.signature.equals(other.signature);
         }
     }
 
     @Override
     public String toString() {
         if (isStatic()) {
-            return m_classEntry.getName() + "." + getName();
+            return this.classEntry.getName() + "." + getName();
         } else {
-            return m_classEntry.getName() + "." + getName() + m_signature;
+            return this.classEntry.getName() + "." + getName() + this.signature;
         }
     }
 }

@@ -89,14 +89,6 @@ public class JarClassIterator implements Iterator<CtClass> {
         return () -> new JarClassIterator(jar);
     }
 
-    public static CtClass getClass(JarFile jar, ClassEntry classEntry) {
-        try {
-            return getClass(jar, new JarEntry(classEntry.getName() + ".class"));
-        } catch (IOException | NotFoundException ex) {
-            throw new Error("Unable to load class: " + classEntry.getName());
-        }
-    }
-
     private static CtClass getClass(JarFile jar, JarEntry entry) throws IOException, NotFoundException {
         // read the class into a buffer
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

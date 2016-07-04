@@ -20,41 +20,41 @@ import cuchaz.enigma.analysis.JarIndex;
 
 public class MappingsChecker {
 
-    private JarIndex m_index;
-    private Map<ClassEntry, ClassMapping> m_droppedClassMappings;
-    private Map<ClassEntry, ClassMapping> m_droppedInnerClassMappings;
-    private Map<FieldEntry, FieldMapping> m_droppedFieldMappings;
-    private Map<BehaviorEntry, MethodMapping> m_droppedMethodMappings;
+    private JarIndex index;
+    private Map<ClassEntry, ClassMapping> droppedClassMappings;
+    private Map<ClassEntry, ClassMapping> droppedInnerClassMappings;
+    private Map<FieldEntry, FieldMapping> droppedFieldMappings;
+    private Map<BehaviorEntry, MethodMapping> droppedMethodMappings;
 
     public MappingsChecker(JarIndex index) {
-        m_index = index;
-        m_droppedClassMappings = Maps.newHashMap();
-        m_droppedInnerClassMappings = Maps.newHashMap();
-        m_droppedFieldMappings = Maps.newHashMap();
-        m_droppedMethodMappings = Maps.newHashMap();
+        this.index = index;
+        this.droppedClassMappings = Maps.newHashMap();
+        this.droppedInnerClassMappings = Maps.newHashMap();
+        this.droppedFieldMappings = Maps.newHashMap();
+        this.droppedMethodMappings = Maps.newHashMap();
     }
 
     public Map<ClassEntry, ClassMapping> getDroppedClassMappings() {
-        return m_droppedClassMappings;
+        return this.droppedClassMappings;
     }
 
     public Map<ClassEntry, ClassMapping> getDroppedInnerClassMappings() {
-        return m_droppedInnerClassMappings;
+        return this.droppedInnerClassMappings;
     }
 
     public Map<FieldEntry, FieldMapping> getDroppedFieldMappings() {
-        return m_droppedFieldMappings;
+        return this.droppedFieldMappings;
     }
 
     public Map<BehaviorEntry, MethodMapping> getDroppedMethodMappings() {
-        return m_droppedMethodMappings;
+        return this.droppedMethodMappings;
     }
 
     public void dropBrokenMappings(Mappings mappings) {
         for (ClassMapping classMapping : Lists.newArrayList(mappings.classes())) {
             if (!checkClassMapping(classMapping)) {
                 mappings.removeClassMapping(classMapping);
-                m_droppedClassMappings.put(EntryFactory.getObfClassEntry(m_index, classMapping), classMapping);
+                this.droppedClassMappings.put(EntryFactory.getObfClassEntry(this.index, classMapping), classMapping);
             }
         }
     }
@@ -62,26 +62,26 @@ public class MappingsChecker {
     private boolean checkClassMapping(ClassMapping classMapping) {
 
         // check the class
-        ClassEntry classEntry = EntryFactory.getObfClassEntry(m_index, classMapping);
-        if (!m_index.getObfClassEntries().contains(classEntry)) {
+        ClassEntry classEntry = EntryFactory.getObfClassEntry(this.index, classMapping);
+        if (!this.index.getObfClassEntries().contains(classEntry)) {
             return false;
         }
 
         // check the fields
         for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
             FieldEntry obfFieldEntry = EntryFactory.getObfFieldEntry(classMapping, fieldMapping);
-            if (!m_index.containsObfField(obfFieldEntry)) {
+            if (!this.index.containsObfField(obfFieldEntry)) {
                 classMapping.removeFieldMapping(fieldMapping);
-                m_droppedFieldMappings.put(obfFieldEntry, fieldMapping);
+                this.droppedFieldMappings.put(obfFieldEntry, fieldMapping);
             }
         }
 
         // check methods
         for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
             BehaviorEntry obfBehaviorEntry = EntryFactory.getObfBehaviorEntry(classEntry, methodMapping);
-            if (!m_index.containsObfBehavior(obfBehaviorEntry)) {
+            if (!this.index.containsObfBehavior(obfBehaviorEntry)) {
                 classMapping.removeMethodMapping(methodMapping);
-                m_droppedMethodMappings.put(obfBehaviorEntry, methodMapping);
+                this.droppedMethodMappings.put(obfBehaviorEntry, methodMapping);
             }
         }
 
@@ -89,7 +89,7 @@ public class MappingsChecker {
         for (ClassMapping innerClassMapping : Lists.newArrayList(classMapping.innerClasses())) {
             if (!checkClassMapping(innerClassMapping)) {
                 classMapping.removeInnerClassMapping(innerClassMapping);
-                m_droppedInnerClassMappings.put(EntryFactory.getObfClassEntry(m_index, innerClassMapping), innerClassMapping);
+                this.droppedInnerClassMappings.put(EntryFactory.getObfClassEntry(this.index, innerClassMapping), innerClassMapping);
             }
         }
 

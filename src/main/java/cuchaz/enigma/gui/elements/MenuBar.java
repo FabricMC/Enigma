@@ -9,7 +9,7 @@ import javax.swing.*;
 
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
-import cuchaz.enigma.mapping.MappingParseException;
+import cuchaz.enigma.throwables.MappingParseException;
 
 public class MenuBar extends JMenuBar {
 
@@ -69,8 +69,6 @@ public class MenuBar extends JMenuBar {
                             this.gui.getController().openMappings(this.gui.mappingsFileChooser.getSelectedFile());
                         } catch (IOException ex) {
                             throw new Error(ex);
-                        } catch (MappingParseException ex) {
-                            JOptionPane.showMessageDialog(this.gui.getFrame(), ex.getMessage());
                         }
                     }
                 });
