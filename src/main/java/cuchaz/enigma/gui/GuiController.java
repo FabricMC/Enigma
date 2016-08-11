@@ -17,6 +17,7 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
@@ -84,6 +85,17 @@ public class GuiController {
 
     public void saveMappings(File file) throws IOException {
         new MappingsWriter().write(file, this.deobfuscator.getMappings());
+        this.isDirty = false;
+    }
+
+    public void saveOldMappings(File file) throws IOException {
+        FileWriter out = new FileWriter(file);
+        new MappingsOldWriter().write(out, this.deobfuscator.getMappings());
+        this.isDirty = false;
+    }
+
+    public void saveSRGMappings(File file) throws IOException {
+        new MappingsSRGWriter().write(file, this.deobfuscator);
         this.isDirty = false;
     }
 

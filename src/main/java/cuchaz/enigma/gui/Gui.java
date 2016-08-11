@@ -319,6 +319,8 @@ public class Gui {
         this.menuBar.openMappingsMenu.setEnabled(true);
         this.menuBar.saveMappingsMenu.setEnabled(false);
         this.menuBar.saveMappingsAsMenu.setEnabled(true);
+        this.menuBar.saveMappingsOldMenu.setEnabled(true);
+        this.menuBar.saveMappingsSrgMenu.setEnabled(true);
         this.menuBar.closeMappingsMenu.setEnabled(true);
         this.menuBar.exportSourceMenu.setEnabled(true);
         this.menuBar.exportJarMenu.setEnabled(true);
@@ -340,6 +342,8 @@ public class Gui {
         this.menuBar.openMappingsMenu.setEnabled(false);
         this.menuBar.saveMappingsMenu.setEnabled(false);
         this.menuBar.saveMappingsAsMenu.setEnabled(false);
+        this.menuBar.saveMappingsOldMenu.setEnabled(false);
+        this.menuBar.saveMappingsSrgMenu.setEnabled(false);
         this.menuBar.closeMappingsMenu.setEnabled(false);
         this.menuBar.exportSourceMenu.setEnabled(false);
         this.menuBar.exportJarMenu.setEnabled(false);

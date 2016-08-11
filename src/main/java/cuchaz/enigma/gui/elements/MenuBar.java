@@ -22,6 +22,8 @@ public class MenuBar extends JMenuBar {
 
     public final JMenuItem saveMappingsMenu;
     public final JMenuItem saveMappingsAsMenu;
+    public final JMenuItem saveMappingsOldMenu;
+    public final JMenuItem saveMappingsSrgMenu;
     public final JMenuItem closeMappingsMenu;
 
 
@@ -119,6 +121,38 @@ public class MenuBar extends JMenuBar {
                 });
                 item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
                 this.saveMappingsAsMenu = item;
+            }
+            {
+                JMenuItem item = new JMenuItem("Save Mappings as Enigma");
+                menu.add(item);
+                item.addActionListener(event -> {
+                    if (this.gui.mappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            this.gui.getController().saveOldMappings(this.gui.mappingsFileChooser.getSelectedFile());
+                            this.saveMappingsMenu.setEnabled(true);
+                        } catch (IOException ex) {
+                            throw new Error(ex);
+                        }
+                    }
+                });
+                item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+                this.saveMappingsOldMenu = item;
+            }
+            {
+                JMenuItem item = new JMenuItem("Save Mappings as SRG");
+                menu.add(item);
+                item.addActionListener(event -> {
+                    if (this.gui.mappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            this.gui.getController().saveSRGMappings(this.gui.mappingsFileChooser.getSelectedFile());
+                            this.saveMappingsMenu.setEnabled(true);
+                        } catch (IOException ex) {
+                            throw new Error(ex);
+                        }
+                    }
+                });
+                item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+                this.saveMappingsSrgMenu = item;
             }
             {
                 JMenuItem item = new JMenuItem("Close Mappings");
