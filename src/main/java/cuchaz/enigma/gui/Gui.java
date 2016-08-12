@@ -34,6 +34,7 @@ import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
+import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFile;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
 import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
@@ -78,8 +79,8 @@ public class Gui {
     public EntryReference<Entry, Entry> m_reference;
 
     public JFileChooser jarFileChooser;
-    public JFileChooser mappingsFileChooser;
-    public JFileChooser oldMappingsFileChooser;
+    public JFileChooser jsonMappingsFileChooser;
+    public JFileChooser enigmaMappingsFileChooser;
 
     public JFileChooser exportSourceFileChooser;
     public JFileChooser exportJarFileChooser;
@@ -106,10 +107,10 @@ public class Gui {
 
         // init file choosers
         this.jarFileChooser = new FileChooserFile();
-        this.mappingsFileChooser = new FileChooserFolder();
+        this.jsonMappingsFileChooser = new FileChooserFolder();
 
 
-        this.oldMappingsFileChooser = new FileChooserFile();
+        this.enigmaMappingsFileChooser = new FileChooserAny();
         this.exportSourceFileChooser = new FileChooserFolder();
         this.exportJarFileChooser = new FileChooserFile();
 
@@ -315,11 +316,12 @@ public class Gui {
 
         // update menu
         this.menuBar.closeJarMenu.setEnabled(true);
-        this.menuBar.openOldMappingsMenu.setEnabled(true);
-        this.menuBar.openMappingsMenu.setEnabled(true);
+        this.menuBar.openEnigmaMappingsMenu.setEnabled(true);
+        this.menuBar.openMappingsJsonMenu.setEnabled(true);
         this.menuBar.saveMappingsMenu.setEnabled(false);
-        this.menuBar.saveMappingsAsMenu.setEnabled(true);
-        this.menuBar.saveMappingsOldMenu.setEnabled(true);
+        this.menuBar.saveMappingsJsonMenu.setEnabled(true);
+        this.menuBar.saveMappingEnigmaFileMenu.setEnabled(true);
+        this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(true);
         this.menuBar.saveMappingsSrgMenu.setEnabled(true);
         this.menuBar.closeMappingsMenu.setEnabled(true);
         this.menuBar.exportSourceMenu.setEnabled(true);
@@ -338,11 +340,12 @@ public class Gui {
 
         // update menu
         this.menuBar.closeJarMenu.setEnabled(false);
-        this.menuBar.openOldMappingsMenu.setEnabled(false);
-        this.menuBar.openMappingsMenu.setEnabled(false);
+        this.menuBar.openEnigmaMappingsMenu.setEnabled(false);
+        this.menuBar.openMappingsJsonMenu.setEnabled(false);
         this.menuBar.saveMappingsMenu.setEnabled(false);
-        this.menuBar.saveMappingsAsMenu.setEnabled(false);
-        this.menuBar.saveMappingsOldMenu.setEnabled(false);
+        this.menuBar.saveMappingsJsonMenu.setEnabled(false);
+        this.menuBar.saveMappingEnigmaFileMenu.setEnabled(false);
+        this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(false);
         this.menuBar.saveMappingsSrgMenu.setEnabled(false);
         this.menuBar.closeMappingsMenu.setEnabled(false);
         this.menuBar.exportSourceMenu.setEnabled(false);
@@ -360,7 +363,7 @@ public class Gui {
     }
 
     public void setMappingsFile(File file) {
-        this.mappingsFileChooser.setSelectedFile(file);
+        this.jsonMappingsFileChooser.setSelectedFile(file);
         this.menuBar.saveMappingsMenu.setEnabled(file != null);
     }
 
@@ -721,9 +724,9 @@ public class Gui {
                     JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
             switch (response) {
                 case JOptionPane.YES_OPTION: // save and exit
-                    if (this.mappingsFileChooser.getSelectedFile() != null || this.mappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION) {
+                    if (this.jsonMappingsFileChooser.getSelectedFile() != null || this.jsonMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.controller.saveMappings(this.mappingsFileChooser.getCurrentDirectory());
+                            this.controller.saveMappings(this.jsonMappingsFileChooser.getCurrentDirectory());
                             this.frame.dispose();
                         } catch (IOException ex) {
                             throw new Error(ex);

@@ -16,7 +16,6 @@ import com.google.common.collect.Queues;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
@@ -65,18 +64,16 @@ public class GuiController {
         this.gui.onCloseJar();
     }
 
-    public void openOldMappings(File file) throws IOException, MappingParseException {
-        FileReader in = new FileReader(file);
-        this.deobfuscator.setMappings(new MappingsReaderOld().read(in));
-        in.close();
+    public void openEnigmaMappings(File file) throws IOException, MappingParseException {
+        this.deobfuscator.setMappings(new MappingsEnigmaReader().read(file));
         this.isDirty = false;
         this.gui.setMappingsFile(file);
         refreshClasses();
         refreshCurrentClass();
     }
 
-    public void openMappings(File file) throws IOException {
-        this.deobfuscator.setMappings(new MappingsReader().read(file));
+    public void openJsonMappings(File file) throws IOException {
+        this.deobfuscator.setMappings(new MappingsJsonReader().read(file));
         this.isDirty = false;
         this.gui.setMappingsFile(file);
         refreshClasses();
@@ -84,13 +81,29 @@ public class GuiController {
     }
 
     public void saveMappings(File file) throws IOException {
-        new MappingsWriter().write(file, this.deobfuscator.getMappings());
+        Mappings mappings = this.deobfuscator.getMappings();
+        switch (mappings.getOriginMappingFormat())
+        {
+            case SRG_FILE:
+                saveSRGMappings(file);
+                break;
+            case JSON_DIRECTORY:
+                saveJsonMappings(file);
+                break;
+            default:
+                saveEnigmaMappings(file, Mappings.FormatType.ENIGMA_FILE != mappings.getOriginMappingFormat());
+                break;
+        }
+
+    }
+
+    public void saveJsonMappings(File file) throws IOException {
+        new MappingsJsonWriter().write(file, this.deobfuscator.getMappings());
         this.isDirty = false;
     }
 
-    public void saveOldMappings(File file) throws IOException {
-        FileWriter out = new FileWriter(file);
-        new MappingsOldWriter().write(out, this.deobfuscator.getMappings());
+    public void saveEnigmaMappings(File file, boolean isDirectoryFormat) throws IOException {
+        new MappingsEnigmaWriter().write(file, this.deobfuscator.getMappings(), isDirectoryFormat);
         this.isDirty = false;
     }
 

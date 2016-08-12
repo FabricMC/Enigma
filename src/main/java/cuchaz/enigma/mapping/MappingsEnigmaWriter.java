@@ -10,17 +10,66 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
+import com.google.common.base.Charsets;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MappingsOldWriter {
+public class MappingsEnigmaWriter {
 	
-	public void write(Writer out, Mappings mappings) throws IOException {
-		write(new PrintWriter(out), mappings);
+	public void write(File out, Mappings mappings, boolean isDirectoryFormat) throws IOException {
+		if (!isDirectoryFormat)
+		{
+			PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(out), Charsets.UTF_8));
+			write(outputWriter, mappings);
+			outputWriter.close();
+		}
+		else
+			writeAsDirectory(out, mappings);
+	}
+
+	public void writeAsDirectory(File target, Mappings mappings) throws IOException {
+		if (!target.exists() && !target.mkdirs())
+			throw  new IOException("Cannot create mapping directory!");
+
+		for (ClassMapping classMapping : sorted(mappings.classes())) {
+			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
+			File result;
+			if (classMapping.getDeobfName() == null)
+				result = obFile;
+			else
+			{
+				// Make sure that old version of the file doesn't exist
+				if (obFile.exists())
+					obFile.delete();
+				result = new File(target, classMapping.getDeobfName() + ".mapping");
+			}
+
+			if (!result.getParentFile().exists())
+				result.getParentFile().mkdirs();
+			result.createNewFile();
+			PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(result), Charsets.UTF_8));
+			write(outputWriter, classMapping, 0);
+			outputWriter.close();
+		}
+
+		// Remove empty directories
+		File[] fileList = target.listFiles();
+		if (fileList != null)
+		{
+			for (File file : fileList)
+			{
+				if (file.isDirectory())
+				{
+					File[] childFiles = file.listFiles();
+					if (childFiles != null && childFiles.length == 0)
+						file.delete();
+				}
+			}
+		}
+
 	}
 	
 	public void write(PrintWriter out, Mappings mappings) throws IOException {

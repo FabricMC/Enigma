@@ -11,20 +11,12 @@
 package cuchaz.enigma;
 
 import static cuchaz.enigma.TestEntryFactory.*;
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.jar.JarFile;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.Mappings;
-import cuchaz.enigma.mapping.MappingsReader;
-import cuchaz.enigma.mapping.TranslationDirection;
 import cuchaz.enigma.mapping.Translator;
 
 
@@ -41,7 +33,7 @@ public class TestTranslator {
 		//TODO FIx
 		//m_deobfuscator = new Deobfuscator(new JarFile("build/test-obf/translation.jar"));
 		//try (InputStream in = TestTranslator.class.getResourceAsStream("/cuchaz/enigma/resources/translation.mappings")) {
-		//	m_mappings = new MappingsReader().read(new InputStreamReader(in));
+		//	m_mappings = new MappingsJsonReader().read(new InputStreamReader(in));
 		//	m_deobfuscator.setMappings(m_mappings);
 		//	m_deobfTranslator = m_deobfuscator.getTranslator(TranslationDirection.Deobfuscating);
 		//	m_obfTranslator = m_deobfuscator.getTranslator(TranslationDirection.Obfuscating);

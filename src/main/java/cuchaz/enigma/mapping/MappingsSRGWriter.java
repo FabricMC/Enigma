@@ -1,10 +1,9 @@
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Charsets;
 import cuchaz.enigma.Deobfuscator;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +21,7 @@ public class MappingsSRGWriter {
 
         Mappings mappings = deobfuscator.getMappings();
 
-        FileWriter writer = new FileWriter(file);
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8));
         List<String> fieldMappings = new ArrayList<>();
         List<String> methodMappings = new ArrayList<>();
         for (ClassMapping classMapping : sorted(mappings.classes())) {
