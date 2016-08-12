@@ -72,14 +72,6 @@ public class GuiController {
         refreshCurrentClass();
     }
 
-    public void openJsonMappings(File file) throws IOException {
-        this.deobfuscator.setMappings(new MappingsJsonReader().read(file));
-        this.isDirty = false;
-        this.gui.setMappingsFile(file);
-        refreshClasses();
-        refreshCurrentClass();
-    }
-
     public void saveMappings(File file) throws IOException {
         Mappings mappings = this.deobfuscator.getMappings();
         switch (mappings.getOriginMappingFormat())
@@ -87,19 +79,11 @@ public class GuiController {
             case SRG_FILE:
                 saveSRGMappings(file);
                 break;
-            case JSON_DIRECTORY:
-                saveJsonMappings(file);
-                break;
             default:
                 saveEnigmaMappings(file, Mappings.FormatType.ENIGMA_FILE != mappings.getOriginMappingFormat());
                 break;
         }
 
-    }
-
-    public void saveJsonMappings(File file) throws IOException {
-        new MappingsJsonWriter().write(file, this.deobfuscator.getMappings());
-        this.isDirty = false;
     }
 
     public void saveEnigmaMappings(File file, boolean isDirectoryFormat) throws IOException {

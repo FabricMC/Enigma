@@ -15,7 +15,7 @@ import java.util.jar.JarFile;
 
 import cuchaz.enigma.Deobfuscator.ProgressListener;
 import cuchaz.enigma.mapping.Mappings;
-import cuchaz.enigma.mapping.MappingsJsonReader;
+import cuchaz.enigma.mapping.MappingsEnigmaReader;
 
 public class CommandMain {
 
@@ -47,7 +47,7 @@ public class CommandMain {
                 this.lastReportTime = now;
             }
             if (isLastUpdate) {
-                double elapsedSeconds = (now - this.startTime) / 1000;
+                double elapsedSeconds = (now - this.startTime) / 1000.0;
                 System.out.println(String.format("Finished in %.1f seconds", elapsedSeconds));
             }
         }
@@ -119,7 +119,7 @@ public class CommandMain {
         Deobfuscator deobfuscator = new Deobfuscator(jar);
         if (fileMappings != null) {
             System.out.println("Reading mappings...");
-            Mappings mappings = new MappingsJsonReader().read(fileMappings);
+            Mappings mappings = new MappingsEnigmaReader().read(fileMappings);
             deobfuscator.setMappings(mappings);
         }
         return deobfuscator;
@@ -143,7 +143,7 @@ public class CommandMain {
         File file = new File(path).getAbsoluteFile();
         File dir = file.getParentFile();
         if (dir == null) {
-            throw new IllegalArgumentException("Cannot write to folder: " + dir);
+            throw new IllegalArgumentException("Cannot write file: " + path);
         }
         // quick fix to avoid stupid stuff in Gradle code
         if (!dir.isDirectory()) {

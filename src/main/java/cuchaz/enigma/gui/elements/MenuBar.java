@@ -17,11 +17,9 @@ public class MenuBar extends JMenuBar {
 
     public final JMenuItem closeJarMenu;
 
-    public final JMenuItem openMappingsJsonMenu;
     public final JMenuItem openEnigmaMappingsMenu;
 
     public final JMenuItem saveMappingsMenu;
-    public final JMenuItem saveMappingsJsonMenu;
     public final JMenuItem saveMappingEnigmaFileMenu;
     public final JMenuItem saveMappingEnigmaDirectoryMenu;
     public final JMenuItem saveMappingsSrgMenu;
@@ -64,6 +62,7 @@ public class MenuBar extends JMenuBar {
             }
             menu.addSeparator();
             JMenu openMenu = new JMenu("Open Mappings...");
+            menu.add(openMenu);
             {
                 JMenuItem item = new JMenuItem("Enigma");
                 openMenu.add(item);
@@ -80,27 +79,12 @@ public class MenuBar extends JMenuBar {
                 });
                 this.openEnigmaMappingsMenu = item;
             }
-            menu.add(openMenu);
-            {
-                JMenuItem item = new JMenuItem("JSON (directory)");
-                openMenu.add(item);
-                item.addActionListener(event -> {
-                    if (this.gui.jsonMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-                        try {
-                            this.gui.getController().openJsonMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        }
-                    }
-                });
-                this.openMappingsJsonMenu = item;
-            }
             {
                 JMenuItem item = new JMenuItem("Save Mappings");
                 menu.add(item);
                 item.addActionListener(event -> {
                     try {
-                        this.gui.getController().saveMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
+                        this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
                     } catch (IOException ex) {
                         throw new Error(ex);
                     }
@@ -109,13 +93,15 @@ public class MenuBar extends JMenuBar {
                 this.saveMappingsMenu = item;
             }
             JMenu saveMenu = new JMenu("Save Mappings As...");
+            menu.add(saveMenu);
             {
                 JMenuItem item = new JMenuItem("Enigma (single file)");
                 saveMenu.add(item);
                 item.addActionListener(event -> {
-                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    // TODO: Use a specific file chooser for it
+                    if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.gui.getController().saveEnigmaMappings(this.gui.jsonMappingsFileChooser.getSelectedFile(), false);
+                            this.gui.getController().saveEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile(), false);
                             this.saveMappingsMenu.setEnabled(true);
                         } catch (IOException ex) {
                             throw new Error(ex);
@@ -128,9 +114,10 @@ public class MenuBar extends JMenuBar {
                 JMenuItem item = new JMenuItem("Enigma (directory)");
                 saveMenu.add(item);
                 item.addActionListener(event -> {
-                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    // TODO: Use a specific file chooser for it
+                    if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.gui.getController().saveEnigmaMappings(this.gui.jsonMappingsFileChooser.getSelectedFile(), true);
+                            this.gui.getController().saveEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile(), true);
                             this.saveMappingsMenu.setEnabled(true);
                         } catch (IOException ex) {
                             throw new Error(ex);
@@ -140,29 +127,14 @@ public class MenuBar extends JMenuBar {
                 item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
                 this.saveMappingEnigmaDirectoryMenu = item;
             }
-            menu.add(saveMenu);
             {
-                JMenuItem item = new JMenuItem("JSON (directory)");
+                JMenuItem item = new JMenuItem("SRG (single file)");
                 saveMenu.add(item);
                 item.addActionListener(event -> {
-                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    // TODO: Use a specific file chooser for it
+                    if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.gui.getController().saveJsonMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
-                            this.saveMappingsMenu.setEnabled(true);
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        }
-                    }
-                });
-                this.saveMappingsJsonMenu = item;
-            }
-            {
-                JMenuItem item = new JMenuItem("SRG");
-                saveMenu.add(item);
-                item.addActionListener(event -> {
-                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-                        try {
-                            this.gui.getController().saveSRGMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
+                            this.gui.getController().saveSRGMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
                             this.saveMappingsMenu.setEnabled(true);
                         } catch (IOException ex) {
                             throw new Error(ex);

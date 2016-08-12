@@ -241,10 +241,7 @@ public class ClassRenamer {
     private static String renameClassSignature(String signature, ReplacerClassMap map) {
         try {
             ClassSignature type = renameType(SignatureAttribute.toClassSignature(signature), map);
-            if (type != null) {
-                return type.encode();
-            }
-            return null;
+            return type.encode();
         } catch (BadBytecode ex) {
             throw new Error("Can't parse field signature: " + signature);
         }
@@ -265,10 +262,7 @@ public class ClassRenamer {
     private static String renameMethodSignature(String signature, ReplacerClassMap map) {
         try {
             MethodSignature type = renameType(SignatureAttribute.toMethodSignature(signature), map);
-            if (type != null) {
-                return type.encode();
-            }
-            return null;
+            return type.encode();
         } catch (BadBytecode ex) {
             throw new Error("Can't parse method signature: " + signature);
         }

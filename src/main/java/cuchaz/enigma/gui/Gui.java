@@ -79,7 +79,6 @@ public class Gui {
     public EntryReference<Entry, Entry> m_reference;
 
     public JFileChooser jarFileChooser;
-    public JFileChooser jsonMappingsFileChooser;
     public JFileChooser enigmaMappingsFileChooser;
 
     public JFileChooser exportSourceFileChooser;
@@ -107,7 +106,6 @@ public class Gui {
 
         // init file choosers
         this.jarFileChooser = new FileChooserFile();
-        this.jsonMappingsFileChooser = new FileChooserFolder();
 
 
         this.enigmaMappingsFileChooser = new FileChooserAny();
@@ -317,9 +315,7 @@ public class Gui {
         // update menu
         this.menuBar.closeJarMenu.setEnabled(true);
         this.menuBar.openEnigmaMappingsMenu.setEnabled(true);
-        this.menuBar.openMappingsJsonMenu.setEnabled(true);
         this.menuBar.saveMappingsMenu.setEnabled(false);
-        this.menuBar.saveMappingsJsonMenu.setEnabled(true);
         this.menuBar.saveMappingEnigmaFileMenu.setEnabled(true);
         this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(true);
         this.menuBar.saveMappingsSrgMenu.setEnabled(true);
@@ -341,9 +337,7 @@ public class Gui {
         // update menu
         this.menuBar.closeJarMenu.setEnabled(false);
         this.menuBar.openEnigmaMappingsMenu.setEnabled(false);
-        this.menuBar.openMappingsJsonMenu.setEnabled(false);
         this.menuBar.saveMappingsMenu.setEnabled(false);
-        this.menuBar.saveMappingsJsonMenu.setEnabled(false);
         this.menuBar.saveMappingEnigmaFileMenu.setEnabled(false);
         this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(false);
         this.menuBar.saveMappingsSrgMenu.setEnabled(false);
@@ -363,7 +357,7 @@ public class Gui {
     }
 
     public void setMappingsFile(File file) {
-        this.jsonMappingsFileChooser.setSelectedFile(file);
+        this.enigmaMappingsFileChooser.setSelectedFile(file);
         this.menuBar.saveMappingsMenu.setEnabled(file != null);
     }
 
@@ -564,6 +558,8 @@ public class Gui {
                     case KeyEvent.VK_ESCAPE:
                         finishRename(text, false);
                         break;
+                    default:
+                        break;
                 }
             }
         });
@@ -668,7 +664,6 @@ public class Gui {
     }
 
     public void showCalls() {
-
         if (m_reference == null) {
             return;
         }
@@ -724,9 +719,9 @@ public class Gui {
                     JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
             switch (response) {
                 case JOptionPane.YES_OPTION: // save and exit
-                    if (this.jsonMappingsFileChooser.getSelectedFile() != null || this.jsonMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION) {
+                    if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.controller.saveMappings(this.jsonMappingsFileChooser.getCurrentDirectory());
+                            this.controller.saveMappings(this.enigmaMappingsFileChooser.getCurrentDirectory());
                             this.frame.dispose();
                         } catch (IOException ex) {
                             throw new Error(ex);
@@ -737,6 +732,8 @@ public class Gui {
                 case JOptionPane.NO_OPTION:
                     // don't save, exit
                     this.frame.dispose();
+                    break;
+                default:
                     break;
 
                 // cancel means do nothing

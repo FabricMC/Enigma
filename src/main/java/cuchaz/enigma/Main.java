@@ -28,7 +28,7 @@ public class Main {
             gui.getController().openJar(new JarFile(getFile(args[0])));
         }
         if (args.length >= 2) {
-            gui.getController().openJsonMappings(getFile(args[1]));
+            gui.getController().openEnigmaMappings(getFile(args[1]));
         }
 
         // DEBUG

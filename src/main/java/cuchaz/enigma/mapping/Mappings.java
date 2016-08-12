@@ -160,6 +160,6 @@ public class Mappings {
 
     public enum FormatType
     {
-        JSON_DIRECTORY, ENIGMA_FILE, ENIGMA_DIRECTORY, SRG_FILE
+        ENIGMA_FILE, ENIGMA_DIRECTORY, SRG_FILE
     }
 }
