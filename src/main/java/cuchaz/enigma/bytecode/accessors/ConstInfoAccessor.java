@@ -11,10 +11,13 @@
 package cuchaz.enigma.bytecode.accessors;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import com.google.common.base.Charsets;
 import cuchaz.enigma.bytecode.InfoType;
 
 public class ConstInfoAccessor {
@@ -56,12 +59,12 @@ public class ConstInfoAccessor {
     public String toString() {
         try {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            PrintWriter out = new PrintWriter(buf);
+            PrintWriter out = new PrintWriter(new OutputStreamWriter(buf, Charsets.UTF_8));
             Method print = this.item.getClass().getMethod("print", PrintWriter.class);
             print.setAccessible(true);
             print.invoke(this.item, out);
             out.close();
-            return buf.toString().replace("\n", "");
+            return buf.toString("UTF-8").replace("\n", "");
         } catch (Exception ex) {
             throw new Error(ex);
         }

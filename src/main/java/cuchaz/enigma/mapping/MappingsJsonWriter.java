@@ -10,19 +10,18 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import cuchaz.enigma.json.*;
 
-public class MappingsWriter {
+public class MappingsJsonWriter {
 
     public void write(File file, Mappings mappings) throws IOException {
         if (!file.isDirectory()) {
@@ -44,7 +43,7 @@ public class MappingsWriter {
                 File f = new File(file, jsonClass.getName() + ".json");
                 f.getParentFile().mkdirs();
                 f.createNewFile();
-                FileWriter writer = new FileWriter(f);
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), Charsets.UTF_8));
                 writer.write(gson.toJson(jsonClass));
                 writer.close();
             }

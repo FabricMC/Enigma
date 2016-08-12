@@ -15,7 +15,7 @@ import java.util.jar.JarFile;
 
 import cuchaz.enigma.Deobfuscator.ProgressListener;
 import cuchaz.enigma.mapping.Mappings;
-import cuchaz.enigma.mapping.MappingsReader;
+import cuchaz.enigma.mapping.MappingsJsonReader;
 
 public class CommandMain {
 
@@ -119,7 +119,7 @@ public class CommandMain {
         Deobfuscator deobfuscator = new Deobfuscator(jar);
         if (fileMappings != null) {
             System.out.println("Reading mappings...");
-            Mappings mappings = new MappingsReader().read(fileMappings);
+            Mappings mappings = new MappingsJsonReader().read(fileMappings);
             deobfuscator.setMappings(mappings);
         }
         return deobfuscator;

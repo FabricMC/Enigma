@@ -17,12 +17,13 @@ public class MenuBar extends JMenuBar {
 
     public final JMenuItem closeJarMenu;
 
-    public final JMenuItem openMappingsMenu;
-    public final JMenuItem openOldMappingsMenu;
+    public final JMenuItem openMappingsJsonMenu;
+    public final JMenuItem openEnigmaMappingsMenu;
 
     public final JMenuItem saveMappingsMenu;
-    public final JMenuItem saveMappingsAsMenu;
-    public final JMenuItem saveMappingsOldMenu;
+    public final JMenuItem saveMappingsJsonMenu;
+    public final JMenuItem saveMappingEnigmaFileMenu;
+    public final JMenuItem saveMappingEnigmaDirectoryMenu;
     public final JMenuItem saveMappingsSrgMenu;
     public final JMenuItem closeMappingsMenu;
 
@@ -62,27 +63,14 @@ public class MenuBar extends JMenuBar {
                 this.closeJarMenu = item;
             }
             menu.addSeparator();
+            JMenu openMenu = new JMenu("Open Mappings...");
             {
-                JMenuItem item = new JMenuItem("Open Mappings...");
-                menu.add(item);
+                JMenuItem item = new JMenuItem("Enigma");
+                openMenu.add(item);
                 item.addActionListener(event -> {
-                    if (this.gui.mappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.gui.getController().openMappings(this.gui.mappingsFileChooser.getSelectedFile());
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        }
-                    }
-                });
-                this.openMappingsMenu = item;
-            }
-            {
-                JMenuItem item = new JMenuItem("Open Old Mappings...");
-                menu.add(item);
-                item.addActionListener(event -> {
-                    if (this.gui.oldMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-                        try {
-                            this.gui.getController().openOldMappings(this.gui.oldMappingsFileChooser.getSelectedFile());
+                            this.gui.getController().openEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
                         } catch (IOException ex) {
                             throw new Error(ex);
                         } catch (MappingParseException ex) {
@@ -90,15 +78,29 @@ public class MenuBar extends JMenuBar {
                         }
                     }
                 });
-                this.openOldMappingsMenu = item;
+                this.openEnigmaMappingsMenu = item;
             }
-            menu.addSeparator();
+            menu.add(openMenu);
+            {
+                JMenuItem item = new JMenuItem("JSON (directory)");
+                openMenu.add(item);
+                item.addActionListener(event -> {
+                    if (this.gui.jsonMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            this.gui.getController().openJsonMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
+                        } catch (IOException ex) {
+                            throw new Error(ex);
+                        }
+                    }
+                });
+                this.openMappingsJsonMenu = item;
+            }
             {
                 JMenuItem item = new JMenuItem("Save Mappings");
                 menu.add(item);
                 item.addActionListener(event -> {
                     try {
-                        this.gui.getController().saveMappings(this.gui.mappingsFileChooser.getSelectedFile());
+                        this.gui.getController().saveMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
                     } catch (IOException ex) {
                         throw new Error(ex);
                     }
@@ -106,29 +108,29 @@ public class MenuBar extends JMenuBar {
                 item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
                 this.saveMappingsMenu = item;
             }
+            JMenu saveMenu = new JMenu("Save Mappings As...");
             {
-                JMenuItem item = new JMenuItem("Save Mappings As...");
-                menu.add(item);
+                JMenuItem item = new JMenuItem("Enigma (single file)");
+                saveMenu.add(item);
                 item.addActionListener(event -> {
-                    if (this.gui.mappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.gui.getController().saveMappings(this.gui.mappingsFileChooser.getSelectedFile());
+                            this.gui.getController().saveEnigmaMappings(this.gui.jsonMappingsFileChooser.getSelectedFile(), false);
                             this.saveMappingsMenu.setEnabled(true);
                         } catch (IOException ex) {
                             throw new Error(ex);
                         }
                     }
                 });
-                item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-                this.saveMappingsAsMenu = item;
+                this.saveMappingEnigmaFileMenu = item;
             }
             {
-                JMenuItem item = new JMenuItem("Save Mappings as Enigma");
-                menu.add(item);
+                JMenuItem item = new JMenuItem("Enigma (directory)");
+                saveMenu.add(item);
                 item.addActionListener(event -> {
-                    if (this.gui.mappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.gui.getController().saveOldMappings(this.gui.mappingsFileChooser.getSelectedFile());
+                            this.gui.getController().saveEnigmaMappings(this.gui.jsonMappingsFileChooser.getSelectedFile(), true);
                             this.saveMappingsMenu.setEnabled(true);
                         } catch (IOException ex) {
                             throw new Error(ex);
@@ -136,22 +138,37 @@ public class MenuBar extends JMenuBar {
                     }
                 });
                 item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-                this.saveMappingsOldMenu = item;
+                this.saveMappingEnigmaDirectoryMenu = item;
+            }
+            menu.add(saveMenu);
+            {
+                JMenuItem item = new JMenuItem("JSON (directory)");
+                saveMenu.add(item);
+                item.addActionListener(event -> {
+                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            this.gui.getController().saveJsonMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
+                            this.saveMappingsMenu.setEnabled(true);
+                        } catch (IOException ex) {
+                            throw new Error(ex);
+                        }
+                    }
+                });
+                this.saveMappingsJsonMenu = item;
             }
             {
-                JMenuItem item = new JMenuItem("Save Mappings as SRG");
-                menu.add(item);
+                JMenuItem item = new JMenuItem("SRG");
+                saveMenu.add(item);
                 item.addActionListener(event -> {
-                    if (this.gui.mappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+                    if (this.gui.jsonMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         try {
-                            this.gui.getController().saveSRGMappings(this.gui.mappingsFileChooser.getSelectedFile());
+                            this.gui.getController().saveSRGMappings(this.gui.jsonMappingsFileChooser.getSelectedFile());
                             this.saveMappingsMenu.setEnabled(true);
                         } catch (IOException ex) {
                             throw new Error(ex);
                         }
                     }
                 });
-                item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
                 this.saveMappingsSrgMenu = item;
             }
             {

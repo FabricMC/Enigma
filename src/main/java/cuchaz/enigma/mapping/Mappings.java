@@ -24,8 +24,15 @@ public class Mappings {
 
     protected Map<String, ClassMapping> classesByObf;
     protected Map<String, ClassMapping> classesByDeobf;
+    private final FormatType originMapping;
 
-    public Mappings() {
+    public Mappings()
+    {
+        this(FormatType.ENIGMA_DIRECTORY);
+    }
+
+    public Mappings(FormatType originMapping) {
+        this.originMapping = originMapping;
         this.classesByObf = Maps.newHashMap();
         this.classesByDeobf = Maps.newHashMap();
     }
@@ -144,5 +151,15 @@ public class Mappings {
             mappingChain.add(classMapping);
         }
         return mappingChain;
+    }
+
+    public FormatType getOriginMappingFormat()
+    {
+        return originMapping;
+    }
+
+    public enum FormatType
+    {
+        JSON_DIRECTORY, ENIGMA_FILE, ENIGMA_DIRECTORY, SRG_FILE
     }
 }

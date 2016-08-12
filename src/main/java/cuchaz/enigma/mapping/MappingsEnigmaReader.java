@@ -1,23 +1,49 @@
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Queues;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Deque;
-
 import cuchaz.enigma.throwables.MappingConflict;
 import cuchaz.enigma.throwables.MappingParseException;
 
-public class MappingsReaderOld {
+import java.io.*;
+import java.util.Deque;
 
-    public Mappings read(Reader in) throws IOException, MappingParseException {
-        return read(new BufferedReader(in));
+public class MappingsEnigmaReader
+{
+
+    public Mappings read(File file) throws IOException, MappingParseException {
+        Mappings mappings;
+
+        // Multiple file
+        if (file.isDirectory())
+        {
+            mappings = new Mappings(Mappings.FormatType.ENIGMA_DIRECTORY);
+            readDirectory(mappings, file);
+        }
+        else
+        {
+            mappings = new Mappings();
+            readFile(mappings, new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8)));
+        }
+        return mappings;
     }
 
-    public Mappings read(BufferedReader in) throws IOException, MappingParseException {
-        Mappings mappings = new Mappings();
+    public void readDirectory(Mappings mappings, File directory) throws IOException, MappingParseException {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile())
+                    readFile(mappings, new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8)));
+                else if (file.isDirectory())
+                    readDirectory(mappings, file.getAbsoluteFile());
+            }
+        }
+        else
+            throw new IOException("Cannot access directory" + directory.getAbsolutePath());
+    }
+
+    public Mappings readFile(Mappings mappings, BufferedReader in) throws IOException, MappingParseException {
+
         Deque<Object> mappingStack = Queues.newArrayDeque();
 
         int lineNumber = 0;
@@ -96,7 +122,7 @@ public class MappingsReaderOld {
                 e.printStackTrace();
             }
         }
-
+        in.close();
         return mappings;
     }
 

@@ -10,22 +10,20 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 import cuchaz.enigma.json.JsonClass;
 import cuchaz.enigma.throwables.MappingConflict;
 
-public class MappingsReader {
+public class MappingsJsonReader {
 
     public Mappings read(File in) throws IOException {
-        Mappings mappings = new Mappings();
+        Mappings mappings = new Mappings(Mappings.FormatType.JSON_DIRECTORY);
         readDirectory(mappings, in);
         return mappings;
     }
@@ -35,7 +33,8 @@ public class MappingsReader {
         if (fList != null) {
             for (File file : fList) {
                 if (file.isFile() && Files.getFileExtension(file.getName()).equalsIgnoreCase("json")) {
-                    readFile(mappings, new BufferedReader(new FileReader(file)));
+                    readFile(mappings, new BufferedReader(new InputStreamReader(new FileInputStream(file),
+                            Charsets.UTF_8)));
                 } else if (file.isDirectory()) {
                     readDirectory(mappings, file.getAbsoluteFile());
                 }

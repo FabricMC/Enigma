@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -277,7 +278,7 @@ public class Deobfuscator {
                 // write the file
                 File file = new File(dirOut, deobfClassEntry.getName().replace('.', '/') + ".java");
                 file.getParentFile().mkdirs();
-                try (FileWriter out = new FileWriter(file)) {
+                try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8)) {
                     out.write(source);
                 }
             } catch (Throwable t) {
