@@ -186,11 +186,15 @@ public class TranslationIndex {
     }
 
     public ClassEntry resolveEntryClass(Entry entry) {
+        return resolveEntryClass(entry, false);
+    }
+
+    public ClassEntry resolveEntryClass(Entry entry, boolean checkSuperclassBeforeChild) {
         if (entry instanceof ClassEntry) {
             return (ClassEntry) entry;
         }
 
-        ClassEntry superclassEntry = resolveSuperclass(entry);
+        ClassEntry superclassEntry = resolveSuperclass(entry, checkSuperclassBeforeChild);
         if (superclassEntry != null) {
             return superclassEntry;
         }
@@ -204,6 +208,10 @@ public class TranslationIndex {
     }
 
     public ClassEntry resolveSuperclass(Entry entry) {
+        return resolveSuperclass(entry, false);
+    }
+
+    public ClassEntry resolveSuperclass(Entry entry, boolean checkSuperclassBeforeChild) {
         // this entry could refer to a method on a class where the method is not actually implemented
         // travel up the inheritance tree to find the closest implementation
 
@@ -212,14 +220,14 @@ public class TranslationIndex {
 
         // Scan superclass before main class to avoid missing override issues
         ClassEntry superclassEntry = null;
-        while (superclassEntry == null || !entryExists(entry)) {
+        while ((checkSuperclassBeforeChild && superclassEntry == null) || !entryExists(entry)) {
 
             // is there a parent class?
             superclassEntry = getSuperclass(entry.getClassEntry());
             if (superclassEntry == null) {
                 // this is probably a method from a class in a library or it's in the default class
                 // we can't trace the implementation up any higher unless we index the library
-                return entryExists(originalEntry) ? originalEntry.getClassEntry() : null;
+                return checkSuperclassBeforeChild && entryExists(originalEntry) ? originalEntry.getClassEntry() : null;
             }
 
             // move up to the parent class

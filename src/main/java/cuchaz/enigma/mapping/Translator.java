@@ -157,9 +157,8 @@ public class Translator {
     }
 
     public String translate(MethodEntry in) {
-
         // resolve the class entry
-        ClassEntry resolvedClassEntry = this.index.resolveEntryClass(in);
+        ClassEntry resolvedClassEntry = this.index.resolveEntryClass(in, true);
         if (resolvedClassEntry != null) {
 
             // look for class
