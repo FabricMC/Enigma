@@ -206,14 +206,20 @@ public class TranslationIndex {
     public ClassEntry resolveSuperclass(Entry entry) {
         // this entry could refer to a method on a class where the method is not actually implemented
         // travel up the inheritance tree to find the closest implementation
-        while (!entryExists(entry)) {
+
+        // Save the original entry
+        Entry originalEntry = entry;
+
+        // Scan superclass before main class to avoid missing override issues
+        ClassEntry superclassEntry = null;
+        while (superclassEntry == null || !entryExists(entry)) {
 
             // is there a parent class?
-            ClassEntry superclassEntry = getSuperclass(entry.getClassEntry());
+            superclassEntry = getSuperclass(entry.getClassEntry());
             if (superclassEntry == null) {
-                // this is probably a method from a class in a library
+                // this is probably a method from a class in a library or it's in the default class
                 // we can't trace the implementation up any higher unless we index the library
-                return null;
+                return entryExists(originalEntry) ? originalEntry.getClassEntry() : null;
             }
 
             // move up to the parent class
