@@ -30,9 +30,22 @@ public class MappingsEnigmaWriter {
 			writeAsDirectory(out, mappings);
 	}
 
+	private void deleteDir(File file) {
+		File[] contents = file.listFiles();
+		if (contents != null) {
+			for (File f : contents) {
+				deleteDir(f);
+			}
+		}
+		file.delete();
+	}
+
 	public void writeAsDirectory(File target, Mappings mappings) throws IOException {
+		//TODO: Know what have changes during write to not rewrite all the things
+		deleteDir(target);
 		if (!target.exists() && !target.mkdirs())
 			throw  new IOException("Cannot create mapping directory!");
+
 
 		for (ClassMapping classMapping : sorted(mappings.classes())) {
 			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
@@ -53,21 +66,6 @@ public class MappingsEnigmaWriter {
 			PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(result), Charsets.UTF_8));
 			write(outputWriter, classMapping, 0);
 			outputWriter.close();
-		}
-
-		// Remove empty directories
-		File[] fileList = target.listFiles();
-		if (fileList != null)
-		{
-			for (File file : fileList)
-			{
-				if (file.isDirectory())
-				{
-					File[] childFiles = file.listFiles();
-					if (childFiles != null && childFiles.length == 0)
-						file.delete();
-				}
-			}
 		}
 
 	}
