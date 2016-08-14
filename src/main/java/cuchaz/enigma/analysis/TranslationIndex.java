@@ -207,27 +207,46 @@ public class TranslationIndex {
         return null;
     }
 
-    public ClassEntry resolveSuperclass(Entry entry) {
-        return resolveSuperclass(entry, false);
-    }
-
     public ClassEntry resolveSuperclass(Entry entry, boolean checkSuperclassBeforeChild) {
-        // this entry could refer to a method on a class where the method is not actually implemented
-        // travel up the inheritance tree to find the closest implementation
+
+        // Default case
+        if (!checkSuperclassBeforeChild)
+            return resolveSuperclass(entry);
 
         // Save the original entry
         Entry originalEntry = entry;
 
-        // Scan superclass before main class to avoid missing override issues
-        ClassEntry superclassEntry = null;
-        while ((checkSuperclassBeforeChild && superclassEntry == null) || !entryExists(entry)) {
+        // Get all possible superclasses and reverse the list
+        List<ClassEntry> superclasses = Lists.reverse(getAncestry(originalEntry.getClassEntry()));
+        boolean existInEntry = false;
 
+        for (ClassEntry classEntry : superclasses)
+        {
+            entry = entry.cloneToNewClass(classEntry);
+            existInEntry = entryExists(entry);
+            if (existInEntry)
+                break;
+        }
+
+        // Doesn't exists in superclasses? check the child or return null
+        if (!existInEntry)
+            return !entryExists(originalEntry) ? null : originalEntry.getClassEntry();
+
+        return entry.getClassEntry();
+    }
+
+    public ClassEntry resolveSuperclass(Entry entry)
+    {
+        // this entry could refer to a method on a class where the method is not actually implemented
+        // travel up the inheritance tree to find the closest implementation
+
+        while (!entryExists(entry)) {
             // is there a parent class?
-            superclassEntry = getSuperclass(entry.getClassEntry());
+            ClassEntry superclassEntry = getSuperclass(entry.getClassEntry());
             if (superclassEntry == null) {
-                // this is probably a method from a class in a library or it's in the default class
+                // this is probably a method from a class in a library
                 // we can't trace the implementation up any higher unless we index the library
-                return checkSuperclassBeforeChild && entryExists(originalEntry) ? originalEntry.getClassEntry() : null;
+                return null;
             }
 
             // move up to the parent class
