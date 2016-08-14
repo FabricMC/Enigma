@@ -50,6 +50,8 @@ public class PanelEditor extends JEditorPane {
                     case KeyEvent.VK_T:
                         gui.popupMenu.toggleMappingMenu.doClick();
                         break;
+                    case KeyEvent.VK_F5:
+                        gui.getController().refreshCurrentClass();
                     default:
                         break;
                 }

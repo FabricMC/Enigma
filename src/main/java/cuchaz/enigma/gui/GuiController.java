@@ -145,7 +145,7 @@ public class GuiController {
     }
 
     public boolean referenceIsRenameable(EntryReference<Entry, Entry> deobfReference) {
-        return this.deobfuscator.isRenameable(this.deobfuscator.obfuscateReference(deobfReference));
+        return this.deobfuscator.isRenameable(this.deobfuscator.obfuscateReference(deobfReference), true);
     }
 
     public ClassInheritanceTreeNode getClassInheritance(ClassEntry deobfClassEntry) {
@@ -275,7 +275,7 @@ public class GuiController {
         this.gui.setDeobfClasses(deobfClasses);
     }
 
-    private void refreshCurrentClass() {
+    public void refreshCurrentClass() {
         refreshCurrentClass(null);
     }
 

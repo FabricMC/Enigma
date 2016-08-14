@@ -375,6 +375,10 @@ public class Deobfuscator {
     }
 
     public boolean isObfuscatedIdentifier(Entry obfEntry) {
+        return isObfuscatedIdentifier(obfEntry, false);
+    }
+
+    public boolean isObfuscatedIdentifier(Entry obfEntry, boolean hack) {
 
         if (obfEntry instanceof MethodEntry) {
 
@@ -405,13 +409,21 @@ public class Deobfuscator {
             } else if (name.equals("wait") && sig.equals("(JI)V")) {
                 return false;
             }
+
+            // FIXME: HACK EVEN MORE HACK!
+            if (hack)
+                return true;
         }
 
         return this.jarIndex.containsObfEntry(obfEntry);
     }
 
+    public boolean isRenameable(EntryReference<Entry, Entry> obfReference, boolean activeHack) {
+        return obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry(), activeHack);
+    }
+
     public boolean isRenameable(EntryReference<Entry, Entry> obfReference) {
-        return obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry());
+        return isRenameable(obfReference, false);
     }
 
     // NOTE: these methods are a bit messy... oh well
