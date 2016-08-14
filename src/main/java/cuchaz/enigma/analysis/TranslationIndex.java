@@ -94,6 +94,7 @@ public class TranslationIndex {
         for (String interfaceClassName : c.getClassFile().getInterfaces()) {
             ClassEntry interfaceClassEntry = new ClassEntry(Descriptor.toJvmName(interfaceClassName));
             if (!isJre(interfaceClassEntry)) {
+
                 this.interfaces.put(classEntry, interfaceClassEntry);
             }
         }
@@ -218,12 +219,18 @@ public class TranslationIndex {
 
         // Get all possible superclasses and reverse the list
         List<ClassEntry> superclasses = Lists.reverse(getAncestry(originalEntry.getClassEntry()));
+
         boolean existInEntry = false;
 
         for (ClassEntry classEntry : superclasses)
         {
             entry = entry.cloneToNewClass(classEntry);
             existInEntry = entryExists(entry);
+
+            // Check for possible entry in interfaces of superclasses
+            ClassEntry interfaceEntry = resolveInterface(entry);
+            if (interfaceEntry != null)
+                return interfaceEntry;
             if (existInEntry)
                 break;
         }
@@ -258,6 +265,7 @@ public class TranslationIndex {
     public ClassEntry resolveInterface(Entry entry) {
         // the interfaces for any class is a forest
         // so let's look at all the trees
+
         for (ClassEntry interfaceEntry : this.interfaces.get(entry.getClassEntry())) {
             ClassEntry resolvedClassEntry = resolveSuperclass(entry.cloneToNewClass(interfaceEntry));
             if (resolvedClassEntry != null) {
