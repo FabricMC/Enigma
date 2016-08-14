@@ -203,22 +203,29 @@ public class Translator {
         throw new Error("Wrong entry type!");
     }
 
+    // TODO: support not identical behavior (specific to constructor)
     public String translate(ArgumentEntry in) {
 
-        // look for the class
-        ClassMapping classMapping = findClassMapping(in.getClassEntry());
-        if (classMapping != null) {
+        // look for identical behavior in superclasses
+        ClassEntry entry =  this.index.resolveEntryClass(in, true);
 
-            // look for the method
-            MethodMapping methodMapping = this.direction.choose(
-                    classMapping.getMethodByObf(in.getMethodName(), in.getMethodSignature()),
-                    classMapping.getMethodByDeobf(in.getMethodName(), translateSignature(in.getMethodSignature()))
-            );
-            if (methodMapping != null) {
-                return this.direction.choose(
-                        methodMapping.getDeobfArgumentName(in.getIndex()),
-                        methodMapping.getObfArgumentName(in.getIndex())
+        if (entry != null)
+        {
+            // look for the class
+            ClassMapping classMapping = findClassMapping(entry);
+            if (classMapping != null) {
+
+                // look for the method
+                MethodMapping methodMapping = this.direction.choose(
+                        classMapping.getMethodByObf(in.getMethodName(), in.getMethodSignature()),
+                        classMapping.getMethodByDeobf(in.getMethodName(), translateSignature(in.getMethodSignature()))
                 );
+                if (methodMapping != null) {
+                    return this.direction.choose(
+                            methodMapping.getDeobfArgumentName(in.getIndex()),
+                            methodMapping.getObfArgumentName(in.getIndex())
+                    );
+                }
             }
         }
         return null;

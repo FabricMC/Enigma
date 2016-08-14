@@ -12,7 +12,7 @@ package cuchaz.enigma;
 
 public class Constants {
     public static final String NAME = "Enigma";
-    public static final String VERSION = "0.2 - Beta";
+    public static final String VERSION = "0.11.0 (Chorus Fork)";
     public static final String URL = "http://www.cuchazinteractive.com/enigma";
     public static final int MiB = 1024 * 1024; // 1 mebibyte
     public static final int KiB = 1024; // 1 kebibyte
