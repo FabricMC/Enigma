@@ -146,7 +146,30 @@ public class MenuBar extends JMenuBar {
             {
                 JMenuItem item = new JMenuItem("Close Mappings");
                 menu.add(item);
-                item.addActionListener(event -> this.gui.getController().closeMappings());
+                item.addActionListener(event -> {
+                    if (this.gui.getController().isDirty())
+                    {
+                        this.gui.showDiscardDiag((response -> {
+                            if (response == JOptionPane.YES_OPTION)
+                            {
+                                try
+                                {
+                                    gui.saveMapping();
+                                    this.gui.getController().closeMappings();
+                                } catch (IOException e)
+                                {
+                                    throw new Error(e);
+                                }
+                            }
+                            else if (response == JOptionPane.NO_OPTION)
+                                this.gui.getController().closeMappings();
+                            return null;
+                        }), "Save and close", "Discard changes", "Cancel");
+                    }
+                    else
+                        this.gui.getController().closeMappings();
+
+                });
                 this.closeMappingsMenu = item;
             }
             menu.addSeparator();

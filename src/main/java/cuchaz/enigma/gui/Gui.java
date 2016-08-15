@@ -11,23 +11,6 @@
 package cuchaz.enigma.gui;
 
 import com.google.common.collect.Lists;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Vector;
-
-import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Highlighter;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
-
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
@@ -49,6 +32,23 @@ import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
+
+import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Highlighter;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Gui {
 
@@ -707,6 +707,19 @@ public class Gui {
         return new TreePath(nodes.toArray());
     }
 
+    public void showDiscardDiag(Function<Integer, Void> callback, String... options)
+    {
+        int response = JOptionPane.showOptionDialog(this.frame, "Your mappings have not been saved yet. Do you want to save?", "Save your changes?", JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+        callback.apply(response);
+    }
+
+    public void saveMapping() throws IOException
+    {
+        if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION)
+            this.controller.saveMappings(this.enigmaMappingsFileChooser.getCurrentDirectory());
+    }
+
     public void close() {
         if (!this.controller.isDirty()) {
             // everything is saved, we can exit safely
@@ -714,30 +727,22 @@ public class Gui {
             System.exit(0);
         } else {
             // ask to save before closing
-            String[] options = {"Save and exit", "Discard changes", "Cancel"};
-            int response = JOptionPane.showOptionDialog(this.frame, "Your mappings have not been saved yet. Do you want to save?", "Save your changes?", JOptionPane.YES_NO_CANCEL_OPTION,
-                    JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
-            switch (response) {
-                case JOptionPane.YES_OPTION: // save and exit
-                    if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION) {
-                        try {
-                            this.controller.saveMappings(this.enigmaMappingsFileChooser.getCurrentDirectory());
-                            this.frame.dispose();
-                        } catch (IOException ex) {
-                            throw new Error(ex);
-                        }
+            showDiscardDiag((response) -> {
+                if (response == JOptionPane.YES_OPTION)
+                {
+                    try {
+                        this.saveMapping();
+                        this.frame.dispose();
+
+                    } catch (IOException ex) {
+                        throw new Error(ex);
                     }
-                    break;
-
-                case JOptionPane.NO_OPTION:
-                    // don't save, exit
+                }
+                else
                     this.frame.dispose();
-                    break;
-                default:
-                    break;
 
-                // cancel means do nothing
-            }
+                return null;
+            }, "Save and exit", "Discard changes", "Cancel");
         }
     }
 
