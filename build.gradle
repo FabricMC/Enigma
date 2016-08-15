@@ -189,3 +189,62 @@ configurations.archives {
 // And finally, make the build generate / install the jars.
 assemble.dependsOn thinJar
 build.dependsOn install
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+		if (project.hasProperty('mavenPass')){
+            repository(url: "http://mavenupload.modmuss50.me/") {
+                authentication(userName: "buildslave", password: project.getProperty('mavenPass'))
+            }
+        }
+        else{ 
+           repository(url: "file:///var/www/maven/")
+        }
+            pom {
+                groupId = "chorusmc"
+                version = project.version
+                artifactId = project.archivesBaseName
+                project {
+                    name project.archivesBaseName
+                    packaging 'jar'
+                    description 'Enigma'
+                    url 'https://github.com/ChorusMC/Enigma'
+                    scm {
+                        url 'https://github.com/ChorusMC/Enigma'
+                        connection 'scm:git:git@github.com:ChorusMC/Enigma.git'
+                        developerConnection 'scm:git:git@github.com:ChorusMC/Enigma.git'
+                    }
+                    issueManagement {
+                        system 'github'
+                        url 'https://github.com/ChorusMC/Enigma/issues'
+                    }
+                    licenses {
+                        license {
+                            name 'License'
+                            url 'https://github.com/ChorusMC/Enigma/blob/master/readme.txt'
+                            distribution 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'modmuss50'
+                            name 'modmuss50'
+                            roles { role 'developer' }
+                        }
+						developer {
+                            id 'Thog'
+                            name 'Thog'
+                            roles { role 'developer' }
+                        }
+						developer {
+                            id 'Cuchaz'
+                            name 'Cuchaz'
+                            roles { role 'developer' }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
