@@ -52,6 +52,7 @@ public class PanelEditor extends JEditorPane {
                         break;
                     case KeyEvent.VK_F5:
                         gui.getController().refreshCurrentClass();
+                        break;
                     default:
                         break;
                 }

@@ -411,7 +411,7 @@ public class Deobfuscator {
             }
 
             // FIXME: HACK EVEN MORE HACK!
-            if (hack)
+            if (hack && this.jarIndex.containsObfEntry(obfEntry.getClassEntry()))
                 return true;
         }
 

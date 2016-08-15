@@ -738,7 +738,7 @@ public class Gui {
                         throw new Error(ex);
                     }
                 }
-                else
+                else if (response == JOptionPane.NO_OPTION)
                     this.frame.dispose();
 
                 return null;
