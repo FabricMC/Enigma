@@ -206,27 +206,27 @@ uploadArchives {
            repository(url: "file:///var/www/maven/")
         }
             pom {
-                groupId = "chorusmc"
+                groupId = "fabricmc"
                 version = project.version
                 artifactId = project.archivesBaseName
                 project {
                     name project.archivesBaseName
                     packaging 'jar'
                     description 'Enigma'
-                    url 'https://github.com/ChorusMC/Enigma'
+                    url 'https://github.com/FabricMC/Enigma'
                     scm {
-                        url 'https://github.com/ChorusMC/Enigma'
-                        connection 'scm:git:git@github.com:ChorusMC/Enigma.git'
-                        developerConnection 'scm:git:git@github.com:ChorusMC/Enigma.git'
+                        url 'https://github.com/FabricMC/Enigma'
+                        connection 'scm:git:git@github.com:FabricMC/Enigma.git'
+                        developerConnection 'scm:git:git@github.com:FabricMC/Enigma.git'
                     }
                     issueManagement {
                         system 'github'
-                        url 'https://github.com/ChorusMC/Enigma/issues'
+                        url 'https://github.com/FabricMC/Enigma/issues'
                     }
                     licenses {
                         license {
                             name 'License'
-                            url 'https://github.com/ChorusMC/Enigma/blob/master/readme.txt'
+                            url 'https://github.com/FabricMC/Enigma/blob/master/readme.txt'
                             distribution 'repo'
                         }
                     }
