@@ -206,7 +206,7 @@ uploadArchives {
            repository(url: "file:///var/www/maven/")
         }
             pom {
-                groupId = "fabricmc"
+                groupId = "net.fabricmc"
                 version = project.version
                 artifactId = project.archivesBaseName
                 project {
