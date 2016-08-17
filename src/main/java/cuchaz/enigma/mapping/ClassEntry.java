@@ -68,7 +68,7 @@ public class ClassEntry implements Entry {
     }
 
     public boolean equals(ClassEntry other) {
-        return this.name.equals(other.name);
+        return other != null && this.name.equals(other.name);
     }
 
     @Override

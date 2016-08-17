@@ -308,11 +308,8 @@ public class ConvertMain {
             System.out.println("WARNING: Broken behavior entry " + mapping.getKey() + " (" + mapping.getValue().getDeobfName() + ")");
         }
 
-        //TODO Fix
         // write out the converted mappings
-//        try (FileWriter out = new FileWriter(outMappingsFile)) {
-//            new MappingsWriter().write(out, newMappings);
-//        }
+        new MappingsEnigmaWriter().write(outMappingsFile, newMappings, true);
         System.out.println("Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath());
     }
 

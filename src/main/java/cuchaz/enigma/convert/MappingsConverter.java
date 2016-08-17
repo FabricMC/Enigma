@@ -117,13 +117,19 @@ public class MappingsConverter {
         Collections.sort(chainSizes);
         for (int chainSize : chainSizes) {
             for (java.util.Map.Entry<ClassEntry, ClassEntry> match : matchesByDestChainSize.get(chainSize)) {
-
                 // get class info
                 ClassEntry obfSourceClassEntry = match.getKey();
                 ClassEntry obfDestClassEntry = match.getValue();
                 List<ClassEntry> destClassChain = destDeobfuscator.getJarIndex().getObfClassChain(obfDestClassEntry);
 
-                ClassMapping sourceMapping = sourceDeobfuscator.getMappings().getClassByObf(obfSourceClassEntry);
+                ClassMapping sourceMapping;
+                if (obfSourceClassEntry.isInnerClass()) {
+                    List<ClassMapping> srcClassChain = sourceDeobfuscator.getMappings().getClassMappingChain(obfSourceClassEntry);
+                    sourceMapping = srcClassChain.get(srcClassChain.size() - 1);
+                } else {
+                    sourceMapping = sourceDeobfuscator.getMappings().getClassByObf(obfSourceClassEntry);
+                }
+
                 if (sourceMapping == null) {
                     // if this class was never deobfuscated, don't try to match it
                     continue;
