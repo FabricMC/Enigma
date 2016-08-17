@@ -704,14 +704,20 @@ public class JarIndex {
     }
 
     public Set<String> getImplementingClasses(String targetInterfaceName) {
-
+        
         // linear search is fast enough for now
         Set<String> classNames = Sets.newHashSet();
+        Set<String> interfaceNames = Sets.newHashSet(targetInterfaceName);
         for (Map.Entry<ClassEntry, ClassEntry> entry : this.translationIndex.getClassInterfaces()) {
             ClassEntry classEntry = entry.getKey();
             ClassEntry interfaceEntry = entry.getValue();
-            if (interfaceEntry.getName().equals(targetInterfaceName)) {
-                classNames.add(classEntry.getClassName());
+            if (interfaceNames.contains(interfaceEntry.getName())) {
+                String className = classEntry.getClassName();
+                classNames.add(className);
+                if (isInterface(className)) {
+                    interfaceNames.add(className);
+                }
+
                 this.translationIndex.getSubclassNamesRecursively(classNames, classEntry);
             }
         }
