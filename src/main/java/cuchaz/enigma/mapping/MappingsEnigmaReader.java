@@ -85,7 +85,7 @@ public class MappingsEnigmaReader
                     ClassMapping classMapping;
                     if (indent <= 0) {
                         // outer class
-                        classMapping = readClass(parts);
+                        classMapping = readClass(parts, false);
                         mappings.addClassMapping(classMapping);
                     } else {
 
@@ -94,7 +94,7 @@ public class MappingsEnigmaReader
                             throw new MappingParseException(lineNumber, "Unexpected CLASS entry here!");
                         }
 
-                        classMapping = readClass(parts);
+                        classMapping = readClass(parts, true);
                         ((ClassMapping) mappingStack.peek()).addInnerClassMapping(classMapping);
                     }
                     mappingStack.push(classMapping);
@@ -130,7 +130,7 @@ public class MappingsEnigmaReader
         return new ArgumentMapping(Integer.parseInt(parts[1]), parts[2]);
     }
 
-    private ClassMapping readClass(String[] parts) {
+    private ClassMapping readClass(String[] parts, boolean makeSimple) {
         if (parts.length == 2) {
             return new ClassMapping(parts[1]);
         } else {

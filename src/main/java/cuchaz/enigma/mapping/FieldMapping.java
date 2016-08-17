@@ -22,6 +22,17 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
         this.obfType = obfType;
     }
 
+    public FieldMapping(FieldMapping other, ClassNameReplacer obfClassNameReplacer) {
+        this.obfName = other.obfName;
+        this.deobfName = other.deobfName;
+        this.obfType = new Type(other.obfType, obfClassNameReplacer);
+    }
+
+    @Override
+    public FieldEntry getObfEntry(ClassEntry classEntry) {
+        return new FieldEntry(classEntry, this.obfName, this.obfType);
+    }
+
     @Override
     public String getObfName() {
         return this.obfName;
@@ -35,12 +46,40 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
         this.deobfName = NameValidator.validateFieldName(val);
     }
 
+    public void setObfName(String val) {
+        this.obfName = NameValidator.validateFieldName(val);
+    }
+
     public Type getObfType() {
         return this.obfType;
+    }
+
+    public void setObfType(Type val) {
+        this.obfType = val;
     }
 
     @Override
     public int compareTo(FieldMapping other) {
         return (this.obfName + this.obfType).compareTo(other.obfName + other.obfType);
     }
+
+    public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
+        // rename obf classes in the type
+        Type newType = new Type(this.obfType, new ClassNameReplacer() {
+            @Override
+            public String replace(String className) {
+                if (className.equals(oldObfClassName)) {
+                    return newObfClassName;
+                }
+                return null;
+            }
+        });
+
+        if (!newType.equals(this.obfType)) {
+            this.obfType = newType;
+            return true;
+        }
+        return false;
+    }
+
 }

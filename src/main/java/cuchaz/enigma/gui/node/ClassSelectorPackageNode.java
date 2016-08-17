@@ -20,6 +20,10 @@ public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
         this.packageName = packageName;
     }
 
+    public String getPackageName() {
+        return packageName;
+    }
+
     @Override
     public String toString() {
         return this.packageName;

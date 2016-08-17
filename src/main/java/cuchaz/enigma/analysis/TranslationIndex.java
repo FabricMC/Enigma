@@ -148,6 +148,13 @@ public class TranslationIndex {
         return subclasses;
     }
 
+    public void getSubclassesRecursively(Set<ClassEntry> out, ClassEntry classEntry) {
+        for (ClassEntry subclassEntry : getSubclass(classEntry)) {
+            out.add(subclassEntry);
+            getSubclassesRecursively(out, subclassEntry);
+        }
+    }
+
     public void getSubclassNamesRecursively(Set<String> out, ClassEntry classEntry) {
         for (ClassEntry subclassEntry : getSubclass(classEntry)) {
             out.add(subclassEntry.getName());

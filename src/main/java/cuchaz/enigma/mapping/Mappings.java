@@ -13,10 +13,13 @@ package cuchaz.enigma.mapping;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.throwables.MappingConflict;
 
@@ -65,8 +68,21 @@ public class Mappings {
         }
     }
 
+
+    public ClassMapping getClassByObf(ClassEntry entry) {
+        return getClassByObf(entry.getName());
+    }
+
     public ClassMapping getClassByObf(String obfName) {
         return this.classesByObf.get(obfName);
+    }
+
+    public ClassMapping getClassByDeobf(ClassEntry entry) {
+        return getClassByDeobf(entry.getName());
+    }
+
+    public ClassMapping getClassByDeobf(String deobfName) {
+        return this.classesByDeobf.get(deobfName);
     }
 
     public void setClassDeobfName(ClassMapping classMapping, String deobfName) {
@@ -118,6 +134,34 @@ public class Mappings {
             buf.append("\n");
         }
         return buf.toString();
+    }
+
+    public void renameObfClass(String oldObfName, String newObfName) {
+        new ArrayList<>(classes()).stream().filter(classMapping -> classMapping.renameObfClass(oldObfName, newObfName)).forEach(classMapping -> {
+            boolean wasRemoved = this.classesByObf.remove(oldObfName) != null;
+            assert (wasRemoved);
+            boolean wasAdded = this.classesByObf.put(newObfName, classMapping) == null;
+            assert (wasAdded);
+        });
+    }
+
+    public Set<String> getAllObfClassNames() {
+        final Set<String> classNames = Sets.newHashSet();
+        for (ClassMapping classMapping : classes()) {
+
+            // add the class name
+            classNames.add(classMapping.getObfFullName());
+
+            // add classes from method signatures
+            for (MethodMapping methodMapping : classMapping.methods()) {
+                for (Type type : methodMapping.getObfSignature().types()) {
+                    if (type.hasClass()) {
+                        classNames.add(type.getClassEntry().getClassName());
+                    }
+                }
+            }
+        }
+        return classNames;
     }
 
     public boolean containsDeobfClass(String deobfName) {

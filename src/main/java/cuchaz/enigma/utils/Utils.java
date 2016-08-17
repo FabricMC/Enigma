@@ -88,47 +88,4 @@ public class Utils {
         manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
         manager.setInitialDelay(oldDelay);
     }
-
-    public static void navigateToToken(final JEditorPane editor, final Token token, final Highlighter.HighlightPainter highlightPainter) {
-
-        // set the caret position to the token
-        editor.setCaretPosition(token.start);
-        editor.grabFocus();
-
-        try {
-            // make sure the token is visible in the scroll window
-            Rectangle start = editor.modelToView(token.start);
-            Rectangle end = editor.modelToView(token.end);
-            final Rectangle show = start.union(end);
-            show.grow(start.width * 10, start.height * 6);
-            SwingUtilities.invokeLater(() -> editor.scrollRectToVisible(show));
-        } catch (BadLocationException ex) {
-            throw new Error(ex);
-        }
-
-        // highlight the token momentarily
-        final Timer timer = new Timer(200, new ActionListener() {
-            private int m_counter = 0;
-            private Object m_highlight = null;
-
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                if (m_counter % 2 == 0) {
-                    try {
-                        m_highlight = editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
-                    } catch (BadLocationException ex) {
-                        // don't care
-                    }
-                } else if (m_highlight != null) {
-                    editor.getHighlighter().removeHighlight(m_highlight);
-                }
-
-                if (m_counter++ > 6) {
-                    Timer timer = (Timer) event.getSource();
-                    timer.stop();
-                }
-            }
-        });
-        timer.start();
-    }
 }

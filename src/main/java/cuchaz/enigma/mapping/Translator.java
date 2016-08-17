@@ -38,6 +38,14 @@ public class Translator {
         this.index = index;
     }
 
+    public TranslationDirection getDirection() {
+        return direction;
+    }
+
+    public TranslationIndex getTranslationIndex() {
+        return index;
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends Entry> T translateEntry(T entry) {
         if (entry instanceof ClassEntry) {

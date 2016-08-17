@@ -34,6 +34,12 @@ public class ArgumentEntry implements Entry {
         this.name = name;
     }
 
+    public ArgumentEntry(ArgumentEntry other) {
+        this.behaviorEntry = other.getBehaviorEntry();
+        this.index = other.index;
+        this.name = other.name;
+    }
+
     public ArgumentEntry(ArgumentEntry other, String newClassName) {
         this.behaviorEntry = (BehaviorEntry) other.behaviorEntry.cloneToNewClass(new ClassEntry(newClassName));
         this.index = other.index;

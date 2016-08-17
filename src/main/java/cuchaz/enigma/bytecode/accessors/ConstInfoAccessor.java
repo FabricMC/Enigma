@@ -10,8 +10,12 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode.accessors;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
@@ -50,6 +54,44 @@ public class ConstInfoAccessor {
     public int getTag() {
         try {
             return (Integer) getTag.invoke(this.item);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
+    }
+
+    public ConstInfoAccessor copy() {
+        return new ConstInfoAccessor(copyItem());
+    }
+
+    public Object copyItem() {
+        // I don't know of a simpler way to copy one of these silly things...
+        try {
+            // serialize the item
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(buf);
+            write(out);
+
+            // deserialize the item
+            DataInputStream in = new DataInputStream(new ByteArrayInputStream(buf.toByteArray()));
+            Object item = new ConstInfoAccessor(in).getItem();
+            in.close();
+
+            return item;
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
+    }
+
+    public void write(DataOutputStream out) throws IOException {
+        try {
+            out.writeUTF(this.item.getClass().getName());
+            out.writeInt(getIndex());
+
+            Method method = this.item.getClass().getMethod("write", DataOutputStream.class);
+            method.setAccessible(true);
+            method.invoke(this.item, out);
+        } catch (IOException ex) {
+            throw ex;
         } catch (Exception ex) {
             throw new Error(ex);
         }

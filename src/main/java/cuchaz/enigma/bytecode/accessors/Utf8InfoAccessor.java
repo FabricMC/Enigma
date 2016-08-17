@@ -10,30 +10,13 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode.accessors;
 
-import java.lang.reflect.Field;
-
-public class StringInfoAccessor {
+public class Utf8InfoAccessor {
 
     private static Class<?> clazz;
-    private static Field stringIndex;
 
-    private Object item;
-
-    public StringInfoAccessor(Object item) {
-        this.item = item;
-    }
-
-    public int getStringIndex() {
+    static {
         try {
-            return (Integer) stringIndex.get(this.item);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
-
-    public void setStringIndex(int val) {
-        try {
-            stringIndex.set(this.item, val);
+            clazz = Class.forName("javassist.bytecode.Utf8Info");
         } catch (Exception ex) {
             throw new Error(ex);
         }
@@ -41,15 +24,5 @@ public class StringInfoAccessor {
 
     public static boolean isType(ConstInfoAccessor accessor) {
         return clazz.isAssignableFrom(accessor.getItem().getClass());
-    }
-
-    static {
-        try {
-            clazz = Class.forName("javassist.bytecode.StringInfo");
-            stringIndex = clazz.getDeclaredField("string");
-            stringIndex.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
     }
 }

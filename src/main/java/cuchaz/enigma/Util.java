@@ -41,6 +41,27 @@ public class Util {
         return result;
     }
 
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException ex) {
+                // just ignore any further exceptions
+            }
+        }
+    }
+
+    public static void closeQuietly(JarFile jarFile) {
+        // silly library should implement Closeable...
+        if (jarFile != null) {
+            try {
+                jarFile.close();
+            } catch (IOException ex) {
+                // just ignore any further exceptions
+            }
+        }
+    }
+
     public static String readStreamToString(InputStream in) throws IOException {
         return CharStreams.toString(new InputStreamReader(in, "UTF-8"));
     }
@@ -63,6 +84,16 @@ public class Util {
             } catch (URISyntaxException ex) {
                 throw new IllegalArgumentException(ex);
             }
+        }
+    }
+
+    public static void writeClass(CtClass c) {
+        String name = Descriptor.toJavaName(c.getName());
+        File file = new File(name + ".class");
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            out.write(c.toBytecode());
+        } catch (IOException | CannotCompileException ex) {
+            throw new Error(ex);
         }
     }
 }

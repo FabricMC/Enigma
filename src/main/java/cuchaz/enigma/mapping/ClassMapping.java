@@ -12,6 +12,7 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Maps;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import cuchaz.enigma.throwables.MappingConflict;
@@ -119,6 +120,15 @@ public class ClassMapping implements Comparable<ClassMapping> {
         return classMapping;
     }
 
+    public String getDeobfInnerClassName(String obfSimpleName) {
+        assert (isSimpleClassName(obfSimpleName));
+        ClassMapping classMapping = m_innerClassesByObfSimple.get(obfSimpleName);
+        if (classMapping != null) {
+            return classMapping.getDeobfName();
+        }
+        return null;
+    }
+
     public void setInnerClassName(ClassEntry obfInnerClass, String deobfName) {
         ClassMapping classMapping = getOrCreateInnerClass(obfInnerClass);
         if (classMapping.getDeobfName() != null) {
@@ -147,6 +157,10 @@ public class ClassMapping implements Comparable<ClassMapping> {
     public Iterable<FieldMapping> fields() {
         assert (m_fieldsByObf.size() == m_fieldsByDeobf.size());
         return m_fieldsByObf.values();
+    }
+
+    public boolean containsObfField(String obfName, Type obfType) {
+        return m_fieldsByObf.containsKey(getFieldKey(obfName, obfType));
     }
 
     public boolean containsDeobfField(String deobfName, Type deobfType) {
@@ -180,6 +194,10 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public FieldMapping getFieldByObf(String obfName, Type obfType) {
         return m_fieldsByObf.get(getFieldKey(obfName, obfType));
+    }
+
+    public FieldMapping getFieldByDeobf(String deobfName, Type obfType) {
+        return m_fieldsByDeobf.get(getFieldKey(deobfName, obfType));
     }
 
     public String getObfFieldName(String deobfName, Type obfType) {
@@ -227,11 +245,25 @@ public class ClassMapping implements Comparable<ClassMapping> {
         }
     }
 
+    public void setFieldObfNameAndType(String oldObfName, Type obfType, String newObfName, Type newObfType) {
+        assert(newObfName != null);
+        FieldMapping fieldMapping = m_fieldsByObf.remove(getFieldKey(oldObfName, obfType));
+        assert(fieldMapping != null);
+        fieldMapping.setObfName(newObfName);
+        fieldMapping.setObfType(newObfType);
+        boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(newObfName, newObfType), fieldMapping) == null;
+        assert(obfWasAdded);
+    }
+
     //// METHODS ////////
 
     public Iterable<MethodMapping> methods() {
         assert (m_methodsByObf.size() >= m_methodsByDeobf.size());
         return m_methodsByObf.values();
+    }
+
+    public boolean containsObfMethod(String obfName, Signature obfSignature) {
+        return m_methodsByObf.containsKey(getMethodKey(obfName, obfSignature));
     }
 
     public boolean containsDeobfMethod(String deobfName, Signature obfSignature) {
@@ -298,6 +330,16 @@ public class ClassMapping implements Comparable<ClassMapping> {
         }
     }
 
+    public void setMethodObfNameAndSignature(String oldObfName, Signature obfSignature, String newObfName, Signature newObfSignature) {
+        assert(newObfName != null);
+        MethodMapping methodMapping = m_methodsByObf.remove(getMethodKey(oldObfName, obfSignature));
+        assert(methodMapping != null);
+        methodMapping.setObfName(newObfName);
+        methodMapping.setObfSignature(newObfSignature);
+        boolean obfWasAdded = m_methodsByObf.put(getMethodKey(newObfName, newObfSignature), methodMapping) == null;
+        assert(obfWasAdded);
+    }
+
     //// ARGUMENTS ////////
 
     public void setArgumentName(String obfMethodName, Signature obfMethodSignature, int argumentIndex, String argumentName) {
@@ -360,6 +402,48 @@ public class ClassMapping implements Comparable<ClassMapping> {
         return m_obfFullName.compareTo(other.m_obfFullName);
     }
 
+    public boolean renameObfClass(String oldObfClassName, String newObfClassName) {
+
+        // rename inner classes
+        for (ClassMapping innerClassMapping : new ArrayList<>(m_innerClassesByObfSimple.values())) {
+            if (innerClassMapping.renameObfClass(oldObfClassName, newObfClassName)) {
+                boolean wasRemoved = m_innerClassesByObfSimple.remove(oldObfClassName) != null;
+                assert (wasRemoved);
+                boolean wasAdded = m_innerClassesByObfSimple.put(newObfClassName, innerClassMapping) == null;
+                assert (wasAdded);
+            }
+        }
+
+        // rename field types
+        for (FieldMapping fieldMapping : new ArrayList<>(m_fieldsByObf.values())) {
+            String oldFieldKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
+            if (fieldMapping.renameObfClass(oldObfClassName, newObfClassName)) {
+                boolean wasRemoved = m_fieldsByObf.remove(oldFieldKey) != null;
+                assert (wasRemoved);
+                boolean wasAdded = m_fieldsByObf.put(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType()), fieldMapping) == null;
+                assert (wasAdded);
+            }
+        }
+
+        // rename method signatures
+        for (MethodMapping methodMapping : new ArrayList<>(m_methodsByObf.values())) {
+            String oldMethodKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());
+            if (methodMapping.renameObfClass(oldObfClassName, newObfClassName)) {
+                boolean wasRemoved = m_methodsByObf.remove(oldMethodKey) != null;
+                assert (wasRemoved);
+                boolean wasAdded = m_methodsByObf.put(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature()), methodMapping) == null;
+                assert (wasAdded);
+            }
+        }
+
+        if (m_obfFullName.equals(oldObfClassName)) {
+            // rename this class
+            m_obfFullName = newObfClassName;
+            return true;
+        }
+        return false;
+    }
+
     public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {
         MethodMapping methodMapping = m_methodsByObf.get(getMethodKey(obfBehaviorEntry.getName(), obfBehaviorEntry.getSignature()));
         return methodMapping != null && methodMapping.containsArgument(name);
@@ -369,4 +453,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
         return name.indexOf('/') < 0 && name.indexOf('$') < 0;
     }
 
+    public ClassEntry getObfEntry() {
+        return new ClassEntry(m_obfFullName);
+    }
 }

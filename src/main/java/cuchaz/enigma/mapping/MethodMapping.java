@@ -39,6 +39,16 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
         this.obfSignature = obfSignature;
         this.arguments = Maps.newTreeMap();
     }
+    
+    public MethodMapping(MethodMapping other, ClassNameReplacer obfClassNameReplacer) {
+        this.obfName = other.obfName;
+        this.deobfName = other.deobfName;
+        this.obfSignature = new Signature(other.obfSignature, obfClassNameReplacer);
+        this.arguments = Maps.newTreeMap();
+        for (Map.Entry<Integer,ArgumentMapping> entry : other.arguments.entrySet()) {
+            this.arguments.put(entry.getKey(), new ArgumentMapping(entry.getValue()));
+        }
+    }
 
     @Override
     public String getObfName() {
@@ -55,6 +65,14 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
 
     public Signature getObfSignature() {
         return this.obfSignature;
+    }
+
+    public void setObfName(String name) {
+        this.obfName = NameValidator.validateMethodName(name);
+    }
+
+    public void setObfSignature(Signature val) {
+        this.obfSignature = val;
     }
 
     public Iterable<ArgumentMapping> arguments() {
@@ -136,5 +154,37 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
             }
         }
         return false;
+    }
+
+    public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
+        // rename obf classes in the signature
+        Signature newSignature = new Signature(this.obfSignature, new ClassNameReplacer() {
+            @Override
+            public String replace(String className) {
+                if (className.equals(oldObfClassName)) {
+                    return newObfClassName;
+                }
+                return null;
+            }
+        });
+
+        if (!newSignature.equals(this.obfSignature)) {
+            this.obfSignature = newSignature;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isConstructor() {
+        return this.obfName.startsWith("<");
+    }
+
+    @Override
+    public BehaviorEntry getObfEntry(ClassEntry classEntry) {
+        if (isConstructor()) {
+            return new ConstructorEntry(classEntry, this.obfSignature);
+        } else {
+            return new MethodEntry(classEntry, this.obfName, this.obfSignature);
+        }
     }
 }

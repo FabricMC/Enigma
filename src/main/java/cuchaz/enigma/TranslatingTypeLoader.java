@@ -52,6 +52,10 @@ public class TranslatingTypeLoader implements ITypeLoader {
         this.defaultTypeLoader = new ClasspathTypeLoader();
     }
 
+    public void clearCache() {
+        this.cache.clear();
+    }
+
     @Override
     public boolean tryLoadType(String className, Buffer out) {
 
@@ -74,6 +78,24 @@ public class TranslatingTypeLoader implements ITypeLoader {
         System.arraycopy(data, 0, out.array(), out.position(), data.length);
         out.position(0);
         return true;
+    }
+
+    public CtClass loadClass(String deobfClassName) {
+
+        byte[] data = loadType(deobfClassName);
+        if (data == null) {
+            return null;
+        }
+
+        // return a javassist handle for the class
+        String javaClassFileName = Descriptor.toJavaName(deobfClassName);
+        ClassPool classPool = new ClassPool();
+        classPool.insertClassPath(new ByteArrayClassPath(javaClassFileName, data));
+        try {
+            return classPool.get(javaClassFileName);
+        } catch (NotFoundException ex) {
+            throw new Error(ex);
+        }
     }
 
     private byte[] loadType(String className) {

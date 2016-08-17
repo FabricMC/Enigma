@@ -90,6 +90,16 @@ public class ClassRenamer {
         });
     }
 
+    public static void moveAllClassesIntoDefaultPackage(CtClass c, final String oldPackageName) {
+        renameClasses(c, className -> {
+            ClassEntry entry = new ClassEntry(className);
+            if (entry.getPackageName().equals(oldPackageName)) {
+                return entry.getSimpleName();
+            }
+            return null;
+        });
+    }
+
     @SuppressWarnings("unchecked")
     public static void renameClasses(CtClass c, ClassNameReplacer replacer) {
 

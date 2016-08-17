@@ -21,6 +21,11 @@ public class ArgumentMapping implements Comparable<ArgumentMapping> {
         this.name = NameValidator.validateArgumentName(name);
     }
 
+    public ArgumentMapping(ArgumentMapping other) {
+        this.index = other.index;
+        this.name = other.name;
+    }
+
     public int getIndex() {
         return this.index;
     }

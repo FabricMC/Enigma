@@ -8,11 +8,23 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.gui;
+
+import cuchaz.enigma.mapping.ClassEntry;
 
 
-public interface MemberMapping<T extends Entry> {
-    T getObfEntry(ClassEntry classEntry);
+public class ScoredClassEntry extends ClassEntry {
 
-    String getObfName();
+    private static final long serialVersionUID = -8798725308554217105L;
+
+    private float m_score;
+
+    public ScoredClassEntry(ClassEntry other, float score) {
+        super(other);
+        m_score = score;
+    }
+
+    public float getScore() {
+        return m_score;
+    }
 }

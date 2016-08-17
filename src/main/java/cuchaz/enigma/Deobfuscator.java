@@ -78,6 +78,10 @@ public class Deobfuscator {
         setMappings(new Mappings());
     }
 
+    public JarFile getJar() {
+        return this.jar;
+    }
+
     public String getJarName() {
         return this.jar.getName();
     }

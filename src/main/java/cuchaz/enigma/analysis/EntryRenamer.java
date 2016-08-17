@@ -56,6 +56,59 @@ public class EntryRenamer {
         }
     }
 
+    public static <Key, Val> void renameMethodsInMultimap(Map<MethodEntry, MethodEntry> renames, Multimap<Key, Val> map) {
+        // for each key/value pair...
+        Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
+        for (Map.Entry<Key, Val> entry : map.entries()) {
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameMethodsInThing(renames, entry.getKey()), renameMethodsInThing(renames, entry.getValue())));
+        }
+        map.clear();
+        for (Map.Entry<Key, Val> entry : entriesToAdd) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public static <Key, Val> void renameMethodsInMap(Map<MethodEntry, MethodEntry> renames, Map<Key, Val> map) {
+        // for each key/value pair...
+        Set<Map.Entry<Key, Val>> entriesToAdd = Sets.newHashSet();
+        for (Map.Entry<Key, Val> entry : map.entrySet()) {
+            entriesToAdd.add(new AbstractMap.SimpleEntry<>(renameMethodsInThing(renames, entry.getKey()), renameMethodsInThing(renames, entry.getValue())));
+        }
+        map.clear();
+        for (Map.Entry<Key, Val> entry : entriesToAdd) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T renameMethodsInThing(Map<MethodEntry,MethodEntry> renames, T thing) {
+        if (thing instanceof MethodEntry) {
+            MethodEntry methodEntry = (MethodEntry)thing;
+            MethodEntry newMethodEntry = renames.get(methodEntry);
+            if (newMethodEntry != null) {
+                return (T)new MethodEntry(
+                        methodEntry.getClassEntry(),
+                        newMethodEntry.getName(),
+                        methodEntry.getSignature()
+                );
+            }
+            return thing;
+        } else if (thing instanceof ArgumentEntry) {
+            ArgumentEntry argumentEntry = (ArgumentEntry)thing;
+            return (T)new ArgumentEntry(
+                    renameMethodsInThing(renames, argumentEntry.getBehaviorEntry()),
+                    argumentEntry.getIndex(),
+                    argumentEntry.getName()
+            );
+        } else if (thing instanceof EntryReference) {
+            EntryReference<Entry,Entry> reference = (EntryReference<Entry,Entry>)thing;
+            reference.entry = renameMethodsInThing(renames, reference.entry);
+            reference.context = renameMethodsInThing(renames, reference.context);
+            return thing;
+        }
+        return thing;
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> T renameClassesInThing(final Map<String, String> renames, T thing) {
         if (thing instanceof String) {

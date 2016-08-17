@@ -10,8 +10,12 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.throwables.IllegalNameException;
@@ -163,6 +167,42 @@ public class MappingsRenamer {
     public void markArgumentAsDeobfuscated(ArgumentEntry obf) {
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
         classMapping.setArgumentName(obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), obf.getName());
+    }
+
+    public boolean moveFieldToObfClass(ClassMapping classMapping, FieldMapping fieldMapping, ClassEntry obfClass) {
+        classMapping.removeFieldMapping(fieldMapping);
+        ClassMapping targetClassMapping = getOrCreateClassMapping(obfClass);
+        if (!targetClassMapping.containsObfField(fieldMapping.getObfName(), fieldMapping.getObfType())) {
+            if (!targetClassMapping.containsDeobfField(fieldMapping.getDeobfName(), fieldMapping.getObfType())) {
+                targetClassMapping.addFieldMapping(fieldMapping);
+                return true;
+            } else {
+                System.err.println("WARNING: deobf field was already there: " + obfClass + "." + fieldMapping.getDeobfName());
+            }
+        }
+        return false;
+    }
+
+    public boolean moveMethodToObfClass(ClassMapping classMapping, MethodMapping methodMapping, ClassEntry obfClass) {
+        classMapping.removeMethodMapping(methodMapping);
+        ClassMapping targetClassMapping = getOrCreateClassMapping(obfClass);
+        if (!targetClassMapping.containsObfMethod(methodMapping.getObfName(), methodMapping.getObfSignature())) {
+            if (!targetClassMapping.containsDeobfMethod(methodMapping.getDeobfName(), methodMapping.getObfSignature())) {
+                targetClassMapping.addMethodMapping(methodMapping);
+                return true;
+            } else {
+                System.err.println("WARNING: deobf method was already there: " + obfClass + "." + methodMapping.getDeobfName() + methodMapping.getObfSignature());
+            }
+        }
+        return false;
+    }
+
+    public void write(OutputStream out) throws IOException {
+        // TEMP: just use the object output for now. We can find a more efficient storage format later
+        GZIPOutputStream gzipout = new GZIPOutputStream(out);
+        ObjectOutputStream oout = new ObjectOutputStream(gzipout);
+        oout.writeObject(this);
+        gzipout.finish();
     }
 
     private ClassMapping getOrCreateClassMapping(ClassEntry obfClassEntry) {

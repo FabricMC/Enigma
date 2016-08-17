@@ -10,9 +10,13 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+public class EntryPair<T extends Entry> {
 
-public interface MemberMapping<T extends Entry> {
-    T getObfEntry(ClassEntry classEntry);
+    public T obf;
+    public T deobf;
 
-    String getObfName();
+    public EntryPair(T obf, T deobf) {
+        this.obf = obf;
+        this.deobf = deobf;
+    }
 }

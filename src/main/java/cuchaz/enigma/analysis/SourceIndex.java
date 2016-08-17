@@ -145,6 +145,14 @@ public class SourceIndex {
         return this.tokenToReference.keySet();
     }
 
+    public Iterable<Token> declarationTokens() {
+        return this.declarationToToken.values();
+    }
+
+    public Iterable<Entry> declarations() {
+        return this.declarationToToken.keySet();
+    }
+
     public Token getDeclarationToken(Entry deobfEntry) {
         return this.declarationToToken.get(deobfEntry);
     }
