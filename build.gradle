@@ -139,28 +139,11 @@ shadowJar {
     exclude 'META-INF/maven/**'
 }
 
-// Now make the deployable application jar with extra classes stripped out using
-// ProGuard (don't use JavaExec because we want to redirect output to a file).
-task('thinJar', dependsOn: shadowJar) << {
-    javaexec {
-        main 'proguard.ProGuard'
-        classpath configurations.proGuard
-
-        args '@proguard-build.conf', '-injars', shadowJar.archivePath,
-                // well this works...
-                '-outjars', file("build/libs/$project.name-${version}-thin.jar")
-
-        // Cut down on console spam
-        standardOutput new File(buildDir, 'proguard.log').newOutputStream();
-    }
-    println 'Saved ProGuard output to build/proguard.log'
-}
-
 // Create a library jar, containing only the deobfuscation code, for use at
 // runtime. This will be deployed to Maven Local with a POM, and can be uploaded
 // to a remote server manually (for now anyway).
 task('libJar', type: Jar, dependsOn: classes) {
-    baseName = 'enigma-lib'
+    classifier = 'lib'
 
     from("$buildDir/classes/main") {
         exclude 'cuchaz/enigma/gui/**'
@@ -172,26 +155,13 @@ task('libJar', type: Jar, dependsOn: classes) {
         exclude 'cuchaz/enigma/ConvertMain*.class'
     }
 }
-artifacts.archives libJar { name 'enigma-lib' }
 
 artifacts {
-	archives shadowJar
-}
-
-// Here we need a bit of hackery to remove the default Maven deployment and just
-// deploy enigma-lib. Works, but not ideal :(
-configurations.archives {
-    artifacts.iterator().with {
-        while (it.hasNext()) {
-            if (it.next().name == 'enigma') {
-                it.remove()
-            }
-        }
-    }
+   archives shadowJar
+   archives libJar
 }
 
 // And finally, make the build generate / install the jars.
-assemble.dependsOn thinJar
 build.dependsOn install
 
 uploadArchives {
