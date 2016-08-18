@@ -49,6 +49,11 @@ repositories {
         name "Cuchaz Custom Repository"
         url 'http://maven.cuchazinteractive.com'
     }
+
+    maven {
+        name "RX14 Repository"
+        url 'http://mvn.rx14.co.uk/local/'
+    }
 }
 
 configurations {
@@ -61,10 +66,7 @@ configurations {
 dependencies {
     compile 'com.google.guava:guava:17.+'
     compile 'org.javassist:javassist:3.+'
-    compile 'org.bitbucket.mstrobel:procyon-decompiler:0.5.28-enigma'
-    compile 'org.javassist:javassist:3.20.0-GA'
-
-    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.32.3-enigma'
 
     application 'de.sciss:syntaxpane:1.1.+'
 
