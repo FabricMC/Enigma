@@ -634,13 +634,13 @@ public class JarIndex {
 
     private void getRelatedMethodImplementations(Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
         MethodEntry methodEntry = node.getMethodEntry();
+
         if (containsObfBehavior(methodEntry)) {
             // collect the entry
             methodEntries.add(methodEntry);
         }
 
         // look at bridged methods!
-        // FIXME: looks like a hack to me
         MethodEntry bridgedEntry = getBridgedMethod(methodEntry);
         while (bridgedEntry != null) {
             methodEntries.addAll(getRelatedMethodImplementations(bridgedEntry));
@@ -663,6 +663,13 @@ public class JarIndex {
         if (containsObfBehavior(methodEntry)) {
             // collect the entry
             methodEntries.add(methodEntry);
+        }
+
+        // look at bridged methods!
+        MethodEntry bridgedEntry = getBridgedMethod(methodEntry);
+        while (bridgedEntry != null) {
+            methodEntries.addAll(getRelatedMethodImplementations(bridgedEntry));
+            bridgedEntry = getBridgedMethod(bridgedEntry);
         }
 
         // recurse
@@ -728,6 +735,7 @@ public class JarIndex {
     }
 
     public Set<String> getImplementingClasses(String targetInterfaceName) {
+
         // linear search is fast enough for now
         Set<String> classNames = Sets.newHashSet();
         for (Map.Entry<ClassEntry, ClassEntry> entry : this.translationIndex.getClassInterfaces()) {
