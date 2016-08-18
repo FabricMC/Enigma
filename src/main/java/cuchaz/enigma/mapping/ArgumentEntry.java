@@ -46,6 +46,12 @@ public class ArgumentEntry implements Entry {
         this.name = other.name;
     }
 
+    public ArgumentEntry(ArgumentEntry other, BehaviorEntry entry) {
+        this.behaviorEntry = entry;
+        this.index = other.index;
+        this.name = other.name;
+    }
+
     public BehaviorEntry getBehaviorEntry() {
         return this.behaviorEntry;
     }

@@ -148,6 +148,27 @@ public class MappingsRenamer {
         classMapping.setMethodName(obf.getName(), obf.getSignature(), obf.getName());
     }
 
+    public void setArgumentTreeName(ArgumentEntry obf, String deobfName) {
+        if (!(obf.getBehaviorEntry() instanceof MethodEntry)) {
+            setArgumentName(obf, deobfName);
+            return;
+        }
+
+        MethodEntry obfMethod = (MethodEntry) obf.getBehaviorEntry();
+
+        Set<MethodEntry> implementations = m_index.getRelatedMethodImplementations(obfMethod);
+        for (MethodEntry entry : implementations) {
+            // NOTE: don't need to check arguments for name collisions with names determined by Procyon
+            if (m_mappings.containsArgument(entry, deobfName)) {
+                throw new IllegalNameException(deobfName, "There is already an argument with that name");
+            }
+        }
+
+        for (MethodEntry entry : implementations) {
+            setArgumentName(new ArgumentEntry(obf, entry), deobfName);
+        }
+    }
+
     public void setArgumentName(ArgumentEntry obf, String deobfName) {
         deobfName = NameValidator.validateArgumentName(deobfName);
         // NOTE: don't need to check arguments for name collisions with names determined by Procyon

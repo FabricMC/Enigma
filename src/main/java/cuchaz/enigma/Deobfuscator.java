@@ -463,7 +463,7 @@ public class Deobfuscator {
         } else if (obfEntry instanceof ConstructorEntry) {
             throw new IllegalArgumentException("Cannot rename constructors");
         } else if (obfEntry instanceof ArgumentEntry) {
-            this.renamer.setArgumentName((ArgumentEntry) obfEntry, newName);
+            this.renamer.setArgumentTreeName((ArgumentEntry) obfEntry, newName);
         } else {
             throw new Error("Unknown entry type: " + obfEntry.getClass().getName());
         }
