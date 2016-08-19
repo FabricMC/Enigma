@@ -21,13 +21,12 @@ import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
 import com.strobel.decompiler.languages.java.JavaOutputVisitor;
-import com.strobel.decompiler.languages.java.ast.AstBuilder;
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
+import com.strobel.decompiler.languages.java.ast.*;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.bytecode.ClassProtectifier;
 import cuchaz.enigma.bytecode.ClassPublifier;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.javadoc.JavaDocMapping;
 import cuchaz.enigma.utils.Utils;
 import javassist.CtClass;
 import javassist.bytecode.Descriptor;
@@ -39,6 +38,8 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
 public class Deobfuscator {
+
+    private final JavaDocMapping docMapping;
 
     public interface ProgressListener {
         void init(int totalWork, String title);
@@ -75,6 +76,8 @@ public class Deobfuscator {
         this.renamer = new MappingsRenamer(this.jarIndex, null);
         // init mappings
         setMappings(new Mappings());
+
+        this.docMapping = new JavaDocMapping();
     }
 
     public JarFile getJar() {
@@ -91,6 +94,11 @@ public class Deobfuscator {
 
     public Mappings getMappings() {
         return this.mappings;
+    }
+
+    public JavaDocMapping getDocMapping()
+    {
+        return docMapping;
     }
 
     public void setMappings(Mappings val) {
@@ -176,7 +184,8 @@ public class Deobfuscator {
                 this.jar,
                 this.jarIndex,
                 getTranslator(TranslationDirection.Obfuscating),
-                getTranslator(TranslationDirection.Deobfuscating)
+                getTranslator(TranslationDirection.Deobfuscating),
+                this.docMapping
         );
         this.settings.setTypeLoader(loader);
 
@@ -204,6 +213,14 @@ public class Deobfuscator {
     }
 
     public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source, Boolean ignoreBadTokens) {
+        List<Annotation> annotations = new ArrayList<>();
+
+        sourceTree.acceptVisitor(new JavadocIndexVisitor(), annotations);
+
+        // DEBUG
+        // sourceTree.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
+
+        annotations.forEach(AstNode::remove);
 
         // build the source index
         SourceIndex index;
@@ -213,9 +230,6 @@ public class Deobfuscator {
             index = new SourceIndex(source);
         }
         sourceTree.acceptVisitor(new SourceIndexVisitor(), index);
-
-        // DEBUG
-        // sourceTree.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
 
         // resolve all the classes in the source references
         for (Token token : index.referenceTokens()) {
@@ -234,10 +248,51 @@ public class Deobfuscator {
                 deobfReference.entry = deobfuscateEntry(obfEntry);
                 index.replaceDeobfReference(token, deobfReference);
             }
-
             // DEBUG
             // System.out.println( token + " -> " + reference + " -> " + index.getReferenceToken( reference ) );
         }
+
+        source = index.getSource();
+
+        for (Annotation annotation : annotations)
+        {
+            // Get the decompiler before calling getText (after that we can get it...)
+            int pos = annotation.getRegion().getBeginLine();
+
+            // Get the exact annotation
+            String original = annotation.getText();
+
+            int originalAnnotationPosInSource = source.indexOf(original) - 1;
+            int prevLineBreak;
+            for (prevLineBreak = originalAnnotationPosInSource; prevLineBreak < source.length(); prevLineBreak--)
+            {
+                if (source.charAt(prevLineBreak) != ' ')
+                    break;
+            }
+
+            // Format
+            String theComment = docMapping.convertAnnotationToJavaDoc(annotation, originalAnnotationPosInSource - prevLineBreak);
+
+            // Replace the annotation by the JavaDoc
+            source = source.replace(original, theComment);
+
+            // Calculate the offset of the changes for tokens
+            int offset = theComment.length() - original.length();
+
+            // Propagate positions changes
+            for (Token token : index.referenceTokens())
+                if (pos <= token.getRegion().getBeginLine())
+                    token.offsetColum += offset;
+        }
+
+        // Set the source because of JavaDoc changes
+        index.setSource(source);
+
+        // Reccompute the start and end using the offset
+        for (Token token : index.referenceTokens())
+            token.computePos();
+
+        annotations.clear();
 
         return index;
     }
@@ -387,8 +442,7 @@ public class Deobfuscator {
                 this.jar,
                 this.jarIndex,
                 getTranslator(TranslationDirection.Obfuscating),
-                getTranslator(TranslationDirection.Deobfuscating)
-        );
+                getTranslator(TranslationDirection.Deobfuscating), this.docMapping);
         transformJar(out, progress, loader::transformClass);
     }
 
@@ -422,7 +476,7 @@ public class Deobfuscator {
                     outJar.write(c.toBytecode());
                     outJar.closeEntry();
                 } catch (Throwable t) {
-                    throw new Error("Unable to transform class " + c.getName(), t);
+                    throw new Error("Unable to tryToAddJavaDoc class " + c.getName(), t);
                 }
             }
             if (progress != null) {
@@ -508,7 +562,7 @@ public class Deobfuscator {
     }
 
     public boolean isRenameable(EntryReference<Entry, Entry> obfReference, boolean activeHack) {
-        return obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry(), activeHack);
+        return obfReference != null && obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry(), activeHack);
     }
 
     public boolean isRenameable(EntryReference<Entry, Entry> obfReference) {

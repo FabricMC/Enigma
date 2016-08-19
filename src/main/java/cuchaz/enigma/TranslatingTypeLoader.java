@@ -12,10 +12,17 @@ package cuchaz.enigma;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
+import cuchaz.enigma.analysis.BridgeMarker;
+import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.bytecode.*;
+import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.mapping.javadoc.JavaDocMapping;
+import javassist.*;
+import javassist.bytecode.Descriptor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,14 +32,6 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import cuchaz.enigma.analysis.BridgeMarker;
-import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.bytecode.*;
-import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.Translator;
-import javassist.*;
-import javassist.bytecode.Descriptor;
-
 public class TranslatingTypeLoader implements ITypeLoader {
 
     private JarFile jar;
@@ -41,14 +40,18 @@ public class TranslatingTypeLoader implements ITypeLoader {
     private Translator deobfuscatingTranslator;
     private Map<String, byte[]> cache;
     private ClasspathTypeLoader defaultTypeLoader;
+    private JavaDocMapping docMapping;
 
-    public TranslatingTypeLoader(JarFile jar, JarIndex jarIndex, Translator obfuscatingTranslator, Translator deobfuscatingTranslator) {
+    public TranslatingTypeLoader(JarFile jar, JarIndex jarIndex, Translator obfuscatingTranslator,
+            Translator deobfuscatingTranslator, JavaDocMapping docMapping) {
         this.jar = jar;
         this.jarIndex = jarIndex;
         this.obfuscatingTranslator = obfuscatingTranslator;
         this.deobfuscatingTranslator = deobfuscatingTranslator;
         this.cache = Maps.newHashMap();
         this.defaultTypeLoader = new ClasspathTypeLoader();
+        this.docMapping = docMapping;
+        this.docMapping.cleanBehaviors();
     }
 
     public void clearCache() {
@@ -214,8 +217,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
         new BridgeMarker(this.jarIndex).markBridges(c);
         new MethodParameterWriter(this.deobfuscatingTranslator).writeMethodArguments(c);
         new LocalVariableRenamer(this.deobfuscatingTranslator).rename(c);
-        new ClassTranslator(this.deobfuscatingTranslator).translate(c);
-
+        new ClassTranslator(this.deobfuscatingTranslator, this.docMapping).translate(c);
         return c;
     }
 

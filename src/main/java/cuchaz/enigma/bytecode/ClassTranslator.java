@@ -11,6 +11,7 @@
 package cuchaz.enigma.bytecode;
 
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.javadoc.JavaDocMapping;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtField;
@@ -22,10 +23,13 @@ import javassist.bytecode.SourceFileAttribute;
 
 public class ClassTranslator {
 
+    private JavaDocMapping docMapping;
     private Translator translator;
 
-    public ClassTranslator(Translator translator) {
+    public ClassTranslator(Translator translator, JavaDocMapping docMapping) {
         this.translator = translator;
+        this.docMapping = docMapping == null ? new JavaDocMapping() : docMapping;
+        this.docMapping.setTranslator(translator);
     }
 
     public void translate(CtClass c) {
@@ -75,14 +79,22 @@ public class ClassTranslator {
 
         ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
 
+        // Try to add javadoc to constructor
+        docMapping.tryToAddJavaDoc(c, classEntry);
         // translate all the fields
         for (CtField field : c.getDeclaredFields()) {
 
             // translate the name
             FieldEntry entry = EntryFactory.getFieldEntry(field);
             String translatedName = this.translator.translate(entry);
+
+            // Try to add javadoc as ob
+            docMapping.tryToAddJavaDoc(field, entry);
             if (translatedName != null) {
                 field.setName(translatedName);
+
+                // Try to add javadoc as ob
+                docMapping.tryToAddJavaDoc(field, entry);
             }
 
             // translate the type
@@ -98,11 +110,21 @@ public class ClassTranslator {
             if (behavior instanceof CtMethod) {
                 CtMethod method = (CtMethod) behavior;
 
+                // Try to add javadoc as ob
+                docMapping.tryToAddJavaDoc(method, entry);
                 // translate the name
                 String translatedName = this.translator.translate(entry);
                 if (translatedName != null) {
+                    MethodEntry deObfuscatedMethod = new MethodEntry(entry.getClassEntry(), translatedName, entry.getSignature());
                     method.setName(translatedName);
+                    // Try to add javadoc as ob
+                    docMapping.tryToAddJavaDoc(method, entry, deObfuscatedMethod);
                 }
+            }
+            else
+            {
+                // Try to add javadoc to constructor
+                docMapping.tryToAddJavaDoc(behavior, entry);
             }
 
             if (entry.getSignature() != null) {

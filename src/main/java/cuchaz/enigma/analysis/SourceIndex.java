@@ -14,17 +14,15 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
 import com.strobel.decompiler.languages.Region;
 import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.Identifier;
+import cuchaz.enigma.mapping.Entry;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import cuchaz.enigma.mapping.Entry;
 
 public class SourceIndex {
 
@@ -56,8 +54,25 @@ public class SourceIndex {
         }
     }
 
+    public void setSource(String source)
+    {
+        this.source = source;
+    }
+
     public String getSource() {
         return this.source;
+    }
+
+    public int getLineNumber(int offset)
+    {
+        int i = 0;
+        for (Integer lineOffset : lineOffsets)
+        {
+            if (lineOffset <= offset)
+                return i;
+            i++;
+        }
+        return i;
     }
 
     public Token getToken(AstNode node) {
@@ -75,7 +90,7 @@ public class SourceIndex {
             System.err.println(String.format("WARNING: %s \"%s\" has invalid region: %s", node.getNodeType(), name, region));
             return null;
         }
-        Token token = new Token(toPos(region.getBeginLine(), region.getBeginColumn()), toPos(region.getEndLine(), region.getEndColumn()), this.source);
+        Token token = new Token(this, region, this.source);
         if (token.start == 0) {
             // DEBUG
             System.err.println(String.format("WARNING: %s \"%s\" has invalid start: %s", node.getNodeType(), name, region));
@@ -157,24 +172,12 @@ public class SourceIndex {
         return this.declarationToToken.get(deobfEntry);
     }
 
-    public int getLineNumber(int pos) {
-        // line number is 1-based
-        int line = 0;
-        for (Integer offset : this.lineOffsets) {
-            if (offset > pos) {
-                break;
-            }
-            line++;
-        }
-        return line;
-    }
-
     public int getColumnNumber(int pos) {
         // column number is 1-based
         return pos - this.lineOffsets.get(getLineNumber(pos) - 1) + 1;
     }
 
-    private int toPos(int line, int col) {
+    public int toPos(int line, int col) {
         // line and col are 1-based
         return this.lineOffsets.get(line - 1) + col - 1;
     }

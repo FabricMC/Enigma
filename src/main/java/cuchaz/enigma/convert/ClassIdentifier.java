@@ -35,7 +35,7 @@ public class ClassIdentifier {
         this.index = index;
         this.namer = namer;
         this.useReferences = useReferences;
-        this.loader = new TranslatingTypeLoader(jar, index, new Translator(), new Translator());
+        this.loader = new TranslatingTypeLoader(jar, index, new Translator(), new Translator(), null);
         this.cache = Maps.newHashMap();
     }
 
