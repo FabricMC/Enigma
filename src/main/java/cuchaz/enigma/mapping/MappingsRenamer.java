@@ -31,6 +31,11 @@ public class MappingsRenamer {
         m_mappings = mappings;
     }
 
+    public void setMappings(Mappings mappings)
+    {
+        this.m_mappings = mappings;
+    }
+
     public void setClassName(ClassEntry obf, String deobfName) {
 
         deobfName = NameValidator.validateClassName(deobfName, !obf.isInnerClass());

@@ -13,7 +13,6 @@ package cuchaz.enigma;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -24,6 +23,13 @@ import com.strobel.decompiler.languages.java.JavaOutputVisitor;
 import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
+import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.bytecode.ClassProtectifier;
+import cuchaz.enigma.bytecode.ClassPublifier;
+import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.utils.Utils;
+import javassist.CtClass;
+import javassist.bytecode.Descriptor;
 
 import java.io.*;
 import java.util.List;
@@ -33,13 +39,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
-import cuchaz.enigma.analysis.*;
-import cuchaz.enigma.bytecode.ClassProtectifier;
-import cuchaz.enigma.bytecode.ClassPublifier;
-import cuchaz.enigma.mapping.*;
-import javassist.CtClass;
-import javassist.bytecode.Descriptor;
-
 public class Deobfuscator {
 
     public interface ProgressListener {
@@ -48,12 +47,12 @@ public class Deobfuscator {
         void onProgress(int numDone, String message);
     }
 
-    private JarFile jar;
-    private DecompilerSettings settings;
-    private JarIndex jarIndex;
+    private final JarFile jar;
+    private final DecompilerSettings settings;
+    private final JarIndex jarIndex;
+    private final MappingsRenamer renamer;
+    private final Map<TranslationDirection, Translator> translatorCache;
     private Mappings mappings;
-    private MappingsRenamer renamer;
-    private Map<TranslationDirection, Translator> translatorCache;
 
     public Deobfuscator(JarFile jar) {
         this.jar = jar;
@@ -64,16 +63,17 @@ public class Deobfuscator {
 
         // config the decompiler
         this.settings = DecompilerSettings.javaDefaults();
-        this.settings.setMergeVariables(true);
-        this.settings.setForceExplicitImports(true);
-        this.settings.setForceExplicitTypeArguments(true);
-        this.settings.setShowDebugLineNumbers(true);
+        this.settings.setMergeVariables(Utils.getSystemPropertyAsBoolean("enigma.mergeVariables", true));
+        this.settings.setForceExplicitImports(Utils.getSystemPropertyAsBoolean("enigma.forceExplicitImports", true));
+        this.settings.setForceExplicitTypeArguments(
+                Utils.getSystemPropertyAsBoolean("enigma.forceExplicitTypeArguments", true));
         // DEBUG
-        //this.settings.setShowSyntheticMembers(true);
+        this.settings.setShowDebugLineNumbers(Utils.getSystemPropertyAsBoolean("enigma.showDebugLineNumbers", false));
+        this.settings.setShowSyntheticMembers(Utils.getSystemPropertyAsBoolean("enigma.showSyntheticMembers", false));
 
         // init defaults
         this.translatorCache = Maps.newTreeMap();
-
+        this.renamer = new MappingsRenamer(this.jarIndex, null);
         // init mappings
         setMappings(new Mappings());
     }
@@ -122,7 +122,7 @@ public class Deobfuscator {
         }
 
         this.mappings = val;
-        this.renamer = new MappingsRenamer(this.jarIndex, val);
+        this.renamer.setMappings(mappings);
         this.translatorCache.clear();
     }
 

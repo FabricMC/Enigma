@@ -88,4 +88,10 @@ public class Utils {
         manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
         manager.setInitialDelay(oldDelay);
     }
+
+    public static boolean getSystemPropertyAsBoolean(String property, boolean defValue)
+    {
+        String value = System.getProperty(property);
+        return value == null ? defValue : Boolean.parseBoolean(value);
+    }
 }
