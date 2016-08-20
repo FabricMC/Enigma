@@ -34,9 +34,9 @@ public class JavaDocMapping
         this.behaviorByID = new ArrayList<>();
 
         // TODO: File format
-        addField("a", "none/akw", "Lnone/kp;", "Hello from Enigma");
+        addField("id", "none/akw", "Lnone/kp;", "Hello from Enigma");
         addMethod("<init>", "none/akw", "(Lnone/ayo;)V", "You know what? I love constructors!", null, new String[]{ "The material of the block!" });
-        addClass("none/akw", "HEY I'M A BLOCK YOU KNOW THAT?!");
+        addClass("net/minecraft/block/Block", "HEY I'M A BLOCK YOU KNOW THAT?!");
     }
 
     private void addClass(String className, String comment)

@@ -79,7 +79,7 @@ public class ClassTranslator {
 
         ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
 
-        // Try to add javadoc to constructor
+        // Try to add javadoc to class
         docMapping.tryToAddJavaDoc(c, classEntry);
         // translate all the fields
         for (CtField field : c.getDeclaredFields()) {
@@ -94,7 +94,7 @@ public class ClassTranslator {
                 field.setName(translatedName);
 
                 // Try to add javadoc as ob
-                docMapping.tryToAddJavaDoc(field, entry);
+                docMapping.tryToAddJavaDoc(field, EntryFactory.getFieldEntry(field));
             }
 
             // translate the type
@@ -115,10 +115,9 @@ public class ClassTranslator {
                 // translate the name
                 String translatedName = this.translator.translate(entry);
                 if (translatedName != null) {
-                    MethodEntry deObfuscatedMethod = new MethodEntry(entry.getClassEntry(), translatedName, entry.getSignature());
                     method.setName(translatedName);
                     // Try to add javadoc as ob
-                    docMapping.tryToAddJavaDoc(method, entry, deObfuscatedMethod);
+                    docMapping.tryToAddJavaDoc(method, entry, EntryFactory.getMethodEntry(method));
                 }
             }
             else
@@ -170,6 +169,8 @@ public class ClassTranslator {
         if (deobfClassEntry != null) {
             String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassEntry().getSimpleName()) + ".java";
             c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));
+            // Try to add javadoc to class as deobfuscated
+            docMapping.tryToAddJavaDoc(c, deobfClassEntry);
         }
     }
 }
