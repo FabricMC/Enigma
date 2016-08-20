@@ -382,13 +382,11 @@ public class MemberMatchingGui<T extends Entry> {
     }
 
     private void setDest(T obfEntry) {
-        if (obfEntry == null) {
-            m_obfDestEntry = null;
+        m_obfDestEntry = obfEntry;
+        if (obfEntry == null)
             m_destLabel.setText("");
-        } else {
-            m_obfDestEntry = obfEntry;
+        else
             m_destLabel.setText(getEntryLabel(obfEntry, m_destDeobfuscator));
-        }
     }
 
     private String getEntryLabel(T obfEntry, Deobfuscator deobfuscator) {

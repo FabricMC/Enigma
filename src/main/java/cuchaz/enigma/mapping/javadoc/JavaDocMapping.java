@@ -35,7 +35,7 @@ public class JavaDocMapping
 
         // TODO: File format
         addField("a", "none/akw", "Lnone/kp;", "Hello from Enigma");
-        addMethod("<init>", "none/akw", "(Lnone/ayo;)V", "You know what? I love constructors!", "The material of the block!");
+        addMethod("<init>", "none/akw", "(Lnone/ayo;)V", "You know what? I love constructors!", null, new String[]{ "The material of the block!" });
         addClass("none/akw", "HEY I'M A BLOCK YOU KNOW THAT?!");
     }
 
@@ -49,7 +49,7 @@ public class JavaDocMapping
         this.javaDocFieldByID.put(new FieldEntry(new ClassEntry(className), fieldName, new Type(type)), new JavaDocField(new JavaDocClass(className, "LOL"), fieldName, type, comment));
     }
 
-    public void addMethod(String methodName, String className, String signature, String comment, String... argComment)
+    public void addMethod(String methodName, String className, String signature, String comment, String returnComment, String[] argComment)
     {
         BehaviorEntry behaviorEntry;
         if (methodName.equals("<init>"))
@@ -58,7 +58,7 @@ public class JavaDocMapping
             behaviorEntry = new MethodEntry(new ClassEntry(className), methodName, new Signature(signature));
 
         this.javaDocMethodByID.put(behaviorEntry, new JavaDocMethod(new JavaDocClass(className, "LOL"), methodName, signature, comment,
-                Arrays.asList(argComment)));
+                returnComment, argComment));
     }
 
     public void cleanBehaviors()
@@ -121,10 +121,17 @@ public class JavaDocMapping
             // Prepare the annotation
             AnnotationsAttribute attr = new AnnotationsAttribute(constpool, AnnotationsAttribute.visibleTag);
             Annotation annot = new Annotation("enigma.remapper.MethodDoc", constpool);
-            annot.addMemberValue("comment", new StringMemberValue(javaDocMethod.getComment(), constpool));
+            String comment = javaDocMethod.getComment();
+            if (comment != null)
+                annot.addMemberValue("comment", new StringMemberValue(comment, constpool));
+
             behaviorByID.add(entry);
             annot.addMemberValue("behavior", new IntegerMemberValue(constpool, behaviorByID.size() - 1));
             annot.addMemberValue("args", translateStringArray(constpool, javaDocMethod.getArgsComments()));
+
+            String returnComment = javaDocMethod.getReturnComment();
+            if (returnComment != null)
+                annot.addMemberValue("return", new StringMemberValue(returnComment, constpool));
             attr.addAnnotation(annot);
             ctBehavior.getMethodInfo().addAttribute(attr);
         }
@@ -154,7 +161,7 @@ public class JavaDocMapping
     {
         MemberValue[] result = new MemberValue[args.length];
         for (int i = 0; i < result.length; i++)
-            result[i] = new StringMemberValue(args[i], pool);
+            result[i] = new StringMemberValue(args[i] == null ? "null" : args[i], pool);
 
         return result;
     }
@@ -202,15 +209,18 @@ public class JavaDocMapping
                 if (child instanceof PrimitiveExpression)
                 {
                     PrimitiveExpression data = (PrimitiveExpression) child;
-                    if (id.equals("comment"))
+                    switch (id)
                     {
-                        builder.append(spaces);
-                        builder.append(" * ");
-                        builder.append(data.getValue());
-                        builder.append("\n");
+                        case "comment":
+                            addCommentLine(builder, (String) data.getValue(), spaces);
+                            break;
+                        case "behavior":
+                            behaviorID = (Integer) data.getValue();
+                            break;
+                        case "return":
+                            addCommentLine(builder, "@return " + data.getValue(), spaces);
+                            break;
                     }
-                    else if (id.equals("behavior"))
-                        behaviorID = (Integer) data.getValue();
                 }
                 else if (child instanceof ArrayInitializerExpression)
                 {
@@ -226,16 +236,14 @@ public class JavaDocMapping
                         {
                             if (expArg instanceof PrimitiveExpression)
                             {
-                                PrimitiveExpression primitiveExpression = (PrimitiveExpression) expArg;
+                                PrimitiveExpression argComment = (PrimitiveExpression) expArg;
+                                String commentStr = (String) argComment.getValue();
+                                if (commentStr.equals("null"))
+                                    continue;
                                 String argName = entry == null ? null : this.translator.translate(new ArgumentEntry(entry, i, ""));
                                 if (argName == null)
                                     argName = "a" + (i + 1);
-                                builder.append(spaces);
-                                builder.append(" * @param ");
-                                builder.append(argName);
-                                builder.append(" ");
-                                builder.append(primitiveExpression.getValue());
-                                builder.append("\n");
+                                addCommentLine(builder, "@param " + argName + " " + argComment.getValue(), spaces);
                             }
                             i++;
                         }
@@ -246,6 +254,14 @@ public class JavaDocMapping
         builder.append(spaces);
         builder.append(" */");
         return builder.toString();
+    }
+
+    public void addCommentLine(StringBuilder builder, String value, String spaces)
+    {
+        builder.append(spaces);
+        builder.append(" * ");
+        builder.append(value);
+        builder.append("\n");
     }
 
     private String buildLineSpace(int spacesCount)

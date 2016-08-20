@@ -30,6 +30,8 @@ public class NameValidator {
     );
 
     static {
+
+        // java allows all kinds of weird characters...
         String identifierRegex = "[A-Za-z_<][A-Za-z0-9_>]*";
         IdentifierPattern = Pattern.compile(identifierRegex);
         ClassPattern = Pattern.compile(String.format("^(%s(\\.|/))*(%s)$", identifierRegex, identifierRegex));

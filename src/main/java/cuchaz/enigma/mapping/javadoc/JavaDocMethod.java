@@ -17,13 +17,16 @@ public class JavaDocMethod extends BaseJavaDocEntry
 {
     private final JavaDocClass classDocEntry;
     private final String       name;
-    private final List<String> argsComments;
+    private final String returnComment;
+    private final String[] argsComments;
 
-    public JavaDocMethod(JavaDocClass classDocEntry, String name, String identifier, String comment, List<String> argsComments)
+    public JavaDocMethod(JavaDocClass classDocEntry, String name, String identifier, String comment,
+            String returnComment, String[] argsComments)
     {
         super(identifier, comment);
         this.name = name;
         this.classDocEntry = classDocEntry;
+        this.returnComment = returnComment;
         this.argsComments = argsComments;
     }
 
@@ -39,11 +42,11 @@ public class JavaDocMethod extends BaseJavaDocEntry
 
     public String[] getArgsComments()
     {
-        return argsComments.toArray(new String[argsComments.size()]);
+        return argsComments;
     }
 
-    public String getArgsComment(int id)
+    public String getReturnComment()
     {
-        return argsComments.size() > id ? argsComments.get(id) : null;
+        return returnComment;
     }
 }

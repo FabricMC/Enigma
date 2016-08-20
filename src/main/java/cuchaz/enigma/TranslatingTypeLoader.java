@@ -51,7 +51,8 @@ public class TranslatingTypeLoader implements ITypeLoader {
         this.cache = Maps.newHashMap();
         this.defaultTypeLoader = new ClasspathTypeLoader();
         this.docMapping = docMapping;
-        this.docMapping.cleanBehaviors();
+        if (docMapping != null)
+            this.docMapping.cleanBehaviors();
     }
 
     public void clearCache() {
