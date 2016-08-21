@@ -22,8 +22,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 
     private BehaviorEntry behaviorEntry;
 
+    // TODO: Really fix Procyon index problem with inner classes
+    private int argumentPosition;
+
     public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry) {
         this.behaviorEntry = behaviorEntry;
+        this.argumentPosition = 0;
     }
 
     @Override
@@ -95,7 +99,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
         if (def.getMethod() instanceof MethodDefinition) {
             MethodDefinition methodDef = (MethodDefinition) def.getMethod();
             BehaviorEntry behaviorEntry = ProcyonEntryFactory.getBehaviorEntry(methodDef);
-            ArgumentEntry argumentEntry = new ArgumentEntry(behaviorEntry, def.getPosition(), node.getName());
+            ArgumentEntry argumentEntry = new ArgumentEntry(behaviorEntry, argumentPosition++, node.getName());
             index.addDeclaration(node.getNameToken(), argumentEntry);
         }
 
