@@ -12,23 +12,20 @@ package cuchaz.enigma.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
-
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.List;
-import java.util.jar.JarFile;
-
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.utils.ReadableToken;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.List;
+import java.util.jar.JarFile;
 
 public class GuiController {
 
@@ -192,18 +189,26 @@ public class GuiController {
     }
 
     public void rename(EntryReference<Entry, Entry> deobfReference, String newName) {
+        rename(deobfReference, newName, true);
+    }
+
+    public void rename(EntryReference<Entry, Entry> deobfReference, String newName, boolean refreshClassTree)
+    {
         EntryReference<Entry, Entry> obfReference = this.deobfuscator.obfuscateReference(deobfReference);
         this.deobfuscator.rename(obfReference.getNameableEntry(), newName);
         this.isDirty = true;
-        refreshClasses();
+
+        if (refreshClassTree)
+            this.gui.moveClassTree(deobfReference, newName);
         refreshCurrentClass(obfReference);
+
     }
 
     public void removeMapping(EntryReference<Entry, Entry> deobfReference) {
         EntryReference<Entry, Entry> obfReference = this.deobfuscator.obfuscateReference(deobfReference);
         this.deobfuscator.removeMapping(obfReference.getNameableEntry());
         this.isDirty = true;
-        refreshClasses();
+        this.gui.moveClassTree(deobfReference, obfReference.entry.getName(), false, true);
         refreshCurrentClass(obfReference);
     }
 
@@ -211,7 +216,6 @@ public class GuiController {
         EntryReference<Entry, Entry> obfReference = this.deobfuscator.obfuscateReference(deobfReference);
         this.deobfuscator.markAsDeobfuscated(obfReference.getNameableEntry());
         this.isDirty = true;
-        refreshClasses();
         refreshCurrentClass(obfReference);
     }
 

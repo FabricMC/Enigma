@@ -24,6 +24,7 @@ import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
 import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
 import cuchaz.enigma.gui.highlight.OtherHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
+import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
@@ -49,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class Gui {
 
@@ -762,11 +762,53 @@ public class Gui {
                 DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
                 ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
                 ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
-                this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getName()), dataChild.getName());
+                this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getName()), dataChild.getName(), false);
             }
         }
         // class rename
         else if (data instanceof ClassEntry)
-            this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getName()), ((ClassEntry) data).getName());
+            this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getName()), ((ClassEntry) data).getName(), false);
+    }
+
+    public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName)
+    {
+        ClassEntry oldEntry = deobfReference.entry.getClassEntry();
+        ClassEntry newEntry = new ClassEntry(newName);
+        moveClassTree(deobfReference, newName, oldEntry.getPackageName().equals(Constants.NONE_PACKAGE),
+                newEntry.getClassEntry().getPackageName().equals(Constants.NONE_PACKAGE));
+    }
+
+    public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb)
+    {
+        ClassEntry oldEntry = deobfReference.entry.getClassEntry();
+        ClassEntry newEntry = new ClassEntry(newName);
+
+        // Ob -> deob
+        if (isOldOb && !isNewOb)
+        {
+            this.deobfPanel.deobfClasses.moveClassTree(oldEntry, newEntry, obfPanel.obfClasses);
+            ClassSelectorPackageNode packageNode = this.obfPanel.obfClasses.getPackageNode(oldEntry);
+            this.obfPanel.obfClasses.removeNode(packageNode, oldEntry);
+            this.obfPanel.obfClasses.removeNodeIfEmpty(packageNode);
+        }
+        // Deob -> ob
+        else if (isNewOb && !isOldOb)
+        {
+            this.obfPanel.obfClasses.moveClassTree(oldEntry, newEntry, deobfPanel.deobfClasses);
+            ClassSelectorPackageNode packageNode = this.deobfPanel.deobfClasses.getPackageNode(oldEntry);
+            this.deobfPanel.deobfClasses.removeNode(packageNode, oldEntry);
+            this.deobfPanel.deobfClasses.removeNodeIfEmpty(packageNode);
+        }
+        // Local move
+        else if (isOldOb)
+        {
+            this.obfPanel.obfClasses.moveClassTree(oldEntry, newEntry, null);
+            this.obfPanel.obfClasses.removeNodeIfEmpty(this.obfPanel.obfClasses.getPackageNode(oldEntry));
+        }
+        else
+        {
+            this.deobfPanel.deobfClasses.moveClassTree(oldEntry, newEntry, null);
+            this.deobfPanel.deobfClasses.removeNodeIfEmpty(this.deobfPanel.deobfClasses.getPackageNode(oldEntry));
+        }
     }
 }

@@ -22,7 +22,8 @@ import cuchaz.enigma.throwables.IllegalNameException;
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.tree.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -294,7 +295,7 @@ public class ClassSelector extends JTree {
         }
     }
 
-    public Iterable<ClassSelectorPackageNode> packageNodes() {
+    public List<ClassSelectorPackageNode> packageNodes() {
         List<ClassSelectorPackageNode> nodes = Lists.newArrayList();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode)getModel().getRoot();
         Enumeration<?> children = root.children();
@@ -305,7 +306,7 @@ public class ClassSelector extends JTree {
         return nodes;
     }
 
-    public Iterable<ClassSelectorClassNode> classNodes(ClassSelectorPackageNode packageNode) {
+    public List<ClassSelectorClassNode> classNodes(ClassSelectorPackageNode packageNode) {
         List<ClassSelectorClassNode> nodes = Lists.newArrayList();
         Enumeration<?> children = packageNode.children();
         while (children.hasMoreElements()) {
@@ -351,6 +352,15 @@ public class ClassSelector extends JTree {
         return null;
     }
 
+    public ClassSelectorPackageNode getPackageNode(ClassSelector selector, ClassEntry entry)
+    {
+        ClassSelectorPackageNode packageNode = getPackageNode(entry);
+
+        if (selector != null && packageNode == null && selector.getPackageNode(entry) != null)
+                return selector.getPackageNode(entry);
+        return packageNode;
+    }
+
     public ClassEntry getNextClass(ClassEntry entry) {
         boolean foundIt = false;
         for (ClassSelectorPackageNode packageNode : packageNodes()) {
@@ -387,5 +397,83 @@ public class ClassSelector extends JTree {
                 }
             }
         }
+    }
+
+    public void removeNode(ClassSelectorPackageNode packageNode, ClassEntry entry)
+    {
+        DefaultTreeModel model = (DefaultTreeModel) getModel();
+
+        if (packageNode == null)
+            return;
+
+        for (int i = 0; i < packageNode.getChildCount(); i++)
+        {
+            DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) packageNode.getChildAt(i);
+            if (childNode.getUserObject() instanceof ClassEntry && childNode.getUserObject().equals(entry))
+            {
+                model.removeNodeFromParent(childNode);
+                break;
+            }
+        }
+    }
+
+    public void removeNodeIfEmpty(ClassSelectorPackageNode packageNode)
+    {
+        if (packageNode != null && packageNode.getChildCount() == 0)
+            ((DefaultTreeModel) getModel()).removeNodeFromParent(packageNode);
+    }
+
+    public void moveClassTree(ClassEntry oldClassEntry, ClassEntry newClassEntry, ClassSelector otherSelector)
+    {
+        if (otherSelector == null)
+            removeNode(getPackageNode(oldClassEntry), oldClassEntry);
+        insertNode(getOrCreate(newClassEntry), newClassEntry);
+    }
+
+    public ClassSelectorPackageNode getOrCreate(ClassEntry entry)
+    {
+        DefaultTreeModel model = (DefaultTreeModel) getModel();
+        ClassSelectorPackageNode newPackageNode = getPackageNode(entry);
+        if (newPackageNode == null)
+        {
+            newPackageNode = new ClassSelectorPackageNode(entry.getPackageName());
+            model.insertNodeInto(newPackageNode, (MutableTreeNode) model.getRoot(), getPlacementIndex(newPackageNode));
+        }
+        return newPackageNode;
+    }
+
+    public void insertNode(ClassSelectorPackageNode packageNode, ClassEntry entry)
+    {
+        DefaultTreeModel model = (DefaultTreeModel) getModel();
+        ClassSelectorClassNode classNode = new ClassSelectorClassNode(entry);
+        model.insertNodeInto(classNode, packageNode, getPlacementIndex(packageNode, classNode));
+    }
+
+    private int getPlacementIndex(ClassSelectorPackageNode newPackageNode, ClassSelectorClassNode classNode)
+    {
+        List<ClassSelectorClassNode> classNodes = classNodes(newPackageNode);
+        classNodes.add(classNode);
+        Collections.sort(classNodes, (a, b) -> a.toString().compareTo(b.toString()));
+        for (int i = 0; i < classNodes.size(); i++)
+            if (classNodes.get(i) == classNode)
+                return i;
+
+        return 0;
+    }
+
+    private int getPlacementIndex(ClassSelectorPackageNode newPackageNode)
+    {
+        List<ClassSelectorPackageNode> packageNodes = packageNodes();
+        if (!packageNodes.contains(newPackageNode))
+        {
+            packageNodes.add(newPackageNode);
+            Collections.sort(packageNodes, (a, b) -> a.toString().compareTo(b.toString()));
+        }
+
+        for (int i = 0; i < packageNodes.size(); i++)
+            if (packageNodes.get(i) == newPackageNode)
+                return i;
+
+        return 0;
     }
 }
