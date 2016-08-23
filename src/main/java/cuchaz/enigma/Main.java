@@ -33,7 +33,7 @@ public class Main {
         }
 
         // DEBUG
-        //gui.getController().openDeclaration(new ClassEntry("none/asj"));
+        //gui.getController().openDeclaration(new ClassEntry("net/minecraft/item/Item"));
     }
 
     private static File getFile(String path) {

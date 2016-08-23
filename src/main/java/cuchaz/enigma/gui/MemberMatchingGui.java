@@ -35,7 +35,6 @@ import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.convert.ClassMatches;
 import cuchaz.enigma.convert.MemberMatches;
-import cuchaz.enigma.gui.ClassSelector.ClassSelectionListener;
 import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
 import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
 import cuchaz.enigma.mapping.ClassEntry;
@@ -139,13 +138,8 @@ public class MemberMatchingGui<T extends Entry> {
             sourceTypePanel.add(button);
         }
 
-        m_sourceClasses = new ClassSelector(ClassSelector.DEOBF_CLASS_COMPARATOR);
-        m_sourceClasses.setListener(new ClassSelectionListener() {
-            @Override
-            public void onSelectClass(ClassEntry classEntry) {
-                setSourceClass(classEntry);
-            }
-        });
+        m_sourceClasses = new ClassSelector(null, ClassSelector.DEOBF_CLASS_COMPARATOR);
+        m_sourceClasses.setSelectionListener(this::setSourceClass);
         JScrollPane sourceScroller = new JScrollPane(m_sourceClasses);
         classesPanel.add(sourceScroller);
 

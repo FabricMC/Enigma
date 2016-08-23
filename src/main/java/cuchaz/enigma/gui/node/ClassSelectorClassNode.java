@@ -20,6 +20,7 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
 
     public ClassSelectorClassNode(ClassEntry classEntry) {
         this.classEntry = classEntry;
+        this.setUserObject(classEntry);
     }
 
     public ClassEntry getClassEntry() {
@@ -34,6 +35,18 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
     @Override
     public boolean equals(Object other) {
         return other instanceof ClassSelectorClassNode && equals((ClassSelectorClassNode) other);
+    }
+
+    @Override public void setUserObject(Object userObject)
+    {
+        String packageName = "";
+        if (classEntry.getPackageName() != null)
+            packageName = classEntry.getPackageName() + "/";
+        if (userObject instanceof String)
+            this.classEntry = new ClassEntry(packageName + userObject);
+        else if (userObject instanceof ClassEntry)
+            this.classEntry = (ClassEntry) userObject;
+        super.setUserObject(classEntry);
     }
 
     public boolean equals(ClassSelectorClassNode other) {

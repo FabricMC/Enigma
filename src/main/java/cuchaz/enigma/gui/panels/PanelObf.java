@@ -28,8 +28,9 @@ public class PanelObf extends JPanel {
             return aname.compareTo(bname);
         };
 
-        this.obfClasses = new ClassSelector(obfClassComparator);
-        this.obfClasses.setListener(gui::navigateTo);
+        this.obfClasses = new ClassSelector(gui, obfClassComparator);
+        this.obfClasses.setSelectionListener(gui::navigateTo);
+        this.obfClasses.setRenameSelectionListener(gui::onPanelRename);
 
         this.setLayout(new BorderLayout());
         this.add(new JLabel("Obfuscated Classes"), BorderLayout.NORTH);

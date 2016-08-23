@@ -131,8 +131,8 @@ public class ClassMatchingGui {
             sourceTypePanel.add(button);
         }
 
-        m_sourceClasses = new ClassSelector(ClassSelector.DEOBF_CLASS_COMPARATOR);
-        m_sourceClasses.setListener(classEntry -> setSourceClass(classEntry));
+        m_sourceClasses = new ClassSelector(null, ClassSelector.DEOBF_CLASS_COMPARATOR);
+        m_sourceClasses.setSelectionListener(this::setSourceClass);
         JScrollPane sourceScroller = new JScrollPane(m_sourceClasses);
         sourcePanel.add(sourceScroller);
 
@@ -147,8 +147,8 @@ public class ClassMatchingGui {
         destPanel.add(m_top10Matches);
         m_top10Matches.addActionListener(event -> toggleTop10Matches());
 
-        m_destClasses = new ClassSelector(ClassSelector.DEOBF_CLASS_COMPARATOR);
-        m_destClasses.setListener(this::setDestClass);
+        m_destClasses = new ClassSelector(null, ClassSelector.DEOBF_CLASS_COMPARATOR);
+        m_destClasses.setSelectionListener(this::setDestClass);
         JScrollPane destScroller = new JScrollPane(m_destClasses);
         destPanel.add(destScroller);
 

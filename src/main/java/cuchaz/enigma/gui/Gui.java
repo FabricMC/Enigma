@@ -36,6 +36,7 @@ import de.sciss.syntaxpane.DefaultSyntaxKit;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -749,5 +750,23 @@ public class Gui {
     public void redraw() {
         this.frame.validate();
         this.frame.repaint();
+    }
+
+    public void onPanelRename(Object prevData, Object data, DefaultMutableTreeNode node) throws IllegalNameException
+    {
+        // package rename
+        if (data instanceof String)
+        {
+            for (int i = 0; i < node.getChildCount(); i++)
+            {
+                DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
+                ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
+                ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
+                this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getName()), dataChild.getName());
+            }
+        }
+        // class rename
+        else if (data instanceof ClassEntry)
+            this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getName()), ((ClassEntry) data).getName());
     }
 }
