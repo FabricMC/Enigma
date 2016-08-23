@@ -216,6 +216,7 @@ public class GuiController {
         EntryReference<Entry, Entry> obfReference = this.deobfuscator.obfuscateReference(deobfReference);
         this.deobfuscator.markAsDeobfuscated(obfReference.getNameableEntry());
         this.isDirty = true;
+        this.gui.moveClassTree(deobfReference, obfReference.entry.getName(), true, false);
         refreshCurrentClass(obfReference);
     }
 
