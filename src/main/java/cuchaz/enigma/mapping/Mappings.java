@@ -13,6 +13,8 @@ package cuchaz.enigma.mapping;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -200,6 +202,16 @@ public class Mappings {
     public FormatType getOriginMappingFormat()
     {
         return originMapping;
+    }
+
+    public void saveEnigmaMappings(File file, boolean isDirectoryFormat) throws IOException
+    {
+        new MappingsEnigmaWriter().write(file, this, isDirectoryFormat);
+    }
+
+    public void saveSRGMappings(File file) throws IOException
+    {
+        new MappingsSRGWriter().write(file, this);
     }
 
     public enum FormatType

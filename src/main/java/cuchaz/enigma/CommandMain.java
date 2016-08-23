@@ -65,7 +65,10 @@ public class CommandMain {
                 protectify(args);
             } else if (command.equalsIgnoreCase("publify")) {
                 publify(args);
-            } else {
+            } else if (command.equalsIgnoreCase("convertmappings")) {
+                convertMappings(args);
+            }
+            else {
                 throw new IllegalArgumentException("Command not recognized: " + command);
             }
         } catch (IllegalArgumentException ex) {
@@ -82,6 +85,8 @@ public class CommandMain {
         System.out.println("\t\tdeobfuscate <in jar> <out jar> [<mappings file>]");
         System.out.println("\t\tdecompile <in jar> <out folder> [<mappings file>]");
         System.out.println("\t\tprotectify <in jar> <out jar>");
+        System.out.println("\t\tpublify <in jar> <out jar>");
+        System.out.println("\t\tconvertmappings <enigma mappings> <converted mappings> <ENIGMA_FILE|ENIGMA_DIRECTORY|SRG_FILE>");
     }
 
     private static void decompile(String[] args) throws Exception {
@@ -123,6 +128,27 @@ public class CommandMain {
             deobfuscator.setMappings(mappings);
         }
         return deobfuscator;
+    }
+
+    private static void convertMappings(String[] args) throws Exception {
+        File fileMappings = getReadableFile(getArg(args, 1, "enigma mapping", true));
+        File result = getWritableFile(getArg(args, 2, "enigma mapping", true));
+        String name = getArg(args, 3, "format type", true);
+        Mappings.FormatType formatType = Mappings.FormatType.valueOf(name.toUpperCase());
+        if (formatType == null)
+            throw new IllegalArgumentException(name + "is not a valid mapping format!");
+        System.out.println("Reading mappings...");
+        Mappings mappings = new MappingsEnigmaReader().read(fileMappings);
+        System.out.println("Saving new mappings...");
+        switch (formatType)
+        {
+            case SRG_FILE:
+                mappings.saveSRGMappings(result);
+                break;
+            default:
+                mappings.saveEnigmaMappings(result, Mappings.FormatType.ENIGMA_FILE != formatType);
+                break;
+        }
     }
 
     private static String getArg(String[] args, int i, String name, boolean required) {

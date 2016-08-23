@@ -2,6 +2,7 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.base.Charsets;
 import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.analysis.TranslationIndex;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -13,13 +14,13 @@ import java.util.List;
  */
 public class MappingsSRGWriter {
 
-    public void write(File file, Deobfuscator deobfuscator) throws IOException {
+    public void write(File file, Mappings mappings) throws IOException {
         if(file.exists()){
            file.delete();
         }
         file.createNewFile();
 
-        Mappings mappings = deobfuscator.getMappings();
+        TranslationIndex index = new TranslationIndex();
 
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8));
         List<String> fieldMappings = new ArrayList<>();
@@ -43,7 +44,7 @@ public class MappingsSRGWriter {
                 }
 
                 for (MethodMapping methodMapping : sorted(innerClassMapping.methods())) {
-                    methodMappings.add("MD: " + innerClassName + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString().replace("none/", "") + " " + innerDebofClassName + "/" + methodMapping.getDeobfName() + " " + deobfuscator.getTranslator(TranslationDirection.Deobfuscating).translateSignature(methodMapping.getObfSignature()));
+                    methodMappings.add("MD: " + innerClassName + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString().replace("none/", "") + " " + innerDebofClassName + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
                 }
             }
 
@@ -52,7 +53,7 @@ public class MappingsSRGWriter {
             }
 
             for (MethodMapping methodMapping : sorted(classMapping.methods())) {
-                methodMappings.add("MD: " + classMapping.getObfFullName().replace("none/", "") + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString().replace("none/", "") + " " + classMapping.getDeobfName() + "/" + methodMapping.getDeobfName() + " " + deobfuscator.getTranslator(TranslationDirection.Deobfuscating).translateSignature(methodMapping.getObfSignature()));
+                methodMappings.add("MD: " + classMapping.getObfFullName().replace("none/", "") + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString().replace("none/", "") + " " + classMapping.getDeobfName() + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
             }
         }
         for(String fd : fieldMappings){

@@ -84,12 +84,12 @@ public class GuiController {
     }
 
     public void saveEnigmaMappings(File file, boolean isDirectoryFormat) throws IOException {
-        new MappingsEnigmaWriter().write(file, this.deobfuscator.getMappings(), isDirectoryFormat);
+        this.deobfuscator.getMappings().saveEnigmaMappings(file, isDirectoryFormat);
         this.isDirty = false;
     }
 
     public void saveSRGMappings(File file) throws IOException {
-        new MappingsSRGWriter().write(file, this.deobfuscator);
+        this.deobfuscator.getMappings().saveSRGMappings(file);
         this.isDirty = false;
     }
 
