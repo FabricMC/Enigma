@@ -32,7 +32,7 @@ public class MappingsEnigmaReader
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
-                if (file.isFile())
+                if (file.isFile() && !file.getName().startsWith(".") && file.getName().endsWith(".mapping"))
                     readFile(mappings, new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8)));
                 else if (file.isDirectory())
                     readDirectory(mappings, file.getAbsoluteFile());
