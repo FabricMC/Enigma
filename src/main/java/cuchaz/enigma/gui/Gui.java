@@ -33,6 +33,7 @@ import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
+import javassist.bytecode.Descriptor;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -759,6 +760,7 @@ public class Gui {
         {
             for (int i = 0; i < node.getChildCount(); i++)
             {
+                data = Descriptor.toJvmName((String) data);
                 DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
                 ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
                 ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
@@ -773,7 +775,7 @@ public class Gui {
     public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName)
     {
         ClassEntry oldEntry = deobfReference.entry.getClassEntry();
-        ClassEntry newEntry = new ClassEntry(newName);
+        ClassEntry newEntry = new ClassEntry(Descriptor.toJvmName(newName));
         moveClassTree(deobfReference, newName, oldEntry.getPackageName().equals(Constants.NONE_PACKAGE),
                 newEntry.getClassEntry().getPackageName().equals(Constants.NONE_PACKAGE));
     }
@@ -781,7 +783,7 @@ public class Gui {
     public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb)
     {
         ClassEntry oldEntry = deobfReference.entry.getClassEntry();
-        ClassEntry newEntry = new ClassEntry(newName);
+        ClassEntry newEntry = new ClassEntry(Descriptor.toJvmName(newName));
 
         // Ob -> deob
         if (isOldOb && !isNewOb)
