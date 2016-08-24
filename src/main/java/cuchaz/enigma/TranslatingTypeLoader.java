@@ -31,7 +31,6 @@ import cuchaz.enigma.bytecode.*;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Translator;
 import javassist.*;
-import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Descriptor;
 
 public class TranslatingTypeLoader implements ITypeLoader {
@@ -224,18 +223,8 @@ public class TranslatingTypeLoader implements ITypeLoader {
         new MethodParameterWriter(this.deobfuscatingTranslator).writeMethodArguments(c);
         new LocalVariableRenamer(this.deobfuscatingTranslator).rename(c);
         new ClassTranslator(this.deobfuscatingTranslator).translate(c);
-        markAllTheThingsPublicBecauseWeAreEvil(c);
 
         return c;
-    }
-
-    @Deprecated
-    private void markAllTheThingsPublicBecauseWeAreEvil(CtClass ctClass)
-    {
-        for (CtField field : ctClass.getDeclaredFields())
-            field.setModifiers(AccessFlag.setPublic(field.getModifiers()));
-        for (CtBehavior behavior : ctClass.getDeclaredBehaviors())
-            behavior.setModifiers(AccessFlag.setPublic(behavior.getModifiers()));
     }
 
     private void assertClassName(CtClass c, ClassEntry obfClassEntry) {
