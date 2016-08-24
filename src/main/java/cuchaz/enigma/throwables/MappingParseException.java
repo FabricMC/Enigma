@@ -10,18 +10,22 @@
  ******************************************************************************/
 package cuchaz.enigma.throwables;
 
+import java.io.File;
+
 public class MappingParseException extends Exception {
 
     private int m_line;
     private String m_message;
+    private String filePath;
 
-    public MappingParseException(int line, String message) {
+    public MappingParseException(File file, int line, String message) {
         m_line = line;
         m_message = message;
+        filePath = file.getAbsolutePath();
     }
 
     @Override
     public String getMessage() {
-        return "Line " + m_line + ": " + m_message;
+        return "Line " + m_line + ": " + m_message + " in file " + filePath;
     }
 }

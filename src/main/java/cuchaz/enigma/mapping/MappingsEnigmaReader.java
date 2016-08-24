@@ -23,7 +23,7 @@ public class MappingsEnigmaReader
         else
         {
             mappings = new Mappings();
-            readFile(mappings, new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8)));
+            readFile(mappings, file);
         }
         return mappings;
     }
@@ -33,7 +33,7 @@ public class MappingsEnigmaReader
         if (files != null) {
             for (File file : files) {
                 if (file.isFile() && !file.getName().startsWith(".") && file.getName().endsWith(".mapping"))
-                    readFile(mappings, new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8)));
+                    readFile(mappings, file);
                 else if (file.isDirectory())
                     readDirectory(mappings, file.getAbsoluteFile());
             }
@@ -42,8 +42,9 @@ public class MappingsEnigmaReader
             throw new IOException("Cannot access directory" + directory.getAbsolutePath());
     }
 
-    public Mappings readFile(Mappings mappings, BufferedReader in) throws IOException, MappingParseException {
+    public Mappings readFile(Mappings mappings, File file) throws IOException, MappingParseException {
 
+        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8));
         Deque<Object> mappingStack = Queues.newArrayDeque();
 
         int lineNumber = 0;
@@ -91,7 +92,7 @@ public class MappingsEnigmaReader
 
                         // inner class
                         if (!(mappingStack.peek() instanceof ClassMapping)) {
-                            throw new MappingParseException(lineNumber, "Unexpected CLASS entry here!");
+                            throw new MappingParseException(file, lineNumber, "Unexpected CLASS entry here!");
                         }
 
                         classMapping = readClass(parts, true);
@@ -100,24 +101,24 @@ public class MappingsEnigmaReader
                     mappingStack.push(classMapping);
                 } else if (token.equalsIgnoreCase("FIELD")) {
                     if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof ClassMapping)) {
-                        throw new MappingParseException(lineNumber, "Unexpected FIELD entry here!");
+                        throw new MappingParseException(file, lineNumber, "Unexpected FIELD entry here!");
                     }
                     ((ClassMapping) mappingStack.peek()).addFieldMapping(readField(parts));
                 } else if (token.equalsIgnoreCase("METHOD")) {
                     if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof ClassMapping)) {
-                        throw new MappingParseException(lineNumber, "Unexpected METHOD entry here!");
+                        throw new MappingParseException(file, lineNumber, "Unexpected METHOD entry here!");
                     }
                     MethodMapping methodMapping = readMethod(parts);
                     ((ClassMapping) mappingStack.peek()).addMethodMapping(methodMapping);
                     mappingStack.push(methodMapping);
                 } else if (token.equalsIgnoreCase("ARG")) {
                     if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof MethodMapping)) {
-                        throw new MappingParseException(lineNumber, "Unexpected ARG entry here!");
+                        throw new MappingParseException(file, lineNumber, "Unexpected ARG entry here!");
                     }
                     ((MethodMapping) mappingStack.peek()).addArgumentMapping(readArgument(parts));
                 }
             } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) {
-                throw new MappingParseException(lineNumber, "Malformed line:\n" + line);
+                throw new MappingParseException(file, lineNumber, "Malformed line:\n" + line);
             } catch (MappingConflict e) {
                 e.printStackTrace();
             }
