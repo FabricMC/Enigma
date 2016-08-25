@@ -719,7 +719,7 @@ public class Gui {
     public void saveMapping() throws IOException
     {
         if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION)
-            this.controller.saveMappings(this.enigmaMappingsFileChooser.getCurrentDirectory());
+            this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile());
     }
 
     public void close() {
