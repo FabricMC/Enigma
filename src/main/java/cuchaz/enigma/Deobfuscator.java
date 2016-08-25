@@ -319,7 +319,7 @@ public class Deobfuscator {
         CtClass transform(CtClass c) throws Exception;
     }
 
-    private void transformJar(File out, ProgressListener progress, ClassTransformer transformer) {
+    public void transformJar(File out, ProgressListener progress, ClassTransformer transformer) {
         try (JarOutputStream outJar = new JarOutputStream(new FileOutputStream(out))) {
             if (progress != null) {
                 progress.init(JarClassIterator.getClassEntries(this.jar).size(), "Transforming classes...");
