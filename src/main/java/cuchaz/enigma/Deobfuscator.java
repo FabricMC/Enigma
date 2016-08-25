@@ -315,7 +315,7 @@ public class Deobfuscator {
         transformJar(out, progress, ClassPublifier::publify);
     }
 
-    private interface ClassTransformer {
+    public interface ClassTransformer {
         CtClass transform(CtClass c) throws Exception;
     }
 
