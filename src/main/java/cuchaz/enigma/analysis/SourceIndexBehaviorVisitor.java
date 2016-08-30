@@ -96,9 +96,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
     @Override
     public Void visitParameterDeclaration(ParameterDeclaration node, SourceIndex index) {
         ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
-        if (def.getMethod() instanceof MethodDefinition) {
-            MethodDefinition methodDef = (MethodDefinition) def.getMethod();
-            BehaviorEntry behaviorEntry = ProcyonEntryFactory.getBehaviorEntry(methodDef);
+        if (def.getMethod() instanceof MemberReference) {
+            BehaviorEntry behaviorEntry;
+            if (def.getMethod() instanceof MethodDefinition)
+                behaviorEntry = ProcyonEntryFactory.getBehaviorEntry((MethodDefinition) def.getMethod());
+            else
+                behaviorEntry = ProcyonEntryFactory.getMethodEntry((MemberReference) def.getMethod()); // Generic definition
             ArgumentEntry argumentEntry = new ArgumentEntry(behaviorEntry, argumentPosition++, node.getName());
             index.addDeclaration(node.getNameToken(), argumentEntry);
         }
