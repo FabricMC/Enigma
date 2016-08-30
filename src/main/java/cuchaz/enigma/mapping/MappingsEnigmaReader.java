@@ -120,7 +120,7 @@ public class MappingsEnigmaReader
             } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) {
                 throw new MappingParseException(file, lineNumber, "Malformed line:\n" + line);
             } catch (MappingConflict e) {
-                e.printStackTrace();
+                throw new MappingParseException(file, lineNumber, e.getMessage());
             }
         }
         in.close();
