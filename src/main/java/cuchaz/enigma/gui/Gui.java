@@ -774,10 +774,11 @@ public class Gui {
 
     public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName)
     {
-        ClassEntry oldEntry = deobfReference.entry.getClassEntry();
-        ClassEntry newEntry = new ClassEntry(Descriptor.toJvmName(newName));
-        moveClassTree(deobfReference, newName, oldEntry.getPackageName().equals(Constants.NONE_PACKAGE),
-                newEntry.getClassEntry().getPackageName().equals(Constants.NONE_PACKAGE));
+        String oldEntry = deobfReference.entry.getClassEntry().getPackageName();
+        String newEntry = new ClassEntry(Descriptor.toJvmName(newName)).getPackageName();
+        if (oldEntry != null && newEntry != null)
+            moveClassTree(deobfReference, newName, oldEntry.equals(Constants.NONE_PACKAGE),
+                    newEntry.equals(Constants.NONE_PACKAGE));
     }
 
     public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb)
