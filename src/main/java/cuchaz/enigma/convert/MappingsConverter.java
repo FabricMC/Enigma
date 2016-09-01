@@ -436,7 +436,7 @@ public class MappingsConverter {
                     memberMatches.makeMatch(obfSourceEntry, obfDestEntries.iterator().next());
                 } else if (obfDestEntries.isEmpty()) {
                     // no match is possible =(
-                    memberMatches.makeSourceUnmatchable(obfSourceEntry);
+                    memberMatches.makeSourceUnmatchable(obfSourceEntry, null);
                 }
             }
         }

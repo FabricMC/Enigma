@@ -150,7 +150,7 @@ public class MemberMatches<T extends Entry> {
     {
         if (sourceDeobfuscator != null && destDeobfuscator != null)
         {
-            makeMatch(sourceEntry, destEntry);
+            unmakeMatch(sourceEntry, destEntry, null, null);
             sourceEntry = (T) sourceEntry.cloneToNewClass(
                     sourceDeobfuscator.getJarIndex().getTranslationIndex().resolveEntryClass(sourceEntry, true));
             destEntry = (T) destEntry.cloneToNewClass(
@@ -165,7 +165,13 @@ public class MemberMatches<T extends Entry> {
         addUnmatchedDestEntry(destEntry);
     }
 
-    public void makeSourceUnmatchable(T sourceEntry) {
+    public void makeSourceUnmatchable(T sourceEntry, Deobfuscator sourceDeobfuscator) {
+        if (sourceDeobfuscator != null)
+        {
+            makeSourceUnmatchable(sourceEntry, null);
+            sourceEntry = (T) sourceEntry.cloneToNewClass(
+                    sourceDeobfuscator.getJarIndex().getTranslationIndex().resolveEntryClass(sourceEntry, true));
+        }
         assert (!isMatchedSourceEntry(sourceEntry));
         boolean wasRemoved = m_unmatchedSourceEntries.remove(sourceEntry.getClassEntry(), sourceEntry);
         assert (wasRemoved);

@@ -465,7 +465,7 @@ public class MemberMatchingGui<T extends Entry> {
     protected void unmatchable() {
 
         // update the field matches
-        m_memberMatches.makeSourceUnmatchable(m_obfSourceEntry);
+        m_memberMatches.makeSourceUnmatchable(m_obfSourceEntry, m_sourceDeobfuscator);
         save();
 
         // update the ui
