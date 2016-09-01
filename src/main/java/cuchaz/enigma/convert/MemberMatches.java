@@ -11,12 +11,12 @@
 package cuchaz.enigma.convert;
 
 import com.google.common.collect.*;
+import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.Entry;
 
 import java.util.Collection;
 import java.util.Set;
-
-import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.Entry;
 
 
 public class MemberMatches<T extends Entry> {
@@ -123,8 +123,17 @@ public class MemberMatches<T extends Entry> {
     public boolean isUnmatchableSourceEntry(T sourceEntry) {
         return m_unmatchableSourceEntries.containsEntry(sourceEntry.getClassEntry(), sourceEntry);
     }
-
     public void makeMatch(T sourceEntry, T destEntry) {
+        makeMatch(sourceEntry, destEntry, null, null);
+    }
+
+    public void makeMatch(T sourceEntry, T destEntry, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
+        if (sourceDeobfuscator != null && destDeobfuscator != null)
+        {
+            makeMatch(sourceEntry, destEntry);
+            sourceEntry = (T) sourceEntry.cloneToNewClass(sourceDeobfuscator.getJarIndex().getTranslationIndex().resolveEntryClass(sourceEntry, true));
+            destEntry = (T) destEntry.cloneToNewClass(destDeobfuscator.getJarIndex().getTranslationIndex().resolveEntryClass(destEntry, true));
+        }
         boolean wasRemoved = m_unmatchedSourceEntries.remove(sourceEntry.getClassEntry(), sourceEntry);
         assert (wasRemoved);
         wasRemoved = m_unmatchedDestEntries.remove(destEntry.getClassEntry(), destEntry);
@@ -137,7 +146,17 @@ public class MemberMatches<T extends Entry> {
         return match != null && match.equals(destEntry);
     }
 
-    public void unmakeMatch(T sourceEntry, T destEntry) {
+    public void unmakeMatch(T sourceEntry, T destEntry, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator)
+    {
+        if (sourceDeobfuscator != null && destDeobfuscator != null)
+        {
+            makeMatch(sourceEntry, destEntry);
+            sourceEntry = (T) sourceEntry.cloneToNewClass(
+                    sourceDeobfuscator.getJarIndex().getTranslationIndex().resolveEntryClass(sourceEntry, true));
+            destEntry = (T) destEntry.cloneToNewClass(
+                    destDeobfuscator.getJarIndex().getTranslationIndex().resolveEntryClass(destEntry, true));
+        }
+
         boolean wasRemoved = m_matches.remove(sourceEntry) != null;
         assert (wasRemoved);
         wasRemoved = m_matchedSourceEntries.remove(sourceEntry.getClassEntry(), sourceEntry);

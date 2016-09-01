@@ -437,7 +437,7 @@ public class MemberMatchingGui<T extends Entry> {
     protected void match() {
 
         // update the field matches
-        m_memberMatches.makeMatch(m_obfSourceEntry, m_obfDestEntry);
+        m_memberMatches.makeMatch(m_obfSourceEntry, m_obfDestEntry, m_sourceDeobfuscator, m_destDeobfuscator);
         save();
 
         // update the ui
@@ -451,7 +451,7 @@ public class MemberMatchingGui<T extends Entry> {
     protected void unmatch() {
 
         // update the field matches
-        m_memberMatches.unmakeMatch(m_obfSourceEntry, m_obfDestEntry);
+        m_memberMatches.unmakeMatch(m_obfSourceEntry, m_obfDestEntry, m_sourceDeobfuscator, m_destDeobfuscator);
         save();
 
         // update the ui
