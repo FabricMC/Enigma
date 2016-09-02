@@ -54,6 +54,8 @@ public class MemberMatches<T extends Entry> {
     }
 
     public void addUnmatchedDestEntry(T destEntry) {
+        if (destEntry.getName().equals("<clinit>") || destEntry.getName().equals("<init>"))
+            return;
         boolean wasAdded = m_unmatchedDestEntries.put(destEntry.getClassEntry(), destEntry);
         assert (wasAdded);
     }
