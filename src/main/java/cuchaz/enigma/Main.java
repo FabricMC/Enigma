@@ -16,7 +16,6 @@ import java.util.jar.JarFile;
 import javax.swing.UIManager;
 
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.mapping.ClassEntry;
 
 public class Main {
 

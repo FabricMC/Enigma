@@ -278,9 +278,8 @@ public class ClassRenamer {
         }
     }
 
-    private static ClassSignature renameType(ClassSignature type, ReplacerClassMap map) {
-
-        TypeParameter[] typeParamTypes = type.getParameters();
+    private static TypeParameter[] renameTypeParameter(TypeParameter[] typeParamTypes, ReplacerClassMap map)
+    {
         if (typeParamTypes != null) {
             typeParamTypes = Arrays.copyOf(typeParamTypes, typeParamTypes.length);
             for (int i = 0; i < typeParamTypes.length; i++) {
@@ -290,6 +289,12 @@ public class ClassRenamer {
                 }
             }
         }
+        return typeParamTypes;
+    }
+
+    private static ClassSignature renameType(ClassSignature type, ReplacerClassMap map) {
+
+        TypeParameter[] typeParamTypes = renameTypeParameter(type.getParameters(), map);
 
         ClassType superclassType = type.getSuperClass();
         if (superclassType != ClassType.OBJECT) {
@@ -315,16 +320,7 @@ public class ClassRenamer {
 
     private static MethodSignature renameType(MethodSignature type, ReplacerClassMap map) {
 
-        TypeParameter[] typeParamTypes = type.getTypeParameters();
-        if (typeParamTypes != null) {
-            typeParamTypes = Arrays.copyOf(typeParamTypes, typeParamTypes.length);
-            for (int i = 0; i < typeParamTypes.length; i++) {
-                TypeParameter newParamType = renameType(typeParamTypes[i], map);
-                if (newParamType != null) {
-                    typeParamTypes[i] = newParamType;
-                }
-            }
-        }
+        TypeParameter[] typeParamTypes = renameTypeParameter(type.getTypeParameters(), map);
 
         Type[] paramTypes = type.getParameterTypes();
         if (paramTypes != null) {

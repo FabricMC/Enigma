@@ -14,9 +14,6 @@ import com.google.common.io.CharStreams;
 
 import java.awt.Desktop;
 import java.awt.Font;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,10 +23,6 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Highlighter;
-
-import cuchaz.enigma.analysis.Token;
 
 public class Utils {
 

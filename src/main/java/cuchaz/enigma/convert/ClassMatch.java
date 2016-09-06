@@ -15,9 +15,8 @@ import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Set;
 
-import cuchaz.enigma.Util;
 import cuchaz.enigma.mapping.ClassEntry;
-
+import cuchaz.enigma.utils.Utils;
 
 public class ClassMatch {
 
@@ -70,7 +69,7 @@ public class ClassMatch {
 
     @Override
     public int hashCode() {
-        return Util.combineHashesOrdered(sourceClasses, destClasses);
+        return Utils.combineHashesOrdered(sourceClasses, destClasses);
     }
 
     @Override

@@ -24,13 +24,6 @@ public class ReadableToken {
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("line ");
-        buf.append(line);
-        buf.append(" columns ");
-        buf.append(startColumn);
-        buf.append("-");
-        buf.append(endColumn);
-        return buf.toString();
+        return "line " + line + " columns " + startColumn + "-" + endColumn;
     }
 }

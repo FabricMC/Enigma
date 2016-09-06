@@ -11,7 +11,6 @@
 package cuchaz.enigma.mapping;
 
 import com.strobel.assembler.metadata.FieldDefinition;
-import com.strobel.assembler.metadata.IMethodSignature;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 

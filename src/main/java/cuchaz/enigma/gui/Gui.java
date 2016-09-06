@@ -639,26 +639,21 @@ public class Gui {
 
         m_implementationsTree.setModel(null);
 
-        if (m_reference.entry instanceof ClassEntry) {
-            // get the class implementations
-            ClassImplementationsTreeNode node = this.controller.getClassImplementations((ClassEntry) m_reference.entry);
-            if (node != null) {
-                // show the tree at the root
-                TreePath path = getPathToRoot(node);
-                m_implementationsTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
-                m_implementationsTree.expandPath(path);
-                m_implementationsTree.setSelectionRow(m_implementationsTree.getRowForPath(path));
-            }
-        } else if (m_reference.entry instanceof MethodEntry) {
-            // get the method implementations
-            MethodImplementationsTreeNode node = this.controller.getMethodImplementations((MethodEntry) m_reference.entry);
-            if (node != null) {
-                // show the tree at the root
-                TreePath path = getPathToRoot(node);
-                m_implementationsTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
-                m_implementationsTree.expandPath(path);
-                m_implementationsTree.setSelectionRow(m_implementationsTree.getRowForPath(path));
-            }
+        DefaultMutableTreeNode node = null;
+
+        // get the class implementations
+        if (m_reference.entry instanceof ClassEntry)
+            node = this.controller.getClassImplementations((ClassEntry) m_reference.entry);
+        else // get the method implementations
+            if (m_reference.entry instanceof MethodEntry)
+                node = this.controller.getMethodImplementations((MethodEntry) m_reference.entry);
+
+        if (node != null) {
+            // show the tree at the root
+            TreePath path = getPathToRoot(node);
+            m_implementationsTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
+            m_implementationsTree.expandPath(path);
+            m_implementationsTree.setSelectionRow(m_implementationsTree.getRowForPath(path));
         }
 
         m_tabs.setSelectedIndex(1);

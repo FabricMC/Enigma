@@ -207,8 +207,8 @@ public class Type {
 
     private static int countArrayDimension(String in) {
         int i = 0;
-        for (; i < in.length() && in.charAt(i) == '['; i++) {
-        }
+        while (i < in.length() && in.charAt(i) == '[')
+            i++;
         return i;
     }
 

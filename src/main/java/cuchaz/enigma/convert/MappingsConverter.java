@@ -11,16 +11,15 @@
 package cuchaz.enigma.convert;
 
 import com.google.common.collect.*;
-
-import java.util.*;
-import java.util.jar.JarFile;
-
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.throwables.MappingConflict;
+
+import java.util.*;
+import java.util.jar.JarFile;
 
 public class MappingsConverter {
 
@@ -365,14 +364,12 @@ public class MappingsConverter {
             public Set<BehaviorEntry> filterEntries(Collection<BehaviorEntry> obfDestFields, BehaviorEntry obfSourceField, ClassMatches classMatches) {
                 Set<BehaviorEntry> out = Sets.newHashSet();
                 for (BehaviorEntry obfDestField : obfDestFields) {
-                    Signature translatedDestSignature = translate(obfDestField.getSignature(), classMatches.getUniqueMatches().inverse());
-                    if (translatedDestSignature == null && obfSourceField.getSignature() == null) {
+                    Signature translatedDestSignature = translate(obfDestField.getSignature(),
+                            classMatches.getUniqueMatches().inverse());
+                    if ((translatedDestSignature == null && obfSourceField.getSignature() == null)
+                            || translatedDestSignature != null && obfSourceField.getSignature() != null
+                            && translatedDestSignature.equals(obfSourceField.getSignature()))
                         out.add(obfDestField);
-                    } else if (translatedDestSignature == null || obfSourceField.getSignature() == null) {
-                        // skip it
-                    } else if (translatedDestSignature.equals(obfSourceField.getSignature())) {
-                        out.add(obfDestField);
-                    }
                 }
                 return out;
             }

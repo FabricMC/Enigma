@@ -287,23 +287,20 @@ public class MemberMatchingGui<T extends Entry> {
 
     private void highlightEntries(CodeReader reader, Deobfuscator deobfuscator, Collection<T> obfMatchedEntries, Collection<T> obfUnmatchedEntries) {
         reader.clearHighlights();
-        SourceIndex index = reader.getSourceIndex();
-
         // matched fields
-        for (T obfT : obfMatchedEntries) {
-            T deobfT = deobfuscator.deobfuscateEntry(obfT);
-            Token token = index.getDeclarationToken(deobfT);
-            if (token != null) {
-                reader.setHighlightedToken(token, m_matchedHighlightPainter);
-            }
-        }
-
+        updateHighlighted(obfMatchedEntries, deobfuscator, reader, m_matchedHighlightPainter);
         // unmatched fields
-        for (T obfT : obfUnmatchedEntries) {
+        updateHighlighted(obfUnmatchedEntries, deobfuscator, reader, m_unmatchedHighlightPainter);
+    }
+
+    private void updateHighlighted(Collection<T> entries, Deobfuscator deobfuscator, CodeReader reader, HighlightPainter painter)
+    {
+        SourceIndex index = reader.getSourceIndex();
+        for (T obfT : entries) {
             T deobfT = deobfuscator.deobfuscateEntry(obfT);
             Token token = index.getDeclarationToken(deobfT);
             if (token != null) {
-                reader.setHighlightedToken(token, m_unmatchedHighlightPainter);
+                reader.setHighlightedToken(token, painter);
             }
         }
     }

@@ -144,12 +144,11 @@ public class ClassMatching {
             numAmbiguousDest += match.destClasses.size();
         }
 
-        StringBuilder buf = new StringBuilder();
-        buf.append(String.format("%20s%8s%8s\n", "", "Source", "Dest"));
-        buf.append(String.format("%20s%8d%8d\n", "Classes", sourceClasses().size(), destClasses().size()));
-        buf.append(String.format("%20s%8d%8d\n", "Uniquely matched", uniqueMatches().size(), uniqueMatches().size()));
-        buf.append(String.format("%20s%8d%8d\n", "Ambiguously matched", numAmbiguousSource, numAmbiguousDest));
-        buf.append(String.format("%20s%8d%8d\n", "Unmatched", unmatchedSourceClasses().size(), unmatchedDestClasses().size()));
-        return buf.toString();
+        String buf = String.format("%20s%8s%8s\n", "", "Source", "Dest") + String
+                .format("%20s%8d%8d\n", "Classes", sourceClasses().size(), destClasses().size()) + String
+                .format("%20s%8d%8d\n", "Uniquely matched", uniqueMatches().size(), uniqueMatches().size()) + String
+                .format("%20s%8d%8d\n", "Ambiguously matched", numAmbiguousSource, numAmbiguousDest) + String
+                .format("%20s%8d%8d\n", "Unmatched", unmatchedSourceClasses().size(), unmatchedDestClasses().size());
+        return buf;
     }
 }

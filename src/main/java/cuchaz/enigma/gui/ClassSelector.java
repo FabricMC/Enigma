@@ -22,8 +22,6 @@ import cuchaz.enigma.throwables.IllegalNameException;
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.tree.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -278,7 +276,7 @@ public class ClassSelector extends JTree {
             TreePath path = tree.getPathForRow(i);
             if (i == row || isDescendant(path, rowPath)) {
                 if (tree.isExpanded(path)) {
-                    buf.append("," + String.valueOf(i - row));
+                    buf.append(",").append(String.valueOf(i - row));
                 }
             } else {
                 break;

@@ -1,7 +1,6 @@
 package cuchaz.enigma.mapping;
 
 import com.google.common.base.Charsets;
-import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.TranslationIndex;
 
 import java.io.*;

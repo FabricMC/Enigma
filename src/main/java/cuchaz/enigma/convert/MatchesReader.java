@@ -28,7 +28,7 @@ public class MatchesReader {
             throws IOException {
         try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             ClassMatches matches = new ClassMatches();
-            String line = null;
+            String line;
             while ((line = in.readLine()) != null) {
                 matches.add(readClassMatch(line));
             }
@@ -57,7 +57,7 @@ public class MatchesReader {
             throws IOException {
         try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             MemberMatches<T> matches = new MemberMatches<T>();
-            String line = null;
+            String line;
             while ((line = in.readLine()) != null) {
                 readMemberMatch(matches, line);
             }

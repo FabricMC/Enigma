@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.Util;
 import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
@@ -30,6 +29,7 @@ import cuchaz.enigma.bytecode.InfoType;
 import cuchaz.enigma.bytecode.accessors.ConstInfoAccessor;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.utils.Utils;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.expr.*;
@@ -386,7 +386,7 @@ public class ClassIdentity {
         objs.addAll(this.implementz);
         objs.addAll(this.implementations);
         objs.addAll(this.references);
-        return Util.combineHashesOrdered(objs);
+        return Utils.combineHashesOrdered(objs);
     }
 
     public int getMatchScore(ClassIdentity other) {

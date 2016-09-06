@@ -123,10 +123,10 @@ public class JarIndex {
 
                         // DEBUG
                         //System.out.println("ANONYMOUS: " + outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName());
-                    } else {
+                    }/* else {
                         // DEBUG
                         //System.out.println("INNER: " + outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName());
-                    }
+                    }*/
                 }
             }
 

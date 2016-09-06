@@ -19,7 +19,6 @@ import cuchaz.enigma.TranslatingTypeLoader;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.TranslationDirection;
 import cuchaz.enigma.mapping.Translator;
 import javassist.CtClass;
 
