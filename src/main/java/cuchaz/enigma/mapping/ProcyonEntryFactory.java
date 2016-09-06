@@ -13,10 +13,11 @@ package cuchaz.enigma.mapping;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodReference;
 
 public class ProcyonEntryFactory {
 
-    public static FieldEntry getFieldEntry(FieldDefinition def) {
+    public static FieldEntry getFieldEntry(MemberReference def) {
         return new FieldEntry(new ClassEntry(def.getDeclaringType().getInternalName()), def.getName(), new Type(def.getErasedSignature()));
     }
 
@@ -24,7 +25,7 @@ public class ProcyonEntryFactory {
         return new MethodEntry(new ClassEntry(def.getDeclaringType().getInternalName()), def.getName(), new Signature(def.getErasedSignature()));
     }
 
-    public static ConstructorEntry getConstructorEntry(MethodDefinition def) {
+    public static ConstructorEntry getConstructorEntry(MethodReference def) {
         if (def.isTypeInitializer()) {
             return new ConstructorEntry(new ClassEntry(def.getDeclaringType().getInternalName()));
         } else {
@@ -32,7 +33,7 @@ public class ProcyonEntryFactory {
         }
     }
 
-    public static BehaviorEntry getBehaviorEntry(MethodDefinition def) {
+    public static BehaviorEntry getBehaviorEntry(MethodReference def) {
         if (def.isConstructor() || def.isTypeInitializer()) {
             return getConstructorEntry(def);
         } else {
