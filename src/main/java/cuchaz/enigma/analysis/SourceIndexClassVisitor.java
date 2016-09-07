@@ -16,7 +16,6 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-
 import cuchaz.enigma.mapping.*;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
@@ -57,7 +56,6 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
         MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
         BehaviorEntry behaviorEntry = ProcyonEntryFactory.getBehaviorEntry(def);
         AstNode tokenNode = node.getNameToken();
-
         if (behaviorEntry instanceof ConstructorEntry) {
             ConstructorEntry constructorEntry = (ConstructorEntry) behaviorEntry;
             if (constructorEntry.isStatic()) {
