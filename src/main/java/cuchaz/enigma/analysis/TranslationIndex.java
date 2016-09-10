@@ -274,6 +274,13 @@ public class TranslationIndex {
         // so let's look at all the trees
 
         for (ClassEntry interfaceEntry : this.interfaces.get(entry.getClassEntry())) {
+            Collection<ClassEntry> subInterface = this.interfaces.get(interfaceEntry);
+            if (subInterface != null && !subInterface.isEmpty())
+            {
+                ClassEntry result = resolveInterface(entry.cloneToNewClass(interfaceEntry));
+                if (result != null)
+                    return result;
+            }
             ClassEntry resolvedClassEntry = resolveSuperclass(entry.cloneToNewClass(interfaceEntry));
             if (resolvedClassEntry != null) {
                 return resolvedClassEntry;
