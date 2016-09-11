@@ -34,7 +34,16 @@ public class ProcyonEntryFactory {
                 builder.append(paramType.getErasedSignature());
         }
         builder.append(")");
-        builder.append(methodReference.getReturnType().getErasedSignature());
+
+        // TODO: Fix Procyon render
+        TypeReference returnType = methodReference.getReturnType();
+        if (returnType.getErasedSignature().equals("Ljava/lang/Object;") && returnType.hasExtendsBound() && returnType.getExtendsBound() instanceof  CompoundTypeReference)
+        {
+            List<TypeReference> interfaces = ((CompoundTypeReference) returnType.getExtendsBound()).getInterfaces();
+            interfaces.forEach((inter) -> builder.append(inter.getErasedSignature()));
+        }
+        else
+            builder.append(returnType.getErasedSignature());
         return builder.toString();
     }
 
