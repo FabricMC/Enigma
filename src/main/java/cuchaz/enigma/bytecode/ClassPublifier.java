@@ -43,7 +43,7 @@ public class ClassPublifier {
     }
 
     private static int publify(int flags) {
-        if (AccessFlag.isPrivate(flags) || AccessFlag.isProtected(flags)) {
+        if (!AccessFlag.isPublic(flags)) {
             flags = AccessFlag.setPublic(flags);
         }
         return flags;
