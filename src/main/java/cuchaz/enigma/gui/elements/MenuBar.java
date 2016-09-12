@@ -25,6 +25,7 @@ public class MenuBar extends JMenuBar {
     public final JMenuItem saveMappingsSrgMenu;
     public final JMenuItem closeMappingsMenu;
 
+    public final JMenuItem rebuildMethodNamesMenu;
 
     public final JMenuItem exportSourceMenu;
     public final JMenuItem exportJarMenu;
@@ -171,6 +172,15 @@ public class MenuBar extends JMenuBar {
 
                 });
                 this.closeMappingsMenu = item;
+            }
+            menu.addSeparator();
+            {
+                JMenuItem item = new JMenuItem("Rebuild Method Names");
+                menu.add(item);
+                item.addActionListener(event -> {
+                    this.gui.getController().rebuildMethodNames();
+                });
+                this.rebuildMethodNamesMenu = item;
             }
             menu.addSeparator();
             {

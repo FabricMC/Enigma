@@ -11,6 +11,7 @@
 package cuchaz.enigma;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.strobel.assembler.metadata.MetadataSystem;
@@ -32,9 +33,7 @@ import javassist.CtClass;
 import javassist.bytecode.Descriptor;
 
 import java.io.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -294,6 +293,92 @@ public class Deobfuscator {
         }
         if (progress != null) {
             progress.onProgress(i, "Done!");
+        }
+    }
+
+    private void addAllPotentialAncestors(Set<ClassEntry> classEntries, ClassEntry classObfEntry) {
+        for (ClassEntry interfaceEntry : jarIndex.getTranslationIndex().getInterfaces(classObfEntry)) {
+            if (classEntries.add(interfaceEntry)) {
+                addAllPotentialAncestors(classEntries, interfaceEntry);
+            }
+        }
+
+        ClassEntry superClassEntry = jarIndex.getTranslationIndex().getSuperclass(classObfEntry);
+        if (superClassEntry != null && classEntries.add(superClassEntry)) {
+            addAllPotentialAncestors(classEntries, superClassEntry);
+        }
+    }
+
+    private boolean isBehaviorProvider(ClassEntry classObfEntry, BehaviorEntry behaviorEntry) {
+        if (behaviorEntry instanceof MethodEntry) {
+            MethodEntry methodEntry = (MethodEntry) behaviorEntry;
+
+            Set<ClassEntry> classEntries = new HashSet<>();
+            addAllPotentialAncestors(classEntries, classObfEntry);
+
+            for (ClassEntry parentEntry : classEntries) {
+                MethodEntry ancestorMethodEntry = new MethodEntry(parentEntry, methodEntry.getName(), methodEntry.getSignature());
+                if (jarIndex.containsObfBehavior(ancestorMethodEntry)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public void rebuildMethodNames(ProgressListener progress) {
+        int i = 0;
+        Map<ClassMapping, Map<Entry, String>> renameClassMap = new HashMap<>();
+
+        progress.init(getMappings().classes().size() * 3, "Rebuilding method names");
+
+        for (ClassMapping classMapping : Lists.newArrayList(getMappings().classes())) {
+            Map<Entry, String> renameEntries = new HashMap<>();
+
+            progress.onProgress(i++, classMapping.getDeobfName());
+
+            for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
+                ClassEntry classObfEntry = classMapping.getObfEntry();
+                BehaviorEntry obfEntry = methodMapping.getObfEntry(classObfEntry);
+
+                if (isBehaviorProvider(classObfEntry, obfEntry)) {
+                    if (hasDeobfuscatedName(obfEntry) && !(obfEntry instanceof ConstructorEntry)
+                            && !(methodMapping.getDeobfName().equals(methodMapping.getObfName()))) {
+                        renameEntries.put(obfEntry, methodMapping.getDeobfName());
+                    }
+
+                    for (ArgumentMapping argumentMapping : Lists.newArrayList(methodMapping.arguments())) {
+                        Entry argObfEntry = argumentMapping.getObfEntry(obfEntry);
+                        if (hasDeobfuscatedName(argObfEntry)) {
+                            renameEntries.put(argObfEntry, deobfuscateEntry(argObfEntry).getName());
+                        }
+                    }
+                }
+            }
+
+            renameClassMap.put(classMapping, renameEntries);
+        }
+
+        for (Map.Entry<ClassMapping, Map<Entry, String>> renameClassMapEntry : renameClassMap.entrySet()) {
+            progress.onProgress(i++, renameClassMapEntry.getKey().getDeobfName());
+
+            for (Map.Entry<Entry, String> entry : renameClassMapEntry.getValue().entrySet()) {
+                Entry obfEntry = entry.getKey();
+
+                removeMapping(obfEntry);
+            }
+        }
+
+        for (Map.Entry<ClassMapping, Map<Entry, String>> renameClassMapEntry : renameClassMap.entrySet()) {
+            progress.onProgress(i++, renameClassMapEntry.getKey().getDeobfName());
+
+            for (Map.Entry<Entry, String> entry : renameClassMapEntry.getValue().entrySet()) {
+                Entry obfEntry = entry.getKey();
+                String name = entry.getValue();
+
+                rename(obfEntry, name);
+            }
         }
     }
 

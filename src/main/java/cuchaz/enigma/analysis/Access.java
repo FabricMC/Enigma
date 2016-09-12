@@ -19,6 +19,7 @@ public enum Access {
 
     Public,
     Protected,
+    Package,
     Private;
 
     public static Access get(CtBehavior behavior) {
@@ -30,12 +31,18 @@ public enum Access {
     }
 
     public static Access get(int modifiers) {
-        if (Modifier.isPublic(modifiers)) {
+        boolean isPublic = Modifier.isPublic(modifiers);
+        boolean isProtected = Modifier.isProtected(modifiers);
+        boolean isPrivate = Modifier.isPrivate(modifiers);
+
+        if (isPublic && !isProtected && !isPrivate) {
             return Public;
-        } else if (Modifier.isProtected(modifiers)) {
+        } else if (!isPublic && isProtected && !isPrivate) {
             return Protected;
-        } else if (Modifier.isPrivate(modifiers)) {
+        } else if (!isPublic && !isProtected && isPrivate) {
             return Private;
+        } else if (!isPublic && !isProtected && !isPrivate) {
+            return Package;
         }
         // assume public by default
         return Public;

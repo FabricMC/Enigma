@@ -100,6 +100,10 @@ public class GuiController {
         refreshCurrentClass();
     }
 
+    public void rebuildMethodNames() {
+        ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.rebuildMethodNames(progress));
+    }
+
     public void exportSource(final File dirOut) {
         ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.writeSources(dirOut, progress));
     }

@@ -175,9 +175,9 @@ public class Mappings {
         return classMapping != null && classMapping.containsDeobfField(deobfName, obfType);
     }
 
-    public boolean containsDeobfMethod(ClassEntry obfClassEntry, String deobfName, Signature deobfSignature) {
+    public boolean containsDeobfMethod(ClassEntry obfClassEntry, String deobfName, Signature obfSignature) {
         ClassMapping classMapping = this.classesByObf.get(obfClassEntry.getName());
-        return classMapping != null && classMapping.containsDeobfMethod(deobfName, deobfSignature);
+        return classMapping != null && classMapping.containsDeobfMethod(deobfName, obfSignature);
     }
 
     public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {

@@ -38,6 +38,7 @@ public class JarIndex {
     private Map<ClassEntry, ClassEntry> outerClassesByInner;
     private Map<ClassEntry, BehaviorEntry> anonymousClasses;
     private Map<MethodEntry, MethodEntry> bridgedMethods;
+    private Set<MethodEntry> syntheticMethods;
 
     public JarIndex() {
         this.obfClassEntries = Sets.newHashSet();
@@ -52,6 +53,7 @@ public class JarIndex {
         this.outerClassesByInner = Maps.newHashMap();
         this.anonymousClasses = Maps.newHashMap();
         this.bridgedMethods = Maps.newHashMap();
+        this.syntheticMethods = Sets.newHashSet();
     }
 
     public void indexJar(JarFile jar, boolean buildInnerClasses) {
@@ -154,6 +156,11 @@ public class JarIndex {
         final BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
         if (behaviorEntry instanceof MethodEntry) {
             MethodEntry methodEntry = (MethodEntry) behaviorEntry;
+
+            // is synthetic
+            if ((behavior.getModifiers() & AccessFlag.SYNTHETIC) != 0) {
+                syntheticMethods.add(methodEntry);
+            }
 
             // index implementation
             this.methodImplementations.put(behaviorEntry.getClassName(), methodEntry);
@@ -718,6 +725,10 @@ public class JarIndex {
 
     public boolean isAnonymousClass(ClassEntry obfInnerClassEntry) {
         return this.anonymousClasses.containsKey(obfInnerClassEntry);
+    }
+
+    public boolean isSyntheticMethod(MethodEntry methodEntry) {
+        return this.syntheticMethods.contains(methodEntry);
     }
 
     public BehaviorEntry getAnonymousClassCaller(ClassEntry obfInnerClassName) {

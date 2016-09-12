@@ -38,6 +38,10 @@ public class ArgumentMapping implements Comparable<ArgumentMapping> {
         this.name = NameValidator.validateArgumentName(val);
     }
 
+    public ArgumentEntry getObfEntry(BehaviorEntry behaviorEntry) {
+        return new ArgumentEntry(behaviorEntry, index, name);
+    }
+
     @Override
     public int compareTo(ArgumentMapping other) {
         return Integer.compare(this.index, other.index);
