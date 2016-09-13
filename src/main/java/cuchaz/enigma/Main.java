@@ -33,7 +33,7 @@ public class Main {
         }
 
         // DEBUG
-        gui.getController().openDeclaration(new ClassEntry("none/byp"));
+        //gitgui.getController().openDeclaration(new ClassEntry("none/byp"));
     }
 
     private static File getFile(String path) {
