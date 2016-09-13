@@ -571,7 +571,14 @@ public class Gui {
         panel.remove(panel.getComponentCount() - 1);
         panel.add(text);
         text.grabFocus();
-        text.selectAll();
+
+        int offset = text.getText().lastIndexOf('/') + 1;
+        // If it's a class and isn't in the default package, assume that it's deobfuscated.
+        if (m_reference.getNameableEntry() instanceof ClassEntry && !text.getText().startsWith(Constants.NONE_PACKAGE)
+                && offset != 0)
+            text.select(offset, text.getText().length());
+        else
+            text.selectAll();
 
         redraw();
     }
