@@ -273,20 +273,20 @@ public class ClassIdentity {
                 // update the hash with the opcode
                 int opcode = iter.byteAt(pos);
                 digest.update((byte) opcode);
-
+                int constIndex;
                 switch (opcode) {
-                    case Opcode.LDC: {
-                        int constIndex = iter.byteAt(pos + 1);
+                    case Opcode.LDC:
+                        constIndex = iter.byteAt(pos + 1);
                         updateHashWithConstant(digest, constants, constIndex);
-                    }
-                    break;
+                        break;
 
                     case Opcode.LDC_W:
-                    case Opcode.LDC2_W: {
-                        int constIndex = (iter.byteAt(pos + 1) << 8) | iter.byteAt(pos + 2);
+                    case Opcode.LDC2_W:
+                        constIndex = (iter.byteAt(pos + 1) << 8) | iter.byteAt(pos + 2);
                         updateHashWithConstant(digest, constants, constIndex);
-                    }
-                    break;
+                        break;
+                    default:
+                        break;
                 }
             }
 

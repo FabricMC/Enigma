@@ -172,11 +172,8 @@ public class MemberMatchingGui<T extends Entry> {
         KeyAdapter keyListener = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {
-                switch (event.getKeyCode()) {
-                    case KeyEvent.VK_M:
-                        m_matchButton.doClick();
-                        break;
-                }
+                if (event.getKeyCode() == KeyEvent.VK_M)
+                    m_matchButton.doClick();
             }
         };
         m_sourceReader.addKeyListener(keyListener);
@@ -376,7 +373,7 @@ public class MemberMatchingGui<T extends Entry> {
 
     private void setSource(T obfEntry) {
         if (obfEntry == null) {
-            m_obfSourceEntry = obfEntry;
+            m_obfSourceEntry = null;
             m_sourceLabel.setText("");
         } else {
             m_obfSourceEntry = obfEntry;
@@ -386,7 +383,7 @@ public class MemberMatchingGui<T extends Entry> {
 
     private void setDest(T obfEntry) {
         if (obfEntry == null) {
-            m_obfDestEntry = obfEntry;
+            m_obfDestEntry = null;
             m_destLabel.setText("");
         } else {
             m_obfDestEntry = obfEntry;

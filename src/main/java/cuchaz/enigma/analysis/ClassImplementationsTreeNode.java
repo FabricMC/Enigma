@@ -60,7 +60,7 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
     public static ClassImplementationsTreeNode findNode(ClassImplementationsTreeNode node, MethodEntry entry) {
         // is this the node?
-        if (node.entry.equals(entry)) {
+        if (node.entry.equals(entry.getClassEntry())) {
             return node;
         }
 

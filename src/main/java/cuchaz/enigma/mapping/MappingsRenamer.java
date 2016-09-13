@@ -13,6 +13,7 @@ package cuchaz.enigma.mapping;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;

@@ -12,10 +12,8 @@ package cuchaz.enigma.convert;
 
 import com.google.common.collect.Lists;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 
@@ -26,7 +24,7 @@ public class MatchesReader {
 
     public static ClassMatches readClasses(File file)
             throws IOException {
-        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8")))) {
             ClassMatches matches = new ClassMatches();
             String line;
             while ((line = in.readLine()) != null) {
@@ -55,7 +53,7 @@ public class MatchesReader {
 
     public static <T extends Entry> MemberMatches<T> readMembers(File file)
             throws IOException {
-        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8")))) {
             MemberMatches<T> matches = new MemberMatches<T>();
             String line;
             while ((line = in.readLine()) != null) {

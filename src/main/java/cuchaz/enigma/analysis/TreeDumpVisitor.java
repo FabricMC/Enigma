@@ -14,10 +14,8 @@ import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.patterns.Pattern;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.Charset;
 
 public class TreeDumpVisitor implements IAstVisitor<Void, Void> {
 
@@ -32,7 +30,7 @@ public class TreeDumpVisitor implements IAstVisitor<Void, Void> {
     @Override
     public Void visitCompilationUnit(CompilationUnit node, Void ignored) {
         try {
-            m_out = new FileWriter(m_file);
+            m_out = new OutputStreamWriter(new FileOutputStream(m_file), Charset.forName("UTF-8"));
             recurse(node, ignored);
             m_out.close();
             return null;

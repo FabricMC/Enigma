@@ -134,9 +134,15 @@ public class CommandMain {
         File fileMappings = getReadableFile(getArg(args, 1, "enigma mapping", true));
         File result = getWritableFile(getArg(args, 2, "enigma mapping", true));
         String name = getArg(args, 3, "format type", true);
-        Mappings.FormatType formatType = Mappings.FormatType.valueOf(name.toUpperCase());
-        if (formatType == null)
+        Mappings.FormatType formatType;
+        try
+        {
+            formatType = Mappings.FormatType.valueOf(name.toUpperCase());
+        } catch (IllegalArgumentException e)
+        {
             throw new IllegalArgumentException(name + "is not a valid mapping format!");
+        }
+
         System.out.println("Reading mappings...");
         Mappings mappings = new MappingsEnigmaReader().read(fileMappings);
         System.out.println("Saving new mappings...");

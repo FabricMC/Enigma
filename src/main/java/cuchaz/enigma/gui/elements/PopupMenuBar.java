@@ -10,8 +10,6 @@ import cuchaz.enigma.gui.Gui;
 
 public class PopupMenuBar extends JPopupMenu {
 
-    private final Gui gui;
-
     public final JMenuItem renameMenu;
     public final JMenuItem showInheritanceMenu;
     public final JMenuItem showImplementationsMenu;
@@ -21,7 +19,6 @@ public class PopupMenuBar extends JPopupMenu {
     public final JMenuItem toggleMappingMenu;
 
     public PopupMenuBar(Gui gui) {
-        this.gui = gui;
         {
             JMenuItem menu = new JMenuItem("Rename");
             menu.addActionListener(event -> gui.startRename());
@@ -73,7 +70,7 @@ public class PopupMenuBar extends JPopupMenu {
         {
             JMenuItem menu = new JMenuItem("Mark as deobfuscated");
             menu.addActionListener(event -> gui.toggleMapping());
-            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0));
+            menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, 0));
             menu.setEnabled(false);
             this.add(menu);
             this.toggleMappingMenu = menu;

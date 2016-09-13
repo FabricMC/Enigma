@@ -18,6 +18,8 @@ import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Signature;
 import javassist.bytecode.*;
 
+@Deprecated
+// TODO: Find if this class can have any usage.
 public class CheckCastIterator implements Iterator<CheckCast> {
 
     public static class CheckCast {

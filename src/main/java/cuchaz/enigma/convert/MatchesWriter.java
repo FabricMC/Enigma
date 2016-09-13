@@ -10,9 +10,8 @@
  ******************************************************************************/
 package cuchaz.enigma.convert;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import cuchaz.enigma.mapping.BehaviorEntry;
@@ -25,14 +24,14 @@ public class MatchesWriter {
 
     public static void writeClasses(ClassMatches matches, File file)
             throws IOException {
-        try (FileWriter out = new FileWriter(file)) {
+        try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"))) {
             for (ClassMatch match : matches) {
                 writeClassMatch(out, match);
             }
         }
     }
 
-    private static void writeClassMatch(FileWriter out, ClassMatch match)
+    private static void writeClassMatch(OutputStreamWriter out, ClassMatch match)
             throws IOException {
         writeClasses(out, match.sourceClasses);
         out.write(":");
@@ -40,7 +39,7 @@ public class MatchesWriter {
         out.write("\n");
     }
 
-    private static void writeClasses(FileWriter out, Iterable<ClassEntry> classes)
+    private static void writeClasses(OutputStreamWriter out, Iterable<ClassEntry> classes)
             throws IOException {
         boolean isFirst = true;
         for (ClassEntry entry : classes) {
@@ -55,7 +54,7 @@ public class MatchesWriter {
 
     public static <T extends Entry> void writeMembers(MemberMatches<T> matches, File file)
             throws IOException {
-        try (FileWriter out = new FileWriter(file)) {
+        try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"))) {
             for (Map.Entry<T, T> match : matches.matches().entrySet()) {
                 writeMemberMatch(out, match.getKey(), match.getValue());
             }
@@ -71,7 +70,7 @@ public class MatchesWriter {
         }
     }
 
-    private static <T extends Entry> void writeMemberMatch(FileWriter out, T source, T dest)
+    private static <T extends Entry> void writeMemberMatch(OutputStreamWriter out, T source, T dest)
             throws IOException {
         if (source != null) {
             writeEntry(out, source);
@@ -83,14 +82,14 @@ public class MatchesWriter {
         out.write("\n");
     }
 
-    private static <T extends Entry> void writeUnmatchableEntry(FileWriter out, T entry)
+    private static <T extends Entry> void writeUnmatchableEntry(OutputStreamWriter out, T entry)
             throws IOException {
         out.write("!");
         writeEntry(out, entry);
         out.write("\n");
     }
 
-    private static <T extends Entry> void writeEntry(FileWriter out, T entry)
+    private static <T extends Entry> void writeEntry(OutputStreamWriter out, T entry)
             throws IOException {
         if (entry instanceof FieldEntry) {
             writeField(out, (FieldEntry) entry);
@@ -99,7 +98,7 @@ public class MatchesWriter {
         }
     }
 
-    private static void writeField(FileWriter out, FieldEntry fieldEntry)
+    private static void writeField(OutputStreamWriter out, FieldEntry fieldEntry)
             throws IOException {
         out.write(fieldEntry.getClassName());
         out.write(" ");
@@ -108,7 +107,7 @@ public class MatchesWriter {
         out.write(fieldEntry.getType().toString());
     }
 
-    private static void writeBehavior(FileWriter out, BehaviorEntry behaviorEntry)
+    private static void writeBehavior(OutputStreamWriter out, BehaviorEntry behaviorEntry)
             throws IOException {
         out.write(behaviorEntry.getClassName());
         out.write(" ");
