@@ -1,5 +1,6 @@
 package cuchaz.enigma.gui.panels;
 
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -16,6 +17,7 @@ public class PanelEditor extends JEditorPane {
         this.gui = gui;
 
         this.setEditable(false);
+        this.setSelectionColor(new Color(31, 46, 90));
         this.setCaret(new BrowserCaret());
         this.setContentType("text/java");
         this.addCaretListener(event -> gui.onCaretMove(event.getDot()));

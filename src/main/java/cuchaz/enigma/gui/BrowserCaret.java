@@ -15,12 +15,9 @@ import javax.swing.text.Highlighter;
 
 public class BrowserCaret extends DefaultCaret {
 
-    private static final Highlighter.HighlightPainter selectionPainter = (g, p0, p1, bounds, c) -> {
-    };
-
     @Override
     public boolean isSelectionVisible() {
-        return false;
+        return true;
     }
 
     @Override
@@ -28,8 +25,4 @@ public class BrowserCaret extends DefaultCaret {
         return true;
     }
 
-    @Override
-    public Highlighter.HighlightPainter getSelectionPainter() {
-        return this.selectionPainter;
-    }
 }
