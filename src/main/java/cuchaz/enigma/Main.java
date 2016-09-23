@@ -21,7 +21,8 @@ import cuchaz.enigma.mapping.ClassEntry;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        if (System.getProperty("enigma.useSystemLookAndFeel", "true").equals("true"))
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         Gui gui = new Gui();
 
         // parse command-line args
@@ -33,7 +34,7 @@ public class Main {
         }
 
         // DEBUG
-        //gitgui.getController().openDeclaration(new ClassEntry("none/byp"));
+        //gui.getController().openDeclaration(new ClassEntry("none/byp"));
     }
 
     private static File getFile(String path) {
