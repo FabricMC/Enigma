@@ -10,13 +10,16 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
-import com.strobel.assembler.metadata.*;
+import com.strobel.assembler.metadata.MemberReference;
+import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-
-import java.lang.Error;
-
 import cuchaz.enigma.mapping.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 
@@ -24,6 +27,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 
     // TODO: Really fix Procyon index problem with inner classes
     private int argumentPosition;
+    private Map<String, Entry> argumentCache = new HashMap<>();
 
     public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry) {
         this.behaviorEntry = behaviorEntry;
@@ -96,11 +100,15 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
     @Override
     public Void visitParameterDeclaration(ParameterDeclaration node, SourceIndex index) {
         ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
-        if (def.getMethod() instanceof MemberReference)
-            if (def.getMethod() instanceof MethodReference)
-                index.addDeclaration(node.getNameToken(),
-                        new ArgumentEntry(ProcyonEntryFactory.getBehaviorEntry((MethodReference) def.getMethod()),
-                                argumentPosition++, node.getName()));
+        if (def.getMethod() instanceof MemberReference && def.getMethod() instanceof MethodReference)
+        {
+            ArgumentEntry argumentEntry = new ArgumentEntry(ProcyonEntryFactory.getBehaviorEntry((MethodReference) def.getMethod()),
+                    argumentPosition++, node.getName());
+            Identifier identifier = node.getNameToken();
+            // cache the argument entry and the identifier
+            argumentCache.put(identifier.getName(), argumentEntry);
+            index.addDeclaration(identifier, argumentEntry);
+        }
 
         return recurse(node, index);
     }
@@ -113,6 +121,8 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
             FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
             index.addReference(node.getIdentifierToken(), fieldEntry, this.behaviorEntry);
         }
+        else if (argumentCache.containsKey(node.getIdentifier())) // If it's in the argument cache, create a token!
+            index.addDeclaration(node.getIdentifierToken(), argumentCache.get(node.getIdentifier()));
 
         return recurse(node, index);
     }
