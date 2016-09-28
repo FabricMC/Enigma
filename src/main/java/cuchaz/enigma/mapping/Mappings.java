@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.throwables.MappingConflict;
 
@@ -204,9 +205,9 @@ public class Mappings {
         return originMapping;
     }
 
-    public void saveEnigmaMappings(File file, boolean isDirectoryFormat) throws IOException
+    public void saveEnigmaMappings(File file, boolean isDirectoryFormat, Deobfuscator.ProgressListener progressListener) throws IOException
     {
-        new MappingsEnigmaWriter().write(file, this, isDirectoryFormat);
+        new MappingsEnigmaWriter().write(file, this, isDirectoryFormat, progressListener);
     }
 
     public void saveSRGMappings(File file) throws IOException

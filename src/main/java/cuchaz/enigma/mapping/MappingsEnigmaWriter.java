@@ -11,6 +11,7 @@
 package cuchaz.enigma.mapping;
 
 import com.google.common.base.Charsets;
+import cuchaz.enigma.Deobfuscator;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.List;
 
 public class MappingsEnigmaWriter {
 	
-	public void write(File out, Mappings mappings, boolean isDirectoryFormat) throws IOException {
+	public void write(File out, Mappings mappings, boolean isDirectoryFormat, Deobfuscator.ProgressListener progressListener) throws IOException {
 		if (!isDirectoryFormat)
 		{
 			PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(out), Charsets.UTF_8));
@@ -27,7 +28,7 @@ public class MappingsEnigmaWriter {
 			outputWriter.close();
 		}
 		else
-			writeAsDirectory(out, mappings);
+			writeAsDirectory(out, mappings, progressListener);
 	}
 
 	private void deleteDir(File file) {
@@ -40,14 +41,29 @@ public class MappingsEnigmaWriter {
 		file.delete();
 	}
 
-	public void writeAsDirectory(File target, Mappings mappings) throws IOException {
+	public void writeAsDirectory(File target, Mappings mappings, Deobfuscator.ProgressListener progressListener) throws IOException {
 		//TODO: Know what have changes during write to not rewrite all the things
 		deleteDir(target);
 		if (!target.exists() && !target.mkdirs())
 			throw  new IOException("Cannot create mapping directory!");
 
+		if(progressListener == null){
+			progressListener = new Deobfuscator.ProgressListener() {
+				@Override
+				public void init(int totalWork, String title) {
 
+				}
+
+				@Override
+				public void onProgress(int numDone, String message) {
+
+				}
+			};
+		}
+		progressListener.init(mappings.classes().size(), "Saving mappings");
+		int done = 0;
 		for (ClassMapping classMapping : sorted(mappings.classes())) {
+			progressListener.onProgress(done++, classMapping.getDeobfName());
 			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
 			File result;
 			if (classMapping.getDeobfName() == null)
