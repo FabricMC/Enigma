@@ -10,10 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.bytecode;
 
-import cuchaz.enigma.mapping.ArgumentEntry;
-import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.EntryFactory;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.mapping.*;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.bytecode.*;
@@ -83,7 +80,22 @@ public class LocalVariableRenamer {
                 int argi = i - starti;
                 String argName = this.translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
                 if (argName == null) {
-                    argName = "a" + (argi + 1);
+                    Type argType = behaviorEntry.getSignature().getArgumentTypes().get(argi);
+                    // Unfortunately each of these have different name getters, so they have different code paths
+                    if (argType.isPrimitive()) {
+                        Type.Primitive argCls = argType.getPrimitive();
+                        argName = "a" + argCls.name() + (argi + 1);
+                    } else if (argType.isArray()) {
+                        // List types would require this whole block again, so just go with aListx
+                        argName = "aList" + (argi + 1);
+                    } else if (argType.isClass()) {
+                        // Anon inner classes getSimpleName returns "" so it will fall back gracefully to ax notation
+                        ClassEntry argCls = argType.getClassEntry();
+                        String argClsName = argCls.getSimpleName();
+                        argName = "a" + argClsName + (argi + 1);
+                    } else {
+                        argName = "a" + (argi + 1);
+                    }
                 }
                 renameVariable(table, i, constants.addUtf8Info(argName));
             }
