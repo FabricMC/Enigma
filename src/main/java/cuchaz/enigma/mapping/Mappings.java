@@ -30,6 +30,7 @@ public class Mappings {
     protected Map<String, ClassMapping> classesByObf;
     protected Map<String, ClassMapping> classesByDeobf;
     private final FormatType originMapping;
+	private List<String> removeList;
 
     public Mappings()
     {
@@ -40,6 +41,7 @@ public class Mappings {
         this.originMapping = originMapping;
         this.classesByObf = Maps.newHashMap();
         this.classesByDeobf = Maps.newHashMap();
+	    this.removeList = new ArrayList<>();
     }
 
     public Collection<ClassMapping> classes() {
@@ -213,6 +215,14 @@ public class Mappings {
     {
         new MappingsSRGWriter().write(file, this);
     }
+
+	public void addMappingForRemove(String obfName) {
+		this.removeList.add(obfName);
+	}
+
+	public List<String> getRemoveList() {
+		return removeList;
+	}
 
     public enum FormatType
     {
