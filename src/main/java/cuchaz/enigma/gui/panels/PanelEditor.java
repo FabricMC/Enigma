@@ -3,6 +3,8 @@ package cuchaz.enigma.gui.panels;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.JEditorPane;
 
@@ -21,6 +23,15 @@ public class PanelEditor extends JEditorPane {
         this.setCaret(new BrowserCaret());
         this.setContentType("text/java");
         this.addCaretListener(event -> gui.onCaretMove(event.getDot()));
+        final PanelEditor self = this;
+        this.addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseReleased(MouseEvent e)
+            {
+                if (e.getButton() == MouseEvent.BUTTON3)
+                    self.setCaretPosition(self.viewToModel(e.getPoint()));
+            }
+        });
         this.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {
