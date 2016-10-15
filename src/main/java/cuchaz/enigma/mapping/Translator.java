@@ -212,10 +212,33 @@ public class Translator {
     }
 
     // TODO: support not identical behavior (specific to constructor)
-    public String translate(ArgumentEntry in) {
+    public String translate(ArgumentEntry in)
+    {
+        String classTranslate = translateArgument(in);
 
+        // Not found in this class
+        if (classTranslate == null)
+        {
+            List<ClassEntry> ancestry = this.index.getAncestry(in.getClassEntry());
+
+            // Check in mother class for the arg
+            for (ClassEntry entry : ancestry)
+            {
+                ArgumentEntry motherArg = in.cloneToNewClass(entry);
+                if (this.index.entryExists(motherArg))
+                {
+                    String result = translateArgument(motherArg);
+                    if (result != null)
+                        return result;
+                }
+            }
+        }
+        return classTranslate;
+    }
+
+    public String translateArgument(ArgumentEntry in) {
         // look for identical behavior in superclasses
-        ClassEntry entry =  this.index.resolveEntryClass(in, true);
+        ClassEntry entry =  in.getClassEntry();
 
         if (entry != null)
         {
