@@ -89,10 +89,8 @@ public class LocalVariableRenamer {
                         // List types would require this whole block again, so just go with aListx
                         argName = "aList" + (argi + 1);
                     } else if (argType.isClass()) {
-                        // Anon inner classes getSimpleName returns "" so it will fall back gracefully to ax notation
-                        ClassEntry argCls = argType.getClassEntry();
-                        String argClsName = argCls.getSimpleName();
-                        argName = "a" + argClsName + (argi + 1);
+                        ClassEntry argClsTrans = this.translator.translateEntry(argType.getClassEntry());
+                        argName = "a" + argClsTrans.getSimpleName().replace("$", "") + (argi + 1);
                     } else {
                         argName = "a" + (argi + 1);
                     }
