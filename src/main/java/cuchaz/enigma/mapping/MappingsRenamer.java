@@ -10,15 +10,15 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+import com.google.common.collect.Lists;
+
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
-import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.throwables.IllegalNameException;
@@ -54,8 +54,8 @@ public class MappingsRenamer {
             }
 
             ClassMapping classMapping = mappingChain.get(0);
+			markDirty(classMapping, true);
             m_mappings.setClassDeobfName(classMapping, deobfName);
-
         } else {
 
             ClassMapping outerClassMapping = mappingChain.get(mappingChain.size() - 2);
@@ -66,7 +66,7 @@ public class MappingsRenamer {
                     throw new IllegalNameException(deobfName, "There is already a class with that name");
                 }
             }
-
+			markDirty(outerClassMapping, true);
             outerClassMapping.setInnerClassName(obf, deobfName);
         }
     }
@@ -80,9 +80,11 @@ public class MappingsRenamer {
         List<ClassMapping> mappingChain = getOrCreateClassMappingChain(obf);
         if (mappingChain.size() == 1) {
             ClassMapping classMapping = mappingChain.get(0);
+			markDirty(classMapping, true);
             m_mappings.setClassDeobfName(classMapping, deobfName);
         } else {
             ClassMapping outerClassMapping = mappingChain.get(mappingChain.size() - 2);
+			markDirty(outerClassMapping, true);
             outerClassMapping.setInnerClassName(obf, deobfName);
         }
     }
@@ -95,6 +97,7 @@ public class MappingsRenamer {
         }
 
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
+		markDirty(classMapping, false);
         classMapping.setFieldName(obf.getName(), obf.getType(), deobfName);
     }
 
@@ -105,6 +108,7 @@ public class MappingsRenamer {
 
     public void markFieldAsDeobfuscated(FieldEntry obf) {
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
+		markDirty(classMapping, false);
         classMapping.setFieldName(obf.getName(), obf.getType(), obf.getName());
     }
 
@@ -154,7 +158,7 @@ public class MappingsRenamer {
             }
             throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
         }
-
+		markDirty(classMapping, false);
         classMapping.setMethodName(obf.getName(), obf.getSignature(), deobfName);
     }
 
@@ -173,6 +177,7 @@ public class MappingsRenamer {
 
     public void markMethodAsDeobfuscated(MethodEntry obf) {
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
+		markDirty(classMapping, false);
         classMapping.setMethodName(obf.getName(), obf.getSignature(), obf.getName());
     }
 
@@ -225,7 +230,7 @@ public class MappingsRenamer {
                 }
             }
         }
-
+		markDirty(classMapping, false);
         classMapping.setArgumentName(obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), deobfName);
     }
 
@@ -236,6 +241,7 @@ public class MappingsRenamer {
 
     public void markArgumentAsDeobfuscated(ArgumentEntry obf) {
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
+		markDirty(classMapping, false);
         classMapping.setArgumentName(obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), obf.getName());
     }
 
@@ -306,4 +312,10 @@ public class MappingsRenamer {
         }
         return mappingChain;
     }
+
+	public void markDirty(ClassMapping classMapping, boolean removeClass) {
+		if (removeClass && classMapping.getDeobfName() != null)
+			m_mappings.addMappingForRemove(classMapping.getDeobfName());
+		classMapping.isDirty = true;
+	}
 }

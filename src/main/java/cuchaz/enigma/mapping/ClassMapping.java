@@ -28,6 +28,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
     private Map<String, FieldMapping> m_fieldsByDeobf;
     private Map<String, MethodMapping> m_methodsByObf;
     private Map<String, MethodMapping> m_methodsByDeobf;
+	public boolean isDirty;
 
     public ClassMapping(String obfFullName) {
         this(obfFullName, null);
