@@ -20,6 +20,7 @@ import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.throwables.MappingConflict;
 
@@ -107,23 +108,31 @@ public class MappingsRenamer {
         classMapping.setFieldName(obf.getName(), obf.getType(), obf.getName());
     }
 
+    private void validateMethodTreeName(MethodEntry entry, String deobfName) {
+        MethodEntry targetEntry = new MethodEntry(entry.getClassEntry(), deobfName, entry.getSignature());
+
+        // TODO: Verify if I don't break things
+        ClassMapping classMapping = m_mappings.getClassByObf(entry.getClassEntry());
+        if ((classMapping != null && classMapping.containsDeobfMethod(deobfName, entry.getSignature()) && classMapping.getMethodByObf(entry.getName(), entry.getSignature()) != classMapping.getMethodByDeobf(deobfName, entry.getSignature()))
+                || m_index.containsObfBehavior(targetEntry)) {
+            String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(entry.getClassName());
+            if (deobfClassName == null) {
+                deobfClassName = entry.getClassName();
+            }
+            throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
+        }
+
+        for (ClassEntry child : m_index.getTranslationIndex().getSubclass(entry.getClassEntry())) {
+            validateMethodTreeName(entry.cloneToNewClass(child), deobfName);
+        }
+    }
+
     public void setMethodTreeName(MethodEntry obf, String deobfName) {
         Set<MethodEntry> implementations = m_index.getRelatedMethodImplementations(obf);
 
         deobfName = NameValidator.validateMethodName(deobfName);
         for (MethodEntry entry : implementations) {
-            MethodEntry targetEntry = new MethodEntry(entry.getClassEntry(), deobfName, entry.getSignature());
-
-            // TODO: Verify if I don't break things
-            ClassMapping classMapping = m_mappings.getClassByObf(entry.getClassEntry());
-            if ((classMapping != null && classMapping.containsDeobfMethod(deobfName, entry.getSignature()) && classMapping.getMethodByObf(entry.getName(), entry.getSignature()) != classMapping.getMethodByDeobf(deobfName, entry.getSignature()))
-                    || m_index.containsObfBehavior(targetEntry)) {
-                String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(entry.getClassName());
-                if (deobfClassName == null) {
-                    deobfClassName = entry.getClassName();
-                }
-                throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
-            }
+            validateMethodTreeName(entry, deobfName);
         }
 
         for (MethodEntry entry : implementations) {
