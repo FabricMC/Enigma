@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.analysis.Access;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.throwables.IllegalNameException;
@@ -87,11 +88,49 @@ public class MappingsRenamer {
         }
     }
 
+    private void validateFieldTreeName(FieldEntry obf, String deobfName, byte directionFlag) {
+        FieldEntry targetEntry = new FieldEntry(obf.getClassEntry(), deobfName, obf.getType());
+        boolean contains = false;
+
+        ClassMapping classMapping = m_mappings.getClassByObf(obf.getClassEntry());
+        if (classMapping != null && classMapping.containsDeobfField(deobfName, obf.getType())
+                && m_index.getAccess(classMapping.getFieldByDeobf(deobfName, obf.getType()).getObfEntry(obf.getClassEntry())).isSubclassAccessible()) {
+            contains = true;
+        }
+
+        if (!contains && m_index.containsObfField(targetEntry)
+                && m_index.getAccess(targetEntry).isSubclassAccessible()) {
+            contains = true;
+        }
+
+        if (contains) {
+            String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(obf.getClassName());
+            if (deobfClassName == null) {
+                deobfClassName = obf.getClassName();
+            }
+            throw new IllegalNameException(deobfName, "There is already a field with that name in class " + deobfClassName);
+        }
+
+        if (directionFlag == 1) {
+            ClassEntry ancestor = m_index.getTranslationIndex().getSuperclass(obf.getClassEntry());
+            if (m_index.containsObfClass(ancestor)) {
+                validateFieldTreeName(obf.cloneToNewClass(ancestor), deobfName, directionFlag);
+            }
+        } else if (directionFlag == 2) {
+            for (ClassEntry child : m_index.getTranslationIndex().getSubclass(obf.getClassEntry())) {
+                validateFieldTreeName(obf.cloneToNewClass(child), deobfName, directionFlag);
+            }
+        }
+    }
+
     public void setFieldName(FieldEntry obf, String deobfName) {
         deobfName = NameValidator.validateFieldName(deobfName);
-        FieldEntry targetEntry = new FieldEntry(obf.getClassEntry(), deobfName, obf.getType());
-        if (m_mappings.containsDeobfField(obf.getClassEntry(), deobfName, obf.getType()) || m_index.containsObfField(targetEntry)) {
-            throw new IllegalNameException(deobfName, "There is already a field with that name");
+
+        if (m_index.getAccess(obf).isSubclassAccessible()) {
+            validateFieldTreeName(obf, deobfName, (byte) 1);
+            validateFieldTreeName(obf, deobfName, (byte) 2);
+        } else {
+            validateFieldTreeName(obf, deobfName, (byte) 0);
         }
 
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
@@ -122,8 +161,10 @@ public class MappingsRenamer {
             throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
         }
 
-        for (ClassEntry child : m_index.getTranslationIndex().getSubclass(entry.getClassEntry())) {
-            validateMethodTreeName(entry.cloneToNewClass(child), deobfName);
+        if (m_index.getAccess(entry) != Access.Private) {
+            for (ClassEntry child : m_index.getTranslationIndex().getSubclass(entry.getClassEntry())) {
+                validateMethodTreeName(entry.cloneToNewClass(child), deobfName);
+            }
         }
     }
 
