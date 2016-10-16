@@ -47,12 +47,4 @@ public enum Access {
         // assume public by default
         return Public;
     }
-
-    public boolean isPackageAccessible() {
-        return this != Private;
-    }
-
-    public boolean isSubclassAccessible() {
-        return this == Protected || this == Public;
-    }
 }
