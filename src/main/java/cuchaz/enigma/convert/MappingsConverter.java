@@ -364,11 +364,9 @@ public class MappingsConverter {
             public Set<BehaviorEntry> filterEntries(Collection<BehaviorEntry> obfDestFields, BehaviorEntry obfSourceField, ClassMatches classMatches) {
                 Set<BehaviorEntry> out = Sets.newHashSet();
                 for (BehaviorEntry obfDestField : obfDestFields) {
-                    Signature translatedDestSignature = translate(obfDestField.getSignature(),
-                            classMatches.getUniqueMatches().inverse());
-                    if ((translatedDestSignature == null && obfSourceField.getSignature() == null)
-                            || translatedDestSignature != null && obfSourceField.getSignature() != null
-                            && translatedDestSignature.equals(obfSourceField.getSignature()))
+                    // Try to translate the signature
+                    Signature translatedDestSignature = translate(obfDestField.getSignature(), classMatches.getUniqueMatches().inverse());
+                    if (translatedDestSignature != null && obfSourceField.getSignature() != null && translatedDestSignature.equals(obfSourceField.getSignature()))
                         out.add(obfDestField);
                 }
                 return out;

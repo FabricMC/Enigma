@@ -63,7 +63,7 @@ public class ConvertMain {
                 editFieldMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, fieldMatchesFile);
                 convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile);
             } else if (command.equalsIgnoreCase("computeMethodMatches")) {
-                computeMethodMatches(methodMatchesFile, destJar, outMappingsFile, classMatchesFile);
+                computeMethodMatches(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
                 convertMappings(outMappingsFile, sourceJar, destJar, mappings, classMatchesFile, fieldMatchesFile, methodMatchesFile);
             } else if (command.equalsIgnoreCase("editMethodMatches")) {
                 editMethodMatches(sourceJar, destJar, outMappingsFile, mappings, classMatchesFile, methodMatchesFile);
@@ -224,15 +224,17 @@ public class ConvertMain {
     }
 
 
-    private static void computeMethodMatches(File methodMatchesFile, JarFile destJar, File destMappingsFile, File classMatchesFile)
+    private static void computeMethodMatches(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings sourceMappings, File classMatchesFile, File fieldMatchesFile, File methodMatchesFile)
             throws IOException, MappingParseException {
 
         System.out.println("Reading class matches...");
         ClassMatches classMatches = MatchesReader.readClasses(classMatchesFile);
-        System.out.println("Reading mappings...");
-        Mappings destMappings = new MappingsEnigmaReader().read(destMappingsFile);
+        System.out.println("Reading dest mappings...");
+        Mappings destMappings = new MappingsEnigmaReader().read(outMappingsFile);
         System.out.println("Indexing dest jar...");
         Deobfuscator destDeobfuscator = new Deobfuscator(destJar);
+        System.out.println("Indexing source jar...");
+        Deobfuscator sourceDeobfuscator = new Deobfuscator(sourceJar);
 
         System.out.println("Writing method matches...");
 
