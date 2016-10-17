@@ -239,9 +239,11 @@ public class ConvertMain {
         System.out.println("Writing method matches...");
 
         // get the matched and unmatched mappings
-        MemberMatches<BehaviorEntry> methodMatches = MappingsConverter.computeMemberMatches(
+        MemberMatches<BehaviorEntry> methodMatches = MappingsConverter.computeMethodsMatches(
                 destDeobfuscator,
                 destMappings,
+                sourceDeobfuscator,
+                sourceMappings,
                 classMatches,
                 MappingsConverter.getMethodDoer()
         );

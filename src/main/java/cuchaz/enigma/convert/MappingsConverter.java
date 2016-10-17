@@ -13,10 +13,18 @@ package cuchaz.enigma.convert;
 import com.google.common.collect.*;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.TranslatingTypeLoader;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.convert.ClassNamer.SidedClassNamer;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.throwables.MappingConflict;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.NotFoundException;
+import javassist.bytecode.BadBytecode;
+import javassist.bytecode.CodeAttribute;
+import javassist.bytecode.CodeIterator;
+import javassist.bytecode.MethodInfo;
 
 import java.util.*;
 import java.util.jar.JarFile;
@@ -388,6 +396,139 @@ public class MappingsConverter {
                 classMapping.removeMethodMapping(classMapping.getMethodByObf(obfBehavior.getName(), obfBehavior.getSignature()));
             }
         };
+    }
+
+    public static int compareMethodByteCode(CodeIterator sourceIt, CodeIterator destIt)
+    {
+        int sourcePos = 0;
+        int destPos = 0;
+        while (sourceIt.hasNext() && destIt.hasNext())
+        {
+            try
+            {
+                sourcePos = sourceIt.next();
+                destPos = destIt.next();
+                if (sourceIt.byteAt(sourcePos) != destIt.byteAt(destPos))
+                    return sourcePos;
+            } catch (BadBytecode badBytecode)
+            {
+                // Ignore bad bytecode (it might be a little bit dangerous...)
+            }
+        }
+        if (sourcePos < destPos)
+            return sourcePos;
+        else if (destPos < sourcePos)
+            return destPos;
+        return sourcePos;
+    }
+
+    public static BehaviorEntry compareMethods(CtClass destCtClass, CtClass sourceCtClass, BehaviorEntry obfSourceEntry,
+            Set<BehaviorEntry> obfDestEntries)
+    {
+        try
+        {
+            // Get the source method with Javassist
+            CtMethod sourceCtClassMethod = sourceCtClass.getMethod(obfSourceEntry.getName(), obfSourceEntry.getSignature().toString());
+            CodeAttribute sourceAttribute = sourceCtClassMethod.getMethodInfo().getCodeAttribute();
+
+            // Empty method body, ignore!
+            if (sourceAttribute == null)
+                return null;
+            Iterator<BehaviorEntry> it = obfDestEntries.iterator();
+            while (it.hasNext())
+            {
+                BehaviorEntry desEntry = it.next();
+                try
+                {
+                    CtMethod destCtClassMethod = destCtClass.getMethod(desEntry.getName(), desEntry.getSignature().toString());
+                    CodeAttribute destAttribute = destCtClassMethod.getMethodInfo().getCodeAttribute();
+
+                    // Ignore empty body methods
+                    if (destAttribute == null)
+                        continue;
+                    CodeIterator destIterator = destAttribute.iterator();
+                    int maxPos = compareMethodByteCode(sourceAttribute.iterator(), destIterator);
+
+                    // The bytecode is identical to the original method, assuming that the method is correct!
+                    if (sourceAttribute.getCodeLength() == (maxPos + 1) && maxPos > 1)
+                        return desEntry;
+                } catch (NotFoundException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        } catch (NotFoundException e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+        return null;
+    }
+
+    public static MemberMatches<BehaviorEntry> computeMethodsMatches(Deobfuscator destDeobfuscator, Mappings destMappings, Deobfuscator sourceDeobfuscator, Mappings sourceMappings, ClassMatches classMatches, Doer<BehaviorEntry> doer) {
+
+        MemberMatches<BehaviorEntry> memberMatches = new MemberMatches<>();
+
+        // unmatched source fields are easy
+        MappingsChecker checker = new MappingsChecker(destDeobfuscator.getJarIndex());
+        checker.dropBrokenMappings(destMappings);
+        for (BehaviorEntry destObfEntry : doer.getDroppedEntries(checker)) {
+            BehaviorEntry srcObfEntry = translate(destObfEntry, classMatches.getUniqueMatches().inverse());
+            memberMatches.addUnmatchedSourceEntry(srcObfEntry);
+        }
+
+        // get matched fields (anything that's left after the checks/drops is matched(
+        for (ClassMapping classMapping : destMappings.classes())
+            collectMatchedFields(memberMatches, classMapping, classMatches, doer);
+
+        // get unmatched dest fields
+        doer.getObfEntries(destDeobfuscator.getJarIndex()).stream()
+                .filter(destEntry -> !memberMatches.isMatchedDestEntry(destEntry))
+                .forEach(memberMatches::addUnmatchedDestEntry);
+
+        // Apply mappings to deobfuscator
+
+        // Create type loader
+        TranslatingTypeLoader destTypeLoader = destDeobfuscator.createTypeLoader();
+        TranslatingTypeLoader sourceTypeLoader = sourceDeobfuscator.createTypeLoader();
+
+        System.out.println("Automatching " + memberMatches.getUnmatchedSourceEntries().size() + " unmatched source entries...");
+
+        // go through the unmatched source fields and try to pick out the easy matches
+        for (ClassEntry obfSourceClass : Lists.newArrayList(memberMatches.getSourceClassesWithUnmatchedEntries())) {
+            for (BehaviorEntry obfSourceEntry : Lists.newArrayList(memberMatches.getUnmatchedSourceEntries(obfSourceClass))) {
+
+                // get the possible dest matches
+                ClassEntry obfDestClass = classMatches.getUniqueMatches().get(obfSourceClass);
+
+                // filter by type/signature
+                Set<BehaviorEntry> obfDestEntries = doer.filterEntries(memberMatches.getUnmatchedDestEntries(obfDestClass), obfSourceEntry, classMatches);
+
+                if (obfDestEntries.size() == 1) {
+                    // make the easy match
+                    memberMatches.makeMatch(obfSourceEntry, obfDestEntries.iterator().next());
+                } else if (obfDestEntries.isEmpty()) {
+                    // no match is possible =(
+                    memberMatches.makeSourceUnmatchable(obfSourceEntry, null);
+                } else
+                {
+                    // Multiple matches! Scan methods instructions
+                    CtClass destCtClass = destTypeLoader.loadClass(obfDestClass.getClassName());
+                    CtClass sourceCtClass = sourceTypeLoader.loadClass(obfSourceClass.getClassName());
+                    BehaviorEntry match = compareMethods(destCtClass, sourceCtClass, obfSourceEntry, obfDestEntries);
+                    // the method match correctly, match it on the member mapping!
+                    if (match != null)
+                        memberMatches.makeMatch(obfSourceEntry, match);
+                }
+            }
+        }
+
+        System.out.println(String.format("Ended up with %d ambiguous and %d unmatchable source entries",
+                memberMatches.getUnmatchedSourceEntries().size(),
+                memberMatches.getUnmatchableSourceEntries().size()
+        ));
+
+        return memberMatches;
     }
 
     public static <T extends Entry> MemberMatches<T> computeMemberMatches(Deobfuscator destDeobfuscator, Mappings destMappings, ClassMatches classMatches, Doer<T> doer) {
