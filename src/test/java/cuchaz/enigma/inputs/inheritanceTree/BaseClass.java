@@ -10,7 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.inputs.inheritanceTree;
 
-// none/a
+// a
 public abstract class BaseClass {
 	
 	// a

@@ -34,25 +34,25 @@ public class MappingsSRGWriter {
                 if(innerClassMapping.getDeobfName() == null || innerClassMapping.getObfSimpleName() == null || innerClassMapping.getDeobfName() == null){
                     continue;
                 }
-                String innerClassName = classMapping.getObfSimpleName() + "$" + innerClassMapping.getObfSimpleName().replace("none/", "");
-                String innerDebofClassName = classMapping.getDeobfName() + "$" + innerClassMapping.getDeobfName().replace("none/", "");
+                String innerClassName = classMapping.getObfSimpleName() + "$" + innerClassMapping.getObfSimpleName();
+                String innerDeobfClassName = classMapping.getDeobfName() + "$" + innerClassMapping.getDeobfName();
                 writer.write("CL: " + innerClassName + " " + classMapping.getDeobfName() + "$" + innerClassMapping.getDeobfName());
                 writer.write(System.lineSeparator());
                 for (FieldMapping fieldMapping : sorted(innerClassMapping.fields())) {
-                    fieldMappings.add("FD: " + innerClassName + "/" + fieldMapping.getObfName() + " " + innerDebofClassName + "/" + fieldMapping.getDeobfName());
+                    fieldMappings.add("FD: " + innerClassName + "/" + fieldMapping.getObfName() + " " + innerDeobfClassName + "/" + fieldMapping.getDeobfName());
                 }
 
                 for (MethodMapping methodMapping : sorted(innerClassMapping.methods())) {
-                    methodMappings.add("MD: " + innerClassName + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString().replace("none/", "") + " " + innerDebofClassName + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
+                    methodMappings.add("MD: " + innerClassName + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString() + " " + innerDeobfClassName + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
                 }
             }
 
             for (FieldMapping fieldMapping : sorted(classMapping.fields())) {
-                fieldMappings.add("FD: " + classMapping.getObfFullName().replace("none/", "") + "/" + fieldMapping.getObfName() + " " + classMapping.getDeobfName() + "/" + fieldMapping.getDeobfName());
+                fieldMappings.add("FD: " + classMapping.getObfFullName() + "/" + fieldMapping.getObfName() + " " + classMapping.getDeobfName() + "/" + fieldMapping.getDeobfName());
             }
 
             for (MethodMapping methodMapping : sorted(classMapping.methods())) {
-                methodMappings.add("MD: " + classMapping.getObfFullName().replace("none/", "") + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString().replace("none/", "") + " " + classMapping.getDeobfName() + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
+                methodMappings.add("MD: " + classMapping.getObfFullName() + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature().toString() + " " + classMapping.getDeobfName() + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
             }
         }
         for(String fd : fieldMappings){

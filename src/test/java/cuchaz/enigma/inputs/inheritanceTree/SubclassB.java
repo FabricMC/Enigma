@@ -10,7 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.inputs.inheritanceTree;
 
-// none/c extends none/a
+// c extends a
 public class SubclassB extends BaseClass {
 	
 	// a
@@ -18,7 +18,7 @@ public class SubclassB extends BaseClass {
 	
 	// <init>()V
 	protected SubclassB() {
-		// none/a.<init>(Ljava/lang/String;)V
+		// a.<init>(Ljava/lang/String;)V
 		super("B");
 		
 		// access to a
@@ -28,7 +28,7 @@ public class SubclassB extends BaseClass {
 	@Override
 	// a()V
 	public void doBaseThings() {
-		// call to none/a.a()Ljava/lang/String;
+		// call to a.a()Ljava/lang/String;
 		System.out.println("Base things by B! " + getName());
 	}
 	

@@ -58,7 +58,7 @@ public class ClassIdentity {
 
             // classes not in the none package can be passed through
             ClassEntry classEntry = new ClassEntry(className);
-            if (!classEntry.getPackageName().equals(Constants.NONE_PACKAGE)) {
+            if (!classEntry.getClassName().contains("/")) {
                 return className;
             }
 

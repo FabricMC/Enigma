@@ -40,28 +40,28 @@ public class TestDeobfed {
 	public void obfEntries() {
 		assertThat(m_index.getObfClassEntries(), containsInAnyOrder(
 			newClass("cuchaz/enigma/inputs/Keep"),
-			newClass("none/a"),
-			newClass("none/b"),
-			newClass("none/c"),
-			newClass("none/d"),
-			newClass("none/d$1"),
-			newClass("none/e"),
-			newClass("none/f"),
-			newClass("none/g"),
-			newClass("none/g$a"),
-			newClass("none/g$a$a"),
-			newClass("none/g$b"),
-			newClass("none/g$b$a"),
-			newClass("none/h"),
-			newClass("none/h$a"),
-			newClass("none/h$a$a"),
-			newClass("none/h$b"),
-			newClass("none/h$b$a"),
-			newClass("none/h$b$a$a"),
-			newClass("none/h$b$a$b"),
-			newClass("none/i"),
-			newClass("none/i$a"),
-			newClass("none/i$b")
+			newClass("a"),
+			newClass("b"),
+			newClass("c"),
+			newClass("d"),
+			newClass("d$1"),
+			newClass("e"),
+			newClass("f"),
+			newClass("g"),
+			newClass("g$a"),
+			newClass("g$a$a"),
+			newClass("g$b"),
+			newClass("g$b$a"),
+			newClass("h"),
+			newClass("h$a"),
+			newClass("h$a$a"),
+			newClass("h$b"),
+			newClass("h$b$a"),
+			newClass("h$b$a$a"),
+			newClass("h$b$a$b"),
+			newClass("i"),
+			newClass("i$a"),
+			newClass("i$b")
 		));
 	}
 	
@@ -69,27 +69,27 @@ public class TestDeobfed {
 	public void decompile()
 	throws Exception {
 		Deobfuscator deobfuscator = new Deobfuscator(m_jar);
-		deobfuscator.getSourceTree("none/a");
-		deobfuscator.getSourceTree("none/b");
-		deobfuscator.getSourceTree("none/c");
-		deobfuscator.getSourceTree("none/d");
-		deobfuscator.getSourceTree("none/d$1");
-		deobfuscator.getSourceTree("none/e");
-		deobfuscator.getSourceTree("none/f");
-		deobfuscator.getSourceTree("none/g");
-		deobfuscator.getSourceTree("none/g$a");
-		deobfuscator.getSourceTree("none/g$a$a");
-		deobfuscator.getSourceTree("none/g$b");
-		deobfuscator.getSourceTree("none/g$b$a");
-		deobfuscator.getSourceTree("none/h");
-		deobfuscator.getSourceTree("none/h$a");
-		deobfuscator.getSourceTree("none/h$a$a");
-		deobfuscator.getSourceTree("none/h$b");
-		deobfuscator.getSourceTree("none/h$b$a");
-		deobfuscator.getSourceTree("none/h$b$a$a");
-		deobfuscator.getSourceTree("none/h$b$a$b");
-		deobfuscator.getSourceTree("none/i");
-		deobfuscator.getSourceTree("none/i$a");
-		deobfuscator.getSourceTree("none/i$b");
+		deobfuscator.getSourceTree("a");
+		deobfuscator.getSourceTree("b");
+		deobfuscator.getSourceTree("c");
+		deobfuscator.getSourceTree("d");
+		deobfuscator.getSourceTree("d$1");
+		deobfuscator.getSourceTree("e");
+		deobfuscator.getSourceTree("f");
+		deobfuscator.getSourceTree("g");
+		deobfuscator.getSourceTree("g$a");
+		deobfuscator.getSourceTree("g$a$a");
+		deobfuscator.getSourceTree("g$b");
+		deobfuscator.getSourceTree("g$b$a");
+		deobfuscator.getSourceTree("h");
+		deobfuscator.getSourceTree("h$a");
+		deobfuscator.getSourceTree("h$a$a");
+		deobfuscator.getSourceTree("h$b");
+		deobfuscator.getSourceTree("h$b$a");
+		deobfuscator.getSourceTree("h$b$a$a");
+		deobfuscator.getSourceTree("h$b$a$b");
+		deobfuscator.getSourceTree("i");
+		deobfuscator.getSourceTree("i$a");
+		deobfuscator.getSourceTree("i$b");
 	}
 }

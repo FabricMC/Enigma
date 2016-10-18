@@ -574,8 +574,7 @@ public class Gui {
 
         int offset = text.getText().lastIndexOf('/') + 1;
         // If it's a class and isn't in the default package, assume that it's deobfuscated.
-        if (m_reference.getNameableEntry() instanceof ClassEntry && !text.getText().startsWith(Constants.NONE_PACKAGE)
-                && offset != 0)
+        if (m_reference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
             text.select(offset, text.getText().length());
         else
             text.selectAll();
@@ -778,9 +777,8 @@ public class Gui {
     {
         String oldEntry = deobfReference.entry.getClassEntry().getPackageName();
         String newEntry = new ClassEntry(Descriptor.toJvmName(newName)).getPackageName();
-        if (oldEntry != null && newEntry != null)
-            moveClassTree(deobfReference, newName, oldEntry.equals(Constants.NONE_PACKAGE),
-                    newEntry.equals(Constants.NONE_PACKAGE));
+        moveClassTree(deobfReference, newName, oldEntry == null,
+                newEntry == null);
     }
 
     public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb)

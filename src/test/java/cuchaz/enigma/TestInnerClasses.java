@@ -27,20 +27,20 @@ public class TestInnerClasses {
 	private JarIndex m_index;
 	private Deobfuscator m_deobfuscator;
 	
-	private static final ClassEntry AnonymousOuter = newClass("none/a");
-	private static final ClassEntry AnonymousInner = newClass("none/a$1");
-	private static final ClassEntry SimpleOuter = newClass("none/d");
-	private static final ClassEntry SimpleInner = newClass("none/d$a");
-	private static final ClassEntry ConstructorArgsOuter = newClass("none/c");
-	private static final ClassEntry ConstructorArgsInner = newClass("none/c$a");
-	private static final ClassEntry AnonymousWithScopeArgsOuter = newClass("none/b");
-	private static final ClassEntry AnonymousWithScopeArgsInner = newClass("none/b$1");
-	private static final ClassEntry AnonymousWithOuterAccessOuter = newClass("none/e");
-	private static final ClassEntry AnonymousWithOuterAccessInner = newClass("none/e$1");
-	private static final ClassEntry ClassTreeRoot = newClass("none/f");
-	private static final ClassEntry ClassTreeLevel1 = newClass("none/f$a");
-	private static final ClassEntry ClassTreeLevel2 = newClass("none/f$a$a");
-	private static final ClassEntry ClassTreeLevel3 = newClass("none/f$a$a$a");
+	private static final ClassEntry AnonymousOuter = newClass("a");
+	private static final ClassEntry AnonymousInner = newClass("a$1");
+	private static final ClassEntry SimpleOuter = newClass("d");
+	private static final ClassEntry SimpleInner = newClass("d$a");
+	private static final ClassEntry ConstructorArgsOuter = newClass("c");
+	private static final ClassEntry ConstructorArgsInner = newClass("c$a");
+	private static final ClassEntry AnonymousWithScopeArgsOuter = newClass("b");
+	private static final ClassEntry AnonymousWithScopeArgsInner = newClass("b$1");
+	private static final ClassEntry AnonymousWithOuterAccessOuter = newClass("e");
+	private static final ClassEntry AnonymousWithOuterAccessInner = newClass("e$1");
+	private static final ClassEntry ClassTreeRoot = newClass("f");
+	private static final ClassEntry ClassTreeLevel1 = newClass("f$a");
+	private static final ClassEntry ClassTreeLevel2 = newClass("f$a$a");
+	private static final ClassEntry ClassTreeLevel3 = newClass("f$a$a$a");
 	
 	public TestInnerClasses()
 	throws Exception {

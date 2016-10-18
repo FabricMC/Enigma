@@ -29,11 +29,11 @@ public class TestJarIndexConstructorReferences {
 	
 	private JarIndex m_index;
 	
-	private ClassEntry m_baseClass = newClass("none/a");
-	private ClassEntry m_subClass = newClass("none/d");
-	private ClassEntry m_subsubClass = newClass("none/e");
-	private ClassEntry m_defaultClass = newClass("none/c");
-	private ClassEntry m_callerClass = newClass("none/b");
+	private ClassEntry m_baseClass = newClass("a");
+	private ClassEntry m_subClass = newClass("d");
+	private ClassEntry m_subsubClass = newClass("e");
+	private ClassEntry m_defaultClass = newClass("c");
+	private ClassEntry m_callerClass = newClass("b");
 	
 	public TestJarIndexConstructorReferences()
 	throws Exception {

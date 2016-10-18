@@ -59,17 +59,10 @@ public class JarIndex {
     public void indexJar(JarFile jar, boolean buildInnerClasses) {
 
         // step 1: read the class names
-        for (ClassEntry classEntry : JarClassIterator.getClassEntries(jar)) {
-            if (classEntry.isInDefaultPackage()) {
-                // move out of default package
-                classEntry = new ClassEntry(Constants.NONE_PACKAGE + "/" + classEntry.getName());
-            }
-            this.obfClassEntries.add(classEntry);
-        }
+        this.obfClassEntries.addAll(JarClassIterator.getClassEntries(jar));
 
         // step 2: index field/method/constructor access
         for (CtClass c : JarClassIterator.classes(jar)) {
-            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
             for (CtField field : c.getDeclaredFields()) {
                 FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
                 this.access.put(fieldEntry, Access.get(field));
@@ -84,7 +77,6 @@ public class JarIndex {
 
         // step 3: index extends, implements, fields, and methods
         for (CtClass c : JarClassIterator.classes(jar)) {
-            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
             this.translationIndex.indexClass(c);
             String className = Descriptor.toJvmName(c.getName());
             for (String interfaceName : c.getClassFile().getInterfaces()) {
@@ -101,7 +93,6 @@ public class JarIndex {
 
         // step 4: index field, method, constructor references
         for (CtClass c : JarClassIterator.classes(jar)) {
-            ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
             for (CtBehavior behavior : c.getDeclaredBehaviors()) {
                 indexBehaviorReferences(behavior);
             }
@@ -111,7 +102,6 @@ public class JarIndex {
 
             // step 5: index inner classes and anonymous classes
             for (CtClass c : JarClassIterator.classes(jar)) {
-                ClassRenamer.moveAllClassesOutOfDefaultPackage(c, Constants.NONE_PACKAGE);
                 ClassEntry innerClassEntry = EntryFactory.getClassEntry(c);
                 ClassEntry outerClassEntry = findOuterClass(c);
                 if (outerClassEntry != null) {

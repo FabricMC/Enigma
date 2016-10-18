@@ -43,7 +43,7 @@ public class TestDeobfuscator {
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
 		deobfuscator.getSeparatedClasses(obfClasses, deobfClasses);
 		assertEquals(1, obfClasses.size());
-		assertEquals("none/a", obfClasses.get(0).getName());
+		assertEquals("a", obfClasses.get(0).getName());
 		assertEquals(1, deobfClasses.size());
 		assertEquals("cuchaz/enigma/inputs/Keep", deobfClasses.get(0).getName());
 	}
@@ -52,6 +52,6 @@ public class TestDeobfuscator {
 	public void decompileClass()
 	throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
-		deobfuscator.getSource(deobfuscator.getSourceTree("none/a"));
+		deobfuscator.getSource(deobfuscator.getSourceTree("a"));
 	}
 }

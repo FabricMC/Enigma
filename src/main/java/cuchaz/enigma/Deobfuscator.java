@@ -146,7 +146,7 @@ public class Deobfuscator {
             if (!deobfClassEntry.equals(obfClassEntry)) {
                 // if the class has a mapping, clearly it's deobfuscated
                 deobfClasses.add(deobfClassEntry);
-            } else if (!obfClassEntry.getPackageName().equals(Constants.NONE_PACKAGE)) {
+            } else if (obfClassEntry.getPackageName() != null) {
                 // also call it deobufscated if it's not in the none package
                 deobfClasses.add(obfClassEntry);
             } else {

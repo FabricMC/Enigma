@@ -10,12 +10,12 @@
  ******************************************************************************/
 package cuchaz.enigma.inputs.constructors;
 
-// none/d extends none/a
+// d extends a
 public class SubClass extends BaseClass {
 	
 	// <init>()V
 	public SubClass() {
-		// none/a.<init>()V
+		// a.<init>()V
 	}
 	
 	// <init>(I)V
@@ -33,6 +33,6 @@ public class SubClass extends BaseClass {
 	
 	// <init>(III)V
 	public SubClass(int a, int b, int c) {
-		// none/a.<init>()V
+		// a.<init>()V
 	}
 }

@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.gui.node;
 
+import com.strobel.annotations.Nullable;
 import javassist.bytecode.Descriptor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -18,8 +19,8 @@ public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
 
     private String packageName;
 
-    public ClassSelectorPackageNode(String packageName) {
-        this.packageName = packageName;
+    public ClassSelectorPackageNode(@Nullable String packageName) {
+        this.packageName = packageName != null ? packageName : "(none)";
     }
 
     public String getPackageName() {

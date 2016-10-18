@@ -44,10 +44,10 @@ public class TestJarIndexInheritanceTree {
 	private JarIndex m_index;
 	
 	private ClassEntry m_objectClass = newClass("java/lang/Object");
-	private ClassEntry m_baseClass = newClass("none/a");
-	private ClassEntry m_subClassA = newClass("none/b");
-	private ClassEntry m_subClassAA = newClass("none/d");
-	private ClassEntry m_subClassB = newClass("none/c");
+	private ClassEntry m_baseClass = newClass("a");
+	private ClassEntry m_subClassA = newClass("b");
+	private ClassEntry m_subClassAA = newClass("d");
+	private ClassEntry m_subClassB = newClass("c");
 	private FieldEntry m_nameField = newField(m_baseClass, "a", "Ljava/lang/String;");
 	private FieldEntry m_numThingsField = newField(m_subClassB, "a", "I");
 	

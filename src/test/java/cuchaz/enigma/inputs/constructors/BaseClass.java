@@ -10,7 +10,7 @@
  ******************************************************************************/
 package cuchaz.enigma.inputs.constructors;
 
-// none/a
+// a
 public class BaseClass {
 	
 	// <init>()V
