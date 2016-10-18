@@ -136,6 +136,9 @@ public class Gui {
         m_selectionHighlightPainter = new SelectionHighlightPainter();
         this.editor = new PanelEditor(this);
         JScrollPane sourceScroller = new JScrollPane(this.editor);
+        this.editor.setContentType("text/java");
+        DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
+        kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
         // init editor popup menu
         this.popupMenu = new PopupMenuBar(this);
