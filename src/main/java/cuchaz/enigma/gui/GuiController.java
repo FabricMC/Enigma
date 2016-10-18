@@ -202,7 +202,7 @@ public class GuiController {
         this.deobfuscator.rename(obfReference.getNameableEntry(), newName);
         this.isDirty = true;
 
-        if (refreshClassTree && deobfReference.entry instanceof ClassEntry)
+        if (refreshClassTree && deobfReference.entry instanceof ClassEntry && !((ClassEntry) deobfReference.entry).isInnerClass())
             this.gui.moveClassTree(deobfReference, newName);
         refreshCurrentClass(obfReference);
 
@@ -221,7 +221,7 @@ public class GuiController {
         EntryReference<Entry, Entry> obfReference = this.deobfuscator.obfuscateReference(deobfReference);
         this.deobfuscator.markAsDeobfuscated(obfReference.getNameableEntry());
         this.isDirty = true;
-        if (deobfReference.entry instanceof ClassEntry)
+        if (deobfReference.entry instanceof ClassEntry && !((ClassEntry) deobfReference.entry).isInnerClass())
             this.gui.moveClassTree(deobfReference, obfReference.entry.getName(), true, false);
         refreshCurrentClass(obfReference);
     }
