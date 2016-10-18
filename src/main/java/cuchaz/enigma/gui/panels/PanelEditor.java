@@ -10,7 +10,6 @@ import javax.swing.JEditorPane;
 
 import cuchaz.enigma.gui.BrowserCaret;
 import cuchaz.enigma.gui.Gui;
-import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class PanelEditor extends JEditorPane {
     private final Gui gui;
@@ -21,7 +20,6 @@ public class PanelEditor extends JEditorPane {
         this.setEditable(false);
         this.setSelectionColor(new Color(31, 46, 90));
         this.setCaret(new BrowserCaret());
-        this.setContentType("text/java");
         this.addCaretListener(event -> gui.onCaretMove(event.getDot()));
         final PanelEditor self = this;
         this.addMouseListener(new MouseAdapter()
@@ -71,8 +69,5 @@ public class PanelEditor extends JEditorPane {
                 }
             }
         });
-
-        DefaultSyntaxKit kit = (DefaultSyntaxKit) this.getEditorKit();
-        kit.toggleComponent(this, "de.sciss.syntaxpane.components.TokenMarker");
     }
 }
