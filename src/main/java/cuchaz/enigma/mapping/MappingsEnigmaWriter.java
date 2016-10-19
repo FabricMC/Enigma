@@ -36,8 +36,7 @@ public class MappingsEnigmaWriter {
 
 		for (ClassMapping classMapping : sorted(mappings.classes())) {
 			if (!classMapping.isDirty())
-			continue;
-			System.out.println("Writing " + classMapping.getObfFullName());
+				continue;
 			this.deletePreviousClassMapping(target, classMapping);
 			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
 			File result;
@@ -57,6 +56,27 @@ public class MappingsEnigmaWriter {
 			PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(result), Charsets.UTF_8));
 			write(outputWriter, classMapping, 0);
 			outputWriter.close();
+		}
+
+		// Remove dropped mappings
+		List<ClassMapping> droppedClassMappings = new ArrayList<>(mappings.getPreviousState().classes());
+		List<ClassMapping> classMappings = new ArrayList<>(mappings.classes());
+		droppedClassMappings.removeAll(classMappings);
+		for (ClassMapping classMapping : droppedClassMappings)
+		{
+			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
+			File result;
+			if (classMapping.getDeobfName() == null)
+				result = obFile;
+			else
+			{
+				// Make sure that old version of the file doesn't exist
+				if (obFile.exists())
+					obFile.delete();
+				result = new File(target, classMapping.getDeobfName() + ".mapping");
+			}
+			if (result.exists())
+				result.delete();
 		}
 	}
 
