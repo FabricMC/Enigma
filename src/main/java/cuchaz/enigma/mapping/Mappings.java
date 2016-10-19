@@ -30,6 +30,7 @@ public class Mappings {
     protected Map<String, ClassMapping> classesByObf;
     protected Map<String, ClassMapping> classesByDeobf;
     private final FormatType originMapping;
+    private Mappings previousState;
 
     public Mappings()
     {
@@ -40,6 +41,7 @@ public class Mappings {
         this.originMapping = originMapping;
         this.classesByObf = Maps.newHashMap();
         this.classesByDeobf = Maps.newHashMap();
+        this.previousState = null;
     }
 
     public Collection<ClassMapping> classes() {
@@ -204,14 +206,28 @@ public class Mappings {
         return originMapping;
     }
 
+    public void savePreviousState()
+    {
+        this.previousState = new Mappings(this.originMapping);
+        this.previousState.classesByDeobf = Maps.newHashMap(this.classesByDeobf);
+        this.previousState.classesByObf = Maps.newHashMap(this.classesByObf);
+        classesByDeobf.values().forEach(ClassMapping::resetDirty);
+        classesByObf.values().forEach(ClassMapping::resetDirty);
+    }
+
     public void saveEnigmaMappings(File file, boolean isDirectoryFormat) throws IOException
     {
         new MappingsEnigmaWriter().write(file, this, isDirectoryFormat);
+        this.savePreviousState();
     }
 
     public void saveSRGMappings(File file) throws IOException
     {
         new MappingsSRGWriter().write(file, this);
+    }
+
+    public Mappings getPreviousState() {
+        return previousState;
     }
 
     public enum FormatType

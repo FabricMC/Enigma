@@ -37,6 +37,7 @@ public class MappingsEnigmaReader
                 else if (file.isDirectory())
                     readDirectory(mappings, file.getAbsoluteFile());
             }
+            mappings.savePreviousState();
         }
         else
             throw new IOException("Cannot access directory" + directory.getAbsolutePath());
