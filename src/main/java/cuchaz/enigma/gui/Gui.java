@@ -442,11 +442,21 @@ public class Gui {
             showConstructorEntry((ConstructorEntry) m_reference.entry);
         } else if (m_reference.entry instanceof ArgumentEntry) {
             showArgumentEntry((ArgumentEntry) m_reference.entry);
+        } else if (m_reference.entry instanceof LocalVariableEntry) {
+            showLocalVariableEntry((LocalVariableEntry) m_reference.entry);
         } else {
             throw new Error("Unknown entry type: " + m_reference.entry.getClass().getName());
         }
 
         redraw();
+    }
+
+    private void showLocalVariableEntry(LocalVariableEntry entry) {
+        addNameValue(m_infoPanel, "Variable", entry.getName());
+        addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
+        addNameValue(m_infoPanel, "Method", entry.getBehaviorEntry().getName());
+        addNameValue(m_infoPanel, "Index", Integer.toString(entry.getIndex()));
+        addNameValue(m_infoPanel, "Type", entry.getType().toString());
     }
 
     private void showClassEntry(ClassEntry entry) {

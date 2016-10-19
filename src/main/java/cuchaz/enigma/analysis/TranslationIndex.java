@@ -181,6 +181,8 @@ public class TranslationIndex {
             return behaviorExists((BehaviorEntry) entry);
         } else if (entry instanceof ArgumentEntry) {
             return behaviorExists(((ArgumentEntry) entry).getBehaviorEntry());
+        } else if (entry instanceof LocalVariableEntry) {
+            return behaviorExists(((LocalVariableEntry) entry).getBehaviorEntry());
         }
         throw new IllegalArgumentException("Cannot check existence for " + entry.getClass());
     }

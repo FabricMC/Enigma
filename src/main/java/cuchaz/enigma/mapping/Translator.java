@@ -58,6 +58,8 @@ public class Translator {
             return (T) translateEntry((ConstructorEntry) entry);
         } else if (entry instanceof ArgumentEntry) {
             return (T) translateEntry((ArgumentEntry) entry);
+        } else if (entry instanceof  LocalVariableEntry) {
+            return (T) translateEntry((LocalVariableEntry) entry);
         } else {
             throw new Error("Unknown entry type: " + entry.getClass().getName());
         }
@@ -74,9 +76,26 @@ public class Translator {
             return translate(entry);
         } else if (entry instanceof ArgumentEntry) {
             return translate((ArgumentEntry) entry);
+        } else if (entry instanceof  LocalVariableEntry) {
+            return translate((LocalVariableEntry) entry);
         } else {
             throw new Error("Unknown entry type: " + entry.getClass().getName());
         }
+    }
+
+    public String translate(LocalVariableEntry in)
+    {
+        LocalVariableEntry translated = translateEntry(in);
+        if (translated.equals(in)) {
+            return null;
+        }
+        return translated.getName();
+    }
+
+    public LocalVariableEntry translateEntry(LocalVariableEntry in)
+    {
+        // TODO: Implement it
+        return in;
     }
 
     public String translate(ClassEntry in) {

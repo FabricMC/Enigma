@@ -10,6 +10,9 @@
  ******************************************************************************/
 package cuchaz.enigma.analysis;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
@@ -17,6 +20,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
 import cuchaz.enigma.mapping.*;
+import javassist.bytecode.Descriptor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,11 +31,14 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 
     // TODO: Really fix Procyon index problem with inner classes
     private int argumentPosition;
-    private Map<String, Entry> argumentCache = new HashMap<>();
+    private int localsPosition;
+    private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
+    private Map<String, Entry> identifierEntryCache = new HashMap<>();
 
     public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry) {
         this.behaviorEntry = behaviorEntry;
         this.argumentPosition = 0;
+        this.localsPosition = 0;
     }
 
     @Override
@@ -66,6 +73,9 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
             }
         }
 
+        // Check for identifier
+        node.getArguments().stream().filter(expression -> expression instanceof IdentifierExpression)
+                .forEach(expression -> this.checkIdentifier((IdentifierExpression) expression, index));
         return recurse(node, index);
     }
 
@@ -106,7 +116,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
                     argumentPosition++, node.getName());
             Identifier identifier = node.getNameToken();
             // cache the argument entry and the identifier
-            argumentCache.put(identifier.getName(), argumentEntry);
+            identifierEntryCache.put(identifier.getName(), argumentEntry);
             index.addDeclaration(identifier, argumentEntry);
         }
 
@@ -121,10 +131,29 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
             FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
             index.addReference(node.getIdentifierToken(), fieldEntry, this.behaviorEntry);
         }
-        else if (argumentCache.containsKey(node.getIdentifier())) // If it's in the argument cache, create a token!
-            index.addDeclaration(node.getIdentifierToken(), argumentCache.get(node.getIdentifier()));
-
+        else
+            this.checkIdentifier(node, index);
         return recurse(node, index);
+    }
+
+    private void checkIdentifier(IdentifierExpression node, SourceIndex index)
+    {
+        if (identifierEntryCache.containsKey(node.getIdentifier())) // If it's in the argument cache, create a token!
+            index.addDeclaration(node.getIdentifierToken(), identifierEntryCache.get(node.getIdentifier()));
+        else
+            unmatchedIdentifier.put(node.getIdentifier(), node.getIdentifierToken()); // Not matched actually, put it!
+    }
+
+    private void addDeclarationToUnmatched(String key, SourceIndex index)
+    {
+        Entry entry = identifierEntryCache.get(key);
+
+        // This cannot happened in theory
+        if (entry == null)
+            return;
+        for (Identifier identifier : unmatchedIdentifier.get(key))
+            index.addDeclaration(identifier, entry);
+        unmatchedIdentifier.removeAll(key);
     }
 
     @Override
@@ -139,6 +168,45 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
             }
         }
 
+        return recurse(node, index);
+    }
+
+    @Override
+    public Void visitForEachStatement(ForEachStatement node, SourceIndex index) {
+        if (node.getVariableType() instanceof SimpleType)
+        {
+            SimpleType type = (SimpleType) node.getVariableType();
+            TypeReference typeReference = type.getUserData(Keys.TYPE_REFERENCE);
+            Identifier identifier = node.getVariableNameToken();
+            String signature = Descriptor.of(typeReference.getErasedDescription());
+            LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, localsPosition++, identifier.getName(), new Type(signature));
+            identifierEntryCache.put(identifier.getName(), localVariableEntry);
+            addDeclarationToUnmatched(identifier.getName(), index);
+            index.addDeclaration(identifier, localVariableEntry);
+        }
+        return recurse(node, index);
+    }
+
+    @Override
+    public Void visitVariableDeclaration(VariableDeclarationStatement node, SourceIndex index) {
+        AstNodeCollection<VariableInitializer> variables = node.getVariables();
+
+        // Single assignation
+        if (variables.size() == 1)
+        {
+            VariableInitializer initializer = variables.firstOrNullObject();
+            if (initializer != null && node.getType() instanceof SimpleType)
+            {
+                SimpleType type = (SimpleType) node.getType();
+                TypeReference typeReference = type.getUserData(Keys.TYPE_REFERENCE);
+                String signature = Descriptor.of(typeReference.getErasedDescription());
+                Identifier identifier = initializer.getNameToken();
+                LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, localsPosition++, initializer.getName(), new Type(signature));
+                identifierEntryCache.put(identifier.getName(), localVariableEntry);
+                addDeclarationToUnmatched(identifier.getName(), index);
+                index.addDeclaration(identifier, localVariableEntry);
+            }
+        }
         return recurse(node, index);
     }
 }

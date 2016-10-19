@@ -533,6 +533,10 @@ public class Deobfuscator {
             return false;
         } else if (obfEntry instanceof ArgumentEntry) {
             return translator.translate((ArgumentEntry) obfEntry) != null;
+        } else if (obfEntry instanceof LocalVariableEntry) {
+            // TODO: Implement it
+            //return translator.translate((LocalVariableEntry)obfEntry) != null;
+            return false;
         } else {
             throw new Error("Unknown entry type: " + obfEntry.getClass().getName());
         }
@@ -549,6 +553,8 @@ public class Deobfuscator {
             throw new IllegalArgumentException("Cannot rename constructors");
         } else if (obfEntry instanceof ArgumentEntry) {
             this.renamer.setArgumentTreeName((ArgumentEntry) obfEntry, newName);
+        } else if (obfEntry instanceof LocalVariableEntry) {
+            // TODO: Implement it
         } else {
             throw new Error("Unknown entry type: " + obfEntry.getClass().getName());
         }
@@ -587,6 +593,8 @@ public class Deobfuscator {
             throw new IllegalArgumentException("Cannot rename constructors");
         } else if (obfEntry instanceof ArgumentEntry) {
             this.renamer.markArgumentAsDeobfuscated((ArgumentEntry) obfEntry);
+        } else if (obfEntry instanceof LocalVariableEntry) {
+            // TODO: Implement it
         } else {
             throw new Error("Unknown entry type: " + obfEntry);
         }

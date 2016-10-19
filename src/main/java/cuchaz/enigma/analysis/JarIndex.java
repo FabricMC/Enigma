@@ -791,6 +791,9 @@ public class JarIndex {
             return containsObfBehavior((BehaviorEntry) obfEntry);
         } else if (obfEntry instanceof ArgumentEntry) {
             return containsObfArgument((ArgumentEntry) obfEntry);
+        } else if (obfEntry instanceof LocalVariableEntry) {
+            // TODO: Implement it
+            return false;
         } else {
             throw new Error("Entry type not supported: " + obfEntry.getClass().getName());
         }
