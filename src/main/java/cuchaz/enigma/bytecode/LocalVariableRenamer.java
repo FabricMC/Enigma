@@ -76,11 +76,27 @@ public class LocalVariableRenamer {
         int numArgs = 0;
         if (behaviorEntry.getSignature() != null) {
             numArgs = behaviorEntry.getSignature().getArgumentTypes().size();
+
+            boolean isNestedClassConstructor = false;
+
+            // If the behavior is a constructor and if it have more than one arg, it's probably from a nested!
+            if (behaviorEntry instanceof ConstructorEntry && behaviorEntry.getClassEntry() != null && behaviorEntry.getClassEntry().isInnerClass() && numArgs >= 1)
+            {
+                // Get the first arg type
+                Type firstArg = behaviorEntry.getSignature().getArgumentTypes().get(0);
+
+                // If the arg is a class and if the class name match the outer class name of the constructor, it's definitely a constructor of a nested class
+                if (firstArg.isClass() && firstArg.getClassEntry().equals(behaviorEntry.getClassEntry().getOuterClassEntry())) {
+                    isNestedClassConstructor = true;
+                    numArgs--;
+                }
+            }
+
             for (int i = starti; i < starti + numArgs && i < table.tableLength(); i++) {
                 int argi = i - starti;
                 String argName = this.translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
                 if (argName == null) {
-                    Type argType = behaviorEntry.getSignature().getArgumentTypes().get(argi);
+                    Type argType = behaviorEntry.getSignature().getArgumentTypes().get(isNestedClassConstructor ? argi + 1 : argi);
                     // Unfortunately each of these have different name getters, so they have different code paths
                     if (argType.isPrimitive()) {
                         Type.Primitive argCls = argType.getPrimitive();
