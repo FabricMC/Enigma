@@ -152,7 +152,7 @@ public class CommandMain {
                 mappings.saveSRGMappings(result);
                 break;
             default:
-                mappings.saveEnigmaMappings(result, Mappings.FormatType.ENIGMA_FILE != formatType);
+                mappings.saveEnigmaMappings(result, Mappings.FormatType.ENIGMA_FILE != formatType, null);
                 break;
         }
     }

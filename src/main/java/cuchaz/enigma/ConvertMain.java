@@ -147,7 +147,7 @@ public class ConvertMain {
         deobfuscators.source.setMappings(mappings);
 
         Mappings newMappings = MappingsConverter.newMappings(classMatches, mappings, deobfuscators.source, deobfuscators.dest);
-        new MappingsEnigmaWriter().write(outMappingsFile, newMappings, true);
+        new MappingsEnigmaWriter().write(outMappingsFile, newMappings, true, null);
         System.out.println("Write converted mappings to: " + outMappingsFile.getAbsolutePath());
     }
 
@@ -219,7 +219,7 @@ public class ConvertMain {
 
         // write out the converted mappings
 
-        new MappingsEnigmaWriter().write(outMappingsFile, newMappings, true);
+        new MappingsEnigmaWriter().write(outMappingsFile, newMappings, true, null);
         System.out.println("Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath());
     }
 
@@ -309,7 +309,7 @@ public class ConvertMain {
         }
 
         // write out the converted mappings
-        new MappingsEnigmaWriter().write(outMappingsFile, newMappings, true);
+        new MappingsEnigmaWriter().write(outMappingsFile, newMappings, true, null);
         System.out.println("Wrote converted mappings to:\n\t" + outMappingsFile.getAbsolutePath());
     }
 

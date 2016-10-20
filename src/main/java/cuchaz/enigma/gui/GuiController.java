@@ -84,7 +84,7 @@ public class GuiController {
     }
 
     public void saveEnigmaMappings(File file, boolean isDirectoryFormat) throws IOException {
-        this.deobfuscator.getMappings().saveEnigmaMappings(file, isDirectoryFormat);
+	    ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.getMappings().saveEnigmaMappings(file, isDirectoryFormat, progress));
         this.isDirty = false;
     }
 
