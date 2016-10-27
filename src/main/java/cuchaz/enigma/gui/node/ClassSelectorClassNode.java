@@ -49,6 +49,11 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
         super.setUserObject(classEntry);
     }
 
+    @Override public Object getUserObject()
+    {
+        return classEntry;
+    }
+
     public boolean equals(ClassSelectorClassNode other) {
         return this.classEntry.equals(other.classEntry);
     }

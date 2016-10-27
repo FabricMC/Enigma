@@ -543,6 +543,10 @@ public class Deobfuscator {
     }
 
     public void rename(Entry obfEntry, String newName) {
+        rename(obfEntry, newName, true);
+    }
+
+    public void rename(Entry obfEntry, String newName, boolean clearCache) {
         if (obfEntry instanceof ClassEntry) {
             this.renamer.setClassName((ClassEntry) obfEntry, Descriptor.toJvmName(newName));
         } else if (obfEntry instanceof FieldEntry) {
@@ -560,7 +564,8 @@ public class Deobfuscator {
         }
 
         // clear caches
-        this.translatorCache.clear();
+        if (clearCache)
+            this.translatorCache.clear();
     }
 
     public void removeMapping(Entry obfEntry) {

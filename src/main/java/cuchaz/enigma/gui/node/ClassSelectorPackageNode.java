@@ -33,9 +33,14 @@ public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
         super.setUserObject(userObject);
     }
 
+    @Override public Object getUserObject()
+    {
+        return packageName;
+    }
+
     @Override
     public String toString() {
-        return Descriptor.toJavaName(this.packageName);
+        return !packageName.equals("(none)") ? Descriptor.toJavaName(this.packageName) : "(none)";
     }
 
     @Override

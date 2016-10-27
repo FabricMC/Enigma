@@ -44,7 +44,7 @@ public class ClassSelector extends JTree {
     private RenameSelectionListener renameSelectionListener;
     private Comparator<ClassEntry> comparator;
 
-    public ClassSelector(Gui gui, Comparator<ClassEntry> comparator) {
+    public ClassSelector(Gui gui, Comparator<ClassEntry> comparator, boolean isRenamable) {
         this.comparator = comparator;
 
         // configure the tree control
@@ -77,7 +77,7 @@ public class ClassSelector extends JTree {
             {
                 @Override public boolean isCellEditable(EventObject event)
                 {
-                    return !(event instanceof MouseEvent) && super.isCellEditable(event);
+                    return isRenamable && !(event instanceof MouseEvent) && super.isCellEditable(event);
                 }
             };
             this.setCellEditor(editor);
@@ -112,7 +112,7 @@ public class ClassSelector extends JTree {
                             try
                             {
                                 renameSelectionListener.onSelectionRename(node.getUserObject(), objectData, node);
-                                node.setUserObject(objectData);
+                                node.setUserObject(objectData); // Make sure that it's modified
                             } catch (IllegalNameException ex)
                             {
                                 JOptionPane.showOptionDialog(gui.getFrame(), ex.getMessage(), "Enigma - Error", JOptionPane.OK_OPTION,
@@ -445,6 +445,51 @@ public class ClassSelector extends JTree {
         DefaultTreeModel model = (DefaultTreeModel) getModel();
         ClassSelectorClassNode classNode = new ClassSelectorClassNode(entry);
         model.insertNodeInto(classNode, packageNode, getPlacementIndex(packageNode, classNode));
+    }
+
+    public void reload()
+    {
+        DefaultTreeModel model = (DefaultTreeModel) getModel();
+        model.reload(sort(rootNodes));
+    }
+
+    private DefaultMutableTreeNode sort(DefaultMutableTreeNode node) {
+
+        for(int i = 0; i < node.getChildCount() - 1; i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
+            if (child == null)
+                continue;
+            String nt = child.toString();
+
+            for(int j = i + 1; j <= node.getChildCount() - 1; j++) {
+                DefaultMutableTreeNode prevNode = (DefaultMutableTreeNode) node.getChildAt(j);
+                if (prevNode == null || prevNode.getUserObject() == null)
+                    continue;
+                String np = prevNode.getUserObject().toString();
+
+                if(nt.compareToIgnoreCase(np) > 0) {
+                    node.insert(child, j);
+                    node.insert(prevNode, i);
+                }
+            }
+            if(child.getChildCount() > 0) {
+                sort(child);
+            }
+        }
+
+        for(int i = 0; i < node.getChildCount() - 1; i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
+            for(int j = i + 1; j <= node.getChildCount() - 1; j++) {
+                DefaultMutableTreeNode prevNode = (DefaultMutableTreeNode) node.getChildAt(j);
+
+                if(!prevNode.isLeaf() && child.isLeaf()) {
+                    node.insert(child, j);
+                    node.insert(prevNode, i);
+                }
+            }
+        }
+
+        return node;
     }
 
     private int getPlacementIndex(ClassSelectorPackageNode newPackageNode, ClassSelectorClassNode classNode)

@@ -193,13 +193,13 @@ public class GuiController {
     }
 
     public void rename(EntryReference<Entry, Entry> deobfReference, String newName) {
-        rename(deobfReference, newName, true);
+        rename(deobfReference, newName, true, true);
     }
 
-    public void rename(EntryReference<Entry, Entry> deobfReference, String newName, boolean refreshClassTree)
+    public void rename(EntryReference<Entry, Entry> deobfReference, String newName, boolean refreshClassTree, boolean clearTranslationCache)
     {
         EntryReference<Entry, Entry> obfReference = this.deobfuscator.obfuscateReference(deobfReference);
-        this.deobfuscator.rename(obfReference.getNameableEntry(), newName);
+        this.deobfuscator.rename(obfReference.getNameableEntry(), newName, clearTranslationCache);
         this.isDirty = true;
 
         if (refreshClassTree && deobfReference.entry instanceof ClassEntry && !((ClassEntry) deobfReference.entry).isInnerClass())

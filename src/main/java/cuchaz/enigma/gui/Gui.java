@@ -778,12 +778,16 @@ public class Gui {
                 DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
                 ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
                 ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
-                this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getName()), dataChild.getName(), false);
+                this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getName()), dataChild.getName(), false, i + 1 == node.getChildCount());
+                childNode.setUserObject(dataChild);
             }
+            node.setUserObject(data);
+            // Ob package will never be modified, just reload deob view
+            this.deobfPanel.deobfClasses.reload();
         }
         // class rename
         else if (data instanceof ClassEntry)
-            this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getName()), ((ClassEntry) data).getName(), false);
+            this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getName()), ((ClassEntry) data).getName(), false, true);
     }
 
     public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName)
@@ -806,6 +810,8 @@ public class Gui {
             ClassSelectorPackageNode packageNode = this.obfPanel.obfClasses.getPackageNode(oldEntry);
             this.obfPanel.obfClasses.removeNode(packageNode, oldEntry);
             this.obfPanel.obfClasses.removeNodeIfEmpty(packageNode);
+            this.deobfPanel.deobfClasses.reload();
+            this.obfPanel.obfClasses.reload();
         }
         // Deob -> ob
         else if (isNewOb && !isOldOb)
@@ -814,17 +820,21 @@ public class Gui {
             ClassSelectorPackageNode packageNode = this.deobfPanel.deobfClasses.getPackageNode(oldEntry);
             this.deobfPanel.deobfClasses.removeNode(packageNode, oldEntry);
             this.deobfPanel.deobfClasses.removeNodeIfEmpty(packageNode);
+            this.deobfPanel.deobfClasses.reload();
+            this.obfPanel.obfClasses.reload();
         }
         // Local move
         else if (isOldOb)
         {
             this.obfPanel.obfClasses.moveClassTree(oldEntry, newEntry, null);
             this.obfPanel.obfClasses.removeNodeIfEmpty(this.obfPanel.obfClasses.getPackageNode(oldEntry));
+            this.obfPanel.obfClasses.reload();
         }
         else
         {
             this.deobfPanel.deobfClasses.moveClassTree(oldEntry, newEntry, null);
             this.deobfPanel.deobfClasses.removeNodeIfEmpty(this.deobfPanel.deobfClasses.getPackageNode(oldEntry));
+            this.deobfPanel.deobfClasses.reload();
         }
     }
 }
