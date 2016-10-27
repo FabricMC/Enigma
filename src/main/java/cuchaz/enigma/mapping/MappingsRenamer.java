@@ -90,8 +90,23 @@ public class MappingsRenamer {
     public void setFieldName(FieldEntry obf, String deobfName) {
         deobfName = NameValidator.validateFieldName(deobfName);
         FieldEntry targetEntry = new FieldEntry(obf.getClassEntry(), deobfName, obf.getType());
-        if (m_mappings.containsDeobfField(obf.getClassEntry(), deobfName, obf.getType()) || m_index.containsObfField(targetEntry)) {
-            throw new IllegalNameException(deobfName, "There is already a field with that name");
+        ClassEntry definedClass = null;
+        if (m_mappings.containsDeobfField(obf.getClassEntry(), deobfName) || m_index.containsEntryWithSameName(targetEntry))
+            definedClass = obf.getClassEntry();
+        else {
+            for (ClassEntry ancestorEntry : this.m_index.getTranslationIndex().getAncestry(obf.getClassEntry())) {
+                if (m_mappings.containsDeobfField(ancestorEntry, deobfName) || m_index.containsEntryWithSameName(targetEntry.cloneToNewClass(ancestorEntry))) {
+                    definedClass = ancestorEntry;
+                    break;
+                }
+            }
+        }
+
+        if (definedClass != null) {
+            String className = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(definedClass.getClassName());
+            if (className == null)
+                className = definedClass.getClassName();
+            throw new IllegalNameException(deobfName, "There is already a field with that name in " + className);
         }
 
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());

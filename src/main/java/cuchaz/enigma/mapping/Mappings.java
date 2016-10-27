@@ -15,11 +15,7 @@ import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.collect.Sets;
 import cuchaz.enigma.analysis.TranslationIndex;
@@ -175,6 +171,16 @@ public class Mappings {
     public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName, Type obfType) {
         ClassMapping classMapping = this.classesByObf.get(obfClassEntry.getName());
         return classMapping != null && classMapping.containsDeobfField(deobfName, obfType);
+    }
+
+    public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName) {
+        ClassMapping classMapping = this.classesByObf.get(obfClassEntry.getName());
+        if (classMapping != null)
+            for (FieldMapping fieldMapping : classMapping.fields())
+                if (deobfName.equals(fieldMapping.getDeobfName()) || deobfName.equals(fieldMapping.getObfName()))
+                    return true;
+
+        return false;
     }
 
     public boolean containsDeobfMethod(ClassEntry obfClassEntry, String deobfName, Signature obfSignature) {

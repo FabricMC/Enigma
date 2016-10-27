@@ -771,6 +771,14 @@ public class JarIndex {
         return this.access.containsKey(obfBehaviorEntry);
     }
 
+    public boolean containsEntryWithSameName(Entry entry)
+    {
+        for (Entry target : this.access.keySet())
+            if (target.getName().equals(entry.getName()) && entry.getClass().isInstance(target.getClass()))
+                return true;
+        return false;
+    }
+
     public boolean containsObfArgument(ArgumentEntry obfArgumentEntry) {
         // check the behavior
         if (!containsObfBehavior(obfArgumentEntry.getBehaviorEntry())) {
