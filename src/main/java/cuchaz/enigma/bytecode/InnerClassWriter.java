@@ -15,22 +15,22 @@ import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 
+import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.EntryFactory;
+import cuchaz.enigma.mapping.*;
+import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.bytecode.AccessFlag;
-import javassist.bytecode.ConstPool;
-import javassist.bytecode.EnclosingMethodAttribute;
-import javassist.bytecode.InnerClassesAttribute;
+import javassist.NotFoundException;
+import javassist.bytecode.*;
 
 public class InnerClassWriter {
 
     private JarIndex index;
+    private Translator deobfuscatorTranslator;
 
-    public InnerClassWriter(JarIndex index) {
+    public InnerClassWriter(JarIndex index, Translator deobfuscatorTranslator) {
         this.index = index;
+        this.deobfuscatorTranslator = deobfuscatorTranslator;
     }
 
     public void write(CtClass c) {
@@ -92,6 +92,29 @@ public class InnerClassWriter {
 
                 // update references to use the fully qualified inner class name
                 c.replaceClassName(obfInnerClassEntry.getName(), obfInnerClassEntry.buildClassEntry(extendedObfClassChain).getName());
+            }
+        }
+    }
+
+    // FIXME: modiffier is not applied to inner class
+    public static void changeModifier(CtClass c, InnerClassesAttribute attr, Translator translator)
+    {
+        ClassPool pool = c.getClassPool();
+        for (int i = 0; i < attr.tableLength(); i++) {
+
+            String innerName = attr.innerClass(i);
+            // get the inner class full name (which has already been translated)
+            ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(innerName));
+            try
+            {
+                CtClass innerClass = pool.get(innerName);
+                Mappings.EntryModifier modifier = translator.getModifier(classEntry);
+                if (modifier != null && modifier != Mappings.EntryModifier.UNCHANGED)
+                    ClassRenamer.applyModifier(innerClass, modifier);
+            } catch (NotFoundException e)
+            {
+                // This shouldn't be possible in theory
+                //e.printStackTrace();
             }
         }
     }

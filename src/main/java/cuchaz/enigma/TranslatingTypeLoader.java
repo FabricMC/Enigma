@@ -198,7 +198,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
             throws IOException, NotFoundException, CannotCompileException {
 
         // reconstruct inner classes
-        new InnerClassWriter(this.jarIndex).write(c);
+        new InnerClassWriter(this.jarIndex, this.deobfuscatingTranslator).write(c);
 
         // re-get the javassist handle since we changed class names
         ClassEntry obfClassEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));

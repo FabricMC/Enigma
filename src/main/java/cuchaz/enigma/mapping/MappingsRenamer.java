@@ -321,4 +321,22 @@ public class MappingsRenamer {
         }
         return mappingChain;
     }
+
+    public void setClassModifier(ClassEntry obEntry, Mappings.EntryModifier modifier)
+    {
+        ClassMapping classMapping = getOrCreateClassMapping(obEntry);
+        classMapping.setModifier(modifier);
+    }
+
+    public void setFieldModifier(FieldEntry obEntry, Mappings.EntryModifier modifier)
+    {
+        ClassMapping classMapping = getOrCreateClassMapping(obEntry.getClassEntry());
+        classMapping.setFieldModifier(obEntry.getName(), obEntry.getType(), modifier);
+    }
+
+    public void setMethodModifier(BehaviorEntry obEntry, Mappings.EntryModifier modifier)
+    {
+        ClassMapping classMapping = getOrCreateClassMapping(obEntry.getClassEntry());
+        classMapping.setMethodModifier(obEntry.getName(), obEntry.getSignature(), modifier);
+    }
 }

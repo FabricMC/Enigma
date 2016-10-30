@@ -19,8 +19,9 @@ import java.util.Map;
 
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.ClassNameReplacer;
+import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.Translator;
-import javassist.CtClass;
+import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.SignatureAttribute.*;
 
@@ -70,6 +71,41 @@ public class ClassRenamer {
         }
     }
 
+    public static void applyModifier(Object obj, Mappings.EntryModifier modifier)
+    {
+        int mod = -1;
+        if (obj instanceof CtField)
+            mod = ((CtField) obj).getModifiers();
+        else if (obj instanceof CtBehavior)
+            mod = ((CtBehavior) obj).getModifiers();
+        else if (obj instanceof CtClass)
+            mod = ((CtClass) obj).getModifiers();
+
+        if (mod != -1)
+        {
+            switch (modifier)
+            {
+                case PRIVATE:
+                    mod = Modifier.setPrivate(mod);
+                    break;
+                case PROTECTED:
+                    mod = Modifier.setProtected(mod);
+                    break;
+                case PUBLIC:
+                    mod = Modifier.setPublic(mod);
+                    break;
+                default:
+                    break;
+            }
+            if (obj instanceof CtField)
+                ((CtField) obj).setModifiers(mod);
+            else if (obj instanceof CtBehavior)
+                ((CtBehavior) obj).setModifiers(mod);
+            else
+                ((CtClass) obj).setModifiers(mod);
+        }
+    }
+
     public static void renameClasses(CtClass c, final Translator translator) {
         renameClasses(c, className -> {
             ClassEntry entry = translator.translateEntry(new ClassEntry(className));
@@ -110,6 +146,7 @@ public class ClassRenamer {
 
         // rename the constant pool (covers ClassInfo, MethodTypeInfo, and NameAndTypeInfo)
         ConstPool constPool = c.getClassFile().getConstPool();
+        String className = constPool.getClassName();
         constPool.renameClass(map);
 
         // rename class attributes
@@ -140,8 +177,9 @@ public class ClassRenamer {
         if (attr != null) {
             for (int i = 0; i < attr.tableLength(); i++) {
 
+                String innerName = attr.innerClass(i);
                 // get the inner class full name (which has already been translated)
-                ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(attr.innerClass(i)));
+                ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(innerName));
 
                 if (attr.innerNameIndex(i) != 0) {
                     // update the inner name

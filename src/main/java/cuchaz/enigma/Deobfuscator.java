@@ -607,4 +607,25 @@ public class Deobfuscator {
         // clear caches
         this.translatorCache.clear();
     }
+
+    public void changeModifier(Entry entry, Mappings.EntryModifier modifierEntry)
+    {
+        Entry obfEntry = obfuscateEntry(entry);
+        if (obfEntry instanceof ClassEntry)
+            this.renamer.setClassModifier((ClassEntry) obfEntry, modifierEntry);
+        else if (obfEntry instanceof FieldEntry)
+            this.renamer.setFieldModifier((FieldEntry) obfEntry, modifierEntry);
+        else if (obfEntry instanceof BehaviorEntry)
+            this.renamer.setMethodModifier((BehaviorEntry) obfEntry, modifierEntry);
+        else
+            throw new Error("Unknown entry type: " + obfEntry);
+    }
+
+    public Mappings.EntryModifier getModifier(Entry obEntry)
+    {
+        Entry entry = obfuscateEntry(obEntry);
+        if (entry != null)
+            obEntry = entry;
+        return getTranslator(TranslationDirection.Deobfuscating).getModifier(obEntry);
+    }
 }

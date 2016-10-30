@@ -15,16 +15,19 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
     private String obfName;
     private String deobfName;
     private Type obfType;
+    private Mappings.EntryModifier modifier;
 
-    public FieldMapping(String obfName, Type obfType, String deobfName) {
+    public FieldMapping(String obfName, Type obfType, String deobfName, Mappings.EntryModifier modifier) {
         this.obfName = obfName;
         this.deobfName = NameValidator.validateFieldName(deobfName);
         this.obfType = obfType;
+        this.modifier = modifier;
     }
 
     public FieldMapping(FieldMapping other, ClassNameReplacer obfClassNameReplacer) {
         this.obfName = other.obfName;
         this.deobfName = other.deobfName;
+        this.modifier = other.modifier;
         this.obfType = new Type(other.obfType, obfClassNameReplacer);
     }
 
@@ -56,6 +59,16 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
 
     public void setObfType(Type val) {
         this.obfType = val;
+    }
+
+    public void setModifier(Mappings.EntryModifier modifier)
+    {
+        this.modifier = modifier;
+    }
+
+    public Mappings.EntryModifier getModifier()
+    {
+        return modifier;
     }
 
     @Override

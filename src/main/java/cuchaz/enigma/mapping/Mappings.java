@@ -240,4 +240,14 @@ public class Mappings {
     {
         ENIGMA_FILE, ENIGMA_DIRECTORY, SRG_FILE
     }
+
+    public enum EntryModifier
+    {
+        UNCHANGED, PUBLIC, PROTECTED, PRIVATE;
+
+        public String getFormattedName()
+        {
+            return " ACC:" + super.toString();
+        }
+    }
 }

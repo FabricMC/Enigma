@@ -22,12 +22,17 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
     private String deobfName;
     private Signature obfSignature;
     private Map<Integer, ArgumentMapping> arguments;
+    private Mappings.EntryModifier modifier;
 
     public MethodMapping(String obfName, Signature obfSignature) {
-        this(obfName, obfSignature, null);
+        this(obfName, obfSignature, null,Mappings.EntryModifier.UNCHANGED);
     }
 
     public MethodMapping(String obfName, Signature obfSignature, String deobfName) {
+        this(obfName, obfSignature, deobfName, Mappings.EntryModifier.UNCHANGED);
+    }
+
+    public MethodMapping(String obfName, Signature obfSignature, String deobfName, Mappings.EntryModifier modifier) {
         if (obfName == null) {
             throw new IllegalArgumentException("obf name cannot be null!");
         }
@@ -38,11 +43,13 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
         this.deobfName = NameValidator.validateMethodName(deobfName);
         this.obfSignature = obfSignature;
         this.arguments = Maps.newTreeMap();
+        this.modifier = modifier;
     }
     
     public MethodMapping(MethodMapping other, ClassNameReplacer obfClassNameReplacer) {
         this.obfName = other.obfName;
         this.deobfName = other.deobfName;
+        this.modifier = other.modifier;
         this.obfSignature = new Signature(other.obfSignature, obfClassNameReplacer);
         this.arguments = Maps.newTreeMap();
         for (Map.Entry<Integer,ArgumentMapping> entry : other.arguments.entrySet()) {
@@ -186,5 +193,15 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
         } else {
             return new MethodEntry(classEntry, this.obfName, this.obfSignature);
         }
+    }
+
+    public Mappings.EntryModifier getModifier()
+    {
+        return modifier;
+    }
+
+    public void setModifier(Mappings.EntryModifier modifier)
+    {
+        this.modifier = modifier;
     }
 }

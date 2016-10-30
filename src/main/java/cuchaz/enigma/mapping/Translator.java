@@ -329,4 +329,27 @@ public class Translator {
         assert (mappingsChain.size() == parts.length);
         return mappingsChain;
     }
+
+    public Mappings.EntryModifier getModifier(Entry entry)
+    {
+        ClassMapping classMapping = findClassMapping(entry.getClassEntry());
+        if (classMapping != null && !entry.getName().equals("<clinit>"))
+        {
+            if (entry instanceof ClassEntry)
+                return classMapping.getModifier();
+            else if (entry instanceof FieldEntry)
+            {
+                FieldMapping fieldMapping = classMapping.getFieldByObf(entry.getName(), ((FieldEntry) entry).getType());
+                return fieldMapping != null ? fieldMapping.getModifier() : Mappings.EntryModifier.UNCHANGED;
+            }
+            else if (entry instanceof BehaviorEntry)
+            {
+                MethodMapping methodMapping = classMapping.getMethodByObf(entry.getName(), ((BehaviorEntry) entry).getSignature());
+                return methodMapping != null ? methodMapping.getModifier() : Mappings.EntryModifier.UNCHANGED;
+            }
+            else
+                throw new Error("Unknown entry type: " + entry.getClass().getName());
+        }
+        return Mappings.EntryModifier.UNCHANGED;
+    }
 }

@@ -20,6 +20,7 @@ import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.utils.ReadableToken;
 
+import java.awt.event.ItemEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -337,5 +338,20 @@ public class GuiController {
                 gui.setHighlightedTokens(obfuscatedTokens, deobfuscatedTokens, otherTokens);
             }
         }.start();
+    }
+
+    public Deobfuscator getDeobfuscator()
+    {
+        return deobfuscator;
+    }
+
+    public void modifierChange(ItemEvent event)
+    {
+        if (event.getStateChange() == ItemEvent.SELECTED)
+        {
+            deobfuscator.changeModifier(gui.m_reference.entry, (Mappings.EntryModifier) event.getItem());
+            this.isDirty = true;
+            refreshCurrentClass();
+        }
     }
 }

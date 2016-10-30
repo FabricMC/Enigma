@@ -11,14 +11,9 @@
 package cuchaz.enigma.bytecode;
 
 import cuchaz.enigma.mapping.*;
-import javassist.CtBehavior;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.CtMethod;
-import javassist.bytecode.ConstPool;
-import javassist.bytecode.Descriptor;
-import javassist.bytecode.EnclosingMethodAttribute;
-import javassist.bytecode.SourceFileAttribute;
+import cuchaz.enigma.mapping.Translator;
+import javassist.*;
+import javassist.bytecode.*;
 
 public class ClassTranslator {
 
@@ -74,6 +69,9 @@ public class ClassTranslator {
         }
 
         ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
+        Mappings.EntryModifier modifier = this.translator.getModifier(classEntry);
+        if (modifier != null && modifier != Mappings.EntryModifier.UNCHANGED)
+            ClassRenamer.applyModifier(c, modifier);
 
         // translate all the fields
         for (CtField field : c.getDeclaredFields()) {
@@ -81,6 +79,10 @@ public class ClassTranslator {
             // translate the name
             FieldEntry entry = EntryFactory.getFieldEntry(field);
             String translatedName = this.translator.translate(entry);
+            modifier = this.translator.getModifier(entry);
+            if (modifier != null && modifier != Mappings.EntryModifier.UNCHANGED)
+                ClassRenamer.applyModifier(field, modifier);
+
             if (translatedName != null) {
                 field.setName(translatedName);
             }
@@ -94,6 +96,10 @@ public class ClassTranslator {
         for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 
             BehaviorEntry entry = EntryFactory.getBehaviorEntry(behavior);
+
+            modifier = this.translator.getModifier(entry);
+            if (modifier != null && modifier != Mappings.EntryModifier.UNCHANGED)
+                ClassRenamer.applyModifier(behavior, modifier);
 
             if (behavior instanceof CtMethod) {
                 CtMethod method = (CtMethod) behavior;
@@ -149,5 +155,8 @@ public class ClassTranslator {
             String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassEntry().getSimpleName()) + ".java";
             c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));
         }
+        InnerClassesAttribute attr = (InnerClassesAttribute) c.getClassFile().getAttribute(InnerClassesAttribute.tag);
+        if (attr != null)
+            InnerClassWriter.changeModifier(c, attr, translator);
     }
 }

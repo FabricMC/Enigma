@@ -110,9 +110,9 @@ public class MappingsEnigmaWriter {
 	
 	private void write(PrintWriter out, ClassMapping classMapping, int depth) throws IOException {
 		if (classMapping.getDeobfName() == null) {
-			out.format("%sCLASS %s\n", getIndent(depth), classMapping.getObfFullName());
+			out.format("%sCLASS %s%s\n", getIndent(depth), classMapping.getObfFullName(), classMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : classMapping.getModifier().getFormattedName());
 		} else {
-			out.format("%sCLASS %s %s\n", getIndent(depth), classMapping.getObfFullName(), classMapping.getDeobfName());
+			out.format("%sCLASS %s %s%s\n", getIndent(depth), classMapping.getObfFullName(), classMapping.getDeobfName(), classMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" :  classMapping.getModifier().getFormattedName());
 		}
 		
 		for (ClassMapping innerClassMapping : sorted(classMapping.innerClasses())) {
@@ -129,14 +129,17 @@ public class MappingsEnigmaWriter {
 	}
 	
 	private void write(PrintWriter out, FieldMapping fieldMapping, int depth) throws IOException {
-		out.format("%sFIELD %s %s %s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName(), fieldMapping.getObfType().toString());
+		if (fieldMapping.getDeobfName() == null)
+			out.format("%sFIELD %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getObfType().toString(), fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
+		else
+			out.format("%sFIELD %s %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName(), fieldMapping.getObfType().toString(), fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
 	}
 	
 	private void write(PrintWriter out, MethodMapping methodMapping, int depth) throws IOException {
 		if (methodMapping.getDeobfName() == null) {
-			out.format("%sMETHOD %s %s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getObfSignature());
+			out.format("%sMETHOD %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getObfSignature(), methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" :methodMapping.getModifier().getFormattedName());
 		} else {
-			out.format("%sMETHOD %s %s %s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getDeobfName(), methodMapping.getObfSignature());
+			out.format("%sMETHOD %s %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getDeobfName(), methodMapping.getObfSignature(), methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
 		}
 		
 		for (ArgumentMapping argumentMapping : sorted(methodMapping.arguments())) {

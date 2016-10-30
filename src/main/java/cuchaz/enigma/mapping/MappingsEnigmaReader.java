@@ -135,21 +135,51 @@ public class MappingsEnigmaReader
     private ClassMapping readClass(String[] parts, boolean makeSimple) {
         if (parts.length == 2) {
             return new ClassMapping(parts[1]);
-        } else {
-            return new ClassMapping(parts[1], parts[2]);
-        }
+        } else if (parts.length == 3) {
+            boolean access = parts[2].startsWith("ACC:");
+            ClassMapping mapping;
+            if (access)
+                mapping = new ClassMapping(parts[1], null, Mappings.EntryModifier.valueOf(parts[2].substring(4)));
+            else
+                mapping = new ClassMapping(parts[1], parts[2]);
+
+            return mapping;
+        } else if (parts.length == 4)
+            return new ClassMapping(parts[1], parts[2], Mappings.EntryModifier.valueOf(parts[3].substring(4)));
+        return null;
     }
 
     /* TEMP */
     protected FieldMapping readField(String[] parts) {
-        return new FieldMapping(parts[1], new Type(parts[3]), parts[2]);
+        FieldMapping mapping = null;
+        if (parts.length == 4)
+        {
+            boolean access = parts[3].startsWith("ACC:");
+            if (access)
+                mapping = new FieldMapping(parts[1], new Type(parts[2]), null,
+                        Mappings.EntryModifier.valueOf(parts[3].substring(4)));
+            else
+                mapping = new FieldMapping(parts[1], new Type(parts[3]), parts[2], Mappings.EntryModifier.UNCHANGED);
+        }
+        else if (parts.length == 5)
+            mapping = new FieldMapping(parts[1], new Type(parts[3]), parts[2], Mappings.EntryModifier.valueOf(parts[4].substring(4)));
+        return mapping;
     }
 
     private MethodMapping readMethod(String[] parts) {
-        if (parts.length == 3) {
-            return new MethodMapping(parts[1], new Signature(parts[2]));
-        } else {
-            return new MethodMapping(parts[1], new Signature(parts[3]), parts[2]);
+        MethodMapping mapping = null;
+        if (parts.length == 3)
+            mapping = new MethodMapping(parts[1], new Signature(parts[2]));
+        else if (parts.length == 4){
+            boolean access = parts[3].startsWith("ACC:");
+            if (access)
+                mapping = new MethodMapping(parts[1], new Signature(parts[2]), null, Mappings.EntryModifier.valueOf(parts[3].substring(4)));
+            else
+                mapping = new MethodMapping(parts[1], new Signature(parts[3]), parts[2]);
         }
+        else if (parts.length == 5)
+            mapping = new MethodMapping(parts[1], new Signature(parts[3]), parts[2],
+                    Mappings.EntryModifier.valueOf(parts[4].substring(4)));
+        return mapping;
     }
 }

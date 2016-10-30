@@ -461,24 +461,29 @@ public class Gui {
 
     private void showClassEntry(ClassEntry entry) {
         addNameValue(m_infoPanel, "Class", entry.getName());
+        addModifierComboBox(m_infoPanel, "Modifier", entry);
     }
 
     private void showFieldEntry(FieldEntry entry) {
         addNameValue(m_infoPanel, "Field", entry.getName());
         addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
         addNameValue(m_infoPanel, "Type", entry.getType().toString());
+        addModifierComboBox(m_infoPanel, "Modifier", entry);
     }
 
     private void showMethodEntry(MethodEntry entry) {
         addNameValue(m_infoPanel, "Method", entry.getName());
         addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
         addNameValue(m_infoPanel, "Signature", entry.getSignature().toString());
+        addModifierComboBox(m_infoPanel, "Modifier", entry);
+
     }
 
     private void showConstructorEntry(ConstructorEntry entry) {
         addNameValue(m_infoPanel, "Constructor", entry.getClassEntry().getName());
         if (!entry.isStatic()) {
             addNameValue(m_infoPanel, "Signature", entry.getSignature().toString());
+            addModifierComboBox(m_infoPanel, "Modifier", entry);
         }
     }
 
@@ -499,6 +504,25 @@ public class Gui {
         panel.add(label);
 
         panel.add(Utils.unboldLabel(new JLabel(value, JLabel.LEFT)));
+    }
+
+    private JComboBox<Mappings.EntryModifier> addModifierComboBox(JPanel container, String name, Entry entry)
+    {
+        if (!getController().entryIsInJar(entry))
+            return null;
+        JPanel panel = new JPanel();
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        container.add(panel);
+        JLabel label = new JLabel(name + ":", JLabel.RIGHT);
+        label.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
+        panel.add(label);
+        JComboBox<Mappings.EntryModifier> combo = new JComboBox<>(Mappings.EntryModifier.values());
+        ((JLabel)combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
+        combo.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
+        combo.setSelectedIndex(getController().getDeobfuscator().getModifier(entry).ordinal());
+        combo.addItemListener(getController()::modifierChange);
+        panel.add(combo);
+        return combo;
     }
 
     public void onCaretMove(int pos) {
