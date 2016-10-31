@@ -59,24 +59,27 @@ public class MappingsEnigmaWriter {
 		}
 
 		// Remove dropped mappings
-		List<ClassMapping> droppedClassMappings = new ArrayList<>(mappings.getPreviousState().classes());
-		List<ClassMapping> classMappings = new ArrayList<>(mappings.classes());
-		droppedClassMappings.removeAll(classMappings);
-		for (ClassMapping classMapping : droppedClassMappings)
+		if (mappings.getPreviousState() != null)
 		{
-			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
-			File result;
-			if (classMapping.getDeobfName() == null)
-				result = obFile;
-			else
+			List<ClassMapping> droppedClassMappings = new ArrayList<>(mappings.getPreviousState().classes());
+			List<ClassMapping> classMappings = new ArrayList<>(mappings.classes());
+			droppedClassMappings.removeAll(classMappings);
+			for (ClassMapping classMapping : droppedClassMappings)
 			{
-				// Make sure that old version of the file doesn't exist
-				if (obFile.exists())
-					obFile.delete();
-				result = new File(target, classMapping.getDeobfName() + ".mapping");
+				File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
+				File result;
+				if (classMapping.getDeobfName() == null)
+					result = obFile;
+				else
+				{
+					// Make sure that old version of the file doesn't exist
+					if (obFile.exists())
+						obFile.delete();
+					result = new File(target, classMapping.getDeobfName() + ".mapping");
+				}
+				if (result.exists())
+					result.delete();
 			}
-			if (result.exists())
-				result.delete();
 		}
 	}
 
