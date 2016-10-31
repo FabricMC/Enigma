@@ -235,7 +235,7 @@ public class MappingsConverter {
 
         // non obfuscated classes can be migrated
         ClassEntry classEntry = oldObfType.getClassEntry();
-        if (!classEntry.getClassName().contains("/")) {
+        if (classEntry.getPackageName() != null) {
             return true;
         }
 

@@ -17,6 +17,7 @@ import java.util.Map;
 
 import cuchaz.enigma.throwables.MappingConflict;
 
+// FIXME: Enigma doesn't support inner classes of inner class????!
 public class ClassMapping implements Comparable<ClassMapping> {
 
     private String m_obfFullName;
@@ -24,6 +25,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
     private String m_deobfName;
     private String m_previousDeobfName;
     private Map<String, ClassMapping> m_innerClassesByObfSimple;
+    private Map<String, ClassMapping> m_innerClassesByObfFull;
     private Map<String, ClassMapping> m_innerClassesByDeobf;
     private Map<String, FieldMapping> m_fieldsByObf;
     private Map<String, FieldMapping> m_fieldsByDeobf;
@@ -50,6 +52,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
         m_previousDeobfName = null;
         m_deobfName = NameValidator.validateClassName(deobfName, false);
         m_innerClassesByObfSimple = Maps.newHashMap();
+        m_innerClassesByObfFull = Maps.newHashMap();
         m_innerClassesByDeobf = Maps.newHashMap();
         m_fieldsByObf = Maps.newHashMap();
         m_fieldsByDeobf = Maps.newHashMap();
@@ -89,9 +92,11 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public void addInnerClassMapping(ClassMapping classMapping) throws MappingConflict {
-        if (this.m_innerClassesByObfSimple.containsKey(classMapping.getObfSimpleName())) {
+        // FIXME: dirty hack, that can get into issues, but it's a temp fix!
+        if (this.m_innerClassesByObfFull.containsKey(classMapping.getObfSimpleName())) {
             throw new MappingConflict("classes", classMapping.getObfSimpleName(), this.m_innerClassesByObfSimple.get(classMapping.getObfSimpleName()).getObfSimpleName());
         }
+        m_innerClassesByObfFull.put(classMapping.getObfFullName(), classMapping);
         m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping);
 
         if (classMapping.getDeobfName() != null) {
@@ -104,6 +109,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public void removeInnerClassMapping(ClassMapping classMapping) {
+        m_innerClassesByObfFull.remove(classMapping.getObfFullName());
         boolean obfWasRemoved = m_innerClassesByObfSimple.remove(classMapping.getObfSimpleName()) != null;
         assert (obfWasRemoved);
         if (classMapping.getDeobfName() != null) {
@@ -117,6 +123,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
         ClassMapping classMapping = m_innerClassesByObfSimple.get(obfInnerClass.getInnermostClassName());
         if (classMapping == null) {
             classMapping = new ClassMapping(obfInnerClass.getName());
+            m_innerClassesByObfFull.put(classMapping.getObfFullName(), classMapping);
             boolean wasAdded = m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping) == null;
             assert (wasAdded);
             this.isDirty = true;
