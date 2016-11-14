@@ -181,6 +181,10 @@ public class ClassSelector extends JTree {
             // I can never keep this rule straight when writing these damn things...
             // a < b => -1, a == b => 0, a > b => +1
 
+            if(b == null || a == null){
+                return 0;
+            }
+
             String[] aparts = a.split("/");
             String[] bparts = b.split("/");
             for (int i = 0; true; i++) {
