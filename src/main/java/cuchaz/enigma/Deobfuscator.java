@@ -156,6 +156,16 @@ public class Deobfuscator {
         }
     }
 
+    public TranslatingTypeLoader createTypeLoader()
+    {
+        return new TranslatingTypeLoader(
+                this.jar,
+                this.jarIndex,
+                getTranslator(TranslationDirection.Obfuscating),
+                getTranslator(TranslationDirection.Deobfuscating)
+        );
+    }
+
     public CompilationUnit getSourceTree(String className) {
 
         // we don't know if this class name is obfuscated or deobfuscated
@@ -172,12 +182,7 @@ public class Deobfuscator {
         }
 
         // set the type loader
-        TranslatingTypeLoader loader = new TranslatingTypeLoader(
-                this.jar,
-                this.jarIndex,
-                getTranslator(TranslationDirection.Obfuscating),
-                getTranslator(TranslationDirection.Deobfuscating)
-        );
+        TranslatingTypeLoader loader  = createTypeLoader();
         this.settings.setTypeLoader(loader);
 
         // see if procyon can find the type
@@ -383,13 +388,7 @@ public class Deobfuscator {
     }
 
     public void writeJar(File out, ProgressListener progress) {
-        final TranslatingTypeLoader loader = new TranslatingTypeLoader(
-                this.jar,
-                this.jarIndex,
-                getTranslator(TranslationDirection.Obfuscating),
-                getTranslator(TranslationDirection.Deobfuscating)
-        );
-        transformJar(out, progress, loader::transformClass);
+        transformJar(out, progress, createTypeLoader()::transformClass);
     }
 
     public void protectifyJar(File out, ProgressListener progress) {
