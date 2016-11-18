@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 
 import java.util.Map;
 
+import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.throwables.MappingConflict;
 
 public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<BehaviorEntry> {
@@ -75,7 +76,19 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
     }
 
     public void setObfName(String name) {
-        this.obfName = NameValidator.validateMethodName(name);
+        try
+        {
+            NameValidator.validateMethodName(name);
+        } catch (IllegalNameException ex)
+        {
+            // Invalid name, damn obfuscation! Map to a deob name with another name to avoid issues
+            if (this.deobfName == null)
+            {
+                System.err.println("WARNING: " + name + " is conflicting, auto deobfuscate to " + (name + "_auto_deob"));
+                setDeobfName(name + "_auto_deob");
+            }
+        }
+        this.obfName = name;
     }
 
     public void setObfSignature(Signature val) {

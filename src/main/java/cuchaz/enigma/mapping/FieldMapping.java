@@ -10,6 +10,8 @@
  ******************************************************************************/
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.throwables.IllegalNameException;
+
 public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<FieldEntry> {
 
     private String obfName;
@@ -49,8 +51,20 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
         this.deobfName = NameValidator.validateFieldName(val);
     }
 
-    public void setObfName(String val) {
-        this.obfName = NameValidator.validateFieldName(val);
+    public void setObfName(String name) {
+        try
+        {
+            NameValidator.validateMethodName(name);
+        } catch (IllegalNameException ex)
+        {
+            // Invalid name, damn obfuscation! Map to a deob name with another name to avoid issues
+            if (this.deobfName == null)
+            {
+                System.err.println("WARNING: " + name + " is conflicting, auto deobfuscate to " + (name + "_auto_deob"));
+                setDeobfName(name + "_auto_deob");
+            }
+        }
+        this.obfName = name;
     }
 
     public Type getObfType() {
