@@ -14,18 +14,18 @@ import java.io.File;
 
 public class MappingParseException extends Exception {
 
-    private int m_line;
-    private String m_message;
+    private int    line;
+    private String message;
     private String filePath;
 
     public MappingParseException(File file, int line, String message) {
-        m_line = line;
-        m_message = message;
+        this.line = line;
+        this.message = message;
         filePath = file.getAbsolutePath();
     }
 
     @Override
     public String getMessage() {
-        return "Line " + m_line + ": " + m_message + " in file " + filePath;
+        return "Line " + line + ": " + message + " in file " + filePath;
     }
 }

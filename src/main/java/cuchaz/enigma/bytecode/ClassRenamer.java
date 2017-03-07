@@ -52,10 +52,10 @@ public class ClassRenamer {
 
     private static class ReplacerClassMap extends HashMap<String, String> {
 
-        private ClassNameReplacer m_replacer;
+        private ClassNameReplacer replacer;
 
         public ReplacerClassMap(ClassNameReplacer replacer) {
-            m_replacer = replacer;
+            this.replacer = replacer;
         }
 
         @Override
@@ -67,7 +67,7 @@ public class ClassRenamer {
         }
 
         public String get(String className) {
-            return m_replacer.replace(className);
+            return replacer.replace(className);
         }
     }
 
@@ -146,7 +146,6 @@ public class ClassRenamer {
 
         // rename the constant pool (covers ClassInfo, MethodTypeInfo, and NameAndTypeInfo)
         ConstPool constPool = c.getClassFile().getConstPool();
-        String className = constPool.getClassName();
         constPool.renameClass(map);
 
         // rename class attributes

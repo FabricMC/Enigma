@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -30,7 +31,7 @@ public class Utils {
         return combineHashesOrdered(Arrays.asList(objs));
     }
 
-    public static int combineHashesOrdered(Iterable<Object> objs) {
+    public static int combineHashesOrdered(List<Object> objs) {
         final int prime = 67;
         int result = 1;
         for (Object obj : objs) {

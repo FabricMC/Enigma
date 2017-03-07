@@ -34,8 +34,7 @@ public class MatchesReader {
         }
     }
 
-    private static ClassMatch readClassMatch(String line)
-            throws IOException {
+    private static ClassMatch readClassMatch(String line) {
         String[] sides = line.split(":", 2);
         return new ClassMatch(readClasses(sides[0]), readClasses(sides[1]));
     }
@@ -54,7 +53,7 @@ public class MatchesReader {
     public static <T extends Entry> MemberMatches<T> readMembers(File file)
             throws IOException {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8")))) {
-            MemberMatches<T> matches = new MemberMatches<T>();
+            MemberMatches<T> matches = new MemberMatches<>();
             String line;
             while ((line = in.readLine()) != null) {
                 readMemberMatch(matches, line);

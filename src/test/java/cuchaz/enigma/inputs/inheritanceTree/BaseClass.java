@@ -14,16 +14,16 @@ package cuchaz.enigma.inputs.inheritanceTree;
 public abstract class BaseClass {
 	
 	// a
-	private String m_name;
+	private String name;
 	
 	// <init>(Ljava/lang/String;)V
 	protected BaseClass(String name) {
-		m_name = name;
+		this.name = name;
 	}
 	
 	// a()Ljava/lang/String;
 	public String getName() {
-		return m_name;
+		return name;
 	}
 	
 	// a()V

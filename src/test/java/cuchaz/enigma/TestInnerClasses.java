@@ -24,8 +24,8 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class TestInnerClasses {
 	
-	private JarIndex m_index;
-	private Deobfuscator m_deobfuscator;
+	private JarIndex     index;
+	private Deobfuscator deobfuscator;
 	
 	private static final ClassEntry AnonymousOuter = newClass("a");
 	private static final ClassEntry AnonymousInner = newClass("a$1");
@@ -44,49 +44,49 @@ public class TestInnerClasses {
 	
 	public TestInnerClasses()
 	throws Exception {
-		m_index = new JarIndex();
+		index = new JarIndex();
 		JarFile jar = new JarFile("build/test-obf/innerClasses.jar");
-		m_index.indexJar(jar, true);
-		m_deobfuscator = new Deobfuscator(jar);
+		index.indexJar(jar, true);
+		deobfuscator = new Deobfuscator(jar);
 	}
 	
 	@Test
 	public void simple() {
-		assertThat(m_index.getOuterClass(SimpleInner), is(SimpleOuter));
-		assertThat(m_index.getInnerClasses(SimpleOuter), containsInAnyOrder(SimpleInner));
-		assertThat(m_index.isAnonymousClass(SimpleInner), is(false));
+		assertThat(index.getOuterClass(SimpleInner), is(SimpleOuter));
+		assertThat(index.getInnerClasses(SimpleOuter), containsInAnyOrder(SimpleInner));
+		assertThat(index.isAnonymousClass(SimpleInner), is(false));
 		decompile(SimpleOuter);
 	}
 	
 	@Test
 	public void anonymous() {
-		assertThat(m_index.getOuterClass(AnonymousInner), is(AnonymousOuter));
-		assertThat(m_index.getInnerClasses(AnonymousOuter), containsInAnyOrder(AnonymousInner));
-		assertThat(m_index.isAnonymousClass(AnonymousInner), is(true));
+		assertThat(index.getOuterClass(AnonymousInner), is(AnonymousOuter));
+		assertThat(index.getInnerClasses(AnonymousOuter), containsInAnyOrder(AnonymousInner));
+		assertThat(index.isAnonymousClass(AnonymousInner), is(true));
 		decompile(AnonymousOuter);
 	}
 	
 	@Test
 	public void constructorArgs() {
-		assertThat(m_index.getOuterClass(ConstructorArgsInner), is(ConstructorArgsOuter));
-		assertThat(m_index.getInnerClasses(ConstructorArgsOuter), containsInAnyOrder(ConstructorArgsInner));
-		assertThat(m_index.isAnonymousClass(ConstructorArgsInner), is(false));
+		assertThat(index.getOuterClass(ConstructorArgsInner), is(ConstructorArgsOuter));
+		assertThat(index.getInnerClasses(ConstructorArgsOuter), containsInAnyOrder(ConstructorArgsInner));
+		assertThat(index.isAnonymousClass(ConstructorArgsInner), is(false));
 		decompile(ConstructorArgsOuter);
 	}
 	
 	@Test
 	public void anonymousWithScopeArgs() {
-		assertThat(m_index.getOuterClass(AnonymousWithScopeArgsInner), is(AnonymousWithScopeArgsOuter));
-		assertThat(m_index.getInnerClasses(AnonymousWithScopeArgsOuter), containsInAnyOrder(AnonymousWithScopeArgsInner));
-		assertThat(m_index.isAnonymousClass(AnonymousWithScopeArgsInner), is(true));
+		assertThat(index.getOuterClass(AnonymousWithScopeArgsInner), is(AnonymousWithScopeArgsOuter));
+		assertThat(index.getInnerClasses(AnonymousWithScopeArgsOuter), containsInAnyOrder(AnonymousWithScopeArgsInner));
+		assertThat(index.isAnonymousClass(AnonymousWithScopeArgsInner), is(true));
 		decompile(AnonymousWithScopeArgsOuter);
 	}
 	
 	@Test
 	public void anonymousWithOuterAccess() {
-		assertThat(m_index.getOuterClass(AnonymousWithOuterAccessInner), is(AnonymousWithOuterAccessOuter));
-		assertThat(m_index.getInnerClasses(AnonymousWithOuterAccessOuter), containsInAnyOrder(AnonymousWithOuterAccessInner));
-		assertThat(m_index.isAnonymousClass(AnonymousWithOuterAccessInner), is(true));
+		assertThat(index.getOuterClass(AnonymousWithOuterAccessInner), is(AnonymousWithOuterAccessOuter));
+		assertThat(index.getInnerClasses(AnonymousWithOuterAccessOuter), containsInAnyOrder(AnonymousWithOuterAccessInner));
+		assertThat(index.isAnonymousClass(AnonymousWithOuterAccessInner), is(true));
 		decompile(AnonymousWithOuterAccessOuter);
 	}
 	
@@ -94,26 +94,26 @@ public class TestInnerClasses {
 	public void classTree() {
 		
 		// root level
-		assertThat(m_index.containsObfClass(ClassTreeRoot), is(true));
-		assertThat(m_index.getOuterClass(ClassTreeRoot), is(nullValue()));
-		assertThat(m_index.getInnerClasses(ClassTreeRoot), containsInAnyOrder(ClassTreeLevel1));
+		assertThat(index.containsObfClass(ClassTreeRoot), is(true));
+		assertThat(index.getOuterClass(ClassTreeRoot), is(nullValue()));
+		assertThat(index.getInnerClasses(ClassTreeRoot), containsInAnyOrder(ClassTreeLevel1));
 		
 		// level 1
 		ClassEntry fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
 			+ "$" + ClassTreeLevel1.getInnermostClassName()
 		);
-		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
-		assertThat(m_index.getOuterClass(ClassTreeLevel1), is(ClassTreeRoot));
-		assertThat(m_index.getInnerClasses(ClassTreeLevel1), containsInAnyOrder(ClassTreeLevel2));
+		assertThat(index.containsObfClass(fullClassEntry), is(true));
+		assertThat(index.getOuterClass(ClassTreeLevel1), is(ClassTreeRoot));
+		assertThat(index.getInnerClasses(ClassTreeLevel1), containsInAnyOrder(ClassTreeLevel2));
 		
 		// level 2
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
 			+ "$" + ClassTreeLevel1.getInnermostClassName()
 			+ "$" + ClassTreeLevel2.getInnermostClassName()
 		);
-		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
-		assertThat(m_index.getOuterClass(ClassTreeLevel2), is(ClassTreeLevel1));
-		assertThat(m_index.getInnerClasses(ClassTreeLevel2), containsInAnyOrder(ClassTreeLevel3));
+		assertThat(index.containsObfClass(fullClassEntry), is(true));
+		assertThat(index.getOuterClass(ClassTreeLevel2), is(ClassTreeLevel1));
+		assertThat(index.getInnerClasses(ClassTreeLevel2), containsInAnyOrder(ClassTreeLevel3));
 		
 		// level 3
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
@@ -121,12 +121,12 @@ public class TestInnerClasses {
 			+ "$" + ClassTreeLevel2.getInnermostClassName()
 			+ "$" + ClassTreeLevel3.getInnermostClassName()
 		);
-		assertThat(m_index.containsObfClass(fullClassEntry), is(true));
-		assertThat(m_index.getOuterClass(ClassTreeLevel3), is(ClassTreeLevel2));
-		assertThat(m_index.getInnerClasses(ClassTreeLevel3), is(empty()));
+		assertThat(index.containsObfClass(fullClassEntry), is(true));
+		assertThat(index.getOuterClass(ClassTreeLevel3), is(ClassTreeLevel2));
+		assertThat(index.getInnerClasses(ClassTreeLevel3), is(empty()));
 	}
 	
 	private void decompile(ClassEntry classEntry) {
-		m_deobfuscator.getSourceTree(classEntry.getName());
+		deobfuscator.getSourceTree(classEntry.getName());
 	}
 }

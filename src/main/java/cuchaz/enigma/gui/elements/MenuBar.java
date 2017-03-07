@@ -42,16 +42,14 @@ public class MenuBar extends JMenuBar {
                 item.addActionListener(event -> {
                     if (this.gui.jarFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
                         // load the jar in a separate thread
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    gui.getController().openJar(new JarFile(gui.jarFileChooser.getSelectedFile()));
-                                } catch (IOException ex) {
-                                    throw new Error(ex);
-                                }
+                        new Thread(() ->
+                        {
+                            try {
+                                gui.getController().openJar(new JarFile(gui.jarFileChooser.getSelectedFile()));
+                            } catch (IOException ex) {
+                                throw new Error(ex);
                             }
-                        }.start();
+                        }).start();
                     }
                 });
             }
@@ -177,9 +175,7 @@ public class MenuBar extends JMenuBar {
             {
                 JMenuItem item = new JMenuItem("Rebuild Method Names");
                 menu.add(item);
-                item.addActionListener(event -> {
-                    this.gui.getController().rebuildMethodNames();
-                });
+                item.addActionListener(event -> this.gui.getController().rebuildMethodNames());
                 this.rebuildMethodNamesMenu = item;
             }
             menu.addSeparator();

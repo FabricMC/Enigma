@@ -92,14 +92,12 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
 
     public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
         // rename obf classes in the type
-        Type newType = new Type(this.obfType, new ClassNameReplacer() {
-            @Override
-            public String replace(String className) {
-                if (className.equals(oldObfClassName)) {
-                    return newObfClassName;
-                }
-                return null;
+        Type newType = new Type(this.obfType, className ->
+        {
+            if (className.equals(oldObfClassName)) {
+                return newObfClassName;
             }
+            return null;
         });
 
         if (!newType.equals(this.obfType)) {

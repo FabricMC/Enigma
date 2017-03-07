@@ -11,7 +11,6 @@
 package cuchaz.enigma.gui;
 
 import javax.swing.text.DefaultCaret;
-import javax.swing.text.Highlighter;
 
 public class BrowserCaret extends DefaultCaret {
 

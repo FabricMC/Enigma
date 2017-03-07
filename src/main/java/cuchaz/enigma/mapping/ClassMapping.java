@@ -20,19 +20,19 @@ import cuchaz.enigma.throwables.MappingConflict;
 // FIXME: Enigma doesn't support inner classes of inner class????!
 public class ClassMapping implements Comparable<ClassMapping> {
 
-    private String m_obfFullName;
-    private String m_obfSimpleName;
-    private String m_deobfName;
-    private String m_previousDeobfName;
-    private Map<String, ClassMapping> m_innerClassesByObfSimple;
-    private Map<String, ClassMapping> m_innerClassesByObfFull;
-    private Map<String, ClassMapping> m_innerClassesByDeobf;
-    private Map<String, FieldMapping> m_fieldsByObf;
-    private Map<String, FieldMapping> m_fieldsByDeobf;
-    private Map<String, MethodMapping> m_methodsByObf;
-    private Map<String, MethodMapping> m_methodsByDeobf;
-    private boolean isDirty;
-    private Mappings.EntryModifier modifier;
+    private String                     obfFullName;
+    private String                     obfSimpleName;
+    private String                     deobfName;
+    private String                     previousDeobfName;
+    private Map<String, ClassMapping>  innerClassesByObfSimple;
+    private Map<String, ClassMapping>  innerClassesByObfFull;
+    private Map<String, ClassMapping>  innerClassesByDeobf;
+    private Map<String, FieldMapping>  fieldsByObf;
+    private Map<String, FieldMapping>  fieldsByDeobf;
+    private Map<String, MethodMapping> methodsByObf;
+    private Map<String, MethodMapping> methodsByDeobf;
+    private boolean                    isDirty;
+    private Mappings.EntryModifier     modifier;
 
     public ClassMapping(String obfFullName)
     {
@@ -46,85 +46,85 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public ClassMapping(String obfFullName, String deobfName, Mappings.EntryModifier modifier)
     {
-        m_obfFullName = obfFullName;
+        this.obfFullName = obfFullName;
         ClassEntry classEntry = new ClassEntry(obfFullName);
-        m_obfSimpleName = classEntry.isInnerClass() ? classEntry.getInnermostClassName() : classEntry.getSimpleName();
-        m_previousDeobfName = null;
-        m_deobfName = NameValidator.validateClassName(deobfName, false);
-        m_innerClassesByObfSimple = Maps.newHashMap();
-        m_innerClassesByObfFull = Maps.newHashMap();
-        m_innerClassesByDeobf = Maps.newHashMap();
-        m_fieldsByObf = Maps.newHashMap();
-        m_fieldsByDeobf = Maps.newHashMap();
-        m_methodsByObf = Maps.newHashMap();
-        m_methodsByDeobf = Maps.newHashMap();
+        obfSimpleName = classEntry.isInnerClass() ? classEntry.getInnermostClassName() : classEntry.getSimpleName();
+        previousDeobfName = null;
+        this.deobfName = NameValidator.validateClassName(deobfName, false);
+        innerClassesByObfSimple = Maps.newHashMap();
+        innerClassesByObfFull = Maps.newHashMap();
+        innerClassesByDeobf = Maps.newHashMap();
+        fieldsByObf = Maps.newHashMap();
+        fieldsByDeobf = Maps.newHashMap();
+        methodsByObf = Maps.newHashMap();
+        methodsByDeobf = Maps.newHashMap();
         isDirty = true;
         this.modifier = modifier;
     }
 
     public String getObfFullName() {
-        return m_obfFullName;
+        return obfFullName;
     }
 
     public String getObfSimpleName() {
-        return m_obfSimpleName;
+        return obfSimpleName;
     }
 
     public String getPreviousDeobfName() {
-        return m_previousDeobfName;
+        return previousDeobfName;
     }
 
     public String getDeobfName() {
-        return m_deobfName;
+        return deobfName;
     }
 
     public void setDeobfName(String val) {
-        m_previousDeobfName = m_deobfName;
-        m_deobfName = NameValidator.validateClassName(val, false);
+        previousDeobfName = deobfName;
+        deobfName = NameValidator.validateClassName(val, false);
         this.isDirty = true;
     }
 
     //// INNER CLASSES ////////
 
     public Iterable<ClassMapping> innerClasses() {
-        assert (m_innerClassesByObfSimple.size() >= m_innerClassesByDeobf.size());
-        return m_innerClassesByObfSimple.values();
+        assert (innerClassesByObfSimple.size() >= innerClassesByDeobf.size());
+        return innerClassesByObfSimple.values();
     }
 
     public void addInnerClassMapping(ClassMapping classMapping) throws MappingConflict {
         // FIXME: dirty hack, that can get into issues, but it's a temp fix!
-        if (this.m_innerClassesByObfFull.containsKey(classMapping.getObfSimpleName())) {
-            throw new MappingConflict("classes", classMapping.getObfSimpleName(), this.m_innerClassesByObfSimple.get(classMapping.getObfSimpleName()).getObfSimpleName());
+        if (this.innerClassesByObfFull.containsKey(classMapping.getObfSimpleName())) {
+            throw new MappingConflict("classes", classMapping.getObfSimpleName(), this.innerClassesByObfSimple.get(classMapping.getObfSimpleName()).getObfSimpleName());
         }
-        m_innerClassesByObfFull.put(classMapping.getObfFullName(), classMapping);
-        m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping);
+        innerClassesByObfFull.put(classMapping.getObfFullName(), classMapping);
+        innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping);
 
         if (classMapping.getDeobfName() != null) {
-            if (this.m_innerClassesByDeobf.containsKey(classMapping.getDeobfName())) {
-                throw new MappingConflict("classes", classMapping.getDeobfName(), this.m_innerClassesByDeobf.get(classMapping.getDeobfName()).getDeobfName());
+            if (this.innerClassesByDeobf.containsKey(classMapping.getDeobfName())) {
+                throw new MappingConflict("classes", classMapping.getDeobfName(), this.innerClassesByDeobf.get(classMapping.getDeobfName()).getDeobfName());
             }
-            m_innerClassesByDeobf.put(classMapping.getDeobfName(), classMapping);
+            innerClassesByDeobf.put(classMapping.getDeobfName(), classMapping);
         }
         this.isDirty = true;
     }
 
     public void removeInnerClassMapping(ClassMapping classMapping) {
-        m_innerClassesByObfFull.remove(classMapping.getObfFullName());
-        boolean obfWasRemoved = m_innerClassesByObfSimple.remove(classMapping.getObfSimpleName()) != null;
+        innerClassesByObfFull.remove(classMapping.getObfFullName());
+        boolean obfWasRemoved = innerClassesByObfSimple.remove(classMapping.getObfSimpleName()) != null;
         assert (obfWasRemoved);
         if (classMapping.getDeobfName() != null) {
-            boolean deobfWasRemoved = m_innerClassesByDeobf.remove(classMapping.getDeobfName()) != null;
+            boolean deobfWasRemoved = innerClassesByDeobf.remove(classMapping.getDeobfName()) != null;
             assert (deobfWasRemoved);
         }
         this.isDirty = true;
     }
 
     public ClassMapping getOrCreateInnerClass(ClassEntry obfInnerClass) {
-        ClassMapping classMapping = m_innerClassesByObfSimple.get(obfInnerClass.getInnermostClassName());
+        ClassMapping classMapping = innerClassesByObfSimple.get(obfInnerClass.getInnermostClassName());
         if (classMapping == null) {
             classMapping = new ClassMapping(obfInnerClass.getName());
-            m_innerClassesByObfFull.put(classMapping.getObfFullName(), classMapping);
-            boolean wasAdded = m_innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping) == null;
+            innerClassesByObfFull.put(classMapping.getObfFullName(), classMapping);
+            boolean wasAdded = innerClassesByObfSimple.put(classMapping.getObfSimpleName(), classMapping) == null;
             assert (wasAdded);
             this.isDirty = true;
         }
@@ -133,12 +133,12 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public ClassMapping getInnerClassByObfSimple(String obfSimpleName) {
         assert (isSimpleClassName(obfSimpleName));
-        return m_innerClassesByObfSimple.get(obfSimpleName);
+        return innerClassesByObfSimple.get(obfSimpleName);
     }
 
     public ClassMapping getInnerClassByDeobf(String deobfName) {
         assert (isSimpleClassName(deobfName));
-        return m_innerClassesByDeobf.get(deobfName);
+        return innerClassesByDeobf.get(deobfName);
     }
 
     public ClassMapping getInnerClassByDeobfThenObfSimple(String name) {
@@ -151,7 +151,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public String getDeobfInnerClassName(String obfSimpleName) {
         assert (isSimpleClassName(obfSimpleName));
-        ClassMapping classMapping = m_innerClassesByObfSimple.get(obfSimpleName);
+        ClassMapping classMapping = innerClassesByObfSimple.get(obfSimpleName);
         if (classMapping != null) {
             return classMapping.getDeobfName();
         }
@@ -161,80 +161,80 @@ public class ClassMapping implements Comparable<ClassMapping> {
     public void setInnerClassName(ClassEntry obfInnerClass, String deobfName) {
         ClassMapping classMapping = getOrCreateInnerClass(obfInnerClass);
         if (classMapping.getDeobfName() != null) {
-            boolean wasRemoved = m_innerClassesByDeobf.remove(classMapping.getDeobfName()) != null;
+            boolean wasRemoved = innerClassesByDeobf.remove(classMapping.getDeobfName()) != null;
             assert (wasRemoved);
         }
         classMapping.setDeobfName(deobfName);
         if (deobfName != null) {
             assert (isSimpleClassName(deobfName));
-            boolean wasAdded = m_innerClassesByDeobf.put(deobfName, classMapping) == null;
+            boolean wasAdded = innerClassesByDeobf.put(deobfName, classMapping) == null;
             assert (wasAdded);
         }
         this.isDirty = true;
     }
 
     public boolean hasInnerClassByObfSimple(String obfSimpleName) {
-        return m_innerClassesByObfSimple.containsKey(obfSimpleName);
+        return innerClassesByObfSimple.containsKey(obfSimpleName);
     }
 
     public boolean hasInnerClassByDeobf(String deobfName) {
-        return m_innerClassesByDeobf.containsKey(deobfName);
+        return innerClassesByDeobf.containsKey(deobfName);
     }
 
 
     //// FIELDS ////////
 
     public Iterable<FieldMapping> fields() {
-        assert (m_fieldsByObf.size() == m_fieldsByDeobf.size());
-        return m_fieldsByObf.values();
+        assert (fieldsByObf.size() == fieldsByDeobf.size());
+        return fieldsByObf.values();
     }
 
     public boolean containsObfField(String obfName, Type obfType) {
-        return m_fieldsByObf.containsKey(getFieldKey(obfName, obfType));
+        return fieldsByObf.containsKey(getFieldKey(obfName, obfType));
     }
 
     public boolean containsDeobfField(String deobfName, Type deobfType) {
-        return m_fieldsByDeobf.containsKey(getFieldKey(deobfName, deobfType));
+        return fieldsByDeobf.containsKey(getFieldKey(deobfName, deobfType));
     }
 
     public void addFieldMapping(FieldMapping fieldMapping) {
         String obfKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
-        if (m_fieldsByObf.containsKey(obfKey)) {
-            throw new Error("Already have mapping for " + m_obfFullName + "." + obfKey);
+        if (fieldsByObf.containsKey(obfKey)) {
+            throw new Error("Already have mapping for " + obfFullName + "." + obfKey);
         }
         if (fieldMapping.getDeobfName() != null) {
             String deobfKey = getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfType());
-            if (m_fieldsByDeobf.containsKey(deobfKey)) {
-                throw new Error("Already have mapping for " + m_deobfName + "." + deobfKey);
+            if (fieldsByDeobf.containsKey(deobfKey)) {
+                throw new Error("Already have mapping for " + deobfName + "." + deobfKey);
             }
-            boolean deobfWasAdded = m_fieldsByDeobf.put(deobfKey, fieldMapping) == null;
+            boolean deobfWasAdded = fieldsByDeobf.put(deobfKey, fieldMapping) == null;
             assert (deobfWasAdded);
         }
-        boolean obfWasAdded = m_fieldsByObf.put(obfKey, fieldMapping) == null;
+        boolean obfWasAdded = fieldsByObf.put(obfKey, fieldMapping) == null;
         assert (obfWasAdded);
         this.isDirty = true;
     }
 
     public void removeFieldMapping(FieldMapping fieldMapping) {
-        boolean obfWasRemoved = m_fieldsByObf.remove(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType())) != null;
+        boolean obfWasRemoved = fieldsByObf.remove(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType())) != null;
         assert (obfWasRemoved);
         if (fieldMapping.getDeobfName() != null) {
-            boolean deobfWasRemoved = m_fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfType())) != null;
+            boolean deobfWasRemoved = fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfType())) != null;
             assert (deobfWasRemoved);
         }
         this.isDirty = true;
     }
 
     public FieldMapping getFieldByObf(String obfName, Type obfType) {
-        return m_fieldsByObf.get(getFieldKey(obfName, obfType));
+        return fieldsByObf.get(getFieldKey(obfName, obfType));
     }
 
     public FieldMapping getFieldByDeobf(String deobfName, Type obfType) {
-        return m_fieldsByDeobf.get(getFieldKey(deobfName, obfType));
+        return fieldsByDeobf.get(getFieldKey(deobfName, obfType));
     }
 
     public String getObfFieldName(String deobfName, Type obfType) {
-        FieldMapping fieldMapping = m_fieldsByDeobf.get(getFieldKey(deobfName, obfType));
+        FieldMapping fieldMapping = fieldsByDeobf.get(getFieldKey(deobfName, obfType));
         if (fieldMapping != null) {
             return fieldMapping.getObfName();
         }
@@ -242,7 +242,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public String getDeobfFieldName(String obfName, Type obfType) {
-        FieldMapping fieldMapping = m_fieldsByObf.get(getFieldKey(obfName, obfType));
+        FieldMapping fieldMapping = fieldsByObf.get(getFieldKey(obfName, obfType));
         if (fieldMapping != null) {
             return fieldMapping.getDeobfName();
         }
@@ -261,18 +261,18 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public void setFieldName(String obfName, Type obfType, String deobfName) {
         assert (deobfName != null);
-        FieldMapping fieldMapping = m_fieldsByObf.get(getFieldKey(obfName, obfType));
+        FieldMapping fieldMapping = fieldsByObf.get(getFieldKey(obfName, obfType));
         if (fieldMapping == null) {
             fieldMapping = new FieldMapping(obfName, obfType, deobfName, Mappings.EntryModifier.UNCHANGED);
-            boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(obfName, obfType), fieldMapping) == null;
+            boolean obfWasAdded = fieldsByObf.put(getFieldKey(obfName, obfType), fieldMapping) == null;
             assert (obfWasAdded);
         } else {
-            boolean wasRemoved = m_fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), obfType)) != null;
+            boolean wasRemoved = fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), obfType)) != null;
             assert (wasRemoved);
         }
         fieldMapping.setDeobfName(deobfName);
         if (deobfName != null) {
-            boolean wasAdded = m_fieldsByDeobf.put(getFieldKey(deobfName, obfType), fieldMapping) == null;
+            boolean wasAdded = fieldsByDeobf.put(getFieldKey(deobfName, obfType), fieldMapping) == null;
             assert (wasAdded);
         }
         this.isDirty = true;
@@ -280,11 +280,11 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public void setFieldObfNameAndType(String oldObfName, Type obfType, String newObfName, Type newObfType) {
         assert(newObfName != null);
-        FieldMapping fieldMapping = m_fieldsByObf.remove(getFieldKey(oldObfName, obfType));
+        FieldMapping fieldMapping = fieldsByObf.remove(getFieldKey(oldObfName, obfType));
         assert(fieldMapping != null);
         fieldMapping.setObfName(newObfName);
         fieldMapping.setObfType(newObfType);
-        boolean obfWasAdded = m_fieldsByObf.put(getFieldKey(newObfName, newObfType), fieldMapping) == null;
+        boolean obfWasAdded = fieldsByObf.put(getFieldKey(newObfName, newObfType), fieldMapping) == null;
         assert(obfWasAdded);
         this.isDirty = true;
     }
@@ -292,53 +292,53 @@ public class ClassMapping implements Comparable<ClassMapping> {
     //// METHODS ////////
 
     public Iterable<MethodMapping> methods() {
-        assert (m_methodsByObf.size() >= m_methodsByDeobf.size());
-        return m_methodsByObf.values();
+        assert (methodsByObf.size() >= methodsByDeobf.size());
+        return methodsByObf.values();
     }
 
     public boolean containsObfMethod(String obfName, Signature obfSignature) {
-        return m_methodsByObf.containsKey(getMethodKey(obfName, obfSignature));
+        return methodsByObf.containsKey(getMethodKey(obfName, obfSignature));
     }
 
     public boolean containsDeobfMethod(String deobfName, Signature obfSignature) {
-        return m_methodsByDeobf.containsKey(getMethodKey(deobfName, obfSignature));
+        return methodsByDeobf.containsKey(getMethodKey(deobfName, obfSignature));
     }
 
     public void addMethodMapping(MethodMapping methodMapping) {
         String obfKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());
-        if (m_methodsByObf.containsKey(obfKey)) {
-            throw new Error("Already have mapping for " + m_obfFullName + "." + obfKey);
+        if (methodsByObf.containsKey(obfKey)) {
+            throw new Error("Already have mapping for " + obfFullName + "." + obfKey);
         }
-        boolean wasAdded = m_methodsByObf.put(obfKey, methodMapping) == null;
+        boolean wasAdded = methodsByObf.put(obfKey, methodMapping) == null;
         assert (wasAdded);
         if (methodMapping.getDeobfName() != null) {
             String deobfKey = getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature());
-            if (m_methodsByDeobf.containsKey(deobfKey)) {
-                throw new Error("Already have mapping for " + m_deobfName + "." + deobfKey);
+            if (methodsByDeobf.containsKey(deobfKey)) {
+                throw new Error("Already have mapping for " + deobfName + "." + deobfKey);
             }
-            boolean deobfWasAdded = m_methodsByDeobf.put(deobfKey, methodMapping) == null;
+            boolean deobfWasAdded = methodsByDeobf.put(deobfKey, methodMapping) == null;
             assert (deobfWasAdded);
         }
         this.isDirty = true;
-        assert (m_methodsByObf.size() >= m_methodsByDeobf.size());
+        assert (methodsByObf.size() >= methodsByDeobf.size());
     }
 
     public void removeMethodMapping(MethodMapping methodMapping) {
-        boolean obfWasRemoved = m_methodsByObf.remove(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature())) != null;
+        boolean obfWasRemoved = methodsByObf.remove(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature())) != null;
         assert (obfWasRemoved);
         if (methodMapping.getDeobfName() != null) {
-            boolean deobfWasRemoved = m_methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature())) != null;
+            boolean deobfWasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature())) != null;
             assert (deobfWasRemoved);
         }
         this.isDirty = true;
     }
 
     public MethodMapping getMethodByObf(String obfName, Signature obfSignature) {
-        return m_methodsByObf.get(getMethodKey(obfName, obfSignature));
+        return methodsByObf.get(getMethodKey(obfName, obfSignature));
     }
 
     public MethodMapping getMethodByDeobf(String deobfName, Signature obfSignature) {
-        return m_methodsByDeobf.get(getMethodKey(deobfName, obfSignature));
+        return methodsByDeobf.get(getMethodKey(deobfName, obfSignature));
     }
 
     private String getMethodKey(String name, Signature signature) {
@@ -352,16 +352,16 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public void setMethodName(String obfName, Signature obfSignature, String deobfName) {
-        MethodMapping methodMapping = m_methodsByObf.get(getMethodKey(obfName, obfSignature));
+        MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfName, obfSignature));
         if (methodMapping == null) {
             methodMapping = createMethodMapping(obfName, obfSignature);
         } else if (methodMapping.getDeobfName() != null) {
-            boolean wasRemoved = m_methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature())) != null;
+            boolean wasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature())) != null;
             assert (wasRemoved);
         }
         methodMapping.setDeobfName(deobfName);
         if (deobfName != null) {
-            boolean wasAdded = m_methodsByDeobf.put(getMethodKey(deobfName, obfSignature), methodMapping) == null;
+            boolean wasAdded = methodsByDeobf.put(getMethodKey(deobfName, obfSignature), methodMapping) == null;
             assert (wasAdded);
         }
         this.isDirty = true;
@@ -369,11 +369,11 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public void setMethodObfNameAndSignature(String oldObfName, Signature obfSignature, String newObfName, Signature newObfSignature) {
         assert(newObfName != null);
-        MethodMapping methodMapping = m_methodsByObf.remove(getMethodKey(oldObfName, obfSignature));
+        MethodMapping methodMapping = methodsByObf.remove(getMethodKey(oldObfName, obfSignature));
         assert(methodMapping != null);
         methodMapping.setObfName(newObfName);
         methodMapping.setObfSignature(newObfSignature);
-        boolean obfWasAdded = m_methodsByObf.put(getMethodKey(newObfName, newObfSignature), methodMapping) == null;
+        boolean obfWasAdded = methodsByObf.put(getMethodKey(newObfName, newObfSignature), methodMapping) == null;
         assert(obfWasAdded);
         this.isDirty = true;
     }
@@ -382,7 +382,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
     public void setArgumentName(String obfMethodName, Signature obfMethodSignature, int argumentIndex, String argumentName) {
         assert (argumentName != null);
-        MethodMapping methodMapping = m_methodsByObf.get(getMethodKey(obfMethodName, obfMethodSignature));
+        MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfMethodName, obfMethodSignature));
         if (methodMapping == null) {
             methodMapping = createMethodMapping(obfMethodName, obfMethodSignature);
         }
@@ -391,13 +391,13 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public void removeArgumentName(String obfMethodName, Signature obfMethodSignature, int argumentIndex) {
-        m_methodsByObf.get(getMethodKey(obfMethodName, obfMethodSignature)).removeArgumentName(argumentIndex);
+        methodsByObf.get(getMethodKey(obfMethodName, obfMethodSignature)).removeArgumentName(argumentIndex);
         this.isDirty = true;
     }
 
     private MethodMapping createMethodMapping(String obfName, Signature obfSignature) {
         MethodMapping methodMapping = new MethodMapping(obfName, obfSignature);
-        boolean wasAdded = m_methodsByObf.put(getMethodKey(obfName, obfSignature), methodMapping) == null;
+        boolean wasAdded = methodsByObf.put(getMethodKey(obfName, obfSignature), methodMapping) == null;
         assert (wasAdded);
         this.isDirty = true;
         return methodMapping;
@@ -406,9 +406,9 @@ public class ClassMapping implements Comparable<ClassMapping> {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append(m_obfFullName);
+        buf.append(obfFullName);
         buf.append(" <-> ");
-        buf.append(m_deobfName);
+        buf.append(deobfName);
         buf.append("\n");
         buf.append("Fields:\n");
         for (FieldMapping fieldMapping : fields()) {
@@ -419,12 +419,12 @@ public class ClassMapping implements Comparable<ClassMapping> {
             buf.append("\n");
         }
         buf.append("Methods:\n");
-        for (MethodMapping methodMapping : m_methodsByObf.values()) {
+        for (MethodMapping methodMapping : methodsByObf.values()) {
             buf.append(methodMapping.toString());
             buf.append("\n");
         }
         buf.append("Inner Classes:\n");
-        for (ClassMapping classMapping : m_innerClassesByObfSimple.values()) {
+        for (ClassMapping classMapping : innerClassesByObfSimple.values()) {
             buf.append("\t");
             buf.append(classMapping.getObfSimpleName());
             buf.append(" <-> ");
@@ -437,49 +437,51 @@ public class ClassMapping implements Comparable<ClassMapping> {
     @Override
     public int compareTo(ClassMapping other) {
         // sort by a, b, c, ... aa, ab, etc
-        if (m_obfFullName.length() != other.m_obfFullName.length()) {
-            return m_obfFullName.length() - other.m_obfFullName.length();
+        if (obfFullName.length() != other.obfFullName.length()) {
+            return obfFullName.length() - other.obfFullName.length();
         }
-        return m_obfFullName.compareTo(other.m_obfFullName);
+        return obfFullName.compareTo(other.obfFullName);
     }
 
     public boolean renameObfClass(String oldObfClassName, String newObfClassName) {
 
         // rename inner classes
-        for (ClassMapping innerClassMapping : new ArrayList<>(m_innerClassesByObfSimple.values())) {
+        for (ClassMapping innerClassMapping : new ArrayList<>(innerClassesByObfSimple.values())) {
             if (innerClassMapping.renameObfClass(oldObfClassName, newObfClassName)) {
-                boolean wasRemoved = m_innerClassesByObfSimple.remove(oldObfClassName) != null;
+                boolean wasRemoved = innerClassesByObfSimple.remove(oldObfClassName) != null;
                 assert (wasRemoved);
-                boolean wasAdded = m_innerClassesByObfSimple.put(newObfClassName, innerClassMapping) == null;
+                boolean wasAdded = innerClassesByObfSimple.put(newObfClassName, innerClassMapping) == null;
                 assert (wasAdded);
             }
         }
 
         // rename field types
-        for (FieldMapping fieldMapping : new ArrayList<>(m_fieldsByObf.values())) {
+        for (FieldMapping fieldMapping : new ArrayList<>(fieldsByObf.values())) {
             String oldFieldKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
             if (fieldMapping.renameObfClass(oldObfClassName, newObfClassName)) {
-                boolean wasRemoved = m_fieldsByObf.remove(oldFieldKey) != null;
+                boolean wasRemoved = fieldsByObf.remove(oldFieldKey) != null;
                 assert (wasRemoved);
-                boolean wasAdded = m_fieldsByObf.put(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType()), fieldMapping) == null;
+                boolean wasAdded = fieldsByObf
+                        .put(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType()), fieldMapping) == null;
                 assert (wasAdded);
             }
         }
 
         // rename method signatures
-        for (MethodMapping methodMapping : new ArrayList<>(m_methodsByObf.values())) {
+        for (MethodMapping methodMapping : new ArrayList<>(methodsByObf.values())) {
             String oldMethodKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());
             if (methodMapping.renameObfClass(oldObfClassName, newObfClassName)) {
-                boolean wasRemoved = m_methodsByObf.remove(oldMethodKey) != null;
+                boolean wasRemoved = methodsByObf.remove(oldMethodKey) != null;
                 assert (wasRemoved);
-                boolean wasAdded = m_methodsByObf.put(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature()), methodMapping) == null;
+                boolean wasAdded = methodsByObf
+                        .put(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature()), methodMapping) == null;
                 assert (wasAdded);
             }
         }
 
-        if (m_obfFullName.equals(oldObfClassName)) {
+        if (obfFullName.equals(oldObfClassName)) {
             // rename this class
-            m_obfFullName = newObfClassName;
+            obfFullName = newObfClassName;
             return true;
         }
         this.isDirty = true;
@@ -487,7 +489,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {
-        MethodMapping methodMapping = m_methodsByObf.get(getMethodKey(obfBehaviorEntry.getName(), obfBehaviorEntry.getSignature()));
+        MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfBehaviorEntry.getName(), obfBehaviorEntry.getSignature()));
         return methodMapping != null && methodMapping.containsArgument(name);
     }
 
@@ -496,7 +498,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public ClassEntry getObfEntry() {
-        return new ClassEntry(m_obfFullName);
+        return new ClassEntry(obfFullName);
     }
 
     public boolean isDirty()
@@ -522,11 +524,8 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public void setFieldModifier(String obfName, Type obfType, Mappings.EntryModifier modifier) {
-        FieldMapping fieldMapping = m_fieldsByObf.get(getFieldKey(obfName, obfType));
-        if (fieldMapping == null) {
-            fieldMapping = new FieldMapping(obfName, obfType, null, Mappings.EntryModifier.UNCHANGED);
-            m_fieldsByObf.put(getFieldKey(obfName, obfType), fieldMapping);
-        }
+        FieldMapping fieldMapping = fieldsByObf.computeIfAbsent(getFieldKey(obfName, obfType),
+                k -> new FieldMapping(obfName, obfType, null, Mappings.EntryModifier.UNCHANGED));
 
         if (fieldMapping.getModifier() != modifier)
         {
@@ -536,11 +535,8 @@ public class ClassMapping implements Comparable<ClassMapping> {
     }
 
     public void setMethodModifier(String obfName, Signature sig, Mappings.EntryModifier modifier) {
-        MethodMapping methodMapping = m_methodsByObf.get(getMethodKey(obfName, sig));
-        if (methodMapping == null) {
-            methodMapping = new MethodMapping(obfName, sig, null, Mappings.EntryModifier.UNCHANGED);
-            m_methodsByObf.put(getMethodKey(obfName, sig), methodMapping);
-        }
+        MethodMapping methodMapping = methodsByObf.computeIfAbsent(getMethodKey(obfName, sig),
+                k -> new MethodMapping(obfName, sig, null, Mappings.EntryModifier.UNCHANGED));
 
         if (methodMapping.getModifier() != modifier)
         {

@@ -23,15 +23,15 @@ import cuchaz.enigma.utils.Utils;
 
 public class CrashDialog {
 
-    private static CrashDialog m_instance = null;
+    private static CrashDialog instance = null;
 
-    private JFrame m_frame;
-    private JTextArea m_text;
+    private JFrame    frame;
+    private JTextArea text;
 
     private CrashDialog(JFrame parent) {
         // init frame
-        m_frame = new JFrame(Constants.NAME + " - Crash Report");
-        final Container pane = m_frame.getContentPane();
+        frame = new JFrame(Constants.NAME + " - Crash Report");
+        final Container pane = frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
         JLabel label = new JLabel(Constants.NAME + " has crashed! =(");
@@ -39,9 +39,9 @@ public class CrashDialog {
         pane.add(label, BorderLayout.NORTH);
 
         // report panel
-        m_text = new JTextArea();
-        m_text.setTabSize(2);
-        pane.add(new JScrollPane(m_text), BorderLayout.CENTER);
+        text = new JTextArea();
+        text.setTabSize(2);
+        pane.add(new JScrollPane(text), BorderLayout.CENTER);
 
         // buttons panel
         JPanel buttonsPanel = new JPanel();
@@ -52,7 +52,7 @@ public class CrashDialog {
         JButton ignoreButton = new JButton("Ignore");
         ignoreButton.addActionListener(event -> {
             // close (hide) the dialog
-            m_frame.setVisible(false);
+            frame.setVisible(false);
         });
         buttonsPanel.add(ignoreButton);
         JButton exitButton = new JButton("Exit");
@@ -64,13 +64,13 @@ public class CrashDialog {
         pane.add(buttonsPanel, BorderLayout.SOUTH);
 
         // show the frame
-        m_frame.setSize(600, 400);
-        m_frame.setLocationRelativeTo(parent);
-        m_frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        frame.setSize(600, 400);
+        frame.setLocationRelativeTo(parent);
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
     }
 
     public static void init(JFrame parent) {
-        m_instance = new CrashDialog(parent);
+        instance = new CrashDialog(parent);
     }
 
     public static void show(Throwable ex) {
@@ -80,8 +80,8 @@ public class CrashDialog {
         String report = buf.toString();
 
         // show it!
-        m_instance.m_text.setText(report);
-        m_instance.m_frame.doLayout();
-        m_instance.m_frame.setVisible(true);
+        instance.text.setText(report);
+        instance.frame.doLayout();
+        instance.frame.setVisible(true);
     }
 }

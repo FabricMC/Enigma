@@ -22,21 +22,21 @@ import cuchaz.enigma.mapping.Translator;
 
 public class TestTranslator {
 
-	private static Deobfuscator m_deobfuscator;
-	private static Mappings m_mappings;
-	private static Translator m_deobfTranslator;
-	private static Translator m_obfTranslator;
+	private static Deobfuscator deobfuscator;
+	private static Mappings     mappings;
+	private static Translator   deobfTranslator;
+	private static Translator   obfTranslator;
 
 	@BeforeClass
 	public static void beforeClass()
 	throws Exception {
 		//TODO FIx
-		//m_deobfuscator = new Deobfuscator(new JarFile("build/test-obf/translation.jar"));
+		//deobfuscator = new Deobfuscator(new JarFile("build/test-obf/translation.jar"));
 		//try (InputStream in = TestTranslator.class.getResourceAsStream("/cuchaz/enigma/resources/translation.mappings")) {
-		//	m_mappings = new MappingsJsonReader().read(new InputStreamReader(in));
-		//	m_deobfuscator.setMappings(m_mappings);
-		//	m_deobfTranslator = m_deobfuscator.getTranslator(TranslationDirection.Deobfuscating);
-		//	m_obfTranslator = m_deobfuscator.getTranslator(TranslationDirection.Obfuscating);
+		//	mappings = new MappingsJsonReader().read(new InputStreamReader(in));
+		//	deobfuscator.setMappings(mappings);
+		//	deobfTranslator = deobfuscator.getTranslator(TranslationDirection.Deobfuscating);
+		//	obfTranslator = deobfuscator.getTranslator(TranslationDirection.Obfuscating);
 		//}
 	}
 
@@ -147,15 +147,15 @@ public class TestTranslator {
 	}
 
 	private void assertMapping(Entry obf, Entry deobf) {
-		//assertThat(m_deobfTranslator.translateEntry(obf), is(deobf));
-		//assertThat(m_obfTranslator.translateEntry(deobf), is(obf));
+		//assertThat(deobfTranslator.translateEntry(obf), is(deobf));
+		//assertThat(obfTranslator.translateEntry(deobf), is(obf));
 
-		//String deobfName = m_deobfTranslator.translate(obf);
+		//String deobfName = deobfTranslator.translate(obf);
 		//if (deobfName != null) {
 		//	assertThat(deobfName, is(deobf.getName()));
 		//}
 
-		//String obfName = m_obfTranslator.translate(deobf);
+		//String obfName = obfTranslator.translate(deobf);
 		//if (obfName != null) {
 		//	assertThat(obfName, is(obf.getName()));
 		//}

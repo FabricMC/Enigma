@@ -25,52 +25,52 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class ClassMatching {
 
-    private ClassForest m_sourceClasses;
-    private ClassForest m_destClasses;
-    private BiMap<ClassEntry, ClassEntry> m_knownMatches;
+    private ClassForest                   sourceClasses;
+    private ClassForest                   destClasses;
+    private BiMap<ClassEntry, ClassEntry> knownMatches;
 
     public ClassMatching(ClassIdentifier sourceIdentifier, ClassIdentifier destIdentifier) {
-        m_sourceClasses = new ClassForest(sourceIdentifier);
-        m_destClasses = new ClassForest(destIdentifier);
-        m_knownMatches = HashBiMap.create();
+        sourceClasses = new ClassForest(sourceIdentifier);
+        destClasses = new ClassForest(destIdentifier);
+        knownMatches = HashBiMap.create();
     }
 
     public void addKnownMatches(BiMap<ClassEntry, ClassEntry> knownMatches) {
-        m_knownMatches.putAll(knownMatches);
+        this.knownMatches.putAll(knownMatches);
     }
 
     public void match(Iterable<ClassEntry> sourceClasses, Iterable<ClassEntry> destClasses) {
         for (ClassEntry sourceClass : sourceClasses) {
-            if (!m_knownMatches.containsKey(sourceClass)) {
-                m_sourceClasses.add(sourceClass);
+            if (!knownMatches.containsKey(sourceClass)) {
+                this.sourceClasses.add(sourceClass);
             }
         }
         for (ClassEntry destClass : destClasses) {
-            if (!m_knownMatches.containsValue(destClass)) {
-                m_destClasses.add(destClass);
+            if (!knownMatches.containsValue(destClass)) {
+                this.destClasses.add(destClass);
             }
         }
     }
 
     public Collection<ClassMatch> matches() {
         List<ClassMatch> matches = Lists.newArrayList();
-        for (Entry<ClassEntry, ClassEntry> entry : m_knownMatches.entrySet()) {
+        for (Entry<ClassEntry, ClassEntry> entry : knownMatches.entrySet()) {
             matches.add(new ClassMatch(
                     entry.getKey(),
                     entry.getValue()
             ));
         }
-        for (ClassIdentity identity : m_sourceClasses.identities()) {
+        for (ClassIdentity identity : sourceClasses.identities()) {
             matches.add(new ClassMatch(
-                    m_sourceClasses.getClasses(identity),
-                    m_destClasses.getClasses(identity)
+                    sourceClasses.getClasses(identity),
+                    destClasses.getClasses(identity)
             ));
         }
-        for (ClassIdentity identity : m_destClasses.identities()) {
-            if (!m_sourceClasses.containsIdentity(identity)) {
+        for (ClassIdentity identity : destClasses.identities()) {
+            if (!sourceClasses.containsIdentity(identity)) {
                 matches.add(new ClassMatch(
                         new ArrayList<>(),
-                        m_destClasses.getClasses(identity)
+                        destClasses.getClasses(identity)
                 ));
             }
         }

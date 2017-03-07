@@ -38,6 +38,12 @@ public class Token implements Comparable<Token> {
         return other instanceof Token && equals((Token) other);
     }
 
+    @Override
+    public int hashCode()
+    {
+        return Integer.hashCode(start) + Integer.hashCode(end) + (text != null ? text.hashCode() : 0);
+    }
+
     public boolean equals(Token other) {
         return start == other.start && end == other.end;
     }

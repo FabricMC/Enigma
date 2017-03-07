@@ -25,20 +25,20 @@ import cuchaz.enigma.analysis.JarIndex;
 
 public class TestDeobfed {
 
-	private static JarFile m_jar;
-	private static JarIndex m_index;
+	private static JarFile  jar;
+	private static JarIndex index;
 	
 	@BeforeClass
 	public static void beforeClass()
 	throws Exception {
-		m_jar = new JarFile("build/test-deobf/translation.jar");
-		m_index = new JarIndex();
-		m_index.indexJar(m_jar, true);
+		jar = new JarFile("build/test-deobf/translation.jar");
+		index = new JarIndex();
+		index.indexJar(jar, true);
 	}
 	
 	@Test
 	public void obfEntries() {
-		assertThat(m_index.getObfClassEntries(), containsInAnyOrder(
+		assertThat(index.getObfClassEntries(), containsInAnyOrder(
 			newClass("cuchaz/enigma/inputs/Keep"),
 			newClass("a"),
 			newClass("b"),
@@ -68,7 +68,7 @@ public class TestDeobfed {
 	@Test
 	public void decompile()
 	throws Exception {
-		Deobfuscator deobfuscator = new Deobfuscator(m_jar);
+		Deobfuscator deobfuscator = new Deobfuscator(jar);
 		deobfuscator.getSourceTree("a");
 		deobfuscator.getSourceTree("b");
 		deobfuscator.getSourceTree("c");

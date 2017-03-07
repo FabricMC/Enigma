@@ -178,14 +178,12 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<B
 
     public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
         // rename obf classes in the signature
-        Signature newSignature = new Signature(this.obfSignature, new ClassNameReplacer() {
-            @Override
-            public String replace(String className) {
-                if (className.equals(oldObfClassName)) {
-                    return newObfClassName;
-                }
-                return null;
+        Signature newSignature = new Signature(this.obfSignature, className ->
+        {
+            if (className.equals(oldObfClassName)) {
+                return newObfClassName;
             }
+            return null;
         });
 
         if (!newSignature.equals(this.obfSignature)) {

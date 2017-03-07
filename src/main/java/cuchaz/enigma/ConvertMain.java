@@ -126,14 +126,12 @@ public class ConvertMain {
         Deobfuscators deobfuscators = new Deobfuscators(sourceJar, destJar);
         deobfuscators.source.setMappings(mappings);
         System.out.println("Starting GUI...");
-        new ClassMatchingGui(classMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new ClassMatchingGui.SaveListener() {
-            @Override
-            public void save(ClassMatches matches) {
-                try {
-                    MatchesWriter.writeClasses(matches, classMatchesFile);
-                } catch (IOException ex) {
-                    throw new Error(ex);
-                }
+        new ClassMatchingGui(classMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(matches ->
+        {
+            try {
+                MatchesWriter.writeClasses(matches, classMatchesFile);
+            } catch (IOException ex) {
+                throw new Error(ex);
             }
         });
     }
@@ -190,16 +188,15 @@ public class ConvertMain {
         checker.dropBrokenMappings(destMappings);
         deobfuscators.dest.setMappings(destMappings);
 
-        new MemberMatchingGui<>(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<FieldEntry>() {
-            @Override
-            public void save(MemberMatches<FieldEntry> matches) {
-                try {
-                    MatchesWriter.writeMembers(matches, fieldMatchesFile);
-                } catch (IOException ex) {
-                    throw new Error(ex);
-                }
-            }
-        });
+        new MemberMatchingGui<>(classMatches, fieldMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(
+                matches ->
+                {
+                    try {
+                        MatchesWriter.writeMembers(matches, fieldMatchesFile);
+                    } catch (IOException ex) {
+                        throw new Error(ex);
+                    }
+                });
     }
 
     @SuppressWarnings("unused")
@@ -267,16 +264,15 @@ public class ConvertMain {
         checker.dropBrokenMappings(destMappings);
         deobfuscators.dest.setMappings(destMappings);
 
-        new MemberMatchingGui<>(classMatches, methodMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(new MemberMatchingGui.SaveListener<BehaviorEntry>() {
-            @Override
-            public void save(MemberMatches<BehaviorEntry> matches) {
-                try {
-                    MatchesWriter.writeMembers(matches, methodMatchesFile);
-                } catch (IOException ex) {
-                    throw new Error(ex);
-                }
-            }
-        });
+        new MemberMatchingGui<>(classMatches, methodMatches, deobfuscators.source, deobfuscators.dest).setSaveListener(
+                matches ->
+                {
+                    try {
+                        MatchesWriter.writeMembers(matches, methodMatchesFile);
+                    } catch (IOException ex) {
+                        throw new Error(ex);
+                    }
+                });
     }
 
     private static void convertMappings(File outMappingsFile, JarFile sourceJar, JarFile destJar, Mappings mappings, File classMatchesFile, File fieldMatchesFile, File methodMatchesFile)
@@ -338,11 +334,11 @@ public class ConvertMain {
 
     private static class IndexerThread extends Thread {
 
-        private JarFile m_jarFile;
+        private JarFile     jarFile;
         public Deobfuscator deobfuscator;
 
         public IndexerThread(JarFile jarFile) {
-            m_jarFile = jarFile;
+            this.jarFile = jarFile;
             deobfuscator = null;
         }
 
@@ -356,7 +352,7 @@ public class ConvertMain {
 
         @Override
         public void run() {
-            deobfuscator = new Deobfuscator(m_jarFile);
+            deobfuscator = new Deobfuscator(jarFile);
         }
     }
 }

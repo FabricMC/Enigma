@@ -126,12 +126,8 @@ public class Deobfuscator {
     }
 
     public Translator getTranslator(TranslationDirection direction) {
-        Translator translator = this.translatorCache.get(direction);
-        if (translator == null) {
-            translator = this.mappings.getTranslator(direction, this.jarIndex.getTranslationIndex());
-            this.translatorCache.put(direction, translator);
-        }
-        return translator;
+        return this.translatorCache.computeIfAbsent(direction,
+                k -> this.mappings.getTranslator(direction, this.jarIndex.getTranslationIndex()));
     }
 
     public void getSeparatedClasses(List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses) {

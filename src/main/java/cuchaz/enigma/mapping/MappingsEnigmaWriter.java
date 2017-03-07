@@ -131,7 +131,7 @@ public class MappingsEnigmaWriter {
 		}
 	}
 	
-	private void write(PrintWriter out, FieldMapping fieldMapping, int depth) throws IOException {
+	private void write(PrintWriter out, FieldMapping fieldMapping, int depth) {
 		if (fieldMapping.getDeobfName() == null)
 			out.format("%sFIELD %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getObfType().toString(), fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
 		else
@@ -150,12 +150,12 @@ public class MappingsEnigmaWriter {
 		}
 	}
 	
-	private void write(PrintWriter out, ArgumentMapping argumentMapping, int depth) throws IOException {
+	private void write(PrintWriter out, ArgumentMapping argumentMapping, int depth) {
 		out.format("%sARG %d %s\n", getIndent(depth), argumentMapping.getIndex(), argumentMapping.getName());
 	}
 	
 	private <T extends Comparable<T>> List<T> sorted(Iterable<T> classes) {
-		List<T> out = new ArrayList<T>();
+		List<T> out = new ArrayList<>();
 		for (T t : classes) {
 			out.add(t);
 		}

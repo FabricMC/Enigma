@@ -48,6 +48,11 @@ public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
         return other instanceof ClassSelectorPackageNode && equals((ClassSelectorPackageNode) other);
     }
 
+    @Override public int hashCode()
+    {
+        return packageName.hashCode();
+    }
+
     public boolean equals(ClassSelectorPackageNode other) {
         return other != null && this.packageName.equals(other.packageName);
     }

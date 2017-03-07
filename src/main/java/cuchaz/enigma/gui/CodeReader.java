@@ -19,8 +19,6 @@ import java.awt.event.ActionListener;
 import javax.swing.JEditorPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter.HighlightPainter;
 
@@ -38,15 +36,15 @@ public class CodeReader extends JEditorPane {
 
     private static final long serialVersionUID = 3673180950485748810L;
 
-    private static final Object m_lock = new Object();
+    private static final Object lock = new Object();
 
     public interface SelectionListener {
         void onSelect(EntryReference<Entry, Entry> reference);
     }
 
-    private SelectionHighlightPainter m_selectionHighlightPainter;
-    private SourceIndex m_sourceIndex;
-    private SelectionListener m_selectionListener;
+    private SelectionHighlightPainter selectionHighlightPainter;
+    private SourceIndex               sourceIndex;
+    private SelectionListener         selectionListener;
 
     public CodeReader() {
 
@@ -58,38 +56,34 @@ public class CodeReader extends JEditorPane {
         kit.toggleComponent(this, "de.sciss.syntaxpane.components.TokenMarker");
 
         // hook events
-        addCaretListener(new CaretListener() {
-            @Override
-            public void caretUpdate(CaretEvent event) {
-                if (m_selectionListener != null && m_sourceIndex != null) {
-                    Token token = m_sourceIndex.getReferenceToken(event.getDot());
-                    if (token != null) {
-                        m_selectionListener.onSelect(m_sourceIndex.getDeobfReference(token));
-                    } else {
-                        m_selectionListener.onSelect(null);
-                    }
+        addCaretListener(event ->
+        {
+            if (selectionListener != null && sourceIndex != null) {
+                Token token = sourceIndex.getReferenceToken(event.getDot());
+                if (token != null) {
+                    selectionListener.onSelect(sourceIndex.getDeobfReference(token));
+                } else {
+                    selectionListener.onSelect(null);
                 }
             }
         });
 
-        m_selectionHighlightPainter = new SelectionHighlightPainter();
-        m_sourceIndex = null;
-        m_selectionListener = null;
+        selectionHighlightPainter = new SelectionHighlightPainter();
     }
 
     public void setSelectionListener(SelectionListener val) {
-        m_selectionListener = val;
+        selectionListener = val;
     }
 
     public void setCode(String code) {
         // sadly, the java lexer is not thread safe, so we have to serialize all these calls
-        synchronized (m_lock) {
+        synchronized (lock) {
             setText(code);
         }
     }
 
     public SourceIndex getSourceIndex() {
-        return m_sourceIndex;
+        return sourceIndex;
     }
 
     public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator) {
@@ -110,33 +104,31 @@ public class CodeReader extends JEditorPane {
         setCode("(decompiling...)");
 
         // run decompilation in a separate thread to keep ui responsive
-        new Thread() {
-            @Override
-            public void run() {
+        new Thread(() ->
+        {
 
-                // decompile it
-                CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClassName());
-                String source = deobfuscator.getSource(sourceTree);
-                setCode(source);
-                m_sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);
+            // decompile it
+            CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClassName());
+            String source = deobfuscator.getSource(sourceTree);
+            setCode(source);
+            sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);
 
-                if (callback != null) {
-                    callback.run();
-                }
+            if (callback != null) {
+                callback.run();
             }
-        }.start();
+        }).start();
     }
 
     public void navigateToClassDeclaration(ClassEntry classEntry) {
 
         // navigate to the class declaration
-        Token token = m_sourceIndex.getDeclarationToken(classEntry);
+        Token token = sourceIndex.getDeclarationToken(classEntry);
         if (token == null) {
             // couldn't find the class declaration token, might be an anonymous class
             // look for any declaration in that class instead
-            for (Entry entry : m_sourceIndex.declarations()) {
+            for (Entry entry : sourceIndex.declarations()) {
                 if (entry.getClassEntry().equals(classEntry)) {
-                    token = m_sourceIndex.getDeclarationToken(entry);
+                    token = sourceIndex.getDeclarationToken(entry);
                     break;
                 }
             }
@@ -151,7 +143,7 @@ public class CodeReader extends JEditorPane {
     }
 
     public void navigateToToken(final Token token) {
-        navigateToToken(this, token, m_selectionHighlightPainter);
+        navigateToToken(this, token, selectionHighlightPainter);
     }
 
     // HACKHACK: someday we can update the main GUI to use this code reader
@@ -167,34 +159,29 @@ public class CodeReader extends JEditorPane {
             Rectangle end = editor.modelToView(token.end);
             final Rectangle show = start.union(end);
             show.grow(start.width * 10, start.height * 6);
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    editor.scrollRectToVisible(show);
-                }
-            });
+            SwingUtilities.invokeLater(() -> editor.scrollRectToVisible(show));
         } catch (BadLocationException ex) {
             throw new Error(ex);
         }
 
         // highlight the token momentarily
         final Timer timer = new Timer(200, new ActionListener() {
-            private int m_counter = 0;
-            private Object m_highlight = null;
+            private int counter = 0;
+            private Object highlight = null;
 
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (m_counter % 2 == 0) {
+                if (counter % 2 == 0) {
                     try {
-                        m_highlight = editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
+                        highlight = editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
                     } catch (BadLocationException ex) {
                         // don't care
                     }
-                } else if (m_highlight != null) {
-                    editor.getHighlighter().removeHighlight(m_highlight);
+                } else if (highlight != null) {
+                    editor.getHighlighter().removeHighlight(highlight);
                 }
 
-                if (m_counter++ > 6) {
+                if (counter++ > 6) {
                     Timer timer = (Timer) event.getSource();
                     timer.stop();
                 }

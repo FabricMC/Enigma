@@ -29,7 +29,7 @@ import java.util.*;
 
 public class ClassSelector extends JTree {
 
-    public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = (a, b) -> a.getName().compareTo(b.getName());
+    public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = Comparator.comparing(ClassEntry::getName);
     private DefaultMutableTreeNode rootNodes;
 
     public interface ClassSelectionListener {
@@ -177,25 +177,32 @@ public class ClassSelector extends JTree {
 
         // sort the packages
         List<String> sortedPackageNames = Lists.newArrayList(packages.keySet());
-        Collections.sort(sortedPackageNames, (a, b) -> {
+        sortedPackageNames.sort((a, b) ->
+        {
             // I can never keep this rule straight when writing these damn things...
             // a < b => -1, a == b => 0, a > b => +1
 
-            if(b == null || a == null){
+            if (b == null || a == null)
+            {
                 return 0;
             }
 
             String[] aparts = a.split("/");
             String[] bparts = b.split("/");
-            for (int i = 0; true; i++) {
-                if (i >= aparts.length) {
+            for (int i = 0; true; i++)
+            {
+                if (i >= aparts.length)
+                {
                     return -1;
-                } else if (i >= bparts.length) {
+                }
+                else if (i >= bparts.length)
+                {
                     return 1;
                 }
 
                 int result = aparts[i].compareTo(bparts[i]);
-                if (result != 0) {
+                if (result != 0)
+                {
                     return result;
                 }
             }
@@ -219,7 +226,7 @@ public class ClassSelector extends JTree {
         for (String packageName : packagedClassEntries.keySet()) {
             // sort the class entries
             List<ClassEntry> classEntriesInPackage = Lists.newArrayList(packagedClassEntries.get(packageName));
-            Collections.sort(classEntriesInPackage, this.comparator);
+            classEntriesInPackage.sort(this.comparator);
 
             // create the nodes in order
             for (ClassEntry classEntry : classEntriesInPackage) {
@@ -274,7 +281,7 @@ public class ClassSelector extends JTree {
 
     public String getExpansionState(JTree tree, int row) {
         TreePath rowPath = tree.getPathForRow(row);
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         int rowCount = tree.getRowCount();
         for (int i = row; i < rowCount; i++) {
             TreePath path = tree.getPathForRow(i);
@@ -500,7 +507,7 @@ public class ClassSelector extends JTree {
     {
         List<ClassSelectorClassNode> classNodes = classNodes(newPackageNode);
         classNodes.add(classNode);
-        Collections.sort(classNodes, (a, b) -> a.toString().compareTo(b.toString()));
+        classNodes.sort(Comparator.comparing(ClassSelectorClassNode::toString));
         for (int i = 0; i < classNodes.size(); i++)
             if (classNodes.get(i) == classNode)
                 return i;
@@ -514,7 +521,7 @@ public class ClassSelector extends JTree {
         if (!packageNodes.contains(newPackageNode))
         {
             packageNodes.add(newPackageNode);
-            Collections.sort(packageNodes, (a, b) -> a.toString().compareTo(b.toString()));
+            packageNodes.sort(Comparator.comparing(ClassSelectorPackageNode::toString));
         }
 
         for (int i = 0; i < packageNodes.size(); i++)

@@ -11,7 +11,6 @@
 package cuchaz.enigma.convert;
 
 import com.google.common.collect.*;
-import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.TranslatingTypeLoader;
 import cuchaz.enigma.analysis.JarIndex;
@@ -24,7 +23,6 @@ import javassist.NotFoundException;
 import javassist.bytecode.BadBytecode;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.CodeIterator;
-import javassist.bytecode.MethodInfo;
 
 import java.util.*;
 import java.util.jar.JarFile;
@@ -174,15 +172,13 @@ public class MappingsConverter {
 
     private static ClassMapping migrateClassMapping(ClassEntry newObfClass, ClassMapping oldClassMapping, final ClassMatches matches, boolean useSimpleName) {
 
-        ClassNameReplacer replacer = new ClassNameReplacer() {
-            @Override
-            public String replace(String className) {
-                ClassEntry newClassEntry = matches.getUniqueMatches().get(new ClassEntry(className));
-                if (newClassEntry != null) {
-                    return newClassEntry.getName();
-                }
-                return null;
+        ClassNameReplacer replacer = className ->
+        {
+            ClassEntry newClassEntry = matches.getUniqueMatches().get(new ClassEntry(className));
+            if (newClassEntry != null) {
+                return newClassEntry.getName();
             }
+            return null;
         };
 
         ClassMapping newClassMapping;
@@ -434,13 +430,12 @@ public class MappingsConverter {
             // Empty method body, ignore!
             if (sourceAttribute == null)
                 return null;
-            Iterator<BehaviorEntry> it = obfDestEntries.iterator();
-            while (it.hasNext())
+            for (BehaviorEntry desEntry : obfDestEntries)
             {
-                BehaviorEntry desEntry = it.next();
                 try
                 {
-                    CtMethod destCtClassMethod = destCtClass.getMethod(desEntry.getName(), desEntry.getSignature().toString());
+                    CtMethod destCtClassMethod = destCtClass
+                            .getMethod(desEntry.getName(), desEntry.getSignature().toString());
                     CodeAttribute destAttribute = destCtClassMethod.getMethodInfo().getCodeAttribute();
 
                     // Ignore empty body methods
@@ -533,7 +528,7 @@ public class MappingsConverter {
 
     public static <T extends Entry> MemberMatches<T> computeMemberMatches(Deobfuscator destDeobfuscator, Mappings destMappings, ClassMatches classMatches, Doer<T> doer) {
 
-        MemberMatches<T> memberMatches = new MemberMatches<T>();
+        MemberMatches<T> memberMatches = new MemberMatches<>();
 
         // unmatched source fields are easy
         MappingsChecker checker = new MappingsChecker(destDeobfuscator.getJarIndex());
@@ -624,15 +619,13 @@ public class MappingsConverter {
     }
 
     private static Type translate(Type type, final BiMap<ClassEntry, ClassEntry> map) {
-        return new Type(type, new ClassNameReplacer() {
-            @Override
-            public String replace(String inClassName) {
-                ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
-                if (outClassEntry == null) {
-                    return null;
-                }
-                return outClassEntry.getName();
+        return new Type(type, inClassName ->
+        {
+            ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
+            if (outClassEntry == null) {
+                return null;
             }
+            return outClassEntry.getName();
         });
     }
 
@@ -640,15 +633,13 @@ public class MappingsConverter {
         if (signature == null) {
             return null;
         }
-        return new Signature(signature, new ClassNameReplacer() {
-            @Override
-            public String replace(String inClassName) {
-                ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
-                if (outClassEntry == null) {
-                    return null;
-                }
-                return outClassEntry.getName();
+        return new Signature(signature, inClassName ->
+        {
+            ClassEntry outClassEntry = map.get(new ClassEntry(inClassName));
+            if (outClassEntry == null) {
+                return null;
             }
+            return outClassEntry.getName();
         });
     }
 

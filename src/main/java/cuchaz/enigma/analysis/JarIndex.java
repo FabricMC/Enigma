@@ -16,8 +16,6 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.jar.JarFile;
 
-import cuchaz.enigma.Constants;
-import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.Translator;
 import javassist.*;

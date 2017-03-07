@@ -15,7 +15,6 @@ import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 
-import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.mapping.*;
 import javassist.ClassPool;

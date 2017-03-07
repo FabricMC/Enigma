@@ -22,28 +22,28 @@ import cuchaz.enigma.mapping.ClassEntry;
 
 public class ClassMatches implements Iterable<ClassMatch> {
 
-    Collection<ClassMatch> m_matches;
-    Map<ClassEntry, ClassMatch> m_matchesBySource;
-    Map<ClassEntry, ClassMatch> m_matchesByDest;
-    BiMap<ClassEntry, ClassEntry> m_uniqueMatches;
-    Map<ClassEntry, ClassMatch> m_ambiguousMatchesBySource;
-    Map<ClassEntry, ClassMatch> m_ambiguousMatchesByDest;
-    Set<ClassEntry> m_unmatchedSourceClasses;
-    Set<ClassEntry> m_unmatchedDestClasses;
+    private Collection<ClassMatch>        matches;
+    private Map<ClassEntry, ClassMatch>   matchesBySource;
+    private Map<ClassEntry, ClassMatch>   matchesByDest;
+    private BiMap<ClassEntry, ClassEntry> uniqueMatches;
+    private Map<ClassEntry, ClassMatch>   ambiguousMatchesBySource;
+    private Map<ClassEntry, ClassMatch>   ambiguousMatchesByDest;
+    private Set<ClassEntry>               unmatchedSourceClasses;
+    private Set<ClassEntry>               unmatchedDestClasses;
 
     public ClassMatches() {
         this(new ArrayList<>());
     }
 
     public ClassMatches(Collection<ClassMatch> matches) {
-        m_matches = matches;
-        m_matchesBySource = Maps.newHashMap();
-        m_matchesByDest = Maps.newHashMap();
-        m_uniqueMatches = HashBiMap.create();
-        m_ambiguousMatchesBySource = Maps.newHashMap();
-        m_ambiguousMatchesByDest = Maps.newHashMap();
-        m_unmatchedSourceClasses = Sets.newHashSet();
-        m_unmatchedDestClasses = Sets.newHashSet();
+        this.matches = matches;
+        matchesBySource = Maps.newHashMap();
+        matchesByDest = Maps.newHashMap();
+        uniqueMatches = HashBiMap.create();
+        ambiguousMatchesBySource = Maps.newHashMap();
+        ambiguousMatchesByDest = Maps.newHashMap();
+        unmatchedSourceClasses = Sets.newHashSet();
+        unmatchedDestClasses = Sets.newHashSet();
 
         for (ClassMatch match : matches) {
             indexMatch(match);
@@ -51,92 +51,92 @@ public class ClassMatches implements Iterable<ClassMatch> {
     }
 
     public void add(ClassMatch match) {
-        m_matches.add(match);
+        matches.add(match);
         indexMatch(match);
     }
 
     public void remove(ClassMatch match) {
         for (ClassEntry sourceClass : match.sourceClasses) {
-            m_matchesBySource.remove(sourceClass);
-            m_uniqueMatches.remove(sourceClass);
-            m_ambiguousMatchesBySource.remove(sourceClass);
-            m_unmatchedSourceClasses.remove(sourceClass);
+            matchesBySource.remove(sourceClass);
+            uniqueMatches.remove(sourceClass);
+            ambiguousMatchesBySource.remove(sourceClass);
+            unmatchedSourceClasses.remove(sourceClass);
         }
         for (ClassEntry destClass : match.destClasses) {
-            m_matchesByDest.remove(destClass);
-            m_uniqueMatches.inverse().remove(destClass);
-            m_ambiguousMatchesByDest.remove(destClass);
-            m_unmatchedDestClasses.remove(destClass);
+            matchesByDest.remove(destClass);
+            uniqueMatches.inverse().remove(destClass);
+            ambiguousMatchesByDest.remove(destClass);
+            unmatchedDestClasses.remove(destClass);
         }
-        m_matches.remove(match);
+        matches.remove(match);
     }
 
     public int size() {
-        return m_matches.size();
+        return matches.size();
     }
 
     @Override
     public Iterator<ClassMatch> iterator() {
-        return m_matches.iterator();
+        return matches.iterator();
     }
 
     private void indexMatch(ClassMatch match) {
         if (!match.isMatched()) {
             // unmatched
-            m_unmatchedSourceClasses.addAll(match.sourceClasses);
-            m_unmatchedDestClasses.addAll(match.destClasses);
+            unmatchedSourceClasses.addAll(match.sourceClasses);
+            unmatchedDestClasses.addAll(match.destClasses);
         } else {
             if (match.isAmbiguous()) {
                 // ambiguously matched
                 for (ClassEntry entry : match.sourceClasses) {
-                    m_ambiguousMatchesBySource.put(entry, match);
+                    ambiguousMatchesBySource.put(entry, match);
                 }
                 for (ClassEntry entry : match.destClasses) {
-                    m_ambiguousMatchesByDest.put(entry, match);
+                    ambiguousMatchesByDest.put(entry, match);
                 }
             } else {
                 // uniquely matched
-                m_uniqueMatches.put(match.getUniqueSource(), match.getUniqueDest());
+                uniqueMatches.put(match.getUniqueSource(), match.getUniqueDest());
             }
         }
         for (ClassEntry entry : match.sourceClasses) {
-            m_matchesBySource.put(entry, match);
+            matchesBySource.put(entry, match);
         }
         for (ClassEntry entry : match.destClasses) {
-            m_matchesByDest.put(entry, match);
+            matchesByDest.put(entry, match);
         }
     }
 
     public BiMap<ClassEntry, ClassEntry> getUniqueMatches() {
-        return m_uniqueMatches;
+        return uniqueMatches;
     }
 
     public Set<ClassEntry> getUnmatchedSourceClasses() {
-        return m_unmatchedSourceClasses;
+        return unmatchedSourceClasses;
     }
 
     public Set<ClassEntry> getUnmatchedDestClasses() {
-        return m_unmatchedDestClasses;
+        return unmatchedDestClasses;
     }
 
     public Set<ClassEntry> getAmbiguouslyMatchedSourceClasses() {
-        return m_ambiguousMatchesBySource.keySet();
+        return ambiguousMatchesBySource.keySet();
     }
 
     public ClassMatch getAmbiguousMatchBySource(ClassEntry sourceClass) {
-        return m_ambiguousMatchesBySource.get(sourceClass);
+        return ambiguousMatchesBySource.get(sourceClass);
     }
 
     public ClassMatch getMatchBySource(ClassEntry sourceClass) {
-        return m_matchesBySource.get(sourceClass);
+        return matchesBySource.get(sourceClass);
     }
 
     public ClassMatch getMatchByDest(ClassEntry destClass) {
-        return m_matchesByDest.get(destClass);
+        return matchesByDest.get(destClass);
     }
 
     public void removeSource(ClassEntry sourceClass) {
-        ClassMatch match = m_matchesBySource.get(sourceClass);
+        ClassMatch match = matchesBySource.get(sourceClass);
         if (match != null) {
             remove(match);
             match.sourceClasses.remove(sourceClass);
@@ -147,7 +147,7 @@ public class ClassMatches implements Iterable<ClassMatch> {
     }
 
     public void removeDest(ClassEntry destClass) {
-        ClassMatch match = m_matchesByDest.get(destClass);
+        ClassMatch match = matchesByDest.get(destClass);
         if (match != null) {
             remove(match);
             match.destClasses.remove(destClass);

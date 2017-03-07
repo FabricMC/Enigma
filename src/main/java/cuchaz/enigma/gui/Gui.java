@@ -62,23 +62,23 @@ public class Gui {
     private final MenuBar menuBar;
     public final PopupMenuBar popupMenu;
 
-    private JFrame frame;
-    private PanelEditor editor;
-    private JPanel classesPanel;
-    private JSplitPane m_splitClasses;
-    private PanelIdentifier m_infoPanel;
-    private ObfuscatedHighlightPainter m_obfuscatedHighlightPainter;
-    private DeobfuscatedHighlightPainter m_deobfuscatedHighlightPainter;
-    private OtherHighlightPainter m_otherHighlightPainter;
-    private SelectionHighlightPainter m_selectionHighlightPainter;
-    private JTree m_inheritanceTree;
-    private JTree m_implementationsTree;
-    private JTree m_callsTree;
-    private JList<Token> m_tokens;
-    private JTabbedPane m_tabs;
+    private JFrame                       frame;
+    private PanelEditor                  editor;
+    private JPanel                       classesPanel;
+    private JSplitPane                   splitClasses;
+    private PanelIdentifier              infoPanel;
+    private ObfuscatedHighlightPainter   obfuscatedHighlightPainter;
+    private DeobfuscatedHighlightPainter deobfuscatedHighlightPainter;
+    private OtherHighlightPainter        otherHighlightPainter;
+    private SelectionHighlightPainter    selectionHighlightPainter;
+    private JTree                        inheritanceTree;
+    private JTree                        implementationsTree;
+    private JTree                        callsTree;
+    private JList<Token>                 tokens;
+    private JTabbedPane                  tabs;
 
     // state
-    public EntryReference<Entry, Entry> m_reference;
+    public EntryReference<Entry, Entry> reference;
 
     public JFileChooser jarFileChooser;
     public JFileChooser enigmaMappingsFileChooser;
@@ -118,22 +118,22 @@ public class Gui {
         this.deobfPanel = new PanelDeobf(this);
 
         // set up classes panel (don't add the splitter yet)
-        m_splitClasses = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, this.obfPanel, this.deobfPanel);
-        m_splitClasses.setResizeWeight(0.3);
+        splitClasses = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, this.obfPanel, this.deobfPanel);
+        splitClasses.setResizeWeight(0.3);
         this.classesPanel = new JPanel();
         this.classesPanel.setLayout(new BorderLayout());
         this.classesPanel.setPreferredSize(new Dimension(250, 0));
 
         // init info panel
-        m_infoPanel = new PanelIdentifier(this);
-        m_infoPanel.clearReference();
+        infoPanel = new PanelIdentifier(this);
+        infoPanel.clearReference();
 
         // init editor
         DefaultSyntaxKit.initKit();
-        m_obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
-        m_deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
-        m_otherHighlightPainter = new OtherHighlightPainter();
-        m_selectionHighlightPainter = new SelectionHighlightPainter();
+        obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
+        deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
+        otherHighlightPainter = new OtherHighlightPainter();
+        selectionHighlightPainter = new SelectionHighlightPainter();
         this.editor = new PanelEditor(this);
         JScrollPane sourceScroller = new JScrollPane(this.editor);
         this.editor.setContentType("text/java");
@@ -145,14 +145,14 @@ public class Gui {
         this.editor.setComponentPopupMenu(this.popupMenu);
 
         // init inheritance panel
-        m_inheritanceTree = new JTree();
-        m_inheritanceTree.setModel(null);
-        m_inheritanceTree.addMouseListener(new MouseAdapter() {
+        inheritanceTree = new JTree();
+        inheritanceTree.setModel(null);
+        inheritanceTree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
                 if (event.getClickCount() == 2) {
                     // get the selected node
-                    TreePath path = m_inheritanceTree.getSelectionPath();
+                    TreePath path = inheritanceTree.getSelectionPath();
                     if (path == null) {
                         return;
                     }
@@ -172,17 +172,17 @@ public class Gui {
         });
         JPanel inheritancePanel = new JPanel();
         inheritancePanel.setLayout(new BorderLayout());
-        inheritancePanel.add(new JScrollPane(m_inheritanceTree));
+        inheritancePanel.add(new JScrollPane(inheritanceTree));
 
         // init implementations panel
-        m_implementationsTree = new JTree();
-        m_implementationsTree.setModel(null);
-        m_implementationsTree.addMouseListener(new MouseAdapter() {
+        implementationsTree = new JTree();
+        implementationsTree.setModel(null);
+        implementationsTree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
                 if (event.getClickCount() == 2) {
                     // get the selected node
-                    TreePath path = m_implementationsTree.getSelectionPath();
+                    TreePath path = implementationsTree.getSelectionPath();
                     if (path == null) {
                         return;
                     }
@@ -200,18 +200,18 @@ public class Gui {
         });
         JPanel implementationsPanel = new JPanel();
         implementationsPanel.setLayout(new BorderLayout());
-        implementationsPanel.add(new JScrollPane(m_implementationsTree));
+        implementationsPanel.add(new JScrollPane(implementationsTree));
 
         // init call panel
-        m_callsTree = new JTree();
-        m_callsTree.setModel(null);
-        m_callsTree.addMouseListener(new MouseAdapter() {
+        callsTree = new JTree();
+        callsTree.setModel(null);
+        callsTree.addMouseListener(new MouseAdapter() {
             @SuppressWarnings("unchecked")
             @Override
             public void mouseClicked(MouseEvent event) {
                 if (event.getClickCount() == 2) {
                     // get the selected node
-                    TreePath path = m_callsTree.getSelectionPath();
+                    TreePath path = callsTree.getSelectionPath();
                     if (path == null) {
                         return;
                     }
@@ -228,28 +228,28 @@ public class Gui {
                 }
             }
         });
-        m_tokens = new JList<>();
-        m_tokens.setCellRenderer(new TokenListCellRenderer(this.controller));
-        m_tokens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        m_tokens.setLayoutOrientation(JList.VERTICAL);
-        m_tokens.addMouseListener(new MouseAdapter() {
+        tokens = new JList<>();
+        tokens.setCellRenderer(new TokenListCellRenderer(this.controller));
+        tokens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tokens.setLayoutOrientation(JList.VERTICAL);
+        tokens.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    Token selected = m_tokens.getSelectedValue();
+                    Token selected = tokens.getSelectedValue();
                     if (selected != null) {
                         showToken(selected);
                     }
                 }
             }
         });
-        m_tokens.setPreferredSize(new Dimension(0, 200));
-        m_tokens.setMinimumSize(new Dimension(0, 200));
+        tokens.setPreferredSize(new Dimension(0, 200));
+        tokens.setMinimumSize(new Dimension(0, 200));
         JSplitPane callPanel = new JSplitPane(
                 JSplitPane.VERTICAL_SPLIT,
                 true,
-                new JScrollPane(m_callsTree),
-                new JScrollPane(m_tokens)
+                new JScrollPane(callsTree),
+                new JScrollPane(tokens)
         );
         callPanel.setResizeWeight(1); // let the top side take all the slack
         callPanel.resetToPreferredSizes();
@@ -257,14 +257,14 @@ public class Gui {
         // layout controls
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BorderLayout());
-        centerPanel.add(m_infoPanel, BorderLayout.NORTH);
+        centerPanel.add(infoPanel, BorderLayout.NORTH);
         centerPanel.add(sourceScroller, BorderLayout.CENTER);
-        m_tabs = new JTabbedPane();
-        m_tabs.setPreferredSize(new Dimension(250, 0));
-        m_tabs.addTab("Inheritance", inheritancePanel);
-        m_tabs.addTab("Implementations", implementationsPanel);
-        m_tabs.addTab("Call Graph", callPanel);
-        JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, m_tabs);
+        tabs = new JTabbedPane();
+        tabs.setPreferredSize(new Dimension(250, 0));
+        tabs.addTab("Inheritance", inheritancePanel);
+        tabs.addTab("Implementations", implementationsPanel);
+        tabs.addTab("Call Graph", callPanel);
+        JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabs);
         splitRight.setResizeWeight(1); // let the left side take all the slack
         splitRight.resetToPreferredSizes();
         JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
@@ -314,7 +314,7 @@ public class Gui {
         // update gui
         this.frame.setTitle(Constants.NAME + " - " + jarName);
         this.classesPanel.removeAll();
-        this.classesPanel.add(m_splitClasses);
+        this.classesPanel.add(splitClasses);
         setSource(null);
 
         // update menu
@@ -375,7 +375,7 @@ public class Gui {
         if (token == null) {
             throw new IllegalArgumentException("Token cannot be null!");
         }
-        CodeReader.navigateToToken(this.editor, token, m_selectionHighlightPainter);
+        CodeReader.navigateToToken(this.editor, token, selectionHighlightPainter);
         redraw();
     }
 
@@ -384,10 +384,10 @@ public class Gui {
         Collections.sort(sortedTokens);
         if (sortedTokens.size() > 1) {
             // sort the tokens and update the tokens panel
-            m_tokens.setListData(sortedTokens);
-            m_tokens.setSelectedIndex(0);
+            this.tokens.setListData(sortedTokens);
+            this.tokens.setSelectedIndex(0);
         } else {
-            m_tokens.setListData(new Vector<>());
+            this.tokens.setListData(new Vector<>());
         }
 
         // show the first token
@@ -401,13 +401,13 @@ public class Gui {
 
         // color things based on the index
         if (obfuscatedTokens != null) {
-            setHighlightedTokens(obfuscatedTokens, m_obfuscatedHighlightPainter);
+            setHighlightedTokens(obfuscatedTokens, obfuscatedHighlightPainter);
         }
         if (deobfuscatedTokens != null) {
-            setHighlightedTokens(deobfuscatedTokens, m_deobfuscatedHighlightPainter);
+            setHighlightedTokens(deobfuscatedTokens, deobfuscatedHighlightPainter);
         }
         if (otherTokens != null) {
-            setHighlightedTokens(otherTokens, m_otherHighlightPainter);
+            setHighlightedTokens(otherTokens, otherHighlightPainter);
         }
 
         redraw();
@@ -425,73 +425,73 @@ public class Gui {
 
     private void showReference(EntryReference<Entry, Entry> reference) {
         if (reference == null) {
-            m_infoPanel.clearReference();
+            infoPanel.clearReference();
             return;
         }
 
-        m_reference = reference;
+        this.reference = reference;
 
-        m_infoPanel.removeAll();
+        infoPanel.removeAll();
         if (reference.entry instanceof ClassEntry) {
-            showClassEntry((ClassEntry) m_reference.entry);
-        } else if (m_reference.entry instanceof FieldEntry) {
-            showFieldEntry((FieldEntry) m_reference.entry);
-        } else if (m_reference.entry instanceof MethodEntry) {
-            showMethodEntry((MethodEntry) m_reference.entry);
-        } else if (m_reference.entry instanceof ConstructorEntry) {
-            showConstructorEntry((ConstructorEntry) m_reference.entry);
-        } else if (m_reference.entry instanceof ArgumentEntry) {
-            showArgumentEntry((ArgumentEntry) m_reference.entry);
-        } else if (m_reference.entry instanceof LocalVariableEntry) {
-            showLocalVariableEntry((LocalVariableEntry) m_reference.entry);
+            showClassEntry((ClassEntry) this.reference.entry);
+        } else if (this.reference.entry instanceof FieldEntry) {
+            showFieldEntry((FieldEntry) this.reference.entry);
+        } else if (this.reference.entry instanceof MethodEntry) {
+            showMethodEntry((MethodEntry) this.reference.entry);
+        } else if (this.reference.entry instanceof ConstructorEntry) {
+            showConstructorEntry((ConstructorEntry) this.reference.entry);
+        } else if (this.reference.entry instanceof ArgumentEntry) {
+            showArgumentEntry((ArgumentEntry) this.reference.entry);
+        } else if (this.reference.entry instanceof LocalVariableEntry) {
+            showLocalVariableEntry((LocalVariableEntry) this.reference.entry);
         } else {
-            throw new Error("Unknown entry type: " + m_reference.entry.getClass().getName());
+            throw new Error("Unknown entry type: " + this.reference.entry.getClass().getName());
         }
 
         redraw();
     }
 
     private void showLocalVariableEntry(LocalVariableEntry entry) {
-        addNameValue(m_infoPanel, "Variable", entry.getName());
-        addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
-        addNameValue(m_infoPanel, "Method", entry.getBehaviorEntry().getName());
-        addNameValue(m_infoPanel, "Index", Integer.toString(entry.getIndex()));
-        addNameValue(m_infoPanel, "Type", entry.getType().toString());
+        addNameValue(infoPanel, "Variable", entry.getName());
+        addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
+        addNameValue(infoPanel, "Method", entry.getBehaviorEntry().getName());
+        addNameValue(infoPanel, "Index", Integer.toString(entry.getIndex()));
+        addNameValue(infoPanel, "Type", entry.getType().toString());
     }
 
     private void showClassEntry(ClassEntry entry) {
-        addNameValue(m_infoPanel, "Class", entry.getName());
-        addModifierComboBox(m_infoPanel, "Modifier", entry);
+        addNameValue(infoPanel, "Class", entry.getName());
+        addModifierComboBox(infoPanel, "Modifier", entry);
     }
 
     private void showFieldEntry(FieldEntry entry) {
-        addNameValue(m_infoPanel, "Field", entry.getName());
-        addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
-        addNameValue(m_infoPanel, "Type", entry.getType().toString());
-        addModifierComboBox(m_infoPanel, "Modifier", entry);
+        addNameValue(infoPanel, "Field", entry.getName());
+        addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
+        addNameValue(infoPanel, "Type", entry.getType().toString());
+        addModifierComboBox(infoPanel, "Modifier", entry);
     }
 
     private void showMethodEntry(MethodEntry entry) {
-        addNameValue(m_infoPanel, "Method", entry.getName());
-        addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
-        addNameValue(m_infoPanel, "Signature", entry.getSignature().toString());
-        addModifierComboBox(m_infoPanel, "Modifier", entry);
+        addNameValue(infoPanel, "Method", entry.getName());
+        addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
+        addNameValue(infoPanel, "Signature", entry.getSignature().toString());
+        addModifierComboBox(infoPanel, "Modifier", entry);
 
     }
 
     private void showConstructorEntry(ConstructorEntry entry) {
-        addNameValue(m_infoPanel, "Constructor", entry.getClassEntry().getName());
+        addNameValue(infoPanel, "Constructor", entry.getClassEntry().getName());
         if (!entry.isStatic()) {
-            addNameValue(m_infoPanel, "Signature", entry.getSignature().toString());
-            addModifierComboBox(m_infoPanel, "Modifier", entry);
+            addNameValue(infoPanel, "Signature", entry.getSignature().toString());
+            addModifierComboBox(infoPanel, "Modifier", entry);
         }
     }
 
     private void showArgumentEntry(ArgumentEntry entry) {
-        addNameValue(m_infoPanel, "Argument", entry.getName());
-        addNameValue(m_infoPanel, "Class", entry.getClassEntry().getName());
-        addNameValue(m_infoPanel, "Method", entry.getBehaviorEntry().getName());
-        addNameValue(m_infoPanel, "Index", Integer.toString(entry.getIndex()));
+        addNameValue(infoPanel, "Argument", entry.getName());
+        addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
+        addNameValue(infoPanel, "Method", entry.getBehaviorEntry().getName());
+        addNameValue(infoPanel, "Index", Integer.toString(entry.getIndex()));
     }
 
     private void addNameValue(JPanel container, String name, String value) {
@@ -530,18 +530,18 @@ public class Gui {
         Token token = this.controller.getToken(pos);
         boolean isToken = token != null;
 
-        m_reference = this.controller.getDeobfReference(token);
-        boolean isClassEntry = isToken && m_reference.entry instanceof ClassEntry;
-        boolean isFieldEntry = isToken && m_reference.entry instanceof FieldEntry;
-        boolean isMethodEntry = isToken && m_reference.entry instanceof MethodEntry;
-        boolean isConstructorEntry = isToken && m_reference.entry instanceof ConstructorEntry;
-        boolean isInJar = isToken && this.controller.entryIsInJar(m_reference.entry);
-        boolean isRenameable = isToken && this.controller.referenceIsRenameable(m_reference);
+        reference = this.controller.getDeobfReference(token);
+        boolean isClassEntry = isToken && reference.entry instanceof ClassEntry;
+        boolean isFieldEntry = isToken && reference.entry instanceof FieldEntry;
+        boolean isMethodEntry = isToken && reference.entry instanceof MethodEntry;
+        boolean isConstructorEntry = isToken && reference.entry instanceof ConstructorEntry;
+        boolean isInJar = isToken && this.controller.entryIsInJar(reference.entry);
+        boolean isRenameable = isToken && this.controller.referenceIsRenameable(reference);
 
         if (isToken) {
-            showReference(m_reference);
+            showReference(reference);
         } else {
-            m_infoPanel.clearReference();
+            infoPanel.clearReference();
         }
 
         this.popupMenu.renameMenu.setEnabled(isRenameable);
@@ -552,7 +552,7 @@ public class Gui {
         this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
         this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
 
-        if (isToken && this.controller.entryHasDeobfuscatedName(m_reference.entry)) {
+        if (isToken && this.controller.entryHasDeobfuscatedName(reference.entry)) {
             this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
         } else {
             this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
@@ -564,8 +564,8 @@ public class Gui {
             // entry is not in the jar. Ignore it
             return;
         }
-        if (m_reference != null) {
-            this.controller.savePreviousReference(m_reference);
+        if (reference != null) {
+            this.controller.savePreviousReference(reference);
         }
         this.controller.openDeclaration(entry);
     }
@@ -574,8 +574,8 @@ public class Gui {
         if (!this.controller.entryIsInJar(reference.getLocationClassEntry())) {
             return;
         }
-        if (m_reference != null) {
-            this.controller.savePreviousReference(m_reference);
+        if (this.reference != null) {
+            this.controller.savePreviousReference(this.reference);
         }
         this.controller.openReference(reference);
     }
@@ -584,7 +584,7 @@ public class Gui {
 
         // init the text box
         final JTextField text = new JTextField();
-        text.setText(m_reference.getNamableName());
+        text.setText(reference.getNamableName());
         text.setPreferredSize(new Dimension(360, text.getPreferredSize().height));
         text.addKeyListener(new KeyAdapter() {
             @Override
@@ -604,14 +604,14 @@ public class Gui {
         });
 
         // find the label with the name and replace it with the text box
-        JPanel panel = (JPanel) m_infoPanel.getComponent(0);
+        JPanel panel = (JPanel) infoPanel.getComponent(0);
         panel.remove(panel.getComponentCount() - 1);
         panel.add(text);
         text.grabFocus();
 
         int offset = text.getText().lastIndexOf('/') + 1;
         // If it's a class and isn't in the default package, assume that it's deobfuscated.
-        if (m_reference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
+        if (reference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
             text.select(offset, text.getText().length());
         else
             text.selectAll();
@@ -623,7 +623,7 @@ public class Gui {
         String newName = text.getText();
         if (saveName && newName != null && newName.length() > 0) {
             try {
-                this.controller.rename(m_reference, newName);
+                this.controller.rename(reference, newName);
             } catch (IllegalNameException ex) {
                 text.setBorder(BorderFactory.createLineBorder(Color.red, 1));
                 text.setToolTipText(ex.getReason());
@@ -633,9 +633,9 @@ public class Gui {
         }
 
         // abort the rename
-        JPanel panel = (JPanel) m_infoPanel.getComponent(0);
+        JPanel panel = (JPanel) infoPanel.getComponent(0);
         panel.remove(panel.getComponentCount() - 1);
-        panel.add(Utils.unboldLabel(new JLabel(m_reference.getNamableName(), JLabel.LEFT)));
+        panel.add(Utils.unboldLabel(new JLabel(reference.getNamableName(), JLabel.LEFT)));
 
         this.editor.grabFocus();
 
@@ -644,95 +644,95 @@ public class Gui {
 
     public void showInheritance() {
 
-        if (m_reference == null) {
+        if (reference == null) {
             return;
         }
 
-        m_inheritanceTree.setModel(null);
+        inheritanceTree.setModel(null);
 
-        if (m_reference.entry instanceof ClassEntry) {
+        if (reference.entry instanceof ClassEntry) {
             // get the class inheritance
-            ClassInheritanceTreeNode classNode = this.controller.getClassInheritance((ClassEntry) m_reference.entry);
+            ClassInheritanceTreeNode classNode = this.controller.getClassInheritance((ClassEntry) reference.entry);
 
             // show the tree at the root
             TreePath path = getPathToRoot(classNode);
-            m_inheritanceTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
-            m_inheritanceTree.expandPath(path);
-            m_inheritanceTree.setSelectionRow(m_inheritanceTree.getRowForPath(path));
-        } else if (m_reference.entry instanceof MethodEntry) {
+            inheritanceTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
+            inheritanceTree.expandPath(path);
+            inheritanceTree.setSelectionRow(inheritanceTree.getRowForPath(path));
+        } else if (reference.entry instanceof MethodEntry) {
             // get the method inheritance
-            MethodInheritanceTreeNode classNode = this.controller.getMethodInheritance((MethodEntry) m_reference.entry);
+            MethodInheritanceTreeNode classNode = this.controller.getMethodInheritance((MethodEntry) reference.entry);
 
             // show the tree at the root
             TreePath path = getPathToRoot(classNode);
-            m_inheritanceTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
-            m_inheritanceTree.expandPath(path);
-            m_inheritanceTree.setSelectionRow(m_inheritanceTree.getRowForPath(path));
+            inheritanceTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
+            inheritanceTree.expandPath(path);
+            inheritanceTree.setSelectionRow(inheritanceTree.getRowForPath(path));
         }
 
-        m_tabs.setSelectedIndex(0);
+        tabs.setSelectedIndex(0);
         redraw();
     }
 
     public void showImplementations() {
 
-        if (m_reference == null) {
+        if (reference == null) {
             return;
         }
 
-        m_implementationsTree.setModel(null);
+        implementationsTree.setModel(null);
 
         DefaultMutableTreeNode node = null;
 
         // get the class implementations
-        if (m_reference.entry instanceof ClassEntry)
-            node = this.controller.getClassImplementations((ClassEntry) m_reference.entry);
+        if (reference.entry instanceof ClassEntry)
+            node = this.controller.getClassImplementations((ClassEntry) reference.entry);
         else // get the method implementations
-            if (m_reference.entry instanceof MethodEntry)
-                node = this.controller.getMethodImplementations((MethodEntry) m_reference.entry);
+            if (reference.entry instanceof MethodEntry)
+                node = this.controller.getMethodImplementations((MethodEntry) reference.entry);
 
         if (node != null) {
             // show the tree at the root
             TreePath path = getPathToRoot(node);
-            m_implementationsTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
-            m_implementationsTree.expandPath(path);
-            m_implementationsTree.setSelectionRow(m_implementationsTree.getRowForPath(path));
+            implementationsTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
+            implementationsTree.expandPath(path);
+            implementationsTree.setSelectionRow(implementationsTree.getRowForPath(path));
         }
 
-        m_tabs.setSelectedIndex(1);
+        tabs.setSelectedIndex(1);
         redraw();
     }
 
     public void showCalls() {
-        if (m_reference == null) {
+        if (reference == null) {
             return;
         }
 
-        if (m_reference.entry instanceof ClassEntry) {
+        if (reference.entry instanceof ClassEntry) {
             // look for calls to the default constructor
             // TODO: get a list of all the constructors and find calls to all of them
-            BehaviorReferenceTreeNode node = this.controller.getMethodReferences(new ConstructorEntry((ClassEntry) m_reference.entry, new Signature("()V")));
-            m_callsTree.setModel(new DefaultTreeModel(node));
-        } else if (m_reference.entry instanceof FieldEntry) {
-            FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) m_reference.entry);
-            m_callsTree.setModel(new DefaultTreeModel(node));
-        } else if (m_reference.entry instanceof MethodEntry) {
-            BehaviorReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) m_reference.entry);
-            m_callsTree.setModel(new DefaultTreeModel(node));
-        } else if (m_reference.entry instanceof ConstructorEntry) {
-            BehaviorReferenceTreeNode node = this.controller.getMethodReferences((ConstructorEntry) m_reference.entry);
-            m_callsTree.setModel(new DefaultTreeModel(node));
+            BehaviorReferenceTreeNode node = this.controller.getMethodReferences(new ConstructorEntry((ClassEntry) reference.entry, new Signature("()V")));
+            callsTree.setModel(new DefaultTreeModel(node));
+        } else if (reference.entry instanceof FieldEntry) {
+            FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) reference.entry);
+            callsTree.setModel(new DefaultTreeModel(node));
+        } else if (reference.entry instanceof MethodEntry) {
+            BehaviorReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) reference.entry);
+            callsTree.setModel(new DefaultTreeModel(node));
+        } else if (reference.entry instanceof ConstructorEntry) {
+            BehaviorReferenceTreeNode node = this.controller.getMethodReferences((ConstructorEntry) reference.entry);
+            callsTree.setModel(new DefaultTreeModel(node));
         }
 
-        m_tabs.setSelectedIndex(2);
+        tabs.setSelectedIndex(2);
         redraw();
     }
 
     public void toggleMapping() {
-        if (this.controller.entryHasDeobfuscatedName(m_reference.entry)) {
-            this.controller.removeMapping(m_reference);
+        if (this.controller.entryHasDeobfuscatedName(reference.entry)) {
+            this.controller.removeMapping(reference);
         } else {
-            this.controller.markAsDeobfuscated(m_reference);
+            this.controller.markAsDeobfuscated(reference);
         }
     }
 

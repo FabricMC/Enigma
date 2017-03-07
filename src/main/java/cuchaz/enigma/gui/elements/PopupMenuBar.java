@@ -53,7 +53,7 @@ public class PopupMenuBar extends JPopupMenu {
         }
         {
             JMenuItem menu = new JMenuItem("Go to Declaration");
-            menu.addActionListener(event -> gui.navigateTo(gui.m_reference.entry));
+            menu.addActionListener(event -> gui.navigateTo(gui.reference.entry));
             menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, 0));
             menu.setEnabled(false);
             this.add(menu);

@@ -50,7 +50,7 @@ public class GuiController {
         return this.isDirty;
     }
 
-    public void openJar(final JarFile jar) throws IOException {
+    public void openJar(final JarFile jar) {
         this.gui.onStartOpenJar();
         this.deobfuscator = new Deobfuscator(jar);
         this.gui.onFinishOpenJar(this.deobfuscator.getJarName());
@@ -302,42 +302,40 @@ public class GuiController {
         this.gui.setSource("(deobfuscating...)");
 
         // run the deobfuscator in a separate thread so we don't block the GUI event queue
-        new Thread() {
-            @Override
-            public void run() {
-                // decompile,deobfuscate the bytecode
-                CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getClassName());
-                if (sourceTree == null) {
-                    // decompilation of this class is not supported
-                    gui.setSource("Unable to find class: " + classEntry);
-                    return;
-                }
-                String source = deobfuscator.getSource(sourceTree);
-                index = deobfuscator.getSourceIndex(sourceTree, source);
-                gui.setSource(index.getSource());
-                if (obfReference != null) {
-                    showReference(obfReference);
-                }
-
-                // set the highlighted tokens
-                List<Token> obfuscatedTokens = Lists.newArrayList();
-                List<Token> deobfuscatedTokens = Lists.newArrayList();
-                List<Token> otherTokens = Lists.newArrayList();
-                for (Token token : index.referenceTokens()) {
-                    EntryReference<Entry, Entry> reference = index.getDeobfReference(token);
-                    if (referenceIsRenameable(reference)) {
-                        if (entryHasDeobfuscatedName(reference.getNameableEntry())) {
-                            deobfuscatedTokens.add(token);
-                        } else {
-                            obfuscatedTokens.add(token);
-                        }
-                    } else {
-                        otherTokens.add(token);
-                    }
-                }
-                gui.setHighlightedTokens(obfuscatedTokens, deobfuscatedTokens, otherTokens);
+        new Thread(() ->
+        {
+            // decompile,deobfuscate the bytecode
+            CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getClassName());
+            if (sourceTree == null) {
+                // decompilation of this class is not supported
+                gui.setSource("Unable to find class: " + classEntry);
+                return;
             }
-        }.start();
+            String source = deobfuscator.getSource(sourceTree);
+            index = deobfuscator.getSourceIndex(sourceTree, source);
+            gui.setSource(index.getSource());
+            if (obfReference != null) {
+                showReference(obfReference);
+            }
+
+            // set the highlighted tokens
+            List<Token> obfuscatedTokens = Lists.newArrayList();
+            List<Token> deobfuscatedTokens = Lists.newArrayList();
+            List<Token> otherTokens = Lists.newArrayList();
+            for (Token token : index.referenceTokens()) {
+                EntryReference<Entry, Entry> reference = index.getDeobfReference(token);
+                if (referenceIsRenameable(reference)) {
+                    if (entryHasDeobfuscatedName(reference.getNameableEntry())) {
+                        deobfuscatedTokens.add(token);
+                    } else {
+                        obfuscatedTokens.add(token);
+                    }
+                } else {
+                    otherTokens.add(token);
+                }
+            }
+            gui.setHighlightedTokens(obfuscatedTokens, deobfuscatedTokens, otherTokens);
+        }).start();
     }
 
     public Deobfuscator getDeobfuscator()
@@ -349,7 +347,7 @@ public class GuiController {
     {
         if (event.getStateChange() == ItemEvent.SELECTED)
         {
-            deobfuscator.changeModifier(gui.m_reference.entry, (Mappings.EntryModifier) event.getItem());
+            deobfuscator.changeModifier(gui.reference.entry, (Mappings.EntryModifier) event.getItem());
             this.isDirty = true;
             refreshCurrentClass();
         }

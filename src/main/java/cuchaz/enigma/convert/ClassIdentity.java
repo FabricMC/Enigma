@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cuchaz.enigma.Constants;
 import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
@@ -49,9 +48,9 @@ public class ClassIdentity {
     private Multiset<String> references;
     private String outer;
 
-    private final ClassNameReplacer m_classNameReplacer = new ClassNameReplacer() {
+    private final ClassNameReplacer classNameReplacer = new ClassNameReplacer() {
 
-        private Map<String, String> m_classNames = Maps.newHashMap();
+        private Map<String, String> classNames = Maps.newHashMap();
 
         @Override
         public String replace(String className) {
@@ -76,14 +75,14 @@ public class ClassIdentity {
             }
 
             // otherwise, use local naming
-            if (!m_classNames.containsKey(className)) {
-                m_classNames.put(className, getNewClassName());
+            if (!classNames.containsKey(className)) {
+                classNames.put(className, getNewClassName());
             }
-            return m_classNames.get(className);
+            return classNames.get(className);
         }
 
         private String getNewClassName() {
-            return String.format("C%03d", m_classNames.size());
+            return String.format("C%03d", classNames.size());
         }
     };
 
@@ -229,7 +228,7 @@ public class ClassIdentity {
     }
 
     private String scrubClassName(String className) {
-        return m_classNameReplacer.replace(className);
+        return classNameReplacer.replace(className);
     }
 
     private String scrubType(String typeName) {
@@ -238,7 +237,7 @@ public class ClassIdentity {
 
     private Type scrubType(Type type) {
         if (type.hasClass()) {
-            return new Type(type, m_classNameReplacer);
+            return new Type(type, classNameReplacer);
         } else {
             return type;
         }
@@ -249,7 +248,7 @@ public class ClassIdentity {
     }
 
     private Signature scrubSignature(Signature signature) {
-        return new Signature(signature, m_classNameReplacer);
+        return new Signature(signature, classNameReplacer);
     }
 
     private boolean isClassMatchedUniquely(String className) {

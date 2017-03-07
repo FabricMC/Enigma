@@ -37,6 +37,11 @@ public class ClassSelectorClassNode extends DefaultMutableTreeNode {
         return other instanceof ClassSelectorClassNode && equals((ClassSelectorClassNode) other);
     }
 
+    @Override public int hashCode()
+    {
+        return 17 + (classEntry != null ? classEntry.hashCode() : 0);
+    }
+
     @Override public void setUserObject(Object userObject)
     {
         String packageName = "";

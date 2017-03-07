@@ -87,15 +87,13 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
     }
 
     public static void runInThread(final JFrame parent, final ProgressRunnable runnable) {
-        new Thread() {
-            @Override
-            public void run() {
-                try (ProgressDialog progress = new ProgressDialog(parent)) {
-                    runnable.run(progress);
-                } catch (Exception ex) {
-                    throw new Error(ex);
-                }
+        new Thread(() ->
+        {
+            try (ProgressDialog progress = new ProgressDialog(parent)) {
+                runnable.run(progress);
+            } catch (Exception ex) {
+                throw new Error(ex);
             }
-        }.start();
+        }).start();
     }
 }

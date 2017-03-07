@@ -17,10 +17,7 @@ import javassist.CtField;
 
 public enum Access {
 
-    Public,
-    Protected,
-    Package,
-    Private;
+    PUBLIC, PROTECTED, PACKAGE, PRIVATE;
 
     public static Access get(CtBehavior behavior) {
         return get(behavior.getModifiers());
@@ -36,15 +33,15 @@ public enum Access {
         boolean isPrivate = Modifier.isPrivate(modifiers);
 
         if (isPublic && !isProtected && !isPrivate) {
-            return Public;
+            return PUBLIC;
         } else if (!isPublic && isProtected && !isPrivate) {
-            return Protected;
+            return PROTECTED;
         } else if (!isPublic && !isProtected && isPrivate) {
-            return Private;
+            return PRIVATE;
         } else if (!isPublic && !isProtected && !isPrivate) {
-            return Package;
+            return PACKAGE;
         }
         // assume public by default
-        return Public;
+        return PUBLIC;
     }
 }

@@ -17,7 +17,6 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -30,7 +29,6 @@ import javax.swing.text.Highlighter.HighlightPainter;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.Deobfuscator;
-import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.convert.ClassMatches;
@@ -78,39 +76,38 @@ public class MemberMatchingGui<T extends Entry> {
     }
 
     // controls
-    private JFrame m_frame;
-    private Map<SourceType, JRadioButton> m_sourceTypeButtons;
-    private ClassSelector m_sourceClasses;
-    private CodeReader m_sourceReader;
-    private CodeReader m_destReader;
-    private JButton m_matchButton;
-    private JButton m_unmatchableButton;
-    private JLabel m_sourceLabel;
-    private JLabel m_destLabel;
-    private HighlightPainter m_unmatchedHighlightPainter;
-    private HighlightPainter m_matchedHighlightPainter;
-
-    private ClassMatches m_classMatches;
-    private MemberMatches<T> m_memberMatches;
-    private Deobfuscator m_sourceDeobfuscator;
-    private Deobfuscator m_destDeobfuscator;
-    private SaveListener<T> m_saveListener;
-    private SourceType m_sourceType;
-    private ClassEntry m_obfSourceClass;
-    private ClassEntry m_obfDestClass;
-    private T m_obfSourceEntry;
-    private T m_obfDestEntry;
+    private JFrame                        frame;
+    private Map<SourceType, JRadioButton> sourceTypeButtons;
+    private ClassSelector    sourceClasses;
+    private CodeReader       sourceReader;
+    private CodeReader       destReader;
+    private JButton          matchButton;
+    private JButton          unmatchableButton;
+    private JLabel           sourceLabel;
+    private JLabel           destLabel;
+    private HighlightPainter unmatchedHighlightPainter;
+    private HighlightPainter matchedHighlightPainter;
+    private ClassMatches     classMatches;
+    private MemberMatches<T> memberMatches;
+    private Deobfuscator     sourceDeobfuscator;
+    private Deobfuscator     destDeobfuscator;
+    private SaveListener<T>  saveListener;
+    private SourceType       sourceType;
+    private ClassEntry       obfSourceClass;
+    private ClassEntry       obfDestClass;
+    private T                obfSourceEntry;
+    private T                obfDestEntry;
 
     public MemberMatchingGui(ClassMatches classMatches, MemberMatches<T> fieldMatches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 
-        m_classMatches = classMatches;
-        m_memberMatches = fieldMatches;
-        m_sourceDeobfuscator = sourceDeobfuscator;
-        m_destDeobfuscator = destDeobfuscator;
+        this.classMatches = classMatches;
+        memberMatches = fieldMatches;
+        this.sourceDeobfuscator = sourceDeobfuscator;
+        this.destDeobfuscator = destDeobfuscator;
 
         // init frame
-        m_frame = new JFrame(Constants.NAME + " - Member Matcher");
-        final Container pane = m_frame.getContentPane();
+        frame = new JFrame(Constants.NAME + " - Member Matcher");
+        final Container pane = frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
         // init classes side
@@ -124,47 +121,38 @@ public class MemberMatchingGui<T extends Entry> {
         JPanel sourceTypePanel = new JPanel();
         classesPanel.add(sourceTypePanel);
         sourceTypePanel.setLayout(new BoxLayout(sourceTypePanel, BoxLayout.PAGE_AXIS));
-        ActionListener sourceTypeListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                setSourceType(SourceType.valueOf(event.getActionCommand()));
-            }
-        };
+        ActionListener sourceTypeListener = event -> setSourceType(SourceType.valueOf(event.getActionCommand()));
         ButtonGroup sourceTypeButtons = new ButtonGroup();
-        m_sourceTypeButtons = Maps.newHashMap();
+        this.sourceTypeButtons = Maps.newHashMap();
         for (SourceType sourceType : SourceType.values()) {
             JRadioButton button = sourceType.newRadio(sourceTypeListener, sourceTypeButtons);
-            m_sourceTypeButtons.put(sourceType, button);
+            this.sourceTypeButtons.put(sourceType, button);
             sourceTypePanel.add(button);
         }
 
-        m_sourceClasses = new ClassSelector(null, ClassSelector.DEOBF_CLASS_COMPARATOR, false);
-        m_sourceClasses.setSelectionListener(this::setSourceClass);
-        JScrollPane sourceScroller = new JScrollPane(m_sourceClasses);
+        sourceClasses = new ClassSelector(null, ClassSelector.DEOBF_CLASS_COMPARATOR, false);
+        sourceClasses.setSelectionListener(this::setSourceClass);
+        JScrollPane sourceScroller = new JScrollPane(sourceClasses);
         classesPanel.add(sourceScroller);
 
         // init readers
         DefaultSyntaxKit.initKit();
-        m_sourceReader = new CodeReader();
-        m_sourceReader.setSelectionListener(new CodeReader.SelectionListener() {
-            @Override
-            public void onSelect(EntryReference<Entry, Entry> reference) {
-                if (reference != null) {
-                    onSelectSource(reference.entry);
-                } else {
-                    onSelectSource(null);
-                }
+        sourceReader = new CodeReader();
+        sourceReader.setSelectionListener(reference ->
+        {
+            if (reference != null) {
+                onSelectSource(reference.entry);
+            } else {
+                onSelectSource(null);
             }
         });
-        m_destReader = new CodeReader();
-        m_destReader.setSelectionListener(new CodeReader.SelectionListener() {
-            @Override
-            public void onSelect(EntryReference<Entry, Entry> reference) {
-                if (reference != null) {
-                    onSelectDest(reference.entry);
-                } else {
-                    onSelectDest(null);
-                }
+        destReader = new CodeReader();
+        destReader.setSelectionListener(reference ->
+        {
+            if (reference != null) {
+                onSelectDest(reference.entry);
+            } else {
+                onSelectDest(null);
             }
         });
 
@@ -173,14 +161,15 @@ public class MemberMatchingGui<T extends Entry> {
             @Override
             public void keyPressed(KeyEvent event) {
                 if (event.getKeyCode() == KeyEvent.VK_M)
-                    m_matchButton.doClick();
+                    matchButton.doClick();
             }
         };
-        m_sourceReader.addKeyListener(keyListener);
-        m_destReader.addKeyListener(keyListener);
+        sourceReader.addKeyListener(keyListener);
+        destReader.addKeyListener(keyListener);
 
         // init all the splits
-        JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, new JScrollPane(m_sourceReader), new JScrollPane(m_destReader));
+        JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, new JScrollPane(sourceReader), new JScrollPane(
+                destReader));
         splitRight.setResizeWeight(0.5); // resize 50:50
         JSplitPane splitLeft = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, classesPanel, splitRight);
         splitLeft.setResizeWeight(0); // let the right side take all the slack
@@ -192,102 +181,92 @@ public class MemberMatchingGui<T extends Entry> {
         bottomPanel.setLayout(new FlowLayout());
         pane.add(bottomPanel, BorderLayout.SOUTH);
 
-        m_matchButton = new JButton();
-        m_unmatchableButton = new JButton();
+        matchButton = new JButton();
+        unmatchableButton = new JButton();
 
-        m_sourceLabel = new JLabel();
-        bottomPanel.add(m_sourceLabel);
-        bottomPanel.add(m_matchButton);
-        bottomPanel.add(m_unmatchableButton);
-        m_destLabel = new JLabel();
-        bottomPanel.add(m_destLabel);
+        sourceLabel = new JLabel();
+        bottomPanel.add(sourceLabel);
+        bottomPanel.add(matchButton);
+        bottomPanel.add(unmatchableButton);
+        destLabel = new JLabel();
+        bottomPanel.add(destLabel);
 
         // show the frame
         pane.doLayout();
-        m_frame.setSize(1024, 576);
-        m_frame.setMinimumSize(new Dimension(640, 480));
-        m_frame.setVisible(true);
-        m_frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setSize(1024, 576);
+        frame.setMinimumSize(new Dimension(640, 480));
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-        m_unmatchedHighlightPainter = new ObfuscatedHighlightPainter();
-        m_matchedHighlightPainter = new DeobfuscatedHighlightPainter();
+        unmatchedHighlightPainter = new ObfuscatedHighlightPainter();
+        matchedHighlightPainter = new DeobfuscatedHighlightPainter();
 
         // init state
-        m_saveListener = null;
-        m_obfSourceClass = null;
-        m_obfDestClass = null;
-        m_obfSourceEntry = null;
-        m_obfDestEntry = null;
+        saveListener = null;
+        obfSourceClass = null;
+        obfDestClass = null;
+        obfSourceEntry = null;
+        obfDestEntry = null;
         setSourceType(SourceType.getDefault());
         updateButtons();
     }
 
     protected void setSourceType(SourceType val) {
-        m_sourceType = val;
+        sourceType = val;
         updateSourceClasses();
     }
 
     public void setSaveListener(SaveListener<T> val) {
-        m_saveListener = val;
+        saveListener = val;
     }
 
     private void updateSourceClasses() {
 
-        String selectedPackage = m_sourceClasses.getSelectedPackage();
+        String selectedPackage = sourceClasses.getSelectedPackage();
 
         List<ClassEntry> deobfClassEntries = Lists.newArrayList();
-        for (ClassEntry entry : m_sourceType.getObfSourceClasses(m_memberMatches)) {
-            deobfClassEntries.add(m_sourceDeobfuscator.deobfuscateEntry(entry));
+        for (ClassEntry entry : sourceType.getObfSourceClasses(memberMatches)) {
+            deobfClassEntries.add(sourceDeobfuscator.deobfuscateEntry(entry));
         }
-        m_sourceClasses.setClasses(deobfClassEntries);
+        sourceClasses.setClasses(deobfClassEntries);
 
         if (selectedPackage != null) {
-            m_sourceClasses.expandPackage(selectedPackage);
+            sourceClasses.expandPackage(selectedPackage);
         }
 
         for (SourceType sourceType : SourceType.values()) {
-            m_sourceTypeButtons.get(sourceType).setText(String.format("%s (%d)",
-                    sourceType.name(), sourceType.getObfSourceClasses(m_memberMatches).size()
+            sourceTypeButtons.get(sourceType).setText(String.format("%s (%d)",
+                    sourceType.name(), sourceType.getObfSourceClasses(memberMatches).size()
             ));
         }
     }
 
     protected void setSourceClass(ClassEntry sourceClass) {
 
-        m_obfSourceClass = m_sourceDeobfuscator.obfuscateEntry(sourceClass);
-        m_obfDestClass = m_classMatches.getUniqueMatches().get(m_obfSourceClass);
-        if (m_obfDestClass == null) {
-            throw new Error("No matching dest class for source class: " + m_obfSourceClass);
+        obfSourceClass = sourceDeobfuscator.obfuscateEntry(sourceClass);
+        obfDestClass = classMatches.getUniqueMatches().get(obfSourceClass);
+        if (obfDestClass == null) {
+            throw new Error("No matching dest class for source class: " + obfSourceClass);
         }
 
-        m_sourceReader.decompileClass(m_obfSourceClass, m_sourceDeobfuscator, false, new Runnable() {
-            @Override
-            public void run() {
-                updateSourceHighlights();
-            }
-        });
-        m_destReader.decompileClass(m_obfDestClass, m_destDeobfuscator, false, new Runnable() {
-            @Override
-            public void run() {
-                updateDestHighlights();
-            }
-        });
+        sourceReader.decompileClass(obfSourceClass, sourceDeobfuscator, false, this::updateSourceHighlights);
+        destReader.decompileClass(obfDestClass, destDeobfuscator, false, this::updateDestHighlights);
     }
 
     protected void updateSourceHighlights() {
-        highlightEntries(m_sourceReader, m_sourceDeobfuscator, m_memberMatches.matches().keySet(), m_memberMatches.getUnmatchedSourceEntries());
+        highlightEntries(sourceReader, sourceDeobfuscator, memberMatches.matches().keySet(), memberMatches.getUnmatchedSourceEntries());
     }
 
     protected void updateDestHighlights() {
-        highlightEntries(m_destReader, m_destDeobfuscator, m_memberMatches.matches().values(), m_memberMatches.getUnmatchedDestEntries());
+        highlightEntries(destReader, destDeobfuscator, memberMatches.matches().values(), memberMatches.getUnmatchedDestEntries());
     }
 
     private void highlightEntries(CodeReader reader, Deobfuscator deobfuscator, Collection<T> obfMatchedEntries, Collection<T> obfUnmatchedEntries) {
         reader.clearHighlights();
         // matched fields
-        updateHighlighted(obfMatchedEntries, deobfuscator, reader, m_matchedHighlightPainter);
+        updateHighlighted(obfMatchedEntries, deobfuscator, reader, matchedHighlightPainter);
         // unmatched fields
-        updateHighlighted(obfUnmatchedEntries, deobfuscator, reader, m_unmatchedHighlightPainter);
+        updateHighlighted(obfUnmatchedEntries, deobfuscator, reader, unmatchedHighlightPainter);
     }
 
     private void updateHighlighted(Collection<T> entries, Deobfuscator deobfuscator, CodeReader reader, HighlightPainter painter)
@@ -303,8 +282,8 @@ public class MemberMatchingGui<T extends Entry> {
     }
 
     private boolean isSelectionMatched() {
-        return m_obfSourceEntry != null && m_obfDestEntry != null
-                && m_memberMatches.isMatched(m_obfSourceEntry, m_obfDestEntry);
+        return obfSourceEntry != null && obfDestEntry != null
+                && memberMatches.isMatched(obfSourceEntry, obfDestEntry);
     }
 
     protected void onSelectSource(Entry source) {
@@ -324,12 +303,12 @@ public class MemberMatchingGui<T extends Entry> {
             @SuppressWarnings("unchecked")
             T sourceEntry = (T) source;
 
-            T obfSourceEntry = m_sourceDeobfuscator.obfuscateEntry(sourceEntry);
-            if (m_memberMatches.hasSource(obfSourceEntry)) {
+            T obfSourceEntry = sourceDeobfuscator.obfuscateEntry(sourceEntry);
+            if (memberMatches.hasSource(obfSourceEntry)) {
                 setSource(obfSourceEntry);
 
                 // look for a matched dest too
-                T obfDestEntry = m_memberMatches.matches().get(obfSourceEntry);
+                T obfDestEntry = memberMatches.matches().get(obfSourceEntry);
                 if (obfDestEntry != null) {
                     setDest(obfDestEntry);
                 }
@@ -356,12 +335,12 @@ public class MemberMatchingGui<T extends Entry> {
             @SuppressWarnings("unchecked")
             T destEntry = (T) dest;
 
-            T obfDestEntry = m_destDeobfuscator.obfuscateEntry(destEntry);
-            if (m_memberMatches.hasDest(obfDestEntry)) {
+            T obfDestEntry = destDeobfuscator.obfuscateEntry(destEntry);
+            if (memberMatches.hasDest(obfDestEntry)) {
                 setDest(obfDestEntry);
 
                 // look for a matched source too
-                T obfSourceEntry = m_memberMatches.matches().inverse().get(obfDestEntry);
+                T obfSourceEntry = memberMatches.matches().inverse().get(obfDestEntry);
                 if (obfSourceEntry != null) {
                     setSource(obfSourceEntry);
                 }
@@ -373,21 +352,21 @@ public class MemberMatchingGui<T extends Entry> {
 
     private void setSource(T obfEntry) {
         if (obfEntry == null) {
-            m_obfSourceEntry = null;
-            m_sourceLabel.setText("");
+            obfSourceEntry = null;
+            sourceLabel.setText("");
         } else {
-            m_obfSourceEntry = obfEntry;
-            m_sourceLabel.setText(getEntryLabel(obfEntry, m_sourceDeobfuscator));
+            obfSourceEntry = obfEntry;
+            sourceLabel.setText(getEntryLabel(obfEntry, sourceDeobfuscator));
         }
     }
 
     private void setDest(T obfEntry) {
         if (obfEntry == null) {
-            m_obfDestEntry = null;
-            m_destLabel.setText("");
+            obfDestEntry = null;
+            destLabel.setText("");
         } else {
-            m_obfDestEntry = obfEntry;
-            m_destLabel.setText(getEntryLabel(obfEntry, m_destDeobfuscator));
+            obfDestEntry = obfEntry;
+            destLabel.setText(getEntryLabel(obfEntry, destDeobfuscator));
         }
     }
 
@@ -399,39 +378,23 @@ public class MemberMatchingGui<T extends Entry> {
 
     private void updateButtons() {
 
-        GuiTricks.deactivateButton(m_matchButton);
-        GuiTricks.deactivateButton(m_unmatchableButton);
+        GuiTricks.deactivateButton(matchButton);
+        GuiTricks.deactivateButton(unmatchableButton);
 
-        if (m_obfSourceEntry != null && m_obfDestEntry != null) {
-            if (m_memberMatches.isMatched(m_obfSourceEntry, m_obfDestEntry)) {
-                GuiTricks.activateButton(m_matchButton, "Unmatch", new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        unmatch();
-                    }
-                });
-            } else if (!m_memberMatches.isMatchedSourceEntry(m_obfSourceEntry) && !m_memberMatches.isMatchedDestEntry(m_obfDestEntry)) {
-                GuiTricks.activateButton(m_matchButton, "Match", new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent event) {
-                        match();
-                    }
-                });
-            }
-        } else if (m_obfSourceEntry != null) {
-            GuiTricks.activateButton(m_unmatchableButton, "Set Unmatchable", new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    unmatchable();
-                }
-            });
-        }
+        if (obfSourceEntry != null && obfDestEntry != null) {
+            if (memberMatches.isMatched(obfSourceEntry, obfDestEntry))
+                GuiTricks.activateButton(matchButton, "Unmatch", event -> unmatch());
+            else if (!memberMatches.isMatchedSourceEntry(obfSourceEntry) && !memberMatches.isMatchedDestEntry(
+                    obfDestEntry))
+                GuiTricks.activateButton(matchButton, "Match", event -> match());
+        } else if (obfSourceEntry != null)
+            GuiTricks.activateButton(unmatchableButton, "Set Unmatchable", event -> unmatchable());
     }
 
     protected void match() {
 
         // update the field matches
-        m_memberMatches.makeMatch(m_obfSourceEntry, m_obfDestEntry, m_sourceDeobfuscator, m_destDeobfuscator);
+        memberMatches.makeMatch(obfSourceEntry, obfDestEntry, sourceDeobfuscator, destDeobfuscator);
         save();
 
         // update the ui
@@ -445,7 +408,7 @@ public class MemberMatchingGui<T extends Entry> {
     protected void unmatch() {
 
         // update the field matches
-        m_memberMatches.unmakeMatch(m_obfSourceEntry, m_obfDestEntry, m_sourceDeobfuscator, m_destDeobfuscator);
+        memberMatches.unmakeMatch(obfSourceEntry, obfDestEntry, sourceDeobfuscator, destDeobfuscator);
         save();
 
         // update the ui
@@ -459,7 +422,7 @@ public class MemberMatchingGui<T extends Entry> {
     protected void unmatchable() {
 
         // update the field matches
-        m_memberMatches.makeSourceUnmatchable(m_obfSourceEntry, m_sourceDeobfuscator);
+        memberMatches.makeSourceUnmatchable(obfSourceEntry, sourceDeobfuscator);
         save();
 
         // update the ui
@@ -471,8 +434,8 @@ public class MemberMatchingGui<T extends Entry> {
     }
 
     private void save() {
-        if (m_saveListener != null) {
-            m_saveListener.save(m_memberMatches);
+        if (saveListener != null) {
+            saveListener.save(memberMatches);
         }
     }
 }

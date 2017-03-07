@@ -19,20 +19,19 @@ import java.nio.charset.Charset;
 
 public class TreeDumpVisitor implements IAstVisitor<Void, Void> {
 
-    private File m_file;
-    private Writer m_out;
+    private File   file;
+    private Writer out;
 
     public TreeDumpVisitor(File file) {
-        m_file = file;
-        m_out = null;
+        this.file = file;
     }
 
     @Override
     public Void visitCompilationUnit(CompilationUnit node, Void ignored) {
         try {
-            m_out = new OutputStreamWriter(new FileOutputStream(m_file), Charset.forName("UTF-8"));
+            out = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"));
             recurse(node, ignored);
-            m_out.close();
+            out.close();
             return null;
         } catch (IOException ex) {
             throw new Error(ex);
@@ -42,7 +41,7 @@ public class TreeDumpVisitor implements IAstVisitor<Void, Void> {
     private Void recurse(AstNode node, Void ignored) {
         // show the tree
         try {
-            m_out.write(getIndent(node) + node.getClass().getSimpleName() + " " + getText(node) + " " + dumpUserData(node) + " " + node.getRegion() + "\n");
+            out.write(getIndent(node) + node.getClass().getSimpleName() + " " + getText(node) + " " + dumpUserData(node) + " " + node.getRegion() + "\n");
         } catch (IOException ex) {
             throw new Error(ex);
         }

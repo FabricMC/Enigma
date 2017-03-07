@@ -13,30 +13,28 @@ package cuchaz.enigma.mapping;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.throwables.MappingConflict;
 
 public class MappingsRenamer {
 
-    private JarIndex m_index;
-    private Mappings m_mappings;
+    private JarIndex index;
+    private Mappings mappings;
 
     public MappingsRenamer(JarIndex index, Mappings mappings) {
-        m_index = index;
-        m_mappings = mappings;
+        this.index = index;
+        this.mappings = mappings;
     }
 
     public void setMappings(Mappings mappings)
     {
-        this.m_mappings = mappings;
+        this.mappings = mappings;
     }
 
     public void setClassName(ClassEntry obf, String deobfName) {
@@ -48,13 +46,13 @@ public class MappingsRenamer {
 
             if (deobfName != null) {
                 // make sure we don't rename to an existing obf or deobf class
-                if (m_mappings.containsDeobfClass(deobfName) || m_index.containsObfClass(new ClassEntry(deobfName))) {
+                if (mappings.containsDeobfClass(deobfName) || index.containsObfClass(new ClassEntry(deobfName))) {
                     throw new IllegalNameException(deobfName, "There is already a class with that name");
                 }
             }
 
             ClassMapping classMapping = mappingChain.get(0);
-            m_mappings.setClassDeobfName(classMapping, deobfName);
+            mappings.setClassDeobfName(classMapping, deobfName);
 
         } else {
 
@@ -80,7 +78,7 @@ public class MappingsRenamer {
         List<ClassMapping> mappingChain = getOrCreateClassMappingChain(obf);
         if (mappingChain.size() == 1) {
             ClassMapping classMapping = mappingChain.get(0);
-            m_mappings.setClassDeobfName(classMapping, deobfName);
+            mappings.setClassDeobfName(classMapping, deobfName);
         } else {
             ClassMapping outerClassMapping = mappingChain.get(mappingChain.size() - 2);
             outerClassMapping.setInnerClassName(obf, deobfName);
@@ -91,11 +89,11 @@ public class MappingsRenamer {
         deobfName = NameValidator.validateFieldName(deobfName);
         FieldEntry targetEntry = new FieldEntry(obf.getClassEntry(), deobfName, obf.getType());
         ClassEntry definedClass = null;
-        if (m_mappings.containsDeobfField(obf.getClassEntry(), deobfName) || m_index.containsEntryWithSameName(targetEntry))
+        if (mappings.containsDeobfField(obf.getClassEntry(), deobfName) || index.containsEntryWithSameName(targetEntry))
             definedClass = obf.getClassEntry();
         else {
-            for (ClassEntry ancestorEntry : this.m_index.getTranslationIndex().getAncestry(obf.getClassEntry())) {
-                if (m_mappings.containsDeobfField(ancestorEntry, deobfName) || m_index.containsEntryWithSameName(targetEntry.cloneToNewClass(ancestorEntry))) {
+            for (ClassEntry ancestorEntry : this.index.getTranslationIndex().getAncestry(obf.getClassEntry())) {
+                if (mappings.containsDeobfField(ancestorEntry, deobfName) || index.containsEntryWithSameName(targetEntry.cloneToNewClass(ancestorEntry))) {
                     definedClass = ancestorEntry;
                     break;
                 }
@@ -103,7 +101,7 @@ public class MappingsRenamer {
         }
 
         if (definedClass != null) {
-            String className = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(definedClass.getClassName());
+            String className = mappings.getTranslator(TranslationDirection.Deobfuscating, index.getTranslationIndex()).translateClass(definedClass.getClassName());
             if (className == null)
                 className = definedClass.getClassName();
             throw new IllegalNameException(deobfName, "There is already a field with that name in " + className);
@@ -127,23 +125,23 @@ public class MappingsRenamer {
         MethodEntry targetEntry = new MethodEntry(entry.getClassEntry(), deobfName, entry.getSignature());
 
         // TODO: Verify if I don't break things
-        ClassMapping classMapping = m_mappings.getClassByObf(entry.getClassEntry());
+        ClassMapping classMapping = mappings.getClassByObf(entry.getClassEntry());
         if ((classMapping != null && classMapping.containsDeobfMethod(deobfName, entry.getSignature()) && classMapping.getMethodByObf(entry.getName(), entry.getSignature()) != classMapping.getMethodByDeobf(deobfName, entry.getSignature()))
-                || m_index.containsObfBehavior(targetEntry)) {
-            String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(entry.getClassName());
+                || index.containsObfBehavior(targetEntry)) {
+            String deobfClassName = mappings.getTranslator(TranslationDirection.Deobfuscating, index.getTranslationIndex()).translateClass(entry.getClassName());
             if (deobfClassName == null) {
                 deobfClassName = entry.getClassName();
             }
             throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
         }
 
-        for (ClassEntry child : m_index.getTranslationIndex().getSubclass(entry.getClassEntry())) {
+        for (ClassEntry child : index.getTranslationIndex().getSubclass(entry.getClassEntry())) {
             validateMethodTreeName(entry.cloneToNewClass(child), deobfName);
         }
     }
 
     public void setMethodTreeName(MethodEntry obf, String deobfName) {
-        Set<MethodEntry> implementations = m_index.getRelatedMethodImplementations(obf);
+        Set<MethodEntry> implementations = index.getRelatedMethodImplementations(obf);
 
         deobfName = NameValidator.validateMethodName(deobfName);
         for (MethodEntry entry : implementations) {
@@ -161,9 +159,9 @@ public class MappingsRenamer {
         ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
 
         // TODO: Verify if I don't break things
-        if ((m_mappings.containsDeobfMethod(obf.getClassEntry(), deobfName, obf.getSignature()) && classMapping.getMethodByObf(obf.getName(), obf.getSignature()) != classMapping.getMethodByDeobf(deobfName, obf.getSignature()))
-                || m_index.containsObfBehavior(targetEntry)) {
-            String deobfClassName = m_mappings.getTranslator(TranslationDirection.Deobfuscating, m_index.getTranslationIndex()).translateClass(obf.getClassName());
+        if ((mappings.containsDeobfMethod(obf.getClassEntry(), deobfName, obf.getSignature()) && classMapping.getMethodByObf(obf.getName(), obf.getSignature()) != classMapping.getMethodByDeobf(deobfName, obf.getSignature()))
+                || index.containsObfBehavior(targetEntry)) {
+            String deobfClassName = mappings.getTranslator(TranslationDirection.Deobfuscating, index.getTranslationIndex()).translateClass(obf.getClassName());
             if (deobfClassName == null) {
                 deobfClassName = obf.getClassName();
             }
@@ -174,7 +172,7 @@ public class MappingsRenamer {
     }
 
     public void removeMethodTreeMapping(MethodEntry obf) {
-        m_index.getRelatedMethodImplementations(obf).forEach(this::removeMethodMapping);
+        index.getRelatedMethodImplementations(obf).forEach(this::removeMethodMapping);
     }
 
     public void removeMethodMapping(MethodEntry obf) {
@@ -183,7 +181,7 @@ public class MappingsRenamer {
     }
 
     public void markMethodTreeAsDeobfuscated(MethodEntry obf) {
-        m_index.getRelatedMethodImplementations(obf).forEach(this::markMethodAsDeobfuscated);
+        index.getRelatedMethodImplementations(obf).forEach(this::markMethodAsDeobfuscated);
     }
 
     public void markMethodAsDeobfuscated(MethodEntry obf) {
@@ -199,9 +197,9 @@ public class MappingsRenamer {
 
         MethodEntry obfMethod = (MethodEntry) obf.getBehaviorEntry();
 
-        Set<MethodEntry> implementations = m_index.getRelatedMethodImplementations(obfMethod);
+        Set<MethodEntry> implementations = index.getRelatedMethodImplementations(obfMethod);
         for (MethodEntry entry : implementations) {
-            ClassMapping classMapping = m_mappings.getClassByObf(entry.getClassEntry());
+            ClassMapping classMapping = mappings.getClassByObf(entry.getClassEntry());
             if (classMapping != null) {
                 MethodMapping mapping = classMapping.getMethodByObf(entry.getName(), entry.getSignature());
                 // NOTE: don't need to check arguments for name collisions with names determined by Procyon
@@ -297,7 +295,7 @@ public class MappingsRenamer {
 
     private List<ClassMapping> getOrCreateClassMappingChain(ClassEntry obfClassEntry) {
         List<ClassEntry> classChain = obfClassEntry.getClassChain();
-        List<ClassMapping> mappingChain = m_mappings.getClassMappingChain(obfClassEntry);
+        List<ClassMapping> mappingChain = mappings.getClassMappingChain(obfClassEntry);
         for (int i = 0; i < classChain.size(); i++) {
             ClassEntry classEntry = classChain.get(i);
             ClassMapping classMapping = mappingChain.get(i);
@@ -310,7 +308,7 @@ public class MappingsRenamer {
                 // add it to the right parent
                 try {
                     if (i == 0) {
-                        m_mappings.addClassMapping(classMapping);
+                        mappings.addClassMapping(classMapping);
                     } else {
                         mappingChain.get(i - 1).addInnerClassMapping(classMapping);
                     }

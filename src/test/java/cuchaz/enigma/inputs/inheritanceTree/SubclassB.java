@@ -14,7 +14,7 @@ package cuchaz.enigma.inputs.inheritanceTree;
 public class SubclassB extends BaseClass {
 	
 	// a
-	private int m_numThings;
+	private int numThings;
 	
 	// <init>()V
 	protected SubclassB() {
@@ -22,7 +22,7 @@ public class SubclassB extends BaseClass {
 		super("B");
 		
 		// access to a
-		m_numThings = 4;
+		numThings = 4;
 	}
 	
 	@Override
@@ -35,6 +35,6 @@ public class SubclassB extends BaseClass {
 	// b()V
 	public void doBThings() {
 		// access to a
-		System.out.println("" + m_numThings + " B things!");
+		System.out.println("" + numThings + " B things!");
 	}
 }
