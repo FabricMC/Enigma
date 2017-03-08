@@ -8,6 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.bytecode;
 
 import javassist.CtBehavior;
@@ -16,36 +17,35 @@ import javassist.CtField;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.InnerClassesAttribute;
 
-
 public class ClassPublifier {
 
-    public static CtClass publify(CtClass c) {
+	public static CtClass publify(CtClass c) {
 
-        // publify all the fields
-        for (CtField field : c.getDeclaredFields()) {
-            field.setModifiers(publify(field.getModifiers()));
-        }
+		// publify all the fields
+		for (CtField field : c.getDeclaredFields()) {
+			field.setModifiers(publify(field.getModifiers()));
+		}
 
-        // publify all the methods and constructors
-        for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-            behavior.setModifiers(publify(behavior.getModifiers()));
-        }
+		// publify all the methods and constructors
+		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
+			behavior.setModifiers(publify(behavior.getModifiers()));
+		}
 
-        // publify all the inner classes
-        InnerClassesAttribute attr = (InnerClassesAttribute) c.getClassFile().getAttribute(InnerClassesAttribute.tag);
-        if (attr != null) {
-            for (int i = 0; i < attr.tableLength(); i++) {
-                attr.setAccessFlags(i, publify(attr.accessFlags(i)));
-            }
-        }
+		// publify all the inner classes
+		InnerClassesAttribute attr = (InnerClassesAttribute) c.getClassFile().getAttribute(InnerClassesAttribute.tag);
+		if (attr != null) {
+			for (int i = 0; i < attr.tableLength(); i++) {
+				attr.setAccessFlags(i, publify(attr.accessFlags(i)));
+			}
+		}
 
-        return c;
-    }
+		return c;
+	}
 
-    private static int publify(int flags) {
-        if (!AccessFlag.isPublic(flags)) {
-            flags = AccessFlag.setPublic(flags);
-        }
-        return flags;
-    }
+	private static int publify(int flags) {
+		if (!AccessFlag.isPublic(flags)) {
+			flags = AccessFlag.setPublic(flags);
+		}
+		return flags;
+	}
 }

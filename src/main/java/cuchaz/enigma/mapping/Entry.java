@@ -8,14 +8,15 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.mapping;
 
 public interface Entry {
-    String getName();
+	String getName();
 
-    String getClassName();
+	String getClassName();
 
-    ClassEntry getClassEntry();
+	ClassEntry getClassEntry();
 
-    Entry cloneToNewClass(ClassEntry classEntry);
+	Entry cloneToNewClass(ClassEntry classEntry);
 }

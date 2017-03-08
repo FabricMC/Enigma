@@ -8,24 +8,25 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.throwables;
 
 import java.io.File;
 
 public class MappingParseException extends Exception {
 
-    private int    line;
-    private String message;
-    private String filePath;
+	private int line;
+	private String message;
+	private String filePath;
 
-    public MappingParseException(File file, int line, String message) {
-        this.line = line;
-        this.message = message;
-        filePath = file.getAbsolutePath();
-    }
+	public MappingParseException(File file, int line, String message) {
+		this.line = line;
+		this.message = message;
+		filePath = file.getAbsolutePath();
+	}
 
-    @Override
-    public String getMessage() {
-        return "Line " + line + ": " + message + " in file " + filePath;
-    }
+	@Override
+	public String getMessage() {
+		return "Line " + line + ": " + message + " in file " + filePath;
+	}
 }

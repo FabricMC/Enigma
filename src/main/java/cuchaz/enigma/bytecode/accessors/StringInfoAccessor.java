@@ -8,48 +8,49 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.bytecode.accessors;
 
 import java.lang.reflect.Field;
 
 public class StringInfoAccessor {
 
-    private static Class<?> clazz;
-    private static Field stringIndex;
+	private static Class<?> clazz;
+	private static Field stringIndex;
 
-    private Object item;
+	static {
+		try {
+			clazz = Class.forName("javassist.bytecode.StringInfo");
+			stringIndex = clazz.getDeclaredField("string");
+			stringIndex.setAccessible(true);
+		} catch (Exception ex) {
+			throw new Error(ex);
+		}
+	}
 
-    public StringInfoAccessor(Object item) {
-        this.item = item;
-    }
+	private Object item;
 
-    public int getStringIndex() {
-        try {
-            return (Integer) stringIndex.get(this.item);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
+	public StringInfoAccessor(Object item) {
+		this.item = item;
+	}
 
-    public void setStringIndex(int val) {
-        try {
-            stringIndex.set(this.item, val);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
+	public static boolean isType(ConstInfoAccessor accessor) {
+		return clazz.isAssignableFrom(accessor.getItem().getClass());
+	}
 
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return clazz.isAssignableFrom(accessor.getItem().getClass());
-    }
+	public int getStringIndex() {
+		try {
+			return (Integer) stringIndex.get(this.item);
+		} catch (Exception ex) {
+			throw new Error(ex);
+		}
+	}
 
-    static {
-        try {
-            clazz = Class.forName("javassist.bytecode.StringInfo");
-            stringIndex = clazz.getDeclaredField("string");
-            stringIndex.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
+	public void setStringIndex(int val) {
+		try {
+			stringIndex.set(this.item, val);
+		} catch (Exception ex) {
+			throw new Error(ex);
+		}
+	}
 }

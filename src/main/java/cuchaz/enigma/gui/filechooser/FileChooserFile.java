@@ -1,8 +1,8 @@
 package cuchaz.enigma.gui.filechooser;
 
-import javax.swing.JFileChooser;
+import javax.swing.*;
 
 public class FileChooserFile extends JFileChooser {
-    public FileChooserFile() {
-    }
+	public FileChooserFile() {
+	}
 }

@@ -4,31 +4,33 @@
  * are made available under the terms of the GNU Lesser General Public
  * License v3.0 which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma;
-
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
-import org.junit.Test;
 
 import cuchaz.enigma.mapping.ClassNameReplacer;
 import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Type;
+import org.junit.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 public class TestSignature {
-	
+
 	@Test
 	public void easiest() {
 		final Signature sig = new Signature("()V");
 		assertThat(sig.getArgumentTypes(), is(empty()));
 		assertThat(sig.getReturnType(), is(new Type("V")));
 	}
-	
+
 	@Test
 	public void primitives() {
 		{
@@ -56,7 +58,7 @@ public class TestSignature {
 			assertThat(sig.getReturnType(), is(new Type("Z")));
 		}
 	}
-	
+
 	@Test
 	public void classes() {
 		{
@@ -82,7 +84,7 @@ public class TestSignature {
 			assertThat(sig.getReturnType(), is(new Type("LBar;")));
 		}
 	}
-	
+
 	@Test
 	public void arrays() {
 		{
@@ -109,7 +111,7 @@ public class TestSignature {
 			assertThat(sig.getReturnType(), is(new Type("[D")));
 		}
 	}
-	
+
 	@Test
 	public void mixed() {
 		{
@@ -131,7 +133,7 @@ public class TestSignature {
 			assertThat(sig.getReturnType(), is(new Type("[LFoo;")));
 		}
 	}
-	
+
 	@Test
 	public void replaceClasses() {
 		{
@@ -195,7 +197,7 @@ public class TestSignature {
 			assertThat(sig.getReturnType(), is(new Type("LCow;")));
 		}
 	}
-	
+
 	@Test
 	public void replaceArrayClasses() {
 		{
@@ -217,13 +219,13 @@ public class TestSignature {
 			assertThat(sig.getReturnType(), is(new Type("[[[LBeer;")));
 		}
 	}
-	
+
 	@Test
 	public void equals() {
-		
+
 		// base
 		assertThat(new Signature("()V"), is(new Signature("()V")));
-		
+
 		// arguments
 		assertThat(new Signature("(I)V"), is(new Signature("(I)V")));
 		assertThat(new Signature("(ZIZ)V"), is(new Signature("(ZIZ)V")));
@@ -238,7 +240,7 @@ public class TestSignature {
 		assertThat(new Signature("([[Z)V"), is(not(new Signature("([[LFoo;)V"))));
 		assertThat(new Signature("(LFoo;LBar;)V"), is(not(new Signature("(LFoo;LCow;)V"))));
 		assertThat(new Signature("([LFoo;LBar;)V"), is(not(new Signature("(LFoo;LCow;)V"))));
-		
+
 		// return type
 		assertThat(new Signature("()I"), is(new Signature("()I")));
 		assertThat(new Signature("()Z"), is(new Signature("()Z")));
@@ -246,7 +248,7 @@ public class TestSignature {
 		assertThat(new Signature("()[[[Z"), is(new Signature("()[[[Z")));
 		assertThat(new Signature("()LFoo;"), is(new Signature("()LFoo;")));
 		assertThat(new Signature("()[LFoo;"), is(new Signature("()[LFoo;")));
-		
+
 		assertThat(new Signature("()I"), is(not(new Signature("()Z"))));
 		assertThat(new Signature("()Z"), is(not(new Signature("()I"))));
 		assertThat(new Signature("()[D"), is(not(new Signature("()[J"))));
@@ -254,7 +256,7 @@ public class TestSignature {
 		assertThat(new Signature("()LFoo;"), is(not(new Signature("()LBar;"))));
 		assertThat(new Signature("()[LFoo;"), is(not(new Signature("()[LBar;"))));
 	}
-	
+
 	@Test
 	public void testToString() {
 		assertThat(new Signature("()V").toString(), is("()V"));

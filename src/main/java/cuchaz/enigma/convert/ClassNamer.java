@@ -8,49 +8,48 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.convert;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Maps;
+import cuchaz.enigma.mapping.ClassEntry;
 
 import java.util.Map;
 
-import cuchaz.enigma.mapping.ClassEntry;
-
 public class ClassNamer {
 
-    public interface SidedClassNamer {
-        String getName(String name);
-    }
+	private Map<String, String> sourceNames;
+	private Map<String, String> destNames;
+	public ClassNamer(BiMap<ClassEntry, ClassEntry> mappings) {
+		// convert the identity mappings to name maps
+		this.sourceNames = Maps.newHashMap();
+		this.destNames = Maps.newHashMap();
+		int i = 0;
+		for (Map.Entry<ClassEntry, ClassEntry> entry : mappings.entrySet()) {
+			String name = String.format("M%04d", i++);
+			this.sourceNames.put(entry.getKey().getName(), name);
+			this.destNames.put(entry.getValue().getName(), name);
+		}
+	}
 
-    private Map<String, String> sourceNames;
-    private Map<String, String> destNames;
+	public String getSourceName(String name) {
+		return this.sourceNames.get(name);
+	}
 
-    public ClassNamer(BiMap<ClassEntry, ClassEntry> mappings) {
-        // convert the identity mappings to name maps
-        this.sourceNames = Maps.newHashMap();
-        this.destNames = Maps.newHashMap();
-        int i = 0;
-        for (Map.Entry<ClassEntry, ClassEntry> entry : mappings.entrySet()) {
-            String name = String.format("M%04d", i++);
-            this.sourceNames.put(entry.getKey().getName(), name);
-            this.destNames.put(entry.getValue().getName(), name);
-        }
-    }
+	public String getDestName(String name) {
+		return this.destNames.get(name);
+	}
 
-    public String getSourceName(String name) {
-        return this.sourceNames.get(name);
-    }
+	public SidedClassNamer getSourceNamer() {
+		return this::getSourceName;
+	}
 
-    public String getDestName(String name) {
-        return this.destNames.get(name);
-    }
+	public SidedClassNamer getDestNamer() {
+		return this::getDestName;
+	}
 
-    public SidedClassNamer getSourceNamer() {
-        return this::getSourceName;
-    }
-
-    public SidedClassNamer getDestNamer() {
-        return this::getDestName;
-    }
+	public interface SidedClassNamer {
+		String getName(String name);
+	}
 }

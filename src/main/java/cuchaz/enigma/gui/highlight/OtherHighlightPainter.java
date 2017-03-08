@@ -8,13 +8,14 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.gui.highlight;
 
-import java.awt.Color;
+import java.awt.*;
 
 public class OtherHighlightPainter extends BoxHighlightPainter {
 
-    public OtherHighlightPainter() {
-        super(null, new Color(180, 180, 180));
-    }
+	public OtherHighlightPainter() {
+		super(null, new Color(180, 180, 180));
+	}
 }

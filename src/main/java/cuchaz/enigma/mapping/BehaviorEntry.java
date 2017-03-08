@@ -8,8 +8,9 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.mapping;
 
 public interface BehaviorEntry extends Entry {
-    Signature getSignature();
+	Signature getSignature();
 }

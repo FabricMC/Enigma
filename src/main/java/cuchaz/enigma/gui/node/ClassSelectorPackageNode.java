@@ -8,6 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.gui.node;
 
 import javassist.bytecode.Descriptor;
@@ -16,44 +17,44 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
 
-    private String packageName;
+	private String packageName;
 
-    public ClassSelectorPackageNode(String packageName) {
-        this.packageName = packageName != null ? packageName : "(none)";
-    }
+	public ClassSelectorPackageNode(String packageName) {
+		this.packageName = packageName != null ? packageName : "(none)";
+	}
 
-    public String getPackageName() {
-        return packageName;
-    }
+	public String getPackageName() {
+		return packageName;
+	}
 
-    @Override public void setUserObject(Object userObject)
-    {
-        if (userObject instanceof String)
-            this.packageName = (String) userObject;
-        super.setUserObject(userObject);
-    }
+	@Override
+	public Object getUserObject() {
+		return packageName;
+	}
 
-    @Override public Object getUserObject()
-    {
-        return packageName;
-    }
+	@Override
+	public void setUserObject(Object userObject) {
+		if (userObject instanceof String)
+			this.packageName = (String) userObject;
+		super.setUserObject(userObject);
+	}
 
-    @Override
-    public String toString() {
-        return !packageName.equals("(none)") ? Descriptor.toJavaName(this.packageName) : "(none)";
-    }
+	@Override
+	public String toString() {
+		return !packageName.equals("(none)") ? Descriptor.toJavaName(this.packageName) : "(none)";
+	}
 
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof ClassSelectorPackageNode && equals((ClassSelectorPackageNode) other);
-    }
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof ClassSelectorPackageNode && equals((ClassSelectorPackageNode) other);
+	}
 
-    @Override public int hashCode()
-    {
-        return packageName.hashCode();
-    }
+	@Override
+	public int hashCode() {
+		return packageName.hashCode();
+	}
 
-    public boolean equals(ClassSelectorPackageNode other) {
-        return other != null && this.packageName.equals(other.packageName);
-    }
+	public boolean equals(ClassSelectorPackageNode other) {
+		return other != null && this.packageName.equals(other.packageName);
+	}
 }

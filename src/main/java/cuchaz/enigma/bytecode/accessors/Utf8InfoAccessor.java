@@ -8,21 +8,22 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.bytecode.accessors;
 
 public class Utf8InfoAccessor {
 
-    private static Class<?> clazz;
+	private static Class<?> clazz;
 
-    static {
-        try {
-            clazz = Class.forName("javassist.bytecode.Utf8Info");
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
+	static {
+		try {
+			clazz = Class.forName("javassist.bytecode.Utf8Info");
+		} catch (Exception ex) {
+			throw new Error(ex);
+		}
+	}
 
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return clazz.isAssignableFrom(accessor.getItem().getClass());
-    }
+	public static boolean isType(ConstInfoAccessor accessor) {
+		return clazz.isAssignableFrom(accessor.getItem().getClass());
+	}
 }

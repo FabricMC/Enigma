@@ -8,11 +8,11 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.mapping;
 
-
 public interface MemberMapping<T extends Entry> {
-    T getObfEntry(ClassEntry classEntry);
+	T getObfEntry(ClassEntry classEntry);
 
-    String getObfName();
+	String getObfName();
 }

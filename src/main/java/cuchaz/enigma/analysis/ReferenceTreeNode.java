@@ -8,12 +8,13 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.mapping.Entry;
 
 public interface ReferenceTreeNode<E extends Entry, C extends Entry> {
-    E getEntry();
+	E getEntry();
 
-    EntryReference<E, C> getReference();
+	EntryReference<E, C> getReference();
 }

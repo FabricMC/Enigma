@@ -8,49 +8,50 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.bytecode.accessors;
 
 import java.lang.reflect.Field;
 
 public class MethodTypeInfoAccessor {
 
-    private static Class<?> clazz;
-    private static Field descriptorIndex;
+	private static Class<?> clazz;
+	private static Field descriptorIndex;
 
-    private Object item;
+	static {
+		try {
+			clazz = Class.forName("javassist.bytecode.MethodTypeInfo");
+			descriptorIndex = clazz.getDeclaredField("descriptor");
+			descriptorIndex.setAccessible(true);
+		} catch (Exception ex) {
+			throw new Error(ex);
+		}
+	}
 
-    public MethodTypeInfoAccessor(Object item) {
-        this.item = item;
-    }
+	private Object item;
 
-    public int getTypeIndex() {
-        try {
-            return (Integer) descriptorIndex.get(this.item);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
+	public MethodTypeInfoAccessor(Object item) {
+		this.item = item;
+	}
 
-    public void setTypeIndex(int val) {
-        try {
-            descriptorIndex.set(this.item, val);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
+	public static boolean isType(ConstInfoAccessor accessor) {
+		return clazz.isAssignableFrom(accessor.getItem().getClass());
+	}
 
-    public static boolean isType(ConstInfoAccessor accessor) {
-        return clazz.isAssignableFrom(accessor.getItem().getClass());
-    }
+	public int getTypeIndex() {
+		try {
+			return (Integer) descriptorIndex.get(this.item);
+		} catch (Exception ex) {
+			throw new Error(ex);
+		}
+	}
 
-    static {
-        try {
-            clazz = Class.forName("javassist.bytecode.MethodTypeInfo");
-            descriptorIndex = clazz.getDeclaredField("descriptor");
-            descriptorIndex.setAccessible(true);
-        } catch (Exception ex) {
-            throw new Error(ex);
-        }
-    }
+	public void setTypeIndex(int val) {
+		try {
+			descriptorIndex.set(this.item, val);
+		} catch (Exception ex) {
+			throw new Error(ex);
+		}
+	}
 
 }

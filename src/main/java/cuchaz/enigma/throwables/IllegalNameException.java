@@ -8,31 +8,32 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.throwables;
 
 public class IllegalNameException extends RuntimeException {
 
-    private String name;
-    private String reason;
+	private String name;
+	private String reason;
 
-    public IllegalNameException(String name, String reason) {
-        this.name = name;
-        this.reason = reason;
-    }
+	public IllegalNameException(String name, String reason) {
+		this.name = name;
+		this.reason = reason;
+	}
 
-    public String getReason() {
-        return this.reason;
-    }
+	public String getReason() {
+		return this.reason;
+	}
 
-    @Override
-    public String getMessage() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("Illegal name: ");
-        buf.append(this.name);
-        if (this.reason != null) {
-            buf.append(" because ");
-            buf.append(this.reason);
-        }
-        return buf.toString();
-    }
+	@Override
+	public String getMessage() {
+		StringBuilder buf = new StringBuilder();
+		buf.append("Illegal name: ");
+		buf.append(this.name);
+		if (this.reason != null) {
+			buf.append(" because ");
+			buf.append(this.reason);
+		}
+		return buf.toString();
+	}
 }

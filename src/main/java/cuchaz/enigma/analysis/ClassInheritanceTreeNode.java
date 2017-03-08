@@ -8,74 +8,73 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-
-import java.util.List;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Translator;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.List;
+
 public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 
-    private Translator deobfuscatingTranslator;
-    private String obfClassName;
+	private Translator deobfuscatingTranslator;
+	private String obfClassName;
 
-    public ClassInheritanceTreeNode(Translator deobfuscatingTranslator, String obfClassName) {
-        this.deobfuscatingTranslator = deobfuscatingTranslator;
-        this.obfClassName = obfClassName;
-    }
+	public ClassInheritanceTreeNode(Translator deobfuscatingTranslator, String obfClassName) {
+		this.deobfuscatingTranslator = deobfuscatingTranslator;
+		this.obfClassName = obfClassName;
+	}
 
-    public String getObfClassName() {
-        return this.obfClassName;
-    }
+	public static ClassInheritanceTreeNode findNode(ClassInheritanceTreeNode node, ClassEntry entry) {
+		// is this the node?
+		if (node.getObfClassName().equals(entry.getName())) {
+			return node;
+		}
 
-    public String getDeobfClassName() {
-        return this.deobfuscatingTranslator.translateClass(this.obfClassName);
-    }
+		// recurse
+		for (int i = 0; i < node.getChildCount(); i++) {
+			ClassInheritanceTreeNode foundNode = findNode((ClassInheritanceTreeNode) node.getChildAt(i), entry);
+			if (foundNode != null) {
+				return foundNode;
+			}
+		}
+		return null;
+	}
 
-    @Override
-    public String toString() {
-        String deobfClassName = getDeobfClassName();
-        if (deobfClassName != null) {
-            return deobfClassName;
-        }
-        return this.obfClassName;
-    }
+	public String getObfClassName() {
+		return this.obfClassName;
+	}
 
-    public void load(TranslationIndex ancestries, boolean recurse) {
-        // get all the child nodes
-        List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
-        for (ClassEntry subclassEntry : ancestries.getSubclass(new ClassEntry(this.obfClassName))) {
-            nodes.add(new ClassInheritanceTreeNode(this.deobfuscatingTranslator, subclassEntry.getName()));
-        }
+	public String getDeobfClassName() {
+		return this.deobfuscatingTranslator.translateClass(this.obfClassName);
+	}
 
-        // add them to this node
-        nodes.forEach(this::add);
+	@Override
+	public String toString() {
+		String deobfClassName = getDeobfClassName();
+		if (deobfClassName != null) {
+			return deobfClassName;
+		}
+		return this.obfClassName;
+	}
 
-        if (recurse) {
-            for (ClassInheritanceTreeNode node : nodes) {
-                node.load(ancestries, true);
-            }
-        }
-    }
+	public void load(TranslationIndex ancestries, boolean recurse) {
+		// get all the child nodes
+		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
+		for (ClassEntry subclassEntry : ancestries.getSubclass(new ClassEntry(this.obfClassName))) {
+			nodes.add(new ClassInheritanceTreeNode(this.deobfuscatingTranslator, subclassEntry.getName()));
+		}
 
-    public static ClassInheritanceTreeNode findNode(ClassInheritanceTreeNode node, ClassEntry entry) {
-        // is this the node?
-        if (node.getObfClassName().equals(entry.getName())) {
-            return node;
-        }
+		// add them to this node
+		nodes.forEach(this::add);
 
-        // recurse
-        for (int i = 0; i < node.getChildCount(); i++) {
-            ClassInheritanceTreeNode foundNode = findNode((ClassInheritanceTreeNode) node.getChildAt(i), entry);
-            if (foundNode != null) {
-                return foundNode;
-            }
-        }
-        return null;
-    }
+		if (recurse) {
+			for (ClassInheritanceTreeNode node : nodes) {
+				node.load(ancestries, true);
+			}
+		}
+	}
 }

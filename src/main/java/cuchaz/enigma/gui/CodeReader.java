@@ -8,20 +8,10 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.gui;
 
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JEditorPane;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Highlighter.HighlightPainter;
-
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
@@ -31,180 +21,184 @@ import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Entry;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
+import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Highlighter.HighlightPainter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class CodeReader extends JEditorPane {
 
-    private static final long serialVersionUID = 3673180950485748810L;
+	private static final long serialVersionUID = 3673180950485748810L;
 
-    private static final Object lock = new Object();
+	private static final Object lock = new Object();
+	private SelectionHighlightPainter selectionHighlightPainter;
+	private SourceIndex sourceIndex;
+	private SelectionListener selectionListener;
+	public CodeReader() {
 
-    public interface SelectionListener {
-        void onSelect(EntryReference<Entry, Entry> reference);
-    }
+		setEditable(false);
+		setContentType("text/java");
 
-    private SelectionHighlightPainter selectionHighlightPainter;
-    private SourceIndex               sourceIndex;
-    private SelectionListener         selectionListener;
+		// turn off token highlighting (it's wrong most of the time anyway...)
+		DefaultSyntaxKit kit = (DefaultSyntaxKit) getEditorKit();
+		kit.toggleComponent(this, "de.sciss.syntaxpane.components.TokenMarker");
 
-    public CodeReader() {
+		// hook events
+		addCaretListener(event ->
+		{
+			if (selectionListener != null && sourceIndex != null) {
+				Token token = sourceIndex.getReferenceToken(event.getDot());
+				if (token != null) {
+					selectionListener.onSelect(sourceIndex.getDeobfReference(token));
+				} else {
+					selectionListener.onSelect(null);
+				}
+			}
+		});
 
-        setEditable(false);
-        setContentType("text/java");
+		selectionHighlightPainter = new SelectionHighlightPainter();
+	}
 
-        // turn off token highlighting (it's wrong most of the time anyway...)
-        DefaultSyntaxKit kit = (DefaultSyntaxKit) getEditorKit();
-        kit.toggleComponent(this, "de.sciss.syntaxpane.components.TokenMarker");
+	// HACKHACK: someday we can update the main GUI to use this code reader
+	public static void navigateToToken(final JEditorPane editor, final Token token, final HighlightPainter highlightPainter) {
 
-        // hook events
-        addCaretListener(event ->
-        {
-            if (selectionListener != null && sourceIndex != null) {
-                Token token = sourceIndex.getReferenceToken(event.getDot());
-                if (token != null) {
-                    selectionListener.onSelect(sourceIndex.getDeobfReference(token));
-                } else {
-                    selectionListener.onSelect(null);
-                }
-            }
-        });
+		// set the caret position to the token
+		editor.setCaretPosition(token.start);
+		editor.grabFocus();
 
-        selectionHighlightPainter = new SelectionHighlightPainter();
-    }
+		try {
+			// make sure the token is visible in the scroll window
+			Rectangle start = editor.modelToView(token.start);
+			Rectangle end = editor.modelToView(token.end);
+			final Rectangle show = start.union(end);
+			show.grow(start.width * 10, start.height * 6);
+			SwingUtilities.invokeLater(() -> editor.scrollRectToVisible(show));
+		} catch (BadLocationException ex) {
+			throw new Error(ex);
+		}
 
-    public void setSelectionListener(SelectionListener val) {
-        selectionListener = val;
-    }
+		// highlight the token momentarily
+		final Timer timer = new Timer(200, new ActionListener() {
+			private int counter = 0;
+			private Object highlight = null;
 
-    public void setCode(String code) {
-        // sadly, the java lexer is not thread safe, so we have to serialize all these calls
-        synchronized (lock) {
-            setText(code);
-        }
-    }
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				if (counter % 2 == 0) {
+					try {
+						highlight = editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
+					} catch (BadLocationException ex) {
+						// don't care
+					}
+				} else if (highlight != null) {
+					editor.getHighlighter().removeHighlight(highlight);
+				}
 
-    public SourceIndex getSourceIndex() {
-        return sourceIndex;
-    }
+				if (counter++ > 6) {
+					Timer timer = (Timer) event.getSource();
+					timer.stop();
+				}
+			}
+		});
+		timer.start();
+	}
 
-    public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator) {
-        decompileClass(classEntry, deobfuscator, null);
-    }
+	public void setSelectionListener(SelectionListener val) {
+		selectionListener = val;
+	}
 
-    public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator, Runnable callback) {
-        decompileClass(classEntry, deobfuscator, null, callback);
-    }
+	public void setCode(String code) {
+		// sadly, the java lexer is not thread safe, so we have to serialize all these calls
+		synchronized (lock) {
+			setText(code);
+		}
+	}
 
-    public void decompileClass(final ClassEntry classEntry, final Deobfuscator deobfuscator, final Boolean ignoreBadTokens, final Runnable callback) {
+	public SourceIndex getSourceIndex() {
+		return sourceIndex;
+	}
 
-        if (classEntry == null) {
-            setCode(null);
-            return;
-        }
+	public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator) {
+		decompileClass(classEntry, deobfuscator, null);
+	}
 
-        setCode("(decompiling...)");
+	public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator, Runnable callback) {
+		decompileClass(classEntry, deobfuscator, null, callback);
+	}
 
-        // run decompilation in a separate thread to keep ui responsive
-        new Thread(() ->
-        {
+	public void decompileClass(final ClassEntry classEntry, final Deobfuscator deobfuscator, final Boolean ignoreBadTokens, final Runnable callback) {
 
-            // decompile it
-            CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClassName());
-            String source = deobfuscator.getSource(sourceTree);
-            setCode(source);
-            sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);
+		if (classEntry == null) {
+			setCode(null);
+			return;
+		}
 
-            if (callback != null) {
-                callback.run();
-            }
-        }).start();
-    }
+		setCode("(decompiling...)");
 
-    public void navigateToClassDeclaration(ClassEntry classEntry) {
+		// run decompilation in a separate thread to keep ui responsive
+		new Thread(() ->
+		{
 
-        // navigate to the class declaration
-        Token token = sourceIndex.getDeclarationToken(classEntry);
-        if (token == null) {
-            // couldn't find the class declaration token, might be an anonymous class
-            // look for any declaration in that class instead
-            for (Entry entry : sourceIndex.declarations()) {
-                if (entry.getClassEntry().equals(classEntry)) {
-                    token = sourceIndex.getDeclarationToken(entry);
-                    break;
-                }
-            }
-        }
+			// decompile it
+			CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClassName());
+			String source = deobfuscator.getSource(sourceTree);
+			setCode(source);
+			sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);
 
-        if (token != null) {
-            navigateToToken(token);
-        } else {
-            // couldn't find anything =(
-            System.out.println("Unable to find declaration in source for " + classEntry);
-        }
-    }
+			if (callback != null) {
+				callback.run();
+			}
+		}).start();
+	}
 
-    public void navigateToToken(final Token token) {
-        navigateToToken(this, token, selectionHighlightPainter);
-    }
+	public void navigateToClassDeclaration(ClassEntry classEntry) {
 
-    // HACKHACK: someday we can update the main GUI to use this code reader
-    public static void navigateToToken(final JEditorPane editor, final Token token, final HighlightPainter highlightPainter) {
+		// navigate to the class declaration
+		Token token = sourceIndex.getDeclarationToken(classEntry);
+		if (token == null) {
+			// couldn't find the class declaration token, might be an anonymous class
+			// look for any declaration in that class instead
+			for (Entry entry : sourceIndex.declarations()) {
+				if (entry.getClassEntry().equals(classEntry)) {
+					token = sourceIndex.getDeclarationToken(entry);
+					break;
+				}
+			}
+		}
 
-        // set the caret position to the token
-        editor.setCaretPosition(token.start);
-        editor.grabFocus();
+		if (token != null) {
+			navigateToToken(token);
+		} else {
+			// couldn't find anything =(
+			System.out.println("Unable to find declaration in source for " + classEntry);
+		}
+	}
 
-        try {
-            // make sure the token is visible in the scroll window
-            Rectangle start = editor.modelToView(token.start);
-            Rectangle end = editor.modelToView(token.end);
-            final Rectangle show = start.union(end);
-            show.grow(start.width * 10, start.height * 6);
-            SwingUtilities.invokeLater(() -> editor.scrollRectToVisible(show));
-        } catch (BadLocationException ex) {
-            throw new Error(ex);
-        }
+	public void navigateToToken(final Token token) {
+		navigateToToken(this, token, selectionHighlightPainter);
+	}
 
-        // highlight the token momentarily
-        final Timer timer = new Timer(200, new ActionListener() {
-            private int counter = 0;
-            private Object highlight = null;
+	public void setHighlightedTokens(Iterable<Token> tokens, HighlightPainter painter) {
+		for (Token token : tokens) {
+			setHighlightedToken(token, painter);
+		}
+	}
 
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                if (counter % 2 == 0) {
-                    try {
-                        highlight = editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
-                    } catch (BadLocationException ex) {
-                        // don't care
-                    }
-                } else if (highlight != null) {
-                    editor.getHighlighter().removeHighlight(highlight);
-                }
+	public void setHighlightedToken(Token token, HighlightPainter painter) {
+		try {
+			getHighlighter().addHighlight(token.start, token.end, painter);
+		} catch (BadLocationException ex) {
+			throw new IllegalArgumentException(ex);
+		}
+	}
 
-                if (counter++ > 6) {
-                    Timer timer = (Timer) event.getSource();
-                    timer.stop();
-                }
-            }
-        });
-        timer.start();
-    }
+	public void clearHighlights() {
+		getHighlighter().removeAllHighlights();
+	}
 
-    public void setHighlightedTokens(Iterable<Token> tokens, HighlightPainter painter) {
-        for (Token token : tokens) {
-            setHighlightedToken(token, painter);
-        }
-    }
-
-    public void setHighlightedToken(Token token, HighlightPainter painter) {
-        try {
-            getHighlighter().addHighlight(token.start, token.end, painter);
-        } catch (BadLocationException ex) {
-            throw new IllegalArgumentException(ex);
-        }
-    }
-
-    public void clearHighlights() {
-        getHighlighter().removeAllHighlights();
-    }
+	public interface SelectionListener {
+		void onSelect(EntryReference<Entry, Entry> reference);
+	}
 }

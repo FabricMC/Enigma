@@ -8,8 +8,9 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.mapping;
 
 public interface ClassNameReplacer {
-    String replace(String className);
+	String replace(String className);
 }

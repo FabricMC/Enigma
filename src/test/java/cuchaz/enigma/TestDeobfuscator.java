@@ -4,40 +4,39 @@
  * are made available under the terms of the GNU Lesser General Public
  * License v3.0 which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma;
 
-import static org.junit.Assert.*;
+import com.google.common.collect.Lists;
+import cuchaz.enigma.mapping.ClassEntry;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.jar.JarFile;
 
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
-
-import cuchaz.enigma.mapping.ClassEntry;
+import static org.junit.Assert.assertEquals;
 
 public class TestDeobfuscator {
-	
+
 	private Deobfuscator getDeobfuscator()
-	throws IOException {
+		throws IOException {
 		return new Deobfuscator(new JarFile("build/test-obf/loneClass.jar"));
 	}
-	
+
 	@Test
 	public void loadJar()
-	throws Exception {
+		throws Exception {
 		getDeobfuscator();
 	}
-	
+
 	@Test
 	public void getClasses()
-	throws Exception {
+		throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
 		List<ClassEntry> obfClasses = Lists.newArrayList();
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
@@ -47,10 +46,10 @@ public class TestDeobfuscator {
 		assertEquals(1, deobfClasses.size());
 		assertEquals("cuchaz/enigma/inputs/Keep", deobfClasses.get(0).getName());
 	}
-	
+
 	@Test
 	public void decompileClass()
-	throws Exception {
+		throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
 		deobfuscator.getSource(deobfuscator.getSourceTree("a"));
 	}

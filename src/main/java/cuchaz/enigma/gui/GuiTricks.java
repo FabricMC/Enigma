@@ -8,6 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.gui;
 
 import javax.swing.*;
@@ -17,26 +18,26 @@ import java.util.Arrays;
 
 public class GuiTricks {
 
-    public static JLabel unboldLabel(JLabel label) {
-        Font font = label.getFont();
-        label.setFont(font.deriveFont(font.getStyle() & ~Font.BOLD));
-        return label;
-    }
+	public static JLabel unboldLabel(JLabel label) {
+		Font font = label.getFont();
+		label.setFont(font.deriveFont(font.getStyle() & ~Font.BOLD));
+		return label;
+	}
 
-    public static void deactivateButton(JButton button) {
-        button.setEnabled(false);
-        button.setText("");
-        for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
-            button.removeActionListener(listener);
-        }
-    }
+	public static void deactivateButton(JButton button) {
+		button.setEnabled(false);
+		button.setText("");
+		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+			button.removeActionListener(listener);
+		}
+	}
 
-    public static void activateButton(JButton button, String text, ActionListener newListener) {
-        button.setText(text);
-        button.setEnabled(true);
-        for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
-            button.removeActionListener(listener);
-        }
-        button.addActionListener(newListener);
-    }
+	public static void activateButton(JButton button, String text, ActionListener newListener) {
+		button.setText(text);
+		button.setEnabled(true);
+		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+			button.removeActionListener(listener);
+		}
+		button.addActionListener(newListener);
+	}
 }

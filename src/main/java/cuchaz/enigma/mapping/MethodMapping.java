@@ -8,211 +8,206 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Maps;
-
-import java.util.Map;
-
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.throwables.MappingConflict;
 
+import java.util.Map;
+
 public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<BehaviorEntry> {
 
-    private String obfName;
-    private String deobfName;
-    private Signature obfSignature;
-    private Map<Integer, ArgumentMapping> arguments;
-    private Mappings.EntryModifier modifier;
+	private String obfName;
+	private String deobfName;
+	private Signature obfSignature;
+	private Map<Integer, ArgumentMapping> arguments;
+	private Mappings.EntryModifier modifier;
 
-    public MethodMapping(String obfName, Signature obfSignature) {
-        this(obfName, obfSignature, null,Mappings.EntryModifier.UNCHANGED);
-    }
+	public MethodMapping(String obfName, Signature obfSignature) {
+		this(obfName, obfSignature, null, Mappings.EntryModifier.UNCHANGED);
+	}
 
-    public MethodMapping(String obfName, Signature obfSignature, String deobfName) {
-        this(obfName, obfSignature, deobfName, Mappings.EntryModifier.UNCHANGED);
-    }
+	public MethodMapping(String obfName, Signature obfSignature, String deobfName) {
+		this(obfName, obfSignature, deobfName, Mappings.EntryModifier.UNCHANGED);
+	}
 
-    public MethodMapping(String obfName, Signature obfSignature, String deobfName, Mappings.EntryModifier modifier) {
-        if (obfName == null) {
-            throw new IllegalArgumentException("obf name cannot be null!");
-        }
-        if (obfSignature == null) {
-            throw new IllegalArgumentException("obf signature cannot be null!");
-        }
-        this.obfName = obfName;
-        this.deobfName = NameValidator.validateMethodName(deobfName);
-        this.obfSignature = obfSignature;
-        this.arguments = Maps.newTreeMap();
-        this.modifier = modifier;
-    }
-    
-    public MethodMapping(MethodMapping other, ClassNameReplacer obfClassNameReplacer) {
-        this.obfName = other.obfName;
-        this.deobfName = other.deobfName;
-        this.modifier = other.modifier;
-        this.obfSignature = new Signature(other.obfSignature, obfClassNameReplacer);
-        this.arguments = Maps.newTreeMap();
-        for (Map.Entry<Integer,ArgumentMapping> entry : other.arguments.entrySet()) {
-            this.arguments.put(entry.getKey(), new ArgumentMapping(entry.getValue()));
-        }
-    }
+	public MethodMapping(String obfName, Signature obfSignature, String deobfName, Mappings.EntryModifier modifier) {
+		if (obfName == null) {
+			throw new IllegalArgumentException("obf name cannot be null!");
+		}
+		if (obfSignature == null) {
+			throw new IllegalArgumentException("obf signature cannot be null!");
+		}
+		this.obfName = obfName;
+		this.deobfName = NameValidator.validateMethodName(deobfName);
+		this.obfSignature = obfSignature;
+		this.arguments = Maps.newTreeMap();
+		this.modifier = modifier;
+	}
 
-    @Override
-    public String getObfName() {
-        return this.obfName;
-    }
+	public MethodMapping(MethodMapping other, ClassNameReplacer obfClassNameReplacer) {
+		this.obfName = other.obfName;
+		this.deobfName = other.deobfName;
+		this.modifier = other.modifier;
+		this.obfSignature = new Signature(other.obfSignature, obfClassNameReplacer);
+		this.arguments = Maps.newTreeMap();
+		for (Map.Entry<Integer, ArgumentMapping> entry : other.arguments.entrySet()) {
+			this.arguments.put(entry.getKey(), new ArgumentMapping(entry.getValue()));
+		}
+	}
 
-    public String getDeobfName() {
-        return this.deobfName;
-    }
+	@Override
+	public String getObfName() {
+		return this.obfName;
+	}
 
-    public void setDeobfName(String val) {
-        this.deobfName = NameValidator.validateMethodName(val);
-    }
+	public void setObfName(String name) {
+		try {
+			NameValidator.validateMethodName(name);
+		} catch (IllegalNameException ex) {
+			// Invalid name, damn obfuscation! Map to a deob name with another name to avoid issues
+			if (this.deobfName == null) {
+				System.err.println("WARNING: " + name + " is conflicting, auto deobfuscate to " + (name + "_auto_deob"));
+				setDeobfName(name + "_auto_deob");
+			}
+		}
+		this.obfName = name;
+	}
 
-    public Signature getObfSignature() {
-        return this.obfSignature;
-    }
+	public String getDeobfName() {
+		return this.deobfName;
+	}
 
-    public void setObfName(String name) {
-        try
-        {
-            NameValidator.validateMethodName(name);
-        } catch (IllegalNameException ex)
-        {
-            // Invalid name, damn obfuscation! Map to a deob name with another name to avoid issues
-            if (this.deobfName == null)
-            {
-                System.err.println("WARNING: " + name + " is conflicting, auto deobfuscate to " + (name + "_auto_deob"));
-                setDeobfName(name + "_auto_deob");
-            }
-        }
-        this.obfName = name;
-    }
+	public void setDeobfName(String val) {
+		this.deobfName = NameValidator.validateMethodName(val);
+	}
 
-    public void setObfSignature(Signature val) {
-        this.obfSignature = val;
-    }
+	public Signature getObfSignature() {
+		return this.obfSignature;
+	}
 
-    public Iterable<ArgumentMapping> arguments() {
-        return this.arguments.values();
-    }
+	public void setObfSignature(Signature val) {
+		this.obfSignature = val;
+	}
 
-    public void addArgumentMapping(ArgumentMapping argumentMapping) throws MappingConflict {
-        if (this.arguments.containsKey(argumentMapping.getIndex())) {
-            throw new MappingConflict("argument", argumentMapping.getName(), this.arguments.get(argumentMapping.getIndex()).getName());
-        }
-        this.arguments.put(argumentMapping.getIndex(), argumentMapping);
-    }
+	public Iterable<ArgumentMapping> arguments() {
+		return this.arguments.values();
+	}
 
-    public String getObfArgumentName(int index) {
-        ArgumentMapping argumentMapping = this.arguments.get(index);
-        if (argumentMapping != null) {
-            return argumentMapping.getName();
-        }
+	public void addArgumentMapping(ArgumentMapping argumentMapping) throws MappingConflict {
+		if (this.arguments.containsKey(argumentMapping.getIndex())) {
+			throw new MappingConflict("argument", argumentMapping.getName(), this.arguments.get(argumentMapping.getIndex()).getName());
+		}
+		this.arguments.put(argumentMapping.getIndex(), argumentMapping);
+	}
 
-        return null;
-    }
+	public String getObfArgumentName(int index) {
+		ArgumentMapping argumentMapping = this.arguments.get(index);
+		if (argumentMapping != null) {
+			return argumentMapping.getName();
+		}
 
-    public String getDeobfArgumentName(int index) {
-        ArgumentMapping argumentMapping = this.arguments.get(index);
-        if (argumentMapping != null) {
-            return argumentMapping.getName();
-        }
+		return null;
+	}
 
-        return null;
-    }
+	public String getDeobfArgumentName(int index) {
+		ArgumentMapping argumentMapping = this.arguments.get(index);
+		if (argumentMapping != null) {
+			return argumentMapping.getName();
+		}
 
-    public void setArgumentName(int index, String name) {
-        ArgumentMapping argumentMapping = this.arguments.get(index);
-        if (argumentMapping == null) {
-            argumentMapping = new ArgumentMapping(index, name);
-            boolean wasAdded = this.arguments.put(index, argumentMapping) == null;
-            assert (wasAdded);
-        } else {
-            argumentMapping.setName(name);
-        }
-    }
+		return null;
+	}
 
-    public void removeArgumentName(int index) {
-        boolean wasRemoved = this.arguments.remove(index) != null;
-        assert (wasRemoved);
-    }
+	public void setArgumentName(int index, String name) {
+		ArgumentMapping argumentMapping = this.arguments.get(index);
+		if (argumentMapping == null) {
+			argumentMapping = new ArgumentMapping(index, name);
+			boolean wasAdded = this.arguments.put(index, argumentMapping) == null;
+			assert (wasAdded);
+		} else {
+			argumentMapping.setName(name);
+		}
+	}
 
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("\t");
-        buf.append(this.obfName);
-        buf.append(" <-> ");
-        buf.append(this.deobfName);
-        buf.append("\n");
-        buf.append("\t");
-        buf.append(this.obfSignature);
-        buf.append("\n");
-        buf.append("\tArguments:\n");
-        for (ArgumentMapping argumentMapping : this.arguments.values()) {
-            buf.append("\t\t");
-            buf.append(argumentMapping.getIndex());
-            buf.append(" -> ");
-            buf.append(argumentMapping.getName());
-            buf.append("\n");
-        }
-        return buf.toString();
-    }
+	public void removeArgumentName(int index) {
+		boolean wasRemoved = this.arguments.remove(index) != null;
+		assert (wasRemoved);
+	}
 
-    @Override
-    public int compareTo(MethodMapping other) {
-        return (this.obfName + this.obfSignature).compareTo(other.obfName + other.obfSignature);
-    }
+	@Override
+	public String toString() {
+		StringBuilder buf = new StringBuilder();
+		buf.append("\t");
+		buf.append(this.obfName);
+		buf.append(" <-> ");
+		buf.append(this.deobfName);
+		buf.append("\n");
+		buf.append("\t");
+		buf.append(this.obfSignature);
+		buf.append("\n");
+		buf.append("\tArguments:\n");
+		for (ArgumentMapping argumentMapping : this.arguments.values()) {
+			buf.append("\t\t");
+			buf.append(argumentMapping.getIndex());
+			buf.append(" -> ");
+			buf.append(argumentMapping.getName());
+			buf.append("\n");
+		}
+		return buf.toString();
+	}
 
-    public boolean containsArgument(String name) {
-        for (ArgumentMapping argumentMapping : this.arguments.values()) {
-            if (argumentMapping.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	@Override
+	public int compareTo(MethodMapping other) {
+		return (this.obfName + this.obfSignature).compareTo(other.obfName + other.obfSignature);
+	}
 
-    public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
-        // rename obf classes in the signature
-        Signature newSignature = new Signature(this.obfSignature, className ->
-        {
-            if (className.equals(oldObfClassName)) {
-                return newObfClassName;
-            }
-            return null;
-        });
+	public boolean containsArgument(String name) {
+		for (ArgumentMapping argumentMapping : this.arguments.values()) {
+			if (argumentMapping.getName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-        if (!newSignature.equals(this.obfSignature)) {
-            this.obfSignature = newSignature;
-            return true;
-        }
-        return false;
-    }
+	public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
+		// rename obf classes in the signature
+		Signature newSignature = new Signature(this.obfSignature, className ->
+		{
+			if (className.equals(oldObfClassName)) {
+				return newObfClassName;
+			}
+			return null;
+		});
 
-    public boolean isConstructor() {
-        return this.obfName.startsWith("<");
-    }
+		if (!newSignature.equals(this.obfSignature)) {
+			this.obfSignature = newSignature;
+			return true;
+		}
+		return false;
+	}
 
-    @Override
-    public BehaviorEntry getObfEntry(ClassEntry classEntry) {
-        if (isConstructor()) {
-            return new ConstructorEntry(classEntry, this.obfSignature);
-        } else {
-            return new MethodEntry(classEntry, this.obfName, this.obfSignature);
-        }
-    }
+	public boolean isConstructor() {
+		return this.obfName.startsWith("<");
+	}
 
-    public Mappings.EntryModifier getModifier()
-    {
-        return modifier;
-    }
+	@Override
+	public BehaviorEntry getObfEntry(ClassEntry classEntry) {
+		if (isConstructor()) {
+			return new ConstructorEntry(classEntry, this.obfSignature);
+		} else {
+			return new MethodEntry(classEntry, this.obfName, this.obfSignature);
+		}
+	}
 
-    public void setModifier(Mappings.EntryModifier modifier)
-    {
-        this.modifier = modifier;
-    }
+	public Mappings.EntryModifier getModifier() {
+		return modifier;
+	}
+
+	public void setModifier(Mappings.EntryModifier modifier) {
+		this.modifier = modifier;
+	}
 }

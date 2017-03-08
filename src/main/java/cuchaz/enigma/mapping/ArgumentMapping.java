@@ -8,42 +8,43 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.mapping;
 
 public class ArgumentMapping implements Comparable<ArgumentMapping> {
 
-    private int index;
-    private String name;
+	private int index;
+	private String name;
 
-    // NOTE: this argument order is important for the MethodReader/MethodWriter
-    public ArgumentMapping(int index, String name) {
-        this.index = index;
-        this.name = NameValidator.validateArgumentName(name);
-    }
+	// NOTE: this argument order is important for the MethodReader/MethodWriter
+	public ArgumentMapping(int index, String name) {
+		this.index = index;
+		this.name = NameValidator.validateArgumentName(name);
+	}
 
-    public ArgumentMapping(ArgumentMapping other) {
-        this.index = other.index;
-        this.name = other.name;
-    }
+	public ArgumentMapping(ArgumentMapping other) {
+		this.index = other.index;
+		this.name = other.name;
+	}
 
-    public int getIndex() {
-        return this.index;
-    }
+	public int getIndex() {
+		return this.index;
+	}
 
-    public String getName() {
-        return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    public void setName(String val) {
-        this.name = NameValidator.validateArgumentName(val);
-    }
+	public void setName(String val) {
+		this.name = NameValidator.validateArgumentName(val);
+	}
 
-    public ArgumentEntry getObfEntry(BehaviorEntry behaviorEntry) {
-        return new ArgumentEntry(behaviorEntry, index, name);
-    }
+	public ArgumentEntry getObfEntry(BehaviorEntry behaviorEntry) {
+		return new ArgumentEntry(behaviorEntry, index, name);
+	}
 
-    @Override
-    public int compareTo(ArgumentMapping other) {
-        return Integer.compare(this.index, other.index);
-    }
+	@Override
+	public int compareTo(ArgumentMapping other) {
+		return Integer.compare(this.index, other.index);
+	}
 }

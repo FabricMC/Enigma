@@ -8,22 +8,23 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.utils;
 
 public class ReadableToken {
 
-    public int line;
-    public int startColumn;
-    public int endColumn;
+	public int line;
+	public int startColumn;
+	public int endColumn;
 
-    public ReadableToken(int line, int startColumn, int endColumn) {
-        this.line = line;
-        this.startColumn = startColumn;
-        this.endColumn = endColumn;
-    }
+	public ReadableToken(int line, int startColumn, int endColumn) {
+		this.line = line;
+		this.startColumn = startColumn;
+		this.endColumn = endColumn;
+	}
 
-    @Override
-    public String toString() {
-        return "line " + line + " columns " + startColumn + "-" + endColumn;
-    }
+	@Override
+	public String toString() {
+		return "line " + line + " columns " + startColumn + "-" + endColumn;
+	}
 }

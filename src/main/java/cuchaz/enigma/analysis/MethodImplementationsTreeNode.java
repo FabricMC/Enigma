@@ -8,87 +8,86 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-
-import java.util.List;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.MethodEntry;
 import cuchaz.enigma.mapping.Translator;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.List;
+
 public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
-    private Translator deobfuscatingTranslator;
-    private MethodEntry entry;
+	private Translator deobfuscatingTranslator;
+	private MethodEntry entry;
 
-    public MethodImplementationsTreeNode(Translator deobfuscatingTranslator, MethodEntry entry) {
-        if (entry == null) {
-            throw new IllegalArgumentException("Entry cannot be null!");
-        }
+	public MethodImplementationsTreeNode(Translator deobfuscatingTranslator, MethodEntry entry) {
+		if (entry == null) {
+			throw new IllegalArgumentException("Entry cannot be null!");
+		}
 
-        this.deobfuscatingTranslator = deobfuscatingTranslator;
-        this.entry = entry;
-    }
+		this.deobfuscatingTranslator = deobfuscatingTranslator;
+		this.entry = entry;
+	}
 
-    public MethodEntry getMethodEntry() {
-        return this.entry;
-    }
+	public static MethodImplementationsTreeNode findNode(MethodImplementationsTreeNode node, MethodEntry entry) {
+		// is this the node?
+		if (node.getMethodEntry().equals(entry)) {
+			return node;
+		}
 
-    public String getDeobfClassName() {
-        return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
-    }
+		// recurse
+		for (int i = 0; i < node.getChildCount(); i++) {
+			MethodImplementationsTreeNode foundNode = findNode((MethodImplementationsTreeNode) node.getChildAt(i), entry);
+			if (foundNode != null) {
+				return foundNode;
+			}
+		}
+		return null;
+	}
 
-    public String getDeobfMethodName() {
-        return this.deobfuscatingTranslator.translate(this.entry);
-    }
+	public MethodEntry getMethodEntry() {
+		return this.entry;
+	}
 
-    @Override
-    public String toString() {
-        String className = getDeobfClassName();
-        if (className == null) {
-            className = this.entry.getClassName();
-        }
+	public String getDeobfClassName() {
+		return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
+	}
 
-        String methodName = getDeobfMethodName();
-        if (methodName == null) {
-            methodName = this.entry.getName();
-        }
-        return className + "." + methodName + "()";
-    }
+	public String getDeobfMethodName() {
+		return this.deobfuscatingTranslator.translate(this.entry);
+	}
 
-    public void load(JarIndex index) {
+	@Override
+	public String toString() {
+		String className = getDeobfClassName();
+		if (className == null) {
+			className = this.entry.getClassName();
+		}
 
-        // get all method implementations
-        List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
-        for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {
-            MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getSignature()
-            );
-            if (index.containsObfBehavior(methodEntry)) {
-                nodes.add(new MethodImplementationsTreeNode(this.deobfuscatingTranslator, methodEntry));
-            }
-        }
+		String methodName = getDeobfMethodName();
+		if (methodName == null) {
+			methodName = this.entry.getName();
+		}
+		return className + "." + methodName + "()";
+	}
 
-        // add them to this node
-        nodes.forEach(this::add);
-    }
+	public void load(JarIndex index) {
 
-    public static MethodImplementationsTreeNode findNode(MethodImplementationsTreeNode node, MethodEntry entry) {
-        // is this the node?
-        if (node.getMethodEntry().equals(entry)) {
-            return node;
-        }
+		// get all method implementations
+		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
+		for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {
+			MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getSignature()
+			);
+			if (index.containsObfBehavior(methodEntry)) {
+				nodes.add(new MethodImplementationsTreeNode(this.deobfuscatingTranslator, methodEntry));
+			}
+		}
 
-        // recurse
-        for (int i = 0; i < node.getChildCount(); i++) {
-            MethodImplementationsTreeNode foundNode = findNode((MethodImplementationsTreeNode) node.getChildAt(i), entry);
-            if (foundNode != null) {
-                return foundNode;
-            }
-        }
-        return null;
-    }
+		// add them to this node
+		nodes.forEach(this::add);
+	}
 }

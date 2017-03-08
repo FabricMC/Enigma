@@ -8,6 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
@@ -20,85 +21,73 @@ import javax.swing.tree.TreeNode;
 import java.util.Set;
 
 public class BehaviorReferenceTreeNode extends DefaultMutableTreeNode
-        implements ReferenceTreeNode<BehaviorEntry, BehaviorEntry>
-{
+	implements ReferenceTreeNode<BehaviorEntry, BehaviorEntry> {
 
-    private Translator                                   deobfuscatingTranslator;
-    private BehaviorEntry                                entry;
-    private EntryReference<BehaviorEntry, BehaviorEntry> reference;
-    private Access                                       access;
+	private Translator deobfuscatingTranslator;
+	private BehaviorEntry entry;
+	private EntryReference<BehaviorEntry, BehaviorEntry> reference;
+	private Access access;
 
-    public BehaviorReferenceTreeNode(Translator deobfuscatingTranslator, BehaviorEntry entry)
-    {
-        this.deobfuscatingTranslator = deobfuscatingTranslator;
-        this.entry = entry;
-        this.reference = null;
-    }
+	public BehaviorReferenceTreeNode(Translator deobfuscatingTranslator, BehaviorEntry entry) {
+		this.deobfuscatingTranslator = deobfuscatingTranslator;
+		this.entry = entry;
+		this.reference = null;
+	}
 
-    public BehaviorReferenceTreeNode(Translator deobfuscatingTranslator,
-            EntryReference<BehaviorEntry, BehaviorEntry> reference, Access access)
-    {
-        this.deobfuscatingTranslator = deobfuscatingTranslator;
-        this.entry = reference.entry;
-        this.reference = reference;
-        this.access = access;
-    }
+	public BehaviorReferenceTreeNode(Translator deobfuscatingTranslator,
+	                                 EntryReference<BehaviorEntry, BehaviorEntry> reference, Access access) {
+		this.deobfuscatingTranslator = deobfuscatingTranslator;
+		this.entry = reference.entry;
+		this.reference = reference;
+		this.access = access;
+	}
 
-    @Override public BehaviorEntry getEntry()
-    {
-        return this.entry;
-    }
+	@Override
+	public BehaviorEntry getEntry() {
+		return this.entry;
+	}
 
-    @Override public EntryReference<BehaviorEntry, BehaviorEntry> getReference()
-    {
-        return this.reference;
-    }
+	@Override
+	public EntryReference<BehaviorEntry, BehaviorEntry> getReference() {
+		return this.reference;
+	}
 
-    @Override public String toString()
-    {
-        if (this.reference != null)
-        {
-            return String.format("%s (%s)", this.deobfuscatingTranslator.translateEntry(this.reference.context),
-                    this.access);
-        }
-        return this.deobfuscatingTranslator.translateEntry(this.entry).toString();
-    }
+	@Override
+	public String toString() {
+		if (this.reference != null) {
+			return String.format("%s (%s)", this.deobfuscatingTranslator.translateEntry(this.reference.context),
+				this.access);
+		}
+		return this.deobfuscatingTranslator.translateEntry(this.entry).toString();
+	}
 
-    public void load(JarIndex index, boolean recurse)
-    {
-        // get all the child nodes
-        for (EntryReference<BehaviorEntry, BehaviorEntry> reference : index.getBehaviorReferences(this.entry))
-        {
-            add(new BehaviorReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
-        }
+	public void load(JarIndex index, boolean recurse) {
+		// get all the child nodes
+		for (EntryReference<BehaviorEntry, BehaviorEntry> reference : index.getBehaviorReferences(this.entry)) {
+			add(new BehaviorReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
+		}
 
-        if (recurse && this.children != null)
-        {
-            for (Object child : this.children)
-            {
-                if (child instanceof BehaviorReferenceTreeNode)
-                {
-                    BehaviorReferenceTreeNode node = (BehaviorReferenceTreeNode) child;
+		if (recurse && this.children != null) {
+			for (Object child : this.children) {
+				if (child instanceof BehaviorReferenceTreeNode) {
+					BehaviorReferenceTreeNode node = (BehaviorReferenceTreeNode) child;
 
-                    // don't recurse into ancestor
-                    Set<Entry> ancestors = Sets.newHashSet();
-                    TreeNode n = node;
-                    while (n.getParent() != null)
-                    {
-                        n = n.getParent();
-                        if (n instanceof BehaviorReferenceTreeNode)
-                        {
-                            ancestors.add(((BehaviorReferenceTreeNode) n).getEntry());
-                        }
-                    }
-                    if (ancestors.contains(node.getEntry()))
-                    {
-                        continue;
-                    }
+					// don't recurse into ancestor
+					Set<Entry> ancestors = Sets.newHashSet();
+					TreeNode n = node;
+					while (n.getParent() != null) {
+						n = n.getParent();
+						if (n instanceof BehaviorReferenceTreeNode) {
+							ancestors.add(((BehaviorReferenceTreeNode) n).getEntry());
+						}
+					}
+					if (ancestors.contains(node.getEntry())) {
+						continue;
+					}
 
-                    node.load(index, true);
-                }
-            }
-        }
-    }
+					node.load(index, true);
+				}
+			}
+		}
+	}
 }

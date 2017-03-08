@@ -4,38 +4,36 @@
  * are made available under the terms of the GNU Lesser General Public
  * License v3.0 which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma;
 
-
-import static cuchaz.enigma.TestEntryFactory.*;
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
-import java.util.jar.JarFile;
-
+import cuchaz.enigma.analysis.JarIndex;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import cuchaz.enigma.analysis.JarIndex;
+import java.util.jar.JarFile;
 
+import static cuchaz.enigma.TestEntryFactory.newClass;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class TestDeobfed {
 
-	private static JarFile  jar;
+	private static JarFile jar;
 	private static JarIndex index;
-	
+
 	@BeforeClass
 	public static void beforeClass()
-	throws Exception {
+		throws Exception {
 		jar = new JarFile("build/test-deobf/translation.jar");
 		index = new JarIndex();
 		index.indexJar(jar, true);
 	}
-	
+
 	@Test
 	public void obfEntries() {
 		assertThat(index.getObfClassEntries(), containsInAnyOrder(
@@ -64,10 +62,10 @@ public class TestDeobfed {
 			newClass("i$b")
 		));
 	}
-	
+
 	@Test
 	public void decompile()
-	throws Exception {
+		throws Exception {
 		Deobfuscator deobfuscator = new Deobfuscator(jar);
 		deobfuscator.getSourceTree("a");
 		deobfuscator.getSourceTree("b");

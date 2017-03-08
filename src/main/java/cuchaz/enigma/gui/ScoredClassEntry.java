@@ -8,37 +8,37 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.gui;
 
 import cuchaz.enigma.mapping.ClassEntry;
 
-
 public class ScoredClassEntry extends ClassEntry {
 
-    private static final long serialVersionUID = -8798725308554217105L;
+	private static final long serialVersionUID = -8798725308554217105L;
 
-    private float score;
+	private float score;
 
-    public ScoredClassEntry(ClassEntry other, float score) {
-        super(other);
-        this.score = score;
-    }
+	public ScoredClassEntry(ClassEntry other, float score) {
+		super(other);
+		this.score = score;
+	}
 
-    public float getScore() {
-        return score;
-    }
+	public float getScore() {
+		return score;
+	}
 
-    @Override
-    public int hashCode() {
-        return Float.hashCode(score) + super.hashCode();
-    }
+	@Override
+	public int hashCode() {
+		return Float.hashCode(score) + super.hashCode();
+	}
 
-    @Override
-    public boolean equals(Object other) {
-        return super.equals(other) && other instanceof ScoredClassEntry && equals((ScoredClassEntry) other);
-    }
+	@Override
+	public boolean equals(Object other) {
+		return super.equals(other) && other instanceof ScoredClassEntry && equals((ScoredClassEntry) other);
+	}
 
-    public boolean equals(ScoredClassEntry other) {
-        return other != null && score == other.score;
-    }
+	public boolean equals(ScoredClassEntry other) {
+		return other != null && Float.compare(score, other.score) == 0;
+	}
 }

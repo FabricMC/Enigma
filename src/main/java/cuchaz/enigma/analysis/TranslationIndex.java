@@ -8,291 +8,288 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import cuchaz.enigma.mapping.*;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.bytecode.Descriptor;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public class TranslationIndex {
 
-    private Map<ClassEntry, ClassEntry> superclasses;
-    private Multimap<ClassEntry, FieldEntry> fieldEntries;
-    private Multimap<ClassEntry, BehaviorEntry> behaviorEntries;
-    private Multimap<ClassEntry, ClassEntry> interfaces;
+	private Map<ClassEntry, ClassEntry> superclasses;
+	private Multimap<ClassEntry, FieldEntry> fieldEntries;
+	private Multimap<ClassEntry, BehaviorEntry> behaviorEntries;
+	private Multimap<ClassEntry, ClassEntry> interfaces;
 
-    public TranslationIndex() {
-        this.superclasses = Maps.newHashMap();
-        this.fieldEntries = HashMultimap.create();
-        this.behaviorEntries = HashMultimap.create();
-        this.interfaces = HashMultimap.create();
-    }
+	public TranslationIndex() {
+		this.superclasses = Maps.newHashMap();
+		this.fieldEntries = HashMultimap.create();
+		this.behaviorEntries = HashMultimap.create();
+		this.interfaces = HashMultimap.create();
+	}
 
-    public TranslationIndex(TranslationIndex other, Translator translator) {
-        // translate the superclasses
-        this.superclasses = Maps.newHashMap();
-        for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.superclasses.entrySet()) {
-            this.superclasses.put(translator.translateEntry(mapEntry.getKey()), translator.translateEntry(mapEntry.getValue()));
-        }
+	public TranslationIndex(TranslationIndex other, Translator translator) {
+		// translate the superclasses
+		this.superclasses = Maps.newHashMap();
+		for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.superclasses.entrySet()) {
+			this.superclasses.put(translator.translateEntry(mapEntry.getKey()), translator.translateEntry(mapEntry.getValue()));
+		}
 
-        // translate the interfaces
-        this.interfaces = HashMultimap.create();
-        for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.interfaces.entries()) {
-            this.interfaces.put(
-                    translator.translateEntry(mapEntry.getKey()),
-                    translator.translateEntry(mapEntry.getValue())
-            );
-        }
+		// translate the interfaces
+		this.interfaces = HashMultimap.create();
+		for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.interfaces.entries()) {
+			this.interfaces.put(
+				translator.translateEntry(mapEntry.getKey()),
+				translator.translateEntry(mapEntry.getValue())
+			);
+		}
 
-        // translate the fields
-        this.fieldEntries = HashMultimap.create();
-        for (Map.Entry<ClassEntry, FieldEntry> mapEntry : other.fieldEntries.entries()) {
-            this.fieldEntries.put(
-                    translator.translateEntry(mapEntry.getKey()),
-                    translator.translateEntry(mapEntry.getValue())
-            );
-        }
+		// translate the fields
+		this.fieldEntries = HashMultimap.create();
+		for (Map.Entry<ClassEntry, FieldEntry> mapEntry : other.fieldEntries.entries()) {
+			this.fieldEntries.put(
+				translator.translateEntry(mapEntry.getKey()),
+				translator.translateEntry(mapEntry.getValue())
+			);
+		}
 
-        this.behaviorEntries = HashMultimap.create();
-        for (Map.Entry<ClassEntry, BehaviorEntry> mapEntry : other.behaviorEntries.entries()) {
-            this.behaviorEntries.put(
-                    translator.translateEntry(mapEntry.getKey()),
-                    translator.translateEntry(mapEntry.getValue())
-            );
-        }
-    }
+		this.behaviorEntries = HashMultimap.create();
+		for (Map.Entry<ClassEntry, BehaviorEntry> mapEntry : other.behaviorEntries.entries()) {
+			this.behaviorEntries.put(
+				translator.translateEntry(mapEntry.getKey()),
+				translator.translateEntry(mapEntry.getValue())
+			);
+		}
+	}
 
-    public void indexClass(CtClass c) {
-        indexClass(c, true);
-    }
+	public void indexClass(CtClass c) {
+		indexClass(c, true);
+	}
 
-    public void indexClass(CtClass c, boolean indexMembers) {
-        ClassEntry classEntry = EntryFactory.getClassEntry(c);
-        if (isJre(classEntry)) {
-            return;
-        }
+	public void indexClass(CtClass c, boolean indexMembers) {
+		ClassEntry classEntry = EntryFactory.getClassEntry(c);
+		if (isJre(classEntry)) {
+			return;
+		}
 
-        // add the superclass
-        ClassEntry superclassEntry = EntryFactory.getSuperclassEntry(c);
-        if (superclassEntry != null) {
-            this.superclasses.put(classEntry, superclassEntry);
-        }
+		// add the superclass
+		ClassEntry superclassEntry = EntryFactory.getSuperclassEntry(c);
+		if (superclassEntry != null) {
+			this.superclasses.put(classEntry, superclassEntry);
+		}
 
-        // add the interfaces
-        for (String interfaceClassName : c.getClassFile().getInterfaces()) {
-            ClassEntry interfaceClassEntry = new ClassEntry(Descriptor.toJvmName(interfaceClassName));
-            if (!isJre(interfaceClassEntry)) {
+		// add the interfaces
+		for (String interfaceClassName : c.getClassFile().getInterfaces()) {
+			ClassEntry interfaceClassEntry = new ClassEntry(Descriptor.toJvmName(interfaceClassName));
+			if (!isJre(interfaceClassEntry)) {
 
-                this.interfaces.put(classEntry, interfaceClassEntry);
-            }
-        }
+				this.interfaces.put(classEntry, interfaceClassEntry);
+			}
+		}
 
-        if (indexMembers) {
-            // add fields
-            for (CtField field : c.getDeclaredFields()) {
-                FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
-                this.fieldEntries.put(fieldEntry.getClassEntry(), fieldEntry);
-            }
+		if (indexMembers) {
+			// add fields
+			for (CtField field : c.getDeclaredFields()) {
+				FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
+				this.fieldEntries.put(fieldEntry.getClassEntry(), fieldEntry);
+			}
 
-            // add behaviors
-            for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-                BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
-                this.behaviorEntries.put(behaviorEntry.getClassEntry(), behaviorEntry);
-            }
-        }
-    }
+			// add behaviors
+			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
+				BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
+				this.behaviorEntries.put(behaviorEntry.getClassEntry(), behaviorEntry);
+			}
+		}
+	}
 
-    public void renameClasses(Map<String, String> renames) {
-        EntryRenamer.renameClassesInMap(renames, this.superclasses);
-        EntryRenamer.renameClassesInMultimap(renames, this.fieldEntries);
-        EntryRenamer.renameClassesInMultimap(renames, this.behaviorEntries);
-    }
+	public void renameClasses(Map<String, String> renames) {
+		EntryRenamer.renameClassesInMap(renames, this.superclasses);
+		EntryRenamer.renameClassesInMultimap(renames, this.fieldEntries);
+		EntryRenamer.renameClassesInMultimap(renames, this.behaviorEntries);
+	}
 
-    public ClassEntry getSuperclass(ClassEntry classEntry) {
-        return this.superclasses.get(classEntry);
-    }
+	public ClassEntry getSuperclass(ClassEntry classEntry) {
+		return this.superclasses.get(classEntry);
+	}
 
-    public List<ClassEntry> getAncestry(ClassEntry classEntry) {
-        List<ClassEntry> ancestors = Lists.newArrayList();
-        while (classEntry != null) {
-            classEntry = getSuperclass(classEntry);
-            if (classEntry != null) {
-                ancestors.add(classEntry);
-            }
-        }
-        return ancestors;
-    }
+	public List<ClassEntry> getAncestry(ClassEntry classEntry) {
+		List<ClassEntry> ancestors = Lists.newArrayList();
+		while (classEntry != null) {
+			classEntry = getSuperclass(classEntry);
+			if (classEntry != null) {
+				ancestors.add(classEntry);
+			}
+		}
+		return ancestors;
+	}
 
-    public List<ClassEntry> getSubclass(ClassEntry classEntry) {
-        // linear search is fast enough for now
-        List<ClassEntry> subclasses = Lists.newArrayList();
-        for (Map.Entry<ClassEntry, ClassEntry> entry : this.superclasses.entrySet()) {
-            ClassEntry subclass = entry.getKey();
-            ClassEntry superclass = entry.getValue();
-            if (classEntry.equals(superclass)) {
-                subclasses.add(subclass);
-            }
-        }
-        return subclasses;
-    }
+	public List<ClassEntry> getSubclass(ClassEntry classEntry) {
+		// linear search is fast enough for now
+		List<ClassEntry> subclasses = Lists.newArrayList();
+		for (Map.Entry<ClassEntry, ClassEntry> entry : this.superclasses.entrySet()) {
+			ClassEntry subclass = entry.getKey();
+			ClassEntry superclass = entry.getValue();
+			if (classEntry.equals(superclass)) {
+				subclasses.add(subclass);
+			}
+		}
+		return subclasses;
+	}
 
-    public void getSubclassesRecursively(Set<ClassEntry> out, ClassEntry classEntry) {
-        for (ClassEntry subclassEntry : getSubclass(classEntry)) {
-            out.add(subclassEntry);
-            getSubclassesRecursively(out, subclassEntry);
-        }
-    }
+	public void getSubclassesRecursively(Set<ClassEntry> out, ClassEntry classEntry) {
+		for (ClassEntry subclassEntry : getSubclass(classEntry)) {
+			out.add(subclassEntry);
+			getSubclassesRecursively(out, subclassEntry);
+		}
+	}
 
-    public void getSubclassNamesRecursively(Set<String> out, ClassEntry classEntry) {
-        for (ClassEntry subclassEntry : getSubclass(classEntry)) {
-            out.add(subclassEntry.getName());
-            getSubclassNamesRecursively(out, subclassEntry);
-        }
-    }
+	public void getSubclassNamesRecursively(Set<String> out, ClassEntry classEntry) {
+		for (ClassEntry subclassEntry : getSubclass(classEntry)) {
+			out.add(subclassEntry.getName());
+			getSubclassNamesRecursively(out, subclassEntry);
+		}
+	}
 
-    public Collection<Map.Entry<ClassEntry, ClassEntry>> getClassInterfaces() {
-        return this.interfaces.entries();
-    }
+	public Collection<Map.Entry<ClassEntry, ClassEntry>> getClassInterfaces() {
+		return this.interfaces.entries();
+	}
 
-    public Collection<ClassEntry> getInterfaces(ClassEntry classEntry) {
-        return this.interfaces.get(classEntry);
-    }
+	public Collection<ClassEntry> getInterfaces(ClassEntry classEntry) {
+		return this.interfaces.get(classEntry);
+	}
 
-    public boolean isInterface(ClassEntry classEntry) {
-        return this.interfaces.containsValue(classEntry);
-    }
+	public boolean isInterface(ClassEntry classEntry) {
+		return this.interfaces.containsValue(classEntry);
+	}
 
-    public boolean entryExists(Entry entry) {
-        if (entry instanceof FieldEntry) {
-            return fieldExists((FieldEntry) entry);
-        } else if (entry instanceof BehaviorEntry) {
-            return behaviorExists((BehaviorEntry) entry);
-        } else if (entry instanceof ArgumentEntry) {
-            return behaviorExists(((ArgumentEntry) entry).getBehaviorEntry());
-        } else if (entry instanceof LocalVariableEntry) {
-            return behaviorExists(((LocalVariableEntry) entry).getBehaviorEntry());
-        }
-        throw new IllegalArgumentException("Cannot check existence for " + entry.getClass());
-    }
+	public boolean entryExists(Entry entry) {
+		if (entry instanceof FieldEntry) {
+			return fieldExists((FieldEntry) entry);
+		} else if (entry instanceof BehaviorEntry) {
+			return behaviorExists((BehaviorEntry) entry);
+		} else if (entry instanceof ArgumentEntry) {
+			return behaviorExists(((ArgumentEntry) entry).getBehaviorEntry());
+		} else if (entry instanceof LocalVariableEntry) {
+			return behaviorExists(((LocalVariableEntry) entry).getBehaviorEntry());
+		}
+		throw new IllegalArgumentException("Cannot check existence for " + entry.getClass());
+	}
 
-    public boolean fieldExists(FieldEntry fieldEntry) {
-        return this.fieldEntries.containsEntry(fieldEntry.getClassEntry(), fieldEntry);
-    }
+	public boolean fieldExists(FieldEntry fieldEntry) {
+		return this.fieldEntries.containsEntry(fieldEntry.getClassEntry(), fieldEntry);
+	}
 
-    public boolean behaviorExists(BehaviorEntry behaviorEntry) {
-        return this.behaviorEntries.containsEntry(behaviorEntry.getClassEntry(), behaviorEntry);
-    }
+	public boolean behaviorExists(BehaviorEntry behaviorEntry) {
+		return this.behaviorEntries.containsEntry(behaviorEntry.getClassEntry(), behaviorEntry);
+	}
 
-    public ClassEntry resolveEntryClass(Entry entry) {
-        return resolveEntryClass(entry, false);
-    }
+	public ClassEntry resolveEntryClass(Entry entry) {
+		return resolveEntryClass(entry, false);
+	}
 
-    public ClassEntry resolveEntryClass(Entry entry, boolean checkSuperclassBeforeChild) {
-        if (entry instanceof ClassEntry) {
-            return (ClassEntry) entry;
-        }
+	public ClassEntry resolveEntryClass(Entry entry, boolean checkSuperclassBeforeChild) {
+		if (entry instanceof ClassEntry) {
+			return (ClassEntry) entry;
+		}
 
-        ClassEntry superclassEntry = resolveSuperclass(entry, checkSuperclassBeforeChild);
-        if (superclassEntry != null) {
-            return superclassEntry;
-        }
+		ClassEntry superclassEntry = resolveSuperclass(entry, checkSuperclassBeforeChild);
+		if (superclassEntry != null) {
+			return superclassEntry;
+		}
 
-        ClassEntry interfaceEntry = resolveInterface(entry);
-        if (interfaceEntry != null) {
-            return interfaceEntry;
-        }
+		ClassEntry interfaceEntry = resolveInterface(entry);
+		if (interfaceEntry != null) {
+			return interfaceEntry;
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public ClassEntry resolveSuperclass(Entry entry, boolean checkSuperclassBeforeChild) {
+	public ClassEntry resolveSuperclass(Entry entry, boolean checkSuperclassBeforeChild) {
 
-        // Default case
-        if (!checkSuperclassBeforeChild)
-            return resolveSuperclass(entry);
+		// Default case
+		if (!checkSuperclassBeforeChild)
+			return resolveSuperclass(entry);
 
-        // Save the original entry
-        Entry originalEntry = entry;
+		// Save the original entry
+		Entry originalEntry = entry;
 
-        // Get all possible superclasses and reverse the list
-        List<ClassEntry> superclasses = Lists.reverse(getAncestry(originalEntry.getClassEntry()));
+		// Get all possible superclasses and reverse the list
+		List<ClassEntry> superclasses = Lists.reverse(getAncestry(originalEntry.getClassEntry()));
 
-        boolean existInEntry = false;
+		boolean existInEntry = false;
 
-        for (ClassEntry classEntry : superclasses)
-        {
-            entry = entry.cloneToNewClass(classEntry);
-            existInEntry = entryExists(entry);
+		for (ClassEntry classEntry : superclasses) {
+			entry = entry.cloneToNewClass(classEntry);
+			existInEntry = entryExists(entry);
 
-            // Check for possible entry in interfaces of superclasses
-            ClassEntry interfaceEntry = resolveInterface(entry);
-            if (interfaceEntry != null)
-                return interfaceEntry;
-            if (existInEntry)
-                break;
-        }
+			// Check for possible entry in interfaces of superclasses
+			ClassEntry interfaceEntry = resolveInterface(entry);
+			if (interfaceEntry != null)
+				return interfaceEntry;
+			if (existInEntry)
+				break;
+		}
 
-        // Doesn't exists in superclasses? check the child or return null
-        if (!existInEntry)
-            return !entryExists(originalEntry) ? null : originalEntry.getClassEntry();
+		// Doesn't exists in superclasses? check the child or return null
+		if (!existInEntry)
+			return !entryExists(originalEntry) ? null : originalEntry.getClassEntry();
 
-        return entry.getClassEntry();
-    }
+		return entry.getClassEntry();
+	}
 
-    public ClassEntry resolveSuperclass(Entry entry)
-    {
-        // this entry could refer to a method on a class where the method is not actually implemented
-        // travel up the inheritance tree to find the closest implementation
+	public ClassEntry resolveSuperclass(Entry entry) {
+		// this entry could refer to a method on a class where the method is not actually implemented
+		// travel up the inheritance tree to find the closest implementation
 
-        while (!entryExists(entry)) {
-            // is there a parent class?
-            ClassEntry superclassEntry = getSuperclass(entry.getClassEntry());
-            if (superclassEntry == null) {
-                // this is probably a method from a class in a library
-                // we can't trace the implementation up any higher unless we index the library
-                return null;
-            }
+		while (!entryExists(entry)) {
+			// is there a parent class?
+			ClassEntry superclassEntry = getSuperclass(entry.getClassEntry());
+			if (superclassEntry == null) {
+				// this is probably a method from a class in a library
+				// we can't trace the implementation up any higher unless we index the library
+				return null;
+			}
 
-            // move up to the parent class
-            entry = entry.cloneToNewClass(superclassEntry);
-        }
-        return entry.getClassEntry();
-    }
+			// move up to the parent class
+			entry = entry.cloneToNewClass(superclassEntry);
+		}
+		return entry.getClassEntry();
+	}
 
-    public ClassEntry resolveInterface(Entry entry) {
-        // the interfaces for any class is a forest
-        // so let's look at all the trees
+	public ClassEntry resolveInterface(Entry entry) {
+		// the interfaces for any class is a forest
+		// so let's look at all the trees
 
-        for (ClassEntry interfaceEntry : this.interfaces.get(entry.getClassEntry())) {
-            Collection<ClassEntry> subInterface = this.interfaces.get(interfaceEntry);
-            if (subInterface != null && !subInterface.isEmpty())
-            {
-                ClassEntry result = resolveInterface(entry.cloneToNewClass(interfaceEntry));
-                if (result != null)
-                    return result;
-            }
-            ClassEntry resolvedClassEntry = resolveSuperclass(entry.cloneToNewClass(interfaceEntry));
-            if (resolvedClassEntry != null) {
-                return resolvedClassEntry;
-            }
-        }
-        return null;
-    }
+		for (ClassEntry interfaceEntry : this.interfaces.get(entry.getClassEntry())) {
+			Collection<ClassEntry> subInterface = this.interfaces.get(interfaceEntry);
+			if (subInterface != null && !subInterface.isEmpty()) {
+				ClassEntry result = resolveInterface(entry.cloneToNewClass(interfaceEntry));
+				if (result != null)
+					return result;
+			}
+			ClassEntry resolvedClassEntry = resolveSuperclass(entry.cloneToNewClass(interfaceEntry));
+			if (resolvedClassEntry != null) {
+				return resolvedClassEntry;
+			}
+		}
+		return null;
+	}
 
-    private boolean isJre(ClassEntry classEntry) {
-        String packageName = classEntry.getPackageName();
-        return packageName != null && (packageName.startsWith("java") || packageName.startsWith("javax"));
-    }
+	private boolean isJre(ClassEntry classEntry) {
+		String packageName = classEntry.getPackageName();
+		return packageName != null && (packageName.startsWith("java") || packageName.startsWith("javax"));
+	}
 }

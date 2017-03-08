@@ -4,23 +4,23 @@
  * are made available under the terms of the GNU Lesser General Public
  * License v3.0 which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma;
 
-import static cuchaz.enigma.TestEntryFactory.*;
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-
+import cuchaz.enigma.mapping.Type;
 import org.junit.Test;
 
-import cuchaz.enigma.mapping.Type;
-
+import static cuchaz.enigma.TestEntryFactory.newClass;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 public class TestType {
-	
+
 	@Test
 	public void isVoid() {
 		assertThat(new Type("V").isVoid(), is(true));
@@ -34,7 +34,7 @@ public class TestType {
 		assertThat(new Type("LFoo;").isVoid(), is(false));
 		assertThat(new Type("[I").isVoid(), is(false));
 	}
-	
+
 	@Test
 	public void isPrimitive() {
 		assertThat(new Type("V").isPrimitive(), is(false));
@@ -48,7 +48,7 @@ public class TestType {
 		assertThat(new Type("LFoo;").isPrimitive(), is(false));
 		assertThat(new Type("[I").isPrimitive(), is(false));
 	}
-	
+
 	@Test
 	public void getPrimitive() {
 		assertThat(new Type("Z").getPrimitive(), is(Type.Primitive.Boolean));
@@ -59,7 +59,7 @@ public class TestType {
 		assertThat(new Type("F").getPrimitive(), is(Type.Primitive.Float));
 		assertThat(new Type("D").getPrimitive(), is(Type.Primitive.Double));
 	}
-	
+
 	@Test
 	public void isClass() {
 		assertThat(new Type("V").isClass(), is(false));
@@ -73,19 +73,19 @@ public class TestType {
 		assertThat(new Type("LFoo;").isClass(), is(true));
 		assertThat(new Type("[I").isClass(), is(false));
 	}
-	
+
 	@Test
 	public void getClassEntry() {
 		assertThat(new Type("LFoo;").getClassEntry(), is(newClass("Foo")));
 		assertThat(new Type("Ljava/lang/String;").getClassEntry(), is(newClass("java/lang/String")));
 	}
-	
+
 	@Test
 	public void getArrayClassEntry() {
 		assertThat(new Type("[LFoo;").getClassEntry(), is(newClass("Foo")));
 		assertThat(new Type("[[[Ljava/lang/String;").getClassEntry(), is(newClass("java/lang/String")));
 	}
-	
+
 	@Test
 	public void isArray() {
 		assertThat(new Type("V").isArray(), is(false));
@@ -99,14 +99,14 @@ public class TestType {
 		assertThat(new Type("LFoo;").isArray(), is(false));
 		assertThat(new Type("[I").isArray(), is(true));
 	}
-	
+
 	@Test
 	public void getArrayDimension() {
 		assertThat(new Type("[I").getArrayDimension(), is(1));
 		assertThat(new Type("[[I").getArrayDimension(), is(2));
 		assertThat(new Type("[[[I").getArrayDimension(), is(3));
 	}
-	
+
 	@Test
 	public void getArrayType() {
 		assertThat(new Type("[I").getArrayType(), is(new Type("I")));
@@ -114,7 +114,7 @@ public class TestType {
 		assertThat(new Type("[[[I").getArrayType(), is(new Type("I")));
 		assertThat(new Type("[Ljava/lang/String;").getArrayType(), is(new Type("Ljava/lang/String;")));
 	}
-	
+
 	@Test
 	public void hasClass() {
 		assertThat(new Type("LFoo;").hasClass(), is(true));
@@ -127,7 +127,7 @@ public class TestType {
 		assertThat(new Type("[[[I").hasClass(), is(false));
 		assertThat(new Type("Z").hasClass(), is(false));
 	}
-	
+
 	@Test
 	public void parseVoid() {
 		final String answer = "V";
@@ -138,7 +138,7 @@ public class TestType {
 		assertThat(Type.parseFirst("VLFoo;"), is(answer));
 		assertThat(Type.parseFirst("V[LFoo;"), is(answer));
 	}
-	
+
 	@Test
 	public void parsePrimitive() {
 		final String answer = "I";
@@ -149,7 +149,7 @@ public class TestType {
 		assertThat(Type.parseFirst("ILFoo;"), is(answer));
 		assertThat(Type.parseFirst("I[LFoo;"), is(answer));
 	}
-	
+
 	@Test
 	public void parseClass() {
 		{
@@ -199,7 +199,7 @@ public class TestType {
 			assertThat(Type.parseFirst("[LFoo;LFoo;"), is(answer));
 		}
 	}
-	
+
 	@Test
 	public void equals() {
 		assertThat(new Type("V"), is(new Type("V")));
@@ -214,7 +214,7 @@ public class TestType {
 		assertThat(new Type("[I"), is(new Type("[I")));
 		assertThat(new Type("[[[I"), is(new Type("[[[I")));
 		assertThat(new Type("[LFoo;"), is(new Type("[LFoo;")));
-		
+
 		assertThat(new Type("V"), is(not(new Type("I"))));
 		assertThat(new Type("I"), is(not(new Type("J"))));
 		assertThat(new Type("I"), is(not(new Type("LBar;"))));
@@ -224,7 +224,7 @@ public class TestType {
 		assertThat(new Type("[[[I"), is(not(new Type("[I"))));
 		assertThat(new Type("[LFoo;"), is(not(new Type("[LBar;"))));
 	}
-	
+
 	@Test
 	public void testToString() {
 		assertThat(new Type("V").toString(), is("V"));

@@ -8,10 +8,8 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.bytecode;
 
-import java.util.ArrayList;
-import java.util.List;
+package cuchaz.enigma.bytecode;
 
 import cuchaz.enigma.mapping.*;
 import javassist.CtBehavior;
@@ -19,48 +17,51 @@ import javassist.CtClass;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.LocalVariableAttribute;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MethodParameterWriter {
 
-    private Translator translator;
+	private Translator translator;
 
-    public MethodParameterWriter(Translator translator) {
-        this.translator = translator;
-    }
+	public MethodParameterWriter(Translator translator) {
+		this.translator = translator;
+	}
 
-    public void writeMethodArguments(CtClass c) {
+	public void writeMethodArguments(CtClass c) {
 
-        // Procyon will read method arguments from the "MethodParameters" attribute, so write those
-        for (CtBehavior behavior : c.getDeclaredBehaviors()) {
+		// Procyon will read method arguments from the "MethodParameters" attribute, so write those
+		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 
-            // if there's a local variable table here, don't write a MethodParameters attribute
-            // let the local variable writer deal with it instead
-            // procyon starts doing really weird things if we give it both attributes
-            CodeAttribute codeAttribute = behavior.getMethodInfo().getCodeAttribute();
-            if (codeAttribute != null && codeAttribute.getAttribute(LocalVariableAttribute.tag) != null) {
-                continue;
-            }
+			// if there's a local variable table here, don't write a MethodParameters attribute
+			// let the local variable writer deal with it instead
+			// procyon starts doing really weird things if we give it both attributes
+			CodeAttribute codeAttribute = behavior.getMethodInfo().getCodeAttribute();
+			if (codeAttribute != null && codeAttribute.getAttribute(LocalVariableAttribute.tag) != null) {
+				continue;
+			}
 
-            BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
+			BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
 
-            // get the number of arguments
-            Signature signature = behaviorEntry.getSignature();
-            if (signature == null) {
-                // static initializers have no signatures, or arguments
-                continue;
-            }
-            int numParams = signature.getArgumentTypes().size();
-            if (numParams <= 0) {
-                continue;
-            }
+			// get the number of arguments
+			Signature signature = behaviorEntry.getSignature();
+			if (signature == null) {
+				// static initializers have no signatures, or arguments
+				continue;
+			}
+			int numParams = signature.getArgumentTypes().size();
+			if (numParams <= 0) {
+				continue;
+			}
 
-            // get the list of argument names
-            List<String> names = new ArrayList<>(numParams);
-            for (int i = 0; i < numParams; i++) {
-                names.add(this.translator.translate(new ArgumentEntry(behaviorEntry, i, "")));
-            }
+			// get the list of argument names
+			List<String> names = new ArrayList<>(numParams);
+			for (int i = 0; i < numParams; i++) {
+				names.add(this.translator.translate(new ArgumentEntry(behaviorEntry, i, "")));
+			}
 
-            // save the mappings to the class
-            MethodParametersAttribute.updateClass(behavior.getMethodInfo(), names);
-        }
-    }
+			// save the mappings to the class
+			MethodParametersAttribute.updateClass(behavior.getMethodInfo(), names);
+		}
+	}
 }

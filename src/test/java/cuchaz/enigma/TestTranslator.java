@@ -8,28 +8,29 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma;
-
-import static cuchaz.enigma.TestEntryFactory.*;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import cuchaz.enigma.mapping.Entry;
 import cuchaz.enigma.mapping.Mappings;
 import cuchaz.enigma.mapping.Translator;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
+import static cuchaz.enigma.TestEntryFactory.newClass;
+import static cuchaz.enigma.TestEntryFactory.newField;
+import static cuchaz.enigma.TestEntryFactory.newMethod;
 
 public class TestTranslator {
 
 	private static Deobfuscator deobfuscator;
-	private static Mappings     mappings;
-	private static Translator   deobfTranslator;
-	private static Translator   obfTranslator;
+	private static Mappings mappings;
+	private static Translator deobfTranslator;
+	private static Translator obfTranslator;
 
 	@BeforeClass
 	public static void beforeClass()
-	throws Exception {
+		throws Exception {
 		//TODO FIx
 		//deobfuscator = new Deobfuscator(new JarFile("build/test-obf/translation.jar"));
 		//try (InputStream in = TestTranslator.class.getResourceAsStream("/cuchaz/enigma/resources/translation.mappings")) {

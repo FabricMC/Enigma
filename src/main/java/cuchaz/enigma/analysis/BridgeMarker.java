@@ -8,6 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.mapping.EntryFactory;
@@ -18,26 +19,26 @@ import javassist.bytecode.AccessFlag;
 
 public class BridgeMarker {
 
-    private JarIndex jarIndex;
+	private JarIndex jarIndex;
 
-    public BridgeMarker(JarIndex jarIndex) {
-        this.jarIndex = jarIndex;
-    }
+	public BridgeMarker(JarIndex jarIndex) {
+		this.jarIndex = jarIndex;
+	}
 
-    public void markBridges(CtClass c) {
+	public void markBridges(CtClass c) {
 
-        for (CtMethod method : c.getDeclaredMethods()) {
-            MethodEntry methodEntry = EntryFactory.getMethodEntry(method);
+		for (CtMethod method : c.getDeclaredMethods()) {
+			MethodEntry methodEntry = EntryFactory.getMethodEntry(method);
 
-            // is this a bridge method?
-            MethodEntry bridgedMethodEntry = this.jarIndex.getBridgedMethod(methodEntry);
-            if (bridgedMethodEntry != null) {
+			// is this a bridge method?
+			MethodEntry bridgedMethodEntry = this.jarIndex.getBridgedMethod(methodEntry);
+			if (bridgedMethodEntry != null) {
 
-                // it's a bridge method! add the bridge flag
-                int flags = method.getMethodInfo().getAccessFlags();
-                flags |= AccessFlag.BRIDGE;
-                method.getMethodInfo().setAccessFlags(flags);
-            }
-        }
-    }
+				// it's a bridge method! add the bridge flag
+				int flags = method.getMethodInfo().getAccessFlags();
+				flags |= AccessFlag.BRIDGE;
+				method.getMethodInfo().setAccessFlags(flags);
+			}
+		}
+	}
 }

@@ -8,6 +8,7 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Maps;
@@ -16,219 +17,219 @@ import java.util.Map;
 
 public class Type {
 
-    public enum Primitive {
-        Byte('B'),
-        Character('C'),
-        Short('S'),
-        Integer('I'),
-        Long('J'),
-        Float('F'),
-        Double('D'),
-        Boolean('Z');
+	protected String name;
 
-        private static final Map<Character, Primitive> lookup;
+	public Type(String name) {
 
-        static {
-            lookup = Maps.newTreeMap();
-            for (Primitive val : values()) {
-                lookup.put(val.getCode(), val);
-            }
-        }
+		// don't deal with generics
+		// this is just for raw jvm types
+		if (name.charAt(0) == 'T' || name.indexOf('<') >= 0 || name.indexOf('>') >= 0) {
+			throw new IllegalArgumentException("don't use with generic types or templates: " + name);
+		}
 
-        public static Primitive get(char code) {
-            return lookup.get(code);
-        }
+		this.name = name;
+	}
 
-        private char code;
+	public Type(Type other, ClassNameReplacer replacer) {
+		this.name = other.name;
+		if (other.isClass()) {
+			String replacedName = replacer.replace(other.getClassEntry().getClassName());
+			if (replacedName != null) {
+				this.name = "L" + replacedName + ";";
+			}
+		} else if (other.isArray() && other.hasClass()) {
+			String replacedName = replacer.replace(other.getClassEntry().getClassName());
+			if (replacedName != null) {
+				this.name = Type.getArrayPrefix(other.getArrayDimension()) + "L" + replacedName + ";";
+			}
+		}
+	}
 
-        Primitive(char code) {
-            this.code = code;
-        }
+	public static String parseFirst(String in) {
 
-        public char getCode() {
-            return this.code;
-        }
-    }
+		if (in == null || in.length() <= 0) {
+			throw new IllegalArgumentException("No type to parse, input is empty!");
+		}
 
-    public static String parseFirst(String in) {
+		// read one type from the input
 
-        if (in == null || in.length() <= 0) {
-            throw new IllegalArgumentException("No type to parse, input is empty!");
-        }
+		char c = in.charAt(0);
 
-        // read one type from the input
+		// first check for void
+		if (c == 'V') {
+			return "V";
+		}
 
-        char c = in.charAt(0);
+		// then check for primitives
+		Primitive primitive = Primitive.get(c);
+		if (primitive != null) {
+			return in.substring(0, 1);
+		}
 
-        // first check for void
-        if (c == 'V') {
-            return "V";
-        }
+		// then check for classes
+		if (c == 'L') {
+			return readClass(in);
+		}
 
-        // then check for primitives
-        Primitive primitive = Primitive.get(c);
-        if (primitive != null) {
-            return in.substring(0, 1);
-        }
+		// then check for templates
+		if (c == 'T') {
+			return readClass(in);
+		}
 
-        // then check for classes
-        if (c == 'L') {
-            return readClass(in);
-        }
+		// then check for arrays
+		int dim = countArrayDimension(in);
+		if (dim > 0) {
+			String arrayType = Type.parseFirst(in.substring(dim));
+			return in.substring(0, dim + arrayType.length());
+		}
 
-        // then check for templates
-        if (c == 'T') {
-            return readClass(in);
-        }
+		throw new IllegalArgumentException("don't know how to parse: " + in);
+	}
 
-        // then check for arrays
-        int dim = countArrayDimension(in);
-        if (dim > 0) {
-            String arrayType = Type.parseFirst(in.substring(dim));
-            return in.substring(0, dim + arrayType.length());
-        }
+	private static String getArrayPrefix(int dimension) {
+		StringBuilder buf = new StringBuilder();
+		for (int i = 0; i < dimension; i++) {
+			buf.append("[");
+		}
+		return buf.toString();
+	}
 
-        throw new IllegalArgumentException("don't know how to parse: " + in);
-    }
+	private static int countArrayDimension(String in) {
+		int i = 0;
+		while (i < in.length() && in.charAt(i) == '[')
+			i++;
+		return i;
+	}
 
-    protected String name;
+	private static String readClass(String in) {
+		// read all the characters in the buffer until we hit a ';'
+		// include the parameters too
+		StringBuilder buf = new StringBuilder();
+		int depth = 0;
+		for (int i = 0; i < in.length(); i++) {
+			char c = in.charAt(i);
+			buf.append(c);
 
-    public Type(String name) {
+			if (c == '<') {
+				depth++;
+			} else if (c == '>') {
+				depth--;
+			} else if (depth == 0 && c == ';') {
+				return buf.toString();
+			}
+		}
+		return null;
+	}
 
-        // don't deal with generics
-        // this is just for raw jvm types
-        if (name.charAt(0) == 'T' || name.indexOf('<') >= 0 || name.indexOf('>') >= 0) {
-            throw new IllegalArgumentException("don't use with generic types or templates: " + name);
-        }
+	@Override
+	public String toString() {
+		return this.name;
+	}
 
-        this.name = name;
-    }
+	public boolean isVoid() {
+		return this.name.length() == 1 && this.name.charAt(0) == 'V';
+	}
 
-    public Type(Type other, ClassNameReplacer replacer) {
-        this.name = other.name;
-        if (other.isClass()) {
-            String replacedName = replacer.replace(other.getClassEntry().getClassName());
-            if (replacedName != null) {
-                this.name = "L" + replacedName + ";";
-            }
-        } else if (other.isArray() && other.hasClass()) {
-            String replacedName = replacer.replace(other.getClassEntry().getClassName());
-            if (replacedName != null) {
-                this.name = Type.getArrayPrefix(other.getArrayDimension()) + "L" + replacedName + ";";
-            }
-        }
-    }
+	public boolean isPrimitive() {
+		return this.name.length() == 1 && Primitive.get(this.name.charAt(0)) != null;
+	}
 
-    @Override
-    public String toString() {
-        return this.name;
-    }
+	public Primitive getPrimitive() {
+		if (!isPrimitive()) {
+			throw new IllegalStateException("not a primitive");
+		}
+		return Primitive.get(this.name.charAt(0));
+	}
 
-    public boolean isVoid() {
-        return this.name.length() == 1 && this.name.charAt(0) == 'V';
-    }
+	public boolean isClass() {
+		return this.name.charAt(0) == 'L' && this.name.charAt(this.name.length() - 1) == ';';
+	}
 
-    public boolean isPrimitive() {
-        return this.name.length() == 1 && Primitive.get(this.name.charAt(0)) != null;
-    }
+	public ClassEntry getClassEntry() {
+		if (isClass()) {
+			String name = this.name.substring(1, this.name.length() - 1);
 
-    public Primitive getPrimitive() {
-        if (!isPrimitive()) {
-            throw new IllegalStateException("not a primitive");
-        }
-        return Primitive.get(this.name.charAt(0));
-    }
+			int pos = name.indexOf('<');
+			if (pos >= 0) {
+				// remove the parameters from the class name
+				name = name.substring(0, pos);
+			}
 
-    public boolean isClass() {
-        return this.name.charAt(0) == 'L' && this.name.charAt(this.name.length() - 1) == ';';
-    }
+			return new ClassEntry(name);
 
-    public ClassEntry getClassEntry() {
-        if (isClass()) {
-            String name = this.name.substring(1, this.name.length() - 1);
+		} else if (isArray() && getArrayType().isClass()) {
+			return getArrayType().getClassEntry();
+		} else {
+			throw new IllegalStateException("type doesn't have a class");
+		}
+	}
 
-            int pos = name.indexOf('<');
-            if (pos >= 0) {
-                // remove the parameters from the class name
-                name = name.substring(0, pos);
-            }
+	public boolean isArray() {
+		return this.name.charAt(0) == '[';
+	}
 
-            return new ClassEntry(name);
+	public int getArrayDimension() {
+		if (!isArray()) {
+			throw new IllegalStateException("not an array");
+		}
+		return countArrayDimension(this.name);
+	}
 
-        } else if (isArray() && getArrayType().isClass()) {
-            return getArrayType().getClassEntry();
-        } else {
-            throw new IllegalStateException("type doesn't have a class");
-        }
-    }
+	public Type getArrayType() {
+		if (!isArray()) {
+			throw new IllegalStateException("not an array");
+		}
+		return new Type(this.name.substring(getArrayDimension(), this.name.length()));
+	}
 
-    public boolean isArray() {
-        return this.name.charAt(0) == '[';
-    }
+	public boolean hasClass() {
+		return isClass() || (isArray() && getArrayType().hasClass());
+	}
 
-    public int getArrayDimension() {
-        if (!isArray()) {
-            throw new IllegalStateException("not an array");
-        }
-        return countArrayDimension(this.name);
-    }
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof Type && equals((Type) other);
+	}
 
-    public Type getArrayType() {
-        if (!isArray()) {
-            throw new IllegalStateException("not an array");
-        }
-        return new Type(this.name.substring(getArrayDimension(), this.name.length()));
-    }
+	public boolean equals(Type other) {
+		return this.name.equals(other.name);
+	}
 
-    private static String getArrayPrefix(int dimension) {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0; i < dimension; i++) {
-            buf.append("[");
-        }
-        return buf.toString();
-    }
+	public int hashCode() {
+		return this.name.hashCode();
+	}
 
-    public boolean hasClass() {
-        return isClass() || (isArray() && getArrayType().hasClass());
-    }
+	public enum Primitive {
+		Byte('B'),
+		Character('C'),
+		Short('S'),
+		Integer('I'),
+		Long('J'),
+		Float('F'),
+		Double('D'),
+		Boolean('Z');
 
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof Type && equals((Type) other);
-    }
+		private static final Map<Character, Primitive> lookup;
 
-    public boolean equals(Type other) {
-        return this.name.equals(other.name);
-    }
+		static {
+			lookup = Maps.newTreeMap();
+			for (Primitive val : values()) {
+				lookup.put(val.getCode(), val);
+			}
+		}
 
-    public int hashCode() {
-        return this.name.hashCode();
-    }
+		private char code;
 
-    private static int countArrayDimension(String in) {
-        int i = 0;
-        while (i < in.length() && in.charAt(i) == '[')
-            i++;
-        return i;
-    }
+		Primitive(char code) {
+			this.code = code;
+		}
 
-    private static String readClass(String in) {
-        // read all the characters in the buffer until we hit a ';'
-        // include the parameters too
-        StringBuilder buf = new StringBuilder();
-        int depth = 0;
-        for (int i = 0; i < in.length(); i++) {
-            char c = in.charAt(i);
-            buf.append(c);
+		public static Primitive get(char code) {
+			return lookup.get(code);
+		}
 
-            if (c == '<') {
-                depth++;
-            } else if (c == '>') {
-                depth--;
-            } else if (depth == 0 && c == ';') {
-                return buf.toString();
-            }
-        }
-        return null;
-    }
+		public char getCode() {
+			return this.code;
+		}
+	}
 }

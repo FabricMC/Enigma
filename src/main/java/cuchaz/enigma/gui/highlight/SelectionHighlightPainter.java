@@ -8,22 +8,22 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.enigma.gui.highlight;
 
-import java.awt.*;
+package cuchaz.enigma.gui.highlight;
 
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
+import java.awt.*;
 
 public class SelectionHighlightPainter implements Highlighter.HighlightPainter {
 
-    @Override
-    public void paint(Graphics g, int start, int end, Shape shape, JTextComponent text) {
-        // draw a thick border
-        Graphics2D g2d = (Graphics2D) g;
-        Rectangle bounds = BoxHighlightPainter.getBounds(text, start, end);
-        g2d.setColor(Color.black);
-        g2d.setStroke(new BasicStroke(2.0f));
-        g2d.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
-    }
+	@Override
+	public void paint(Graphics g, int start, int end, Shape shape, JTextComponent text) {
+		// draw a thick border
+		Graphics2D g2d = (Graphics2D) g;
+		Rectangle bounds = BoxHighlightPainter.getBounds(text, start, end);
+		g2d.setColor(Color.black);
+		g2d.setStroke(new BasicStroke(2.0f));
+		g2d.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
+	}
 }

@@ -4,15 +4,16 @@
  * are made available under the terms of the GNU Lesser General Public
  * License v3.0 which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.inputs.constructors;
 
 // e extends d
 public class SubSubClass extends SubClass {
-	
+
 	// <init>(I)V
 	public SubSubClass(int i) {
 		// c.<init>(I)V

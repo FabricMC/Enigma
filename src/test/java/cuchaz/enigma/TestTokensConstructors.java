@@ -4,35 +4,40 @@
  * are made available under the terms of the GNU Lesser General Public
  * License v3.0 which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma;
 
-import static cuchaz.enigma.TestEntryFactory.*;
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
+import cuchaz.enigma.mapping.BehaviorEntry;
+import org.junit.Test;
 
 import java.util.jar.JarFile;
 
-import org.junit.Test;
-
-import cuchaz.enigma.mapping.BehaviorEntry;
+import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByConstructor;
+import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByMethod;
+import static cuchaz.enigma.TestEntryFactory.newConstructor;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 public class TestTokensConstructors extends TokenChecker {
-	
+
 	public TestTokensConstructors()
-	throws Exception {
+		throws Exception {
 		super(new JarFile("build/test-obf/constructors.jar"));
 	}
-	
+
 	@Test
 	public void baseDeclarations() {
 		assertThat(getDeclarationToken(newConstructor("a", "()V")), is("a"));
 		assertThat(getDeclarationToken(newConstructor("a", "(I)V")), is("a"));
 	}
-	
+
 	@Test
 	public void subDeclarations() {
 		assertThat(getDeclarationToken(newConstructor("d", "()V")), is("d"));
@@ -40,17 +45,17 @@ public class TestTokensConstructors extends TokenChecker {
 		assertThat(getDeclarationToken(newConstructor("d", "(II)V")), is("d"));
 		assertThat(getDeclarationToken(newConstructor("d", "(III)V")), is("d"));
 	}
-	
+
 	@Test
 	public void subsubDeclarations() {
 		assertThat(getDeclarationToken(newConstructor("e", "(I)V")), is("e"));
 	}
-	
+
 	@Test
 	public void defaultDeclarations() {
 		assertThat(getDeclarationToken(newConstructor("c", "()V")), nullValue());
 	}
-	
+
 	@Test
 	public void baseDefaultReferences() {
 		BehaviorEntry source = newConstructor("a", "()V");
@@ -67,7 +72,7 @@ public class TestTokensConstructors extends TokenChecker {
 			is(empty()) // implicit call, not decompiled to token
 		);
 	}
-	
+
 	@Test
 	public void baseIntReferences() {
 		BehaviorEntry source = newConstructor("a", "(I)V");
@@ -76,7 +81,7 @@ public class TestTokensConstructors extends TokenChecker {
 			containsInAnyOrder("a")
 		);
 	}
-	
+
 	@Test
 	public void subDefaultReferences() {
 		BehaviorEntry source = newConstructor("d", "()V");
@@ -89,7 +94,7 @@ public class TestTokensConstructors extends TokenChecker {
 			containsInAnyOrder("this")
 		);
 	}
-	
+
 	@Test
 	public void subIntReferences() {
 		BehaviorEntry source = newConstructor("d", "(I)V");
@@ -106,7 +111,7 @@ public class TestTokensConstructors extends TokenChecker {
 			containsInAnyOrder("super")
 		);
 	}
-	
+
 	@Test
 	public void subIntIntReferences() {
 		BehaviorEntry source = newConstructor("d", "(II)V");
@@ -115,7 +120,7 @@ public class TestTokensConstructors extends TokenChecker {
 			containsInAnyOrder("d")
 		);
 	}
-	
+
 	@Test
 	public void subsubIntReferences() {
 		BehaviorEntry source = newConstructor("e", "(I)V");
@@ -124,7 +129,7 @@ public class TestTokensConstructors extends TokenChecker {
 			containsInAnyOrder("e")
 		);
 	}
-	
+
 	@Test
 	public void defaultConstructableReferences() {
 		BehaviorEntry source = newConstructor("c", "()V");

@@ -8,13 +8,14 @@
  * Contributors:
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
+
 package cuchaz.enigma.gui.highlight;
 
-import java.awt.Color;
+import java.awt.*;
 
 public class ObfuscatedHighlightPainter extends BoxHighlightPainter {
 
-    public ObfuscatedHighlightPainter() {
-        super(new Color(255, 220, 220), new Color(160, 80, 80));
-    }
+	public ObfuscatedHighlightPainter() {
+		super(new Color(255, 220, 220), new Color(160, 80, 80));
+	}
 }
