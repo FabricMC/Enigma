@@ -36,7 +36,6 @@ public class Mappings {
 		this.originMapping = originMapping;
 		this.classesByObf = Maps.newHashMap();
 		this.classesByDeobf = Maps.newHashMap();
-		this.previousState = null;
 	}
 
 	public Collection<ClassMapping> classes() {

@@ -116,7 +116,7 @@ public class LocalVariableRenamer {
 
 		// then rename the rest of the args, if any
 		for (int i = starti + numArgs; i < table.tableLength(); i++) {
-			int firstIndex = table.index(starti + numArgs);
+			int firstIndex = Math.min(table.index(starti + numArgs), table.index(i));
 			renameVariable(table, i, constants.addUtf8Info("v" + (table.index(i) - firstIndex + 1)));
 		}
 	}

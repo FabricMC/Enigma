@@ -174,7 +174,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 			TypeReference typeReference = type.getUserData(Keys.TYPE_REFERENCE);
 			Identifier identifier = node.getVariableNameToken();
 			String signature = Descriptor.of(typeReference.getErasedDescription());
-			LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, localsPosition++, identifier.getName(), new Type(signature));
+			LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, argumentPosition + localsPosition++, identifier.getName(), new Type(signature));
 			identifierEntryCache.put(identifier.getName(), localVariableEntry);
 			addDeclarationToUnmatched(identifier.getName(), index);
 			index.addDeclaration(identifier, localVariableEntry);
@@ -194,7 +194,7 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 				TypeReference typeReference = type.getUserData(Keys.TYPE_REFERENCE);
 				String signature = Descriptor.of(typeReference.getErasedDescription());
 				Identifier identifier = initializer.getNameToken();
-				LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, localsPosition++, initializer.getName(), new Type(signature));
+				LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, argumentPosition + localsPosition++, initializer.getName(), new Type(signature));
 				identifierEntryCache.put(identifier.getName(), localVariableEntry);
 				addDeclarationToUnmatched(identifier.getName(), index);
 				index.addDeclaration(identifier, localVariableEntry);
