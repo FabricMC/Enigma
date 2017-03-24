@@ -138,7 +138,7 @@ public class InnerClassWriter {
 		attr.append(innerClassIndex, parentClassIndex, innerClassNameIndex, accessFlags);
 
 		/* DEBUG 
-	    System.out.println(String.format("\tOBF: %s -> ATTR: %s,%s,%s (replace %s with %s)",
+		System.out.println(String.format("\tOBF: %s -> ATTR: %s,%s,%s (replace %s with %s)",
 			obfClassEntry,
 			attr.innerClass(attr.tableLength() - 1),
 			attr.outerClass(attr.tableLength() - 1),

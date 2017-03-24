@@ -53,6 +53,7 @@ public class ClassMatchingGui {
 	private ClassEntry destClass;
 	private SourceType sourceType;
 	private SaveListener saveListener;
+
 	public ClassMatchingGui(ClassMatches matches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 
 		classMatches = matches;

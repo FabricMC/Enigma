@@ -114,7 +114,7 @@ public class JarIndex {
 						// DEBUG
 						//System.out.println("ANONYMOUS: " + outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName());
 					}/* else {
-	                    // DEBUG
+		                // DEBUG
                         //System.out.println("INNER: " + outerClassEntry.getName() + "$" + innerClassEntry.getSimpleName());
                     }*/
 				}

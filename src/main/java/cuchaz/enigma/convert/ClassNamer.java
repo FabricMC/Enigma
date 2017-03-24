@@ -21,6 +21,7 @@ public class ClassNamer {
 
 	private Map<String, String> sourceNames;
 	private Map<String, String> destNames;
+
 	public ClassNamer(BiMap<ClassEntry, ClassEntry> mappings) {
 		// convert the identity mappings to name maps
 		this.sourceNames = Maps.newHashMap();

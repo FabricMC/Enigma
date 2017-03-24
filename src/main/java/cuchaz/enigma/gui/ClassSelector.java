@@ -35,6 +35,7 @@ public class ClassSelector extends JTree {
 	private ClassSelectionListener selectionListener;
 	private RenameSelectionListener renameSelectionListener;
 	private Comparator<ClassEntry> comparator;
+
 	public ClassSelector(Gui gui, Comparator<ClassEntry> comparator, boolean isRenamable) {
 		this.comparator = comparator;
 

@@ -59,6 +59,7 @@ public class MemberMatchingGui<T extends Entry> {
 	private ClassEntry obfDestClass;
 	private T obfSourceEntry;
 	private T obfDestEntry;
+
 	public MemberMatchingGui(ClassMatches classMatches, MemberMatches<T> fieldMatches, Deobfuscator sourceDeobfuscator, Deobfuscator destDeobfuscator) {
 
 		this.classMatches = classMatches;

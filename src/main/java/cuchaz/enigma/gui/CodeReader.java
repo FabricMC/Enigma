@@ -36,6 +36,7 @@ public class CodeReader extends JEditorPane {
 	private SelectionHighlightPainter selectionHighlightPainter;
 	private SourceIndex sourceIndex;
 	private SelectionListener selectionListener;
+
 	public CodeReader() {
 
 		setEditable(false);

@@ -47,6 +47,7 @@ public class Deobfuscator {
 	private final MappingsRenamer renamer;
 	private final Map<TranslationDirection, Translator> translatorCache;
 	private Mappings mappings;
+
 	public Deobfuscator(JarFile jar) {
 		this.jar = jar;
 

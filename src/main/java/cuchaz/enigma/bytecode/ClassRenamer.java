@@ -143,7 +143,7 @@ public class ClassRenamer {
 				}
 
 				/* DEBUG
-	            System.out.println(String.format("\tDEOBF: %s-> ATTR: %s,%s,%s", classEntry, attr.outerClass(i), attr.innerClass(i), attr.innerName(i)));
+		        System.out.println(String.format("\tDEOBF: %s-> ATTR: %s,%s,%s", classEntry, attr.outerClass(i), attr.innerClass(i), attr.innerName(i)));
 				*/
 			}
 		}

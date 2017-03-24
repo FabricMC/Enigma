@@ -542,8 +542,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	}
 
 	// Used for tiny parsing to keep track of deobfuscate inner classes
-	public ClassMapping setDeobInner(String deobName)
-	{
+	public ClassMapping setDeobInner(String deobName) {
 		this.deobfFullName = deobName;
 		return this;
 	}
