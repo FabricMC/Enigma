@@ -63,6 +63,7 @@ public class Gui {
 	// state
 	public EntryReference<Entry, Entry> reference;
 	public JFileChooser jarFileChooser;
+	public JFileChooser tinyMappingsFileChooser;
 	public JFileChooser enigmaMappingsFileChooser;
 	public JFileChooser exportSourceFileChooser;
 	public JFileChooser exportJarFileChooser;
@@ -105,6 +106,7 @@ public class Gui {
 		// init file choosers
 		this.jarFileChooser = new FileChooserFile();
 
+		this.tinyMappingsFileChooser = new FileChooserFile();
 		this.enigmaMappingsFileChooser = new FileChooserAny();
 		this.exportSourceFileChooser = new FileChooserFolder();
 		this.exportJarFileChooser = new FileChooserFile();
@@ -314,6 +316,7 @@ public class Gui {
 
 		// update menu
 		this.menuBar.closeJarMenu.setEnabled(true);
+		this.menuBar.openTinyMappingsMenu.setEnabled(true);
 		this.menuBar.openEnigmaMappingsMenu.setEnabled(true);
 		this.menuBar.saveMappingsMenu.setEnabled(false);
 		this.menuBar.saveMappingEnigmaFileMenu.setEnabled(true);
@@ -336,6 +339,7 @@ public class Gui {
 
 		// update menu
 		this.menuBar.closeJarMenu.setEnabled(false);
+		this.menuBar.openTinyMappingsMenu.setEnabled(false);
 		this.menuBar.openEnigmaMappingsMenu.setEnabled(false);
 		this.menuBar.saveMappingsMenu.setEnabled(false);
 		this.menuBar.saveMappingEnigmaFileMenu.setEnabled(false);

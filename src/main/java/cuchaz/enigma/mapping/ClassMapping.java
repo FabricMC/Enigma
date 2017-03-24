@@ -23,6 +23,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	private String obfFullName;
 	private String obfSimpleName;
 	private String deobfName;
+	private String deobfFullName;
 	private String previousDeobfName;
 	private Map<String, ClassMapping> innerClassesByObfSimple;
 	private Map<String, ClassMapping> innerClassesByObfFull;
@@ -33,6 +34,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	private Map<String, MethodMapping> methodsByDeobf;
 	private boolean isDirty;
 	private Mappings.EntryModifier modifier;
+	private boolean deobfInner;
 
 	public ClassMapping(String obfFullName) {
 		this(obfFullName, null, Mappings.EntryModifier.UNCHANGED);
@@ -497,6 +499,10 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		return new ClassEntry(obfFullName);
 	}
 
+	public ClassEntry getDeObfEntry() {
+		return deobfFullName != null ? new ClassEntry(deobfFullName) : null;
+	}
+
 	public boolean isDirty() {
 		return isDirty;
 	}
@@ -533,5 +539,12 @@ public class ClassMapping implements Comparable<ClassMapping> {
 			methodMapping.setModifier(modifier);
 			this.isDirty = true;
 		}
+	}
+
+	// Used for tiny parsing to keep track of deobfuscate inner classes
+	public ClassMapping setDeobInner(String deobName)
+	{
+		this.deobfFullName = deobName;
+		return this;
 	}
 }

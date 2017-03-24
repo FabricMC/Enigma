@@ -71,6 +71,14 @@ public class GuiController {
 		refreshCurrentClass();
 	}
 
+	public void openTinyMappings(File file) throws IOException, MappingParseException {
+		this.deobfuscator.setMappings(new MappingsTinyReader().read(file));
+		this.isDirty = false;
+		this.gui.setMappingsFile(file);
+		refreshClasses();
+		refreshCurrentClass();
+	}
+
 	public void saveMappings(File file) throws IOException {
 		Mappings mappings = this.deobfuscator.getMappings();
 		switch (mappings.getOriginMappingFormat()) {

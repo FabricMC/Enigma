@@ -230,7 +230,7 @@ public class Mappings {
 	}
 
 	public enum FormatType {
-		ENIGMA_FILE, ENIGMA_DIRECTORY, SRG_FILE
+		ENIGMA_FILE, ENIGMA_DIRECTORY, TINY_FILE, SRG_FILE
 	}
 
 	public enum EntryModifier {
