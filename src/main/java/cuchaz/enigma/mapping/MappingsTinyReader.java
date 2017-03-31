@@ -34,7 +34,7 @@ public class MappingsTinyReader {
 		lines.remove(0); // TODO: use the header
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
 			String line = lines.get(lineNumber);
-			String[] parts = line.split("\\s");
+			String[] parts = line.split("\t");
 			try {
 				String token = parts[0];
 				ClassMapping classMapping;
@@ -74,6 +74,7 @@ public class MappingsTinyReader {
 						throw new MappingParseException(file, lineNumber, "Unknown token '" + token + "' !");
 				}
 			} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) {
+				ex.printStackTrace();
 				throw new MappingParseException(file, lineNumber, "Malformed line:\n" + line);
 			}
 		}
