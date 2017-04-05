@@ -111,6 +111,7 @@ public class GuiController {
 
 	public void rebuildMethodNames() {
 		ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.rebuildMethodNames(progress));
+		this.isDirty = true;
 	}
 
 	public void exportSource(final File dirOut) {

@@ -29,6 +29,7 @@ import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.bytecode.ClassProtectifier;
 import cuchaz.enigma.bytecode.ClassPublifier;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
 import javassist.CtClass;
 import javassist.bytecode.Descriptor;
@@ -372,7 +373,12 @@ public class Deobfuscator {
 				Entry obfEntry = entry.getKey();
 				String name = entry.getValue();
 
-				rename(obfEntry, name);
+				try {
+					rename(obfEntry, name);
+				} catch (IllegalNameException exception)
+				{
+					System.out.println("WARNING: " + exception.getMessage());
+				}
 			}
 		}
 	}
