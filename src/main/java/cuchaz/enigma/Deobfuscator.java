@@ -330,30 +330,11 @@ public class Deobfuscator {
 		progress.init(getMappings().classes().size() * 3, "Rebuilding method names");
 
 		for (ClassMapping classMapping : Lists.newArrayList(getMappings().classes())) {
-			Map<Entry, String> renameEntries = new HashMap<>();
-
 			progress.onProgress(i++, classMapping.getDeobfName());
-
-			for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
-				ClassEntry classObfEntry = classMapping.getObfEntry();
-				BehaviorEntry obfEntry = methodMapping.getObfEntry(classObfEntry);
-
-				if (isBehaviorProvider(classObfEntry, obfEntry)) {
-					if (hasDeobfuscatedName(obfEntry) && !(obfEntry instanceof ConstructorEntry)
-						&& !(methodMapping.getDeobfName().equals(methodMapping.getObfName()))) {
-						renameEntries.put(obfEntry, methodMapping.getDeobfName());
-					}
-
-					for (ArgumentMapping argumentMapping : Lists.newArrayList(methodMapping.arguments())) {
-						Entry argObfEntry = argumentMapping.getObfEntry(obfEntry);
-						if (hasDeobfuscatedName(argObfEntry)) {
-							renameEntries.put(argObfEntry, deobfuscateEntry(argObfEntry).getName());
-						}
-					}
-				}
+			rebuildMethodNames(classMapping, renameClassMap);
+			for(ClassMapping innerClass : classMapping.innerClasses()){
+				rebuildMethodNames(innerClass, renameClassMap);
 			}
-
-			renameClassMap.put(classMapping, renameEntries);
 		}
 
 		for (Map.Entry<ClassMapping, Map<Entry, String>> renameClassMapEntry : renameClassMap.entrySet()) {
@@ -382,6 +363,33 @@ public class Deobfuscator {
 			}
 		}
 	}
+
+	private void rebuildMethodNames(ClassMapping classMapping, Map<ClassMapping, Map<Entry, String>> renameClassMap){
+		Map<Entry, String> renameEntries = new HashMap<>();
+
+		for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
+			ClassEntry classObfEntry = classMapping.getObfEntry();
+			BehaviorEntry obfEntry = methodMapping.getObfEntry(classObfEntry);
+
+			if (isBehaviorProvider(classObfEntry, obfEntry)) {
+				if (hasDeobfuscatedName(obfEntry) && !(obfEntry instanceof ConstructorEntry)
+					&& !(methodMapping.getDeobfName().equals(methodMapping.getObfName()))) {
+					renameEntries.put(obfEntry, methodMapping.getDeobfName());
+				}
+
+				for (ArgumentMapping argumentMapping : Lists.newArrayList(methodMapping.arguments())) {
+					Entry argObfEntry = argumentMapping.getObfEntry(obfEntry);
+					if (hasDeobfuscatedName(argObfEntry)) {
+						renameEntries.put(argObfEntry, deobfuscateEntry(argObfEntry).getName());
+					}
+				}
+			}
+		}
+
+		renameClassMap.put(classMapping, renameEntries);
+	}
+
+
 
 	public void writeJar(File out, ProgressListener progress) {
 		transformJar(out, progress, createTypeLoader()::transformClass);
