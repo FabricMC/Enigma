@@ -192,7 +192,6 @@ public class ClassMatchingGui {
 		} catch (MappingConflict ex) {
 			System.out.println(ex.getMessage());
 			ex.printStackTrace();
-			return;
 		}
 	}
 

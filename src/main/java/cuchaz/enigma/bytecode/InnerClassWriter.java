@@ -32,7 +32,7 @@ public class InnerClassWriter {
 		this.deobfuscatorTranslator = deobfuscatorTranslator;
 	}
 
-	// FIXME: modiffier is not applied to inner class
+	// FIXME: modifier is not applied to inner class
 	public static void changeModifier(CtClass c, InnerClassesAttribute attr, Translator translator) {
 		ClassPool pool = c.getClassPool();
 		for (int i = 0; i < attr.tableLength(); i++) {

@@ -22,6 +22,7 @@ import cuchaz.enigma.mapping.*;
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
 
 	private ClassEntry classEntry;
+	private boolean isEnum;
 
 	public SourceIndexClassVisitor(ClassEntry classEntry) {
 		this.classEntry = classEntry;
@@ -65,7 +66,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 			}
 		}
 		index.addDeclaration(tokenNode, behaviorEntry);
-		return node.acceptVisitor(new SourceIndexBehaviorVisitor(behaviorEntry), index);
+		return node.acceptVisitor(new SourceIndexBehaviorVisitor(behaviorEntry, false), index);
 	}
 
 	@Override
@@ -73,7 +74,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
 		ConstructorEntry constructorEntry = ProcyonEntryFactory.getConstructorEntry(def);
 		index.addDeclaration(node.getNameToken(), constructorEntry);
-		return node.acceptVisitor(new SourceIndexBehaviorVisitor(constructorEntry), index);
+		return node.acceptVisitor(new SourceIndexBehaviorVisitor(constructorEntry, isEnum), index);
 	}
 
 	@Override
@@ -93,7 +94,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
 		FieldEntry fieldEntry = ProcyonEntryFactory.getFieldEntry(def);
 		index.addDeclaration(node.getNameToken(), fieldEntry);
-
+		this.isEnum = true;
 		return recurse(node, index);
 	}
 }

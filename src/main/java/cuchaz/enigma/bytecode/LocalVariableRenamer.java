@@ -38,7 +38,7 @@ public class LocalVariableRenamer {
 
 			LocalVariableAttribute table = (LocalVariableAttribute) codeAttribute.getAttribute(LocalVariableAttribute.tag);
 			if (table != null) {
-				renameLVT(behaviorEntry, constants, table);
+				renameLVT(behaviorEntry, constants, table, c);
 			}
 
 			LocalVariableTypeAttribute typeTable = (LocalVariableTypeAttribute) codeAttribute.getAttribute(LocalVariableAttribute.typeTag);
@@ -58,7 +58,7 @@ public class LocalVariableRenamer {
 		}
 	}
 
-	private void renameLVT(BehaviorEntry behaviorEntry, ConstPool constants, LocalVariableAttribute table) {
+	private void renameLVT(BehaviorEntry behaviorEntry, ConstPool constants, LocalVariableAttribute table, CtClass ctClass) {
 
 		// skip empty tables
 		if (table.tableLength() <= 0) {
@@ -69,14 +69,13 @@ public class LocalVariableRenamer {
 		int starti = 0;
 		if (table.variableName(0).equals("this")) {
 			// skip the "this" variable
-			starti = 1;
+			starti++;
 		}
 
 		// rename method arguments first
 		int numArgs = 0;
 		if (behaviorEntry.getSignature() != null) {
 			numArgs = behaviorEntry.getSignature().getArgumentTypes().size();
-
 			boolean isNestedClassConstructor = false;
 
 			// If the behavior is a constructor and if it have more than one arg, it's probably from a nested!
@@ -93,21 +92,28 @@ public class LocalVariableRenamer {
 
 			for (int i = starti; i < starti + numArgs && i < table.tableLength(); i++) {
 				int argi = i - starti;
+				if (ctClass.isEnum())
+					argi += 2;
+				if (behaviorEntry.getClassEntry().getName().contains("ahd") && behaviorEntry instanceof ConstructorEntry)
+					System.out.println(behaviorEntry.getClassEntry() + " " + i);
 				String argName = this.translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
 				if (argName == null) {
-					Type argType = behaviorEntry.getSignature().getArgumentTypes().get(isNestedClassConstructor ? argi + 1 : argi);
+					int argIndex = isNestedClassConstructor ? argi + 1 : argi;
+					if (ctClass.isEnum())
+						argIndex -= 2;
+					Type argType = behaviorEntry.getSignature().getArgumentTypes().get(argIndex);
 					// Unfortunately each of these have different name getters, so they have different code paths
 					if (argType.isPrimitive()) {
 						Type.Primitive argCls = argType.getPrimitive();
-						argName = "a" + argCls.name() + (argi + 1);
+						argName = "a" + argCls.name() + (argIndex + 1);
 					} else if (argType.isArray()) {
 						// List types would require this whole block again, so just go with aListx
-						argName = "aList" + (argi + 1);
+						argName = "aList" + (argIndex + 1);
 					} else if (argType.isClass()) {
 						ClassEntry argClsTrans = this.translator.translateEntry(argType.getClassEntry());
-						argName = "a" + argClsTrans.getSimpleName().replace("$", "") + (argi + 1);
+						argName = "a" + argClsTrans.getSimpleName().replace("$", "") + (argIndex + 1);
 					} else {
-						argName = "a" + (argi + 1);
+						argName = "a" + (argIndex + 1);
 					}
 				}
 				renameVariable(table, i, constants.addUtf8Info(argName));

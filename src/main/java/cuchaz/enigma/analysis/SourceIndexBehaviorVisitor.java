@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
-
 	private BehaviorEntry behaviorEntry;
 
 	// TODO: Really fix Procyon index problem with inner classes
@@ -35,9 +34,9 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
 	private Map<String, Entry> identifierEntryCache = new HashMap<>();
 
-	public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry) {
+	public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry, boolean isEnum) {
 		this.behaviorEntry = behaviorEntry;
-		this.argumentPosition = 0;
+		this.argumentPosition = isEnum ? 2 : 0;
 		this.localsPosition = 0;
 	}
 

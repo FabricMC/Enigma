@@ -316,8 +316,11 @@ public class ClassSelector extends JTree {
 	}
 
 	public ClassEntry getFirstClass() {
-		for (ClassSelectorPackageNode packageNode : packageNodes()) {
-			for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
+		ClassSelectorPackageNode packageNode = packageNodes().get(0);
+		if (packageNode != null)
+		{
+			ClassSelectorClassNode classNode = classNodes(packageNode).get(0);
+			if (classNode != null) {
 				return classNode.getClassEntry();
 			}
 		}
@@ -360,7 +363,8 @@ public class ClassSelector extends JTree {
 				}
 			} else {
 				// return the next class
-				for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
+				ClassSelectorClassNode classNode = classNodes(packageNode).get(0);
+				if (classNode != null) {
 					return classNode.getClassEntry();
 				}
 			}
