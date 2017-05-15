@@ -19,19 +19,13 @@ import javassist.bytecode.AccessFlag;
 
 public class BridgeMarker {
 
-	private JarIndex jarIndex;
-
-	public BridgeMarker(JarIndex jarIndex) {
-		this.jarIndex = jarIndex;
-	}
-
-	public void markBridges(CtClass c) {
+	public static void markBridges(JarIndex jarIndex, CtClass c) {
 
 		for (CtMethod method : c.getDeclaredMethods()) {
 			MethodEntry methodEntry = EntryFactory.getMethodEntry(method);
 
 			// is this a bridge method?
-			MethodEntry bridgedMethodEntry = this.jarIndex.getBridgedMethod(methodEntry);
+			MethodEntry bridgedMethodEntry = jarIndex.getBridgedMethod(methodEntry);
 			if (bridgedMethodEntry != null) {
 
 				// it's a bridge method! add the bridge flag

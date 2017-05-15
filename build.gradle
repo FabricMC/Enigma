@@ -154,7 +154,6 @@ task('libJar', type: Jar, dependsOn: classes) {
         // Main classes + inner classes (keep CommandMain)
         exclude 'cuchaz/enigma/Main.class'
         exclude 'cuchaz/enigma/Main.class'
-        exclude 'cuchaz/enigma/ConvertMain*.class'
     }
 }
 

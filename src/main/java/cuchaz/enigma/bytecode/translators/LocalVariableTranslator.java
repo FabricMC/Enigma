@@ -9,22 +9,16 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.bytecode;
+package cuchaz.enigma.bytecode.translators;
 
 import cuchaz.enigma.mapping.*;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.bytecode.*;
 
-public class LocalVariableRenamer {
+public class LocalVariableTranslator {
 
-	private Translator translator;
-
-	public LocalVariableRenamer(Translator translator) {
-		this.translator = translator;
-	}
-
-	public void rename(CtClass c) {
+	public static void translate(Translator translator, CtClass c) {
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
 
 			// if there's a local variable table, just rename everything to v1, v2, v3, ... for now
@@ -38,7 +32,7 @@ public class LocalVariableRenamer {
 
 			LocalVariableAttribute table = (LocalVariableAttribute) codeAttribute.getAttribute(LocalVariableAttribute.tag);
 			if (table != null) {
-				renameLVT(behaviorEntry, constants, table, c);
+				renameLVT(translator, behaviorEntry, constants, table, c);
 			}
 
 			LocalVariableTypeAttribute typeTable = (LocalVariableTypeAttribute) codeAttribute.getAttribute(LocalVariableAttribute.typeTag);
@@ -50,7 +44,7 @@ public class LocalVariableRenamer {
 
 	// DEBUG
 	@SuppressWarnings("unused")
-	private void dumpTable(LocalVariableAttribute table) {
+	private static void dumpTable(LocalVariableAttribute table) {
 		for (int i = 0; i < table.tableLength(); i++) {
 			System.out.println(String.format("\t%d (%d): %s %s",
 				i, table.index(i), table.variableName(i), table.descriptor(i)
@@ -58,7 +52,7 @@ public class LocalVariableRenamer {
 		}
 	}
 
-	private void renameLVT(BehaviorEntry behaviorEntry, ConstPool constants, LocalVariableAttribute table, CtClass ctClass) {
+	private static void renameLVT(Translator translator, BehaviorEntry behaviorEntry, ConstPool constants, LocalVariableAttribute table, CtClass ctClass) {
 
 		// skip empty tables
 		if (table.tableLength() <= 0) {
@@ -94,9 +88,7 @@ public class LocalVariableRenamer {
 				int argi = i - starti;
 				if (ctClass.isEnum())
 					argi += 2;
-				if (behaviorEntry.getClassEntry().getName().contains("ahd") && behaviorEntry instanceof ConstructorEntry)
-					System.out.println(behaviorEntry.getClassEntry() + " " + i);
-				String argName = this.translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
+				String argName = translator.translate(new ArgumentEntry(behaviorEntry, argi, ""));
 				if (argName == null) {
 					int argIndex = isNestedClassConstructor ? argi + 1 : argi;
 					if (ctClass.isEnum())
@@ -110,7 +102,7 @@ public class LocalVariableRenamer {
 						// List types would require this whole block again, so just go with aListx
 						argName = "aList" + (argIndex + 1);
 					} else if (argType.isClass()) {
-						ClassEntry argClsTrans = this.translator.translateEntry(argType.getClassEntry());
+						ClassEntry argClsTrans = translator.translateEntry(argType.getClassEntry());
 						argName = "a" + argClsTrans.getSimpleName().replace("$", "") + (argIndex + 1);
 					} else {
 						argName = "a" + (argIndex + 1);
@@ -127,19 +119,19 @@ public class LocalVariableRenamer {
 		}
 	}
 
-	private void renameLVTT(LocalVariableTypeAttribute typeTable, LocalVariableAttribute table) {
+	private static void renameLVTT(LocalVariableTypeAttribute typeTable, LocalVariableAttribute table) {
 		// rename args to the same names as in the LVT
 		for (int i = 0; i < typeTable.tableLength(); i++) {
 			renameVariable(typeTable, i, getNameIndex(table, typeTable.index(i)));
 		}
 	}
 
-	private void renameVariable(LocalVariableAttribute table, int i, int stringId) {
+	private static void renameVariable(LocalVariableAttribute table, int i, int stringId) {
 		// based off of LocalVariableAttribute.nameIndex()
 		ByteArray.write16bit(stringId, table.get(), i * 10 + 6);
 	}
 
-	private int getNameIndex(LocalVariableAttribute table, int index) {
+	private static int getNameIndex(LocalVariableAttribute table, int index) {
 		for (int i = 0; i < table.tableLength(); i++) {
 			if (table.index(i) == index) {
 				return table.nameIndex(i);

@@ -18,10 +18,10 @@ import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
 import cuchaz.enigma.analysis.BridgeMarker;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.bytecode.ClassTranslator;
-import cuchaz.enigma.bytecode.InnerClassWriter;
-import cuchaz.enigma.bytecode.LocalVariableRenamer;
-import cuchaz.enigma.bytecode.MethodParameterWriter;
+import cuchaz.enigma.bytecode.translators.ClassTranslator;
+import cuchaz.enigma.bytecode.translators.InnerClassWriter;
+import cuchaz.enigma.bytecode.translators.LocalVariableTranslator;
+import cuchaz.enigma.bytecode.translators.MethodParameterTranslator;
 import cuchaz.enigma.mapping.ClassEntry;
 import cuchaz.enigma.mapping.Translator;
 import javassist.*;
@@ -51,6 +51,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
 		this.cache = Maps.newHashMap();
 		this.defaultTypeLoader = new ClasspathTypeLoader();
+
 	}
 
 	public void clearCache() {
@@ -200,7 +201,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		throws IOException, NotFoundException, CannotCompileException {
 
 		// reconstruct inner classes
-		new InnerClassWriter(this.jarIndex, this.deobfuscatingTranslator).write(c);
+		InnerClassWriter.write(jarIndex, c);
 
 		// re-get the javassist handle since we changed class names
 		ClassEntry obfClassEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
@@ -213,10 +214,10 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		assertClassName(c, obfClassEntry);
 
 		// do all kinds of deobfuscating transformations on the class
-		new BridgeMarker(this.jarIndex).markBridges(c);
-		new MethodParameterWriter(this.deobfuscatingTranslator).writeMethodArguments(c);
-		new LocalVariableRenamer(this.deobfuscatingTranslator).rename(c);
-		new ClassTranslator(this.deobfuscatingTranslator).translate(c);
+		BridgeMarker.markBridges(this.jarIndex, c);
+		MethodParameterTranslator.translate(this.deobfuscatingTranslator, c);
+		LocalVariableTranslator.translate(this.deobfuscatingTranslator, c);
+		ClassTranslator.translate(this.deobfuscatingTranslator, c);
 
 		return c;
 	}

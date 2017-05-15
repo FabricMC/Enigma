@@ -9,10 +9,11 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.bytecode;
+package cuchaz.enigma.bytecode.translators;
 
 import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.bytecode.ClassRenamer;
 import cuchaz.enigma.mapping.*;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -23,14 +24,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class InnerClassWriter {
-
-	private JarIndex index;
-	private Translator deobfuscatorTranslator;
-
-	public InnerClassWriter(JarIndex index, Translator deobfuscatorTranslator) {
-		this.index = index;
-		this.deobfuscatorTranslator = deobfuscatorTranslator;
-	}
 
 	// FIXME: modifier is not applied to inner class
 	public static void changeModifier(CtClass c, InnerClassesAttribute attr, Translator translator) {
@@ -52,7 +45,7 @@ public class InnerClassWriter {
 		}
 	}
 
-	public void write(CtClass c) {
+	public static void write(JarIndex index, CtClass c) {
 
 		// don't change anything if there's already an attribute there
 		InnerClassesAttribute oldAttr = (InnerClassesAttribute) c.getClassFile().getAttribute(InnerClassesAttribute.tag);
@@ -62,7 +55,7 @@ public class InnerClassWriter {
 		}
 
 		ClassEntry obfClassEntry = EntryFactory.getClassEntry(c);
-		List<ClassEntry> obfClassChain = this.index.getObfClassChain(obfClassEntry);
+		List<ClassEntry> obfClassChain = index.getObfClassChain(obfClassEntry);
 
 		boolean isInnerClass = obfClassChain.size() > 1;
 		if (isInnerClass) {
@@ -70,7 +63,7 @@ public class InnerClassWriter {
 			// it's an inner class, rename it to the fully qualified name
 			c.setName(obfClassEntry.buildClassEntry(obfClassChain).getName());
 
-			BehaviorEntry caller = this.index.getAnonymousClassCaller(obfClassEntry);
+			BehaviorEntry caller = index.getAnonymousClassCaller(obfClassEntry);
 			if (caller != null) {
 
 				// write the enclosing method attribute
@@ -83,7 +76,7 @@ public class InnerClassWriter {
 		}
 
 		// does this class have any inner classes?
-		Collection<ClassEntry> obfInnerClassEntries = this.index.getInnerClasses(obfClassEntry);
+		Collection<ClassEntry> obfInnerClassEntries = index.getInnerClasses(obfClassEntry);
 
 		if (isInnerClass || !obfInnerClassEntries.isEmpty()) {
 
@@ -94,7 +87,7 @@ public class InnerClassWriter {
 			// write the ancestry, but not the outermost class
 			for (int i = 1; i < obfClassChain.size(); i++) {
 				ClassEntry obfInnerClassEntry = obfClassChain.get(i);
-				writeInnerClass(attr, obfClassChain, obfInnerClassEntry);
+				writeInnerClass(index, attr, obfClassChain, obfInnerClassEntry);
 
 				// update references to use the fully qualified inner class name
 				c.replaceClassName(obfInnerClassEntry.getName(), obfInnerClassEntry.buildClassEntry(obfClassChain).getName());
@@ -107,7 +100,7 @@ public class InnerClassWriter {
 				List<ClassEntry> extendedObfClassChain = Lists.newArrayList(obfClassChain);
 				extendedObfClassChain.add(obfInnerClassEntry);
 
-				writeInnerClass(attr, extendedObfClassChain, obfInnerClassEntry);
+				writeInnerClass(index, attr, extendedObfClassChain, obfInnerClassEntry);
 
 				// update references to use the fully qualified inner class name
 				c.replaceClassName(obfInnerClassEntry.getName(), obfInnerClassEntry.buildClassEntry(extendedObfClassChain).getName());
@@ -115,7 +108,7 @@ public class InnerClassWriter {
 		}
 	}
 
-	private void writeInnerClass(InnerClassesAttribute attr, List<ClassEntry> obfClassChain, ClassEntry obfClassEntry) {
+	private static void writeInnerClass(JarIndex index, InnerClassesAttribute attr, List<ClassEntry> obfClassChain, ClassEntry obfClassEntry) {
 
 		// get the new inner class name
 		ClassEntry obfInnerClassEntry = obfClassEntry.buildClassEntry(obfClassChain);
@@ -131,7 +124,7 @@ public class InnerClassWriter {
 		int innerClassNameIndex = 0;
 		int accessFlags = AccessFlag.PUBLIC;
 		// TODO: need to figure out if we can put static or not
-		if (!this.index.isAnonymousClass(obfClassEntry)) {
+		if (!index.isAnonymousClass(obfClassEntry)) {
 			innerClassNameIndex = constPool.addUtf8Info(obfInnerClassEntry.getInnermostClassName());
 		}
 

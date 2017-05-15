@@ -9,8 +9,10 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.bytecode;
+package cuchaz.enigma.bytecode.translators;
 
+import cuchaz.enigma.bytecode.ClassRenamer;
+import cuchaz.enigma.bytecode.ConstPoolEditor;
 import cuchaz.enigma.mapping.*;
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -20,13 +22,7 @@ import javassist.bytecode.*;
 
 public class ClassTranslator {
 
-	private Translator translator;
-
-	public ClassTranslator(Translator translator) {
-		this.translator = translator;
-	}
-
-	public void translate(CtClass c) {
+	public static void translate(Translator translator, CtClass c) {
 
 		// NOTE: the order of these translations is very important
 
@@ -44,7 +40,7 @@ public class ClassTranslator {
 						constants.getFieldrefName(i),
 						constants.getFieldrefType(i)
 					);
-					FieldEntry translatedEntry = this.translator.translateEntry(entry);
+					FieldEntry translatedEntry = translator.translateEntry(entry);
 					if (!entry.equals(translatedEntry)) {
 						editor.changeMemberrefNameAndType(i, translatedEntry.getName(), translatedEntry.getType().toString());
 					}
@@ -60,7 +56,7 @@ public class ClassTranslator {
 						editor.getMemberrefName(i),
 						editor.getMemberrefType(i)
 					);
-					BehaviorEntry translatedEntry = this.translator.translateEntry(entry);
+					BehaviorEntry translatedEntry = translator.translateEntry(entry);
 					if (!entry.equals(translatedEntry)) {
 						editor.changeMemberrefNameAndType(i, translatedEntry.getName(), translatedEntry.getSignature().toString());
 					}
@@ -72,7 +68,7 @@ public class ClassTranslator {
 		}
 
 		ClassEntry classEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
-		Mappings.EntryModifier modifier = this.translator.getModifier(classEntry);
+		Mappings.EntryModifier modifier = translator.getModifier(classEntry);
 		if (modifier != null && modifier != Mappings.EntryModifier.UNCHANGED)
 			ClassRenamer.applyModifier(c, modifier);
 
@@ -81,8 +77,8 @@ public class ClassTranslator {
 
 			// translate the name
 			FieldEntry entry = EntryFactory.getFieldEntry(field);
-			String translatedName = this.translator.translate(entry);
-			modifier = this.translator.getModifier(entry);
+			String translatedName = translator.translate(entry);
+			modifier = translator.getModifier(entry);
 			if (modifier != null && modifier != Mappings.EntryModifier.UNCHANGED)
 				ClassRenamer.applyModifier(field, modifier);
 
@@ -91,7 +87,7 @@ public class ClassTranslator {
 			}
 
 			// translate the type
-			Type translatedType = this.translator.translateType(entry.getType());
+			Type translatedType = translator.translateType(entry.getType());
 			field.getFieldInfo().setDescriptor(translatedType.toString());
 		}
 
@@ -100,7 +96,7 @@ public class ClassTranslator {
 
 			BehaviorEntry entry = EntryFactory.getBehaviorEntry(behavior);
 
-			modifier = this.translator.getModifier(entry);
+			modifier = translator.getModifier(entry);
 			if (modifier != null && modifier != Mappings.EntryModifier.UNCHANGED)
 				ClassRenamer.applyModifier(behavior, modifier);
 
@@ -108,7 +104,7 @@ public class ClassTranslator {
 				CtMethod method = (CtMethod) behavior;
 
 				// translate the name
-				String translatedName = this.translator.translate(entry);
+				String translatedName = translator.translate(entry);
 				if (translatedName != null) {
 					method.setName(translatedName);
 				}
@@ -116,7 +112,7 @@ public class ClassTranslator {
 
 			if (entry.getSignature() != null) {
 				// translate the signature
-				Signature translatedSignature = this.translator.translateSignature(entry.getSignature());
+				Signature translatedSignature = translator.translateSignature(entry.getSignature());
 				behavior.getMethodInfo().setDescriptor(translatedSignature.toString());
 			}
 		}
@@ -127,7 +123,7 @@ public class ClassTranslator {
 
 			if (enclosingMethodAttr.methodIndex() == 0) {
 				BehaviorEntry obfBehaviorEntry = EntryFactory.getBehaviorEntry(Descriptor.toJvmName(enclosingMethodAttr.className()));
-				BehaviorEntry deobfBehaviorEntry = this.translator.translateEntry(obfBehaviorEntry);
+				BehaviorEntry deobfBehaviorEntry = translator.translateEntry(obfBehaviorEntry);
 				c.getClassFile().addAttribute(new EnclosingMethodAttribute(
 					constants,
 					deobfBehaviorEntry.getClassName()
@@ -138,7 +134,7 @@ public class ClassTranslator {
 					enclosingMethodAttr.methodName(),
 					enclosingMethodAttr.methodDescriptor()
 				);
-				BehaviorEntry deobfBehaviorEntry = this.translator.translateEntry(obfBehaviorEntry);
+				BehaviorEntry deobfBehaviorEntry = translator.translateEntry(obfBehaviorEntry);
 				c.getClassFile().addAttribute(new EnclosingMethodAttribute(
 					constants,
 					deobfBehaviorEntry.getClassName(),
@@ -150,10 +146,10 @@ public class ClassTranslator {
 
 		// translate all the class names referenced in the code
 		// the above code only changed method/field/reference names and types, but not the rest of the class references
-		ClassRenamer.renameClasses(c, this.translator);
+		ClassRenamer.renameClasses(c, translator);
 
 		// translate the source file attribute too
-		ClassEntry deobfClassEntry = this.translator.translateEntry(classEntry);
+		ClassEntry deobfClassEntry = translator.translateEntry(classEntry);
 		if (deobfClassEntry != null) {
 			String sourceFile = Descriptor.toJvmName(deobfClassEntry.getOutermostClassEntry().getSimpleName()) + ".java";
 			c.getClassFile().addAttribute(new SourceFileAttribute(constants, sourceFile));

@@ -9,8 +9,9 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.bytecode;
+package cuchaz.enigma.bytecode.translators;
 
+import cuchaz.enigma.bytecode.MethodParametersAttribute;
 import cuchaz.enigma.mapping.*;
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -20,15 +21,9 @@ import javassist.bytecode.LocalVariableAttribute;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MethodParameterWriter {
+public class MethodParameterTranslator {
 
-	private Translator translator;
-
-	public MethodParameterWriter(Translator translator) {
-		this.translator = translator;
-	}
-
-	public void writeMethodArguments(CtClass c) {
+	public static void translate(Translator translator, CtClass c) {
 
 		// Procyon will read method arguments from the "MethodParameters" attribute, so write those
 		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
@@ -57,7 +52,7 @@ public class MethodParameterWriter {
 			// get the list of argument names
 			List<String> names = new ArrayList<>(numParams);
 			for (int i = 0; i < numParams; i++) {
-				names.add(this.translator.translate(new ArgumentEntry(behaviorEntry, i, "")));
+				names.add(translator.translate(new ArgumentEntry(behaviorEntry, i, "")));
 			}
 
 			// save the mappings to the class
