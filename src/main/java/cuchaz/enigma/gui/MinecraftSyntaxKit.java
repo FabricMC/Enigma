@@ -33,5 +33,6 @@ public class MinecraftSyntaxKit extends JavaSyntaxKit {
         configuration.put("Style.TYPE2", Config.INSTANCE.typeColor + ", 1");
         configuration.put("Style.IDENTIFIER", Config.INSTANCE.identifierColor + ", 0");
         configuration.put("Style.DEFAULT", Config.INSTANCE.defaultTextColor + ", 0");
+        configuration.put("RightMarginColumn", "999"); //No need to have a right margin, if someone wants it add a config
     }
 }
