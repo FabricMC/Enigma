@@ -58,4 +58,9 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
 		g.setColor(this.borderColor);
 		g.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
 	}
+
+	protected static Color getColor(int rgb, float alpha){
+		Color baseColor = new Color(rgb);
+		return new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), (int)(255 * alpha));
+	}
 }
