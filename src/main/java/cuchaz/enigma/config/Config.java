@@ -1,7 +1,7 @@
 package cuchaz.enigma.config;
 
+import com.google.common.io.Files;
 import com.google.gson.*;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,11 +45,16 @@ public class Config {
         Gson gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).setPrettyPrinting().create();
         File dirHome = new File(System.getProperty("user.home"));
         File engimaDir = new File(dirHome, ".enigma");
+        if(!engimaDir.exists()){
+            engimaDir.mkdirs();
+        }
         File configFile = new File(engimaDir, "config.json");
         if (configFile.exists()) {
-            INSTANCE = gson.fromJson(FileUtils.readFileToString(configFile, Charset.defaultCharset()), Config.class);
+            INSTANCE = gson.fromJson(Files.toString(configFile, Charset.defaultCharset()), Config.class);
+        } else {
+            Files.touch(configFile);
         }
-        FileUtils.writeStringToFile(configFile, gson.toJson(INSTANCE), Charset.defaultCharset());
+        Files.write(gson.toJson(INSTANCE), configFile, Charset.defaultCharset());
     }
 
     private static class IntSerializer implements JsonSerializer<Integer> {
