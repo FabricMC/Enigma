@@ -8,7 +8,6 @@ import de.sciss.syntaxpane.util.Configuration;
  * Created by Mark on 04/06/2017.
  */
 public class MinecraftSyntaxKit extends JavaSyntaxKit {
-
     private static Configuration configuration = null;
 
     @Override

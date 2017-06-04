@@ -49,6 +49,7 @@ public class Config {
         if(!engimaDir.exists()){
             engimaDir.mkdirs();
         }
+        File configFile = new File(engimaDir, "config.json");
         if (configFile.exists()) {
             INSTANCE = gson.fromJson(Files.toString(configFile, Charset.defaultCharset()), Config.class);
         } else {
