@@ -48,10 +48,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.Vector;
 import java.util.function.Function;
 
 public class Gui {
@@ -128,13 +126,14 @@ public class Gui {
 
 		// init editor
 		DefaultSyntaxKit.initKit();
+		DefaultSyntaxKit.registerContentType("text/minecraft", MinecraftSyntaxKit.class.getName());
 		obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
 		deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
 		otherHighlightPainter = new OtherHighlightPainter();
 		selectionHighlightPainter = new SelectionHighlightPainter();
 		this.editor = new PanelEditor(this);
 		JScrollPane sourceScroller = new JScrollPane(this.editor);
-		this.editor.setContentType("text/java");
+		this.editor.setContentType("text/minecraft");
 		this.editor.setBackground(new Color(Config.INSTANCE.editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");

@@ -18,6 +18,6 @@ import java.awt.*;
 public class ObfuscatedHighlightPainter extends BoxHighlightPainter {
 
 	public ObfuscatedHighlightPainter() {
-		super(new Color(Config.INSTANCE.obfuscatedColor), new Color(Config.INSTANCE.obfuscatedColorOutline));
+		super(getColor(Config.INSTANCE.obfuscatedColor, Config.INSTANCE.obfuscatedHiglightAlpha), getColor(Config.INSTANCE.obfuscatedColorOutline, Config.INSTANCE.obfuscatedOutlineAlpha));
 	}
 }
