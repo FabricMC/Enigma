@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
@@ -134,6 +135,7 @@ public class Gui {
 		this.editor = new PanelEditor(this);
 		JScrollPane sourceScroller = new JScrollPane(this.editor);
 		this.editor.setContentType("text/java");
+		this.editor.setBackground(new Color(Config.INSTANCE.editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
