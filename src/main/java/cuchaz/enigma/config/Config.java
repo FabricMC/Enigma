@@ -43,7 +43,9 @@ public class Config {
 
     public static void loadConfig() throws IOException {
         Gson gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).setPrettyPrinting().create();
-        File configFile = new File(".engimaConfig.json");
+        File dirHome = new File(System.getProperty("user.home"));
+        File engimaDir = new File(dirHome, ".enigma");
+        File configFile = new File(engimaDir, "config.json");
         if (configFile.exists()) {
             INSTANCE = gson.fromJson(FileUtils.readFileToString(configFile, Charset.defaultCharset()), Config.class);
         }
