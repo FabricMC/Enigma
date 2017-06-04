@@ -67,6 +67,9 @@ dependencies {
     compile 'com.google.guava:guava:21.+'
     compile 'org.javassist:javassist:3.21.0-GA'
     compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.33.8-enigma'
+    compile 'commons-io:commons-io:2.5'
+    compile 'com.google.code.gson:gson:2.8.1'
+
 
     application 'de.sciss:syntaxpane:1.1.+'
 

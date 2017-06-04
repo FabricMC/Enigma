@@ -11,6 +11,7 @@
 
 package cuchaz.enigma;
 
+import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.Gui;
 
 import javax.swing.*;
@@ -20,7 +21,8 @@ import java.util.jar.JarFile;
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		if (System.getProperty("enigma.useSystemLookAndFeel", "true").equals("true"))
+		Config.loadConfig();
+		if (Config.INSTANCE.useSystemLAF)
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		Gui gui = new Gui();
 
