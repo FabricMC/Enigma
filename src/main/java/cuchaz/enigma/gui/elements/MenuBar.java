@@ -222,7 +222,7 @@ public class MenuBar extends JMenuBar {
 					JMenuItem defaultTheme = new JMenuItem("Default");
 					themes.add(defaultTheme);
 					defaultTheme.addActionListener(event -> Themes.setDefault(gui));
-					JMenuItem dark = new JMenuItem("Dark");
+					JMenuItem dark = new JMenuItem("Dank");
 					themes.add(dark);
 					dark.addActionListener(event -> Themes.setDark(gui));
 					themes.addSeparator();
