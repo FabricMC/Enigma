@@ -9,7 +9,7 @@ import de.sciss.syntaxpane.util.Configuration;
  */
 public class MinecraftSyntaxKit extends JavaSyntaxKit {
 
-    public Configuration configuration = null;
+    private static Configuration configuration = null;
 
     @Override
     public Configuration getConfig() {
@@ -34,5 +34,9 @@ public class MinecraftSyntaxKit extends JavaSyntaxKit {
         configuration.put("Style.IDENTIFIER", Config.INSTANCE.identifierColor + ", 0");
         configuration.put("Style.DEFAULT", Config.INSTANCE.defaultTextColor + ", 0");
         configuration.put("RightMarginColumn", "999"); //No need to have a right margin, if someone wants it add a config
+    }
+
+    public static void invalidate(){
+        configuration = null;
     }
 }

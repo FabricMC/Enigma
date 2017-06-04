@@ -13,7 +13,11 @@ import java.nio.charset.Charset;
  */
 public class Config {
 
-    public static Config INSTANCE = new Config();
+    private static transient Gson gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).setPrettyPrinting().create();
+    private static transient File dirHome = new File(System.getProperty("user.home"));
+    private static transient File engimaDir = new File(dirHome, ".enigma");
+    private static transient File configFile = new File(engimaDir, "config.json");
+    public static transient Config INSTANCE = new Config();
 
     public Integer obfuscatedColor = 0xFFDCDC;
     public float obfuscatedHiglightAlpha = 1.0F;
@@ -42,18 +46,18 @@ public class Config {
     public boolean useSystemLAF = true;
 
     public static void loadConfig() throws IOException {
-        Gson gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).setPrettyPrinting().create();
-        File dirHome = new File(System.getProperty("user.home"));
-        File engimaDir = new File(dirHome, ".enigma");
         if(!engimaDir.exists()){
             engimaDir.mkdirs();
         }
-        File configFile = new File(engimaDir, "config.json");
         if (configFile.exists()) {
             INSTANCE = gson.fromJson(Files.toString(configFile, Charset.defaultCharset()), Config.class);
         } else {
             Files.touch(configFile);
         }
+        saveConfig();
+    }
+
+    public static void saveConfig() throws IOException {
         Files.write(gson.toJson(INSTANCE), configFile, Charset.defaultCharset());
     }
 
