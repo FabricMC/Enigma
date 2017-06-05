@@ -134,7 +134,7 @@ public class Gui {
 		this.editor = new PanelEditor(this);
 		JScrollPane sourceScroller = new JScrollPane(this.editor);
 		this.editor.setContentType("text/minecraft");
-		this.editor.setBackground(new Color(Config.INSTANCE.editorBackground));
+		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 

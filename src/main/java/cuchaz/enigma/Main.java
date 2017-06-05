@@ -21,8 +21,7 @@ import java.util.jar.JarFile;
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		Config.loadConfig();
-		if (Config.INSTANCE.useSystemLAF)
+		if (Config.getInstance().useSystemLAF)
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		Gui gui = new Gui();
 

@@ -8,16 +8,13 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
-/**
- * Created by Mark on 04/06/2017.
- */
 public class Config {
 
-    private static transient Gson gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).setPrettyPrinting().create();
-    private static transient File dirHome = new File(System.getProperty("user.home"));
-    private static transient File engimaDir = new File(dirHome, ".enigma");
-    private static transient File configFile = new File(engimaDir, "config.json");
-    public static transient Config INSTANCE = new Config();
+    private static Gson gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).setPrettyPrinting().create();
+    private static File dirHome = new File(System.getProperty("user.home"));
+    private static File engimaDir = new File(dirHome, ".enigma");
+    private static File configFile = new File(engimaDir, "config.json");
+    private static Config INSTANCE;
 
     public Integer obfuscatedColor = 0xFFDCDC;
     public float obfuscatedHiglightAlpha = 1.0F;
@@ -62,6 +59,11 @@ public class Config {
         Files.write(gson.toJson(INSTANCE), configFile, Charset.defaultCharset());
     }
 
+    public static void resetConfig() throws IOException {
+	    INSTANCE = new Config();
+	    saveConfig();
+    }
+
     private static class IntSerializer implements JsonSerializer<Integer> {
         public JsonElement serialize(Integer src, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive("#" + Integer.toHexString(src).toUpperCase());
@@ -74,4 +76,15 @@ public class Config {
         }
     }
 
+	public static Config getInstance() {
+    	if(INSTANCE == null){
+    		INSTANCE = new Config();
+		    try {
+			    loadConfig();
+		    } catch (IOException e) {
+			    e.printStackTrace();
+		    }
+	    }
+		return INSTANCE;
+	}
 }

@@ -16,6 +16,6 @@ import cuchaz.enigma.config.Config;
 public class OtherHighlightPainter extends BoxHighlightPainter {
 
 	public OtherHighlightPainter() {
-		super(null, getColor(Config.INSTANCE.otherColorOutline, Config.INSTANCE.otherOutlineAlpha));
+		super(null, getColor(Config.getInstance().otherColorOutline, Config.getInstance().otherOutlineAlpha));
 	}
 }
