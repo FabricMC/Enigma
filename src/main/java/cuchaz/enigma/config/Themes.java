@@ -15,7 +15,7 @@ public class Themes {
     public static void setDefault(Gui gui) {
         //TODO set to default
 	    try {
-		    Config.resetConfig();
+		    Config.getInstance().reset();
 	    } catch (IOException e) {
 		    e.printStackTrace();
 	    }
@@ -48,7 +48,7 @@ public class Themes {
 
     public static void updateTheme(Gui gui) {
         try {
-            Config.saveConfig();
+	        Config.getInstance().saveConfig();
         } catch (IOException e) {
             e.printStackTrace();
         }

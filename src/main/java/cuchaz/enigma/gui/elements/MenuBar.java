@@ -230,7 +230,8 @@ public class MenuBar extends JMenuBar {
 					themes.add(refresh);
 					refresh.addActionListener(event -> {
 						try {
-							Config.loadConfig();
+							Config.getInstance().reset();
+							Config.getInstance().saveConfig();
 							Themes.updateTheme(gui);
 						} catch (IOException e) {
 							e.printStackTrace();
