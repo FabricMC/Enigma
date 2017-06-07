@@ -19,8 +19,7 @@ import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
-import cuchaz.enigma.gui.filechooser.FileChooserAny;
-import cuchaz.enigma.gui.filechooser.FileChooserFolder;
+import cuchaz.enigma.gui.filechooser.NativeDirectoryChooser;
 import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
 import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
 import cuchaz.enigma.gui.highlight.OtherHighlightPainter;
@@ -64,8 +63,8 @@ public class Gui {
 	public EntryReference<Entry, Entry> reference;
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
-	public JFileChooser enigmaMappingsFileChooser;
-	public JFileChooser exportSourceFileChooser;
+	public NativeDirectoryChooser enigmaMappingsFileChooser;
+	public NativeDirectoryChooser exportSourceFileChooser;
 	public FileDialog exportJarFileChooser;
 	private GuiController controller;
 	private JFrame frame;
@@ -107,8 +106,8 @@ public class Gui {
 		this.jarFileChooser = new FileDialog(getFrame(), "Open Jar", FileDialog.LOAD);
 
 		this.tinyMappingsFileChooser = new FileDialog(getFrame(), "Open tiny Mappings", FileDialog.LOAD);
-		this.enigmaMappingsFileChooser = new FileChooserAny();
-		this.exportSourceFileChooser = new FileChooserFolder();
+		this.enigmaMappingsFileChooser = new NativeDirectoryChooser();
+		this.exportSourceFileChooser = new NativeDirectoryChooser();
 		this.exportJarFileChooser = new FileDialog(getFrame(), "Export jar", FileDialog.SAVE);
 
 		this.obfPanel = new PanelObf(this);
@@ -754,7 +753,7 @@ public class Gui {
 	}
 
 	public void saveMapping() throws IOException {
-		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION)
+		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.show() != null)
 			this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile());
 	}
 

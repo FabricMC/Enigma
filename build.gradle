@@ -68,6 +68,7 @@ configurations {
     compile.extendsFrom application
 }
 
+
 dependencies {
     compile 'com.google.guava:guava:21.+'
     compile 'org.javassist:javassist:3.21.0-GA'
@@ -77,7 +78,16 @@ dependencies {
     application 'de.sciss:syntaxpane:1.1.+'
 	application name: "darcula", version: "1.0.0"
 
-    testCompile 'junit:junit:4.+'
+	application 'org.lwjgl:lwjgl:3.1.2'
+	application 'org.lwjgl:lwjgl-nfd:3.1.2'
+	application 'org.lwjgl.osgi:org.lwjgl.nfd:3.1.2'
+
+	application "org.lwjgl:lwjgl:3.1.2:natives-windows"
+	application "org.lwjgl:lwjgl:3.1.2:natives-linux"
+	application "org.lwjgl:lwjgl:3.1.2:natives-macos"
+
+
+	testCompile 'junit:junit:4.+'
     testCompile 'org.hamcrest:hamcrest-all:1.+'
 
     proGuard 'net.sf.proguard:proguard-base:5.+'

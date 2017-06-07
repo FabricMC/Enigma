@@ -66,7 +66,7 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("Enigma");
 				openMenu.add(item);
 				item.addActionListener(event -> {
-					if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+					if (this.gui.enigmaMappingsFileChooser.show() != null) {
 						try {
 							this.gui.getController().openEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
 						} catch (IOException ex) {
@@ -115,7 +115,7 @@ public class MenuBar extends JMenuBar {
 				saveMenu.add(item);
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+					if (this.gui.enigmaMappingsFileChooser.show() != null) {
 						try {
 							this.gui.getController().saveEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile(), false);
 							this.saveMappingsMenu.setEnabled(true);
@@ -131,7 +131,7 @@ public class MenuBar extends JMenuBar {
 				saveMenu.add(item);
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+					if (this.gui.enigmaMappingsFileChooser.show() != null) {
 						try {
 							this.gui.getController().saveEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile(), true);
 							this.saveMappingsMenu.setEnabled(true);
@@ -148,7 +148,7 @@ public class MenuBar extends JMenuBar {
 				saveMenu.add(item);
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+					if (this.gui.enigmaMappingsFileChooser.show() != null) {
 						try {
 							this.gui.getController().saveSRGMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
 							this.saveMappingsMenu.setEnabled(true);
@@ -194,8 +194,9 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("Export Source...");
 				menu.add(item);
 				item.addActionListener(event -> {
-					if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile());
+					File file = this.gui.exportSourceFileChooser.show();
+					if (file != null) {
+						this.gui.getController().exportSource(file);
 					}
 				});
 				this.exportSourceMenu = item;
