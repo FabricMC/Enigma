@@ -20,7 +20,6 @@ import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
-import cuchaz.enigma.gui.filechooser.FileChooserFile;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
 import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
 import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
@@ -48,8 +47,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 import java.util.function.Function;
 
 public class Gui {
@@ -61,11 +62,11 @@ public class Gui {
 	private final MenuBar menuBar;
 	// state
 	public EntryReference<Entry, Entry> reference;
-	public JFileChooser jarFileChooser;
-	public JFileChooser tinyMappingsFileChooser;
+	public FileDialog jarFileChooser;
+	public FileDialog tinyMappingsFileChooser;
 	public JFileChooser enigmaMappingsFileChooser;
 	public JFileChooser exportSourceFileChooser;
-	public JFileChooser exportJarFileChooser;
+	public FileDialog exportJarFileChooser;
 	private GuiController controller;
 	private JFrame frame;
 	public PanelEditor editor;
@@ -103,12 +104,12 @@ public class Gui {
 		this.controller = new GuiController(this);
 
 		// init file choosers
-		this.jarFileChooser = new FileChooserFile();
+		this.jarFileChooser = new FileDialog(getFrame(), "Open Jar", FileDialog.LOAD);
 
-		this.tinyMappingsFileChooser = new FileChooserFile();
+		this.tinyMappingsFileChooser = new FileDialog(getFrame(), "Open tiny Mappings", FileDialog.LOAD);
 		this.enigmaMappingsFileChooser = new FileChooserAny();
 		this.exportSourceFileChooser = new FileChooserFolder();
-		this.exportJarFileChooser = new FileChooserFile();
+		this.exportJarFileChooser = new FileDialog(getFrame(), "Export jar", FileDialog.SAVE);
 
 		this.obfPanel = new PanelObf(this);
 		this.deobfPanel = new PanelDeobf(this);
