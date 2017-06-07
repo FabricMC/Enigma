@@ -1,5 +1,7 @@
 package cuchaz.enigma.gui.elements;
 
+import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.throwables.MappingParseException;
@@ -208,6 +210,35 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("Exit");
 				menu.add(item);
 				item.addActionListener(event -> this.gui.close());
+			}
+		}
+		{
+			JMenu menu = new JMenu("View");
+			this.add(menu);
+			{
+				JMenu themes = new JMenu("Themes");
+				menu.add(themes);
+				{
+					JMenuItem defaultTheme = new JMenuItem("Default");
+					themes.add(defaultTheme);
+					defaultTheme.addActionListener(event -> Themes.setDefault(gui));
+					JMenuItem dark = new JMenuItem("Dank");
+					themes.add(dark);
+					dark.addActionListener(event -> Themes.setDark(gui));
+					themes.addSeparator();
+					JMenuItem refresh = new JMenuItem("Reload From config");
+					themes.add(refresh);
+					refresh.addActionListener(event -> {
+						try {
+							Config.getInstance().reset();
+							Config.getInstance().saveConfig();
+							Themes.updateTheme(gui);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					});
+				}
+
 			}
 		}
 		{

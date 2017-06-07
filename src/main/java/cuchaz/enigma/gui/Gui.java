@@ -68,13 +68,13 @@ public class Gui {
 	public JFileChooser exportJarFileChooser;
 	private GuiController controller;
 	private JFrame frame;
-	private PanelEditor editor;
+	public PanelEditor editor;
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
 	private PanelIdentifier infoPanel;
-	private ObfuscatedHighlightPainter obfuscatedHighlightPainter;
-	private DeobfuscatedHighlightPainter deobfuscatedHighlightPainter;
-	private OtherHighlightPainter otherHighlightPainter;
+	public ObfuscatedHighlightPainter obfuscatedHighlightPainter;
+	public DeobfuscatedHighlightPainter deobfuscatedHighlightPainter;
+	public OtherHighlightPainter otherHighlightPainter;
 	private SelectionHighlightPainter selectionHighlightPainter;
 	private JTree inheritanceTree;
 	private JTree implementationsTree;
@@ -134,7 +134,7 @@ public class Gui {
 		this.editor = new PanelEditor(this);
 		JScrollPane sourceScroller = new JScrollPane(this.editor);
 		this.editor.setContentType("text/minecraft");
-		this.editor.setBackground(new Color(Config.INSTANCE.editorBackground));
+		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 

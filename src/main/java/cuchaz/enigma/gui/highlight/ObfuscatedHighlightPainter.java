@@ -13,11 +13,9 @@ package cuchaz.enigma.gui.highlight;
 
 import cuchaz.enigma.config.Config;
 
-import java.awt.*;
-
 public class ObfuscatedHighlightPainter extends BoxHighlightPainter {
 
 	public ObfuscatedHighlightPainter() {
-		super(getColor(Config.INSTANCE.obfuscatedColor, Config.INSTANCE.obfuscatedHiglightAlpha), getColor(Config.INSTANCE.obfuscatedColorOutline, Config.INSTANCE.obfuscatedOutlineAlpha));
+		super(getColor(Config.getInstance().obfuscatedColor, Config.getInstance().obfuscatedHiglightAlpha), getColor(Config.getInstance().obfuscatedColorOutline, Config.getInstance().obfuscatedOutlineAlpha));
 	}
 }
