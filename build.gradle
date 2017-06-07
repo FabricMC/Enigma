@@ -78,7 +78,6 @@ dependencies {
     application 'de.sciss:syntaxpane:1.1.+'
 	application name: "darcula", version: "1.0.0"
 
-	application 'org.lwjgl:lwjgl:3.1.2'
 	application 'org.lwjgl:lwjgl-nfd:3.1.2'
 	application 'org.lwjgl.osgi:org.lwjgl.nfd:3.1.2'
 
