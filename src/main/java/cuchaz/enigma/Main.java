@@ -11,18 +11,16 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 
-import javax.swing.*;
 import java.io.File;
 import java.util.jar.JarFile;
 
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		if (Config.getInstance().useSystemLAF)
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		Themes.setLAF();
 		Gui gui = new Gui();
 
 		// parse command-line args

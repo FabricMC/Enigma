@@ -40,7 +40,8 @@ public class Config {
 	public Integer identifierColor;
 	public Integer defaultTextColor;
 
-	public boolean useSystemLAF = true;
+	public boolean useSystemLAF;
+	public boolean useDraculaLAF;
 
 	private Config() {
 		gson = new GsonBuilder()
@@ -95,6 +96,7 @@ public class Config {
 		this.identifierColor = 0x000000;
 		this.defaultTextColor = 0x000000;
 		this.useSystemLAF = true;
+		this.useDraculaLAF = false;
 		this.saveConfig();
 	}
 

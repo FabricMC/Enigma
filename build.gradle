@@ -54,6 +54,11 @@ repositories {
         name "Modmuss Repository"
         url 'http://maven.modmuss50.me/'
     }
+
+	ivy {
+		name "darcula"
+		artifactPattern "https://raw.githubusercontent.com/bulenkov/Darcula/master/build/[module].[ext]"
+	}
 }
 
 configurations {
@@ -71,6 +76,8 @@ dependencies {
     compile 'org.ow2.asm:asm-commons:7.0'
     compile 'org.ow2.asm:asm-tree:7.0'
     compile 'org.ow2.asm:asm-util:7.0'
+
+    compile name: "darcula", version: "1.0.0"
 
     application 'de.sciss:syntaxpane:1.1.+'
 
