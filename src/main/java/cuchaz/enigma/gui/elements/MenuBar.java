@@ -9,6 +9,7 @@ import cuchaz.enigma.throwables.MappingParseException;
 import javax.swing.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.io.IOException;
 import java.util.jar.JarFile;
 
@@ -37,12 +38,14 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("Open Jar...");
 				menu.add(item);
 				item.addActionListener(event -> {
-					if (this.gui.jarFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+					this.gui.jarFileChooser.setVisible(true);
+					File file = new File(this.gui.jarFileChooser.getDirectory() + File.separator + this.gui.jarFileChooser.getFile());
+					if (file.exists()) {
 						// load the jar in a separate thread
 						new Thread(() ->
 						{
 							try {
-								gui.getController().openJar(new JarFile(gui.jarFileChooser.getSelectedFile()));
+								gui.getController().openJar(new JarFile(file));
 							} catch (IOException ex) {
 								throw new Error(ex);
 							}
@@ -78,9 +81,11 @@ public class MenuBar extends JMenuBar {
 				item = new JMenuItem("Tiny");
 				openMenu.add(item);
 				item.addActionListener(event -> {
-					if (this.gui.tinyMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+					this.gui.tinyMappingsFileChooser.setVisible(true);
+					File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
+					if (file.exists()) {
 						try {
-							this.gui.getController().openTinyMappings(this.gui.tinyMappingsFileChooser.getSelectedFile());
+							this.gui.getController().openTinyMappings(file);
 						} catch (IOException ex) {
 							throw new Error(ex);
 						} catch (MappingParseException ex) {
@@ -199,8 +204,10 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("Export Jar...");
 				menu.add(item);
 				item.addActionListener(event -> {
-					if (this.gui.exportJarFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().exportJar(this.gui.exportJarFileChooser.getSelectedFile());
+					this.gui.tinyMappingsFileChooser.setVisible(true);
+					if (this.gui.tinyMappingsFileChooser.getFile() != null) {
+						File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
+						this.gui.getController().exportJar(file);
 					}
 				});
 				this.exportJarMenu = item;
