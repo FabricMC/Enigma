@@ -1,5 +1,6 @@
 package cuchaz.enigma.config;
 
+import com.bulenkov.darcula.DarculaLaf;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.MinecraftSyntaxKit;
 import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
@@ -7,6 +8,7 @@ import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
 import cuchaz.enigma.gui.highlight.OtherHighlightPainter;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
@@ -43,6 +45,7 @@ public class Themes {
         Config.getInstance().typeColor = 0xF8F8F2;
         Config.getInstance().identifierColor = 0xF8F8F2;
         Config.getInstance().defaultTextColor = 0xF8F8F2;
+        Config.getInstance().useDraculaLAF = true;
         updateTheme(gui);
     }
 
@@ -60,7 +63,20 @@ public class Themes {
         gui.otherHighlightPainter = new OtherHighlightPainter();
         gui.editor.updateUI();
         gui.editor.setBackground(new Color(Config.getInstance().editorBackground));
+        setLAF();
+	    SwingUtilities.updateComponentTreeUI(gui.getFrame());
         gui.getController().refreshCurrentClass();
+    }
+
+    public static void setLAF(){
+    	try {
+		    if (Config.getInstance().useDraculaLAF){
+			    UIManager.setLookAndFeel(new DarculaLaf());
+		    } else if (Config.getInstance().useSystemLAF)
+			    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+	    } catch (Exception e){
+    		throw new Error("Failed to set LAF", e);
+	    }
     }
 
 }

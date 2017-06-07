@@ -54,6 +54,11 @@ repositories {
         name "RX14 Repository"
         url 'http://mvn.rx14.co.uk/local/'
     }
+
+	ivy {
+		name "darcula"
+		artifactPattern "https://raw.githubusercontent.com/bulenkov/Darcula/master/build/[module].[ext]"
+	}
 }
 
 configurations {
@@ -68,6 +73,8 @@ dependencies {
     compile 'org.javassist:javassist:3.21.0-GA'
     compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.33.8-enigma'
     compile 'com.google.code.gson:gson:2.8.1'
+	compile 'com.google.code.gson:gson:2.8.1'
+	compile name: "darcula", version: "1.0.0"
 
 
     application 'de.sciss:syntaxpane:1.1.+'
