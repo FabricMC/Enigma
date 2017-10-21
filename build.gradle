@@ -51,8 +51,8 @@ repositories {
     }
 
     maven {
-        name "RX14 Repository"
-        url 'http://mvn.rx14.co.uk/local/'
+        name "Modmuss Repository"
+        url 'http://maven.modmuss50.me/'
     }
 }
 
