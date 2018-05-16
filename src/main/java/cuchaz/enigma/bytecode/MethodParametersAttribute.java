@@ -35,8 +35,6 @@ public class MethodParametersAttribute extends AttributeInfo {
 		for (String name : names) {
 			if (name != null) {
 				parameterNameIndices.add(constPool.addUtf8Info(name));
-			} else {
-				parameterNameIndices.add(0);
 			}
 		}
 
