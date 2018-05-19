@@ -17,6 +17,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 
 import java.util.Collection;
 import java.util.List;

@@ -29,6 +29,7 @@ import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.bytecode.ClassProtectifier;
 import cuchaz.enigma.bytecode.ClassPublifier;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.ClassWriter;

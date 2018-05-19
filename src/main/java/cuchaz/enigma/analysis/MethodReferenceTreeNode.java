@@ -13,6 +13,9 @@ package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.Entry;
+import cuchaz.enigma.mapping.entry.MethodDefEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;

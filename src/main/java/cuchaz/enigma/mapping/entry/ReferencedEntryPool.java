@@ -9,7 +9,10 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
+
+import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.TypeDescriptor;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -11,6 +11,9 @@
 
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.mapping.entry.LocalVariableEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
+
 public class LocalVariableMapping implements Comparable<LocalVariableMapping> {
 
 	private int index;

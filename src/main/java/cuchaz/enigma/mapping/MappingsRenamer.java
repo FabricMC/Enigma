@@ -13,6 +13,7 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.mapping.entry.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.throwables.MappingConflict;
 

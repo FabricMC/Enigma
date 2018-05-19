@@ -9,7 +9,7 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
 
 public interface Entry {
 	String getName();

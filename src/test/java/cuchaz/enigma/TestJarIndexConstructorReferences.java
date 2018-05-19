@@ -14,10 +14,10 @@ package cuchaz.enigma;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
-import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.MethodDefEntry;
-import cuchaz.enigma.mapping.MethodEntry;
-import cuchaz.enigma.mapping.ReferencedEntryPool;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.MethodDefEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 import org.junit.Test;
 
 import java.io.File;

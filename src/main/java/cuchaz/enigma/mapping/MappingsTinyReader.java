@@ -2,6 +2,7 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
+import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.throwables.MappingConflict;
 import cuchaz.enigma.throwables.MappingParseException;
 

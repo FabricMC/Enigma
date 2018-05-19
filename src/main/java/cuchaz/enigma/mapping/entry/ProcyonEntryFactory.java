@@ -9,10 +9,12 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
 
 import com.strobel.assembler.metadata.*;
 import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.TypeDescriptor;
 
 import java.util.List;
 

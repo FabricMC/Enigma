@@ -11,6 +11,8 @@
 
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.mapping.entry.*;
+
 public interface Translator {
 	ClassEntry getTranslatedClass(ClassEntry entry);
 

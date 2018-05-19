@@ -1,6 +1,7 @@
 package cuchaz.enigma.bytecode.translators;
 
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 import org.objectweb.asm.*;
 
 import java.util.Locale;

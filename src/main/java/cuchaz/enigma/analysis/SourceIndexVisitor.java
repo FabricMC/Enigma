@@ -14,8 +14,8 @@ package cuchaz.enigma.analysis;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.patterns.Pattern;
-import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.ReferencedEntryPool;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 
 public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void> {
 	private final ReferencedEntryPool entryPool;

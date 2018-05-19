@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
 
 import java.util.Arrays;

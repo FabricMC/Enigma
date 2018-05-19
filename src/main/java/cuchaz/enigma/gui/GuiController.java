@@ -18,6 +18,10 @@ import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.Entry;
+import cuchaz.enigma.mapping.entry.FieldEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.utils.ReadableToken;
 

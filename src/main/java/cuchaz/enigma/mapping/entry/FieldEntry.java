@@ -9,9 +9,10 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
 
 import com.google.common.base.Preconditions;
+import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.utils.Utils;
 
 public class FieldEntry implements Entry {

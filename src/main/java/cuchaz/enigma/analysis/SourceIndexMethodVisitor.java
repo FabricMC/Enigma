@@ -20,6 +20,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 
 import java.util.HashMap;
 import java.util.Map;

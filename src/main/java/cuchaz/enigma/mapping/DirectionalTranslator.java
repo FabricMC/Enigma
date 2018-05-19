@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.mapping.entry.*;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -9,7 +9,7 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

@@ -2,6 +2,7 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.base.Charsets;
 import cuchaz.enigma.analysis.TranslationIndex;
+import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 
 import java.io.*;
 import java.util.ArrayList;

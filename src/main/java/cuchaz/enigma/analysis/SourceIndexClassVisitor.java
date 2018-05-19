@@ -17,7 +17,7 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	private final ReferencedEntryPool entryPool;

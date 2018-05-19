@@ -1,6 +1,7 @@
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
 
 import com.google.common.base.Preconditions;
+import cuchaz.enigma.mapping.MethodDescriptor;
 import cuchaz.enigma.utils.Utils;
 
 /**

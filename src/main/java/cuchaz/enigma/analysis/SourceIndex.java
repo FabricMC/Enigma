@@ -18,7 +18,7 @@ import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.Region;
 import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.Identifier;
-import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.entry.Entry;
 
 import java.util.Collection;
 import java.util.List;

@@ -11,6 +11,8 @@
 
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.FieldEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
 
 public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<FieldEntry> {

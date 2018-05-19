@@ -14,6 +14,7 @@ package cuchaz.enigma.bytecode.translators;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 import org.objectweb.asm.*;
 
 import java.util.regex.Pattern;

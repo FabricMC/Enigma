@@ -9,9 +9,13 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
 
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.mapping.ClassMapping;
+import cuchaz.enigma.mapping.FieldMapping;
+import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.MethodMapping;
 
 public class EntryFactory {
 	public static ClassEntry getObfClassEntry(JarIndex jarIndex, ClassMapping classMapping) {

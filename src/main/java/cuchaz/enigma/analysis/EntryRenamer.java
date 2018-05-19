@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 
 import java.util.AbstractMap;
 import java.util.List;

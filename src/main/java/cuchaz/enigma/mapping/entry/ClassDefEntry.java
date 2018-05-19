@@ -9,27 +9,21 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.mapping.entry;
 
 import com.google.common.base.Preconditions;
 import cuchaz.enigma.bytecode.AccessFlags;
 
-public class MethodDefEntry extends MethodEntry {
-
+public class ClassDefEntry extends ClassEntry {
 	private final AccessFlags access;
 
-	public MethodDefEntry(ClassEntry classEntry, String name, MethodDescriptor descriptor, AccessFlags access) {
-		super(classEntry, name, descriptor);
-		Preconditions.checkNotNull(access, "Method access cannot be null");
+	public ClassDefEntry(String className, AccessFlags access) {
+		super(className);
+		Preconditions.checkNotNull(access, "Class access cannot be null");
 		this.access = access;
 	}
 
 	public AccessFlags getAccess() {
 		return access;
-	}
-
-	@Override
-	public MethodDefEntry updateOwnership(ClassEntry classEntry) {
-		return new MethodDefEntry(new ClassEntry(classEntry.getName()), name, descriptor, access);
 	}
 }

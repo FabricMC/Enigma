@@ -2,6 +2,9 @@ package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.MethodDefEntry;
+import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 

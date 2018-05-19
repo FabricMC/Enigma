@@ -14,6 +14,7 @@ package cuchaz.enigma.analysis;
 import com.google.common.collect.*;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;

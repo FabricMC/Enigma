@@ -12,6 +12,7 @@
 package cuchaz.enigma.mapping;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.utils.Utils;
 
 import java.util.ArrayList;

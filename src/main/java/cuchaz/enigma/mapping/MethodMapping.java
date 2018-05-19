@@ -13,6 +13,8 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.throwables.MappingConflict;
 
