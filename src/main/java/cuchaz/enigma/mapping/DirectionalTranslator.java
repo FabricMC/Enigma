@@ -119,13 +119,16 @@ public class DirectionalTranslator implements Translator {
 
 	private String translateFieldName(FieldEntry entry) {
 		// resolve the class entry
-		ClassEntry resolvedClassEntry = this.index.resolveEntryOwner(entry);
+		ClassEntry resolvedClassEntry = this.index.resolveEntryOwner(entry, true);
 		if (resolvedClassEntry != null) {
 			// look for the class
 			ClassMapping classMapping = findClassMapping(resolvedClassEntry);
 			if (classMapping != null) {
 				// look for the field
-				FieldMapping mapping = classMapping.getFieldByObf(entry.getName(), entry.getDesc());
+				FieldMapping mapping = this.direction.choose(
+						classMapping.getFieldByObf(entry.getName(), entry.getDesc()),
+						classMapping.getFieldByDeobf(entry.getName(), getTranslatedTypeDesc(entry.getDesc()))
+				);
 				if (mapping != null) {
 					return this.direction.choose(mapping.getDeobfName(), mapping.getObfName());
 				}
@@ -166,7 +169,10 @@ public class DirectionalTranslator implements Translator {
 			ClassMapping classMapping = findClassMapping(resolvedOwner);
 			if (classMapping != null) {
 				// look for the method
-				MethodMapping mapping = classMapping.getMethodByObf(entry.getName(), entry.getDesc());
+				MethodMapping mapping = this.direction.choose(
+						classMapping.getMethodByObf(entry.getName(), entry.getDesc()),
+						classMapping.getMethodByDeobf(entry.getName(), getTranslatedMethodDesc(entry.getDesc()))
+				);
 				if (mapping != null) {
 					return this.direction.choose(mapping.getDeobfName(), mapping.getObfName());
 				}
@@ -230,7 +236,10 @@ public class DirectionalTranslator implements Translator {
 			ClassMapping classMapping = findClassMapping(ownerEntry);
 			if (classMapping != null) {
 				// look for the method
-				MethodMapping methodMapping = classMapping.getMethodByObf(entry.getMethodName(), entry.getMethodDesc());
+				MethodMapping methodMapping = this.direction.choose(
+						classMapping.getMethodByObf(entry.getMethodName(), entry.getMethodDesc()),
+						classMapping.getMethodByDeobf(entry.getMethodName(), getTranslatedMethodDesc(entry.getMethodDesc()))
+				);
 				if (methodMapping != null) {
 					int index = entry.getIndex();
 					return this.direction.choose(
@@ -345,11 +354,6 @@ public class DirectionalTranslator implements Translator {
 	}
 
 	private String remapClass(String name) {
-		String translatedName = getTranslatedClass(new ClassEntry(name)).getName();
-		int separatorIndex = translatedName.lastIndexOf("$");
-		if (separatorIndex != -1) {
-			translatedName = translatedName.substring(separatorIndex + 1);
-		}
-		return translatedName;
+		return getTranslatedClass(new ClassEntry(name)).getName();
 	}
 }
