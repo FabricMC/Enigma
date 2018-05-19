@@ -19,11 +19,7 @@ import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.mapping.entry.*;
 import org.objectweb.asm.*;
 
-import java.util.regex.Pattern;
-
 public class TranslationClassVisitor extends ClassVisitor {
-	private static final Pattern OBJECT_PATTERN = Pattern.compile(".*:Ljava/lang/Object;:.*");
-
 	private final Translator translator;
 	private final JarIndex jarIndex;
 	private final ReferencedEntryPool entryPool;
@@ -39,9 +35,6 @@ public class TranslationClassVisitor extends ClassVisitor {
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		if (signature != null && OBJECT_PATTERN.matcher(signature).matches()) {
-			signature = signature.replaceAll(":Ljava/lang/Object;:", "::");
-		}
 		obfClassEntry = new ClassDefEntry(name, new AccessFlags(access));
 		ClassDefEntry entry = translator.getTranslatedClassDef(obfClassEntry);
 		ClassEntry superEntry = translator.getTranslatedClass(entryPool.getClass(superName));
@@ -49,14 +42,16 @@ public class TranslationClassVisitor extends ClassVisitor {
 		for (int i = 0; i < interfaces.length; i++) {
 			translatedInterfaces[i] = translator.getTranslatedClass(entryPool.getClass(interfaces[i])).getName();
 		}
-		super.visit(version, entry.getAccess().getFlags(), entry.getName(), signature, superEntry.getName(), translatedInterfaces);
+		String translatedSignature = translator.getTranslatedSignature(signature, false, api);
+		super.visit(version, entry.getAccess().getFlags(), entry.getName(), translatedSignature, superEntry.getName(), translatedInterfaces);
 	}
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
 		FieldDefEntry entry = new FieldDefEntry(obfClassEntry, name, new TypeDescriptor(desc), new AccessFlags(access));
 		FieldDefEntry translatedEntry = translator.getTranslatedFieldDef(entry);
-		FieldVisitor fv = super.visitField(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), signature, value);
+		String translatedSignature = translator.getTranslatedSignature(signature, true, api);
+		FieldVisitor fv = super.visitField(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedSignature, value);
 		return new TranslationFieldVisitor(translator, translatedEntry, api, fv);
 	}
 
@@ -71,19 +66,18 @@ public class TranslationClassVisitor extends ClassVisitor {
 		for (int i = 0; i < exceptions.length; i++) {
 			translatedExceptions[i] = translator.getTranslatedClass(entryPool.getClass(exceptions[i])).getName();
 		}
-		MethodVisitor mv = super.visitMethod(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), signature, translatedExceptions);
+		String translatedSignature = translator.getTranslatedSignature(signature, false, api);
+		MethodVisitor mv = super.visitMethod(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedSignature, translatedExceptions);
 		return new TranslationMethodVisitor(translator, translatedEntry, api, mv);
 	}
 
 	@Override
 	public void visitOuterClass(String owner, String name, String desc) {
-		ClassEntry ownerEntry = translator.getTranslatedClass(entryPool.getClass(owner));
-		String translatedDesc = desc != null ? translator.getTranslatedTypeDesc(new TypeDescriptor(desc)).toString() : desc;
-		if (name != null) {
-			ClassEntry entry = translator.getTranslatedClass(entryPool.getClass(name));
-			super.visitOuterClass(ownerEntry.getName(), entry.getName(), translatedDesc);
+		if (desc != null) {
+			MethodEntry translatedEntry = translator.getTranslatedMethod(new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc)));
+			super.visitOuterClass(translatedEntry.getClassName(), translatedEntry.getName(), translatedEntry.getDesc().toString());
 		} else {
-			super.visitOuterClass(ownerEntry.getName(), name, translatedDesc);
+			super.visitOuterClass(owner, name, desc);
 		}
 	}
 

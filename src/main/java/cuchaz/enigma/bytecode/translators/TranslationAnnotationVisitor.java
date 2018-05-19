@@ -6,7 +6,6 @@ import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.mapping.entry.FieldDefEntry;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Type;
 
 public class TranslationAnnotationVisitor extends AnnotationVisitor {
 	private final Translator translator;
@@ -20,12 +19,12 @@ public class TranslationAnnotationVisitor extends AnnotationVisitor {
 
 	@Override
 	public void visit(String name, Object value) {
-		if (value instanceof Type) {
-			Type type = (Type) value;
-			super.visit(name, translator.getTranslatedType(type));
-		} else {
-			super.visit(name, value);
-		}
+		super.visit(name, translator.getTranslatedValue(value));
+	}
+
+	@Override
+	public AnnotationVisitor visitArray(String name) {
+		return this;
 	}
 
 	@Override

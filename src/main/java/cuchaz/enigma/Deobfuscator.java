@@ -532,15 +532,15 @@ public class Deobfuscator {
 			ClassMapping classMapping = mappingChain.get(mappingChain.size() - 1);
 			return classMapping != null && classMapping.getDeobfName() != null;
 		} else if (obfEntry instanceof FieldEntry) {
-			return translator.getTranslatedField((FieldEntry) obfEntry) != null;
+			return translator.hasFieldMapping((FieldEntry) obfEntry);
 		} else if (obfEntry instanceof MethodEntry) {
 			MethodEntry methodEntry = (MethodEntry) obfEntry;
 			if (methodEntry.isConstructor()) {
 				return false;
 			}
-			return translator.getTranslatedMethod(methodEntry) != null;
+			return translator.hasMethodMapping(methodEntry);
 		} else if (obfEntry instanceof LocalVariableEntry) {
-			return translator.getTranslatedVariable((LocalVariableEntry) obfEntry) != null;
+			return translator.hasLocalVariableMapping((LocalVariableEntry) obfEntry);
 		} else {
 			throw new Error("Unknown entry desc: " + obfEntry.getClass().getName());
 		}

@@ -15,13 +15,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.bytecode.translators.TranslationSignatureVisitor;
 import cuchaz.enigma.mapping.entry.*;
+import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureVisitor;
+import org.objectweb.asm.signature.SignatureWriter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class DirectionalTranslator implements Translator {
+	private static final Pattern OBJECT_PATTERN = Pattern.compile(".*:Ljava/lang/Object;:.*");
 
 	private final TranslationDirection direction;
 	private final Map<String, ClassMapping> classes;
@@ -98,7 +104,7 @@ public class DirectionalTranslator implements Translator {
 	public FieldDefEntry getTranslatedFieldDef(FieldDefEntry entry) {
 		String translatedName = translateFieldName(entry);
 		if (translatedName == null) {
-			return entry;
+			translatedName = entry.getName();
 		}
 		ClassEntry translatedOwner = getTranslatedClass(entry.getOwnerClassEntry());
 		TypeDescriptor translatedDesc = getTranslatedTypeDesc(entry.getDesc());
@@ -110,7 +116,7 @@ public class DirectionalTranslator implements Translator {
 	public FieldEntry getTranslatedField(FieldEntry entry) {
 		String translatedName = translateFieldName(entry);
 		if (translatedName == null) {
-			return null;
+			translatedName = entry.getName();
 		}
 		ClassEntry translatedOwner = getTranslatedClass(entry.getOwnerClassEntry());
 		TypeDescriptor translatedDesc = getTranslatedTypeDesc(entry.getDesc());
@@ -138,7 +144,7 @@ public class DirectionalTranslator implements Translator {
 	public MethodDefEntry getTranslatedMethodDef(MethodDefEntry entry) {
 		String translatedName = translateMethodName(entry);
 		if (translatedName == null) {
-			return entry;
+			translatedName = entry.getName();
 		}
 		ClassEntry translatedOwner = getTranslatedClass(entry.getOwnerClassEntry());
 		MethodDescriptor translatedDesc = getTranslatedMethodDesc(entry.getDesc());
@@ -150,7 +156,7 @@ public class DirectionalTranslator implements Translator {
 	public MethodEntry getTranslatedMethod(MethodEntry entry) {
 		String translatedName = translateMethodName(entry);
 		if (translatedName == null) {
-			return null;
+			translatedName = entry.getName();
 		}
 		ClassEntry translatedOwner = getTranslatedClass(entry.getOwnerClassEntry());
 		MethodDescriptor translatedDesc = getTranslatedMethodDesc(entry.getDesc());
@@ -181,11 +187,11 @@ public class DirectionalTranslator implements Translator {
 			translatedArgumentName = inheritLocalVariableName(entry);
 		}
 		if (translatedArgumentName == null) {
-			return null;
+			translatedArgumentName = entry.getName();
 		}
 		// TODO: Translating arguments calls method translation.. Can we refactor the code in such a way that we don't need this?
 		MethodEntry translatedOwner = getTranslatedMethod(entry.getOwnerEntry());
-		return new LocalVariableEntry(translatedOwner != null ? translatedOwner : entry.getOwnerEntry(), entry.getIndex(), translatedArgumentName);
+		return new LocalVariableEntry(translatedOwner, entry.getIndex(), translatedArgumentName);
 	}
 
 	@Override
@@ -198,6 +204,26 @@ public class DirectionalTranslator implements Translator {
 		MethodDefEntry translatedOwner = getTranslatedMethodDef(entry.getOwnerEntry());
 		TypeDescriptor translatedTypeDesc = getTranslatedTypeDesc(entry.getDesc());
 		return new LocalVariableDefEntry(translatedOwner, entry.getIndex(), translatedArgumentName != null ? translatedArgumentName : entry.getName(), translatedTypeDesc);
+	}
+
+	@Override
+	public boolean hasClassMapping(ClassEntry entry) {
+		return classes.containsKey(entry.getName());
+	}
+
+	@Override
+	public boolean hasFieldMapping(FieldEntry entry) {
+		return translateFieldName(entry) != null;
+	}
+
+	@Override
+	public boolean hasMethodMapping(MethodEntry entry) {
+		return translateMethodName(entry) != null;
+	}
+
+	@Override
+	public boolean hasLocalVariableMapping(LocalVariableEntry entry) {
+		return translateLocalVariableName(entry) != null || inheritLocalVariableName(entry) != null;
 	}
 
 	// TODO: support not identical behavior (specific to constructor)
@@ -250,6 +276,26 @@ public class DirectionalTranslator implements Translator {
 			translatedArguments.add(getTranslatedTypeDesc(argument));
 		}
 		return new MethodDescriptor(translatedArguments, getTranslatedTypeDesc(descriptor.getReturnDesc()));
+	}
+
+	@Override
+	public String getTranslatedSignature(String signature, boolean isType, int api) {
+		if (signature == null) {
+			return null;
+		}
+		SignatureReader reader = new SignatureReader(signature);
+		SignatureWriter writer = new SignatureWriter();
+		SignatureVisitor visitor = new TranslationSignatureVisitor(this, api, writer);
+		if (isType) {
+			reader.acceptType(visitor);
+		} else {
+			reader.accept(visitor);
+		}
+		String translatedSignature = writer.toString();
+		if (OBJECT_PATTERN.matcher(signature).matches()) {
+			translatedSignature = signature.replaceAll(":Ljava/lang/Object;:", "::");
+		}
+		return translatedSignature;
 	}
 
 	private ClassMapping findClassMapping(ClassEntry entry) {
