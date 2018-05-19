@@ -99,7 +99,7 @@ public class CommandMain {
 	private static void convertMappings(String[] args) throws Exception {
 		File fileMappings = getReadableFile(getArg(args, 1, "enigma mapping", true));
 		File result = getWritableFile(getArg(args, 2, "enigma mapping", true));
-		String name = getArg(args, 3, "format type", true);
+		String name = getArg(args, 3, "format desc", true);
 		Mappings.FormatType formatType;
 		try {
 			formatType = Mappings.FormatType.valueOf(name.toUpperCase());

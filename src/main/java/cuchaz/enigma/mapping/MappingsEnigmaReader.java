@@ -123,8 +123,8 @@ public class MappingsEnigmaReader {
 		return mappings;
 	}
 
-	private ArgumentMapping readArgument(String[] parts) {
-		return new ArgumentMapping(Integer.parseInt(parts[1]), parts[2]);
+	private LocalVariableMapping readArgument(String[] parts) {
+		return new LocalVariableMapping(Integer.parseInt(parts[1]), parts[2]);
 	}
 
 	private ClassMapping readClass(String[] parts, boolean makeSimple) {
@@ -150,27 +150,27 @@ public class MappingsEnigmaReader {
 		if (parts.length == 4) {
 			boolean access = parts[3].startsWith("ACC:");
 			if (access)
-				mapping = new FieldMapping(parts[1], new Type(parts[2]), null,
+				mapping = new FieldMapping(parts[1], new TypeDescriptor(parts[2]), null,
 					Mappings.EntryModifier.valueOf(parts[3].substring(4)));
 			else
-				mapping = new FieldMapping(parts[1], new Type(parts[3]), parts[2], Mappings.EntryModifier.UNCHANGED);
+				mapping = new FieldMapping(parts[1], new TypeDescriptor(parts[3]), parts[2], Mappings.EntryModifier.UNCHANGED);
 		} else if (parts.length == 5)
-			mapping = new FieldMapping(parts[1], new Type(parts[3]), parts[2], Mappings.EntryModifier.valueOf(parts[4].substring(4)));
+			mapping = new FieldMapping(parts[1], new TypeDescriptor(parts[3]), parts[2], Mappings.EntryModifier.valueOf(parts[4].substring(4)));
 		return mapping;
 	}
 
 	private MethodMapping readMethod(String[] parts) {
 		MethodMapping mapping = null;
 		if (parts.length == 3)
-			mapping = new MethodMapping(parts[1], new Signature(parts[2]));
+			mapping = new MethodMapping(parts[1], new MethodDescriptor(parts[2]));
 		else if (parts.length == 4) {
 			boolean access = parts[3].startsWith("ACC:");
 			if (access)
-				mapping = new MethodMapping(parts[1], new Signature(parts[2]), null, Mappings.EntryModifier.valueOf(parts[3].substring(4)));
+				mapping = new MethodMapping(parts[1], new MethodDescriptor(parts[2]), null, Mappings.EntryModifier.valueOf(parts[3].substring(4)));
 			else
-				mapping = new MethodMapping(parts[1], new Signature(parts[3]), parts[2]);
+				mapping = new MethodMapping(parts[1], new MethodDescriptor(parts[3]), parts[2]);
 		} else if (parts.length == 5)
-			mapping = new MethodMapping(parts[1], new Signature(parts[3]), parts[2],
+			mapping = new MethodMapping(parts[1], new MethodDescriptor(parts[3]), parts[2],
 				Mappings.EntryModifier.valueOf(parts[4].substring(4)));
 		return mapping;
 	}

@@ -13,15 +13,21 @@ package cuchaz.enigma.mapping;
 
 public enum TranslationDirection {
 
-	Deobfuscating {
+	DEOBFUSCATING {
 		@Override
 		public <T> T choose(T deobfChoice, T obfChoice) {
+			if (deobfChoice == null) {
+				return obfChoice;
+			}
 			return deobfChoice;
 		}
 	},
-	Obfuscating {
+	OBFUSCATING {
 		@Override
 		public <T> T choose(T deobfChoice, T obfChoice) {
+			if (obfChoice == null) {
+				return deobfChoice;
+			}
 			return obfChoice;
 		}
 	};

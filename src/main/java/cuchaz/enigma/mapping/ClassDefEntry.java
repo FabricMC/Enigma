@@ -11,6 +11,19 @@
 
 package cuchaz.enigma.mapping;
 
-public interface BehaviorEntry extends Entry {
-	Signature getSignature();
+import com.google.common.base.Preconditions;
+import cuchaz.enigma.bytecode.AccessFlags;
+
+public class ClassDefEntry extends ClassEntry {
+	private final AccessFlags access;
+
+	public ClassDefEntry(String className, AccessFlags access) {
+		super(className);
+		Preconditions.checkNotNull(access, "Class access cannot be null");
+		this.access = access;
+	}
+
+	public AccessFlags getAccess() {
+		return access;
+	}
 }

@@ -16,7 +16,7 @@ public interface Entry {
 
 	String getClassName();
 
-	ClassEntry getClassEntry();
+	ClassEntry getOwnerClassEntry();
 
-	Entry cloneToNewClass(ClassEntry classEntry);
+	Entry updateOwnership(ClassEntry classEntry);
 }

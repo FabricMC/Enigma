@@ -52,11 +52,11 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
+		return this.deobfuscatingTranslator.getTranslatedClass(this.entry.getOwnerClassEntry()).getName();
 	}
 
 	public String getDeobfMethodName() {
-		return this.deobfuscatingTranslator.translate(this.entry);
+		return this.deobfuscatingTranslator.getTranslatedMethod(this.entry).getName();
 	}
 
 	public boolean isImplemented() {
@@ -84,11 +84,9 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-		for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(this.entry.getClassEntry())) {
-			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getSignature()
-			);
-			nodes.add(new MethodInheritanceTreeNode(this.deobfuscatingTranslator, methodEntry, index.containsObfBehavior(methodEntry)
-			));
+		for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(this.entry.getOwnerClassEntry())) {
+			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
+			nodes.add(new MethodInheritanceTreeNode(this.deobfuscatingTranslator, methodEntry, index.containsObfMethod(methodEntry)));
 		}
 
 		// add them to this node

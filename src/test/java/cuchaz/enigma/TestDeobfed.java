@@ -12,6 +12,8 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.mapping.ReferencedEntryPool;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -30,8 +32,8 @@ public class TestDeobfed {
 	public static void beforeClass()
 		throws Exception {
 		jar = new JarFile("build/test-deobf/translation.jar");
-		index = new JarIndex();
-		index.indexJar(jar, true);
+		index = new JarIndex(new ReferencedEntryPool());
+		index.indexJar(new ParsedJar(jar), true);
 	}
 
 	@Test

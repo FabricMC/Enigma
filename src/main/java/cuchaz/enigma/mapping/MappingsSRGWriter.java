@@ -19,7 +19,7 @@ public class MappingsSRGWriter {
 		}
 		file.createNewFile();
 
-		TranslationIndex index = new TranslationIndex();
+		TranslationIndex index = new TranslationIndex(new ReferencedEntryPool());
 
 		PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8));
 		List<String> fieldMappings = new ArrayList<>();
@@ -43,7 +43,7 @@ public class MappingsSRGWriter {
 				}
 
 				for (MethodMapping methodMapping : sorted(innerClassMapping.methods())) {
-					methodMappings.add("MD: " + innerClassName + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature() + " " + innerDeobfClassName + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
+					methodMappings.add("MD: " + innerClassName + "/" + methodMapping.getObfName() + " " + methodMapping.getObfDesc() + " " + innerDeobfClassName + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.DEOBFUSCATING, index).getTranslatedMethodDesc(methodMapping.getObfDesc()));
 				}
 			}
 
@@ -52,7 +52,7 @@ public class MappingsSRGWriter {
 			}
 
 			for (MethodMapping methodMapping : sorted(classMapping.methods())) {
-				methodMappings.add("MD: " + classMapping.getObfFullName() + "/" + methodMapping.getObfName() + " " + methodMapping.getObfSignature() + " " + classMapping.getDeobfName() + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.Deobfuscating, index).translateSignature(methodMapping.getObfSignature()));
+				methodMappings.add("MD: " + classMapping.getObfFullName() + "/" + methodMapping.getObfName() + " " + methodMapping.getObfDesc() + " " + classMapping.getDeobfName() + "/" + methodMapping.getDeobfName() + " " + mappings.getTranslator(TranslationDirection.DEOBFUSCATING, index).getTranslatedMethodDesc(methodMapping.getObfDesc()));
 			}
 		}
 		for (String fd : fieldMappings) {

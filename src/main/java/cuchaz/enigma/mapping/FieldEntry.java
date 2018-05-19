@@ -11,40 +11,29 @@
 
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Preconditions;
 import cuchaz.enigma.utils.Utils;
 
 public class FieldEntry implements Entry {
 
-	private ClassEntry classEntry;
-	private String name;
-	private Type type;
+	protected final ClassEntry ownerEntry;
+	protected final String name;
+	protected final TypeDescriptor desc;
 
 	// NOTE: this argument order is important for the MethodReader/MethodWriter
-	public FieldEntry(ClassEntry classEntry, String name, Type type) {
-		if (classEntry == null) {
-			throw new IllegalArgumentException("Class cannot be null!");
-		}
-		if (name == null) {
-			throw new IllegalArgumentException("Field name cannot be null!");
-		}
-		if (type == null) {
-			throw new IllegalArgumentException("Field type cannot be null!");
-		}
+	public FieldEntry(ClassEntry ownerEntry, String name, TypeDescriptor desc) {
+		Preconditions.checkNotNull(ownerEntry, "Owner cannot be null");
+		Preconditions.checkNotNull(name, "Field name cannot be null");
+		Preconditions.checkNotNull(desc, "Field descriptor cannot be null");
 
-		this.classEntry = classEntry;
+		this.ownerEntry = ownerEntry;
 		this.name = name;
-		this.type = type;
-	}
-
-	public FieldEntry(FieldEntry other, ClassEntry newClassEntry) {
-		this.classEntry = newClassEntry;
-		this.name = other.name;
-		this.type = other.type;
+		this.desc = desc;
 	}
 
 	@Override
-	public ClassEntry getClassEntry() {
-		return this.classEntry;
+	public ClassEntry getOwnerClassEntry() {
+		return this.ownerEntry;
 	}
 
 	@Override
@@ -54,21 +43,21 @@ public class FieldEntry implements Entry {
 
 	@Override
 	public String getClassName() {
-		return this.classEntry.getName();
+		return this.ownerEntry.getName();
 	}
 
-	public Type getType() {
-		return this.type;
+	public TypeDescriptor getDesc() {
+		return this.desc;
 	}
 
 	@Override
-	public FieldEntry cloneToNewClass(ClassEntry classEntry) {
-		return new FieldEntry(this, classEntry);
+	public FieldEntry updateOwnership(ClassEntry owner) {
+		return new FieldEntry(owner, this.name, this.desc);
 	}
 
 	@Override
 	public int hashCode() {
-		return Utils.combineHashesOrdered(this.classEntry, this.name, this.type);
+		return Utils.combineHashesOrdered(this.ownerEntry, this.name, this.desc);
 	}
 
 	@Override
@@ -77,11 +66,11 @@ public class FieldEntry implements Entry {
 	}
 
 	public boolean equals(FieldEntry other) {
-		return this.classEntry.equals(other.classEntry) && this.name.equals(other.name) && this.type.equals(other.type);
+		return this.ownerEntry.equals(other.ownerEntry) && this.name.equals(other.name) && this.desc.equals(other.desc);
 	}
 
 	@Override
 	public String toString() {
-		return this.classEntry.getName() + "." + this.name + ":" + this.type;
+		return this.ownerEntry.getName() + "." + this.name + ":" + this.desc;
 	}
 }

@@ -25,12 +25,14 @@ import java.util.zip.GZIPOutputStream;
 
 public class MappingsRenamer {
 
-	private JarIndex index;
+	private final JarIndex index;
+	private final ReferencedEntryPool entryPool;
 	private Mappings mappings;
 
-	public MappingsRenamer(JarIndex index, Mappings mappings) {
+	public MappingsRenamer(JarIndex index, Mappings mappings, ReferencedEntryPool entryPool) {
 		this.index = index;
 		this.mappings = mappings;
+		this.entryPool = entryPool;
 	}
 
 	public void setMappings(Mappings mappings) {
@@ -46,7 +48,7 @@ public class MappingsRenamer {
 
 			if (deobfName != null) {
 				// make sure we don't rename to an existing obf or deobf class
-				if (mappings.containsDeobfClass(deobfName) || index.containsObfClass(new ClassEntry(deobfName))) {
+				if (mappings.containsDeobfClass(deobfName) || index.containsObfClass(entryPool.getClass(deobfName))) {
 					throw new IllegalNameException(deobfName, "There is already a class with that name");
 				}
 			}
@@ -87,13 +89,13 @@ public class MappingsRenamer {
 
 	public void setFieldName(FieldEntry obf, String deobfName) {
 		deobfName = NameValidator.validateFieldName(deobfName);
-		FieldEntry targetEntry = new FieldEntry(obf.getClassEntry(), deobfName, obf.getType());
+		FieldEntry targetEntry = entryPool.getField(obf.getOwnerClassEntry(), deobfName, obf.getDesc());
 		ClassEntry definedClass = null;
-		if (mappings.containsDeobfField(obf.getClassEntry(), deobfName) || index.containsEntryWithSameName(targetEntry))
-			definedClass = obf.getClassEntry();
+		if (mappings.containsDeobfField(obf.getOwnerClassEntry(), deobfName) || index.containsEntryWithSameName(targetEntry))
+			definedClass = obf.getOwnerClassEntry();
 		else {
-			for (ClassEntry ancestorEntry : this.index.getTranslationIndex().getAncestry(obf.getClassEntry())) {
-				if (mappings.containsDeobfField(ancestorEntry, deobfName) || index.containsEntryWithSameName(targetEntry.cloneToNewClass(ancestorEntry))) {
+			for (ClassEntry ancestorEntry : this.index.getTranslationIndex().getAncestry(obf.getOwnerClassEntry())) {
+				if (mappings.containsDeobfField(ancestorEntry, deobfName) || index.containsEntryWithSameName(targetEntry.updateOwnership(ancestorEntry))) {
 					definedClass = ancestorEntry;
 					break;
 				}
@@ -101,42 +103,44 @@ public class MappingsRenamer {
 		}
 
 		if (definedClass != null) {
-			String className = mappings.getTranslator(TranslationDirection.Deobfuscating, index.getTranslationIndex()).translateClass(definedClass.getClassName());
+			Translator translator = mappings.getTranslator(TranslationDirection.DEOBFUSCATING, index.getTranslationIndex());
+			String className = translator.getTranslatedClass(entryPool.getClass(definedClass.getClassName())).getName();
 			if (className == null)
 				className = definedClass.getClassName();
 			throw new IllegalNameException(deobfName, "There is already a field with that name in " + className);
 		}
 
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		classMapping.setFieldName(obf.getName(), obf.getType(), deobfName);
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		classMapping.setFieldName(obf.getName(), obf.getDesc(), deobfName);
 	}
 
 	public void removeFieldMapping(FieldEntry obf) {
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		classMapping.removeFieldMapping(classMapping.getFieldByObf(obf.getName(), obf.getType()));
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		classMapping.removeFieldMapping(classMapping.getFieldByObf(obf.getName(), obf.getDesc()));
 	}
 
 	public void markFieldAsDeobfuscated(FieldEntry obf) {
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		classMapping.setFieldName(obf.getName(), obf.getType(), obf.getName());
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		classMapping.setFieldName(obf.getName(), obf.getDesc(), obf.getName());
 	}
 
 	private void validateMethodTreeName(MethodEntry entry, String deobfName) {
-		MethodEntry targetEntry = new MethodEntry(entry.getClassEntry(), deobfName, entry.getSignature());
+		MethodEntry targetEntry = entryPool.getMethod(entry.getOwnerClassEntry(), deobfName, entry.getDesc());
 
 		// TODO: Verify if I don't break things
-		ClassMapping classMapping = mappings.getClassByObf(entry.getClassEntry());
-		if ((classMapping != null && classMapping.containsDeobfMethod(deobfName, entry.getSignature()) && classMapping.getMethodByObf(entry.getName(), entry.getSignature()) != classMapping.getMethodByDeobf(deobfName, entry.getSignature()))
-			|| index.containsObfBehavior(targetEntry)) {
-			String deobfClassName = mappings.getTranslator(TranslationDirection.Deobfuscating, index.getTranslationIndex()).translateClass(entry.getClassName());
+		ClassMapping classMapping = mappings.getClassByObf(entry.getOwnerClassEntry());
+		if ((classMapping != null && classMapping.containsDeobfMethod(deobfName, entry.getDesc()) && classMapping.getMethodByObf(entry.getName(), entry.getDesc()) != classMapping.getMethodByDeobf(deobfName, entry.getDesc()))
+				|| index.containsObfMethod(targetEntry)) {
+			Translator translator = mappings.getTranslator(TranslationDirection.DEOBFUSCATING, index.getTranslationIndex());
+			String deobfClassName = translator.getTranslatedClass(entryPool.getClass(entry.getClassName())).getClassName();
 			if (deobfClassName == null) {
 				deobfClassName = entry.getClassName();
 			}
 			throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
 		}
 
-		for (ClassEntry child : index.getTranslationIndex().getSubclass(entry.getClassEntry())) {
-			validateMethodTreeName(entry.cloneToNewClass(child), deobfName);
+		for (ClassEntry child : index.getTranslationIndex().getSubclass(entry.getOwnerClassEntry())) {
+			validateMethodTreeName(entry.updateOwnership(child), deobfName);
 		}
 	}
 
@@ -155,20 +159,21 @@ public class MappingsRenamer {
 
 	public void setMethodName(MethodEntry obf, String deobfName) {
 		deobfName = NameValidator.validateMethodName(deobfName);
-		MethodEntry targetEntry = new MethodEntry(obf.getClassEntry(), deobfName, obf.getSignature());
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
+		MethodEntry targetEntry = entryPool.getMethod(obf.getOwnerClassEntry(), deobfName, obf.getDesc());
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
 
 		// TODO: Verify if I don't break things
-		if ((mappings.containsDeobfMethod(obf.getClassEntry(), deobfName, obf.getSignature()) && classMapping.getMethodByObf(obf.getName(), obf.getSignature()) != classMapping.getMethodByDeobf(deobfName, obf.getSignature()))
-			|| index.containsObfBehavior(targetEntry)) {
-			String deobfClassName = mappings.getTranslator(TranslationDirection.Deobfuscating, index.getTranslationIndex()).translateClass(obf.getClassName());
+		if ((mappings.containsDeobfMethod(obf.getOwnerClassEntry(), deobfName, obf.getDesc()) && classMapping.getMethodByObf(obf.getName(), obf.getDesc()) != classMapping.getMethodByDeobf(deobfName, obf.getDesc()))
+				|| index.containsObfMethod(targetEntry)) {
+			Translator translator = mappings.getTranslator(TranslationDirection.DEOBFUSCATING, index.getTranslationIndex());
+			String deobfClassName = translator.getTranslatedClass(entryPool.getClass(obf.getClassName())).getClassName();
 			if (deobfClassName == null) {
 				deobfClassName = obf.getClassName();
 			}
 			throw new IllegalNameException(deobfName, "There is already a method with that name and signature in class " + deobfClassName);
 		}
 
-		classMapping.setMethodName(obf.getName(), obf.getSignature(), deobfName);
+		classMapping.setMethodName(obf.getName(), obf.getDesc(), deobfName);
 	}
 
 	public void removeMethodTreeMapping(MethodEntry obf) {
@@ -176,8 +181,8 @@ public class MappingsRenamer {
 	}
 
 	public void removeMethodMapping(MethodEntry obf) {
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		classMapping.setMethodName(obf.getName(), obf.getSignature(), null);
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		classMapping.setMethodName(obf.getName(), obf.getDesc(), null);
 	}
 
 	public void markMethodTreeAsDeobfuscated(MethodEntry obf) {
@@ -185,30 +190,25 @@ public class MappingsRenamer {
 	}
 
 	public void markMethodAsDeobfuscated(MethodEntry obf) {
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		classMapping.setMethodName(obf.getName(), obf.getSignature(), obf.getName());
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		classMapping.setMethodName(obf.getName(), obf.getDesc(), obf.getName());
 	}
 
-	public void setArgumentTreeName(ArgumentEntry obf, String deobfName) {
-		if (!(obf.getBehaviorEntry() instanceof MethodEntry)) {
-			setArgumentName(obf, deobfName);
-			return;
-		}
-
-		MethodEntry obfMethod = (MethodEntry) obf.getBehaviorEntry();
+	public void setLocalVariableTreeName(LocalVariableEntry obf, String deobfName) {
+		MethodEntry obfMethod = obf.getOwnerEntry();
 
 		Set<MethodEntry> implementations = index.getRelatedMethodImplementations(obfMethod);
 		for (MethodEntry entry : implementations) {
-			ClassMapping classMapping = mappings.getClassByObf(entry.getClassEntry());
+			ClassMapping classMapping = mappings.getClassByObf(entry.getOwnerClassEntry());
 			if (classMapping != null) {
-				MethodMapping mapping = classMapping.getMethodByObf(entry.getName(), entry.getSignature());
+				MethodMapping mapping = classMapping.getMethodByObf(entry.getName(), entry.getDesc());
 				// NOTE: don't need to check arguments for name collisions with names determined by Procyon
 				// TODO: Verify if I don't break things
 				if (mapping != null) {
-					for (ArgumentMapping argumentMapping : Lists.newArrayList(mapping.arguments())) {
-						if (argumentMapping.getIndex() != obf.getIndex()) {
-							if (mapping.getDeobfArgumentName(argumentMapping.getIndex()).equals(deobfName)
-								|| argumentMapping.getName().equals(deobfName)) {
+					for (LocalVariableMapping localVariableMapping : Lists.newArrayList(mapping.arguments())) {
+						if (localVariableMapping.getIndex() != obf.getIndex()) {
+							if (mapping.getDeobfLocalVariableName(localVariableMapping.getIndex()).equals(deobfName)
+									|| localVariableMapping.getName().equals(deobfName)) {
 								throw new IllegalNameException(deobfName, "There is already an argument with that name");
 							}
 						}
@@ -218,45 +218,45 @@ public class MappingsRenamer {
 		}
 
 		for (MethodEntry entry : implementations) {
-			setArgumentName(new ArgumentEntry(obf, entry), deobfName);
+			setLocalVariableName(new LocalVariableEntry(entry, obf.getIndex(), obf.getName()), deobfName);
 		}
 	}
 
-	public void setArgumentName(ArgumentEntry obf, String deobfName) {
+	public void setLocalVariableName(LocalVariableEntry obf, String deobfName) {
 		deobfName = NameValidator.validateArgumentName(deobfName);
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		MethodMapping mapping = classMapping.getMethodByObf(obf.getMethodName(), obf.getMethodSignature());
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		MethodMapping mapping = classMapping.getMethodByObf(obf.getMethodName(), obf.getMethodDesc());
 		// NOTE: don't need to check arguments for name collisions with names determined by Procyon
 		// TODO: Verify if I don't break things
 		if (mapping != null) {
-			for (ArgumentMapping argumentMapping : Lists.newArrayList(mapping.arguments())) {
-				if (argumentMapping.getIndex() != obf.getIndex()) {
-					if (mapping.getDeobfArgumentName(argumentMapping.getIndex()).equals(deobfName)
-						|| argumentMapping.getName().equals(deobfName)) {
+			for (LocalVariableMapping localVariableMapping : Lists.newArrayList(mapping.arguments())) {
+				if (localVariableMapping.getIndex() != obf.getIndex()) {
+					if (mapping.getDeobfLocalVariableName(localVariableMapping.getIndex()).equals(deobfName)
+							|| localVariableMapping.getName().equals(deobfName)) {
 						throw new IllegalNameException(deobfName, "There is already an argument with that name");
 					}
 				}
 			}
 		}
 
-		classMapping.setArgumentName(obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), deobfName);
+		classMapping.setArgumentName(obf.getMethodName(), obf.getMethodDesc(), obf.getIndex(), deobfName);
 	}
 
-	public void removeArgumentMapping(ArgumentEntry obf) {
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		classMapping.removeArgumentName(obf.getMethodName(), obf.getMethodSignature(), obf.getIndex());
+	public void removeLocalVariableMapping(LocalVariableEntry obf) {
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		classMapping.removeArgumentName(obf.getMethodName(), obf.getMethodDesc(), obf.getIndex());
 	}
 
-	public void markArgumentAsDeobfuscated(ArgumentEntry obf) {
-		ClassMapping classMapping = getOrCreateClassMapping(obf.getClassEntry());
-		classMapping.setArgumentName(obf.getMethodName(), obf.getMethodSignature(), obf.getIndex(), obf.getName());
+	public void markArgumentAsDeobfuscated(LocalVariableEntry obf) {
+		ClassMapping classMapping = getOrCreateClassMapping(obf.getOwnerClassEntry());
+		classMapping.setArgumentName(obf.getMethodName(), obf.getMethodDesc(), obf.getIndex(), obf.getName());
 	}
 
 	public boolean moveFieldToObfClass(ClassMapping classMapping, FieldMapping fieldMapping, ClassEntry obfClass) {
 		classMapping.removeFieldMapping(fieldMapping);
 		ClassMapping targetClassMapping = getOrCreateClassMapping(obfClass);
-		if (!targetClassMapping.containsObfField(fieldMapping.getObfName(), fieldMapping.getObfType())) {
-			if (!targetClassMapping.containsDeobfField(fieldMapping.getDeobfName(), fieldMapping.getObfType())) {
+		if (!targetClassMapping.containsObfField(fieldMapping.getObfName(), fieldMapping.getObfDesc())) {
+			if (!targetClassMapping.containsDeobfField(fieldMapping.getDeobfName(), fieldMapping.getObfDesc())) {
 				targetClassMapping.addFieldMapping(fieldMapping);
 				return true;
 			} else {
@@ -269,12 +269,12 @@ public class MappingsRenamer {
 	public boolean moveMethodToObfClass(ClassMapping classMapping, MethodMapping methodMapping, ClassEntry obfClass) {
 		classMapping.removeMethodMapping(methodMapping);
 		ClassMapping targetClassMapping = getOrCreateClassMapping(obfClass);
-		if (!targetClassMapping.containsObfMethod(methodMapping.getObfName(), methodMapping.getObfSignature())) {
-			if (!targetClassMapping.containsDeobfMethod(methodMapping.getDeobfName(), methodMapping.getObfSignature())) {
+		if (!targetClassMapping.containsObfMethod(methodMapping.getObfName(), methodMapping.getObfDesc())) {
+			if (!targetClassMapping.containsDeobfMethod(methodMapping.getDeobfName(), methodMapping.getObfDesc())) {
 				targetClassMapping.addMethodMapping(methodMapping);
 				return true;
 			} else {
-				System.err.println("WARNING: deobf method was already there: " + obfClass + "." + methodMapping.getDeobfName() + methodMapping.getObfSignature());
+				System.err.println("WARNING: deobf method was already there: " + obfClass + "." + methodMapping.getDeobfName() + methodMapping.getObfDesc());
 			}
 		}
 		return false;
@@ -326,12 +326,35 @@ public class MappingsRenamer {
 	}
 
 	public void setFieldModifier(FieldEntry obEntry, Mappings.EntryModifier modifier) {
-		ClassMapping classMapping = getOrCreateClassMapping(obEntry.getClassEntry());
-		classMapping.setFieldModifier(obEntry.getName(), obEntry.getType(), modifier);
+		ClassMapping classMapping = getOrCreateClassMapping(obEntry.getOwnerClassEntry());
+		classMapping.setFieldModifier(obEntry.getName(), obEntry.getDesc(), modifier);
 	}
 
-	public void setMethodModifier(BehaviorEntry obEntry, Mappings.EntryModifier modifier) {
-		ClassMapping classMapping = getOrCreateClassMapping(obEntry.getClassEntry());
-		classMapping.setMethodModifier(obEntry.getName(), obEntry.getSignature(), modifier);
+	public void setMethodModifier(MethodEntry obEntry, Mappings.EntryModifier modifier) {
+		ClassMapping classMapping = getOrCreateClassMapping(obEntry.getOwnerClassEntry());
+		classMapping.setMethodModifier(obEntry.getName(), obEntry.getDesc(), modifier);
+	}
+
+	public Mappings.EntryModifier getClassModifier(ClassEntry obfEntry) {
+		ClassMapping classMapping = getOrCreateClassMapping(obfEntry);
+		return classMapping.getModifier();
+	}
+
+	public Mappings.EntryModifier getFieldModifier(FieldEntry obfEntry) {
+		ClassMapping classMapping = getOrCreateClassMapping(obfEntry.getOwnerClassEntry());
+		FieldMapping fieldMapping = classMapping.getFieldByObf(obfEntry);
+		if (fieldMapping == null) {
+			return Mappings.EntryModifier.UNCHANGED;
+		}
+		return fieldMapping.getModifier();
+	}
+
+	public Mappings.EntryModifier getMethodModfifier(MethodEntry obfEntry) {
+		ClassMapping classMapping = getOrCreateClassMapping(obfEntry.getOwnerClassEntry());
+		MethodMapping methodMapping = classMapping.getMethodByObf(obfEntry);
+		if (methodMapping == null) {
+			return Mappings.EntryModifier.UNCHANGED;
+		}
+		return methodMapping.getModifier();
 	}
 }

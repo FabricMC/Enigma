@@ -11,17 +11,15 @@
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.mapping.BehaviorEntry;
-import cuchaz.enigma.mapping.FieldEntry;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.mapping.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<FieldEntry, BehaviorEntry> {
+public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<FieldEntry, MethodDefEntry> {
 
 	private Translator deobfuscatingTranslator;
 	private FieldEntry entry;
-	private EntryReference<FieldEntry, BehaviorEntry> reference;
+	private EntryReference<FieldEntry, MethodDefEntry> reference;
 	private Access access;
 
 	public FieldReferenceTreeNode(Translator deobfuscatingTranslator, FieldEntry entry) {
@@ -30,7 +28,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 		this.reference = null;
 	}
 
-	private FieldReferenceTreeNode(Translator deobfuscatingTranslator, EntryReference<FieldEntry, BehaviorEntry> reference, Access access) {
+	private FieldReferenceTreeNode(Translator deobfuscatingTranslator, EntryReference<FieldEntry, MethodDefEntry> reference, Access access) {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
 		this.entry = reference.entry;
 		this.reference = reference;
@@ -43,34 +41,34 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	}
 
 	@Override
-	public EntryReference<FieldEntry, BehaviorEntry> getReference() {
+	public EntryReference<FieldEntry, MethodDefEntry> getReference() {
 		return this.reference;
 	}
 
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", this.deobfuscatingTranslator.translateEntry(this.reference.context), this.access);
+			return String.format("%s (%s)", this.deobfuscatingTranslator.getTranslatedMethodDef(this.reference.context), this.access);
 		}
-		return this.deobfuscatingTranslator.translateEntry(this.entry).toString();
+		return deobfuscatingTranslator.getTranslatedField(entry).getName();
 	}
 
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		if (this.reference == null) {
-			for (EntryReference<FieldEntry, BehaviorEntry> reference : index.getFieldReferences(this.entry)) {
+			for (EntryReference<FieldEntry, MethodDefEntry> reference : index.getFieldReferences(this.entry)) {
 				add(new FieldReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
 			}
 		} else {
-			for (EntryReference<BehaviorEntry, BehaviorEntry> reference : index.getBehaviorReferences(this.reference.context)) {
-				add(new BehaviorReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.reference.context)));
+			for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodReferences(this.reference.context)) {
+				add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.reference.context)));
 			}
 		}
 
 		if (recurse && children != null) {
 			for (Object node : children) {
-				if (node instanceof BehaviorReferenceTreeNode) {
-					((BehaviorReferenceTreeNode) node).load(index, true);
+				if (node instanceof MethodReferenceTreeNode) {
+					((MethodReferenceTreeNode) node).load(index, true);
 				} else if (node instanceof FieldReferenceTreeNode) {
 					((FieldReferenceTreeNode) node).load(index, true);
 				}

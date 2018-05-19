@@ -20,13 +20,15 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
 import cuchaz.enigma.mapping.*;
-import javassist.bytecode.Descriptor;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
-	private BehaviorEntry behaviorEntry;
+public class SourceIndexMethodVisitor extends SourceIndexVisitor {
+	private final ReferencedEntryPool entryPool;
+	private final ProcyonEntryFactory entryFactory;
+
+	private MethodDefEntry methodEntry;
 
 	// TODO: Really fix Procyon index problem with inner classes
 	private int argumentPosition;
@@ -34,8 +36,11 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
 	private Map<String, Entry> identifierEntryCache = new HashMap<>();
 
-	public SourceIndexBehaviorVisitor(BehaviorEntry behaviorEntry, boolean isEnum) {
-		this.behaviorEntry = behaviorEntry;
+	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, MethodDefEntry methodEntry, boolean isEnum) {
+		super(entryPool);
+		this.entryPool = entryPool;
+		this.entryFactory = new ProcyonEntryFactory(entryPool);
+		this.methodEntry = methodEntry;
 		this.argumentPosition = isEnum ? 2 : 0;
 		this.localsPosition = 0;
 	}
@@ -45,19 +50,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 
 		// get the behavior entry
-		ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-		BehaviorEntry behaviorEntry = null;
+		ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
+		MethodEntry methodEntry = null;
 		if (ref instanceof MethodReference) {
-			MethodReference methodRef = (MethodReference) ref;
-			if (methodRef.isConstructor()) {
-				behaviorEntry = new ConstructorEntry(classEntry, new Signature(ref.getErasedSignature()));
-			} else if (methodRef.isTypeInitializer()) {
-				behaviorEntry = new ConstructorEntry(classEntry);
-			} else {
-				behaviorEntry = new MethodEntry(classEntry, ref.getName(), new Signature(ref.getErasedSignature()));
-			}
+			methodEntry = entryPool.getMethod(classEntry, ref.getName(), ref.getErasedSignature());
 		}
-		if (behaviorEntry != null) {
+		if (methodEntry != null) {
 			// get the node for the token
 			AstNode tokenNode = null;
 			if (node.getTarget() instanceof MemberReferenceExpression) {
@@ -68,13 +66,13 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 				tokenNode = node.getTarget();
 			}
 			if (tokenNode != null) {
-				index.addReference(tokenNode, behaviorEntry, this.behaviorEntry);
+				index.addReference(tokenNode, methodEntry, this.methodEntry);
 			}
 		}
 
 		// Check for identifier
 		node.getArguments().stream().filter(expression -> expression instanceof IdentifierExpression)
-			.forEach(expression -> this.checkIdentifier((IdentifierExpression) expression, index));
+				.forEach(expression -> this.checkIdentifier((IdentifierExpression) expression, index));
 		return recurse(node, index);
 	}
 
@@ -83,13 +81,17 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
 			// make sure this is actually a field
-			if (ref.getErasedSignature().indexOf('(') >= 0) {
+			String erasedSignature = ref.getErasedSignature();
+			if (erasedSignature.indexOf('(') >= 0) {
 				throw new Error("Expected a field here! got " + ref);
 			}
 
-			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
-			index.addReference(node.getMemberNameToken(), fieldEntry, this.behaviorEntry);
+			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
+			FieldEntry fieldEntry = entryPool.getField(classEntry, ref.getName(), new TypeDescriptor(erasedSignature));
+			if (fieldEntry == null) {
+				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getName());
+			}
+			index.addReference(node.getMemberNameToken(), fieldEntry, this.methodEntry);
 		}
 
 		return recurse(node, index);
@@ -99,8 +101,8 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	public Void visitSimpleType(SimpleType node, SourceIndex index) {
 		TypeReference ref = node.getUserData(Keys.TYPE_REFERENCE);
 		if (node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY) {
-			ClassEntry classEntry = new ClassEntry(ref.getInternalName());
-			index.addReference(node.getIdentifierToken(), classEntry, this.behaviorEntry);
+			ClassEntry classEntry = entryPool.getClass(ref.getInternalName());
+			index.addReference(node.getIdentifierToken(), classEntry, this.methodEntry);
 		}
 
 		return recurse(node, index);
@@ -110,12 +112,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	public Void visitParameterDeclaration(ParameterDeclaration node, SourceIndex index) {
 		ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
 		if (def.getMethod() instanceof MemberReference && def.getMethod() instanceof MethodReference) {
-			ArgumentEntry argumentEntry = new ArgumentEntry(ProcyonEntryFactory.getBehaviorEntry((MethodReference) def.getMethod()),
-				argumentPosition++, node.getName());
+			MethodEntry methodEntry = entryFactory.getMethodEntry((MethodReference) def.getMethod());
+			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, argumentPosition++, node.getName());
 			Identifier identifier = node.getNameToken();
 			// cache the argument entry and the identifier
-			identifierEntryCache.put(identifier.getName(), argumentEntry);
-			index.addDeclaration(identifier, argumentEntry);
+			identifierEntryCache.put(identifier.getName(), localVariableEntry);
+			index.addDeclaration(identifier, localVariableEntry);
 		}
 
 		return recurse(node, index);
@@ -125,9 +127,12 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	public Void visitIdentifierExpression(IdentifierExpression node, SourceIndex index) {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
-			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new Type(ref.getErasedSignature()));
-			index.addReference(node.getIdentifierToken(), fieldEntry, this.behaviorEntry);
+			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
+			FieldEntry fieldEntry = entryPool.getField(classEntry, ref.getName(), new TypeDescriptor(ref.getErasedSignature()));
+			if (fieldEntry == null) {
+				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getName());
+			}
+			index.addReference(node.getIdentifierToken(), fieldEntry, this.methodEntry);
 		} else
 			this.checkIdentifier(node, index);
 		return recurse(node, index);
@@ -155,11 +160,11 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	public Void visitObjectCreationExpression(ObjectCreationExpression node, SourceIndex index) {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
-			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-			ConstructorEntry constructorEntry = new ConstructorEntry(classEntry, new Signature(ref.getErasedSignature()));
+			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
+			MethodEntry constructorEntry = entryPool.getMethod(classEntry, "<init>", ref.getErasedSignature());
 			if (node.getType() instanceof SimpleType) {
 				SimpleType simpleTypeNode = (SimpleType) node.getType();
-				index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, this.behaviorEntry);
+				index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, this.methodEntry);
 			}
 		}
 
@@ -169,11 +174,8 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitForEachStatement(ForEachStatement node, SourceIndex index) {
 		if (node.getVariableType() instanceof SimpleType) {
-			SimpleType type = (SimpleType) node.getVariableType();
-			TypeReference typeReference = type.getUserData(Keys.TYPE_REFERENCE);
 			Identifier identifier = node.getVariableNameToken();
-			String signature = Descriptor.of(typeReference.getErasedDescription());
-			LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, argumentPosition + localsPosition++, identifier.getName(), new Type(signature));
+			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, argumentPosition + localsPosition++, identifier.getName());
 			identifierEntryCache.put(identifier.getName(), localVariableEntry);
 			addDeclarationToUnmatched(identifier.getName(), index);
 			index.addDeclaration(identifier, localVariableEntry);
@@ -189,11 +191,8 @@ public class SourceIndexBehaviorVisitor extends SourceIndexVisitor {
 		if (variables.size() == 1) {
 			VariableInitializer initializer = variables.firstOrNullObject();
 			if (initializer != null && node.getType() instanceof SimpleType) {
-				SimpleType type = (SimpleType) node.getType();
-				TypeReference typeReference = type.getUserData(Keys.TYPE_REFERENCE);
-				String signature = Descriptor.of(typeReference.getErasedDescription());
 				Identifier identifier = initializer.getNameToken();
-				LocalVariableEntry localVariableEntry = new LocalVariableEntry(behaviorEntry, argumentPosition + localsPosition++, initializer.getName(), new Type(signature));
+				LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, argumentPosition + localsPosition++, initializer.getName());
 				identifierEntryCache.put(identifier.getName(), localVariableEntry);
 				addDeclarationToUnmatched(identifier.getName(), index);
 				index.addDeclaration(identifier, localVariableEntry);

@@ -34,7 +34,6 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	private Map<String, MethodMapping> methodsByDeobf;
 	private boolean isDirty;
 	private Mappings.EntryModifier modifier;
-	private boolean deobfInner;
 
 	public ClassMapping(String obfFullName) {
 		this(obfFullName, null, Mappings.EntryModifier.UNCHANGED);
@@ -79,6 +78,10 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
 	public String getDeobfName() {
 		return deobfName;
+	}
+
+	public String getTranslatedName(TranslationDirection direction) {
+		return direction.choose(deobfName, obfFullName);
 	}
 
 	//// INNER CLASSES ////////
@@ -191,21 +194,21 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		return fieldsByObf.values();
 	}
 
-	public boolean containsObfField(String obfName, Type obfType) {
-		return fieldsByObf.containsKey(getFieldKey(obfName, obfType));
+	public boolean containsObfField(String obfName, TypeDescriptor obfDesc) {
+		return fieldsByObf.containsKey(getFieldKey(obfName, obfDesc));
 	}
 
-	public boolean containsDeobfField(String deobfName, Type deobfType) {
-		return fieldsByDeobf.containsKey(getFieldKey(deobfName, deobfType));
+	public boolean containsDeobfField(String deobfName, TypeDescriptor deobfDesc) {
+		return fieldsByDeobf.containsKey(getFieldKey(deobfName, deobfDesc));
 	}
 
 	public void addFieldMapping(FieldMapping fieldMapping) {
-		String obfKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
+		String obfKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfDesc());
 		if (fieldsByObf.containsKey(obfKey)) {
 			throw new Error("Already have mapping for " + obfFullName + "." + obfKey);
 		}
 		if (fieldMapping.getDeobfName() != null) {
-			String deobfKey = getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfType());
+			String deobfKey = getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfDesc());
 			if (fieldsByDeobf.containsKey(deobfKey)) {
 				throw new Error("Already have mapping for " + deobfName + "." + deobfKey);
 			}
@@ -218,63 +221,67 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	}
 
 	public void removeFieldMapping(FieldMapping fieldMapping) {
-		boolean obfWasRemoved = fieldsByObf.remove(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType())) != null;
+		boolean obfWasRemoved = fieldsByObf.remove(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfDesc())) != null;
 		assert (obfWasRemoved);
 		if (fieldMapping.getDeobfName() != null) {
-			boolean deobfWasRemoved = fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfType())) != null;
+			boolean deobfWasRemoved = fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), fieldMapping.getObfDesc())) != null;
 			assert (deobfWasRemoved);
 		}
 		this.isDirty = true;
 	}
 
-	public FieldMapping getFieldByObf(String obfName, Type obfType) {
-		return fieldsByObf.get(getFieldKey(obfName, obfType));
+	public FieldMapping getFieldByObf(String obfName, TypeDescriptor obfDesc) {
+		return fieldsByObf.get(getFieldKey(obfName, obfDesc));
 	}
 
-	public FieldMapping getFieldByDeobf(String deobfName, Type obfType) {
-		return fieldsByDeobf.get(getFieldKey(deobfName, obfType));
+	public FieldMapping getFieldByObf(FieldEntry field) {
+		return getFieldByObf(field.getName(), field.getDesc());
 	}
 
-	public String getObfFieldName(String deobfName, Type obfType) {
-		FieldMapping fieldMapping = fieldsByDeobf.get(getFieldKey(deobfName, obfType));
+	public FieldMapping getFieldByDeobf(String deobfName, TypeDescriptor obfDesc) {
+		return fieldsByDeobf.get(getFieldKey(deobfName, obfDesc));
+	}
+
+	public String getObfFieldName(String deobfName, TypeDescriptor obfDesc) {
+		FieldMapping fieldMapping = fieldsByDeobf.get(getFieldKey(deobfName, obfDesc));
 		if (fieldMapping != null) {
 			return fieldMapping.getObfName();
 		}
 		return null;
 	}
 
-	public String getDeobfFieldName(String obfName, Type obfType) {
-		FieldMapping fieldMapping = fieldsByObf.get(getFieldKey(obfName, obfType));
+	public String getDeobfFieldName(String obfName, TypeDescriptor obfDesc) {
+		FieldMapping fieldMapping = fieldsByObf.get(getFieldKey(obfName, obfDesc));
 		if (fieldMapping != null) {
 			return fieldMapping.getDeobfName();
 		}
 		return null;
 	}
 
-	private String getFieldKey(String name, Type type) {
+	private String getFieldKey(String name, TypeDescriptor desc) {
 		if (name == null) {
 			throw new IllegalArgumentException("name cannot be null!");
 		}
-		if (type == null) {
-			throw new IllegalArgumentException("type cannot be null!");
+		if (desc == null) {
+			throw new IllegalArgumentException("desc cannot be null!");
 		}
-		return name + ":" + type;
+		return name + ":" + desc;
 	}
 
-	public void setFieldName(String obfName, Type obfType, String deobfName) {
+	public void setFieldName(String obfName, TypeDescriptor obfDesc, String deobfName) {
 		assert (deobfName != null);
-		FieldMapping fieldMapping = fieldsByObf.get(getFieldKey(obfName, obfType));
+		FieldMapping fieldMapping = fieldsByObf.get(getFieldKey(obfName, obfDesc));
 		if (fieldMapping == null) {
-			fieldMapping = new FieldMapping(obfName, obfType, deobfName, Mappings.EntryModifier.UNCHANGED);
-			boolean obfWasAdded = fieldsByObf.put(getFieldKey(obfName, obfType), fieldMapping) == null;
+			fieldMapping = new FieldMapping(obfName, obfDesc, deobfName, Mappings.EntryModifier.UNCHANGED);
+			boolean obfWasAdded = fieldsByObf.put(getFieldKey(obfName, obfDesc), fieldMapping) == null;
 			assert (obfWasAdded);
 		} else {
-			boolean wasRemoved = fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), obfType)) != null;
+			boolean wasRemoved = fieldsByDeobf.remove(getFieldKey(fieldMapping.getDeobfName(), obfDesc)) != null;
 			assert (wasRemoved);
 		}
 		fieldMapping.setDeobfName(deobfName);
 		if (deobfName != null) {
-			boolean wasAdded = fieldsByDeobf.put(getFieldKey(deobfName, obfType), fieldMapping) == null;
+			boolean wasAdded = fieldsByDeobf.put(getFieldKey(deobfName, obfDesc), fieldMapping) == null;
 			assert (wasAdded);
 		}
 		this.isDirty = true;
@@ -282,13 +289,13 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
 	//// METHODS ////////
 
-	public void setFieldObfNameAndType(String oldObfName, Type obfType, String newObfName, Type newObfType) {
+	public void setFieldObfNameAndType(String oldObfName, TypeDescriptor obfDesc, String newObfName, TypeDescriptor newObfDesc) {
 		assert (newObfName != null);
-		FieldMapping fieldMapping = fieldsByObf.remove(getFieldKey(oldObfName, obfType));
+		FieldMapping fieldMapping = fieldsByObf.remove(getFieldKey(oldObfName, obfDesc));
 		assert (fieldMapping != null);
 		fieldMapping.setObfName(newObfName);
-		fieldMapping.setObfType(newObfType);
-		boolean obfWasAdded = fieldsByObf.put(getFieldKey(newObfName, newObfType), fieldMapping) == null;
+		fieldMapping.setObfDesc(newObfDesc);
+		boolean obfWasAdded = fieldsByObf.put(getFieldKey(newObfName, newObfDesc), fieldMapping) == null;
 		assert (obfWasAdded);
 		this.isDirty = true;
 	}
@@ -298,23 +305,23 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		return methodsByObf.values();
 	}
 
-	public boolean containsObfMethod(String obfName, Signature obfSignature) {
-		return methodsByObf.containsKey(getMethodKey(obfName, obfSignature));
+	public boolean containsObfMethod(String obfName, MethodDescriptor obfDescriptor) {
+		return methodsByObf.containsKey(getMethodKey(obfName, obfDescriptor));
 	}
 
-	public boolean containsDeobfMethod(String deobfName, Signature obfSignature) {
-		return methodsByDeobf.containsKey(getMethodKey(deobfName, obfSignature));
+	public boolean containsDeobfMethod(String deobfName, MethodDescriptor obfDescriptor) {
+		return methodsByDeobf.containsKey(getMethodKey(deobfName, obfDescriptor));
 	}
 
 	public void addMethodMapping(MethodMapping methodMapping) {
-		String obfKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());
+		String obfKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfDesc());
 		if (methodsByObf.containsKey(obfKey)) {
 			throw new Error("Already have mapping for " + obfFullName + "." + obfKey);
 		}
 		boolean wasAdded = methodsByObf.put(obfKey, methodMapping) == null;
 		assert (wasAdded);
 		if (methodMapping.getDeobfName() != null) {
-			String deobfKey = getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature());
+			String deobfKey = getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfDesc());
 			if (methodsByDeobf.containsKey(deobfKey)) {
 				throw new Error("Already have mapping for " + deobfName + "." + deobfKey);
 			}
@@ -326,44 +333,48 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	}
 
 	public void removeMethodMapping(MethodMapping methodMapping) {
-		boolean obfWasRemoved = methodsByObf.remove(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature())) != null;
+		boolean obfWasRemoved = methodsByObf.remove(getMethodKey(methodMapping.getObfName(), methodMapping.getObfDesc())) != null;
 		assert (obfWasRemoved);
 		if (methodMapping.getDeobfName() != null) {
-			boolean deobfWasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature())) != null;
+			boolean deobfWasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfDesc())) != null;
 			assert (deobfWasRemoved);
 		}
 		this.isDirty = true;
 	}
 
-	public MethodMapping getMethodByObf(String obfName, Signature obfSignature) {
-		return methodsByObf.get(getMethodKey(obfName, obfSignature));
+	public MethodMapping getMethodByObf(String obfName, MethodDescriptor obfDescriptor) {
+		return methodsByObf.get(getMethodKey(obfName, obfDescriptor));
 	}
 
-	public MethodMapping getMethodByDeobf(String deobfName, Signature obfSignature) {
-		return methodsByDeobf.get(getMethodKey(deobfName, obfSignature));
+	public MethodMapping getMethodByObf(MethodEntry method) {
+		return getMethodByObf(method.getName(), method.getDesc());
 	}
 
-	private String getMethodKey(String name, Signature signature) {
+	public MethodMapping getMethodByDeobf(String deobfName, MethodDescriptor obfDescriptor) {
+		return methodsByDeobf.get(getMethodKey(deobfName, obfDescriptor));
+	}
+
+	private String getMethodKey(String name, MethodDescriptor descriptor) {
 		if (name == null) {
 			throw new IllegalArgumentException("name cannot be null!");
 		}
-		if (signature == null) {
-			throw new IllegalArgumentException("signature cannot be null!");
+		if (descriptor == null) {
+			throw new IllegalArgumentException("descriptor cannot be null!");
 		}
-		return name + signature;
+		return name + descriptor;
 	}
 
-	public void setMethodName(String obfName, Signature obfSignature, String deobfName) {
-		MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfName, obfSignature));
+	public void setMethodName(String obfName, MethodDescriptor obfDescriptor, String deobfName) {
+		MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfName, obfDescriptor));
 		if (methodMapping == null) {
-			methodMapping = createMethodMapping(obfName, obfSignature);
+			methodMapping = createMethodMapping(obfName, obfDescriptor);
 		} else if (methodMapping.getDeobfName() != null) {
-			boolean wasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfSignature())) != null;
+			boolean wasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfDesc())) != null;
 			assert (wasRemoved);
 		}
 		methodMapping.setDeobfName(deobfName);
 		if (deobfName != null) {
-			boolean wasAdded = methodsByDeobf.put(getMethodKey(deobfName, obfSignature), methodMapping) == null;
+			boolean wasAdded = methodsByDeobf.put(getMethodKey(deobfName, obfDescriptor), methodMapping) == null;
 			assert (wasAdded);
 		}
 		this.isDirty = true;
@@ -371,35 +382,35 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
 	//// ARGUMENTS ////////
 
-	public void setMethodObfNameAndSignature(String oldObfName, Signature obfSignature, String newObfName, Signature newObfSignature) {
+	public void setMethodObfNameAndSignature(String oldObfName, MethodDescriptor obfDescriptor, String newObfName, MethodDescriptor newObfDescriptor) {
 		assert (newObfName != null);
-		MethodMapping methodMapping = methodsByObf.remove(getMethodKey(oldObfName, obfSignature));
+		MethodMapping methodMapping = methodsByObf.remove(getMethodKey(oldObfName, obfDescriptor));
 		assert (methodMapping != null);
 		methodMapping.setObfName(newObfName);
-		methodMapping.setObfSignature(newObfSignature);
-		boolean obfWasAdded = methodsByObf.put(getMethodKey(newObfName, newObfSignature), methodMapping) == null;
+		methodMapping.setObfDescriptor(newObfDescriptor);
+		boolean obfWasAdded = methodsByObf.put(getMethodKey(newObfName, newObfDescriptor), methodMapping) == null;
 		assert (obfWasAdded);
 		this.isDirty = true;
 	}
 
-	public void setArgumentName(String obfMethodName, Signature obfMethodSignature, int argumentIndex, String argumentName) {
+	public void setArgumentName(String obfMethodName, MethodDescriptor obfMethodDescriptor, int argumentIndex, String argumentName) {
 		assert (argumentName != null);
-		MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfMethodName, obfMethodSignature));
+		MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfMethodName, obfMethodDescriptor));
 		if (methodMapping == null) {
-			methodMapping = createMethodMapping(obfMethodName, obfMethodSignature);
+			methodMapping = createMethodMapping(obfMethodName, obfMethodDescriptor);
 		}
-		methodMapping.setArgumentName(argumentIndex, argumentName);
+		methodMapping.setLocalVariableName(argumentIndex, argumentName);
 		this.isDirty = true;
 	}
 
-	public void removeArgumentName(String obfMethodName, Signature obfMethodSignature, int argumentIndex) {
-		methodsByObf.get(getMethodKey(obfMethodName, obfMethodSignature)).removeArgumentName(argumentIndex);
+	public void removeArgumentName(String obfMethodName, MethodDescriptor obfMethodDescriptor, int argumentIndex) {
+		methodsByObf.get(getMethodKey(obfMethodName, obfMethodDescriptor)).removeLocalVariableName(argumentIndex);
 		this.isDirty = true;
 	}
 
-	private MethodMapping createMethodMapping(String obfName, Signature obfSignature) {
-		MethodMapping methodMapping = new MethodMapping(obfName, obfSignature);
-		boolean wasAdded = methodsByObf.put(getMethodKey(obfName, obfSignature), methodMapping) == null;
+	private MethodMapping createMethodMapping(String obfName, MethodDescriptor obfDescriptor) {
+		MethodMapping methodMapping = new MethodMapping(obfName, obfDescriptor);
+		boolean wasAdded = methodsByObf.put(getMethodKey(obfName, obfDescriptor), methodMapping) == null;
 		assert (wasAdded);
 		this.isDirty = true;
 		return methodMapping;
@@ -459,24 +470,24 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
 		// rename field types
 		for (FieldMapping fieldMapping : new ArrayList<>(fieldsByObf.values())) {
-			String oldFieldKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType());
+			String oldFieldKey = getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfDesc());
 			if (fieldMapping.renameObfClass(oldObfClassName, newObfClassName)) {
 				boolean wasRemoved = fieldsByObf.remove(oldFieldKey) != null;
 				assert (wasRemoved);
 				boolean wasAdded = fieldsByObf
-					.put(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfType()), fieldMapping) == null;
+					.put(getFieldKey(fieldMapping.getObfName(), fieldMapping.getObfDesc()), fieldMapping) == null;
 				assert (wasAdded);
 			}
 		}
 
 		// rename method signatures
 		for (MethodMapping methodMapping : new ArrayList<>(methodsByObf.values())) {
-			String oldMethodKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature());
+			String oldMethodKey = getMethodKey(methodMapping.getObfName(), methodMapping.getObfDesc());
 			if (methodMapping.renameObfClass(oldObfClassName, newObfClassName)) {
 				boolean wasRemoved = methodsByObf.remove(oldMethodKey) != null;
 				assert (wasRemoved);
 				boolean wasAdded = methodsByObf
-					.put(getMethodKey(methodMapping.getObfName(), methodMapping.getObfSignature()), methodMapping) == null;
+					.put(getMethodKey(methodMapping.getObfName(), methodMapping.getObfDesc()), methodMapping) == null;
 				assert (wasAdded);
 			}
 		}
@@ -490,9 +501,9 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		return false;
 	}
 
-	public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {
-		MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfBehaviorEntry.getName(), obfBehaviorEntry.getSignature()));
-		return methodMapping != null && methodMapping.containsArgument(name);
+	public boolean containsArgument(MethodEntry obfMethodEntry, String name) {
+		MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfMethodEntry.getName(), obfMethodEntry.getDesc()));
+		return methodMapping != null && methodMapping.containsLocalVariable(name);
 	}
 
 	public ClassEntry getObfEntry() {
@@ -521,9 +532,9 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		this.modifier = modifier;
 	}
 
-	public void setFieldModifier(String obfName, Type obfType, Mappings.EntryModifier modifier) {
-		FieldMapping fieldMapping = fieldsByObf.computeIfAbsent(getFieldKey(obfName, obfType),
-			k -> new FieldMapping(obfName, obfType, null, Mappings.EntryModifier.UNCHANGED));
+	public void setFieldModifier(String obfName, TypeDescriptor obfDesc, Mappings.EntryModifier modifier) {
+		FieldMapping fieldMapping = fieldsByObf.computeIfAbsent(getFieldKey(obfName, obfDesc),
+			k -> new FieldMapping(obfName, obfDesc, null, Mappings.EntryModifier.UNCHANGED));
 
 		if (fieldMapping.getModifier() != modifier) {
 			fieldMapping.setModifier(modifier);
@@ -531,7 +542,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		}
 	}
 
-	public void setMethodModifier(String obfName, Signature sig, Mappings.EntryModifier modifier) {
+	public void setMethodModifier(String obfName, MethodDescriptor sig, Mappings.EntryModifier modifier) {
 		MethodMapping methodMapping = methodsByObf.computeIfAbsent(getMethodKey(obfName, sig),
 			k -> new MethodMapping(obfName, sig, null, Mappings.EntryModifier.UNCHANGED));
 

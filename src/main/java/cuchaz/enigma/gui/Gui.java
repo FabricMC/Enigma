@@ -35,7 +35,6 @@ import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
-import javassist.bytecode.Descriptor;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -48,8 +47,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 import java.util.function.Function;
 
 public class Gui {
@@ -438,14 +439,10 @@ public class Gui {
 			showFieldEntry((FieldEntry) this.reference.entry);
 		} else if (this.reference.entry instanceof MethodEntry) {
 			showMethodEntry((MethodEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof ConstructorEntry) {
-			showConstructorEntry((ConstructorEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof ArgumentEntry) {
-			showArgumentEntry((ArgumentEntry) this.reference.entry);
 		} else if (this.reference.entry instanceof LocalVariableEntry) {
 			showLocalVariableEntry((LocalVariableEntry) this.reference.entry);
 		} else {
-			throw new Error("Unknown entry type: " + this.reference.entry.getClass().getName());
+			throw new Error("Unknown entry desc: " + this.reference.entry.getClass().getName());
 		}
 
 		redraw();
@@ -453,10 +450,9 @@ public class Gui {
 
 	private void showLocalVariableEntry(LocalVariableEntry entry) {
 		addNameValue(infoPanel, "Variable", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
-		addNameValue(infoPanel, "Method", entry.getBehaviorEntry().getName());
+		addNameValue(infoPanel, "Class", entry.getOwnerClassEntry().getName());
+		addNameValue(infoPanel, "Method", entry.getOwnerEntry().getName());
 		addNameValue(infoPanel, "Index", Integer.toString(entry.getIndex()));
-		addNameValue(infoPanel, "Type", entry.getType().toString());
 	}
 
 	private void showClassEntry(ClassEntry entry) {
@@ -466,32 +462,20 @@ public class Gui {
 
 	private void showFieldEntry(FieldEntry entry) {
 		addNameValue(infoPanel, "Field", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
-		addNameValue(infoPanel, "Type", entry.getType().toString());
+		addNameValue(infoPanel, "Class", entry.getOwnerClassEntry().getName());
+		addNameValue(infoPanel, "TypeDescriptor", entry.getDesc().toString());
 		addModifierComboBox(infoPanel, "Modifier", entry);
 	}
 
 	private void showMethodEntry(MethodEntry entry) {
-		addNameValue(infoPanel, "Method", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
-		addNameValue(infoPanel, "Signature", entry.getSignature().toString());
-		addModifierComboBox(infoPanel, "Modifier", entry);
-
-	}
-
-	private void showConstructorEntry(ConstructorEntry entry) {
-		addNameValue(infoPanel, "Constructor", entry.getClassEntry().getName());
-		if (!entry.isStatic()) {
-			addNameValue(infoPanel, "Signature", entry.getSignature().toString());
-			addModifierComboBox(infoPanel, "Modifier", entry);
+		if (entry.isConstructor()) {
+			addNameValue(infoPanel, "Constructor", entry.getOwnerClassEntry().getName());
+		} else {
+			addNameValue(infoPanel, "Method", entry.getName());
+			addNameValue(infoPanel, "Class", entry.getOwnerClassEntry().getName());
 		}
-	}
-
-	private void showArgumentEntry(ArgumentEntry entry) {
-		addNameValue(infoPanel, "Argument", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getClassEntry().getName());
-		addNameValue(infoPanel, "Method", entry.getBehaviorEntry().getName());
-		addNameValue(infoPanel, "Index", Integer.toString(entry.getIndex()));
+		addNameValue(infoPanel, "MethodDescriptor", entry.getDesc().toString());
+		addModifierComboBox(infoPanel, "Modifier", entry);
 	}
 
 	private void addNameValue(JPanel container, String name, String value) {
@@ -532,8 +516,8 @@ public class Gui {
 		reference = this.controller.getDeobfReference(token);
 		boolean isClassEntry = isToken && reference.entry instanceof ClassEntry;
 		boolean isFieldEntry = isToken && reference.entry instanceof FieldEntry;
-		boolean isMethodEntry = isToken && reference.entry instanceof MethodEntry;
-		boolean isConstructorEntry = isToken && reference.entry instanceof ConstructorEntry;
+		boolean isMethodEntry = isToken && reference.entry instanceof MethodEntry && !((MethodEntry) reference.entry).isConstructor();
+		boolean isConstructorEntry = isToken && reference.entry instanceof MethodEntry && ((MethodEntry) reference.entry).isConstructor();
 		boolean isInJar = isToken && this.controller.entryIsInJar(reference.entry);
 		boolean isRenameable = isToken && this.controller.referenceIsRenameable(reference);
 
@@ -710,16 +694,13 @@ public class Gui {
 		if (reference.entry instanceof ClassEntry) {
 			// look for calls to the default constructor
 			// TODO: get a list of all the constructors and find calls to all of them
-			BehaviorReferenceTreeNode node = this.controller.getMethodReferences(new ConstructorEntry((ClassEntry) reference.entry, new Signature("()V")));
+			MethodReferenceTreeNode node = this.controller.getMethodReferences(new MethodEntry((ClassEntry) reference.entry, "<init>", new MethodDescriptor("()V")));
 			callsTree.setModel(new DefaultTreeModel(node));
 		} else if (reference.entry instanceof FieldEntry) {
 			FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) reference.entry);
 			callsTree.setModel(new DefaultTreeModel(node));
 		} else if (reference.entry instanceof MethodEntry) {
-			BehaviorReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) reference.entry);
-			callsTree.setModel(new DefaultTreeModel(node));
-		} else if (reference.entry instanceof ConstructorEntry) {
-			BehaviorReferenceTreeNode node = this.controller.getMethodReferences((ConstructorEntry) reference.entry);
+			MethodReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) reference.entry);
 			callsTree.setModel(new DefaultTreeModel(node));
 		}
 
@@ -790,7 +771,6 @@ public class Gui {
 		// package rename
 		if (data instanceof String) {
 			for (int i = 0; i < node.getChildCount(); i++) {
-				data = Descriptor.toJvmName((String) data);
 				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
@@ -807,15 +787,15 @@ public class Gui {
 	}
 
 	public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName) {
-		String oldEntry = deobfReference.entry.getClassEntry().getPackageName();
-		String newEntry = new ClassEntry(Descriptor.toJvmName(newName)).getPackageName();
+		String oldEntry = deobfReference.entry.getOwnerClassEntry().getPackageName();
+		String newEntry = new ClassEntry(newName).getPackageName();
 		moveClassTree(deobfReference, newName, oldEntry == null,
 			newEntry == null);
 	}
 
 	public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb) {
-		ClassEntry oldEntry = deobfReference.entry.getClassEntry();
-		ClassEntry newEntry = new ClassEntry(Descriptor.toJvmName(newName));
+		ClassEntry oldEntry = deobfReference.entry.getOwnerClassEntry();
+		ClassEntry newEntry = new ClassEntry(newName);
 
 		// Ob -> deob
 		if (isOldOb && !isNewOb) {

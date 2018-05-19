@@ -11,18 +11,18 @@
 
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.util.List;
 
 public class ClassEntry implements Entry {
 
-	private String name;
+	private final String name;
 
 	public ClassEntry(String className) {
-		if (className == null) {
-			throw new IllegalArgumentException("Class name cannot be null!");
-		}
+		Preconditions.checkNotNull(className, "Class name cannot be null");
+
 		if (className.indexOf('.') >= 0) {
 			throw new IllegalArgumentException("Class name must be in JVM format. ie, path/to/package/class$inner : " + className);
 		}
@@ -49,12 +49,12 @@ public class ClassEntry implements Entry {
 	}
 
 	@Override
-	public ClassEntry getClassEntry() {
+	public ClassEntry getOwnerClassEntry() {
 		return this;
 	}
 
 	@Override
-	public ClassEntry cloneToNewClass(ClassEntry classEntry) {
+	public ClassEntry updateOwnership(ClassEntry classEntry) {
 		return classEntry;
 	}
 
@@ -132,11 +132,7 @@ public class ClassEntry implements Entry {
 	}
 
 	public String getPackageName() {
-		int pos = this.name.lastIndexOf('/');
-		if (pos > 0) {
-			return this.name.substring(0, pos);
-		}
-		return null;
+		return getPackageName(this.name);
 	}
 
 	public String getSimpleName() {
@@ -145,6 +141,14 @@ public class ClassEntry implements Entry {
 			return this.name.substring(pos + 1);
 		}
 		return this.name;
+	}
+
+	public static String getPackageName(String name) {
+		int pos = name.lastIndexOf('/');
+		if (pos > 0) {
+			return name.substring(0, pos);
+		}
+		return null;
 	}
 
 	public ClassEntry buildClassEntry(List<ClassEntry> classChain) {

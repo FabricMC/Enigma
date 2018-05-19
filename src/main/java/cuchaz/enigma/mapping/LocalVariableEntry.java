@@ -1,52 +1,31 @@
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Preconditions;
 import cuchaz.enigma.utils.Utils;
 
 /**
- * Desc...
+ * TypeDescriptor...
  * Created by Thog
  * 19/10/2016
  */
 public class LocalVariableEntry implements Entry {
 
-	protected final BehaviorEntry behaviorEntry;
+	protected final MethodEntry ownerEntry;
 	protected final String name;
-	protected final Type type;
 	protected final int index;
 
-	public LocalVariableEntry(BehaviorEntry behaviorEntry, int index, String name, Type type) {
-		if (behaviorEntry == null) {
-			throw new IllegalArgumentException("Behavior cannot be null!");
-		}
-		if (index < 0) {
-			throw new IllegalArgumentException("Index must be non-negative!");
-		}
-		if (name == null) {
-			throw new IllegalArgumentException("Variable name cannot be null!");
-		}
-		if (type == null) {
-			throw new IllegalArgumentException("Variable type cannot be null!");
-		}
+	public LocalVariableEntry(MethodEntry ownerEntry, int index, String name) {
+		Preconditions.checkNotNull(ownerEntry, "Variable owner cannot be null");
+		Preconditions.checkNotNull(name, "Variable name cannot be null");
+		Preconditions.checkArgument(index >= 0, "Index must be positive");
 
-		this.behaviorEntry = behaviorEntry;
+		this.ownerEntry = ownerEntry;
 		this.name = name;
-		this.type = type;
 		this.index = index;
 	}
 
-	public LocalVariableEntry(LocalVariableEntry other, ClassEntry newClassEntry) {
-		this.behaviorEntry = (BehaviorEntry) other.behaviorEntry.cloneToNewClass(newClassEntry);
-		this.name = other.name;
-		this.type = other.type;
-		this.index = other.index;
-	}
-
-	public BehaviorEntry getBehaviorEntry() {
-		return this.behaviorEntry;
-	}
-
-	public Type getType() {
-		return type;
+	public MethodEntry getOwnerEntry() {
+		return this.ownerEntry;
 	}
 
 	public int getIndex() {
@@ -59,31 +38,31 @@ public class LocalVariableEntry implements Entry {
 	}
 
 	@Override
-	public ClassEntry getClassEntry() {
-		return this.behaviorEntry.getClassEntry();
+	public ClassEntry getOwnerClassEntry() {
+		return this.ownerEntry.getOwnerClassEntry();
 	}
 
 	@Override
 	public String getClassName() {
-		return this.behaviorEntry.getClassName();
+		return this.ownerEntry.getClassName();
 	}
 
 	@Override
-	public LocalVariableEntry cloneToNewClass(ClassEntry classEntry) {
-		return new LocalVariableEntry(this, classEntry);
+	public LocalVariableEntry updateOwnership(ClassEntry classEntry) {
+		return new LocalVariableEntry(ownerEntry.updateOwnership(classEntry), index, name);
 	}
 
 	public String getMethodName() {
-		return this.behaviorEntry.getName();
+		return this.ownerEntry.getName();
 	}
 
-	public Signature getMethodSignature() {
-		return this.behaviorEntry.getSignature();
+	public MethodDescriptor getMethodDesc() {
+		return this.ownerEntry.getDesc();
 	}
 
 	@Override
 	public int hashCode() {
-		return Utils.combineHashesOrdered(this.behaviorEntry, this.type.hashCode(), this.name.hashCode(), Integer.hashCode(this.index));
+		return Utils.combineHashesOrdered(this.ownerEntry, this.name.hashCode(), Integer.hashCode(this.index));
 	}
 
 	@Override
@@ -92,11 +71,11 @@ public class LocalVariableEntry implements Entry {
 	}
 
 	public boolean equals(LocalVariableEntry other) {
-		return this.behaviorEntry.equals(other.behaviorEntry) && this.type.equals(other.type) && this.name.equals(other.name) && this.index == other.index;
+		return this.ownerEntry.equals(other.ownerEntry) && this.name.equals(other.name) && this.index == other.index;
 	}
 
 	@Override
 	public String toString() {
-		return this.behaviorEntry + "(" + this.index + ":" + this.name + ":" + this.type + ")";
+		return this.ownerEntry + "(" + this.index + ":" + this.name + ")";
 	}
 }

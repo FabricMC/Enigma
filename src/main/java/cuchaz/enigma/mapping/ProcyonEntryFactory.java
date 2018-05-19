@@ -12,12 +12,18 @@
 package cuchaz.enigma.mapping;
 
 import com.strobel.assembler.metadata.*;
+import cuchaz.enigma.bytecode.AccessFlags;
 
 import java.util.List;
 
 public class ProcyonEntryFactory {
+	private final ReferencedEntryPool entryPool;
 
-	private static String getErasedSignature(MemberReference def) {
+	public ProcyonEntryFactory(ReferencedEntryPool entryPool) {
+		this.entryPool = entryPool;
+	}
+
+	private String getErasedSignature(MemberReference def) {
 		if (!(def instanceof MethodReference))
 			return def.getErasedSignature();
 		MethodReference methodReference = (MethodReference) def;
@@ -41,27 +47,23 @@ public class ProcyonEntryFactory {
 		return builder.toString();
 	}
 
-	public static FieldEntry getFieldEntry(MemberReference def) {
-		return new FieldEntry(new ClassEntry(def.getDeclaringType().getInternalName()), def.getName(), new Type(def.getErasedSignature()));
+	public FieldEntry getFieldEntry(MemberReference def) {
+		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
+		return entryPool.getField(classEntry, def.getName(), def.getErasedSignature());
 	}
 
-	public static MethodEntry getMethodEntry(MemberReference def) {
-		return new MethodEntry(new ClassEntry(def.getDeclaringType().getInternalName()), def.getName(), new Signature(getErasedSignature(def)));
+	public FieldDefEntry getFieldDefEntry(FieldDefinition def) {
+		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
+		return new FieldDefEntry(classEntry, def.getName(), new TypeDescriptor(def.getErasedSignature()), new AccessFlags(def.getModifiers()));
 	}
 
-	public static ConstructorEntry getConstructorEntry(MethodReference def) {
-		if (def.isTypeInitializer()) {
-			return new ConstructorEntry(new ClassEntry(def.getDeclaringType().getInternalName()));
-		} else {
-			return new ConstructorEntry(new ClassEntry(def.getDeclaringType().getInternalName()), new Signature(def.getErasedSignature()));
-		}
+	public MethodEntry getMethodEntry(MemberReference def) {
+		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
+		return entryPool.getMethod(classEntry, def.getName(), getErasedSignature(def));
 	}
 
-	public static BehaviorEntry getBehaviorEntry(MethodReference def) {
-		if (def.isConstructor() || def.isTypeInitializer()) {
-			return getConstructorEntry(def);
-		} else {
-			return getMethodEntry(def);
-		}
+	public MethodDefEntry getMethodDefEntry(MethodDefinition def) {
+		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
+		return new MethodDefEntry(classEntry, def.getName(), new MethodDescriptor(def.getErasedSignature()), new AccessFlags(def.getModifiers()));
 	}
 }

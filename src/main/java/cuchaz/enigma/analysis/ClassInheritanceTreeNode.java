@@ -20,12 +20,12 @@ import java.util.List;
 
 public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 
-	private Translator deobfuscatingTranslator;
-	private String obfClassName;
+	private final Translator deobfuscatingTranslator;
+	private final ClassEntry obfClassEntry;
 
 	public ClassInheritanceTreeNode(Translator deobfuscatingTranslator, String obfClassName) {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
-		this.obfClassName = obfClassName;
+		this.obfClassEntry = new ClassEntry(obfClassName);
 	}
 
 	public static ClassInheritanceTreeNode findNode(ClassInheritanceTreeNode node, ClassEntry entry) {
@@ -45,11 +45,11 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public String getObfClassName() {
-		return this.obfClassName;
+		return this.obfClassEntry.getClassName();
 	}
 
 	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.translateClass(this.obfClassName);
+		return this.deobfuscatingTranslator.getTranslatedClass(this.obfClassEntry).getClassName();
 	}
 
 	@Override
@@ -58,13 +58,13 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 		if (deobfClassName != null) {
 			return deobfClassName;
 		}
-		return this.obfClassName;
+		return this.obfClassEntry.getName();
 	}
 
 	public void load(TranslationIndex ancestries, boolean recurse) {
 		// get all the child nodes
 		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
-		for (ClassEntry subclassEntry : ancestries.getSubclass(new ClassEntry(this.obfClassName))) {
+		for (ClassEntry subclassEntry : ancestries.getSubclass(this.obfClassEntry)) {
 			nodes.add(new ClassInheritanceTreeNode(this.deobfuscatingTranslator, subclassEntry.getName()));
 		}
 

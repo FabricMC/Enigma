@@ -54,11 +54,11 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
+		return this.deobfuscatingTranslator.getTranslatedClass(this.entry.getOwnerClassEntry()).getClassName();
 	}
 
 	public String getDeobfMethodName() {
-		return this.deobfuscatingTranslator.translate(this.entry);
+		return this.deobfuscatingTranslator.getTranslatedMethod(this.entry).getName();
 	}
 
 	@Override
@@ -80,9 +80,8 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 		// get all method implementations
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
 		for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {
-			MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getSignature()
-			);
-			if (index.containsObfBehavior(methodEntry)) {
+			MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getDesc());
+			if (index.containsObfMethod(methodEntry)) {
 				nodes.add(new MethodImplementationsTreeNode(this.deobfuscatingTranslator, methodEntry));
 			}
 		}

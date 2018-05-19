@@ -127,29 +127,29 @@ public class MappingsEnigmaWriter {
 
 	private void write(PrintWriter out, FieldMapping fieldMapping, int depth) {
 		if (fieldMapping.getDeobfName() == null)
-			out.format("%sFIELD %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getObfType().toString(),
+			out.format("%sFIELD %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getObfDesc().toString(),
 				fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
 		else
-			out.format("%sFIELD %s %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName(), fieldMapping.getObfType().toString(),
+			out.format("%sFIELD %s %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName(), fieldMapping.getObfDesc().toString(),
 				fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
 	}
 
 	private void write(PrintWriter out, MethodMapping methodMapping, int depth) throws IOException {
 		if (methodMapping.getDeobfName() == null) {
-			out.format("%sMETHOD %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getObfSignature(),
+			out.format("%sMETHOD %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getObfDesc(),
 				methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
 		} else {
-			out.format("%sMETHOD %s %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getDeobfName(), methodMapping.getObfSignature(),
+			out.format("%sMETHOD %s %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getDeobfName(), methodMapping.getObfDesc(),
 				methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
 		}
 
-		for (ArgumentMapping argumentMapping : sorted(methodMapping.arguments())) {
-			write(out, argumentMapping, depth + 1);
+		for (LocalVariableMapping localVariableMapping : sorted(methodMapping.arguments())) {
+			write(out, localVariableMapping, depth + 1);
 		}
 	}
 
-	private void write(PrintWriter out, ArgumentMapping argumentMapping, int depth) {
-		out.format("%sARG %d %s\n", getIndent(depth), argumentMapping.getIndex(), argumentMapping.getName());
+	private void write(PrintWriter out, LocalVariableMapping localVariableMapping, int depth) {
+		out.format("%sARG %d %s\n", getIndent(depth), localVariableMapping.getIndex(), localVariableMapping.getName());
 	}
 
 	private <T extends Comparable<T>> List<T> sorted(Iterable<T> classes) {

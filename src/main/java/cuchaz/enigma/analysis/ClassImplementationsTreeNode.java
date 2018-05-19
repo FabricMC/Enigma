@@ -21,8 +21,8 @@ import java.util.List;
 
 public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
-	private Translator deobfuscatingTranslator;
-	private ClassEntry entry;
+	private final Translator deobfuscatingTranslator;
+	private final ClassEntry entry;
 
 	public ClassImplementationsTreeNode(Translator deobfuscatingTranslator, ClassEntry entry) {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
@@ -31,7 +31,7 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
 	public static ClassImplementationsTreeNode findNode(ClassImplementationsTreeNode node, MethodEntry entry) {
 		// is this the node?
-		if (node.entry.equals(entry.getClassEntry())) {
+		if (node.entry.equals(entry.getOwnerClassEntry())) {
 			return node;
 		}
 
@@ -50,7 +50,7 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.translateClass(this.entry.getClassName());
+		return this.deobfuscatingTranslator.getTranslatedClass(entry).getClassName();
 	}
 
 	@Override

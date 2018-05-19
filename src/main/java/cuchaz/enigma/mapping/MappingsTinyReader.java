@@ -20,11 +20,11 @@ public class MappingsTinyReader {
 	}
 
 	public FieldMapping readField(String[] parts) {
-		return new FieldMapping(parts[3], new Type(parts[2]), parts[4], Mappings.EntryModifier.UNCHANGED);
+		return new FieldMapping(parts[3], new TypeDescriptor(parts[2]), parts[4], Mappings.EntryModifier.UNCHANGED);
 	}
 
 	public MethodMapping readMethod(String[] parts) {
-		return new MethodMapping(parts[3], new Signature(parts[2]), parts[4]);
+		return new MethodMapping(parts[3], new MethodDescriptor(parts[2]), parts[4]);
 	}
 
 	public Mappings read(File file) throws IOException, MappingParseException {

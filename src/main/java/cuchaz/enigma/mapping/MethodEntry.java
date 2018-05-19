@@ -11,41 +11,27 @@
 
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Preconditions;
 import cuchaz.enigma.utils.Utils;
 
-public class MethodEntry implements BehaviorEntry {
+public class MethodEntry implements Entry {
 
-	private ClassEntry classEntry;
-	private String name;
-	private Signature signature;
+	protected final ClassEntry classEntry;
+	protected final String name;
+	protected final MethodDescriptor descriptor;
 
-	public MethodEntry(ClassEntry classEntry, String name, Signature signature) {
-		if (classEntry == null) {
-			throw new IllegalArgumentException("Class cannot be null!");
-		}
-		if (name == null) {
-			throw new IllegalArgumentException("Method name cannot be null!");
-		}
-		if (signature == null) {
-			throw new IllegalArgumentException("Method signature cannot be null!");
-		}
-		if (name.startsWith("<")) {
-			throw new IllegalArgumentException("Don't use MethodEntry for a constructor!");
-		}
+	public MethodEntry(ClassEntry classEntry, String name, MethodDescriptor descriptor) {
+		Preconditions.checkNotNull(classEntry, "Class cannot be null");
+		Preconditions.checkNotNull(name, "Method name cannot be null");
+		Preconditions.checkNotNull(descriptor, "Method descriptor cannot be null");
 
 		this.classEntry = classEntry;
 		this.name = name;
-		this.signature = signature;
-	}
-
-	public MethodEntry(MethodEntry other, String newClassName) {
-		this.classEntry = new ClassEntry(newClassName);
-		this.name = other.name;
-		this.signature = other.signature;
+		this.descriptor = descriptor;
 	}
 
 	@Override
-	public ClassEntry getClassEntry() {
+	public ClassEntry getOwnerClassEntry() {
 		return this.classEntry;
 	}
 
@@ -54,9 +40,12 @@ public class MethodEntry implements BehaviorEntry {
 		return this.name;
 	}
 
-	@Override
-	public Signature getSignature() {
-		return this.signature;
+	public MethodDescriptor getDesc() {
+		return this.descriptor;
+	}
+
+	public boolean isConstructor() {
+		return name.equals("<init>") || name.equals("<clinit>");
 	}
 
 	@Override
@@ -65,13 +54,13 @@ public class MethodEntry implements BehaviorEntry {
 	}
 
 	@Override
-	public MethodEntry cloneToNewClass(ClassEntry classEntry) {
-		return new MethodEntry(this, classEntry.getName());
+	public MethodEntry updateOwnership(ClassEntry classEntry) {
+		return new MethodEntry(new ClassEntry(classEntry.getName()), name, descriptor);
 	}
 
 	@Override
 	public int hashCode() {
-		return Utils.combineHashesOrdered(this.classEntry, this.name, this.signature);
+		return Utils.combineHashesOrdered(this.classEntry, this.name, this.descriptor);
 	}
 
 	@Override
@@ -80,11 +69,11 @@ public class MethodEntry implements BehaviorEntry {
 	}
 
 	public boolean equals(MethodEntry other) {
-		return this.classEntry.equals(other.classEntry) && this.name.equals(other.name) && this.signature.equals(other.signature);
+		return this.classEntry.equals(other.getOwnerClassEntry()) && this.name.equals(other.getName()) && this.descriptor.equals(other.getDesc());
 	}
 
 	@Override
 	public String toString() {
-		return this.classEntry.getName() + "." + this.name + this.signature;
+		return this.classEntry.getName() + "." + this.name + this.descriptor;
 	}
 }

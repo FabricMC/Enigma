@@ -11,18 +11,18 @@
 
 package cuchaz.enigma.mapping;
 
-public class ArgumentMapping implements Comparable<ArgumentMapping> {
+public class LocalVariableMapping implements Comparable<LocalVariableMapping> {
 
 	private int index;
 	private String name;
 
 	// NOTE: this argument order is important for the MethodReader/MethodWriter
-	public ArgumentMapping(int index, String name) {
+	public LocalVariableMapping(int index, String name) {
 		this.index = index;
 		this.name = NameValidator.validateArgumentName(name);
 	}
 
-	public ArgumentMapping(ArgumentMapping other) {
+	public LocalVariableMapping(LocalVariableMapping other) {
 		this.index = other.index;
 		this.name = other.name;
 	}
@@ -39,12 +39,12 @@ public class ArgumentMapping implements Comparable<ArgumentMapping> {
 		this.name = NameValidator.validateArgumentName(val);
 	}
 
-	public ArgumentEntry getObfEntry(BehaviorEntry behaviorEntry) {
-		return new ArgumentEntry(behaviorEntry, index, name);
+	public LocalVariableEntry getObfEntry(MethodEntry methodEntry) {
+		return new LocalVariableEntry(methodEntry, index, name);
 	}
 
 	@Override
-	public int compareTo(ArgumentMapping other) {
+	public int compareTo(LocalVariableMapping other) {
 		return Integer.compare(this.index, other.index);
 	}
 }
