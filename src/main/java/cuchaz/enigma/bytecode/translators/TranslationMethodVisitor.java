@@ -77,34 +77,47 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 	@Override
 	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-		LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, new TypeDescriptor(desc));
-		LocalVariableDefEntry translatedEntry = translator.getTranslatedVariableDef(entry);
-		String translatedName = translatedEntry.getName();
-		// TODO: Better name inference
-		if (translatedName.equals(entry.getName())) {
-			TypeDescriptor argDesc = translatedEntry.getDesc();
-			int nameIndex = translatedEntry.getNamedIndex() + 1;
-			String prefix = translatedEntry.getNamedIndex() < methodEntry.getDesc().getArgumentDescs().size() ? "a" : "v";
-			StringBuilder nameBuilder = new StringBuilder(prefix);
-			// Unfortunately each of these have different name getters, so they have different code paths
-			if (argDesc.isPrimitive()) {
-				TypeDescriptor.Primitive argCls = argDesc.getPrimitive();
-				nameBuilder.append(argCls.name());
-			} else if (argDesc.isArray()) {
-				// List types would require this whole block again, so just go with aListx
-				nameBuilder.append(nameIndex);
-			} else if (argDesc.isType()) {
-				String typeName = argDesc.getTypeEntry().getSimpleName().replace("$", "");
-				typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);
-				nameBuilder.append(typeName);
-			}
-			if (methodEntry.getDesc().getArgumentDescs().size() > 1) {
-				nameBuilder.append(nameIndex);
-			}
-			translatedName = nameBuilder.toString();
-		}
 		String translatedSignature = translator.getTranslatedSignature(Signature.createTypedSignature(signature)).toString();
-		super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
+
+		// If we're not static, "this" is bound to index 0
+		int offsetIndex = index - (methodEntry.getAccess().isStatic() ? 0 : 1);
+		if (offsetIndex >= 0) {
+			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, offsetIndex, name, new TypeDescriptor(desc));
+			LocalVariableDefEntry translatedEntry = translator.getTranslatedVariableDef(entry);
+			String translatedName = translatedEntry.getName();
+
+			// TODO: Better name inference
+			if (translatedName.equals(entry.getName())) {
+				TypeDescriptor argDesc = translatedEntry.getDesc();
+				int nameIndex = offsetIndex + 1;
+				String prefix = offsetIndex < methodEntry.getDesc().getArgumentDescs().size() ? "a" : "v";
+				StringBuilder nameBuilder = new StringBuilder(prefix);
+				// Unfortunately each of these have different name getters, so they have different code paths
+				if (argDesc.isPrimitive()) {
+					TypeDescriptor.Primitive argCls = argDesc.getPrimitive();
+					nameBuilder.append(argCls.name());
+				} else if (argDesc.isArray()) {
+					// List types would require this whole block again, so just go with aListx
+					nameBuilder.append(nameIndex);
+				} else if (argDesc.isType()) {
+					String typeName = argDesc.getTypeEntry().getSimpleName().replace("$", "");
+					typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);
+					nameBuilder.append(typeName);
+				}
+				if (methodEntry.getDesc().getArgumentDescs().size() > 1) {
+					nameBuilder.append(nameIndex);
+				}
+				translatedName = nameBuilder.toString();
+			} else {
+				System.out.println();
+			}
+
+			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
+		} else {
+			// Handle "this" variable
+			TypeDescriptor translatedDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+			super.visitLocalVariable(name, translatedDesc.toString(), translatedSignature, start, end, index);
+		}
 	}
 
 	@Override

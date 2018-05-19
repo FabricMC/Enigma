@@ -22,19 +22,6 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 		this.desc = desc;
 	}
 
-	public LocalVariableDefEntry(MethodDefEntry ownerEntry, int index, String name) {
-		super(ownerEntry, index, name);
-
-		this.ownerEntry = ownerEntry;
-
-		int namedIndex = getNamedIndex();
-		if (namedIndex < 0) {
-			this.desc = TypeDescriptor.of(ownerEntry.getOwnerClassEntry().getName());
-		} else {
-			this.desc = ownerEntry.getDesc().getArgumentDescs().get(namedIndex);
-		}
-	}
-
 	@Override
 	public MethodDefEntry getOwnerEntry() {
 		return this.ownerEntry;
@@ -42,12 +29,6 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 
 	public TypeDescriptor getDesc() {
 		return desc;
-	}
-
-	public int getNamedIndex() {
-		// If we're not static, "this" is bound to index 0
-		int indexOffset = ownerEntry.getAccess().isStatic() ? 0 : 1;
-		return index - indexOffset;
 	}
 
 	@Override
