@@ -194,13 +194,10 @@ public class DirectionalTranslator implements Translator {
 		if (translatedArgumentName == null) {
 			translatedArgumentName = inheritLocalVariableName(entry);
 		}
-		if (translatedArgumentName == null) {
-			return entry;
-		}
 		// TODO: Translating arguments calls method translation.. Can we refactor the code in such a way that we don't need this?
 		MethodDefEntry translatedOwner = getTranslatedMethodDef(entry.getOwnerEntry());
 		TypeDescriptor translatedTypeDesc = getTranslatedTypeDesc(entry.getDesc());
-		return new LocalVariableDefEntry(translatedOwner, entry.getIndex(), translatedArgumentName, translatedTypeDesc);
+		return new LocalVariableDefEntry(translatedOwner, entry.getIndex(), translatedArgumentName != null ? translatedArgumentName : entry.getName(), translatedTypeDesc);
 	}
 
 	// TODO: support not identical behavior (specific to constructor)

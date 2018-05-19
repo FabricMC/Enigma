@@ -13,7 +13,9 @@ package cuchaz.enigma.bytecode.translators;
 
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.mapping.entry.*;
 import org.objectweb.asm.*;
 
@@ -101,18 +103,13 @@ public class TranslationClassVisitor extends ClassVisitor {
 
 	@Override
 	public void visitInnerClass(String name, String outerName, String innerName, int access) {
-		// If this is not an anonymous class
-		if (innerName != null && outerName != null) {
-			ClassDefEntry translatedEntry = translator.getTranslatedClassDef(new ClassDefEntry(innerName, new AccessFlags(access)));
-			ClassEntry outerEntry = translator.getTranslatedClass(entryPool.getClass(outerName));
-			ClassEntry innerEntry = translator.getTranslatedClass(entryPool.getClass(innerName));
-			super.visitInnerClass(translatedEntry.getName(), outerEntry.getName(), innerEntry.getName(), translatedEntry.getAccess().getFlags());
-		} else {
-			int separatorIndex = name.lastIndexOf("$");
-			String parentName = name.substring(0, separatorIndex);
-			String childName = name.substring(separatorIndex + 1);
-			ClassEntry outerEntry = translator.getTranslatedClass(entryPool.getClass(parentName));
-			super.visitInnerClass(outerEntry.getName() + "$" + childName, outerName, innerName, access);
-		}
+		ClassDefEntry translatedEntry = translator.getTranslatedClassDef(new ClassDefEntry(name, new AccessFlags(access)));
+		String translatedName = translatedEntry.getName();
+		int separatorIndex = translatedName.lastIndexOf("$");
+		String parentName = translatedName.substring(0, separatorIndex);
+		String childName = translatedName.substring(separatorIndex + 1);
+
+		ClassEntry outerEntry = translator.getTranslatedClass(entryPool.getClass(parentName));
+		super.visitInnerClass(translatedName, outerEntry.getName(), childName, translatedEntry.getAccess().getFlags());
 	}
 }
