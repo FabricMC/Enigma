@@ -1,6 +1,7 @@
 package cuchaz.enigma.bytecode.translators;
 
 import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.Translator;
 import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.mapping.entry.*;
@@ -102,7 +103,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			}
 			translatedName = nameBuilder.toString();
 		}
-		String translatedSignature = translator.getTranslatedSignature(signature, true, api);
+		String translatedSignature = translator.getTranslatedSignature(Signature.createTypedSignature(signature)).toString();
 		super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
 	}
 

@@ -15,20 +15,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.bytecode.translators.TranslationSignatureVisitor;
 import cuchaz.enigma.mapping.entry.*;
-import org.objectweb.asm.signature.SignatureReader;
-import org.objectweb.asm.signature.SignatureVisitor;
-import org.objectweb.asm.signature.SignatureWriter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class DirectionalTranslator implements Translator {
-	private static final Pattern OBJECT_PATTERN = Pattern.compile(".*:Ljava/lang/Object;:.*");
-
 	private final TranslationDirection direction;
 	private final Map<String, ClassMapping> classes;
 	private final TranslationIndex index;
@@ -62,7 +55,7 @@ public class DirectionalTranslator implements Translator {
 	@Override
 	public ClassDefEntry getTranslatedClassDef(ClassDefEntry entry) {
 		String className = entry.isInnerClass() ? translateInnerClassName(entry) : translateClassName(entry);
-		return new ClassDefEntry(className, getClassModifier(entry).transform(entry.getAccess()));
+		return new ClassDefEntry(className, entry.getSignature(), getClassModifier(entry).transform(entry.getAccess()));
 	}
 
 	private String translateClassName(ClassEntry entry) {
@@ -108,8 +101,9 @@ public class DirectionalTranslator implements Translator {
 		}
 		ClassEntry translatedOwner = getTranslatedClass(entry.getOwnerClassEntry());
 		TypeDescriptor translatedDesc = getTranslatedTypeDesc(entry.getDesc());
+		Signature translatedSignature = getTranslatedSignature(entry.getSignature());
 		AccessFlags translatedAccess = getFieldModifier(entry).transform(entry.getAccess());
-		return new FieldDefEntry(translatedOwner, translatedName, translatedDesc, translatedAccess);
+		return new FieldDefEntry(translatedOwner, translatedName, translatedDesc, translatedSignature, translatedAccess);
 	}
 
 	@Override
@@ -148,8 +142,9 @@ public class DirectionalTranslator implements Translator {
 		}
 		ClassEntry translatedOwner = getTranslatedClass(entry.getOwnerClassEntry());
 		MethodDescriptor translatedDesc = getTranslatedMethodDesc(entry.getDesc());
+		Signature translatedSignature = getTranslatedSignature(entry.getSignature());
 		AccessFlags access = getMethodModifier(entry).transform(entry.getAccess());
-		return new MethodDefEntry(translatedOwner, translatedName, translatedDesc, access);
+		return new MethodDefEntry(translatedOwner, translatedName, translatedDesc, translatedSignature, access);
 	}
 
 	@Override
@@ -265,7 +260,7 @@ public class DirectionalTranslator implements Translator {
 
 	@Override
 	public TypeDescriptor getTranslatedTypeDesc(TypeDescriptor desc) {
-		return desc.remap(name -> getTranslatedClass(new ClassEntry(name)).getName());
+		return desc.remap(this::remapClass);
 	}
 
 	@Override
@@ -279,23 +274,11 @@ public class DirectionalTranslator implements Translator {
 	}
 
 	@Override
-	public String getTranslatedSignature(String signature, boolean isType, int api) {
+	public Signature getTranslatedSignature(Signature signature) {
 		if (signature == null) {
 			return null;
 		}
-		SignatureReader reader = new SignatureReader(signature);
-		SignatureWriter writer = new SignatureWriter();
-		SignatureVisitor visitor = new TranslationSignatureVisitor(this, api, writer);
-		if (isType) {
-			reader.acceptType(visitor);
-		} else {
-			reader.accept(visitor);
-		}
-		String translatedSignature = writer.toString();
-		if (OBJECT_PATTERN.matcher(signature).matches()) {
-			translatedSignature = signature.replaceAll(":Ljava/lang/Object;:", "::");
-		}
-		return translatedSignature;
+		return signature.remap(this::remapClass);
 	}
 
 	private ClassMapping findClassMapping(ClassEntry entry) {
@@ -359,5 +342,14 @@ public class DirectionalTranslator implements Translator {
 			}
 		}
 		return Mappings.EntryModifier.UNCHANGED;
+	}
+
+	private String remapClass(String name) {
+		String translatedName = getTranslatedClass(new ClassEntry(name)).getName();
+		int separatorIndex = translatedName.lastIndexOf("$");
+		if (separatorIndex != -1) {
+			translatedName = translatedName.substring(separatorIndex + 1);
+		}
+		return translatedName;
 	}
 }

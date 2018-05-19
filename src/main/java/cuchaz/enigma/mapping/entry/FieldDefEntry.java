@@ -13,23 +13,31 @@ package cuchaz.enigma.mapping.entry;
 
 import com.google.common.base.Preconditions;
 import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.TypeDescriptor;
 
 public class FieldDefEntry extends FieldEntry {
 	private final AccessFlags access;
+	private final Signature signature;
 
-	public FieldDefEntry(ClassEntry ownerEntry, String name, TypeDescriptor desc, AccessFlags access) {
+	public FieldDefEntry(ClassEntry ownerEntry, String name, TypeDescriptor desc, Signature signature, AccessFlags access) {
 		super(ownerEntry, name, desc);
 		Preconditions.checkNotNull(access, "Field access cannot be null");
+		Preconditions.checkNotNull(signature, "Field signature cannot be null");
 		this.access = access;
+		this.signature = signature;
 	}
 
 	public AccessFlags getAccess() {
 		return access;
 	}
 
+	public Signature getSignature() {
+		return signature;
+	}
+
 	@Override
 	public FieldDefEntry updateOwnership(ClassEntry owner) {
-		return new FieldDefEntry(owner, this.name, this.desc, access);
+		return new FieldDefEntry(owner, this.name, this.desc, signature, access);
 	}
 }

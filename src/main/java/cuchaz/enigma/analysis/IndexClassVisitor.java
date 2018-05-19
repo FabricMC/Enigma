@@ -16,14 +16,14 @@ public class IndexClassVisitor extends ClassVisitor {
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		this.classEntry = this.index.indexClass(access, name, superName, interfaces);
+		this.classEntry = this.index.indexClass(access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
 		if (this.classEntry != null) {
-			this.index.indexField(this.classEntry, access, name, desc);
+			this.index.indexField(this.classEntry, access, name, desc, signature);
 		}
 		return super.visitField(access, name, desc, signature, value);
 	}
@@ -31,7 +31,7 @@ public class IndexClassVisitor extends ClassVisitor {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		if (this.classEntry != null) {
-			this.index.indexMethod(this.classEntry, access, name, desc);
+			this.index.indexMethod(this.classEntry, access, name, desc, signature);
 		}
 		return super.visitMethod(access, name, desc, signature, exceptions);
 	}

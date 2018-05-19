@@ -61,7 +61,7 @@ public class JarIndex {
 		jar.visit(node -> node.accept(new IndexClassVisitor(this, Opcodes.ASM5)));
 
 		// step 3: index field, method, constructor references
-		jar.visit(node -> node.accept(new IndexReferenceVisitor(this, entryPool, Opcodes.ASM5)));
+		jar.visit(node -> node.accept(new IndexReferenceVisitor(this, Opcodes.ASM5)));
 
 		// step 4: index bridged methods
 		for (MethodDefEntry methodEntry : methods.values()) {
@@ -95,24 +95,24 @@ public class JarIndex {
 		}
 	}
 
-	protected ClassDefEntry indexClass(int access, String name, String superName, String[] interfaces) {
+	protected ClassDefEntry indexClass(int access, String name, String signature, String superName, String[] interfaces) {
 		for (String interfaceName : interfaces) {
 			if (name.equals(interfaceName)) {
 				throw new IllegalArgumentException("Class cannot be its own interface! " + name);
 			}
 		}
-		return this.translationIndex.indexClass(access, name, superName, interfaces);
+		return this.translationIndex.indexClass(access, name, signature, superName, interfaces);
 	}
 
-	protected void indexField(ClassDefEntry owner, int access, String name, String desc) {
-		FieldDefEntry fieldEntry = new FieldDefEntry(owner, name, new TypeDescriptor(desc), new AccessFlags(access));
+	protected void indexField(ClassDefEntry owner, int access, String name, String desc, String signature) {
+		FieldDefEntry fieldEntry = new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexField(fieldEntry);
 		this.access.put(fieldEntry, Access.get(access));
 		this.fields.put(fieldEntry.getOwnerClassEntry(), fieldEntry);
 	}
 
-	protected void indexMethod(ClassDefEntry owner, int access, String name, String desc) {
-		MethodDefEntry methodEntry = new MethodDefEntry(owner, name, new MethodDescriptor(desc), new AccessFlags(access));
+	protected void indexMethod(ClassDefEntry owner, int access, String name, String desc, String signature) {
+		MethodDefEntry methodEntry = new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexMethod(methodEntry);
 		this.access.put(methodEntry, Access.get(access));
 		this.methods.put(methodEntry.getOwnerClassEntry(), methodEntry);

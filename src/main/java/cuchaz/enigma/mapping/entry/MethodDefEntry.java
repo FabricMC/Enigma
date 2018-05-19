@@ -14,23 +14,31 @@ package cuchaz.enigma.mapping.entry;
 import com.google.common.base.Preconditions;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.Signature;
 
 public class MethodDefEntry extends MethodEntry {
 
 	private final AccessFlags access;
+	private final Signature signature;
 
-	public MethodDefEntry(ClassEntry classEntry, String name, MethodDescriptor descriptor, AccessFlags access) {
+	public MethodDefEntry(ClassEntry classEntry, String name, MethodDescriptor descriptor, Signature signature, AccessFlags access) {
 		super(classEntry, name, descriptor);
 		Preconditions.checkNotNull(access, "Method access cannot be null");
+		Preconditions.checkNotNull(signature, "Method signature cannot be null");
 		this.access = access;
+		this.signature = signature;
 	}
 
 	public AccessFlags getAccess() {
 		return access;
 	}
 
+	public Signature getSignature() {
+		return signature;
+	}
+
 	@Override
 	public MethodDefEntry updateOwnership(ClassEntry classEntry) {
-		return new MethodDefEntry(new ClassEntry(classEntry.getName()), name, descriptor, access);
+		return new MethodDefEntry(new ClassEntry(classEntry.getName()), name, descriptor, signature, access);
 	}
 }

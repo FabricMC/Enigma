@@ -76,8 +76,8 @@ public class TranslationIndex {
 		}
 	}
 
-	protected ClassDefEntry indexClass(int access, String name, String superName, String[] interfaces) {
-		ClassDefEntry classEntry = new ClassDefEntry(name, new AccessFlags(access));
+	protected ClassDefEntry indexClass(int access, String name, String signature, String superName, String[] interfaces) {
+		ClassDefEntry classEntry = new ClassDefEntry(name, Signature.createSignature(signature), new AccessFlags(access));
 		if (isJre(classEntry)) {
 			return null;
 		}

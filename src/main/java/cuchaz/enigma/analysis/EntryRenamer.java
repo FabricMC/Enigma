@@ -122,10 +122,22 @@ public class EntryRenamer {
 			return (T) new ClassEntry(renameClassesInThing(renames, classEntry.getClassName()));
 		} else if (thing instanceof FieldDefEntry) {
 			FieldDefEntry fieldEntry = (FieldDefEntry) thing;
-			return (T) new FieldDefEntry(renameClassesInThing(renames, fieldEntry.getOwnerClassEntry()), fieldEntry.getName(), renameClassesInThing(renames, fieldEntry.getDesc()), fieldEntry.getAccess());
+			return (T) new FieldDefEntry(
+					renameClassesInThing(renames, fieldEntry.getOwnerClassEntry()),
+					fieldEntry.getName(),
+					renameClassesInThing(renames, fieldEntry.getDesc()),
+					renameClassesInThing(renames, fieldEntry.getSignature()),
+					fieldEntry.getAccess()
+			);
 		} else if (thing instanceof MethodDefEntry) {
 			MethodDefEntry methodEntry = (MethodDefEntry) thing;
-			return (T) new MethodDefEntry(renameClassesInThing(renames, methodEntry.getOwnerClassEntry()), methodEntry.getName(), renameClassesInThing(renames, methodEntry.getDesc()), methodEntry.getAccess());
+			return (T) new MethodDefEntry(
+					renameClassesInThing(renames, methodEntry.getOwnerClassEntry()),
+					methodEntry.getName(),
+					renameClassesInThing(renames, methodEntry.getDesc()),
+					renameClassesInThing(renames, methodEntry.getSignature()),
+					methodEntry.getAccess()
+			);
 		} else if (thing instanceof LocalVariableEntry) {
 			LocalVariableEntry argumentEntry = (LocalVariableEntry) thing;
 			return (T) new LocalVariableEntry(renameClassesInThing(renames, argumentEntry.getOwnerEntry()), argumentEntry.getIndex(), argumentEntry.getName());
@@ -138,6 +150,8 @@ public class EntryRenamer {
 			return (T) ((MethodDescriptor) thing).remap(className -> renameClassesInThing(renames, className));
 		} else if (thing instanceof TypeDescriptor) {
 			return (T) ((TypeDescriptor) thing).remap(className -> renameClassesInThing(renames, className));
+		} else if (thing instanceof Signature) {
+			return (T) ((Signature) thing).remap(className -> renameClassesInThing(renames, className));
 		}
 
 		return thing;

@@ -1,22 +1,20 @@
 package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.mapping.entry.MethodDefEntry;
-import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 public class IndexReferenceVisitor extends ClassVisitor {
 	private final JarIndex index;
-	private final ReferencedEntryPool entryPool;
 	private ClassEntry classEntry;
 
-	public IndexReferenceVisitor(JarIndex index, ReferencedEntryPool entryPool, int api) {
+	public IndexReferenceVisitor(JarIndex index, int api) {
 		super(api);
 		this.index = index;
-		this.entryPool = entryPool;
 	}
 
 	@Override
@@ -26,7 +24,7 @@ public class IndexReferenceVisitor extends ClassVisitor {
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-		MethodDefEntry entry = new MethodDefEntry(classEntry, name, new MethodDescriptor(desc), new AccessFlags(access));
+		MethodDefEntry entry = new MethodDefEntry(classEntry, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
 		return new Method(this.index, entry, this.api);
 	}
 

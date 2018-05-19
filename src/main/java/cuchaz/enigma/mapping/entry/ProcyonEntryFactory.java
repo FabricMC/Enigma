@@ -14,6 +14,7 @@ package cuchaz.enigma.mapping.entry;
 import com.strobel.assembler.metadata.*;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.MethodDescriptor;
+import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.TypeDescriptor;
 
 import java.util.List;
@@ -56,7 +57,7 @@ public class ProcyonEntryFactory {
 
 	public FieldDefEntry getFieldDefEntry(FieldDefinition def) {
 		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
-		return new FieldDefEntry(classEntry, def.getName(), new TypeDescriptor(def.getErasedSignature()), new AccessFlags(def.getModifiers()));
+		return new FieldDefEntry(classEntry, def.getName(), new TypeDescriptor(def.getErasedSignature()), Signature.createTypedSignature(def.getSignature()), new AccessFlags(def.getModifiers()));
 	}
 
 	public MethodEntry getMethodEntry(MemberReference def) {
@@ -66,6 +67,6 @@ public class ProcyonEntryFactory {
 
 	public MethodDefEntry getMethodDefEntry(MethodDefinition def) {
 		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
-		return new MethodDefEntry(classEntry, def.getName(), new MethodDescriptor(def.getErasedSignature()), new AccessFlags(def.getModifiers()));
+		return new MethodDefEntry(classEntry, def.getName(), new MethodDescriptor(def.getErasedSignature()), Signature.createSignature(def.getSignature()), new AccessFlags(def.getModifiers()));
 	}
 }

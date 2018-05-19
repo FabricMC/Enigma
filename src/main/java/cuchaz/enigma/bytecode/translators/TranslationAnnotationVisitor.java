@@ -1,10 +1,9 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.Translator;
 import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.FieldDefEntry;
+import cuchaz.enigma.mapping.entry.FieldEntry;
 import org.objectweb.asm.AnnotationVisitor;
 
 public class TranslationAnnotationVisitor extends AnnotationVisitor {
@@ -30,15 +29,15 @@ public class TranslationAnnotationVisitor extends AnnotationVisitor {
 	@Override
 	public AnnotationVisitor visitAnnotation(String name, String desc) {
 		TypeDescriptor type = new TypeDescriptor(desc);
-		FieldDefEntry annotationField = translator.getTranslatedFieldDef(new FieldDefEntry(annotationEntry, name, type, AccessFlags.PUBLIC));
+		FieldEntry annotationField = translator.getTranslatedField(new FieldEntry(annotationEntry, name, type));
 		return super.visitAnnotation(annotationField.getName(), annotationField.getDesc().toString());
 	}
 
 	@Override
 	public void visitEnum(String name, String desc, String value) {
 		TypeDescriptor type = new TypeDescriptor(desc);
-		FieldDefEntry annotationField = translator.getTranslatedFieldDef(new FieldDefEntry(annotationEntry, name, type, AccessFlags.PUBLIC));
-		FieldDefEntry enumField = translator.getTranslatedFieldDef(new FieldDefEntry(type.getTypeEntry(), value, type, AccessFlags.PUBLIC_STATIC_FINAL));
+		FieldEntry annotationField = translator.getTranslatedField(new FieldEntry(annotationEntry, name, type));
+		FieldEntry enumField = translator.getTranslatedField(new FieldEntry(type.getTypeEntry(), value, type));
 		super.visitEnum(annotationField.getName(), annotationField.getDesc().toString(), enumField.getName());
 	}
 }

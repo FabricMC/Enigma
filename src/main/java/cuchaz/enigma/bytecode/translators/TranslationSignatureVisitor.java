@@ -1,37 +1,36 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.mapping.Translator;
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureVisitor;
 
 import java.util.Stack;
+import java.util.function.Function;
 
 public class TranslationSignatureVisitor extends SignatureVisitor {
-	private final Translator translator;
+	private final Function<String, String> remapper;
 
 	private final SignatureVisitor sv;
-	private final Stack<ClassEntry> classes = new Stack<>();
+	private final Stack<String> classes = new Stack<>();
 
-	public TranslationSignatureVisitor(Translator translator, int api, SignatureVisitor sv) {
-		super(api);
-		this.translator = translator;
+	public TranslationSignatureVisitor(Function<String, String> remapper, SignatureVisitor sv) {
+		super(Opcodes.ASM5);
+		this.remapper = remapper;
 		this.sv = sv;
 	}
 
 	@Override
 	public void visitClassType(String name) {
-		ClassEntry entry = new ClassEntry(name);
-		ClassEntry translatedEntry = this.translator.getTranslatedClass(entry);
-		this.classes.push(entry);
-		this.sv.visitClassType(translatedEntry.getName());
+		String translatedEntry = this.remapper.apply(name);
+		this.classes.push(name);
+		this.sv.visitClassType(translatedEntry);
 	}
 
 	@Override
 	public void visitInnerClassType(String name) {
-		ClassEntry outerEntry = this.classes.pop();
-		ClassEntry entry = new ClassEntry(outerEntry + "$" + name);
-		this.classes.push(entry);
-		String translatedEntry = this.translator.getTranslatedClass(entry).getName();
+		String outerName = this.classes.pop();
+		String className = outerName + "$" + name;
+		this.classes.push(className);
+		String translatedEntry = this.remapper.apply(className);
 		this.sv.visitInnerClassType(translatedEntry.substring(translatedEntry.lastIndexOf('$') + 1));
 	}
 

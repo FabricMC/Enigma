@@ -44,7 +44,7 @@ public interface Translator {
 
 	MethodDescriptor getTranslatedMethodDesc(MethodDescriptor descriptor);
 
-	String getTranslatedSignature(String signature, boolean isType, int api);
+	Signature getTranslatedSignature(Signature signature);
 
 	default Type getTranslatedType(Type type) {
 		String descString = type.getDescriptor();
