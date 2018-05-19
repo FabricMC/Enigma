@@ -12,6 +12,7 @@
 package cuchaz.enigma.mapping;
 
 import cuchaz.enigma.mapping.entry.*;
+import org.objectweb.asm.Type;
 
 public interface Translator {
 	ClassEntry getTranslatedClass(ClassEntry entry);
@@ -33,6 +34,18 @@ public interface Translator {
 	TypeDescriptor getTranslatedTypeDesc(TypeDescriptor desc);
 
 	MethodDescriptor getTranslatedMethodDesc(MethodDescriptor descriptor);
+
+	default Type getTranslatedType(Type type) {
+		String descString = type.getDescriptor();
+		// If this is a method
+		if (descString.contains("(")) {
+			MethodDescriptor descriptor = new MethodDescriptor(descString);
+			return Type.getMethodType(getTranslatedMethodDesc(descriptor).toString());
+		} else {
+			TypeDescriptor descriptor = new TypeDescriptor(descString);
+			return Type.getType(getTranslatedTypeDesc(descriptor).toString());
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	default <T extends Entry> T getTranslatedEntry(T entry) {

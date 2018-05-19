@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.mapping;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import cuchaz.enigma.mapping.entry.ClassEntry;
 
@@ -22,6 +23,8 @@ public class TypeDescriptor {
 	protected final String desc;
 
 	public TypeDescriptor(String desc) {
+		Preconditions.checkNotNull(desc, "Desc cannot be null");
+
 		// don't deal with generics
 		// this is just for raw jvm types
 		if (desc.charAt(0) == 'T' || desc.indexOf('<') >= 0 || desc.indexOf('>') >= 0) {
@@ -127,7 +130,7 @@ public class TypeDescriptor {
 		return this.desc.charAt(0) == 'L' && this.desc.charAt(this.desc.length() - 1) == ';';
 	}
 
-	public ClassEntry getOwnerEntry() {
+	public ClassEntry getTypeEntry() {
 		if (isType()) {
 			String name = this.desc.substring(1, this.desc.length() - 1);
 
@@ -140,7 +143,7 @@ public class TypeDescriptor {
 			return new ClassEntry(name);
 
 		} else if (isArray() && getArrayType().isType()) {
-			return getArrayType().getOwnerEntry();
+			return getArrayType().getTypeEntry();
 		} else {
 			throw new IllegalStateException("desc doesn't have a class");
 		}
@@ -185,7 +188,7 @@ public class TypeDescriptor {
 	public TypeDescriptor remap(Function<String, String> remapper) {
 		String desc = this.desc;
 		if (isType() || (isArray() && containsType())) {
-			String replacedName = remapper.apply(this.getOwnerEntry().getName());
+			String replacedName = remapper.apply(this.getTypeEntry().getName());
 			if (replacedName != null) {
 				if (this.isType()) {
 					desc = "L" + replacedName + ";";

@@ -156,7 +156,7 @@ public class Mappings {
 			for (MethodMapping methodMapping : classMapping.methods()) {
 				for (TypeDescriptor desc : methodMapping.getObfDesc().types()) {
 					if (desc.containsType()) {
-						classNames.add(desc.getOwnerEntry().getClassName());
+						classNames.add(desc.getTypeEntry().getClassName());
 					}
 				}
 			}

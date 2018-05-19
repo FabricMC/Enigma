@@ -39,15 +39,17 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	}
 
 	@Override
-	public void visitAttribute(Attribute attr) {
-		// TODO: Implement
-		super.visitAttribute(attr);
+	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		AnnotationVisitor av = super.visitAnnotation(typeDesc.toString(), visible);
+		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
-	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-		// TODO: Implement
-		return super.visitAnnotation(desc, visible);
+	public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
+		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		AnnotationVisitor av = super.visitAnnotation(typeDesc.toString(), visible);
+		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
@@ -69,7 +71,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 				// List types would require this whole block again, so just go with aListx
 				nameBuilder.append(nameIndex);
 			} else if (argDesc.isType()) {
-				String typeName = argDesc.getOwnerEntry().getSimpleName().replace("$", "");
+				String typeName = argDesc.getTypeEntry().getSimpleName().replace("$", "");
 				typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);
 				nameBuilder.append(typeName);
 			}

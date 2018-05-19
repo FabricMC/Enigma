@@ -54,7 +54,8 @@ public class TranslationClassVisitor extends ClassVisitor {
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
 		FieldDefEntry entry = new FieldDefEntry(obfClassEntry, name, new TypeDescriptor(desc), new AccessFlags(access));
 		FieldDefEntry translatedEntry = translator.getTranslatedFieldDef(entry);
-		return super.visitField(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), signature, value);
+		FieldVisitor fv = super.visitField(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), signature, value);
+		return new TranslationFieldVisitor(translator, translatedEntry, api, fv);
 	}
 
 	@Override
@@ -64,32 +65,38 @@ public class TranslationClassVisitor extends ClassVisitor {
 		if (jarIndex.getBridgedMethod(entry) != null) {
 			translatedEntry.getAccess().setBridged();
 		}
-		MethodVisitor mv = super.visitMethod(translatedEntry.getAccess().getFlags(), name, desc, signature, exceptions);
+		String[] translatedExceptions = new String[exceptions.length];
+		for (int i = 0; i < exceptions.length; i++) {
+			translatedExceptions[i] = translator.getTranslatedClass(entryPool.getClass(exceptions[i])).getName();
+		}
+		MethodVisitor mv = super.visitMethod(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), signature, translatedExceptions);
 		return new TranslationMethodVisitor(translator, translatedEntry, api, mv);
 	}
 
 	@Override
 	public void visitOuterClass(String owner, String name, String desc) {
+		ClassEntry ownerEntry = translator.getTranslatedClass(entryPool.getClass(owner));
+		String translatedDesc = desc != null ? translator.getTranslatedTypeDesc(new TypeDescriptor(desc)).toString() : desc;
 		if (name != null) {
-			ClassEntry ownerEntry = translator.getTranslatedClass(entryPool.getClass(owner));
 			ClassEntry entry = translator.getTranslatedClass(entryPool.getClass(name));
-			String translatedDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc)).toString();
 			super.visitOuterClass(ownerEntry.getName(), entry.getName(), translatedDesc);
 		} else {
-			super.visitOuterClass(owner, name, desc);
+			super.visitOuterClass(ownerEntry.getName(), name, translatedDesc);
 		}
 	}
 
 	@Override
 	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-		// TODO: Implement
-		return super.visitAnnotation(desc, visible);
+		TypeDescriptor translatedDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		AnnotationVisitor av = super.visitAnnotation(translatedDesc.toString(), visible);
+		return new TranslationAnnotationVisitor(translator, translatedDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
 	public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-		// TODO: Implement
-		return super.visitTypeAnnotation(typeRef, typePath, desc, visible);
+		TypeDescriptor translatedDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		AnnotationVisitor av = super.visitTypeAnnotation(typeRef, typePath, translatedDesc.toString(), visible);
+		return new TranslationAnnotationVisitor(translator, translatedDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
@@ -101,7 +108,11 @@ public class TranslationClassVisitor extends ClassVisitor {
 			ClassEntry innerEntry = translator.getTranslatedClass(entryPool.getClass(innerName));
 			super.visitInnerClass(translatedEntry.getName(), outerEntry.getName(), innerEntry.getName(), translatedEntry.getAccess().getFlags());
 		} else {
-			super.visitInnerClass(name, outerName, innerName, access);
+			int separatorIndex = name.lastIndexOf("$");
+			String parentName = name.substring(0, separatorIndex);
+			String childName = name.substring(separatorIndex + 1);
+			ClassEntry outerEntry = translator.getTranslatedClass(entryPool.getClass(parentName));
+			super.visitInnerClass(outerEntry.getName() + "$" + childName, outerName, innerName, access);
 		}
 	}
 }

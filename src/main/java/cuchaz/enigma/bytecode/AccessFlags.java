@@ -5,6 +5,9 @@ import org.objectweb.asm.Opcodes;
 import java.lang.reflect.Modifier;
 
 public class AccessFlags {
+	public static final AccessFlags PUBLIC = new AccessFlags(Modifier.PUBLIC);
+	public static final AccessFlags PUBLIC_STATIC_FINAL = new AccessFlags(Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL);
+
 	private static final int SYNTHETIC_FLAG = 0x00001000;
 	private static final int BRIDGED_FLAG = 0x00000040;
 

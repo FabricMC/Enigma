@@ -185,7 +185,7 @@ public class DirectionalTranslator implements Translator {
 		}
 		// TODO: Translating arguments calls method translation.. Can we refactor the code in such a way that we don't need this?
 		MethodEntry translatedOwner = getTranslatedMethod(entry.getOwnerEntry());
-		return new LocalVariableEntry(translatedOwner, entry.getIndex(), translatedArgumentName);
+		return new LocalVariableEntry(translatedOwner != null ? translatedOwner : entry.getOwnerEntry(), entry.getIndex(), translatedArgumentName);
 	}
 
 	@Override

@@ -97,7 +97,7 @@ public class MethodDescriptor {
 
 	public boolean hasClass(ClassEntry classEntry) {
 		for (TypeDescriptor desc : types()) {
-			if (desc.containsType() && desc.getOwnerEntry().equals(classEntry)) {
+			if (desc.containsType() && desc.getTypeEntry().equals(classEntry)) {
 				return true;
 			}
 		}
