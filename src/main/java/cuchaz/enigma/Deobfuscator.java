@@ -284,7 +284,7 @@ public class Deobfuscator {
 				// write the file
 				File file = new File(dirOut, deobfClassEntry.getName().replace('.', '/') + ".java");
 				file.getParentFile().mkdirs();
-				try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8)) {
+				try (OutputStreamWriter out = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), Charsets.UTF_8)) {
 					out.write(source);
 				}
 			} catch (Throwable t) {

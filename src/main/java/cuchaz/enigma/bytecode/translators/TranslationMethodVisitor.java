@@ -108,8 +108,6 @@ public class TranslationMethodVisitor extends MethodVisitor {
 					nameBuilder.append(nameIndex);
 				}
 				translatedName = nameBuilder.toString();
-			} else {
-				System.out.println();
 			}
 
 			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);

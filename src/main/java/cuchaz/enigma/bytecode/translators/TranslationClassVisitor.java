@@ -80,7 +80,11 @@ public class TranslationClassVisitor extends ClassVisitor {
 		String childName = translatedName.substring(separatorIndex + 1);
 
 		ClassEntry outerEntry = translator.getTranslatedClass(entryPool.getClass(parentName));
-		super.visitInnerClass(translatedName, outerEntry.getName(), childName, translatedEntry.getAccess().getFlags());
+
+		// Anonymous classes do not specify an outer or inner name. As we do not translate from the given parameter, ignore if the input is null
+		String translatedOuterName = outerName != null ? outerEntry.getName() : null;
+		String translatedInnerName = innerName != null ? childName : null;
+		super.visitInnerClass(translatedName, translatedOuterName, translatedInnerName, translatedEntry.getAccess().getFlags());
 	}
 
 	@Override
