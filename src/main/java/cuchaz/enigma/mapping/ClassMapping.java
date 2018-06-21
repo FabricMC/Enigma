@@ -511,6 +511,10 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		this.isDirty = false;
 	}
 
+	public void markDirty(){
+		isDirty = true;
+	}
+
 	public Mappings.EntryModifier getModifier() {
 		return modifier;
 	}
