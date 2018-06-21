@@ -171,7 +171,7 @@ public class JarIndex {
 		}
 
 		// we have a bridge method!
-		return referencedMethods.stream().filter(ref -> ref.entry != method).findFirst().map(ref -> ref.entry).orElse(null);
+		return referencedMethods.stream().map(ref -> ref.context).filter(Objects::nonNull).findFirst().orElse(null);
 	}
 
 	public Set<ClassEntry> getObfClassEntries() {
