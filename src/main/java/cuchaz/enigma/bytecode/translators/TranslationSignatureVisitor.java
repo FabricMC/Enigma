@@ -3,14 +3,12 @@ package cuchaz.enigma.bytecode.translators;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureVisitor;
 
-import java.util.Stack;
 import java.util.function.Function;
 
 public class TranslationSignatureVisitor extends SignatureVisitor {
 	private final Function<String, String> remapper;
 
 	private final SignatureVisitor sv;
-	private final Stack<String> classes = new Stack<>();
 
 	public TranslationSignatureVisitor(Function<String, String> remapper, SignatureVisitor sv) {
 		super(Opcodes.ASM5);
@@ -21,17 +19,13 @@ public class TranslationSignatureVisitor extends SignatureVisitor {
 	@Override
 	public void visitClassType(String name) {
 		String translatedEntry = this.remapper.apply(name);
-		this.classes.push(name);
 		this.sv.visitClassType(translatedEntry);
 	}
 
 	@Override
 	public void visitInnerClassType(String name) {
-		String outerName = this.classes.pop();
-		String className = outerName + "$" + name;
-		this.classes.push(className);
-		String translatedEntry = this.remapper.apply(className);
-		this.sv.visitInnerClassType(translatedEntry.substring(translatedEntry.lastIndexOf('$') + 1));
+		String translatedEntry = this.remapper.apply(name);
+		this.sv.visitInnerClassType(translatedEntry);
 	}
 
 	@Override
@@ -111,7 +105,6 @@ public class TranslationSignatureVisitor extends SignatureVisitor {
 	@Override
 	public void visitEnd() {
 		this.sv.visitEnd();
-		this.classes.pop();
 	}
 
 	@Override

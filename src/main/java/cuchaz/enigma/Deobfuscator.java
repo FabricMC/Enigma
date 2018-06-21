@@ -335,9 +335,6 @@ public class Deobfuscator {
 		for (ClassMapping classMapping : Lists.newArrayList(getMappings().classes())) {
 			progress.onProgress(i++, classMapping.getDeobfName());
 			rebuildMethodNames(classMapping, renameClassMap);
-			for (ClassMapping innerClass : classMapping.innerClasses()) {
-				rebuildMethodNames(innerClass, renameClassMap);
-			}
 		}
 
 		for (Map.Entry<ClassMapping, Map<Entry, String>> renameClassMapEntry : renameClassMap.entrySet()) {
@@ -389,7 +386,11 @@ public class Deobfuscator {
 			}
 		}
 
+		classMapping.markDirty();
 		renameClassMap.put(classMapping, renameEntries);
+		for(ClassMapping innerClass : classMapping.innerClasses()){
+			rebuildMethodNames(innerClass, renameClassMap);
+		}
 	}
 
 
