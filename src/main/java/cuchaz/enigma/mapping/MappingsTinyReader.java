@@ -71,6 +71,10 @@ public class MappingsTinyReader {
 						classMapping = classMappingMap.computeIfAbsent(parts[1], k -> new ClassMapping(parts[1]));
 						classMapping.addMethodMapping(readMethod(parts));
 						break;
+					case "MTH-ARG":
+						classMapping = classMappingMap.computeIfAbsent(parts[1], k -> new ClassMapping(parts[1]));
+						classMapping.setArgumentName(parts[3], new Signature(parts[2]), Integer.parseInt(parts[4]), parts[5]);
+						break;
 					default:
 						throw new MappingParseException(file, lineNumber, "Unknown token '" + token + "' !");
 				}
