@@ -46,7 +46,6 @@ import java.util.jar.JarOutputStream;
 public class Deobfuscator {
 
 	private final ReferencedEntryPool entryPool = new ReferencedEntryPool();
-	private final JarFile jar;
 	private final ParsedJar parsedJar;
 	private final DecompilerSettings settings;
 	private final JarIndex jarIndex;
@@ -54,9 +53,8 @@ public class Deobfuscator {
 	private final Map<TranslationDirection, Translator> translatorCache;
 	private Mappings mappings;
 
-	public Deobfuscator(JarFile jar) throws IOException {
-		this.jar = jar;
-		this.parsedJar = new ParsedJar(jar);
+	public Deobfuscator(ParsedJar jar) {
+		this.parsedJar = jar;
 
 		// build the jar index
 		this.jarIndex = new JarIndex(entryPool);
@@ -79,12 +77,12 @@ public class Deobfuscator {
 		setMappings(new Mappings());
 	}
 
-	public ParsedJar getJar() {
-		return this.parsedJar;
+	public Deobfuscator(JarFile jar) throws IOException {
+		this(new ParsedJar(jar));
 	}
 
-	public String getJarName() {
-		return this.jar.getName();
+	public ParsedJar getJar() {
+		return this.parsedJar;
 	}
 
 	public JarIndex getJarIndex() {
@@ -388,7 +386,7 @@ public class Deobfuscator {
 
 		classMapping.markDirty();
 		renameClassMap.put(classMapping, renameEntries);
-		for(ClassMapping innerClass : classMapping.innerClasses()){
+		for (ClassMapping innerClass : classMapping.innerClasses()) {
 			rebuildMethodNames(innerClass, renameClassMap);
 		}
 	}

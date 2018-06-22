@@ -84,7 +84,7 @@ public class TranslationIndex {
 
 		// add the superclass
 		ClassEntry superclassEntry = entryPool.getClass(superName);
-		if (!isJre(superclassEntry)) {
+		if (superclassEntry != null) {
 			this.superclasses.put(classEntry, superclassEntry);
 		}
 

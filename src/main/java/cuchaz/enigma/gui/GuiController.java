@@ -58,7 +58,7 @@ public class GuiController {
 	public void openJar(final JarFile jar) throws IOException {
 		this.gui.onStartOpenJar();
 		this.deobfuscator = new Deobfuscator(jar);
-		this.gui.onFinishOpenJar(this.deobfuscator.getJarName());
+		this.gui.onFinishOpenJar(jar.getName());
 		refreshClasses();
 	}
 

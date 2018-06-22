@@ -25,15 +25,15 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class TestDeobfed {
 
-	private static JarFile jar;
+	private static ParsedJar jar;
 	private static JarIndex index;
 
 	@BeforeClass
 	public static void beforeClass()
 		throws Exception {
-		jar = new JarFile("build/test-deobf/translation.jar");
+		jar = new ParsedJar(new JarFile("build/test-deobf/translation.jar"));
 		index = new JarIndex(new ReferencedEntryPool());
-		index.indexJar(new ParsedJar(jar), true);
+		index.indexJar(jar, true);
 	}
 
 	@Test

@@ -148,8 +148,7 @@ public class JarIndex {
 
 	public void indexInnerClass(ClassEntry innerEntry, ClassEntry outerEntry) {
 		this.innerClassesByOuter.put(outerEntry, innerEntry);
-		boolean innerWasAdded = this.outerClassesByInner.put(innerEntry, outerEntry) == null;
-		assert (innerWasAdded);
+		this.outerClassesByInner.putIfAbsent(innerEntry, outerEntry);
 	}
 
 	private MethodEntry findBridgedMethod(MethodDefEntry method) {

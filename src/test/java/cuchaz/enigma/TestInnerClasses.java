@@ -42,8 +42,8 @@ public class TestInnerClasses {
 	public TestInnerClasses()
 		throws Exception {
 		index = new JarIndex(new ReferencedEntryPool());
-		JarFile jar = new JarFile("build/test-obf/innerClasses.jar");
-		index.indexJar(new ParsedJar(jar), true);
+		ParsedJar jar = new ParsedJar(new JarFile("build/test-obf/innerClasses.jar"));
+		index.indexJar(jar, true);
 		deobfuscator = new Deobfuscator(jar);
 	}
 
