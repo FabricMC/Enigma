@@ -385,8 +385,7 @@ public class JarIndex {
 
 	public Set<ClassEntry> getInterfaces(String className) {
 		ClassEntry classEntry = entryPool.getClass(className);
-		Set<ClassEntry> interfaces = new HashSet<>();
-		interfaces.addAll(this.translationIndex.getInterfaces(classEntry));
+		Set<ClassEntry> interfaces = new HashSet<>(this.translationIndex.getInterfaces(classEntry));
 		for (ClassEntry ancestor : this.translationIndex.getAncestry(classEntry)) {
 			interfaces.addAll(this.translationIndex.getInterfaces(ancestor));
 		}
