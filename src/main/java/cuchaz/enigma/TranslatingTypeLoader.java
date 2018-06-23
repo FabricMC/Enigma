@@ -111,7 +111,7 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		}
 
 		ClassWriter writer = new ClassWriter(0);
-		createTransformer(node, writer);
+		transformInto(node, writer);
 
 		// we have a transformed class!
 		return writer.toByteArray();
@@ -145,7 +145,8 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		return classNamesToTry;
 	}
 
-	public void createTransformer(ClassNode node, ClassWriter writer) {
+	public String transformInto(ClassNode node, ClassWriter writer) {
 		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, jarIndex, entryPool, Opcodes.ASM5, writer));
+		return deobfuscatingTranslator.getTranslatedClass(new ClassEntry(node.name)).getName();
 	}
 }

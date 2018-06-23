@@ -393,15 +393,21 @@ public class Deobfuscator {
 
 
 	public void writeJar(File out, ProgressListener progress) {
-		transformJar(out, progress, createTypeLoader()::createTransformer);
+		transformJar(out, progress, createTypeLoader()::transformInto);
 	}
 
 	public void protectifyJar(File out, ProgressListener progress) {
-		transformJar(out, progress, (node, writer) -> node.accept(new ClassProtectifier(Opcodes.ASM5, writer)));
+		transformJar(out, progress, (node, writer) -> {
+			node.accept(new ClassProtectifier(Opcodes.ASM5, writer));
+			return node.name;
+		});
 	}
 
 	public void publifyJar(File out, ProgressListener progress) {
-		transformJar(out, progress, (node, writer) -> node.accept(new ClassPublifier(Opcodes.ASM5, writer)));
+		transformJar(out, progress, (node, writer) -> {
+			node.accept(new ClassPublifier(Opcodes.ASM5, writer));
+			return node.name;
+		});
 	}
 
 	public void transformJar(File out, ProgressListener progress, ClassTransformer transformer) {
@@ -418,8 +424,8 @@ public class Deobfuscator {
 
 				try {
 					ClassWriter writer = new ClassWriter(0);
-					transformer.write(node, writer);
-					outJar.putNextEntry(new JarEntry(node.name.replace('.', '/') + ".class"));
+					String transformedName = transformer.transform(node, writer);
+					outJar.putNextEntry(new JarEntry(transformedName.replace('.', '/') + ".class"));
 					outJar.write(writer.toByteArray());
 					outJar.closeEntry();
 				} catch (Throwable t) {
@@ -646,6 +652,6 @@ public class Deobfuscator {
 	}
 
 	public interface ClassTransformer {
-		void write(ClassNode node, ClassWriter writer);
+		String transform(ClassNode node, ClassWriter writer);
 	}
 }
