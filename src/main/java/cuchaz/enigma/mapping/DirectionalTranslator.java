@@ -48,13 +48,23 @@ public class DirectionalTranslator implements Translator {
 
 	@Override
 	public ClassEntry getTranslatedClass(ClassEntry entry) {
-		String className = entry.isInnerClass() ? translateInnerClassName(entry) : translateClassName(entry);
+		String className;
+		if (entry.isArray()) {
+			className = this.getTranslatedTypeDesc(new TypeDescriptor(entry.getName())).toString();
+		} else {
+			className = entry.isInnerClass() ? translateInnerClassName(entry) : translateClassName(entry);
+		}
 		return new ClassEntry(className);
 	}
 
 	@Override
 	public ClassDefEntry getTranslatedClassDef(ClassDefEntry entry) {
-		String className = entry.isInnerClass() ? translateInnerClassName(entry) : translateClassName(entry);
+		String className;
+		if (entry.isArray()) {
+			className = this.getTranslatedTypeDesc(new TypeDescriptor(entry.getName())).toString();
+		} else {
+			className = entry.isInnerClass() ? translateInnerClassName(entry) : translateClassName(entry);
+		}
 		Signature translatedSignature = this.getTranslatedSignature(entry.getSignature());
 		return new ClassDefEntry(className, translatedSignature, getClassModifier(entry).transform(entry.getAccess()));
 	}

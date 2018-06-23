@@ -77,6 +77,10 @@ public class ClassEntry implements Entry {
 		return this.name;
 	}
 
+	public boolean isArray() {
+		return this.name.lastIndexOf('[') >= 0;
+	}
+
 	public boolean isInnerClass() {
 		return this.name.lastIndexOf('$') >= 0;
 	}

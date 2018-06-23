@@ -48,11 +48,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			Object object = array[i];
 			if (object instanceof String) {
 				String type = (String) object;
-				if (type.startsWith("[") || type.endsWith(";")) {
-					array[i] = translator.getTranslatedType(Type.getType(type)).getDescriptor();
-				} else {
-					array[i] = translator.getTranslatedClass(new ClassEntry(type)).getName();
-				}
+				array[i] = translator.getTranslatedClass(new ClassEntry(type)).getName();
 			}
 		}
 		return array;
