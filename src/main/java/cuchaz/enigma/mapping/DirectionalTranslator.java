@@ -55,7 +55,8 @@ public class DirectionalTranslator implements Translator {
 	@Override
 	public ClassDefEntry getTranslatedClassDef(ClassDefEntry entry) {
 		String className = entry.isInnerClass() ? translateInnerClassName(entry) : translateClassName(entry);
-		return new ClassDefEntry(className, entry.getSignature(), getClassModifier(entry).transform(entry.getAccess()));
+		Signature translatedSignature = this.getTranslatedSignature(entry.getSignature());
+		return new ClassDefEntry(className, translatedSignature, getClassModifier(entry).transform(entry.getAccess()));
 	}
 
 	private String translateClassName(ClassEntry entry) {
