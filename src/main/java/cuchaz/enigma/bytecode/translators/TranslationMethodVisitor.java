@@ -11,14 +11,16 @@ import java.util.List;
 import java.util.Locale;
 
 public class TranslationMethodVisitor extends MethodVisitor {
+	private final ClassDefEntry ownerEntry;
 	private final MethodDefEntry methodEntry;
 	private final Translator translator;
 
 	private boolean hasParameterMeta;
 
-	public TranslationMethodVisitor(Translator translator, MethodDefEntry methodEntry, int api, MethodVisitor mv) {
+	public TranslationMethodVisitor(Translator translator, ClassDefEntry ownerEntry, MethodDefEntry methodEntry, int api, MethodVisitor mv) {
 		super(api, mv);
 		this.translator = translator;
+		this.ownerEntry = ownerEntry;
 		this.methodEntry = methodEntry;
 	}
 
@@ -85,7 +87,13 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		String translatedSignature = translator.getTranslatedSignature(Signature.createTypedSignature(signature)).toString();
 
 		// If we're not static, "this" is bound to index 0
-		int offsetIndex = index - (methodEntry.getAccess().isStatic() ? 0 : 1);
+		int offset = methodEntry.getAccess().isStatic() ? 0 : 1;
+		if (ownerEntry.getAccess().isEnum() && methodEntry.getName().startsWith("<")) {
+			// Enum constructors have an implicit "name" and "ordinal" parameter as well as "this"
+			offset = 3;
+		}
+
+		int offsetIndex = index - offset;
 		if (offsetIndex >= 0) {
 			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, offsetIndex, name, new TypeDescriptor(desc));
 			LocalVariableDefEntry translatedEntry = translator.getTranslatedVariableDef(entry);
@@ -170,7 +178,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			nameBuilder.append(argCls.name());
 		} else if (desc.isArray()) {
 			// List types would require this whole block again, so just go with aListx
-			nameBuilder.append(nameIndex);
+			nameBuilder.append("Arr");
 		} else if (desc.isType()) {
 			String typeName = desc.getTypeEntry().getSimpleName().replace("$", "");
 			typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);

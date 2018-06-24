@@ -68,7 +68,7 @@ public class TranslationClassVisitor extends ClassVisitor {
 			translatedExceptions[i] = translator.getTranslatedClass(entryPool.getClass(exceptions[i])).getName();
 		}
 		MethodVisitor mv = super.visitMethod(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedEntry.getSignature().toString(), translatedExceptions);
-		return new TranslationMethodVisitor(translator, entry, api, mv);
+		return new TranslationMethodVisitor(translator, obfClassEntry, entry, api, mv);
 	}
 
 	@Override

@@ -5,12 +5,6 @@ import org.objectweb.asm.Opcodes;
 import java.lang.reflect.Modifier;
 
 public class AccessFlags {
-	public static final AccessFlags PUBLIC = new AccessFlags(Modifier.PUBLIC);
-	public static final AccessFlags PUBLIC_STATIC_FINAL = new AccessFlags(Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL);
-
-	private static final int SYNTHETIC_FLAG = 0x00001000;
-	private static final int BRIDGED_FLAG = 0x00000040;
-
 	private int flags;
 
 	public AccessFlags(int flags) {
@@ -30,11 +24,15 @@ public class AccessFlags {
 	}
 
 	public boolean isSynthetic() {
-		return (this.flags & SYNTHETIC_FLAG) != 0;
+		return (this.flags & Opcodes.ACC_SYNTHETIC) != 0;
 	}
 
 	public boolean isStatic() {
 		return Modifier.isStatic(this.flags);
+	}
+
+	public boolean isEnum() {
+		return (flags & Opcodes.ACC_ENUM) != 0;
 	}
 
 	public AccessFlags setPrivate() {
@@ -53,7 +51,7 @@ public class AccessFlags {
 	}
 
 	public AccessFlags setBridged() {
-		this.setVisibility(BRIDGED_FLAG);
+		this.setVisibility(Opcodes.ACC_BRIDGE);
 		return this;
 	}
 
