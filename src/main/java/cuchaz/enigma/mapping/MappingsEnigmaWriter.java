@@ -135,7 +135,7 @@ public class MappingsEnigmaWriter {
 	}
 
 	private void write(PrintWriter out, MethodMapping methodMapping, int depth) throws IOException {
-		if (methodMapping.getDeobfName() == null) {
+		if (methodMapping.isObfuscated()) {
 			out.format("%sMETHOD %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getObfDesc(),
 				methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
 		} else {

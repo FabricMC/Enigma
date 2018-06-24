@@ -323,7 +323,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		}
 		boolean wasAdded = methodsByObf.put(obfKey, methodMapping) == null;
 		assert (wasAdded);
-		if (methodMapping.getDeobfName() != null) {
+		if (!methodMapping.isObfuscated()) {
 			String deobfKey = getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfDesc());
 			if (methodsByDeobf.containsKey(deobfKey)) {
 				throw new Error("Already have mapping for " + deobfName + "." + deobfKey);
@@ -338,7 +338,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	public void removeMethodMapping(MethodMapping methodMapping) {
 		boolean obfWasRemoved = methodsByObf.remove(getMethodKey(methodMapping.getObfName(), methodMapping.getObfDesc())) != null;
 		assert (obfWasRemoved);
-		if (methodMapping.getDeobfName() != null) {
+		if (!methodMapping.isObfuscated()) {
 			boolean deobfWasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfDesc())) != null;
 			assert (deobfWasRemoved);
 		}
@@ -371,7 +371,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		MethodMapping methodMapping = methodsByObf.get(getMethodKey(obfName, obfDescriptor));
 		if (methodMapping == null) {
 			methodMapping = createMethodMapping(obfName, obfDescriptor);
-		} else if (methodMapping.getDeobfName() != null) {
+		} else if (!methodMapping.isObfuscated()) {
 			boolean wasRemoved = methodsByDeobf.remove(getMethodKey(methodMapping.getDeobfName(), methodMapping.getObfDesc())) != null;
 			assert (wasRemoved);
 		}

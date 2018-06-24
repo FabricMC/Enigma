@@ -76,6 +76,9 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<M
 	}
 
 	public String getDeobfName() {
+		if (deobfName == null) {
+			return obfName;
+		}
 		return this.deobfName;
 	}
 
@@ -199,5 +202,9 @@ public class MethodMapping implements Comparable<MethodMapping>, MemberMapping<M
 
 	public void setModifier(Mappings.EntryModifier modifier) {
 		this.modifier = modifier;
+	}
+
+	public boolean isObfuscated() {
+		return deobfName == null || deobfName.equals(obfName);
 	}
 }

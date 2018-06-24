@@ -11,43 +11,19 @@
 
 package cuchaz.enigma.mapping.entry;
 
-import com.strobel.assembler.metadata.*;
+import com.strobel.assembler.metadata.FieldDefinition;
+import com.strobel.assembler.metadata.MemberReference;
+import com.strobel.assembler.metadata.MethodDefinition;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.MethodDescriptor;
 import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.TypeDescriptor;
-
-import java.util.List;
 
 public class ProcyonEntryFactory {
 	private final ReferencedEntryPool entryPool;
 
 	public ProcyonEntryFactory(ReferencedEntryPool entryPool) {
 		this.entryPool = entryPool;
-	}
-
-	private String getErasedSignature(MemberReference def) {
-		if (!(def instanceof MethodReference))
-			return def.getErasedSignature();
-		MethodReference methodReference = (MethodReference) def;
-		StringBuilder builder = new StringBuilder("(");
-		for (ParameterDefinition param : methodReference.getParameters()) {
-			TypeReference paramType = param.getParameterType();
-			if (paramType.getErasedSignature().equals("Ljava/lang/Object;") && paramType.hasExtendsBound() && paramType.getExtendsBound() instanceof CompoundTypeReference) {
-				List<TypeReference> interfaces = ((CompoundTypeReference) paramType.getExtendsBound()).getInterfaces();
-				interfaces.forEach((inter) -> builder.append(inter.getErasedSignature()));
-			} else
-				builder.append(paramType.getErasedSignature());
-		}
-		builder.append(")");
-
-		TypeReference returnType = methodReference.getReturnType();
-		if (returnType.getErasedSignature().equals("Ljava/lang/Object;") && returnType.hasExtendsBound() && returnType.getExtendsBound() instanceof CompoundTypeReference) {
-			List<TypeReference> interfaces = ((CompoundTypeReference) returnType.getExtendsBound()).getInterfaces();
-			interfaces.forEach((inter) -> builder.append(inter.getErasedSignature()));
-		} else
-			builder.append(returnType.getErasedSignature());
-		return builder.toString();
 	}
 
 	public FieldEntry getFieldEntry(MemberReference def) {
@@ -62,7 +38,7 @@ public class ProcyonEntryFactory {
 
 	public MethodEntry getMethodEntry(MemberReference def) {
 		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
-		return entryPool.getMethod(classEntry, def.getName(), getErasedSignature(def));
+		return entryPool.getMethod(classEntry, def.getName(), def.getErasedSignature());
 	}
 
 	public MethodDefEntry getMethodDefEntry(MethodDefinition def) {
