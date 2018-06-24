@@ -7,11 +7,14 @@ import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.mapping.entry.*;
 import org.objectweb.asm.*;
 
+import java.util.List;
 import java.util.Locale;
 
 public class TranslationMethodVisitor extends MethodVisitor {
 	private final MethodDefEntry methodEntry;
 	private final Translator translator;
+
+	private boolean hasParameterMeta;
 
 	public TranslationMethodVisitor(Translator translator, MethodDefEntry methodEntry, int api, MethodVisitor mv) {
 		super(api, mv);
@@ -77,6 +80,8 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 	@Override
 	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+		hasParameterMeta = true;
+
 		String translatedSignature = translator.getTranslatedSignature(Signature.createTypedSignature(signature)).toString();
 
 		// If we're not static, "this" is bound to index 0
@@ -88,26 +93,8 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 			// TODO: Better name inference
 			if (translatedName.equals(entry.getName())) {
-				TypeDescriptor argDesc = translatedEntry.getDesc();
-				int nameIndex = offsetIndex + 1;
 				String prefix = offsetIndex < methodEntry.getDesc().getArgumentDescs().size() ? "a" : "v";
-				StringBuilder nameBuilder = new StringBuilder(prefix);
-				// Unfortunately each of these have different name getters, so they have different code paths
-				if (argDesc.isPrimitive()) {
-					TypeDescriptor.Primitive argCls = argDesc.getPrimitive();
-					nameBuilder.append(argCls.name());
-				} else if (argDesc.isArray()) {
-					// List types would require this whole block again, so just go with aListx
-					nameBuilder.append(nameIndex);
-				} else if (argDesc.isType()) {
-					String typeName = argDesc.getTypeEntry().getSimpleName().replace("$", "");
-					typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);
-					nameBuilder.append(typeName);
-				}
-				if (methodEntry.getDesc().getArgumentDescs().size() > 1) {
-					nameBuilder.append(nameIndex);
-				}
-				translatedName = nameBuilder.toString();
+				translatedName = inferName(prefix, offsetIndex, translatedEntry.getDesc());
 			}
 
 			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
@@ -152,5 +139,47 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		} else {
 			super.visitTryCatchBlock(start, end, handler, type);
 		}
+	}
+
+	@Override
+	public void visitEnd() {
+		// If we didn't receive any parameter metadata, generate it
+		if (!hasParameterMeta) {
+			List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
+			for (int index = 0; index < arguments.size(); index++) {
+				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, index, "");
+				LocalVariableEntry translatedEntry = translator.getTranslatedVariable(entry);
+				String translatedName = translatedEntry.getName();
+				if (translatedName.equals(entry.getName())) {
+					super.visitParameter(inferName("a", index, arguments.get(index)), 0);
+				} else {
+					super.visitParameter(translatedName, 0);
+				}
+			}
+		}
+		super.visitEnd();
+	}
+
+	private String inferName(String prefix, int argumentIndex, TypeDescriptor desc) {
+		String translatedName;
+		int nameIndex = argumentIndex + 1;
+		StringBuilder nameBuilder = new StringBuilder(prefix);
+		// Unfortunately each of these have different name getters, so they have different code paths
+		if (desc.isPrimitive()) {
+			TypeDescriptor.Primitive argCls = desc.getPrimitive();
+			nameBuilder.append(argCls.name());
+		} else if (desc.isArray()) {
+			// List types would require this whole block again, so just go with aListx
+			nameBuilder.append(nameIndex);
+		} else if (desc.isType()) {
+			String typeName = desc.getTypeEntry().getSimpleName().replace("$", "");
+			typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);
+			nameBuilder.append(typeName);
+		}
+		if (methodEntry.getDesc().getArgumentDescs().size() > 1) {
+			nameBuilder.append(nameIndex);
+		}
+		translatedName = nameBuilder.toString();
+		return translatedName;
 	}
 }
