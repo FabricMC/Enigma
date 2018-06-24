@@ -152,7 +152,7 @@ public class TestJarIndexInheritanceTree {
 
 		// baseClass constructor
 		source = newMethod(baseClass, "<init>", "(Ljava/lang/String;)V");
-		references = index.getMethodReferences(source);
+		references = index.getMethodsReferencing(source);
 		assertThat(references, containsInAnyOrder(
 				newBehaviorReferenceByMethod(source, subClassA.getName(), "<init>", "(Ljava/lang/String;)V"),
 				newBehaviorReferenceByMethod(source, subClassB.getName(), "<init>", "()V")
@@ -160,14 +160,14 @@ public class TestJarIndexInheritanceTree {
 
 		// subClassA constructor
 		source = newMethod(subClassA, "<init>", "(Ljava/lang/String;)V");
-		references = index.getMethodReferences(source);
+		references = index.getMethodsReferencing(source);
 		assertThat(references, containsInAnyOrder(
 				newBehaviorReferenceByMethod(source, subClassAA.getName(), "<init>", "()V")
 		));
 
 		// baseClass.getName()
 		source = newMethod(baseClass, "a", "()Ljava/lang/String;");
-		references = index.getMethodReferences(source);
+		references = index.getMethodsReferencing(source);
 		assertThat(references, containsInAnyOrder(
 				newBehaviorReferenceByMethod(source, subClassAA.getName(), "a", "()Ljava/lang/String;"),
 				newBehaviorReferenceByMethod(source, subClassB.getName(), "a", "()V")
@@ -175,7 +175,7 @@ public class TestJarIndexInheritanceTree {
 
 		// subclassAA.getName()
 		source = newMethod(subClassAA, "a", "()Ljava/lang/String;");
-		references = index.getMethodReferences(source);
+		references = index.getMethodsReferencing(source);
 		assertThat(references, containsInAnyOrder(
 				newBehaviorReferenceByMethod(source, subClassAA.getName(), "a", "()V")
 		));

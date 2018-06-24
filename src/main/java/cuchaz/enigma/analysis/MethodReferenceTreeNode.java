@@ -64,7 +64,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
-		for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodReferences(this.entry)) {
+		for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.entry)) {
 			add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
 		}
 

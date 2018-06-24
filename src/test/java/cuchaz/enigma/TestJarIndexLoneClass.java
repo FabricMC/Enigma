@@ -110,7 +110,7 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void behaviorReferences() {
-		assertThat(index.getMethodReferences(newMethod("a", "a", "()Ljava/lang/String;")), is(empty()));
+		assertThat(index.getMethodsReferencing(newMethod("a", "a", "()Ljava/lang/String;")), is(empty()));
 	}
 
 	@Test

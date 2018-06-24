@@ -63,7 +63,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 				add(new FieldReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
 			}
 		} else {
-			for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodReferences(this.reference.context)) {
+			for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.reference.context)) {
 				add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.reference.context)));
 			}
 		}

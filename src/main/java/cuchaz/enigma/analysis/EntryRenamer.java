@@ -138,6 +138,13 @@ public class EntryRenamer {
 					renameClassesInThing(renames, methodEntry.getSignature()),
 					methodEntry.getAccess()
 			);
+		} else if (thing instanceof MethodEntry) {
+			MethodEntry methodEntry = (MethodEntry) thing;
+			return (T) new MethodEntry(
+					renameClassesInThing(renames, methodEntry.getOwnerClassEntry()),
+					methodEntry.getName(),
+					renameClassesInThing(renames, methodEntry.getDesc())
+			);
 		} else if (thing instanceof LocalVariableEntry) {
 			LocalVariableEntry argumentEntry = (LocalVariableEntry) thing;
 			return (T) new LocalVariableEntry(renameClassesInThing(renames, argumentEntry.getOwnerEntry()), argumentEntry.getIndex(), argumentEntry.getName());

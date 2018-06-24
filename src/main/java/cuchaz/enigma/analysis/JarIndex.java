@@ -29,11 +29,13 @@ public class JarIndex {
 	private Multimap<ClassEntry, FieldDefEntry> fields;
 	private Multimap<ClassEntry, MethodDefEntry> methods;
 	private Multimap<String, MethodDefEntry> methodImplementations;
-	private Multimap<MethodEntry, EntryReference<MethodEntry, MethodDefEntry>> methodReferences;
+	private Multimap<MethodEntry, EntryReference<MethodEntry, MethodDefEntry>> methodsReferencing;
+	private Multimap<MethodEntry, MethodEntry> methodReferences;
 	private Multimap<FieldEntry, EntryReference<FieldEntry, MethodDefEntry>> fieldReferences;
 	private Multimap<ClassEntry, ClassEntry> innerClassesByOuter;
 	private Map<ClassEntry, ClassEntry> outerClassesByInner;
 	private Map<MethodEntry, MethodEntry> bridgedMethods;
+	private Map<MethodEntry, MethodEntry> accessMethods;
 	private Set<MethodEntry> syntheticMethods;
 
 	public JarIndex(ReferencedEntryPool entryPool) {
@@ -44,11 +46,13 @@ public class JarIndex {
 		this.fields = HashMultimap.create();
 		this.methods = HashMultimap.create();
 		this.methodImplementations = HashMultimap.create();
+		this.methodsReferencing = HashMultimap.create();
 		this.methodReferences = HashMultimap.create();
 		this.fieldReferences = HashMultimap.create();
 		this.innerClassesByOuter = HashMultimap.create();
 		this.outerClassesByInner = Maps.newHashMap();
 		this.bridgedMethods = Maps.newHashMap();
+		this.accessMethods = Maps.newHashMap();
 		this.syntheticMethods = Sets.newHashSet();
 	}
 
@@ -63,12 +67,15 @@ public class JarIndex {
 		// step 3: index field, method, constructor references
 		jar.visit(node -> node.accept(new IndexReferenceVisitor(this, Opcodes.ASM5)));
 
-		// step 4: index bridged methods
+		// step 4: index access and bridged methods
 		for (MethodDefEntry methodEntry : methods.values()) {
-			// look for bridge and bridged methods
-			MethodEntry bridgedMethod = findBridgedMethod(methodEntry);
-			if (bridgedMethod != null) {
-				this.bridgedMethods.put(methodEntry, bridgedMethod);
+			// look for access and bridged methods
+			MethodEntry accessedMethod = findAccessMethod(methodEntry);
+			if (accessedMethod != null) {
+				this.accessMethods.put(methodEntry, accessedMethod);
+				if (isBridgedMethod(accessedMethod, methodEntry)) {
+					this.bridgedMethods.put(methodEntry, accessedMethod);
+				}
 			}
 		}
 
@@ -89,6 +96,7 @@ public class JarIndex {
 			EntryRenamer.renameClassesInSet(renames, this.obfClassEntries);
 			this.translationIndex.renameClasses(renames);
 			EntryRenamer.renameClassesInMultimap(renames, this.methodImplementations);
+			EntryRenamer.renameClassesInMultimap(renames, this.methodsReferencing);
 			EntryRenamer.renameClassesInMultimap(renames, this.methodReferences);
 			EntryRenamer.renameClassesInMultimap(renames, this.fieldReferences);
 			EntryRenamer.renameClassesInMap(renames, this.access);
@@ -134,7 +142,8 @@ public class JarIndex {
 		if (resolvedClassEntry != null && !resolvedClassEntry.equals(referencedMethod.getOwnerClassEntry())) {
 			referencedMethod = referencedMethod.updateOwnership(resolvedClassEntry);
 		}
-		methodReferences.put(referencedMethod, new EntryReference<>(referencedMethod, referencedMethod.getName(), callerEntry));
+		methodsReferencing.put(referencedMethod, new EntryReference<>(referencedMethod, referencedMethod.getName(), callerEntry));
+		methodReferences.put(callerEntry, referencedMethod);
 	}
 
 	protected void indexFieldAccess(MethodDefEntry callerEntry, String owner, String name, String desc) {
@@ -151,26 +160,54 @@ public class JarIndex {
 		this.outerClassesByInner.putIfAbsent(innerEntry, outerEntry);
 	}
 
-	private MethodEntry findBridgedMethod(MethodDefEntry method) {
+	private MethodEntry findAccessMethod(MethodDefEntry method) {
 
-		// bridge methods just call another method, cast it to the return desc, and return the result
-		// let's see if we can detect this scenario
+		// we want to find all compiler-added methods that directly call another with no processing
 
 		// skip non-synthetic methods
 		if (!method.getAccess().isSynthetic()) {
 			return null;
 		}
 
-		// get all the called methods
-		final Collection<EntryReference<MethodEntry, MethodDefEntry>> referencedMethods = methodReferences.get(method);
+		// get all the methods that we call
+		final Collection<MethodEntry> referencedMethods = methodReferences.get(method);
 
 		// is there just one?
 		if (referencedMethods.size() != 1) {
 			return null;
 		}
 
-		// we have a bridge method!
-		return referencedMethods.stream().map(ref -> ref.context).filter(Objects::nonNull).findFirst().orElse(null);
+		return referencedMethods.stream().findFirst().orElse(null);
+	}
+
+	private boolean isBridgedMethod(MethodEntry called, MethodEntry access) {
+		// Bridged methods will always have the same name as the method they are calling
+		// They will also have the same amount of parameters (though equal descriptors cannot be guaranteed)
+		if (!called.getName().equals(access.getName()) || called.getDesc().getArgumentDescs().size() != access.getDesc().getArgumentDescs().size()) {
+			return false;
+		}
+
+		TypeDescriptor accessReturn = access.getDesc().getReturnDesc();
+		TypeDescriptor calledReturn = called.getDesc().getReturnDesc();
+		if (calledReturn.isVoid() || calledReturn.isPrimitive() || accessReturn.isVoid() || accessReturn.isPrimitive()) {
+			return false;
+		}
+
+		// Bridged methods will never have the same type as what they are calling
+		if (accessReturn.equals(calledReturn)) {
+			return false;
+		}
+
+		String accessType = accessReturn.toString();
+
+		// If we're casting down from generic type to type-erased Object we're a bridge method
+		if (accessType.equals("Ljava/lang/Object;")) {
+			return true;
+		}
+
+		// Now we need to detect cases where we are being casted down to a higher type bound
+		List<ClassEntry> calledAncestry = translationIndex.getAncestry(calledReturn.getTypeEntry());
+		return calledAncestry.contains(accessReturn.getTypeEntry());
 	}
 
 	public Set<ClassEntry> getObfClassEntries() {
@@ -302,11 +339,11 @@ public class JarIndex {
 			methodEntries.add(methodEntry);
 		}
 
-		// look at bridged methods!
-		MethodEntry bridgedEntry = getBridgedMethod(methodEntry);
-		while (bridgedEntry != null) {
-			methodEntries.addAll(getRelatedMethodImplementations(bridgedEntry));
-			bridgedEntry = getBridgedMethod(bridgedEntry);
+		// look at access methods!
+		MethodEntry accessMethod = getAccessMethod(methodEntry);
+		while (accessMethod != null) {
+			methodEntries.addAll(getRelatedMethodImplementations(accessMethod));
+			accessMethod = getAccessMethod(accessMethod);
 		}
 
 		// look at interface methods too
@@ -327,11 +364,11 @@ public class JarIndex {
 			methodEntries.add(methodEntry);
 		}
 
-		// look at bridged methods!
-		MethodEntry bridgedEntry = getBridgedMethod(methodEntry);
-		while (bridgedEntry != null) {
-			methodEntries.addAll(getRelatedMethodImplementations(bridgedEntry));
-			bridgedEntry = getBridgedMethod(bridgedEntry);
+		// look at access methods!
+		MethodEntry accessMethod = getAccessMethod(methodEntry);
+		while (accessMethod != null) {
+			methodEntries.addAll(getRelatedMethodImplementations(accessMethod));
+			accessMethod = getAccessMethod(accessMethod);
 		}
 
 		// recurse
@@ -355,19 +392,12 @@ public class JarIndex {
 		return fieldEntries;
 	}
 
-	public Collection<EntryReference<MethodEntry, MethodDefEntry>> getMethodReferences(MethodEntry methodEntry) {
-		return this.methodReferences.get(methodEntry);
+	public Collection<EntryReference<MethodEntry, MethodDefEntry>> getMethodsReferencing(MethodEntry methodEntry) {
+		return this.methodsReferencing.get(methodEntry);
 	}
 
 	public Collection<MethodEntry> getReferencedMethods(MethodDefEntry methodEntry) {
-		// linear search is fast enough for now
-		Set<MethodEntry> behaviorEntries = Sets.newHashSet();
-		for (EntryReference<MethodEntry, MethodDefEntry> reference : this.methodReferences.values()) {
-			if (reference.context == methodEntry) {
-				behaviorEntries.add(reference.entry);
-			}
-		}
-		return behaviorEntries;
+		return this.methodReferences.get(methodEntry);
 	}
 
 	public Collection<ClassEntry> getInnerClasses(ClassEntry obfOuterClassEntry) {
@@ -459,6 +489,10 @@ public class JarIndex {
 
 	public MethodEntry getBridgedMethod(MethodEntry bridgeMethodEntry) {
 		return this.bridgedMethods.get(bridgeMethodEntry);
+	}
+
+	public MethodEntry getAccessMethod(MethodEntry bridgeMethodEntry) {
+		return this.accessMethods.get(bridgeMethodEntry);
 	}
 
 	public List<ClassEntry> getObfClassChain(ClassEntry obfClassEntry) {
