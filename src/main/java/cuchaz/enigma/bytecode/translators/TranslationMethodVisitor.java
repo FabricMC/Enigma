@@ -86,12 +86,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 		String translatedSignature = translator.getTranslatedSignature(Signature.createTypedSignature(signature)).toString();
 
-		// If we're not static, "this" is bound to index 0
-		int offset = methodEntry.getAccess().isStatic() ? 0 : 1;
-		if (ownerEntry.getAccess().isEnum() && methodEntry.getName().startsWith("<")) {
-			// Enum constructors have an implicit "name" and "ordinal" parameter as well as "this"
-			offset = 3;
-		}
+		int offset = methodEntry.getVariableOffset(ownerEntry);
 
 		int offsetIndex = index - offset;
 		if (offsetIndex >= 0) {
@@ -101,8 +96,8 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 			// TODO: Better name inference
 			if (translatedName.equals(entry.getName())) {
-				String prefix = offsetIndex < methodEntry.getDesc().getArgumentDescs().size() ? "a" : "v";
-				translatedName = inferName(prefix, offsetIndex, translatedEntry.getDesc());
+				boolean argument = offsetIndex < methodEntry.getDesc().getArgumentDescs().size();
+				translatedName = inferName(argument, offsetIndex, translatedEntry.getDesc());
 			}
 
 			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
@@ -159,7 +154,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 				LocalVariableEntry translatedEntry = translator.getTranslatedVariable(entry);
 				String translatedName = translatedEntry.getName();
 				if (translatedName.equals(entry.getName())) {
-					super.visitParameter(inferName("a", index, arguments.get(index)), 0);
+					super.visitParameter(inferName(true, index, arguments.get(index)), 0);
 				} else {
 					super.visitParameter(translatedName, 0);
 				}
@@ -168,10 +163,10 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		super.visitEnd();
 	}
 
-	private String inferName(String prefix, int argumentIndex, TypeDescriptor desc) {
+	private String inferName(boolean argument, int argumentIndex, TypeDescriptor desc) {
 		String translatedName;
 		int nameIndex = argumentIndex + 1;
-		StringBuilder nameBuilder = new StringBuilder(prefix);
+		StringBuilder nameBuilder = new StringBuilder(argument ? "a" : "v");
 		// Unfortunately each of these have different name getters, so they have different code paths
 		if (desc.isPrimitive()) {
 			TypeDescriptor.Primitive argCls = desc.getPrimitive();
@@ -184,7 +179,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);
 			nameBuilder.append(typeName);
 		}
-		if (methodEntry.getDesc().getArgumentDescs().size() > 1) {
+		if (!argument || methodEntry.getDesc().getArgumentDescs().size() > 1) {
 			nameBuilder.append(nameIndex);
 		}
 		translatedName = nameBuilder.toString();

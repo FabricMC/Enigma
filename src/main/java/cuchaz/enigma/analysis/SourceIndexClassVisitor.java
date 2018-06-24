@@ -17,16 +17,18 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
+import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.entry.*;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	private final ReferencedEntryPool entryPool;
 	private final ProcyonEntryFactory entryFactory;
 
-	private ClassEntry classEntry;
+	private ClassDefEntry classEntry;
 	private boolean isEnum;
 
-	public SourceIndexClassVisitor(ReferencedEntryPool entryPool, ClassEntry classEntry) {
+	public SourceIndexClassVisitor(ReferencedEntryPool entryPool, ClassDefEntry classEntry) {
 		super(entryPool);
 		this.entryPool = entryPool;
 		this.entryFactory = new ProcyonEntryFactory(entryPool);
@@ -37,7 +39,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	public Void visitTypeDeclaration(TypeDeclaration node, SourceIndex index) {
 		// is this this class, or a subtype?
 		TypeDefinition def = node.getUserData(Keys.TYPE_DEFINITION);
-		ClassEntry classEntry = new ClassEntry(def.getInternalName());
+		ClassDefEntry classEntry = new ClassDefEntry(def.getInternalName(), Signature.createSignature(def.getSignature()), new AccessFlags(def.getModifiers()));
 		if (!classEntry.equals(this.classEntry)) {
 			// it's a subtype, recurse
 			index.addDeclaration(node.getNameToken(), classEntry);
@@ -68,7 +70,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 			tokenNode = node.getModifiers().firstOrNullObject();
 		}
 		index.addDeclaration(tokenNode, methodEntry);
-		return node.acceptVisitor(new SourceIndexMethodVisitor(entryPool, methodEntry, false), index);
+		return node.acceptVisitor(new SourceIndexMethodVisitor(entryPool, classEntry, methodEntry), index);
 	}
 
 	@Override
@@ -76,7 +78,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
 		MethodDefEntry methodEntry = entryFactory.getMethodDefEntry(def);
 		index.addDeclaration(node.getNameToken(), methodEntry);
-		return node.acceptVisitor(new SourceIndexMethodVisitor(entryPool, methodEntry, isEnum), index);
+		return node.acceptVisitor(new SourceIndexMethodVisitor(entryPool, classEntry, methodEntry), index);
 	}
 
 	@Override

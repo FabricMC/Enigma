@@ -13,15 +13,14 @@ package cuchaz.enigma.analysis;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.strobel.assembler.metadata.MemberReference;
-import com.strobel.assembler.metadata.MethodReference;
-import com.strobel.assembler.metadata.ParameterDefinition;
-import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.assembler.metadata.*;
+import com.strobel.decompiler.ast.Variable;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.TypeDescriptor;
 import cuchaz.enigma.mapping.entry.*;
 
+import java.lang.Error;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,21 +28,18 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	private final ReferencedEntryPool entryPool;
 	private final ProcyonEntryFactory entryFactory;
 
-	private MethodDefEntry methodEntry;
+	private final ClassDefEntry ownerEntry;
+	private final MethodDefEntry methodEntry;
 
-	// TODO: Really fix Procyon index problem with inner classes
-	private int argumentPosition;
-	private int localsPosition;
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
 	private Map<String, Entry> identifierEntryCache = new HashMap<>();
 
-	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, MethodDefEntry methodEntry, boolean isEnum) {
+	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, ClassDefEntry ownerEntry, MethodDefEntry methodEntry) {
 		super(entryPool);
 		this.entryPool = entryPool;
 		this.entryFactory = new ProcyonEntryFactory(entryPool);
+		this.ownerEntry = ownerEntry;
 		this.methodEntry = methodEntry;
-		this.argumentPosition = isEnum ? 2 : 0;
-		this.localsPosition = 0;
 	}
 
 	@Override
@@ -112,14 +108,13 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitParameterDeclaration(ParameterDeclaration node, SourceIndex index) {
 		ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
-		if (def.getMethod() instanceof MemberReference && def.getMethod() instanceof MethodReference) {
-			MethodEntry methodEntry = entryFactory.getMethodEntry((MethodReference) def.getMethod());
-			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, argumentPosition++, node.getName());
-			Identifier identifier = node.getNameToken();
-			// cache the argument entry and the identifier
-			identifierEntryCache.put(identifier.getName(), localVariableEntry);
-			index.addDeclaration(identifier, localVariableEntry);
-		}
+
+		int variableOffset = this.methodEntry.getVariableOffset(ownerEntry);
+		LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, def.getSlot() - variableOffset, node.getName());
+		Identifier identifier = node.getNameToken();
+		// cache the argument entry and the identifier
+		identifierEntryCache.put(identifier.getName(), localVariableEntry);
+		index.addDeclaration(identifier, localVariableEntry);
 
 		return recurse(node, index);
 	}
@@ -173,18 +168,6 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	}
 
 	@Override
-	public Void visitForEachStatement(ForEachStatement node, SourceIndex index) {
-		if (node.getVariableType() instanceof SimpleType) {
-			Identifier identifier = node.getVariableNameToken();
-			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, argumentPosition + localsPosition++, identifier.getName());
-			identifierEntryCache.put(identifier.getName(), localVariableEntry);
-			addDeclarationToUnmatched(identifier.getName(), index);
-			index.addDeclaration(identifier, localVariableEntry);
-		}
-		return recurse(node, index);
-	}
-
-	@Override
 	public Void visitVariableDeclaration(VariableDeclarationStatement node, SourceIndex index) {
 		AstNodeCollection<VariableInitializer> variables = node.getVariables();
 
@@ -193,10 +176,17 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			VariableInitializer initializer = variables.firstOrNullObject();
 			if (initializer != null && node.getType() instanceof SimpleType) {
 				Identifier identifier = initializer.getNameToken();
-				LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, argumentPosition + localsPosition++, initializer.getName());
-				identifierEntryCache.put(identifier.getName(), localVariableEntry);
-				addDeclarationToUnmatched(identifier.getName(), index);
-				index.addDeclaration(identifier, localVariableEntry);
+				Variable variable = initializer.getUserData(Keys.VARIABLE);
+				if (variable != null) {
+					VariableDefinition originalVariable = variable.getOriginalVariable();
+					if (originalVariable != null) {
+						int variableOffset = methodEntry.getVariableOffset(ownerEntry);
+						LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, originalVariable.getSlot() - variableOffset, initializer.getName());
+						identifierEntryCache.put(identifier.getName(), localVariableEntry);
+						addDeclarationToUnmatched(identifier.getName(), index);
+						index.addDeclaration(identifier, localVariableEntry);
+					}
+				}
 			}
 		}
 		return recurse(node, index);
