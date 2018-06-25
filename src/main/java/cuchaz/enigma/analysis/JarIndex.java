@@ -35,7 +35,6 @@ public class JarIndex {
 	private Multimap<ClassEntry, ClassEntry> innerClassesByOuter;
 	private Map<ClassEntry, ClassEntry> outerClassesByInner;
 	private Map<MethodEntry, MethodEntry> bridgedMethods;
-	private Map<MethodEntry, MethodEntry> accessMethods;
 	private Set<MethodEntry> syntheticMethods;
 
 	public JarIndex(ReferencedEntryPool entryPool) {
@@ -52,7 +51,6 @@ public class JarIndex {
 		this.innerClassesByOuter = HashMultimap.create();
 		this.outerClassesByInner = Maps.newHashMap();
 		this.bridgedMethods = Maps.newHashMap();
-		this.accessMethods = Maps.newHashMap();
 		this.syntheticMethods = Sets.newHashSet();
 	}
 
@@ -72,7 +70,6 @@ public class JarIndex {
 			// look for access and bridged methods
 			MethodEntry accessedMethod = findAccessMethod(methodEntry);
 			if (accessedMethod != null) {
-				this.accessMethods.put(methodEntry, accessedMethod);
 				if (isBridgedMethod(accessedMethod, methodEntry)) {
 					this.bridgedMethods.put(methodEntry, accessedMethod);
 				}
@@ -333,17 +330,20 @@ public class JarIndex {
 
 	private void getRelatedMethodImplementations(Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
+		if (methodEntries.contains(methodEntry)) {
+			return;
+		}
 
 		if (containsObfMethod(methodEntry)) {
 			// collect the entry
 			methodEntries.add(methodEntry);
 		}
 
-		// look at access methods!
-		MethodEntry accessMethod = getAccessMethod(methodEntry);
-		while (accessMethod != null) {
-			methodEntries.addAll(getRelatedMethodImplementations(accessMethod));
-			accessMethod = getAccessMethod(accessMethod);
+		// look at bridge methods!
+		MethodEntry bridgedMethod = getBridgedMethod(methodEntry);
+		while (bridgedMethod != null) {
+			methodEntries.addAll(getRelatedMethodImplementations(bridgedMethod));
+			bridgedMethod = getBridgedMethod(bridgedMethod);
 		}
 
 		// look at interface methods too
@@ -364,11 +364,11 @@ public class JarIndex {
 			methodEntries.add(methodEntry);
 		}
 
-		// look at access methods!
-		MethodEntry accessMethod = getAccessMethod(methodEntry);
-		while (accessMethod != null) {
-			methodEntries.addAll(getRelatedMethodImplementations(accessMethod));
-			accessMethod = getAccessMethod(accessMethod);
+		// look at bridge methods!
+		MethodEntry bridgedMethod = getBridgedMethod(methodEntry);
+		while (bridgedMethod != null) {
+			methodEntries.addAll(getRelatedMethodImplementations(bridgedMethod));
+			bridgedMethod = getBridgedMethod(bridgedMethod);
 		}
 
 		// recurse
@@ -489,10 +489,6 @@ public class JarIndex {
 
 	public MethodEntry getBridgedMethod(MethodEntry bridgeMethodEntry) {
 		return this.bridgedMethods.get(bridgeMethodEntry);
-	}
-
-	public MethodEntry getAccessMethod(MethodEntry bridgeMethodEntry) {
-		return this.accessMethods.get(bridgeMethodEntry);
 	}
 
 	public List<ClassEntry> getObfClassChain(ClassEntry obfClassEntry) {
