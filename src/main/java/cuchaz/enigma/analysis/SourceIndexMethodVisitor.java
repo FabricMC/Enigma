@@ -110,11 +110,15 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
 
 		int variableOffset = this.methodEntry.getVariableOffset(ownerEntry);
-		LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, def.getSlot() - variableOffset, node.getName());
-		Identifier identifier = node.getNameToken();
-		// cache the argument entry and the identifier
-		identifierEntryCache.put(identifier.getName(), localVariableEntry);
-		index.addDeclaration(identifier, localVariableEntry);
+		int parameterIndex = def.getSlot() - variableOffset;
+
+		if (parameterIndex >= 0) {
+			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, parameterIndex, node.getName());
+			Identifier identifier = node.getNameToken();
+			// cache the argument entry and the identifier
+			identifierEntryCache.put(identifier.getName(), localVariableEntry);
+			index.addDeclaration(identifier, localVariableEntry);
+		}
 
 		return recurse(node, index);
 	}
@@ -181,10 +185,13 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 					VariableDefinition originalVariable = variable.getOriginalVariable();
 					if (originalVariable != null) {
 						int variableOffset = methodEntry.getVariableOffset(ownerEntry);
-						LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, originalVariable.getSlot() - variableOffset, initializer.getName());
-						identifierEntryCache.put(identifier.getName(), localVariableEntry);
-						addDeclarationToUnmatched(identifier.getName(), index);
-						index.addDeclaration(identifier, localVariableEntry);
+						int variableIndex = originalVariable.getSlot() - variableOffset;
+						if (variableIndex >= 0) {
+							LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, variableIndex, initializer.getName());
+							identifierEntryCache.put(identifier.getName(), localVariableEntry);
+							addDeclarationToUnmatched(identifier.getName(), index);
+							index.addDeclaration(identifier, localVariableEntry);
+						}
 					}
 				}
 			}
