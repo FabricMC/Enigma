@@ -11,7 +11,6 @@
 
 package cuchaz.enigma;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -277,13 +276,14 @@ public class Deobfuscator {
 
 			try {
 				// get the source
-				String source = getSource(getSourceTree(obfClassEntry.getName()));
+				CompilationUnit sourceTree = getSourceTree(obfClassEntry.getName());
 
 				// write the file
 				File file = new File(dirOut, deobfClassEntry.getName().replace('.', '/') + ".java");
 				file.getParentFile().mkdirs();
-				try (OutputStreamWriter out = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), Charsets.UTF_8)) {
-					out.write(source);
+				try (Writer writer = new BufferedWriter(new FileWriter(file))) {
+					sourceTree.acceptVisitor(new InsertParenthesesVisitor(), null);
+					sourceTree.acceptVisitor(new JavaOutputVisitor(new PlainTextOutput(writer), this.settings), null);
 				}
 			} catch (Throwable t) {
 				// don't crash the whole world here, just log the error and keep going
