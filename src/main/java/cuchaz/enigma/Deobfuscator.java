@@ -11,6 +11,7 @@
 
 package cuchaz.enigma;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -267,11 +268,12 @@ public class Deobfuscator {
 		}
 
 		// DEOBFUSCATE ALL THE THINGS!! @_@
-		int i = 0;
-		for (ClassEntry obfClassEntry : classEntries) {
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		AtomicInteger count = new AtomicInteger();
+		classEntries.parallelStream().forEach(obfClassEntry -> {
 			ClassEntry deobfClassEntry = deobfuscateEntry(new ClassEntry(obfClassEntry));
 			if (progress != null) {
-				progress.onProgress(i++, deobfClassEntry.toString());
+				progress.onProgress(count.getAndIncrement(), deobfClassEntry.toString());
 			}
 
 			try {
@@ -283,7 +285,7 @@ public class Deobfuscator {
 				file.getParentFile().mkdirs();
 				try (Writer writer = new BufferedWriter(new FileWriter(file))) {
 					sourceTree.acceptVisitor(new InsertParenthesesVisitor(), null);
-					sourceTree.acceptVisitor(new JavaOutputVisitor(new PlainTextOutput(writer), this.settings), null);
+					sourceTree.acceptVisitor(new JavaOutputVisitor(new PlainTextOutput(writer), settings), null);
 				}
 			} catch (Throwable t) {
 				// don't crash the whole world here, just log the error and keep going
@@ -291,9 +293,11 @@ public class Deobfuscator {
 				System.err.println("Unable to deobfuscate class " + deobfClassEntry + " (" + obfClassEntry + ")");
 				t.printStackTrace(System.err);
 			}
-		}
+		});
+		stopwatch.stop();
+		System.out.println("Done in : " + stopwatch.toString());
 		if (progress != null) {
-			progress.onProgress(i, "Done!");
+			progress.onProgress(count.get(), "Done:");
 		}
 	}
 
