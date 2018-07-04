@@ -69,14 +69,14 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	@Override
 	public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
 		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
-		AnnotationVisitor av = super.visitAnnotation(typeDesc.toString(), visible);
+		AnnotationVisitor av = super.visitParameterAnnotation(parameter, typeDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
 	public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
 		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
-		AnnotationVisitor av = super.visitAnnotation(typeDesc.toString(), visible);
+		AnnotationVisitor av = super.visitTypeAnnotation(typeRef, typePath, typeDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
 
