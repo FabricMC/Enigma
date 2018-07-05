@@ -14,9 +14,7 @@ package cuchaz.enigma.mapping;
 import com.google.common.base.Charsets;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class MappingsEnigmaWriter {
 
@@ -33,68 +31,49 @@ public class MappingsEnigmaWriter {
 		if (!target.exists() && !target.mkdirs())
 			throw new IOException("Cannot create mapping directory!");
 
+		Mappings previousState = mappings.getPreviousState();
 		for (ClassMapping classMapping : sorted(mappings.classes())) {
-			if (!classMapping.isDirty())
+			if (!classMapping.isDirty()) {
 				continue;
-			this.deletePreviousClassMapping(target, classMapping);
-			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
-			File result;
-			if (classMapping.getDeobfName() == null)
-				result = obFile;
-			else {
-				// Make sure that old version of the file doesn't exist
-				if (obFile.exists())
-					obFile.delete();
-				result = new File(target, classMapping.getDeobfName() + ".mapping");
 			}
 
-			if (!result.getParentFile().exists())
-				result.getParentFile().mkdirs();
+			if (previousState != null) {
+				ClassMapping previousClass = previousState.classesByObf.get(classMapping.getObfFullName());
+				if (previousClass != null) {
+					File previousFile = new File(target, previousClass.getSaveName() + ".mapping");
+					if (previousFile.exists() && !previousFile.delete()) {
+						System.err.println("Failed to delete old class mapping " + previousFile.getName());
+					}
+				}
+			}
+
+			File result = new File(target, classMapping.getSaveName() + ".mapping");
+
+			File packageFile = result.getParentFile();
+			if (!packageFile.exists()) {
+				packageFile.mkdirs();
+			}
 			result.createNewFile();
-			PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(result), Charsets.UTF_8));
-			write(outputWriter, classMapping, 0);
-			outputWriter.close();
+
+			try (PrintWriter outputWriter = new PrintWriter(new BufferedWriter(new FileWriter(result)))) {
+				write(outputWriter, classMapping, 0);
+			}
 		}
 
 		// Remove dropped mappings
-		if (mappings.getPreviousState() != null) {
-			List<ClassMapping> droppedClassMappings = new ArrayList<>(mappings.getPreviousState().classes());
-			List<ClassMapping> classMappings = new ArrayList<>(mappings.classes());
-			droppedClassMappings.removeAll(classMappings);
-			for (ClassMapping classMapping : droppedClassMappings) {
-				File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
-				File result;
-				if (classMapping.getDeobfName() == null)
-					result = obFile;
-				else {
-					// Make sure that old version of the file doesn't exist
-					if (obFile.exists())
-						obFile.delete();
-					result = new File(target, classMapping.getDeobfName() + ".mapping");
+		if (previousState != null) {
+			Set<ClassMapping> droppedClassMappings = new HashSet<>(previousState.classes());
+			droppedClassMappings.removeAll(mappings.classes());
+			for (ClassMapping droppedMapping : droppedClassMappings) {
+				File result = new File(target, droppedMapping.getSaveName() + ".mapping");
+				if (!result.exists()) {
+					continue;
 				}
-				if (result.exists())
-					result.delete();
+				if (!result.delete()) {
+					System.err.println("Failed to delete dropped class mapping " + result.getName());
+				}
 			}
 		}
-	}
-
-	private void deletePreviousClassMapping(File target, ClassMapping classMapping) {
-		File prevFile = null;
-		// Deob rename
-		if (classMapping.getDeobfName() != null && classMapping.getPreviousDeobfName() != null && !classMapping.getPreviousDeobfName().equals(classMapping.getDeobfName())) {
-			prevFile = new File(target, classMapping.getPreviousDeobfName() + ".mapping");
-		}
-		// Deob to ob rename
-		else if (classMapping.getDeobfName() == null && classMapping.getPreviousDeobfName() != null) {
-			prevFile = new File(target, classMapping.getPreviousDeobfName() + ".mapping");
-		}
-		// Ob to Deob rename
-		else if (classMapping.getDeobfName() != null && classMapping.getPreviousDeobfName() == null) {
-			prevFile = new File(target, classMapping.getObfFullName() + ".mapping");
-		}
-
-		if (prevFile != null && prevFile.exists())
-			prevFile.delete();
 	}
 
 	public void write(PrintWriter out, Mappings mappings) throws IOException {

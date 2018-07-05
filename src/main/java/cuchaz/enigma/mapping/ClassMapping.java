@@ -517,6 +517,14 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		return deobfFullName != null ? new ClassEntry(deobfFullName) : null;
 	}
 
+	public boolean isObfuscated() {
+		return this.deobfName == null || this.deobfName.equals(this.obfFullName);
+	}
+
+	public String getSaveName() {
+		return this.isObfuscated() ? this.obfFullName : this.deobfName;
+	}
+
 	public boolean isDirty() {
 		return isDirty;
 	}
@@ -563,5 +571,15 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	public ClassMapping setDeobInner(String deobName) {
 		this.deobfFullName = deobName;
 		return this;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.obfFullName.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof ClassMapping && ((ClassMapping) obj).obfFullName.equals(this.obfFullName);
 	}
 }

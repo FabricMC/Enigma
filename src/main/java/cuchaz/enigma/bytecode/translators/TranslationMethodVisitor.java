@@ -178,6 +178,9 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			String typeName = desc.getTypeEntry().getSimpleName().replace("$", "");
 			typeName = typeName.substring(0, 1).toUpperCase(Locale.ROOT) + typeName.substring(1);
 			nameBuilder.append(typeName);
+		} else {
+			System.err.println("Encountered invalid argument type descriptor " + desc.toString());
+			nameBuilder.append("Unk");
 		}
 		if (!argument || methodEntry.getDesc().getArgumentDescs().size() > 1) {
 			nameBuilder.append(nameIndex);
