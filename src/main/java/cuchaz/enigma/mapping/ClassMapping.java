@@ -573,6 +573,22 @@ public class ClassMapping implements Comparable<ClassMapping> {
 		return this;
 	}
 
+	public ClassMapping copy() {
+		ClassMapping copied = new ClassMapping(this.obfFullName);
+		copied.obfSimpleName= this.obfSimpleName;
+		copied.modifier = this.modifier;
+		copied.deobfFullName = this.deobfFullName;
+		copied.deobfName = this.deobfName;
+		copied.innerClassesByDeobf = this.innerClassesByDeobf;
+		copied.innerClassesByObfFull = this.innerClassesByObfFull;
+		copied.innerClassesByObfSimple = this.innerClassesByObfSimple;
+		copied.fieldsByObf = this.fieldsByObf;
+		copied.fieldsByDeobf = this.fieldsByDeobf;
+		copied.methodsByObf = this.methodsByObf;
+		copied.methodsByDeobf = this.methodsByDeobf;
+		return copied;
+	}
+
 	@Override
 	public int hashCode() {
 		return this.obfFullName.hashCode();

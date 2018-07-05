@@ -39,88 +39,87 @@ public class MappingsEnigmaReader {
 	}
 
 	public Mappings readFile(Mappings mappings, File file) throws IOException, MappingParseException {
+		try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8))) {
+			Deque<Object> mappingStack = Queues.newArrayDeque();
 
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8));
-		Deque<Object> mappingStack = Queues.newArrayDeque();
+			int lineNumber = 0;
+			String line;
+			while ((line = in.readLine()) != null) {
+				lineNumber++;
 
-		int lineNumber = 0;
-		String line;
-		while ((line = in.readLine()) != null) {
-			lineNumber++;
-
-			// strip comments
-			int commentPos = line.indexOf('#');
-			if (commentPos >= 0) {
-				line = line.substring(0, commentPos);
-			}
-
-			// skip blank lines
-			if (line.trim().length() <= 0) {
-				continue;
-			}
-
-			// get the indent of this line
-			int indent = 0;
-			for (int i = 0; i < line.length(); i++) {
-				if (line.charAt(i) != '\t') {
-					break;
+				// strip comments
+				int commentPos = line.indexOf('#');
+				if (commentPos >= 0) {
+					line = line.substring(0, commentPos);
 				}
-				indent++;
-			}
 
-			// handle stack pops
-			while (indent < mappingStack.size()) {
-				mappingStack.pop();
-			}
+				// skip blank lines
+				if (line.trim().length() <= 0) {
+					continue;
+				}
 
-			String[] parts = line.trim().split("\\s");
-			try {
-				// read the first token
-				String token = parts[0];
+				// get the indent of this line
+				int indent = 0;
+				for (int i = 0; i < line.length(); i++) {
+					if (line.charAt(i) != '\t') {
+						break;
+					}
+					indent++;
+				}
 
-				if (token.equalsIgnoreCase("CLASS")) {
-					ClassMapping classMapping;
-					if (indent <= 0) {
-						// outer class
-						classMapping = readClass(parts, false);
-						mappings.addClassMapping(classMapping);
-					} else {
+				// handle stack pops
+				while (indent < mappingStack.size()) {
+					mappingStack.pop();
+				}
 
-						// inner class
-						if (!(mappingStack.peek() instanceof ClassMapping)) {
-							throw new MappingParseException(file, lineNumber, "Unexpected CLASS entry here!");
+				String[] parts = line.trim().split("\\s");
+				try {
+					// read the first token
+					String token = parts[0];
+
+					if (token.equalsIgnoreCase("CLASS")) {
+						ClassMapping classMapping;
+						if (indent <= 0) {
+							// outer class
+							classMapping = readClass(parts, false);
+							mappings.addClassMapping(classMapping);
+						} else {
+
+							// inner class
+							if (!(mappingStack.peek() instanceof ClassMapping)) {
+								throw new MappingParseException(file, lineNumber, "Unexpected CLASS entry here!");
+							}
+
+							classMapping = readClass(parts, true);
+							((ClassMapping) mappingStack.peek()).addInnerClassMapping(classMapping);
 						}
-
-						classMapping = readClass(parts, true);
-						((ClassMapping) mappingStack.peek()).addInnerClassMapping(classMapping);
+						mappingStack.push(classMapping);
+					} else if (token.equalsIgnoreCase("FIELD")) {
+						if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof ClassMapping)) {
+							throw new MappingParseException(file, lineNumber, "Unexpected FIELD entry here!");
+						}
+						((ClassMapping) mappingStack.peek()).addFieldMapping(readField(parts));
+					} else if (token.equalsIgnoreCase("METHOD")) {
+						if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof ClassMapping)) {
+							throw new MappingParseException(file, lineNumber, "Unexpected METHOD entry here!");
+						}
+						MethodMapping methodMapping = readMethod(parts);
+						((ClassMapping) mappingStack.peek()).addMethodMapping(methodMapping);
+						mappingStack.push(methodMapping);
+					} else if (token.equalsIgnoreCase("ARG")) {
+						if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof MethodMapping)) {
+							throw new MappingParseException(file, lineNumber, "Unexpected ARG entry here!");
+						}
+						((MethodMapping) mappingStack.peek()).addArgumentMapping(readArgument(parts));
 					}
-					mappingStack.push(classMapping);
-				} else if (token.equalsIgnoreCase("FIELD")) {
-					if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof ClassMapping)) {
-						throw new MappingParseException(file, lineNumber, "Unexpected FIELD entry here!");
-					}
-					((ClassMapping) mappingStack.peek()).addFieldMapping(readField(parts));
-				} else if (token.equalsIgnoreCase("METHOD")) {
-					if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof ClassMapping)) {
-						throw new MappingParseException(file, lineNumber, "Unexpected METHOD entry here!");
-					}
-					MethodMapping methodMapping = readMethod(parts);
-					((ClassMapping) mappingStack.peek()).addMethodMapping(methodMapping);
-					mappingStack.push(methodMapping);
-				} else if (token.equalsIgnoreCase("ARG")) {
-					if (mappingStack.isEmpty() || !(mappingStack.peek() instanceof MethodMapping)) {
-						throw new MappingParseException(file, lineNumber, "Unexpected ARG entry here!");
-					}
-					((MethodMapping) mappingStack.peek()).addArgumentMapping(readArgument(parts));
+				} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) {
+					throw new MappingParseException(file, lineNumber, "Malformed line:\n" + line);
+				} catch (MappingConflict e) {
+					throw new MappingParseException(file, lineNumber, e.getMessage());
 				}
-			} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) {
-				throw new MappingParseException(file, lineNumber, "Malformed line:\n" + line);
-			} catch (MappingConflict e) {
-				throw new MappingParseException(file, lineNumber, e.getMessage());
 			}
+			return mappings;
 		}
-		in.close();
-		return mappings;
 	}
 
 	private LocalVariableMapping readArgument(String[] parts) {

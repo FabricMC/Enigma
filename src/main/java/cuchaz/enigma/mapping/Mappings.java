@@ -23,6 +23,7 @@ import cuchaz.enigma.throwables.MappingConflict;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Mappings {
 
@@ -47,10 +48,6 @@ public class Mappings {
 	}
 
 	public void addClassMapping(ClassMapping classMapping) throws MappingConflict {
-		if (classMapping.isObfuscated()) {
-			return;
-		}
-
 		if (this.classesByObf.containsKey(classMapping.getObfFullName())) {
 			throw new MappingConflict("class", classMapping.getObfFullName(), this.classesByObf.get(classMapping.getObfFullName()).getObfFullName());
 		}
@@ -217,8 +214,14 @@ public class Mappings {
 
 	public void savePreviousState() {
 		this.previousState = new Mappings(this.originMapping);
-		this.previousState.classesByDeobf = Maps.newHashMap(this.classesByDeobf);
-		this.previousState.classesByObf = Maps.newHashMap(this.classesByObf);
+		this.previousState.classesByDeobf = new HashMap<>();
+		for (Map.Entry<String, ClassMapping> entry : this.classesByDeobf.entrySet()) {
+			this.previousState.classesByDeobf.put(entry.getKey(), entry.getValue().copy());
+		}
+		this.previousState.classesByObf = new HashMap<>();
+		for (Map.Entry<String, ClassMapping> entry : this.classesByObf.entrySet()) {
+			this.previousState.classesByObf.put(entry.getKey(), entry.getValue().copy());
+		}
 		classesByDeobf.values().forEach(ClassMapping::resetDirty);
 		classesByObf.values().forEach(ClassMapping::resetDirty);
 	}
