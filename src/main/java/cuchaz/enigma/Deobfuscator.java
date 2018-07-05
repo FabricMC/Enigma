@@ -314,7 +314,7 @@ public class Deobfuscator {
 		}
 	}
 
-	private boolean isMethodProvider(ClassEntry classObfEntry, MethodEntry methodEntry) {
+	public boolean isMethodProvider(ClassEntry classObfEntry, MethodEntry methodEntry) {
 		Set<ClassEntry> classEntries = new HashSet<>();
 		addAllPotentialAncestors(classEntries, classObfEntry);
 
