@@ -47,6 +47,10 @@ public class Mappings {
 	}
 
 	public void addClassMapping(ClassMapping classMapping) throws MappingConflict {
+		if (classMapping.isObfuscated()) {
+			return;
+		}
+
 		if (this.classesByObf.containsKey(classMapping.getObfFullName())) {
 			throw new MappingConflict("class", classMapping.getObfFullName(), this.classesByObf.get(classMapping.getObfFullName()).getObfFullName());
 		}
