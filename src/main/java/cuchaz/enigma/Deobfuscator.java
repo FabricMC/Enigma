@@ -15,6 +15,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -163,6 +164,10 @@ public class Deobfuscator {
 	}
 
 	public CompilationUnit getSourceTree(String className) {
+		return getSourceTree(className, createTypeLoader());
+	}
+
+	public CompilationUnit getSourceTree(String className, ITranslatingTypeLoader loader) {
 
 		// we don't know if this class name is obfuscated or deobfuscated
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
@@ -178,7 +183,6 @@ public class Deobfuscator {
 		}
 
 		// set the desc loader
-		TranslatingTypeLoader loader = createTypeLoader();
 		this.settings.setTypeLoader(loader);
 
 		// see if procyon can find the desc
@@ -267,6 +271,10 @@ public class Deobfuscator {
 			progress.init(classEntries.size(), "Decompiling classes...");
 		}
 
+		//create a common instance outside the loop as mappings shouldn't be changing while this is happening
+		//synchronized to make sure the parallelStream doesn't CME with the cache
+		ITranslatingTypeLoader typeLoader = new SynchronizedTypeLoader(createTypeLoader());
+
 		// DEOBFUSCATE ALL THE THINGS!! @_@
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		AtomicInteger count = new AtomicInteger();
@@ -278,7 +286,7 @@ public class Deobfuscator {
 
 			try {
 				// get the source
-				CompilationUnit sourceTree = getSourceTree(obfClassEntry.getName());
+				CompilationUnit sourceTree = getSourceTree(obfClassEntry.getName(), typeLoader);
 
 				// write the file
 				File file = new File(dirOut, deobfClassEntry.getName().replace('.', '/') + ".java");
@@ -295,7 +303,7 @@ public class Deobfuscator {
 			}
 		});
 		stopwatch.stop();
-		System.out.println("Done in : " + stopwatch.toString());
+		System.out.println("writeSources Done in : " + stopwatch.toString());
 		if (progress != null) {
 			progress.onProgress(count.get(), "Done:");
 		}
@@ -657,5 +665,33 @@ public class Deobfuscator {
 
 	public interface ClassTransformer {
 		String transform(ClassNode node, ClassWriter writer);
+	}
+
+	private class SynchronizedTypeLoader implements ITranslatingTypeLoader {
+		private final TranslatingTypeLoader delegate;
+
+		private SynchronizedTypeLoader(TranslatingTypeLoader delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public List<String> getClassNamesToTry(String className) {
+			return delegate.getClassNamesToTry(className);
+		}
+
+		@Override
+		public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
+			return delegate.getClassNamesToTry(obfClassEntry);
+		}
+
+		@Override
+		public String transformInto(ClassNode node, ClassWriter writer) {
+			return delegate.transformInto(node, writer);
+		}
+
+		@Override
+		public synchronized boolean tryLoadType(String internalName, Buffer buffer) {
+			return delegate.tryLoadType(internalName, buffer);
+		}
 	}
 }
