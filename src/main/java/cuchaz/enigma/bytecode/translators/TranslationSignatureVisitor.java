@@ -3,12 +3,14 @@ package cuchaz.enigma.bytecode.translators;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureVisitor;
 
+import java.util.Stack;
 import java.util.function.Function;
 
 public class TranslationSignatureVisitor extends SignatureVisitor {
 	private final Function<String, String> remapper;
 
 	private final SignatureVisitor sv;
+	private final Stack<String> classStack = new Stack<>();
 
 	public TranslationSignatureVisitor(Function<String, String> remapper, SignatureVisitor sv) {
 		super(Opcodes.ASM5);
@@ -18,13 +20,24 @@ public class TranslationSignatureVisitor extends SignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
+		classStack.push(name);
 		String translatedEntry = this.remapper.apply(name);
 		this.sv.visitClassType(translatedEntry);
 	}
 
 	@Override
 	public void visitInnerClassType(String name) {
+		String lastClass = classStack.pop();
+		if (!name.startsWith(lastClass+"$")){//todo see if there's a way to base this on whether there were type params or not
+			name = lastClass+"$"+name;
+		}
 		String translatedEntry = this.remapper.apply(name);
+		if (translatedEntry.contains("/")){
+			translatedEntry = translatedEntry.substring(translatedEntry.lastIndexOf("/")+1);
+		}
+		if (translatedEntry.contains("$")){
+			translatedEntry = translatedEntry.substring(translatedEntry.lastIndexOf("$")+1);
+		}
 		this.sv.visitInnerClassType(translatedEntry);
 	}
 
@@ -105,6 +118,8 @@ public class TranslationSignatureVisitor extends SignatureVisitor {
 	@Override
 	public void visitEnd() {
 		this.sv.visitEnd();
+		if (!classStack.empty())
+			classStack.pop();
 	}
 
 	@Override
