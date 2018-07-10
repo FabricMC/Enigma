@@ -13,7 +13,7 @@ import java.util.List;
 public class SynchronizedTypeLoader implements ITranslatingTypeLoader {
 	private final TranslatingTypeLoader delegate;
 
-	SynchronizedTypeLoader(TranslatingTypeLoader delegate) {
+	public SynchronizedTypeLoader(TranslatingTypeLoader delegate) {
 		this.delegate = delegate;
 	}
 
