@@ -328,8 +328,12 @@ public class ClassSelector extends JTree {
 	}
 
 	public ClassSelectorPackageNode getPackageNode(ClassEntry entry) {
+		String packageName = entry.getPackageName();
+		if (packageName == null){
+			packageName = "(none)";
+		}
 		for (ClassSelectorPackageNode packageNode : packageNodes()) {
-			if (packageNode.getPackageName().equals(entry.getPackageName())) {
+			if (packageNode.getPackageName().equals(packageName)) {
 				return packageNode;
 			}
 		}
