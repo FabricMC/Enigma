@@ -12,9 +12,7 @@
 package cuchaz.enigma;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.strobel.assembler.metadata.Buffer;
-import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
@@ -27,17 +25,16 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.List;
-import java.util.Map;
 
-public class TranslatingTypeLoader implements ITypeLoader {
+public class TranslatingTypeLoader extends CachingTypeLoader implements ITranslatingTypeLoader {
+	//Store one instance as the classpath shouldnt change during load
+	private static final ITypeLoader defaultTypeLoader = new CachingClasspathTypeLoader();
 
 	private final ParsedJar jar;
 	private final JarIndex jarIndex;
 	private final ReferencedEntryPool entryPool;
 	private final Translator obfuscatingTranslator;
 	private final Translator deobfuscatingTranslator;
-	private final Map<String, byte[]> cache;
-	private final ClasspathTypeLoader defaultTypeLoader;
 
 	public TranslatingTypeLoader(ParsedJar jar, JarIndex jarIndex, ReferencedEntryPool entryPool, Translator obfuscatingTranslator, Translator deobfuscatingTranslator) {
 		this.jar = jar;
@@ -45,37 +42,19 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		this.entryPool = entryPool;
 		this.obfuscatingTranslator = obfuscatingTranslator;
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
-		this.cache = Maps.newHashMap();
-		this.defaultTypeLoader = new ClasspathTypeLoader();
-
 	}
 
-	public void clearCache() {
-		this.cache.clear();
-	}
-
-	@Override
-	public boolean tryLoadType(String className, Buffer out) {
-
-		// check the cache
-		byte[] data;
-		if (this.cache.containsKey(className)) {
-			data = this.cache.get(className);
-		} else {
-			data = loadType(className);
-			this.cache.put(className, data);
-		}
-
+	protected byte[] doLoad(String className){
+		byte[] data = loadType(className);
 		if (data == null) {
 			// chain to default desc loader
-			return this.defaultTypeLoader.tryLoadType(className, out);
+			Buffer parentBuf = new Buffer();
+			if (defaultTypeLoader.tryLoadType(className, parentBuf)){
+				return parentBuf.array();
+			}
+			return EMPTY_ARRAY;//need to return *something* as null means no store
 		}
-
-		// send the class to the decompiler
-		out.reset(data.length);
-		System.arraycopy(data, 0, out.array(), out.position(), data.length);
-		out.position(0);
-		return true;
+		return data;
 	}
 
 	private byte[] loadType(String className) {
@@ -131,10 +110,12 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		return null;
 	}
 
+	@Override
 	public List<String> getClassNamesToTry(String className) {
 		return getClassNamesToTry(this.obfuscatingTranslator.getTranslatedClass(new ClassEntry(className)));
 	}
 
+	@Override
 	public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
 		List<String> classNamesToTry = Lists.newArrayList();
 		classNamesToTry.add(obfClassEntry.getName());
@@ -145,8 +126,10 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		return classNamesToTry;
 	}
 
+	@Override
 	public String transformInto(ClassNode node, ClassWriter writer) {
 		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, jarIndex, entryPool, Opcodes.ASM5, writer));
 		return deobfuscatingTranslator.getTranslatedClass(new ClassEntry(node.name)).getName();
 	}
+
 }
