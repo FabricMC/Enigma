@@ -159,9 +159,15 @@ task('libJar', type: Jar, dependsOn: classes) {
     }
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 artifacts {
    archives shadowJar
    archives libJar
+   archives sourcesJar
 }
 
 // And finally, make the build generate / install the jars.
