@@ -15,12 +15,14 @@ import cuchaz.enigma.mapping.entry.ClassEntry;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 
 public class ParsedJar {
 	private final Map<String, ClassNode> nodes = new LinkedHashMap<>();
@@ -33,7 +35,7 @@ public class ParsedJar {
 				JarEntry entry = entries.nextElement();
 				// is this a class file?
 				if (entry.getName().endsWith(".class")) {
-					try (InputStream input = jar.getInputStream(entry)) {
+					try (InputStream input = new BufferedInputStream(jar.getInputStream(entry))) {
 						// read the ClassNode from the jar
 						ClassReader reader = new ClassReader(input);
 						ClassNode node = new ClassNode();
@@ -41,6 +43,27 @@ public class ParsedJar {
 						String path = entry.getName().substring(0, entry.getName().length() - ".class".length());
 						nodes.put(path, node);
 					}
+				}
+			}
+		} finally {
+			jar.close();
+		}
+	}
+
+	public ParsedJar(JarInputStream jar) throws IOException {
+		try {
+			// get the jar entries that correspond to classes
+			JarEntry entry;
+			while ((entry = jar.getNextJarEntry()) != null) {
+				// is this a class file?
+				if (entry.getName().endsWith(".class")) {
+					// read the ClassNode from the jar
+					ClassReader reader = new ClassReader(jar);
+					ClassNode node = new ClassNode();
+					reader.accept(node, 0);
+					String path = entry.getName().substring(0, entry.getName().length() - ".class".length());
+					nodes.put(path, node);
+					jar.closeEntry();
 				}
 			}
 		} finally {
