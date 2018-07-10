@@ -7,7 +7,7 @@ import com.strobel.assembler.metadata.ITypeLoader;
 /**
  * Caching version of {@link ClasspathTypeLoader}
  */
-class CachingClasspathTypeLoader extends CachingTypeLoader {
+public class CachingClasspathTypeLoader extends CachingTypeLoader {
 	private final ITypeLoader classpathLoader = new ClasspathTypeLoader();
 
 	protected byte[] doLoad(String className) {
