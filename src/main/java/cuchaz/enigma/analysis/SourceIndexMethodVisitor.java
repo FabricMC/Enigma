@@ -198,4 +198,27 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		}
 		return recurse(node, index);
 	}
+
+	@Override
+	public Void visitMethodGroupExpression(MethodGroupExpression node, SourceIndex index) {
+		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
+
+		if (ref instanceof MethodReference) {
+			// get the behavior entry
+			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
+			MethodEntry methodEntry = null;
+
+			methodEntry = entryPool.getMethod(classEntry, ref.getName(), ref.getErasedSignature());
+			// get the node for the token
+			AstNode tokenNode = node.getMethodNameToken();
+			if (tokenNode == null || (tokenNode.getRegion().getBeginLine() == 0 || tokenNode.getRegion().getEndLine() == 0)){
+				tokenNode = node.getTarget();
+			}
+			if (tokenNode != null) {
+				index.addReference(tokenNode, methodEntry, this.methodEntry);
+			}
+		}
+
+		return recurse(node, index);
+	}
 }

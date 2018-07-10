@@ -6,7 +6,9 @@ import cuchaz.enigma.mapping.Signature;
 import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.mapping.entry.MethodDefEntry;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 public class IndexReferenceVisitor extends ClassVisitor {
 	private final JarIndex index;
@@ -46,6 +48,30 @@ public class IndexReferenceVisitor extends ClassVisitor {
 		@Override
 		public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
 			this.index.indexMethodCall(callerEntry, owner, name, desc);
+		}
+
+		@Override
+		public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+			for (Object bsmArg : bsmArgs){
+				if (bsmArg instanceof Handle){
+					Handle handle = (Handle)bsmArg;
+					switch (handle.getTag()){
+						case Opcodes.H_GETFIELD:
+						case Opcodes.H_GETSTATIC:
+						case Opcodes.H_PUTFIELD:
+						case Opcodes.H_PUTSTATIC:
+							this.index.indexFieldAccess(callerEntry, handle.getOwner(), handle.getName(), handle.getDesc());
+							break;
+						case Opcodes.H_INVOKEINTERFACE:
+						case Opcodes.H_INVOKESPECIAL:
+						case Opcodes.H_INVOKESTATIC:
+						case Opcodes.H_INVOKEVIRTUAL:
+						case Opcodes.H_NEWINVOKESPECIAL:
+							this.index.indexMethodCall(callerEntry, handle.getOwner(), handle.getName(), handle.getDesc());
+							break;
+					}
+				}
+			}
 		}
 	}
 }
