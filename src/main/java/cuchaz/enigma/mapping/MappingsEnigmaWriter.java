@@ -85,7 +85,7 @@ public class MappingsEnigmaWriter {
 		}
 	}
 
-	private void write(PrintWriter out, ClassMapping classMapping, int depth) throws IOException {
+	protected void write(PrintWriter out, ClassMapping classMapping, int depth) throws IOException {
 		if (classMapping.getDeobfName() == null) {
 			out.format("%sCLASS %s%s\n", getIndent(depth), classMapping.getObfFullName(),
 					classMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : classMapping.getModifier().getFormattedName());
@@ -134,7 +134,7 @@ public class MappingsEnigmaWriter {
 		out.format("%sARG %d %s\n", getIndent(depth), localVariableMapping.getIndex(), localVariableMapping.getName());
 	}
 
-	private <T extends Comparable<T>> List<T> sorted(Iterable<T> classes) {
+	protected <T extends Comparable<T>> List<T> sorted(Iterable<T> classes) {
 		List<T> out = new ArrayList<>();
 		for (T t : classes) {
 			out.add(t);
