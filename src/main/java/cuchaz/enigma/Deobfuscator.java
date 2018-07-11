@@ -34,6 +34,7 @@ import cuchaz.enigma.mapping.entry.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
 import oml.ast.transformers.ObfuscatedEnumSwitchRewriterTransform;
+import oml.ast.transformers.RemoveObjectCasts;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -661,7 +662,8 @@ public class Deobfuscator {
 
 	public static void runCustomTransforms(AstBuilder builder, DecompilerContext context){
 		List<IAstTransform> transformers = Arrays.asList(
-				new ObfuscatedEnumSwitchRewriterTransform(context)
+				new ObfuscatedEnumSwitchRewriterTransform(context),
+				new RemoveObjectCasts(context)
 		);
 		for (IAstTransform transform : transformers){
 			transform.run(builder.getCompilationUnit());
