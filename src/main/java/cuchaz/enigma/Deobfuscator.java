@@ -25,6 +25,7 @@ import com.strobel.decompiler.languages.java.JavaOutputVisitor;
 import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
+import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.bytecode.ClassProtectifier;
 import cuchaz.enigma.bytecode.ClassPublifier;
@@ -32,6 +33,7 @@ import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
+import oml.ast.transformers.ObfuscatedEnumSwitchRewriterTransform;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -200,6 +202,7 @@ public class Deobfuscator {
 		AstBuilder builder = new AstBuilder(context);
 		builder.addType(resolvedType);
 		builder.runTransformations(null);
+		runCustomTransforms(builder, context);
 		return builder.getCompilationUnit();
 	}
 
@@ -654,6 +657,15 @@ public class Deobfuscator {
 			return this.renamer.getMethodModfifier((MethodEntry) obfEntry);
 		else
 			throw new Error("Unknown entry desc: " + obfEntry);
+	}
+
+	public static void runCustomTransforms(AstBuilder builder, DecompilerContext context){
+		List<IAstTransform> transformers = Arrays.asList(
+				new ObfuscatedEnumSwitchRewriterTransform(context)
+		);
+		for (IAstTransform transform : transformers){
+			transform.run(builder.getCompilationUnit());
+		}
 	}
 
 	public interface ProgressListener {
