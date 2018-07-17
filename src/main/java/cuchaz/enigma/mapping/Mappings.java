@@ -15,11 +15,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import cuchaz.enigma.analysis.TranslationIndex;
+import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 import cuchaz.enigma.throwables.MappingConflict;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Mappings {
 
@@ -96,11 +100,11 @@ public class Mappings {
 
 	public Translator getTranslator(TranslationDirection direction, TranslationIndex index) {
 		switch (direction) {
-			case Deobfuscating:
+			case DEOBFUSCATING:
 
-				return new Translator(direction, this.classesByObf, index);
+				return new DirectionalTranslator(direction, this.classesByObf, index);
 
-			case Obfuscating:
+			case OBFUSCATING:
 
 				// fill in the missing deobf class entries with obf entries
 				Map<String, ClassMapping> classes = Maps.newHashMap();
@@ -114,9 +118,9 @@ public class Mappings {
 
 				// translate the translation index
 				// NOTE: this isn't actually recursive
-				TranslationIndex deobfIndex = new TranslationIndex(index, getTranslator(TranslationDirection.Deobfuscating, index));
+				TranslationIndex deobfIndex = new TranslationIndex(index, getTranslator(TranslationDirection.DEOBFUSCATING, index));
 
-				return new Translator(direction, classes, deobfIndex);
+				return new DirectionalTranslator(direction, classes, deobfIndex);
 
 			default:
 				throw new Error("Invalid translation direction!");
@@ -151,9 +155,9 @@ public class Mappings {
 
 			// add classes from method signatures
 			for (MethodMapping methodMapping : classMapping.methods()) {
-				for (Type type : methodMapping.getObfSignature().types()) {
-					if (type.hasClass()) {
-						classNames.add(type.getClassEntry().getClassName());
+				for (TypeDescriptor desc : methodMapping.getObfDesc().types()) {
+					if (desc.containsType()) {
+						classNames.add(desc.getTypeEntry().getClassName());
 					}
 				}
 			}
@@ -165,9 +169,9 @@ public class Mappings {
 		return this.classesByDeobf.containsKey(deobfName);
 	}
 
-	public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName, Type obfType) {
+	public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName, TypeDescriptor obfDesc) {
 		ClassMapping classMapping = this.classesByObf.get(obfClassEntry.getName());
-		return classMapping != null && classMapping.containsDeobfField(deobfName, obfType);
+		return classMapping != null && classMapping.containsDeobfField(deobfName, obfDesc);
 	}
 
 	public boolean containsDeobfField(ClassEntry obfClassEntry, String deobfName) {
@@ -180,14 +184,14 @@ public class Mappings {
 		return false;
 	}
 
-	public boolean containsDeobfMethod(ClassEntry obfClassEntry, String deobfName, Signature obfSignature) {
+	public boolean containsDeobfMethod(ClassEntry obfClassEntry, String deobfName, MethodDescriptor obfDescriptor) {
 		ClassMapping classMapping = this.classesByObf.get(obfClassEntry.getName());
-		return classMapping != null && classMapping.containsDeobfMethod(deobfName, obfSignature);
+		return classMapping != null && classMapping.containsDeobfMethod(deobfName, obfDescriptor);
 	}
 
-	public boolean containsArgument(BehaviorEntry obfBehaviorEntry, String name) {
-		ClassMapping classMapping = this.classesByObf.get(obfBehaviorEntry.getClassName());
-		return classMapping != null && classMapping.containsArgument(obfBehaviorEntry, name);
+	public boolean containsArgument(MethodEntry obfMethodEntry, String name) {
+		ClassMapping classMapping = this.classesByObf.get(obfMethodEntry.getClassName());
+		return classMapping != null && classMapping.containsArgument(obfMethodEntry, name);
 	}
 
 	public List<ClassMapping> getClassMappingChain(ClassEntry obfClass) {
@@ -210,8 +214,14 @@ public class Mappings {
 
 	public void savePreviousState() {
 		this.previousState = new Mappings(this.originMapping);
-		this.previousState.classesByDeobf = Maps.newHashMap(this.classesByDeobf);
-		this.previousState.classesByObf = Maps.newHashMap(this.classesByObf);
+		this.previousState.classesByDeobf = new HashMap<>();
+		for (Map.Entry<String, ClassMapping> entry : this.classesByDeobf.entrySet()) {
+			this.previousState.classesByDeobf.put(entry.getKey(), entry.getValue().copy());
+		}
+		this.previousState.classesByObf = new HashMap<>();
+		for (Map.Entry<String, ClassMapping> entry : this.classesByObf.entrySet()) {
+			this.previousState.classesByObf.put(entry.getKey(), entry.getValue().copy());
+		}
 		classesByDeobf.values().forEach(ClassMapping::resetDirty);
 		classesByObf.values().forEach(ClassMapping::resetDirty);
 	}
@@ -238,6 +248,20 @@ public class Mappings {
 
 		public String getFormattedName() {
 			return " ACC:" + super.toString();
+		}
+
+		public AccessFlags transform(AccessFlags access) {
+			switch (this) {
+				case PUBLIC:
+					return access.setPublic();
+				case PROTECTED:
+					return access.setProtected();
+				case PRIVATE:
+					return access.setPrivate();
+				case UNCHANGED:
+				default:
+					return access;
+			}
 		}
 	}
 }

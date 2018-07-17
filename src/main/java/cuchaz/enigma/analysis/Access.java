@@ -11,8 +11,7 @@
 
 package cuchaz.enigma.analysis;
 
-import javassist.CtBehavior;
-import javassist.CtField;
+import cuchaz.enigma.bytecode.AccessFlags;
 
 import java.lang.reflect.Modifier;
 
@@ -20,12 +19,8 @@ public enum Access {
 
 	PUBLIC, PROTECTED, PACKAGE, PRIVATE;
 
-	public static Access get(CtBehavior behavior) {
-		return get(behavior.getModifiers());
-	}
-
-	public static Access get(CtField field) {
-		return get(field.getModifiers());
+	public static Access get(AccessFlags flags) {
+		return get(flags.getFlags());
 	}
 
 	public static Access get(int modifiers) {

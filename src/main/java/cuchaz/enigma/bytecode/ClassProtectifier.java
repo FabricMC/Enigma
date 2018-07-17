@@ -11,41 +11,39 @@
 
 package cuchaz.enigma.bytecode;
 
-import javassist.CtBehavior;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.bytecode.AccessFlag;
-import javassist.bytecode.InnerClassesAttribute;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
 
-public class ClassProtectifier {
+public class ClassProtectifier extends ClassVisitor {
 
-	public static CtClass protectify(CtClass c) {
-
-		// protectify all the fields
-		for (CtField field : c.getDeclaredFields()) {
-			field.setModifiers(protectify(field.getModifiers()));
-		}
-
-		// protectify all the methods and constructors
-		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-			behavior.setModifiers(protectify(behavior.getModifiers()));
-		}
-
-		// protectify all the inner classes
-		InnerClassesAttribute attr = (InnerClassesAttribute) c.getClassFile().getAttribute(InnerClassesAttribute.tag);
-		if (attr != null) {
-			for (int i = 0; i < attr.tableLength(); i++) {
-				attr.setAccessFlags(i, protectify(attr.accessFlags(i)));
-			}
-		}
-
-		return c;
+	public ClassProtectifier(int api, ClassVisitor cv) {
+		super(api, cv);
 	}
 
-	private static int protectify(int flags) {
-		if (AccessFlag.isPrivate(flags)) {
-			flags = AccessFlag.setProtected(flags);
+	@Override
+	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+		access = protectify(access);
+		return super.visitMethod(access, name, desc, signature, exceptions);
+	}
+
+	@Override
+	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
+		access = protectify(access);
+		return super.visitField(access, name, desc, signature, value);
+	}
+
+	@Override
+	public void visitInnerClass(String name, String outerName, String innerName, int access) {
+		access = protectify(access);
+		super.visitInnerClass(name, outerName, innerName, access);
+	}
+
+	private static int protectify(int access) {
+		AccessFlags accessFlags = new AccessFlags(access);
+		if (accessFlags.isPrivate()) {
+			accessFlags.setProtected();
 		}
-		return flags;
+		return accessFlags.getFlags();
 	}
 }

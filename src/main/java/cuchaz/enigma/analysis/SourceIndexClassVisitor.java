@@ -17,14 +17,21 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.mapping.Signature;
+import cuchaz.enigma.mapping.entry.*;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
+	private final ReferencedEntryPool entryPool;
+	private final ProcyonEntryFactory entryFactory;
 
-	private ClassEntry classEntry;
+	private ClassDefEntry classEntry;
 	private boolean isEnum;
 
-	public SourceIndexClassVisitor(ClassEntry classEntry) {
+	public SourceIndexClassVisitor(ReferencedEntryPool entryPool, ClassDefEntry classEntry) {
+		super(entryPool);
+		this.entryPool = entryPool;
+		this.entryFactory = new ProcyonEntryFactory(entryPool);
 		this.classEntry = classEntry;
 	}
 
@@ -32,11 +39,11 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	public Void visitTypeDeclaration(TypeDeclaration node, SourceIndex index) {
 		// is this this class, or a subtype?
 		TypeDefinition def = node.getUserData(Keys.TYPE_DEFINITION);
-		ClassEntry classEntry = new ClassEntry(def.getInternalName());
+		ClassDefEntry classEntry = new ClassDefEntry(def.getInternalName(), Signature.createSignature(def.getSignature()), new AccessFlags(def.getModifiers()));
 		if (!classEntry.equals(this.classEntry)) {
-			// it's a sub-type, recurse
+			// it's a subtype, recurse
 			index.addDeclaration(node.getNameToken(), classEntry);
-			return node.acceptVisitor(new SourceIndexClassVisitor(classEntry), index);
+			return node.acceptVisitor(new SourceIndexClassVisitor(entryPool, classEntry), index);
 		}
 
 		return recurse(node, index);
@@ -56,31 +63,28 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitMethodDeclaration(MethodDeclaration node, SourceIndex index) {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
-		BehaviorEntry behaviorEntry = ProcyonEntryFactory.getBehaviorEntry(def);
+		MethodDefEntry methodEntry = entryFactory.getMethodDefEntry(def);
 		AstNode tokenNode = node.getNameToken();
-		if (behaviorEntry instanceof ConstructorEntry) {
-			ConstructorEntry constructorEntry = (ConstructorEntry) behaviorEntry;
-			if (constructorEntry.isStatic()) {
-				// for static initializers, check elsewhere for the token node
-				tokenNode = node.getModifiers().firstOrNullObject();
-			}
+		if (methodEntry.isConstructor() && methodEntry.getName().equals("<clinit>")) {
+			// for static initializers, check elsewhere for the token node
+			tokenNode = node.getModifiers().firstOrNullObject();
 		}
-		index.addDeclaration(tokenNode, behaviorEntry);
-		return node.acceptVisitor(new SourceIndexBehaviorVisitor(behaviorEntry, false), index);
+		index.addDeclaration(tokenNode, methodEntry);
+		return node.acceptVisitor(new SourceIndexMethodVisitor(entryPool, classEntry, methodEntry), index);
 	}
 
 	@Override
 	public Void visitConstructorDeclaration(ConstructorDeclaration node, SourceIndex index) {
 		MethodDefinition def = node.getUserData(Keys.METHOD_DEFINITION);
-		ConstructorEntry constructorEntry = ProcyonEntryFactory.getConstructorEntry(def);
-		index.addDeclaration(node.getNameToken(), constructorEntry);
-		return node.acceptVisitor(new SourceIndexBehaviorVisitor(constructorEntry, isEnum), index);
+		MethodDefEntry methodEntry = entryFactory.getMethodDefEntry(def);
+		index.addDeclaration(node.getNameToken(), methodEntry);
+		return node.acceptVisitor(new SourceIndexMethodVisitor(entryPool, classEntry, methodEntry), index);
 	}
 
 	@Override
 	public Void visitFieldDeclaration(FieldDeclaration node, SourceIndex index) {
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
-		FieldEntry fieldEntry = ProcyonEntryFactory.getFieldEntry(def);
+		FieldDefEntry fieldEntry = entryFactory.getFieldDefEntry(def);
 		assert (node.getVariables().size() == 1);
 		VariableInitializer variable = node.getVariables().firstOrNullObject();
 		index.addDeclaration(variable.getNameToken(), fieldEntry);
@@ -92,7 +96,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	public Void visitEnumValueDeclaration(EnumValueDeclaration node, SourceIndex index) {
 		// treat enum declarations as field declarations
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
-		FieldEntry fieldEntry = ProcyonEntryFactory.getFieldEntry(def);
+		FieldDefEntry fieldEntry = entryFactory.getFieldDefEntry(def);
 		index.addDeclaration(node.getNameToken(), fieldEntry);
 		this.isEnum = true;
 		return recurse(node, index);

@@ -2,6 +2,7 @@ package cuchaz.enigma.mapping;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
+import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.throwables.MappingConflict;
 import cuchaz.enigma.throwables.MappingParseException;
 
@@ -20,11 +21,11 @@ public class MappingsTinyReader {
 	}
 
 	public FieldMapping readField(String[] parts) {
-		return new FieldMapping(parts[3], new Type(parts[2]), parts[4], Mappings.EntryModifier.UNCHANGED);
+		return new FieldMapping(parts[3], new TypeDescriptor(parts[2]), parts[4], Mappings.EntryModifier.UNCHANGED);
 	}
 
 	public MethodMapping readMethod(String[] parts) {
-		return new MethodMapping(parts[3], new Signature(parts[2]), parts[4]);
+		return new MethodMapping(parts[3], new MethodDescriptor(parts[2]), parts[4]);
 	}
 
 	public Mappings read(File file) throws IOException, MappingParseException {
@@ -72,7 +73,7 @@ public class MappingsTinyReader {
 						break;
 					case "MTH-ARG":
 						classMapping = classMappingMap.computeIfAbsent(parts[1], k -> new ClassMapping(parts[1]));
-						classMapping.setArgumentName(parts[3], new Signature(parts[2]), Integer.parseInt(parts[4]), parts[5]);
+						classMapping.setArgumentName(parts[3], new MethodDescriptor(parts[2]), Integer.parseInt(parts[4]), parts[5]);
 						break;
 					default:
 						throw new MappingParseException(file, lineNumber, "Unknown token '" + token + "' !");

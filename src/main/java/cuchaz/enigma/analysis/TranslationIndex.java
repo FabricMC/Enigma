@@ -15,11 +15,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
-import javassist.CtBehavior;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.bytecode.Descriptor;
+import cuchaz.enigma.mapping.entry.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -28,96 +26,91 @@ import java.util.Set;
 
 public class TranslationIndex {
 
+	private final ReferencedEntryPool entryPool;
 	private Map<ClassEntry, ClassEntry> superclasses;
-	private Multimap<ClassEntry, FieldEntry> fieldEntries;
-	private Multimap<ClassEntry, BehaviorEntry> behaviorEntries;
+	private Multimap<ClassEntry, FieldDefEntry> fieldEntries;
+	private Multimap<ClassEntry, MethodDefEntry> methodEntries;
 	private Multimap<ClassEntry, ClassEntry> interfaces;
 
-	public TranslationIndex() {
+	public TranslationIndex(ReferencedEntryPool entryPool) {
+		this.entryPool = entryPool;
 		this.superclasses = Maps.newHashMap();
 		this.fieldEntries = HashMultimap.create();
-		this.behaviorEntries = HashMultimap.create();
+		this.methodEntries = HashMultimap.create();
 		this.interfaces = HashMultimap.create();
 	}
 
 	public TranslationIndex(TranslationIndex other, Translator translator) {
+		this.entryPool = other.entryPool;
+
 		// translate the superclasses
 		this.superclasses = Maps.newHashMap();
 		for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.superclasses.entrySet()) {
-			this.superclasses.put(translator.translateEntry(mapEntry.getKey()), translator.translateEntry(mapEntry.getValue()));
+			this.superclasses.put(translator.getTranslatedClass(mapEntry.getKey()), translator.getTranslatedClass(mapEntry.getValue()));
 		}
 
 		// translate the interfaces
 		this.interfaces = HashMultimap.create();
 		for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.interfaces.entries()) {
 			this.interfaces.put(
-				translator.translateEntry(mapEntry.getKey()),
-				translator.translateEntry(mapEntry.getValue())
+					translator.getTranslatedClass(mapEntry.getKey()),
+					translator.getTranslatedClass(mapEntry.getValue())
 			);
 		}
 
 		// translate the fields
 		this.fieldEntries = HashMultimap.create();
-		for (Map.Entry<ClassEntry, FieldEntry> mapEntry : other.fieldEntries.entries()) {
+		for (Map.Entry<ClassEntry, FieldDefEntry> mapEntry : other.fieldEntries.entries()) {
 			this.fieldEntries.put(
-				translator.translateEntry(mapEntry.getKey()),
-				translator.translateEntry(mapEntry.getValue())
+					translator.getTranslatedClass(mapEntry.getKey()),
+					translator.getTranslatedFieldDef(mapEntry.getValue())
 			);
 		}
 
-		this.behaviorEntries = HashMultimap.create();
-		for (Map.Entry<ClassEntry, BehaviorEntry> mapEntry : other.behaviorEntries.entries()) {
-			this.behaviorEntries.put(
-				translator.translateEntry(mapEntry.getKey()),
-				translator.translateEntry(mapEntry.getValue())
+		this.methodEntries = HashMultimap.create();
+		for (Map.Entry<ClassEntry, MethodDefEntry> mapEntry : other.methodEntries.entries()) {
+			this.methodEntries.put(
+					translator.getTranslatedClass(mapEntry.getKey()),
+					translator.getTranslatedMethodDef(mapEntry.getValue())
 			);
 		}
 	}
 
-	public void indexClass(CtClass c) {
-		indexClass(c, true);
-	}
-
-	public void indexClass(CtClass c, boolean indexMembers) {
-		ClassEntry classEntry = EntryFactory.getClassEntry(c);
+	protected ClassDefEntry indexClass(int access, String name, String signature, String superName, String[] interfaces) {
+		ClassDefEntry classEntry = new ClassDefEntry(name, Signature.createSignature(signature), new AccessFlags(access));
 		if (isJre(classEntry)) {
-			return;
+			return null;
 		}
 
 		// add the superclass
-		ClassEntry superclassEntry = EntryFactory.getSuperclassEntry(c);
+		ClassEntry superclassEntry = entryPool.getClass(superName);
 		if (superclassEntry != null) {
 			this.superclasses.put(classEntry, superclassEntry);
 		}
 
 		// add the interfaces
-		for (String interfaceClassName : c.getClassFile().getInterfaces()) {
-			ClassEntry interfaceClassEntry = new ClassEntry(Descriptor.toJvmName(interfaceClassName));
+		for (String interfaceClassName : interfaces) {
+			ClassEntry interfaceClassEntry = entryPool.getClass(interfaceClassName);
 			if (!isJre(interfaceClassEntry)) {
-
 				this.interfaces.put(classEntry, interfaceClassEntry);
 			}
 		}
 
-		if (indexMembers) {
-			// add fields
-			for (CtField field : c.getDeclaredFields()) {
-				FieldEntry fieldEntry = EntryFactory.getFieldEntry(field);
-				this.fieldEntries.put(fieldEntry.getClassEntry(), fieldEntry);
-			}
+		return classEntry;
+	}
 
-			// add behaviors
-			for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-				BehaviorEntry behaviorEntry = EntryFactory.getBehaviorEntry(behavior);
-				this.behaviorEntries.put(behaviorEntry.getClassEntry(), behaviorEntry);
-			}
-		}
+	protected void indexField(FieldDefEntry fieldEntry) {
+		this.fieldEntries.put(fieldEntry.getOwnerClassEntry(), fieldEntry);
+	}
+
+	protected void indexMethod(MethodDefEntry methodEntry) {
+		this.methodEntries.put(methodEntry.getOwnerClassEntry(), methodEntry);
 	}
 
 	public void renameClasses(Map<String, String> renames) {
 		EntryRenamer.renameClassesInMap(renames, this.superclasses);
 		EntryRenamer.renameClassesInMultimap(renames, this.fieldEntries);
-		EntryRenamer.renameClassesInMultimap(renames, this.behaviorEntries);
+		EntryRenamer.renameClassesInMultimap(renames, this.methodEntries);
 	}
 
 	public ClassEntry getSuperclass(ClassEntry classEntry) {
@@ -175,31 +168,32 @@ public class TranslationIndex {
 	}
 
 	public boolean entryExists(Entry entry) {
+		if (entry == null) {
+			return false;
+		}
 		if (entry instanceof FieldEntry) {
 			return fieldExists((FieldEntry) entry);
-		} else if (entry instanceof BehaviorEntry) {
-			return behaviorExists((BehaviorEntry) entry);
-		} else if (entry instanceof ArgumentEntry) {
-			return behaviorExists(((ArgumentEntry) entry).getBehaviorEntry());
+		} else if (entry instanceof MethodEntry) {
+			return methodExists((MethodEntry) entry);
 		} else if (entry instanceof LocalVariableEntry) {
-			return behaviorExists(((LocalVariableEntry) entry).getBehaviorEntry());
+			return methodExists(((LocalVariableEntry) entry).getOwnerEntry());
 		}
 		throw new IllegalArgumentException("Cannot check existence for " + entry.getClass());
 	}
 
 	public boolean fieldExists(FieldEntry fieldEntry) {
-		return this.fieldEntries.containsEntry(fieldEntry.getClassEntry(), fieldEntry);
+		return this.fieldEntries.containsEntry(fieldEntry.getOwnerClassEntry(), fieldEntry);
 	}
 
-	public boolean behaviorExists(BehaviorEntry behaviorEntry) {
-		return this.behaviorEntries.containsEntry(behaviorEntry.getClassEntry(), behaviorEntry);
+	public boolean methodExists(MethodEntry methodEntry) {
+		return this.methodEntries.containsEntry(methodEntry.getOwnerClassEntry(), methodEntry);
 	}
 
-	public ClassEntry resolveEntryClass(Entry entry) {
-		return resolveEntryClass(entry, false);
+	public ClassEntry resolveEntryOwner(Entry entry) {
+		return resolveEntryOwner(entry, false);
 	}
 
-	public ClassEntry resolveEntryClass(Entry entry, boolean checkSuperclassBeforeChild) {
+	public ClassEntry resolveEntryOwner(Entry entry, boolean checkSuperclassBeforeChild) {
 		if (entry instanceof ClassEntry) {
 			return (ClassEntry) entry;
 		}
@@ -227,12 +221,12 @@ public class TranslationIndex {
 		Entry originalEntry = entry;
 
 		// Get all possible superclasses and reverse the list
-		List<ClassEntry> superclasses = Lists.reverse(getAncestry(originalEntry.getClassEntry()));
+		List<ClassEntry> superclasses = Lists.reverse(getAncestry(originalEntry.getOwnerClassEntry()));
 
 		boolean existInEntry = false;
 
 		for (ClassEntry classEntry : superclasses) {
-			entry = entry.cloneToNewClass(classEntry);
+			entry = entry.updateOwnership(classEntry);
 			existInEntry = entryExists(entry);
 
 			// Check for possible entry in interfaces of superclasses
@@ -245,9 +239,9 @@ public class TranslationIndex {
 
 		// Doesn't exists in superclasses? check the child or return null
 		if (!existInEntry)
-			return !entryExists(originalEntry) ? null : originalEntry.getClassEntry();
+			return !entryExists(originalEntry) ? null : originalEntry.getOwnerClassEntry();
 
-		return entry.getClassEntry();
+		return entry.getOwnerClassEntry();
 	}
 
 	public ClassEntry resolveSuperclass(Entry entry) {
@@ -256,7 +250,7 @@ public class TranslationIndex {
 
 		while (!entryExists(entry)) {
 			// is there a parent class?
-			ClassEntry superclassEntry = getSuperclass(entry.getClassEntry());
+			ClassEntry superclassEntry = getSuperclass(entry.getOwnerClassEntry());
 			if (superclassEntry == null) {
 				// this is probably a method from a class in a library
 				// we can't trace the implementation up any higher unless we index the library
@@ -264,23 +258,23 @@ public class TranslationIndex {
 			}
 
 			// move up to the parent class
-			entry = entry.cloneToNewClass(superclassEntry);
+			entry = entry.updateOwnership(superclassEntry);
 		}
-		return entry.getClassEntry();
+		return entry.getOwnerClassEntry();
 	}
 
 	public ClassEntry resolveInterface(Entry entry) {
 		// the interfaces for any class is a forest
 		// so let's look at all the trees
 
-		for (ClassEntry interfaceEntry : this.interfaces.get(entry.getClassEntry())) {
+		for (ClassEntry interfaceEntry : this.interfaces.get(entry.getOwnerClassEntry())) {
 			Collection<ClassEntry> subInterface = this.interfaces.get(interfaceEntry);
 			if (subInterface != null && !subInterface.isEmpty()) {
-				ClassEntry result = resolveInterface(entry.cloneToNewClass(interfaceEntry));
+				ClassEntry result = resolveInterface(entry.updateOwnership(interfaceEntry));
 				if (result != null)
 					return result;
 			}
-			ClassEntry resolvedClassEntry = resolveSuperclass(entry.cloneToNewClass(interfaceEntry));
+			ClassEntry resolvedClassEntry = resolveSuperclass(entry.updateOwnership(interfaceEntry));
 			if (resolvedClassEntry != null) {
 				return resolvedClassEntry;
 			}

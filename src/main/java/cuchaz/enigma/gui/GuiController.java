@@ -18,6 +18,10 @@ import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.Entry;
+import cuchaz.enigma.mapping.entry.FieldEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.utils.ReadableToken;
 
@@ -51,10 +55,10 @@ public class GuiController {
 		return this.isDirty;
 	}
 
-	public void openJar(final JarFile jar) {
+	public void openJar(final JarFile jar) throws IOException {
 		this.gui.onStartOpenJar();
 		this.deobfuscator = new Deobfuscator(jar);
-		this.gui.onFinishOpenJar(this.deobfuscator.getJarName());
+		this.gui.onFinishOpenJar(jar.getName());
 		refreshClasses();
 	}
 
@@ -161,24 +165,24 @@ public class GuiController {
 
 	public ClassInheritanceTreeNode getClassInheritance(ClassEntry deobfClassEntry) {
 		ClassEntry obfClassEntry = this.deobfuscator.obfuscateEntry(deobfClassEntry);
-		ClassInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getClassInheritance(this.deobfuscator.getTranslator(TranslationDirection.Deobfuscating), obfClassEntry);
+		ClassInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getClassInheritance(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfClassEntry);
 		return ClassInheritanceTreeNode.findNode(rootNode, obfClassEntry);
 	}
 
 	public ClassImplementationsTreeNode getClassImplementations(ClassEntry deobfClassEntry) {
 		ClassEntry obfClassEntry = this.deobfuscator.obfuscateEntry(deobfClassEntry);
-		return this.deobfuscator.getJarIndex().getClassImplementations(this.deobfuscator.getTranslator(TranslationDirection.Deobfuscating), obfClassEntry);
+		return this.deobfuscator.getJarIndex().getClassImplementations(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfClassEntry);
 	}
 
 	public MethodInheritanceTreeNode getMethodInheritance(MethodEntry deobfMethodEntry) {
 		MethodEntry obfMethodEntry = this.deobfuscator.obfuscateEntry(deobfMethodEntry);
-		MethodInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getMethodInheritance(this.deobfuscator.getTranslator(TranslationDirection.Deobfuscating), obfMethodEntry);
+		MethodInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getMethodInheritance(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfMethodEntry);
 		return MethodInheritanceTreeNode.findNode(rootNode, obfMethodEntry);
 	}
 
 	public MethodImplementationsTreeNode getMethodImplementations(MethodEntry deobfMethodEntry) {
 		MethodEntry obfMethodEntry = this.deobfuscator.obfuscateEntry(deobfMethodEntry);
-		List<MethodImplementationsTreeNode> rootNodes = this.deobfuscator.getJarIndex().getMethodImplementations(this.deobfuscator.getTranslator(TranslationDirection.Deobfuscating), obfMethodEntry);
+		List<MethodImplementationsTreeNode> rootNodes = this.deobfuscator.getJarIndex().getMethodImplementations(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfMethodEntry);
 		if (rootNodes.isEmpty()) {
 			return null;
 		}
@@ -190,14 +194,14 @@ public class GuiController {
 
 	public FieldReferenceTreeNode getFieldReferences(FieldEntry deobfFieldEntry) {
 		FieldEntry obfFieldEntry = this.deobfuscator.obfuscateEntry(deobfFieldEntry);
-		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(this.deobfuscator.getTranslator(TranslationDirection.Deobfuscating), obfFieldEntry);
+		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfFieldEntry);
 		rootNode.load(this.deobfuscator.getJarIndex(), true);
 		return rootNode;
 	}
 
-	public BehaviorReferenceTreeNode getMethodReferences(BehaviorEntry deobfBehaviorEntry) {
-		BehaviorEntry obfBehaviorEntry = this.deobfuscator.obfuscateEntry(deobfBehaviorEntry);
-		BehaviorReferenceTreeNode rootNode = new BehaviorReferenceTreeNode(this.deobfuscator.getTranslator(TranslationDirection.Deobfuscating), obfBehaviorEntry);
+	public MethodReferenceTreeNode getMethodReferences(MethodEntry deobfMethodEntry) {
+		MethodEntry obfMethodEntry = this.deobfuscator.obfuscateEntry(deobfMethodEntry);
+		MethodReferenceTreeNode rootNode = new MethodReferenceTreeNode(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfMethodEntry);
 		rootNode.load(this.deobfuscator.getJarIndex(), true);
 		return rootNode;
 	}

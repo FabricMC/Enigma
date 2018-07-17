@@ -14,6 +14,10 @@ package cuchaz.enigma.mapping;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.EntryFactory;
+import cuchaz.enigma.mapping.entry.FieldEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 
 import java.util.Map;
 
@@ -23,7 +27,7 @@ public class MappingsChecker {
 	private Map<ClassEntry, ClassMapping> droppedClassMappings;
 	private Map<ClassEntry, ClassMapping> droppedInnerClassMappings;
 	private Map<FieldEntry, FieldMapping> droppedFieldMappings;
-	private Map<BehaviorEntry, MethodMapping> droppedMethodMappings;
+	private Map<MethodEntry, MethodMapping> droppedMethodMappings;
 
 	public MappingsChecker(JarIndex index) {
 		this.index = index;
@@ -45,7 +49,7 @@ public class MappingsChecker {
 		return this.droppedFieldMappings;
 	}
 
-	public Map<BehaviorEntry, MethodMapping> getDroppedMethodMappings() {
+	public Map<MethodEntry, MethodMapping> getDroppedMethodMappings() {
 		return this.droppedMethodMappings;
 	}
 
@@ -77,10 +81,10 @@ public class MappingsChecker {
 
 		// check methods
 		for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
-			BehaviorEntry obfBehaviorEntry = EntryFactory.getObfBehaviorEntry(classEntry, methodMapping);
-			if (!this.index.containsObfBehavior(obfBehaviorEntry)) {
+			MethodEntry obfMethodEntry = EntryFactory.getObfMethodEntry(classEntry, methodMapping);
+			if (!this.index.containsObfMethod(obfMethodEntry)) {
 				classMapping.removeMethodMapping(methodMapping);
-				this.droppedMethodMappings.put(obfBehaviorEntry, methodMapping);
+				this.droppedMethodMappings.put(obfMethodEntry, methodMapping);
 			}
 		}
 

@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 
 import java.util.AbstractMap;
 import java.util.List;
@@ -87,18 +88,18 @@ public class EntryRenamer {
 			MethodEntry newMethodEntry = renames.get(methodEntry);
 			if (newMethodEntry != null) {
 				return (T) new MethodEntry(
-					methodEntry.getClassEntry(),
-					newMethodEntry.getName(),
-					methodEntry.getSignature()
+						methodEntry.getOwnerClassEntry(),
+						newMethodEntry.getName(),
+						methodEntry.getDesc()
 				);
 			}
 			return thing;
-		} else if (thing instanceof ArgumentEntry) {
-			ArgumentEntry argumentEntry = (ArgumentEntry) thing;
-			return (T) new ArgumentEntry(
-				renameMethodsInThing(renames, argumentEntry.getBehaviorEntry()),
-				argumentEntry.getIndex(),
-				argumentEntry.getName()
+		} else if (thing instanceof LocalVariableEntry) {
+			LocalVariableEntry variableEntry = (LocalVariableEntry) thing;
+			return (T) new LocalVariableEntry(
+					renameMethodsInThing(renames, variableEntry.getOwnerEntry()),
+					variableEntry.getIndex(),
+					variableEntry.getName()
 			);
 		} else if (thing instanceof EntryReference) {
 			EntryReference<Entry, Entry> reference = (EntryReference<Entry, Entry>) thing;
@@ -119,27 +120,45 @@ public class EntryRenamer {
 		} else if (thing instanceof ClassEntry) {
 			ClassEntry classEntry = (ClassEntry) thing;
 			return (T) new ClassEntry(renameClassesInThing(renames, classEntry.getClassName()));
-		} else if (thing instanceof FieldEntry) {
-			FieldEntry fieldEntry = (FieldEntry) thing;
-			return (T) new FieldEntry(renameClassesInThing(renames, fieldEntry.getClassEntry()), fieldEntry.getName(), renameClassesInThing(renames, fieldEntry.getType()));
-		} else if (thing instanceof ConstructorEntry) {
-			ConstructorEntry constructorEntry = (ConstructorEntry) thing;
-			return (T) new ConstructorEntry(renameClassesInThing(renames, constructorEntry.getClassEntry()), renameClassesInThing(renames, constructorEntry.getSignature()));
+		} else if (thing instanceof FieldDefEntry) {
+			FieldDefEntry fieldEntry = (FieldDefEntry) thing;
+			return (T) new FieldDefEntry(
+					renameClassesInThing(renames, fieldEntry.getOwnerClassEntry()),
+					fieldEntry.getName(),
+					renameClassesInThing(renames, fieldEntry.getDesc()),
+					renameClassesInThing(renames, fieldEntry.getSignature()),
+					fieldEntry.getAccess()
+			);
+		} else if (thing instanceof MethodDefEntry) {
+			MethodDefEntry methodEntry = (MethodDefEntry) thing;
+			return (T) new MethodDefEntry(
+					renameClassesInThing(renames, methodEntry.getOwnerClassEntry()),
+					methodEntry.getName(),
+					renameClassesInThing(renames, methodEntry.getDesc()),
+					renameClassesInThing(renames, methodEntry.getSignature()),
+					methodEntry.getAccess()
+			);
 		} else if (thing instanceof MethodEntry) {
 			MethodEntry methodEntry = (MethodEntry) thing;
-			return (T) new MethodEntry(renameClassesInThing(renames, methodEntry.getClassEntry()), methodEntry.getName(), renameClassesInThing(renames, methodEntry.getSignature()));
-		} else if (thing instanceof ArgumentEntry) {
-			ArgumentEntry argumentEntry = (ArgumentEntry) thing;
-			return (T) new ArgumentEntry(renameClassesInThing(renames, argumentEntry.getBehaviorEntry()), argumentEntry.getIndex(), argumentEntry.getName());
+			return (T) new MethodEntry(
+					renameClassesInThing(renames, methodEntry.getOwnerClassEntry()),
+					methodEntry.getName(),
+					renameClassesInThing(renames, methodEntry.getDesc())
+			);
+		} else if (thing instanceof LocalVariableEntry) {
+			LocalVariableEntry argumentEntry = (LocalVariableEntry) thing;
+			return (T) new LocalVariableEntry(renameClassesInThing(renames, argumentEntry.getOwnerEntry()), argumentEntry.getIndex(), argumentEntry.getName());
 		} else if (thing instanceof EntryReference) {
 			EntryReference<Entry, Entry> reference = (EntryReference<Entry, Entry>) thing;
 			reference.entry = renameClassesInThing(renames, reference.entry);
 			reference.context = renameClassesInThing(renames, reference.context);
 			return thing;
+		} else if (thing instanceof MethodDescriptor) {
+			return (T) ((MethodDescriptor) thing).remap(className -> renameClassesInThing(renames, className));
+		} else if (thing instanceof TypeDescriptor) {
+			return (T) ((TypeDescriptor) thing).remap(className -> renameClassesInThing(renames, className));
 		} else if (thing instanceof Signature) {
-			return (T) new Signature((Signature) thing, className -> renameClassesInThing(renames, className));
-		} else if (thing instanceof Type) {
-			return (T) new Type((Type) thing, className -> renameClassesInThing(renames, className));
+			return (T) ((Signature) thing).remap(className -> renameClassesInThing(renames, className));
 		}
 
 		return thing;

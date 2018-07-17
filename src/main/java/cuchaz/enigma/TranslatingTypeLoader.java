@@ -12,106 +12,63 @@
 package cuchaz.enigma;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.strobel.assembler.metadata.Buffer;
-import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
-import cuchaz.enigma.analysis.BridgeMarker;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.bytecode.translators.ClassTranslator;
-import cuchaz.enigma.bytecode.translators.InnerClassWriter;
-import cuchaz.enigma.bytecode.translators.LocalVariableTranslator;
-import cuchaz.enigma.bytecode.translators.MethodParameterTranslator;
-import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 import cuchaz.enigma.mapping.Translator;
-import javassist.*;
-import javassist.bytecode.Descriptor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
-public class TranslatingTypeLoader implements ITypeLoader {
+public class TranslatingTypeLoader extends CachingTypeLoader implements ITranslatingTypeLoader {
+	//Store one instance as the classpath shouldnt change during load
+	private static final ITypeLoader defaultTypeLoader = new CachingClasspathTypeLoader();
 
-	private JarFile jar;
-	private JarIndex jarIndex;
-	private Translator obfuscatingTranslator;
-	private Translator deobfuscatingTranslator;
-	private Map<String, byte[]> cache;
-	private ClasspathTypeLoader defaultTypeLoader;
+	private final ParsedJar jar;
+	private final JarIndex jarIndex;
+	private final ReferencedEntryPool entryPool;
+	private final Translator obfuscatingTranslator;
+	private final Translator deobfuscatingTranslator;
 
-	public TranslatingTypeLoader(JarFile jar, JarIndex jarIndex, Translator obfuscatingTranslator, Translator deobfuscatingTranslator) {
+	public TranslatingTypeLoader(ParsedJar jar, JarIndex jarIndex, ReferencedEntryPool entryPool, Translator obfuscatingTranslator, Translator deobfuscatingTranslator) {
 		this.jar = jar;
 		this.jarIndex = jarIndex;
+		this.entryPool = entryPool;
 		this.obfuscatingTranslator = obfuscatingTranslator;
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
-		this.cache = Maps.newHashMap();
-		this.defaultTypeLoader = new ClasspathTypeLoader();
-
 	}
 
-	public void clearCache() {
-		this.cache.clear();
-	}
-
-	@Override
-	public boolean tryLoadType(String className, Buffer out) {
-
-		// check the cache
-		byte[] data;
-		if (this.cache.containsKey(className)) {
-			data = this.cache.get(className);
-		} else {
-			data = loadType(className);
-			this.cache.put(className, data);
-		}
-
+	protected byte[] doLoad(String className){
+		byte[] data = loadType(className);
 		if (data == null) {
-			// chain to default type loader
-			return this.defaultTypeLoader.tryLoadType(className, out);
+			// chain to default desc loader
+			Buffer parentBuf = new Buffer();
+			if (defaultTypeLoader.tryLoadType(className, parentBuf)){
+				return parentBuf.array();
+			}
+			return EMPTY_ARRAY;//need to return *something* as null means no store
 		}
-
-		// send the class to the decompiler
-		out.reset(data.length);
-		System.arraycopy(data, 0, out.array(), out.position(), data.length);
-		out.position(0);
-		return true;
-	}
-
-	public CtClass loadClass(String deobfClassName) {
-
-		byte[] data = loadType(deobfClassName);
-		if (data == null) {
-			return null;
-		}
-
-		// return a javassist handle for the class
-		String javaClassFileName = Descriptor.toJavaName(deobfClassName);
-		ClassPool classPool = new ClassPool();
-		classPool.insertClassPath(new ByteArrayClassPath(javaClassFileName, data));
-		try {
-			return classPool.get(javaClassFileName);
-		} catch (NotFoundException ex) {
-			throw new Error(ex);
-		}
+		return data;
 	}
 
 	private byte[] loadType(String className) {
 
 		// NOTE: don't know if class name is obf or deobf
 		ClassEntry classEntry = new ClassEntry(className);
-		ClassEntry obfClassEntry = this.obfuscatingTranslator.translateEntry(classEntry);
+		ClassEntry obfClassEntry = this.obfuscatingTranslator.getTranslatedClass(classEntry);
 
 		// is this an inner class referenced directly? (ie trying to load b instead of a$b)
 		if (!obfClassEntry.isInnerClass()) {
 			List<ClassEntry> classChain = this.jarIndex.getObfClassChain(obfClassEntry);
 			if (classChain.size() > 1) {
 				System.err.println(String.format("WARNING: no class %s after inner class reconstruction. Try %s",
-					className, obfClassEntry.buildClassEntry(classChain)
+						className, obfClassEntry.buildClassEntry(classChain)
 				));
 				return null;
 			}
@@ -126,56 +83,26 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		//System.out.println(String.format("Looking for %s (obf: %s)", classEntry.getName(), obfClassEntry.getName()));
 
 		// find the class in the jar
-		String classInJarName = findClassInJar(obfClassEntry);
-		if (classInJarName == null) {
+		ClassNode node = findClassInJar(obfClassEntry);
+		if (node == null) {
 			// couldn't find it
 			return null;
 		}
 
-		try {
-			// read the class file into a buffer
-			ByteArrayOutputStream data = new ByteArrayOutputStream();
-			byte[] buf = new byte[1024 * 1024]; // 1 KiB
-			InputStream in = this.jar.getInputStream(this.jar.getJarEntry(classInJarName + ".class"));
-			while (true) {
-				int bytesRead = in.read(buf);
-				if (bytesRead <= 0) {
-					break;
-				}
-				data.write(buf, 0, bytesRead);
-			}
-			data.close();
-			in.close();
-			buf = data.toByteArray();
+		ClassWriter writer = new ClassWriter(0);
+		transformInto(node, writer);
 
-			// load the javassist handle to the raw class
-			ClassPool classPool = new ClassPool();
-			String classInJarJavaName = Descriptor.toJavaName(classInJarName);
-			classPool.insertClassPath(new ByteArrayClassPath(classInJarJavaName, buf));
-			CtClass c = classPool.get(classInJarJavaName);
-
-			c = transformClass(c);
-
-			// sanity checking
-			assertClassName(c, classEntry);
-
-			// DEBUG
-			//Util.writeClass( c );
-
-			// we have a transformed class!
-			return c.toBytecode();
-		} catch (IOException | NotFoundException | CannotCompileException ex) {
-			throw new Error(ex);
-		}
+		// we have a transformed class!
+		return writer.toByteArray();
 	}
 
-	private String findClassInJar(ClassEntry obfClassEntry) {
+	private ClassNode findClassInJar(ClassEntry obfClassEntry) {
 
 		// try to find the class in the jar
 		for (String className : getClassNamesToTry(obfClassEntry)) {
-			JarEntry jarEntry = this.jar.getJarEntry(className + ".class");
-			if (jarEntry != null) {
-				return className;
+			ClassNode node = this.jar.getClassNode(className);
+			if (node != null) {
+				return node;
 			}
 		}
 
@@ -183,10 +110,12 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		return null;
 	}
 
+	@Override
 	public List<String> getClassNamesToTry(String className) {
-		return getClassNamesToTry(this.obfuscatingTranslator.translateEntry(new ClassEntry(className)));
+		return getClassNamesToTry(this.obfuscatingTranslator.getTranslatedClass(new ClassEntry(className)));
 	}
 
+	@Override
 	public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
 		List<String> classNamesToTry = Lists.newArrayList();
 		classNamesToTry.add(obfClassEntry.getName());
@@ -197,36 +126,10 @@ public class TranslatingTypeLoader implements ITypeLoader {
 		return classNamesToTry;
 	}
 
-	public CtClass transformClass(CtClass c)
-		throws IOException, NotFoundException, CannotCompileException {
-
-		// reconstruct inner classes
-		InnerClassWriter.write(jarIndex, c);
-
-		// re-get the javassist handle since we changed class names
-		ClassEntry obfClassEntry = new ClassEntry(Descriptor.toJvmName(c.getName()));
-		String javaClassReconstructedName = Descriptor.toJavaName(obfClassEntry.getName());
-		ClassPool classPool = new ClassPool();
-		classPool.insertClassPath(new ByteArrayClassPath(javaClassReconstructedName, c.toBytecode()));
-		c = classPool.get(javaClassReconstructedName);
-
-		// check that the file is correct after inner class reconstruction (ie cause Javassist to fail fast if something is wrong)
-		assertClassName(c, obfClassEntry);
-
-		// do all kinds of deobfuscating transformations on the class
-		BridgeMarker.markBridges(this.jarIndex, c);
-		MethodParameterTranslator.translate(this.deobfuscatingTranslator, c);
-		LocalVariableTranslator.translate(this.deobfuscatingTranslator, c);
-		ClassTranslator.translate(this.deobfuscatingTranslator, c);
-
-		return c;
+	@Override
+	public String transformInto(ClassNode node, ClassWriter writer) {
+		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, jarIndex, entryPool, Opcodes.ASM5, writer));
+		return deobfuscatingTranslator.getTranslatedClass(new ClassEntry(node.name)).getName();
 	}
 
-	private void assertClassName(CtClass c, ClassEntry obfClassEntry) {
-		String name1 = Descriptor.toJvmName(c.getName());
-		assert (name1.equals(obfClassEntry.getName())) : String.format("Looking for %s, instead found %s", obfClassEntry.getName(), name1);
-
-		String name2 = Descriptor.toJvmName(c.getClassFile().getName());
-		assert (name2.equals(obfClassEntry.getName())) : String.format("Looking for %s, instead found %s", obfClassEntry.getName(), name2);
-	}
 }

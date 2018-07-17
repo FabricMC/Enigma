@@ -1,106 +1,82 @@
-/*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
-
 package cuchaz.enigma.mapping;
 
-import com.google.common.collect.Lists;
-import cuchaz.enigma.utils.Utils;
+import cuchaz.enigma.bytecode.translators.TranslationSignatureVisitor;
+import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureVisitor;
+import org.objectweb.asm.signature.SignatureWriter;
 
-import java.util.List;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 
 public class Signature {
+	private static final Pattern OBJECT_PATTERN = Pattern.compile(".*:Ljava/lang/Object;:.*");
 
-	private List<Type> argumentTypes;
-	private Type returnType;
+	private final String signature;
+	private final boolean isType;
 
-	public Signature(String signature) {
-		try {
-			this.argumentTypes = Lists.newArrayList();
-			int i = 0;
-			while (i < signature.length()) {
-				char c = signature.charAt(i);
-				if (c == '(') {
-					assert (this.argumentTypes.isEmpty());
-					assert (this.returnType == null);
-					i++;
-				} else if (c == ')') {
-					i++;
-					break;
-				} else {
-					String type = Type.parseFirst(signature.substring(i));
-					this.argumentTypes.add(new Type(type));
-					i += type.length();
-				}
-			}
-			this.returnType = new Type(Type.parseFirst(signature.substring(i)));
-		} catch (Exception ex) {
-			throw new IllegalArgumentException("Unable to parse signature: " + signature, ex);
+	private Signature(String signature, boolean isType) {
+		if (signature != null && OBJECT_PATTERN.matcher(signature).matches()) {
+			signature = signature.replaceAll(":Ljava/lang/Object;:", "::");
 		}
+
+		this.signature = signature;
+		this.isType = isType;
 	}
 
-	public Signature(Signature other, ClassNameReplacer replacer) {
-		this.argumentTypes = Lists.newArrayList(other.argumentTypes);
-		for (int i = 0; i < this.argumentTypes.size(); i++) {
-			this.argumentTypes.set(i, new Type(this.argumentTypes.get(i), replacer));
+	public static Signature createTypedSignature(String signature) {
+		if (signature != null && !signature.isEmpty()) {
+			return new Signature(signature, true);
 		}
-		this.returnType = new Type(other.returnType, replacer);
+		return new Signature(null, true);
 	}
 
-	public List<Type> getArgumentTypes() {
-		return this.argumentTypes;
+	public static Signature createSignature(String signature) {
+		if (signature != null && !signature.isEmpty()) {
+			return new Signature(signature, false);
+		}
+		return new Signature(null, false);
 	}
 
-	public Type getReturnType() {
-		return this.returnType;
+	public String getSignature() {
+		return signature;
+	}
+
+	public boolean isType() {
+		return isType;
+	}
+
+	public Signature remap(Function<String, String> remapper) {
+		if (signature == null) {
+			return this;
+		}
+		SignatureWriter writer = new SignatureWriter();
+		SignatureVisitor visitor = new TranslationSignatureVisitor(remapper, writer);
+		if (isType) {
+			new SignatureReader(signature).acceptType(visitor);
+		} else {
+			new SignatureReader(signature).accept(visitor);
+		}
+		return new Signature(writer.toString(), isType);
 	}
 
 	@Override
-	public String toString() {
-		StringBuilder buf = new StringBuilder();
-		buf.append("(");
-		for (Type type : this.argumentTypes) {
-			buf.append(type);
+	public boolean equals(Object obj) {
+		if (obj instanceof Signature) {
+			Signature other = (Signature) obj;
+			return (other.signature == null && signature == null || other.signature != null
+					&& signature != null && other.signature.equals(signature))
+					&& other.isType == this.isType;
 		}
-		buf.append(")");
-		buf.append(this.returnType);
-		return buf.toString();
-	}
-
-	public Iterable<Type> types() {
-		List<Type> types = Lists.newArrayList();
-		types.addAll(this.argumentTypes);
-		types.add(this.returnType);
-		return types;
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		return other instanceof Signature && equals((Signature) other);
-	}
-
-	public boolean equals(Signature other) {
-		return this.argumentTypes.equals(other.argumentTypes) && this.returnType.equals(other.returnType);
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return Utils.combineHashesOrdered(this.argumentTypes.hashCode(), this.returnType.hashCode());
+		return signature.hashCode() | (isType ? 1 : 0) << 16;
 	}
 
-	public boolean hasClass(ClassEntry classEntry) {
-		for (Type type : types()) {
-			if (type.hasClass() && type.getClassEntry().equals(classEntry)) {
-				return true;
-			}
-		}
-		return false;
+	@Override
+	public String toString() {
+		return signature;
 	}
 }

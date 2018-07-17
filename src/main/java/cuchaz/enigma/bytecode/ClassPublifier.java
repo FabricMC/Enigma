@@ -11,41 +11,45 @@
 
 package cuchaz.enigma.bytecode;
 
-import javassist.CtBehavior;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.bytecode.AccessFlag;
-import javassist.bytecode.InnerClassesAttribute;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
 
-public class ClassPublifier {
+public class ClassPublifier extends ClassVisitor {
 
-	public static CtClass publify(CtClass c) {
-
-		// publify all the fields
-		for (CtField field : c.getDeclaredFields()) {
-			field.setModifiers(publify(field.getModifiers()));
-		}
-
-		// publify all the methods and constructors
-		for (CtBehavior behavior : c.getDeclaredBehaviors()) {
-			behavior.setModifiers(publify(behavior.getModifiers()));
-		}
-
-		// publify all the inner classes
-		InnerClassesAttribute attr = (InnerClassesAttribute) c.getClassFile().getAttribute(InnerClassesAttribute.tag);
-		if (attr != null) {
-			for (int i = 0; i < attr.tableLength(); i++) {
-				attr.setAccessFlags(i, publify(attr.accessFlags(i)));
-			}
-		}
-
-		return c;
+	public ClassPublifier(int api, ClassVisitor cv) {
+		super(api, cv);
 	}
 
-	private static int publify(int flags) {
-		if (!AccessFlag.isPublic(flags)) {
-			flags = AccessFlag.setPublic(flags);
+	@Override
+	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+		access = publify(access);
+		super.visit(version, access, name, signature, superName, interfaces);
+	}
+
+	@Override
+	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
+		access = publify(access);
+		return super.visitField(access, name, desc, signature, value);
+	}
+
+	@Override
+	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+		access = publify(access);
+		return super.visitMethod(access, name, desc, signature, exceptions);
+	}
+
+	@Override
+	public void visitInnerClass(String name, String outerName, String innerName, int access) {
+		access = publify(access);
+		super.visitInnerClass(name, outerName, innerName, access);
+	}
+
+	private static int publify(int access) {
+		AccessFlags accessFlags = new AccessFlags(access);
+		if (!accessFlags.isPublic()) {
+			accessFlags.setPublic();
 		}
-		return flags;
+		return accessFlags.getFlags();
 	}
 }

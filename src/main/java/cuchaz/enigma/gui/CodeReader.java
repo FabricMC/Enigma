@@ -17,8 +17,8 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
-import cuchaz.enigma.mapping.ClassEntry;
-import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.Entry;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import javax.swing.*;
@@ -162,7 +162,7 @@ public class CodeReader extends JEditorPane {
 			// couldn't find the class declaration token, might be an anonymous class
 			// look for any declaration in that class instead
 			for (Entry entry : sourceIndex.declarations()) {
-				if (entry.getClassEntry().equals(classEntry)) {
+				if (entry.getOwnerClassEntry().equals(classEntry)) {
 					token = sourceIndex.getDeclarationToken(entry);
 					break;
 				}

@@ -14,7 +14,6 @@ package cuchaz.enigma.gui;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 
 public class GuiTricks {
 
@@ -27,7 +26,7 @@ public class GuiTricks {
 	public static void deactivateButton(JButton button) {
 		button.setEnabled(false);
 		button.setText("");
-		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+		for (ActionListener listener : button.getActionListeners()) {
 			button.removeActionListener(listener);
 		}
 	}
@@ -35,7 +34,7 @@ public class GuiTricks {
 	public static void activateButton(JButton button, String text, ActionListener newListener) {
 		button.setText(text);
 		button.setEnabled(true);
-		for (ActionListener listener : Arrays.asList(button.getActionListeners())) {
+		for (ActionListener listener : button.getActionListeners()) {
 			button.removeActionListener(listener);
 		}
 		button.addActionListener(newListener);

@@ -13,6 +13,9 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.FieldEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 
 public class TestEntryFactory {
 
@@ -25,7 +28,7 @@ public class TestEntryFactory {
 	}
 
 	public static FieldEntry newField(ClassEntry classEntry, String fieldName, String fieldType) {
-		return new FieldEntry(classEntry, fieldName, new Type(fieldType));
+		return new FieldEntry(classEntry, fieldName, new TypeDescriptor(fieldType));
 	}
 
 	public static MethodEntry newMethod(String className, String methodName, String methodSignature) {
@@ -33,30 +36,14 @@ public class TestEntryFactory {
 	}
 
 	public static MethodEntry newMethod(ClassEntry classEntry, String methodName, String methodSignature) {
-		return new MethodEntry(classEntry, methodName, new Signature(methodSignature));
+		return new MethodEntry(classEntry, methodName, new MethodDescriptor(methodSignature));
 	}
 
-	public static ConstructorEntry newConstructor(String className, String signature) {
-		return newConstructor(newClass(className), signature);
+	public static EntryReference<FieldEntry, MethodEntry> newFieldReferenceByMethod(FieldEntry fieldEntry, String callerClassName, String callerName, String callerSignature) {
+		return new EntryReference<>(fieldEntry, "", newMethod(callerClassName, callerName, callerSignature));
 	}
 
-	public static ConstructorEntry newConstructor(ClassEntry classEntry, String signature) {
-		return new ConstructorEntry(classEntry, new Signature(signature));
-	}
-
-	public static EntryReference<FieldEntry, BehaviorEntry> newFieldReferenceByMethod(FieldEntry fieldEntry, String callerClassName, String callerName, String callerSignature) {
-		return new EntryReference<FieldEntry, BehaviorEntry>(fieldEntry, "", newMethod(callerClassName, callerName, callerSignature));
-	}
-
-	public static EntryReference<FieldEntry, BehaviorEntry> newFieldReferenceByConstructor(FieldEntry fieldEntry, String callerClassName, String callerSignature) {
-		return new EntryReference<FieldEntry, BehaviorEntry>(fieldEntry, "", newConstructor(callerClassName, callerSignature));
-	}
-
-	public static EntryReference<BehaviorEntry, BehaviorEntry> newBehaviorReferenceByMethod(BehaviorEntry behaviorEntry, String callerClassName, String callerName, String callerSignature) {
-		return new EntryReference<BehaviorEntry, BehaviorEntry>(behaviorEntry, "", newMethod(callerClassName, callerName, callerSignature));
-	}
-
-	public static EntryReference<BehaviorEntry, BehaviorEntry> newBehaviorReferenceByConstructor(BehaviorEntry behaviorEntry, String callerClassName, String callerSignature) {
-		return new EntryReference<BehaviorEntry, BehaviorEntry>(behaviorEntry, "", newConstructor(callerClassName, callerSignature));
+	public static EntryReference<MethodEntry, MethodEntry> newBehaviorReferenceByMethod(MethodEntry methodEntry, String callerClassName, String callerName, String callerSignature) {
+		return new EntryReference<>(methodEntry, "", newMethod(callerClassName, callerName, callerSignature));
 	}
 }

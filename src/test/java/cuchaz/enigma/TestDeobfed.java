@@ -12,6 +12,8 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -23,14 +25,14 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class TestDeobfed {
 
-	private static JarFile jar;
+	private static ParsedJar jar;
 	private static JarIndex index;
 
 	@BeforeClass
 	public static void beforeClass()
 		throws Exception {
-		jar = new JarFile("build/test-deobf/translation.jar");
-		index = new JarIndex();
+		jar = new ParsedJar(new JarFile("build/test-deobf/translation.jar"));
+		index = new JarIndex(new ReferencedEntryPool());
 		index.indexJar(jar, true);
 	}
 

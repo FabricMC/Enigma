@@ -13,6 +13,7 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.mapping.*;
+import cuchaz.enigma.mapping.entry.*;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -28,16 +29,16 @@ public class TestJarIndexLoneClass {
 	private JarIndex index;
 
 	public TestJarIndexLoneClass()
-		throws Exception {
-		index = new JarIndex();
-		index.indexJar(new JarFile("build/test-obf/loneClass.jar"), false);
+			throws Exception {
+		index = new JarIndex(new ReferencedEntryPool());
+		index.indexJar(new ParsedJar(new JarFile("build/test-obf/loneClass.jar")), false);
 	}
 
 	@Test
 	public void obfEntries() {
 		assertThat(index.getObfClassEntries(), containsInAnyOrder(
-			newClass("cuchaz/enigma/inputs/Keep"),
-			newClass("a")
+				newClass("cuchaz/enigma/inputs/Keep"),
+				newClass("a")
 		));
 	}
 
@@ -61,7 +62,7 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void classInheritance() {
-		ClassInheritanceTreeNode node = index.getClassInheritance(new Translator(), newClass("a"));
+		ClassInheritanceTreeNode node = index.getClassInheritance(new DirectionalTranslator(new ReferencedEntryPool()), newClass("a"));
 		assertThat(node, is(not(nullValue())));
 		assertThat(node.getObfClassName(), is("a"));
 		assertThat(node.getChildCount(), is(0));
@@ -70,7 +71,7 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void methodInheritance() {
 		MethodEntry source = newMethod("a", "a", "()Ljava/lang/String;");
-		MethodInheritanceTreeNode node = index.getMethodInheritance(new Translator(), source);
+		MethodInheritanceTreeNode node = index.getMethodInheritance(new DirectionalTranslator(new ReferencedEntryPool()), source);
 		assertThat(node, is(not(nullValue())));
 		assertThat(node.getMethodEntry(), is(source));
 		assertThat(node.getChildCount(), is(0));
@@ -78,21 +79,21 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void classImplementations() {
-		ClassImplementationsTreeNode node = index.getClassImplementations(new Translator(), newClass("a"));
+		ClassImplementationsTreeNode node = index.getClassImplementations(new DirectionalTranslator(new ReferencedEntryPool()), newClass("a"));
 		assertThat(node, is(nullValue()));
 	}
 
 	@Test
 	public void methodImplementations() {
 		MethodEntry source = newMethod("a", "a", "()Ljava/lang/String;");
-		assertThat(index.getMethodImplementations(new Translator(), source), is(empty()));
+		assertThat(index.getMethodImplementations(new DirectionalTranslator(new ReferencedEntryPool()), source), is(empty()));
 	}
 
 	@Test
 	public void relatedMethodImplementations() {
 		Set<MethodEntry> entries = index.getRelatedMethodImplementations(newMethod("a", "a", "()Ljava/lang/String;"));
 		assertThat(entries, containsInAnyOrder(
-			newMethod("a", "a", "()Ljava/lang/String;")
+				newMethod("a", "a", "()Ljava/lang/String;")
 		));
 	}
 
@@ -100,16 +101,16 @@ public class TestJarIndexLoneClass {
 	@SuppressWarnings("unchecked")
 	public void fieldReferences() {
 		FieldEntry source = newField("a", "a", "Ljava/lang/String;");
-		Collection<EntryReference<FieldEntry, BehaviorEntry>> references = index.getFieldReferences(source);
+		Collection<EntryReference<FieldEntry, MethodDefEntry>> references = index.getFieldReferences(source);
 		assertThat(references, containsInAnyOrder(
-			newFieldReferenceByConstructor(source, "a", "(Ljava/lang/String;)V"),
-			newFieldReferenceByMethod(source, "a", "a", "()Ljava/lang/String;")
+				newFieldReferenceByMethod(source, "a", "<init>", "(Ljava/lang/String;)V"),
+				newFieldReferenceByMethod(source, "a", "a", "()Ljava/lang/String;")
 		));
 	}
 
 	@Test
 	public void behaviorReferences() {
-		assertThat(index.getBehaviorReferences(newMethod("a", "a", "()Ljava/lang/String;")), is(empty()));
+		assertThat(index.getMethodsReferencing(newMethod("a", "a", "()Ljava/lang/String;")), is(empty()));
 	}
 
 	@Test
@@ -120,11 +121,6 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void outerClass() {
 		assertThat(index.getOuterClass(newClass("a")), is(nullValue()));
-	}
-
-	@Test
-	public void isAnonymousClass() {
-		assertThat(index.isAnonymousClass(newClass("a")), is(false));
 	}
 
 	@Test
@@ -149,7 +145,7 @@ public class TestJarIndexLoneClass {
 		assertThat(index.containsObfField(newField("a", "a", "Ljava/lang/String;")), is(true));
 		assertThat(index.containsObfField(newField("a", "b", "Ljava/lang/String;")), is(false));
 		assertThat(index.containsObfField(newField("a", "a", "LFoo;")), is(false));
-		assertThat(index.containsObfBehavior(newMethod("a", "a", "()Ljava/lang/String;")), is(true));
-		assertThat(index.containsObfBehavior(newMethod("a", "b", "()Ljava/lang/String;")), is(false));
+		assertThat(index.containsObfMethod(newMethod("a", "a", "()Ljava/lang/String;")), is(true));
+		assertThat(index.containsObfMethod(newMethod("a", "b", "()Ljava/lang/String;")), is(false));
 	}
 }
