@@ -11,8 +11,8 @@
 
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
-import javassist.bytecode.Descriptor;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,11 +23,11 @@ public class NameValidator {
 	private static final Pattern IdentifierPattern;
 	private static final Pattern ClassPattern;
 	private static final List<String> ReservedWords = Arrays.asList(
-		"abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package", "synchronized",
-		"boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw", "byte",
-		"else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch",
-		"extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally",
-		"long", "strictfp", "volatile", "const", "float", "native", "super", "while"
+			"abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package", "synchronized",
+			"boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw", "byte",
+			"else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch",
+			"extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally",
+			"long", "strictfp", "volatile", "const", "float", "native", "super", "while"
 	);
 
 	static {
@@ -43,10 +43,10 @@ public class NameValidator {
 		if (!ClassPattern.matcher(name).matches() || ReservedWords.contains(name)) {
 			throw new IllegalNameException(name, "This doesn't look like a legal class name");
 		}
-		if (packageRequired && new ClassEntry(name).getPackageName() == null) {
+		if (packageRequired && ClassEntry.getPackageName(name) == null) {
 			throw new IllegalNameException(name, "Class must be in a package");
 		}
-		return Descriptor.toJvmName(name);
+		return name;
 	}
 
 	public static String validateFieldName(String name) {

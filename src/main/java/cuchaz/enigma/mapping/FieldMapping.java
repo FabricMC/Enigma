@@ -11,32 +11,27 @@
 
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.FieldEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
 
 public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<FieldEntry> {
 
 	private String obfName;
 	private String deobfName;
-	private Type obfType;
+	private TypeDescriptor obfDesc;
 	private Mappings.EntryModifier modifier;
 
-	public FieldMapping(String obfName, Type obfType, String deobfName, Mappings.EntryModifier modifier) {
+	public FieldMapping(String obfName, TypeDescriptor obfDesc, String deobfName, Mappings.EntryModifier modifier) {
 		this.obfName = obfName;
 		this.deobfName = NameValidator.validateFieldName(deobfName);
-		this.obfType = obfType;
+		this.obfDesc = obfDesc;
 		this.modifier = modifier;
-	}
-
-	public FieldMapping(FieldMapping other, ClassNameReplacer obfClassNameReplacer) {
-		this.obfName = other.obfName;
-		this.deobfName = other.deobfName;
-		this.modifier = other.modifier;
-		this.obfType = new Type(other.obfType, obfClassNameReplacer);
 	}
 
 	@Override
 	public FieldEntry getObfEntry(ClassEntry classEntry) {
-		return new FieldEntry(classEntry, this.obfName, this.obfType);
+		return new FieldEntry(classEntry, this.obfName, this.obfDesc);
 	}
 
 	@Override
@@ -65,12 +60,12 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
 		this.deobfName = NameValidator.validateFieldName(val);
 	}
 
-	public Type getObfType() {
-		return this.obfType;
+	public TypeDescriptor getObfDesc() {
+		return this.obfDesc;
 	}
 
-	public void setObfType(Type val) {
-		this.obfType = val;
+	public void setObfDesc(TypeDescriptor val) {
+		this.obfDesc = val;
 	}
 
 	public Mappings.EntryModifier getModifier() {
@@ -83,21 +78,20 @@ public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<Fie
 
 	@Override
 	public int compareTo(FieldMapping other) {
-		return (this.obfName + this.obfType).compareTo(other.obfName + other.obfType);
+		return (this.obfName + this.obfDesc).compareTo(other.obfName + other.obfDesc);
 	}
 
 	public boolean renameObfClass(final String oldObfClassName, final String newObfClassName) {
-		// rename obf classes in the type
-		Type newType = new Type(this.obfType, className ->
-		{
+		// rename obf classes in the desc
+		TypeDescriptor newDesc = this.obfDesc.remap(className -> {
 			if (className.equals(oldObfClassName)) {
 				return newObfClassName;
 			}
-			return null;
+			return className;
 		});
 
-		if (!newType.equals(this.obfType)) {
-			this.obfType = newType;
+		if (!newDesc.equals(this.obfDesc)) {
+			this.obfDesc = newDesc;
 			return true;
 		}
 		return false;

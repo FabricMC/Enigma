@@ -12,6 +12,7 @@
 package cuchaz.enigma.throwables;
 
 import java.io.File;
+import java.util.function.Supplier;
 
 public class MappingParseException extends Exception {
 
@@ -23,6 +24,12 @@ public class MappingParseException extends Exception {
 		this.line = line;
 		this.message = message;
 		filePath = file.getAbsolutePath();
+	}
+
+	public MappingParseException(Supplier<String> filenameProvider, int line, String message) {
+		this.line = line;
+		this.message = message;
+		filePath = filenameProvider.get();
 	}
 
 	@Override

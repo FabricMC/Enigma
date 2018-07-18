@@ -11,7 +11,7 @@
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.mapping.Entry;
+import cuchaz.enigma.mapping.entry.Entry;
 
 public interface ReferenceTreeNode<E extends Entry, C extends Entry> {
 	E getEntry();

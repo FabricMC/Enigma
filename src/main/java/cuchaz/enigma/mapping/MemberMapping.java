@@ -11,6 +11,9 @@
 
 package cuchaz.enigma.mapping;
 
+import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.mapping.entry.Entry;
+
 public interface MemberMapping<T extends Entry> {
 	T getObfEntry(ClassEntry classEntry);
 

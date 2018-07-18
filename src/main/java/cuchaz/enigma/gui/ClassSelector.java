@@ -17,7 +17,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
-import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.entry.ClassEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
 
 import javax.swing.*;
@@ -328,8 +328,12 @@ public class ClassSelector extends JTree {
 	}
 
 	public ClassSelectorPackageNode getPackageNode(ClassEntry entry) {
+		String packageName = entry.getPackageName();
+		if (packageName == null){
+			packageName = "(none)";
+		}
 		for (ClassSelectorPackageNode packageNode : packageNodes()) {
-			if (packageNode.getPackageName().equals(entry.getPackageName())) {
+			if (packageNode.getPackageName().equals(packageName)) {
 				return packageNode;
 			}
 		}

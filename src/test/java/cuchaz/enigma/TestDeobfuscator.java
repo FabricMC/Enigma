@@ -12,7 +12,7 @@
 package cuchaz.enigma;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.mapping.ClassEntry;
+import cuchaz.enigma.mapping.entry.ClassEntry;
 import org.junit.Test;
 
 import java.io.IOException;

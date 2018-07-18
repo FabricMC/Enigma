@@ -11,131 +11,127 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.mapping.BehaviorEntry;
+import cuchaz.enigma.mapping.entry.MethodEntry;
 import org.junit.Test;
 
 import java.util.jar.JarFile;
 
-import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByConstructor;
 import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByMethod;
-import static cuchaz.enigma.TestEntryFactory.newConstructor;
+import static cuchaz.enigma.TestEntryFactory.newMethod;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 public class TestTokensConstructors extends TokenChecker {
 
 	public TestTokensConstructors()
-		throws Exception {
+			throws Exception {
 		super(new JarFile("build/test-obf/constructors.jar"));
 	}
 
 	@Test
 	public void baseDeclarations() {
-		assertThat(getDeclarationToken(newConstructor("a", "()V")), is("a"));
-		assertThat(getDeclarationToken(newConstructor("a", "(I)V")), is("a"));
+		assertThat(getDeclarationToken(newMethod("a", "<init>", "()V")), is("a"));
+		assertThat(getDeclarationToken(newMethod("a", "<init>", "(I)V")), is("a"));
 	}
 
 	@Test
 	public void subDeclarations() {
-		assertThat(getDeclarationToken(newConstructor("d", "()V")), is("d"));
-		assertThat(getDeclarationToken(newConstructor("d", "(I)V")), is("d"));
-		assertThat(getDeclarationToken(newConstructor("d", "(II)V")), is("d"));
-		assertThat(getDeclarationToken(newConstructor("d", "(III)V")), is("d"));
+		assertThat(getDeclarationToken(newMethod("d", "<init>", "()V")), is("d"));
+		assertThat(getDeclarationToken(newMethod("d", "<init>", "(I)V")), is("d"));
+		assertThat(getDeclarationToken(newMethod("d", "<init>", "(II)V")), is("d"));
+		assertThat(getDeclarationToken(newMethod("d", "<init>", "(III)V")), is("d"));
 	}
 
 	@Test
 	public void subsubDeclarations() {
-		assertThat(getDeclarationToken(newConstructor("e", "(I)V")), is("e"));
+		assertThat(getDeclarationToken(newMethod("e", "<init>", "(I)V")), is("e"));
 	}
 
 	@Test
 	public void defaultDeclarations() {
-		assertThat(getDeclarationToken(newConstructor("c", "()V")), nullValue());
+		assertThat(getDeclarationToken(newMethod("c", "<init>", "()V")), nullValue());
 	}
 
 	@Test
 	public void baseDefaultReferences() {
-		BehaviorEntry source = newConstructor("a", "()V");
+		MethodEntry source = newMethod("a", "<init>", "()V");
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "a", "()V")),
-			containsInAnyOrder("a")
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "a", "()V")),
+				containsInAnyOrder("a")
 		);
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByConstructor(source, "d", "()V")),
-			is(empty()) // implicit call, not decompiled to token
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "d", "<init>", "()V")),
+				is(empty()) // implicit call, not decompiled to token
 		);
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByConstructor(source, "d", "(III)V")),
-			is(empty()) // implicit call, not decompiled to token
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "d", "<init>", "(III)V")),
+				is(empty()) // implicit call, not decompiled to token
 		);
 	}
 
 	@Test
 	public void baseIntReferences() {
-		BehaviorEntry source = newConstructor("a", "(I)V");
+		MethodEntry source = newMethod("a", "<init>", "(I)V");
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "b", "()V")),
-			containsInAnyOrder("a")
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "b", "()V")),
+				containsInAnyOrder("a")
 		);
 	}
 
 	@Test
 	public void subDefaultReferences() {
-		BehaviorEntry source = newConstructor("d", "()V");
+		MethodEntry source = newMethod("d", "<init>", "()V");
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "c", "()V")),
-			containsInAnyOrder("d")
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "c", "()V")),
+				containsInAnyOrder("d")
 		);
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByConstructor(source, "d", "(I)V")),
-			containsInAnyOrder("this")
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "d", "<init>", "(I)V")),
+				containsInAnyOrder("this")
 		);
 	}
 
 	@Test
 	public void subIntReferences() {
-		BehaviorEntry source = newConstructor("d", "(I)V");
+		MethodEntry source = newMethod("d", "<init>", "(I)V");
 		assertThat(getReferenceTokens(
-			newBehaviorReferenceByMethod(source, "b", "d", "()V")),
-			containsInAnyOrder("d")
+				newBehaviorReferenceByMethod(source, "b", "d", "()V")),
+				containsInAnyOrder("d")
 		);
 		assertThat(getReferenceTokens(
-			newBehaviorReferenceByConstructor(source, "d", "(II)V")),
-			containsInAnyOrder("this")
+				newBehaviorReferenceByMethod(source, "d", "<init>", "(II)V")),
+				containsInAnyOrder("this")
 		);
 		assertThat(getReferenceTokens(
-			newBehaviorReferenceByConstructor(source, "e", "(I)V")),
-			containsInAnyOrder("super")
+				newBehaviorReferenceByMethod(source, "e", "<init>", "(I)V")),
+				containsInAnyOrder("super")
 		);
 	}
 
 	@Test
 	public void subIntIntReferences() {
-		BehaviorEntry source = newConstructor("d", "(II)V");
+		MethodEntry source = newMethod("d", "<init>", "(II)V");
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "e", "()V")),
-			containsInAnyOrder("d")
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "e", "()V")),
+				containsInAnyOrder("d")
 		);
 	}
 
 	@Test
 	public void subsubIntReferences() {
-		BehaviorEntry source = newConstructor("e", "(I)V");
+		MethodEntry source = newMethod("e", "<init>", "(I)V");
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "f", "()V")),
-			containsInAnyOrder("e")
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "f", "()V")),
+				containsInAnyOrder("e")
 		);
 	}
 
 	@Test
 	public void defaultConstructableReferences() {
-		BehaviorEntry source = newConstructor("c", "()V");
+		MethodEntry source = newMethod("c", "<init>", "()V");
 		assertThat(
-			getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "g", "()V")),
-			containsInAnyOrder("c")
+				getReferenceTokens(newBehaviorReferenceByMethod(source, "b", "g", "()V")),
+				containsInAnyOrder("c")
 		);
 	}
 }

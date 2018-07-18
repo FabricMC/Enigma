@@ -14,9 +14,7 @@ package cuchaz.enigma.mapping;
 import com.google.common.base.Charsets;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class MappingsEnigmaWriter {
 
@@ -33,68 +31,52 @@ public class MappingsEnigmaWriter {
 		if (!target.exists() && !target.mkdirs())
 			throw new IOException("Cannot create mapping directory!");
 
+		Mappings previousState = mappings.getPreviousState();
 		for (ClassMapping classMapping : sorted(mappings.classes())) {
-			if (!classMapping.isDirty())
+			if (!classMapping.isDirty()) {
 				continue;
-			this.deletePreviousClassMapping(target, classMapping);
-			File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
-			File result;
-			if (classMapping.getDeobfName() == null)
-				result = obFile;
-			else {
-				// Make sure that old version of the file doesn't exist
-				if (obFile.exists())
-					obFile.delete();
-				result = new File(target, classMapping.getDeobfName() + ".mapping");
 			}
 
-			if (!result.getParentFile().exists())
-				result.getParentFile().mkdirs();
+			if (previousState != null) {
+				ClassMapping previousClass = previousState.classesByObf.get(classMapping.getObfFullName());
+				File previousFile;
+				if (previousClass != null) {
+					previousFile = new File(target, previousClass.getSaveName() + ".mapping");
+				} else {
+					previousFile = new File(target, classMapping.getObfFullName() + ".mapping");
+				}
+				if (previousFile.exists() && !previousFile.delete()) {
+					System.err.println("Failed to delete old class mapping " + previousFile.getName());
+				}
+			}
+
+			File result = new File(target, classMapping.getSaveName() + ".mapping");
+
+			File packageFile = result.getParentFile();
+			if (!packageFile.exists()) {
+				packageFile.mkdirs();
+			}
 			result.createNewFile();
-			PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(result), Charsets.UTF_8));
-			write(outputWriter, classMapping, 0);
-			outputWriter.close();
+
+			try (PrintWriter outputWriter = new PrintWriter(new BufferedWriter(new FileWriter(result)))) {
+				write(outputWriter, classMapping, 0);
+			}
 		}
 
 		// Remove dropped mappings
-		if (mappings.getPreviousState() != null) {
-			List<ClassMapping> droppedClassMappings = new ArrayList<>(mappings.getPreviousState().classes());
-			List<ClassMapping> classMappings = new ArrayList<>(mappings.classes());
-			droppedClassMappings.removeAll(classMappings);
-			for (ClassMapping classMapping : droppedClassMappings) {
-				File obFile = new File(target, classMapping.getObfFullName() + ".mapping");
-				File result;
-				if (classMapping.getDeobfName() == null)
-					result = obFile;
-				else {
-					// Make sure that old version of the file doesn't exist
-					if (obFile.exists())
-						obFile.delete();
-					result = new File(target, classMapping.getDeobfName() + ".mapping");
+		if (previousState != null) {
+			Set<ClassMapping> droppedClassMappings = new HashSet<>(previousState.classes());
+			droppedClassMappings.removeAll(mappings.classes());
+			for (ClassMapping droppedMapping : droppedClassMappings) {
+				File result = new File(target, droppedMapping.getSaveName() + ".mapping");
+				if (!result.exists()) {
+					continue;
 				}
-				if (result.exists())
-					result.delete();
+				if (!result.delete()) {
+					System.err.println("Failed to delete dropped class mapping " + result.getName());
+				}
 			}
 		}
-	}
-
-	private void deletePreviousClassMapping(File target, ClassMapping classMapping) {
-		File prevFile = null;
-		// Deob rename
-		if (classMapping.getDeobfName() != null && classMapping.getPreviousDeobfName() != null && !classMapping.getPreviousDeobfName().equals(classMapping.getDeobfName())) {
-			prevFile = new File(target, classMapping.getPreviousDeobfName() + ".mapping");
-		}
-		// Deob to ob rename
-		else if (classMapping.getDeobfName() == null && classMapping.getPreviousDeobfName() != null) {
-			prevFile = new File(target, classMapping.getPreviousDeobfName() + ".mapping");
-		}
-		// Ob to Deob rename
-		else if (classMapping.getDeobfName() != null && classMapping.getPreviousDeobfName() == null) {
-			prevFile = new File(target, classMapping.getObfFullName() + ".mapping");
-		}
-
-		if (prevFile != null && prevFile.exists())
-			prevFile.delete();
 	}
 
 	public void write(PrintWriter out, Mappings mappings) throws IOException {
@@ -103,13 +85,13 @@ public class MappingsEnigmaWriter {
 		}
 	}
 
-	private void write(PrintWriter out, ClassMapping classMapping, int depth) throws IOException {
+	protected void write(PrintWriter out, ClassMapping classMapping, int depth) throws IOException {
 		if (classMapping.getDeobfName() == null) {
 			out.format("%sCLASS %s%s\n", getIndent(depth), classMapping.getObfFullName(),
-				classMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : classMapping.getModifier().getFormattedName());
+					classMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : classMapping.getModifier().getFormattedName());
 		} else {
 			out.format("%sCLASS %s %s%s\n", getIndent(depth), classMapping.getObfFullName(), classMapping.getDeobfName(),
-				classMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : classMapping.getModifier().getFormattedName());
+					classMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : classMapping.getModifier().getFormattedName());
 		}
 
 		for (ClassMapping innerClassMapping : sorted(classMapping.innerClasses())) {
@@ -127,32 +109,32 @@ public class MappingsEnigmaWriter {
 
 	private void write(PrintWriter out, FieldMapping fieldMapping, int depth) {
 		if (fieldMapping.getDeobfName() == null)
-			out.format("%sFIELD %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getObfType().toString(),
-				fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
+			out.format("%sFIELD %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getObfDesc().toString(),
+					fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
 		else
-			out.format("%sFIELD %s %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName(), fieldMapping.getObfType().toString(),
-				fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
+			out.format("%sFIELD %s %s %s%s\n", getIndent(depth), fieldMapping.getObfName(), fieldMapping.getDeobfName(), fieldMapping.getObfDesc().toString(),
+					fieldMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : fieldMapping.getModifier().getFormattedName());
 	}
 
 	private void write(PrintWriter out, MethodMapping methodMapping, int depth) throws IOException {
-		if (methodMapping.getDeobfName() == null) {
-			out.format("%sMETHOD %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getObfSignature(),
-				methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
+		if (methodMapping.isObfuscated()) {
+			out.format("%sMETHOD %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getObfDesc(),
+					methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
 		} else {
-			out.format("%sMETHOD %s %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getDeobfName(), methodMapping.getObfSignature(),
-				methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
+			out.format("%sMETHOD %s %s %s%s\n", getIndent(depth), methodMapping.getObfName(), methodMapping.getDeobfName(), methodMapping.getObfDesc(),
+					methodMapping.getModifier() == Mappings.EntryModifier.UNCHANGED ? "" : methodMapping.getModifier().getFormattedName());
 		}
 
-		for (ArgumentMapping argumentMapping : sorted(methodMapping.arguments())) {
-			write(out, argumentMapping, depth + 1);
+		for (LocalVariableMapping localVariableMapping : sorted(methodMapping.arguments())) {
+			write(out, localVariableMapping, depth + 1);
 		}
 	}
 
-	private void write(PrintWriter out, ArgumentMapping argumentMapping, int depth) {
-		out.format("%sARG %d %s\n", getIndent(depth), argumentMapping.getIndex(), argumentMapping.getName());
+	private void write(PrintWriter out, LocalVariableMapping localVariableMapping, int depth) {
+		out.format("%sARG %d %s\n", getIndent(depth), localVariableMapping.getIndex(), localVariableMapping.getName());
 	}
 
-	private <T extends Comparable<T>> List<T> sorted(Iterable<T> classes) {
+	protected <T extends Comparable<T>> List<T> sorted(Iterable<T> classes) {
 		List<T> out = new ArrayList<>();
 		for (T t : classes) {
 			out.add(t);
