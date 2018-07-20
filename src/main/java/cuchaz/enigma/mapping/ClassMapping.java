@@ -526,7 +526,16 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	}
 
 	public boolean isDirty() {
-		return isDirty;
+		return isDirty || areInnersDirty();
+	}
+
+	private boolean areInnersDirty(){
+		for (ClassMapping c : this.innerClasses()){
+			if (c.isDirty()){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void resetDirty() {
