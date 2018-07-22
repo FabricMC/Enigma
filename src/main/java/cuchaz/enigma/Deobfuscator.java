@@ -340,28 +340,28 @@ public class Deobfuscator {
 	}
 
 	public void rebuildMethodNames(ProgressListener progress) {
-		int i = 0;
+		final AtomicInteger i = new AtomicInteger();
 		Map<ClassMapping, Map<Entry, String>> renameClassMap = new HashMap<>();
 
 		progress.init(getMappings().classes().size() * 3, "Rebuilding method names");
 
-		for (ClassMapping classMapping : Lists.newArrayList(getMappings().classes())) {
-			progress.onProgress(i++, classMapping.getDeobfName());
+		Lists.newArrayList(getMappings().classes()).parallelStream().forEach(classMapping -> {
+			progress.onProgress(i.getAndIncrement(), classMapping.getDeobfName());
 			rebuildMethodNames(classMapping, renameClassMap);
-		}
+		});
 
-		for (Map.Entry<ClassMapping, Map<Entry, String>> renameClassMapEntry : renameClassMap.entrySet()) {
-			progress.onProgress(i++, renameClassMapEntry.getKey().getDeobfName());
 
+		renameClassMap.entrySet().parallelStream().forEach(renameClassMapEntry -> {
+			progress.onProgress(i.getAndIncrement(), renameClassMapEntry.getKey().getDeobfName());
 			for (Map.Entry<Entry, String> entry : renameClassMapEntry.getValue().entrySet()) {
 				Entry obfEntry = entry.getKey();
 
 				removeMapping(obfEntry);
 			}
-		}
+		});
 
-		for (Map.Entry<ClassMapping, Map<Entry, String>> renameClassMapEntry : renameClassMap.entrySet()) {
-			progress.onProgress(i++, renameClassMapEntry.getKey().getDeobfName());
+		renameClassMap.entrySet().parallelStream().forEach(renameClassMapEntry -> {
+			progress.onProgress(i.getAndIncrement(), renameClassMapEntry.getKey().getDeobfName());
 
 			for (Map.Entry<Entry, String> entry : renameClassMapEntry.getValue().entrySet()) {
 				Entry obfEntry = entry.getKey();
@@ -373,7 +373,7 @@ public class Deobfuscator {
 					System.out.println("WARNING: " + exception.getMessage());
 				}
 			}
-		}
+		});
 	}
 
 	private void rebuildMethodNames(ClassMapping classMapping, Map<ClassMapping, Map<Entry, String>> renameClassMap) {
