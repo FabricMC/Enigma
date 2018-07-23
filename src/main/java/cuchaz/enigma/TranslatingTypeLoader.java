@@ -102,7 +102,7 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 			while (insnNode != null){
 				if (insnNode instanceof MethodInsnNode && insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL){
 					MethodInsnNode methodInsnNode = (MethodInsnNode)insnNode;
-					if (methodInsnNode.name.equals("getClass") && methodInsnNode.owner.equals("java/lang/Object") && methodInsnNode.desc.equals("()Ljava/lang/Class")){
+					if (methodInsnNode.name.equals("getClass") && methodInsnNode.owner.equals("java/lang/Object") && methodInsnNode.desc.equals("()Ljava/lang/Class;")){
 						AbstractInsnNode previous = methodInsnNode.getPrevious();
 						AbstractInsnNode next = methodInsnNode.getNext();
 						if (previous.getOpcode() == Opcodes.DUP && next.getOpcode() == Opcodes.POP){
