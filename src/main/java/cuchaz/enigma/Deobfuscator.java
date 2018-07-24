@@ -15,6 +15,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -44,6 +45,7 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -173,6 +175,10 @@ public class Deobfuscator {
 	}
 
 	public CompilationUnit getSourceTree(String className, ITranslatingTypeLoader loader) {
+		return getSourceTree(className, loader, new NoRetryMetadataSystem(loader));
+	}
+
+	public CompilationUnit getSourceTree(String className, ITranslatingTypeLoader loader, MetadataSystem metadataSystem) {
 
 		// we don't know if this class name is obfuscated or deobfuscated
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
@@ -191,7 +197,7 @@ public class Deobfuscator {
 		this.settings.setTypeLoader(loader);
 
 		// see if procyon can find the desc
-		TypeReference type = new MetadataSystem(loader).lookupType(deobfClassName);
+		TypeReference type = metadataSystem.lookupType(deobfClassName);
 		if (type == null) {
 			throw new Error(String.format("Unable to find desc: %s (deobf: %s)\nTried class names: %s",
 					className, deobfClassName, loader.getClassNamesToTry(deobfClassName)
@@ -281,6 +287,9 @@ public class Deobfuscator {
 		//synchronized to make sure the parallelStream doesn't CME with the cache
 		ITranslatingTypeLoader typeLoader = new SynchronizedTypeLoader(createTypeLoader());
 
+		MetadataSystem metadataSystem = new NoRetryMetadataSystem(typeLoader);
+		metadataSystem.setEagerMethodLoadingEnabled(true);//ensures methods are loaded on classload and prevents race conditions
+
 		// DEOBFUSCATE ALL THE THINGS!! @_@
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		AtomicInteger count = new AtomicInteger();
@@ -292,7 +301,7 @@ public class Deobfuscator {
 
 			try {
 				// get the source
-				CompilationUnit sourceTree = getSourceTree(obfClassEntry.getName(), typeLoader);
+				CompilationUnit sourceTree = getSourceTree(obfClassEntry.getName(), typeLoader, metadataSystem);
 
 				// write the file
 				File file = new File(dirOut, deobfClassEntry.getName().replace('.', '/') + ".java");
@@ -686,4 +695,30 @@ public class Deobfuscator {
 		String transform(ClassNode node, ClassWriter writer);
 	}
 
+	public static class NoRetryMetadataSystem extends MetadataSystem {
+		private final Set<String> _failedTypes = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
+		public NoRetryMetadataSystem(final ITypeLoader typeLoader) {
+			super(typeLoader);
+		}
+
+		@Override
+		protected synchronized TypeDefinition resolveType(final String descriptor, final boolean mightBePrimitive) {
+			if (_failedTypes.contains(descriptor)) {
+				return null;
+			}
+
+			final TypeDefinition result = super.resolveType(descriptor, mightBePrimitive);
+
+			if (result == null) {
+				_failedTypes.add(descriptor);
+			}
+
+			return result;
+		}
+
+		public synchronized TypeDefinition resolve(final TypeReference type) {
+			return super.resolve(type);
+		}
+	}
 }
