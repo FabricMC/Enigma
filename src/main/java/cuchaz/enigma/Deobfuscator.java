@@ -34,6 +34,7 @@ import cuchaz.enigma.mapping.entry.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.utils.Utils;
 import oml.ast.transformers.ObfuscatedEnumSwitchRewriterTransform;
+import oml.ast.transformers.RemoveObjectCasts;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -324,6 +325,21 @@ public class Deobfuscator {
 		}
 	}
 
+	public boolean isMethodProvider(MethodEntry methodEntry) {
+		Set<ClassEntry> classEntries = new HashSet<>();
+		addAllPotentialAncestors(classEntries, methodEntry.getOwnerClassEntry());
+
+		for (ClassEntry parentEntry : classEntries) {
+			MethodEntry ancestorMethodEntry = entryPool.getMethod(parentEntry, methodEntry.getName(), methodEntry.getDesc());
+			if (jarIndex.containsObfMethod(ancestorMethodEntry)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	@Deprecated
 	public boolean isMethodProvider(ClassEntry classObfEntry, MethodEntry methodEntry) {
 		Set<ClassEntry> classEntries = new HashSet<>();
 		addAllPotentialAncestors(classEntries, classObfEntry);
@@ -366,10 +382,12 @@ public class Deobfuscator {
 				Entry obfEntry = entry.getKey();
 				String name = entry.getValue();
 
-				try {
-					rename(obfEntry, name);
-				} catch (IllegalNameException exception) {
-					System.out.println("WARNING: " + exception.getMessage());
+				if (name != null) {
+					try {
+						rename(obfEntry, name);
+					} catch (IllegalNameException exception) {
+						System.out.println("WARNING: " + exception.getMessage());
+					}
 				}
 			}
 		}
@@ -381,15 +399,15 @@ public class Deobfuscator {
 		for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
 			ClassEntry classObfEntry = classMapping.getObfEntry();
 			MethodEntry obfEntry = methodMapping.getObfEntry(classObfEntry);
+			boolean isProvider = isMethodProvider(obfEntry);
 
-			if (isMethodProvider(classObfEntry, obfEntry)) {
-				if (hasDeobfuscatedName(obfEntry)
-						&& !(methodMapping.getDeobfName().equals(methodMapping.getObfName()))) {
-					renameEntries.put(obfEntry, methodMapping.getDeobfName());
-				}
+			if (hasDeobfuscatedName(obfEntry)
+					&& !(methodMapping.getDeobfName().equals(methodMapping.getObfName()))) {
+				renameEntries.put(obfEntry, isProvider ? methodMapping.getDeobfName() : null);
+			}
 
-				ArrayList<LocalVariableMapping> arguments = Lists.newArrayList(methodMapping.arguments());
-				for (LocalVariableMapping localVariableMapping : arguments) {
+			if (isProvider) {
+				for (LocalVariableMapping localVariableMapping : methodMapping.arguments()) {
 					Entry argObfEntry = localVariableMapping.getObfEntry(obfEntry);
 					if (hasDeobfuscatedName(argObfEntry)) {
 						renameEntries.put(argObfEntry, deobfuscateEntry(argObfEntry).getName());
@@ -661,7 +679,8 @@ public class Deobfuscator {
 
 	public static void runCustomTransforms(AstBuilder builder, DecompilerContext context){
 		List<IAstTransform> transformers = Arrays.asList(
-				new ObfuscatedEnumSwitchRewriterTransform(context)
+				new ObfuscatedEnumSwitchRewriterTransform(context),
+				new RemoveObjectCasts(context)
 		);
 		for (IAstTransform transform : transformers){
 			transform.run(builder.getCompilationUnit());

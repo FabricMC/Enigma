@@ -268,13 +268,34 @@ public class JarIndex {
 	}
 
 	public MethodInheritanceTreeNode getMethodInheritance(Translator deobfuscatingTranslator, MethodEntry obfMethodEntry) {
-
 		// travel to the ancestor implementation
+		LinkedList<ClassEntry> entries = new LinkedList<>();
+		entries.add(obfMethodEntry.getOwnerClassEntry());
+
+		// TODO: This could be optimized to not go through interfaces repeatedly...
+
 		ClassEntry baseImplementationClassEntry = obfMethodEntry.getOwnerClassEntry();
-		for (ClassEntry ancestorClassEntry : this.translationIndex.getAncestry(obfMethodEntry.getOwnerClassEntry())) {
+
+		for (ClassEntry itf : getInterfaces(obfMethodEntry.getOwnerClassEntry().getClassName())) {
+			MethodEntry itfMethodEntry = entryPool.getMethod(itf, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
+			if (itfMethodEntry != null && containsObfMethod(itfMethodEntry)) {
+				baseImplementationClassEntry = itf;
+			}
+		}
+
+		for (ClassEntry ancestorClassEntry : this.translationIndex.getAncestry(entries.remove())) {
 			MethodEntry ancestorMethodEntry = entryPool.getMethod(ancestorClassEntry, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
-			if (ancestorMethodEntry != null && containsObfMethod(ancestorMethodEntry)) {
-				baseImplementationClassEntry = ancestorClassEntry;
+			if (ancestorMethodEntry != null) {
+				if (containsObfMethod(ancestorMethodEntry)) {
+					baseImplementationClassEntry = ancestorClassEntry;
+				}
+
+				for (ClassEntry itf : getInterfaces(ancestorClassEntry.getClassName())) {
+					MethodEntry itfMethodEntry = entryPool.getMethod(itf, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
+					if (itfMethodEntry != null && containsObfMethod(itfMethodEntry)) {
+						baseImplementationClassEntry = itf;
+					}
+				}
 			}
 		}
 
