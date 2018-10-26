@@ -368,7 +368,7 @@ public class Deobfuscator {
 
 	public void rebuildMethodNames(ProgressListener progress) {
 		final AtomicInteger i = new AtomicInteger();
-		Map<ClassMapping, Map<Entry, String>> renameClassMap = new HashMap<>();
+		Map<ClassMapping, Map<Entry, String>> renameClassMap = new ConcurrentHashMap<>();
 
 		progress.init(getMappings().classes().size() * 3, "Rebuilding method names");
 
@@ -378,16 +378,18 @@ public class Deobfuscator {
 		});
 
 
-		renameClassMap.entrySet().parallelStream().forEach(renameClassMapEntry -> {
+		renameClassMap.entrySet().stream().forEach(renameClassMapEntry -> {
 			progress.onProgress(i.getAndIncrement(), renameClassMapEntry.getKey().getDeobfName());
 			for (Map.Entry<Entry, String> entry : renameClassMapEntry.getValue().entrySet()) {
 				Entry obfEntry = entry.getKey();
 
-				removeMapping(obfEntry);
+				removeMapping(obfEntry, false);
 			}
 		});
 
-		renameClassMap.entrySet().parallelStream().forEach(renameClassMapEntry -> {
+		translatorCache.clear();
+
+		renameClassMap.entrySet().stream().forEach(renameClassMapEntry -> {
 			progress.onProgress(i.getAndIncrement(), renameClassMapEntry.getKey().getDeobfName());
 
 			for (Map.Entry<Entry, String> entry : renameClassMapEntry.getValue().entrySet()) {
@@ -623,6 +625,10 @@ public class Deobfuscator {
 	}
 
 	public void removeMapping(Entry obfEntry) {
+		removeMapping(obfEntry, true);
+	}
+
+	public void removeMapping(Entry obfEntry, boolean clearCache) {
 		if (obfEntry instanceof ClassEntry) {
 			this.renamer.removeClassMapping((ClassEntry) obfEntry);
 		} else if (obfEntry instanceof FieldEntry) {
@@ -639,10 +645,15 @@ public class Deobfuscator {
 		}
 
 		// clear caches
-		this.translatorCache.clear();
+		if (clearCache)
+			this.translatorCache.clear();
 	}
 
 	public void markAsDeobfuscated(Entry obfEntry) {
+		markAsDeobfuscated(obfEntry, true);
+	}
+
+	public void markAsDeobfuscated(Entry obfEntry, boolean clearCache) {
 		if (obfEntry instanceof ClassEntry) {
 			this.renamer.markClassAsDeobfuscated((ClassEntry) obfEntry);
 		} else if (obfEntry instanceof FieldEntry) {
@@ -660,7 +671,8 @@ public class Deobfuscator {
 		}
 
 		// clear caches
-		this.translatorCache.clear();
+		if (clearCache)
+			this.translatorCache.clear();
 	}
 
 	public void changeModifier(Entry entry, Mappings.EntryModifier modifierEntry) {
