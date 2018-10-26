@@ -17,7 +17,7 @@ public class MappingsTinyReader {
 	public ClassMapping readClass(String[] parts) {
 		// Extract the inner naming of the deob form if it have one
 		String deobName = parts[2].contains("$") ? parts[2].substring(parts[2].lastIndexOf('$') + 1) : parts[2];
-		return new ClassMapping(parts[1], deobName).setDeobInner(parts[2]);
+		return new ClassMapping(parts[1], deobName).setDeobfInner(parts[2]);
 	}
 
 	public FieldMapping readField(String[] parts) {
@@ -52,7 +52,7 @@ public class MappingsTinyReader {
 							                  parts[2];
 
 							// Add full deob name to the class mapping to handle inner class after this loop
-							classMappingMap.put(parts[2], classMapping.setDeobInner(parts[2]));
+							classMappingMap.put(parts[2], classMapping.setDeobfInner(parts[2]));
 							classMapping.setDeobfName(deobName);
 
 							// Avoid to make the mapping dirty directly at the startup

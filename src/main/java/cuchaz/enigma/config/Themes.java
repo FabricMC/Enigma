@@ -13,7 +13,7 @@ import java.io.IOException;
 public class Themes {
 
     public static void setDefault(Gui gui) {
-        //TODO set to default
+        // TODO set to default
 	    try {
 		    Config.getInstance().reset();
 	    } catch (IOException e) {

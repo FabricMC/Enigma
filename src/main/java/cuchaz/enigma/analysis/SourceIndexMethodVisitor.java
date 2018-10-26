@@ -33,6 +33,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
 	private Map<String, Entry> identifierEntryCache = new HashMap<>();
+	private int argumentPosition = 0;
 
 	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, ClassDefEntry ownerEntry, MethodDefEntry methodEntry) {
 		super(entryPool);
@@ -107,10 +108,9 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 
 	@Override
 	public Void visitParameterDeclaration(ParameterDeclaration node, SourceIndex index) {
-		ParameterDefinition def = node.getUserData(Keys.PARAMETER_DEFINITION);
+		// DO NOT USE def.getSlot()! Doubleword slots increase by 2, not by 1
 
-		int variableOffset = this.methodEntry.getVariableOffset(ownerEntry);
-		int parameterIndex = def.getSlot() - variableOffset;
+		int parameterIndex = (argumentPosition++);
 
 		if (parameterIndex >= 0) {
 			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, parameterIndex, node.getName());
@@ -184,8 +184,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 				if (variable != null) {
 					VariableDefinition originalVariable = variable.getOriginalVariable();
 					if (originalVariable != null) {
-						int variableOffset = methodEntry.getVariableOffset(ownerEntry);
-						int variableIndex = originalVariable.getSlot() - variableOffset;
+						int variableIndex = (argumentPosition++);
 						if (variableIndex >= 0) {
 							LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, variableIndex, initializer.getName());
 							identifierEntryCache.put(identifier.getName(), localVariableEntry);

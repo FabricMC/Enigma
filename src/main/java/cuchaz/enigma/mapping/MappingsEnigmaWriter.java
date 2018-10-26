@@ -33,7 +33,16 @@ public class MappingsEnigmaWriter {
 
 		Mappings previousState = mappings.getPreviousState();
 		for (ClassMapping classMapping : sorted(mappings.classes())) {
+			File result = new File(target, classMapping.getSaveName() + ".mapping");
+
 			if (!classMapping.isDirty()) {
+				continue;
+			}
+
+			if (classMapping.isEmpty()) {
+				if (result.exists()) {
+					result.delete();
+				}
 				continue;
 			}
 
@@ -49,8 +58,6 @@ public class MappingsEnigmaWriter {
 					System.err.println("Failed to delete old class mapping " + previousFile.getName());
 				}
 			}
-
-			File result = new File(target, classMapping.getSaveName() + ".mapping");
 
 			File packageFile = result.getParentFile();
 			if (!packageFile.exists()) {

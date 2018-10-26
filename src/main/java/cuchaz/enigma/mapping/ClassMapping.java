@@ -577,7 +577,7 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	}
 
 	// Used for tiny parsing to keep track of deobfuscate inner classes
-	public ClassMapping setDeobInner(String deobName) {
+	public ClassMapping setDeobfInner(String deobName) {
 		this.deobfFullName = deobName;
 		return this;
 	}
@@ -607,4 +607,21 @@ public class ClassMapping implements Comparable<ClassMapping> {
 	public boolean equals(Object obj) {
 		return obj instanceof ClassMapping && ((ClassMapping) obj).obfFullName.equals(this.obfFullName);
 	}
+
+    public boolean isEmpty() {
+		if (fieldsByDeobf.isEmpty() && methodsByDeobf.isEmpty() && deobfFullName == null && deobfName == null
+				&& innerClassesByObfSimple.values().stream().allMatch(ClassMapping::isEmpty)) {
+
+			// check args
+			for (MethodMapping mapping : methodsByObf.values()) {
+				if (mapping.arguments().iterator().hasNext()) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+    }
 }
