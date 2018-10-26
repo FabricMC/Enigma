@@ -76,7 +76,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitMemberReferenceExpression(MemberReferenceExpression node, SourceIndex index) {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
-		if (ref != null) {
+		if (ref instanceof FieldReference) {
 			// make sure this is actually a field
 			String erasedSignature = ref.getErasedSignature();
 			if (erasedSignature.indexOf('(') >= 0) {

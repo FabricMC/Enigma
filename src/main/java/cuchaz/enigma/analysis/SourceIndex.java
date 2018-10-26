@@ -17,15 +17,19 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.Region;
 import com.strobel.decompiler.languages.java.ast.AstNode;
+import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
 import com.strobel.decompiler.languages.java.ast.Identifier;
+import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
 import cuchaz.enigma.mapping.entry.Entry;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 public class SourceIndex {
+	private static Pattern ANONYMOUS_INNER = Pattern.compile("\\$\\d+$");
 
 	private String source;
 	private TreeMap<Token, EntryReference<Entry, Entry>> tokenToReference;
@@ -79,6 +83,14 @@ public class SourceIndex {
 			// DEBUG
 			System.err.println(String.format("WARNING: %s \"%s\" has invalid start: %s", node.getNodeType(), name, region));
 			return null;
+		}
+
+		if (node instanceof Identifier && name.indexOf('$') >=0 && node.getParent() instanceof ConstructorDeclaration && name.lastIndexOf('$') >= 0 && !ANONYMOUS_INNER.matcher(name).matches()){
+			TypeDeclaration type = node.getParent().getParent() instanceof TypeDeclaration ? (TypeDeclaration) node.getParent().getParent() : null;
+			if (type != null){
+				name = type.getName();
+				token.end = token.start + name.length();
+			}
 		}
 
 		// DEBUG

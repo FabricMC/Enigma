@@ -56,7 +56,7 @@ public class PanelEditor extends JEditorPane {
 						gui.popupMenu.showCallsMenu.doClick();
 						break;
 
-					case KeyEvent.VK_T:
+					case KeyEvent.VK_O:
 						gui.popupMenu.toggleMappingMenu.doClick();
 						break;
 					case KeyEvent.VK_F5:

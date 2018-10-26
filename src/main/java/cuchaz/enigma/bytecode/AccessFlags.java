@@ -51,7 +51,7 @@ public class AccessFlags {
 	}
 
 	public AccessFlags setBridged() {
-		this.setVisibility(Opcodes.ACC_BRIDGE);
+		flags |= Opcodes.ACC_BRIDGE;
 		return this;
 	}
 

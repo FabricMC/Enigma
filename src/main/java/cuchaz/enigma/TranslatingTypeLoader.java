@@ -22,7 +22,10 @@ import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
 import cuchaz.enigma.mapping.Translator;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.List;
 
@@ -87,6 +90,31 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 		if (node == null) {
 			// couldn't find it
 			return null;
+		}
+
+
+		// remove <obj>.getClass() calls that are seemingly injected
+		//	DUP
+		//	INVOKEVIRTUAL java/lang/Object.getClass ()Ljava/lang/Class;
+		//	POP
+		for (MethodNode methodNode : node.methods){
+			AbstractInsnNode insnNode = methodNode.instructions.getFirst();
+			while (insnNode != null){
+				if (insnNode instanceof MethodInsnNode && insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL){
+					MethodInsnNode methodInsnNode = (MethodInsnNode)insnNode;
+					if (methodInsnNode.name.equals("getClass") && methodInsnNode.owner.equals("java/lang/Object") && methodInsnNode.desc.equals("()Ljava/lang/Class;")){
+						AbstractInsnNode previous = methodInsnNode.getPrevious();
+						AbstractInsnNode next = methodInsnNode.getNext();
+						if (previous.getOpcode() == Opcodes.DUP && next.getOpcode() == Opcodes.POP){
+							insnNode = previous.getPrevious();//reset the iterator so it gets the new next instruction
+							methodNode.instructions.remove(previous);
+							methodNode.instructions.remove(methodInsnNode);
+							methodNode.instructions.remove(next);
+						}
+					}
+				}
+				insnNode = insnNode.getNext();
+			}
 		}
 
 		ClassWriter writer = new ClassWriter(0);

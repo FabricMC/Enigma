@@ -62,7 +62,7 @@ public class Config {
 	public void loadConfig() throws IOException {
 		if (!ENIGMA_DIR.exists()) ENIGMA_DIR.mkdirs();
 		File configFile = new File(ENIGMA_DIR, "config.json");
-		if (configFile.exists()) gson.fromJson(Files.toString(configFile, Charset.defaultCharset()), Config.class);
+		if (configFile.exists()) gson.fromJson(Files.asCharSource(configFile, Charset.defaultCharset()).read(), Config.class);
 		else {
 			this.reset();
 			Files.touch(configFile);
@@ -71,7 +71,7 @@ public class Config {
 	}
 
 	public void saveConfig() throws IOException {
-		Files.write(gson.toJson(this), CONFIG_FILE, Charset.defaultCharset());
+		Files.asCharSink(CONFIG_FILE, Charset.defaultCharset()).write(gson.toJson(this));
 	}
 
 	public void reset() throws IOException {
