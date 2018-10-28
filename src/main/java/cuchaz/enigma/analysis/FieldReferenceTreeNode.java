@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.analysis;
 
+import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.FieldEntry;
 import cuchaz.enigma.mapping.entry.MethodDefEntry;
@@ -23,7 +24,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	private Translator deobfuscatingTranslator;
 	private FieldEntry entry;
 	private EntryReference<FieldEntry, MethodDefEntry> reference;
-	private Access access;
+	private AccessFlags access;
 
 	public FieldReferenceTreeNode(Translator deobfuscatingTranslator, FieldEntry entry) {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
@@ -31,7 +32,7 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 		this.reference = null;
 	}
 
-	private FieldReferenceTreeNode(Translator deobfuscatingTranslator, EntryReference<FieldEntry, MethodDefEntry> reference, Access access) {
+	private FieldReferenceTreeNode(Translator deobfuscatingTranslator, EntryReference<FieldEntry, MethodDefEntry> reference, AccessFlags access) {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
 		this.entry = reference.entry;
 		this.reference = reference;
@@ -60,11 +61,11 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 		// get all the child nodes
 		if (this.reference == null) {
 			for (EntryReference<FieldEntry, MethodDefEntry> reference : index.getFieldReferences(this.entry)) {
-				add(new FieldReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
+				add(new FieldReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccessFlags(this.entry)));
 			}
 		} else {
 			for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.reference.context)) {
-				add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.reference.context)));
+				add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccessFlags(this.reference.context)));
 			}
 		}
 

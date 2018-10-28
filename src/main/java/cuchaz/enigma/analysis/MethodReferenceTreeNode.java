@@ -12,6 +12,7 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
+import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.Entry;
 import cuchaz.enigma.mapping.entry.MethodDefEntry;
@@ -27,7 +28,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 	private Translator deobfuscatingTranslator;
 	private MethodEntry entry;
 	private EntryReference<MethodEntry, MethodDefEntry> reference;
-	private Access access;
+	private AccessFlags access;
 
 	public MethodReferenceTreeNode(Translator deobfuscatingTranslator, MethodEntry entry) {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
@@ -36,7 +37,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 	}
 
 	public MethodReferenceTreeNode(Translator deobfuscatingTranslator,
-								   EntryReference<MethodEntry, MethodDefEntry> reference, Access access) {
+								   EntryReference<MethodEntry, MethodDefEntry> reference, AccessFlags access) {
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
 		this.entry = reference.entry;
 		this.reference = reference;
@@ -65,7 +66,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.entry)) {
-			add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccess(this.entry)));
+			add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccessFlags(this.entry)));
 		}
 
 		if (recurse && this.children != null) {

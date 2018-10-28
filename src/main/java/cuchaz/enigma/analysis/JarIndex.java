@@ -25,7 +25,7 @@ public class JarIndex {
 
 	private Set<ClassEntry> obfClassEntries;
 	private TranslationIndex translationIndex;
-	private Map<Entry, Access> access;
+	private Map<Entry, AccessFlags> access;
 	private Multimap<ClassEntry, FieldDefEntry> fields;
 	private Multimap<ClassEntry, MethodDefEntry> methods;
 	private Multimap<String, MethodDefEntry> methodImplementations;
@@ -112,14 +112,14 @@ public class JarIndex {
 	protected void indexField(ClassDefEntry owner, int access, String name, String desc, String signature) {
 		FieldDefEntry fieldEntry = new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexField(fieldEntry);
-		this.access.put(fieldEntry, Access.get(access));
+		this.access.put(fieldEntry, owner.getAccess());
 		this.fields.put(fieldEntry.getOwnerClassEntry(), fieldEntry);
 	}
 
 	protected void indexMethod(ClassDefEntry owner, int access, String name, String desc, String signature) {
 		MethodDefEntry methodEntry = new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexMethod(methodEntry);
-		this.access.put(methodEntry, Access.get(access));
+		this.access.put(methodEntry, owner.getAccess());
 		this.methods.put(methodEntry.getOwnerClassEntry(), methodEntry);
 
 		if (new AccessFlags(access).isSynthetic()) {
@@ -231,7 +231,13 @@ public class JarIndex {
 		return this.translationIndex;
 	}
 
+	@Deprecated
 	public Access getAccess(Entry entry) {
+		AccessFlags flags = getAccessFlags(entry);
+		return flags != null ? Access.get(flags) : null;
+	}
+
+	public AccessFlags getAccessFlags(Entry entry) {
 		return this.access.get(entry);
 	}
 
