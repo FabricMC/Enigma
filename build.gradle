@@ -67,11 +67,10 @@ dependencies {
     compile 'com.google.guava:guava:23.+'
     compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.33.8-enigma'
     compile 'com.google.code.gson:gson:2.8.5'
-    compile 'org.ow2.asm:asm:6.2.1'
-    compile 'org.ow2.asm:asm-analysis:6.2.1'
-    compile 'org.ow2.asm:asm-commons:6.2.1'
-    compile 'org.ow2.asm:asm-tree:6.2.1'
-    compile 'org.ow2.asm:asm-util:6.2.1'
+    compile 'org.ow2.asm:asm:7.0'
+    compile 'org.ow2.asm:asm-commons:7.0'
+    compile 'org.ow2.asm:asm-tree:7.0'
+    compile 'org.ow2.asm:asm-util:7.0'
 
     application 'de.sciss:syntaxpane:1.1.+'
 
