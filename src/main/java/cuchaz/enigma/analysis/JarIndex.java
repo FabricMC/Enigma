@@ -106,20 +106,22 @@ public class JarIndex {
 				throw new IllegalArgumentException("Class cannot be its own interface! " + name);
 			}
 		}
-		return this.translationIndex.indexClass(access, name, signature, superName, interfaces);
+		ClassDefEntry entry = this.translationIndex.indexClass(access, name, signature, superName, interfaces);
+		this.access.put(entry, entry.getAccess());
+		return entry;
 	}
 
 	protected void indexField(ClassDefEntry owner, int access, String name, String desc, String signature) {
 		FieldDefEntry fieldEntry = new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexField(fieldEntry);
-		this.access.put(fieldEntry, owner.getAccess());
+		this.access.put(fieldEntry, fieldEntry.getAccess());
 		this.fields.put(fieldEntry.getOwnerClassEntry(), fieldEntry);
 	}
 
 	protected void indexMethod(ClassDefEntry owner, int access, String name, String desc, String signature) {
 		MethodDefEntry methodEntry = new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexMethod(methodEntry);
-		this.access.put(methodEntry, owner.getAccess());
+		this.access.put(methodEntry, methodEntry.getAccess());
 		this.methods.put(methodEntry.getOwnerClassEntry(), methodEntry);
 
 		if (new AccessFlags(access).isSynthetic()) {
