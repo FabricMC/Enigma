@@ -33,7 +33,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
 	private Map<String, Entry> identifierEntryCache = new HashMap<>();
-	private int argumentPosition = 0;
+	private int argumentPosition;
 
 	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, ClassDefEntry ownerEntry, MethodDefEntry methodEntry) {
 		super(entryPool);
@@ -41,6 +41,10 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		this.entryFactory = new ProcyonEntryFactory(entryPool);
 		this.ownerEntry = ownerEntry;
 		this.methodEntry = methodEntry;
+		this.argumentPosition = 0;
+		if (ownerEntry.isInnerClass() && methodEntry.isConstructor() && !ownerEntry.getAccess().isStatic()) {
+			this.argumentPosition++;
+		}
 	}
 
 	@Override
