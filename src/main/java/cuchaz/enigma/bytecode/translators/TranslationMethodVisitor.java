@@ -85,10 +85,8 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		hasParameterMeta = true;
 
 		String translatedSignature = translator.getTranslatedSignature(Signature.createTypedSignature(signature)).toString();
+		int offsetIndex = index;
 
-		int offset = methodEntry.getVariableOffset(ownerEntry);
-
-		int offsetIndex = index - offset;
 		if (offsetIndex >= 0) {
 			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, offsetIndex, name, new TypeDescriptor(desc));
 			LocalVariableDefEntry translatedEntry = translator.getTranslatedVariableDef(entry);
@@ -149,8 +147,10 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		// If we didn't receive any parameter metadata, generate it
 		if (!hasParameterMeta) {
 			List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
+			int offset = 0;
+
 			for (int index = 0; index < arguments.size(); index++) {
-				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, index, "");
+				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "");
 				LocalVariableEntry translatedEntry = translator.getTranslatedVariable(entry);
 				String translatedName = translatedEntry.getName();
 				if (translatedName.equals(entry.getName())) {
@@ -158,6 +158,8 @@ public class TranslationMethodVisitor extends MethodVisitor {
 				} else {
 					super.visitParameter(translatedName, 0);
 				}
+
+				offset += arguments.get(index).getSize();
 			}
 		}
 		super.visitEnd();

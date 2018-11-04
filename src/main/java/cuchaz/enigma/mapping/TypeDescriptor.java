@@ -208,6 +208,20 @@ public class TypeDescriptor {
 		return buf.toString();
 	}
 
+	public int getSize() {
+		switch (desc.charAt(0)) {
+			case 'J':
+			case 'D':
+				if (desc.length() == 1) {
+					return 2;
+				} else {
+					return 1;
+				}
+			default:
+				return 1;
+		}
+	}
+
 	public enum Primitive {
 		Byte('B'),
 		Character('C'),

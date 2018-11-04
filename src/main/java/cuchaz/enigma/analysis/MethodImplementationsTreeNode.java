@@ -76,7 +76,6 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public void load(JarIndex index) {
-
 		// get all method implementations
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
 		for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {

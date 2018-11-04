@@ -37,16 +37,6 @@ public class MethodDefEntry extends MethodEntry {
 		return signature;
 	}
 
-	public int getVariableOffset(ClassDefEntry ownerEntry) {
-		// Enum constructors have an implicit "name" and "ordinal" parameter as well as "this"
-		if (ownerEntry.getAccess().isEnum() && getName().startsWith("<")) {
-			return 3;
-		} else {
-			// If we're not static, "this" is bound to index 0
-			return getAccess().isStatic() ? 0 : 1;
-		}
-	}
-
 	@Override
 	public MethodDefEntry updateOwnership(ClassEntry classEntry) {
 		return new MethodDefEntry(new ClassEntry(classEntry.getName()), name, descriptor, signature, access);
