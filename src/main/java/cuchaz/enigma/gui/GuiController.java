@@ -192,6 +192,13 @@ public class GuiController {
 		return MethodImplementationsTreeNode.findNode(rootNodes.get(0), obfMethodEntry);
 	}
 
+	public ClassReferenceTreeNode getClassReferences(ClassEntry deobfClassEntry) {
+		ClassEntry obfClassEntry = this.deobfuscator.obfuscateEntry(deobfClassEntry);
+		ClassReferenceTreeNode rootNode = new ClassReferenceTreeNode(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfClassEntry);
+		rootNode.load(this.deobfuscator.getJarIndex(), true);
+		return rootNode;
+	}
+
 	public FieldReferenceTreeNode getFieldReferences(FieldEntry deobfFieldEntry) {
 		FieldEntry obfFieldEntry = this.deobfuscator.obfuscateEntry(deobfFieldEntry);
 		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfFieldEntry);

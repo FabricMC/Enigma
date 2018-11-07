@@ -61,7 +61,7 @@ public class TranslationClassVisitor extends ClassVisitor {
 		MethodDefEntry entry = new MethodDefEntry(obfClassEntry, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
 		MethodDefEntry translatedEntry = translator.getTranslatedMethodDef(entry);
 		if (jarIndex.getBridgedMethod(entry) != null) {
-			translatedEntry.getAccess().setBridged();
+			translatedEntry.getAccess().setBridge();
 		}
 		String[] translatedExceptions = new String[exceptions.length];
 		for (int i = 0; i < exceptions.length; i++) {

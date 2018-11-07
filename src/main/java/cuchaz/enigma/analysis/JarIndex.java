@@ -30,6 +30,7 @@ public class JarIndex {
 	private Multimap<ClassEntry, MethodDefEntry> methods;
 	private Multimap<String, MethodDefEntry> methodImplementations;
 	private Multimap<MethodEntry, EntryReference<MethodEntry, MethodDefEntry>> methodsReferencing;
+	private Multimap<ClassEntry, EntryReference<ClassEntry, MethodDefEntry>> methodsReferencingClasses;
 	private Multimap<MethodEntry, MethodEntry> methodReferences;
 	private Multimap<FieldEntry, EntryReference<FieldEntry, MethodDefEntry>> fieldReferences;
 	private Multimap<ClassEntry, ClassEntry> innerClassesByOuter;
@@ -45,6 +46,7 @@ public class JarIndex {
 		this.fields = HashMultimap.create();
 		this.methods = HashMultimap.create();
 		this.methodImplementations = HashMultimap.create();
+		this.methodsReferencingClasses = HashMultimap.create();
 		this.methodsReferencing = HashMultimap.create();
 		this.methodReferences = HashMultimap.create();
 		this.fieldReferences = HashMultimap.create();
@@ -93,6 +95,7 @@ public class JarIndex {
 			EntryRenamer.renameClassesInSet(renames, this.obfClassEntries);
 			this.translationIndex.renameClasses(renames);
 			EntryRenamer.renameClassesInMultimap(renames, this.methodImplementations);
+			EntryRenamer.renameClassesInMultimap(renames, this.methodsReferencingClasses);
 			EntryRenamer.renameClassesInMultimap(renames, this.methodsReferencing);
 			EntryRenamer.renameClassesInMultimap(renames, this.methodReferences);
 			EntryRenamer.renameClassesInMultimap(renames, this.fieldReferences);
@@ -136,12 +139,16 @@ public class JarIndex {
 	}
 
 	protected void indexMethodCall(MethodDefEntry callerEntry, String owner, String name, String desc) {
-		MethodEntry referencedMethod = new MethodEntry(entryPool.getClass(owner), name, new MethodDescriptor(desc));
+		ClassEntry referencedClass = entryPool.getClass(owner);
+		MethodEntry referencedMethod = new MethodEntry(referencedClass, name, new MethodDescriptor(desc));
 		ClassEntry resolvedClassEntry = translationIndex.resolveEntryOwner(referencedMethod);
 		if (resolvedClassEntry != null && !resolvedClassEntry.equals(referencedMethod.getOwnerClassEntry())) {
 			referencedMethod = referencedMethod.updateOwnership(resolvedClassEntry);
 		}
 		methodsReferencing.put(referencedMethod, new EntryReference<>(referencedMethod, referencedMethod.getName(), callerEntry));
+		if (referencedMethod.isConstructor()) {
+			methodsReferencingClasses.put(referencedClass, new EntryReference<>(referencedClass, referencedMethod.getName(), callerEntry));
+		}
 		methodReferences.put(callerEntry, referencedMethod);
 	}
 
@@ -419,6 +426,10 @@ public class JarIndex {
 			}
 		}
 		return fieldEntries;
+	}
+
+	public Collection<EntryReference<ClassEntry, MethodDefEntry>> getMethodsReferencing(ClassEntry classEntry) {
+		return this.methodsReferencingClasses.get(classEntry);
 	}
 
 	public Collection<EntryReference<MethodEntry, MethodDefEntry>> getMethodsReferencing(MethodEntry methodEntry) {

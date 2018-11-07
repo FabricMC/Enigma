@@ -693,9 +693,7 @@ public class Gui {
 		}
 
 		if (reference.entry instanceof ClassEntry) {
-			// look for calls to the default constructor
-			// TODO: get a list of all the constructors and find calls to all of them
-			MethodReferenceTreeNode node = this.controller.getMethodReferences(new MethodEntry((ClassEntry) reference.entry, "<init>", new MethodDescriptor("()V")));
+			ClassReferenceTreeNode node = this.controller.getClassReferences((ClassEntry) reference.entry);
 			callsTree.setModel(new DefaultTreeModel(node));
 		} else if (reference.entry instanceof FieldEntry) {
 			FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) reference.entry);

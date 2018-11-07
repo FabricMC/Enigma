@@ -1,5 +1,6 @@
 package cuchaz.enigma.bytecode;
 
+import cuchaz.enigma.analysis.Access;
 import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
@@ -35,6 +36,10 @@ public class AccessFlags {
 		return (flags & Opcodes.ACC_ENUM) != 0;
 	}
 
+	public boolean isBridge() {
+		return (flags & Opcodes.ACC_BRIDGE) != 0;
+	}
+
 	public AccessFlags setPrivate() {
 		this.setVisibility(Opcodes.ACC_PRIVATE);
 		return this;
@@ -50,9 +55,14 @@ public class AccessFlags {
 		return this;
 	}
 
-	public AccessFlags setBridged() {
+	public AccessFlags setBridge() {
 		flags |= Opcodes.ACC_BRIDGE;
 		return this;
+	}
+
+	@Deprecated
+	public AccessFlags setBridged() {
+		return setBridge();
 	}
 
 	public void setVisibility(int visibility) {
@@ -76,5 +86,20 @@ public class AccessFlags {
 	@Override
 	public int hashCode() {
 		return flags;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(Access.get(this).toString().toLowerCase());
+		if (isStatic()) {
+			builder.append(" static");
+		}
+		if (isSynthetic()) {
+			builder.append(" synthetic");
+		}
+		if (isBridge()) {
+			builder.append(" bridge");
+		}
+		return builder.toString();
 	}
 }
