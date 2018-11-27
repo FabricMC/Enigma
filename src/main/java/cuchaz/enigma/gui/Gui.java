@@ -792,11 +792,15 @@ public class Gui {
 			newEntry == null);
 	}
 
+	// TODO: getExpansionState will *not* actually update itself based on name changes!
 	public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb) {
 		ClassEntry oldEntry = deobfReference.entry.getOwnerClassEntry();
 		ClassEntry newEntry = new ClassEntry(newName);
 
 		// Ob -> deob
+		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
+		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
+
 		if (isOldOb && !isNewOb) {
 			this.deobfPanel.deobfClasses.moveClassTree(oldEntry, newEntry, obfPanel.obfClasses);
 			ClassSelectorPackageNode packageNode = this.obfPanel.obfClasses.getPackageNode(oldEntry);
@@ -824,5 +828,8 @@ public class Gui {
 			this.deobfPanel.deobfClasses.removeNodeIfEmpty(this.deobfPanel.deobfClasses.getPackageNode(oldEntry));
 			this.deobfPanel.deobfClasses.reload();
 		}
+
+		this.deobfPanel.deobfClasses.restoreExpansionState(this.deobfPanel.deobfClasses, stateDeobf);
+		this.obfPanel.obfClasses.restoreExpansionState(this.obfPanel.obfClasses, stateObf);
 	}
 }

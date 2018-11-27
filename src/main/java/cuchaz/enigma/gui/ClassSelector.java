@@ -141,7 +141,7 @@ public class ClassSelector extends JTree {
 	}
 
 	public void setClasses(Collection<ClassEntry> classEntries) {
-		String state = getExpansionState(this, 0);
+		List<StateEntry> state = getExpansionState(this);
 		if (classEntries == null) {
 			setModel(null);
 			return;
@@ -210,7 +210,7 @@ public class ClassSelector extends JTree {
 		// finally, update the tree control
 		setModel(new DefaultTreeModel(rootNodes));
 
-		restoreExpanstionState(this, 0, state);
+		restoreExpansionState(this, state);
 	}
 
 	public ClassEntry getSelectedClass() {
@@ -251,28 +251,48 @@ public class ClassSelector extends JTree {
 		return path1.equals(path2);
 	}
 
-	public String getExpansionState(JTree tree, int row) {
-		TreePath rowPath = tree.getPathForRow(row);
-		StringBuilder buf = new StringBuilder();
-		int rowCount = tree.getRowCount();
-		for (int i = row; i < rowCount; i++) {
-			TreePath path = tree.getPathForRow(i);
-			if (i == row || isDescendant(path, rowPath)) {
-				if (tree.isExpanded(path)) {
-					buf.append(",").append((i - row));
-				}
-			} else {
-				break;
-			}
-		}
-		return buf.toString();
+	public enum State {
+		EXPANDED,
+		SELECTED
 	}
 
-	public void restoreExpanstionState(JTree tree, int row, String expansionState) {
-		StringTokenizer stok = new StringTokenizer(expansionState, ",");
-		while (stok.hasMoreTokens()) {
-			int token = row + Integer.parseInt(stok.nextToken());
-			tree.expandRow(token);
+	public static class StateEntry {
+		public final State state;
+		public final TreePath path;
+
+		public StateEntry(State state, TreePath path) {
+			this.state = state;
+			this.path = path;
+		}
+	}
+
+	public List<StateEntry> getExpansionState(JTree tree) {
+		List<StateEntry> state = new ArrayList<>();
+		int rowCount = tree.getRowCount();
+		for (int i = 0; i < rowCount; i++) {
+			TreePath path = tree.getPathForRow(i);
+			if (tree.isPathSelected(path)) {
+				state.add(new StateEntry(State.SELECTED, path));
+			}
+			if (tree.isExpanded(path)) {
+				state.add(new StateEntry(State.EXPANDED, path));
+			}
+		}
+		return state;
+	}
+
+	public void restoreExpansionState(JTree tree, List<StateEntry> expansionState) {
+		tree.clearSelection();
+
+		for (StateEntry entry : expansionState) {
+			switch (entry.state) {
+				case SELECTED:
+					tree.addSelectionPath(entry.path);
+					break;
+				case EXPANDED:
+					tree.expandPath(entry.path);
+					break;
+			}
 		}
 	}
 
