@@ -99,7 +99,8 @@ public class EntryRenamer {
 			return (T) new LocalVariableEntry(
 					renameMethodsInThing(renames, variableEntry.getOwnerEntry()),
 					variableEntry.getIndex(),
-					variableEntry.getName()
+					variableEntry.getName(),
+					variableEntry.isParameter()
 			);
 		} else if (thing instanceof EntryReference) {
 			EntryReference<Entry, Entry> reference = (EntryReference<Entry, Entry>) thing;
@@ -147,7 +148,7 @@ public class EntryRenamer {
 			);
 		} else if (thing instanceof LocalVariableEntry) {
 			LocalVariableEntry argumentEntry = (LocalVariableEntry) thing;
-			return (T) new LocalVariableEntry(renameClassesInThing(renames, argumentEntry.getOwnerEntry()), argumentEntry.getIndex(), argumentEntry.getName());
+			return (T) new LocalVariableEntry(renameClassesInThing(renames, argumentEntry.getOwnerEntry()), argumentEntry.getIndex(), argumentEntry.getName(), argumentEntry.isParameter());
 		} else if (thing instanceof EntryReference) {
 			EntryReference<Entry, Entry> reference = (EntryReference<Entry, Entry>) thing;
 			reference.entry = renameClassesInThing(renames, reference.entry);

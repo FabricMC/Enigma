@@ -42,8 +42,13 @@ public class LocalVariableMapping implements Comparable<LocalVariableMapping> {
 		this.name = NameValidator.validateArgumentName(val);
 	}
 
+	@Deprecated
 	public LocalVariableEntry getObfEntry(MethodEntry methodEntry) {
 		return new LocalVariableEntry(methodEntry, index, name);
+	}
+
+	public LocalVariableEntry getObfEntry(MethodEntry methodEntry, boolean parameter) {
+		return new LocalVariableEntry(methodEntry, index, name, parameter);
 	}
 
 	@Override

@@ -111,7 +111,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		int parameterIndex = def.getSlot();
 
 		if (parameterIndex >= 0) {
-			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, parameterIndex, node.getName());
+			LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, parameterIndex, node.getName(), true);
 			Identifier identifier = node.getNameToken();
 			// cache the argument entry and the identifier
 			identifierEntryCache.put(identifier.getName(), localVariableEntry);
@@ -184,7 +184,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 					if (originalVariable != null) {
 						int variableIndex = originalVariable.getSlot();
 						if (variableIndex >= 0) {
-							LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, variableIndex, initializer.getName());
+							LocalVariableEntry localVariableEntry = new LocalVariableEntry(methodEntry, variableIndex, initializer.getName(), false);
 							identifierEntryCache.put(identifier.getName(), localVariableEntry);
 							addDeclarationToUnmatched(identifier.getName(), index);
 							index.addDeclaration(identifier, localVariableEntry);

@@ -150,7 +150,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			int offset = 0;
 
 			for (int index = 0; index < arguments.size(); index++) {
-				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "");
+				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "", true);
 				LocalVariableEntry translatedEntry = translator.getTranslatedVariable(entry);
 				String translatedName = translatedEntry.getName();
 				if (translatedName.equals(entry.getName())) {

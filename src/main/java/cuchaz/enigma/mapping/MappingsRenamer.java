@@ -197,6 +197,10 @@ public class MappingsRenamer {
 
 	public void setLocalVariableTreeName(LocalVariableEntry obf, String deobfName) {
 		MethodEntry obfMethod = obf.getOwnerEntry();
+		if (!obf.isParameter()) {
+			setLocalVariableName(obf, deobfName);
+			return;
+		}
 
 		Set<MethodEntry> implementations = index.getRelatedMethodImplementations(obfMethod);
 		for (MethodEntry entry : implementations) {
@@ -219,7 +223,7 @@ public class MappingsRenamer {
 		}
 
 		for (MethodEntry entry : implementations) {
-			setLocalVariableName(new LocalVariableEntry(entry, obf.getIndex(), obf.getName()), deobfName);
+			setLocalVariableName(new LocalVariableEntry(entry, obf.getIndex(), obf.getName(), obf.isParameter()), deobfName);
 		}
 	}
 

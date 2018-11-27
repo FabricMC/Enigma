@@ -203,7 +203,7 @@ public class DirectionalTranslator implements Translator {
 		}
 		// TODO: Translating arguments calls method translation.. Can we refactor the code in such a way that we don't need this?
 		MethodEntry translatedOwner = getTranslatedMethod(entry.getOwnerEntry());
-		return new LocalVariableEntry(translatedOwner, entry.getIndex(), translatedArgumentName);
+		return new LocalVariableEntry(translatedOwner, entry.getIndex(), translatedArgumentName, entry.isParameter());
 	}
 
 	@Override
@@ -215,7 +215,7 @@ public class DirectionalTranslator implements Translator {
 		// TODO: Translating arguments calls method translation.. Can we refactor the code in such a way that we don't need this?
 		MethodDefEntry translatedOwner = getTranslatedMethodDef(entry.getOwnerEntry());
 		TypeDescriptor translatedTypeDesc = getTranslatedTypeDesc(entry.getDesc());
-		return new LocalVariableDefEntry(translatedOwner, entry.getIndex(), translatedArgumentName != null ? translatedArgumentName : entry.getName(), translatedTypeDesc);
+		return new LocalVariableDefEntry(translatedOwner, entry.getIndex(), translatedArgumentName != null ? translatedArgumentName : entry.getName(), entry.isParameter(), translatedTypeDesc);
 	}
 
 	@Override

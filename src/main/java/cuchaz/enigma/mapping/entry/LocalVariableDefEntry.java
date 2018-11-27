@@ -15,7 +15,11 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 	protected final TypeDescriptor desc;
 
 	public LocalVariableDefEntry(MethodDefEntry ownerEntry, int index, String name, TypeDescriptor desc) {
-		super(ownerEntry, index, name);
+		this(ownerEntry, index, name, true, desc);
+	}
+
+	public LocalVariableDefEntry(MethodDefEntry ownerEntry, int index, String name, boolean parameter, TypeDescriptor desc) {
+		super(ownerEntry, index, name, parameter);
 		Preconditions.checkNotNull(desc, "Variable desc cannot be null");
 
 		this.ownerEntry = ownerEntry;
@@ -33,7 +37,7 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 
 	@Override
 	public LocalVariableDefEntry updateOwnership(ClassEntry classEntry) {
-		return new LocalVariableDefEntry(ownerEntry.updateOwnership(classEntry), index, name, desc);
+		return new LocalVariableDefEntry(ownerEntry.updateOwnership(classEntry), index, name, parameter, desc);
 	}
 
 	@Override

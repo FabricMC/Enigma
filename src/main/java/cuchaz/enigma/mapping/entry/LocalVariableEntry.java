@@ -14,8 +14,14 @@ public class LocalVariableEntry implements Entry {
 	protected final MethodEntry ownerEntry;
 	protected final String name;
 	protected final int index;
+	protected final boolean parameter;
 
+	@Deprecated
 	public LocalVariableEntry(MethodEntry ownerEntry, int index, String name) {
+		this(ownerEntry, index, name, true);
+	}
+
+	public LocalVariableEntry(MethodEntry ownerEntry, int index, String name, boolean parameter) {
 		Preconditions.checkNotNull(ownerEntry, "Variable owner cannot be null");
 		Preconditions.checkNotNull(name, "Variable name cannot be null");
 		Preconditions.checkArgument(index >= 0, "Index must be positive");
@@ -23,6 +29,11 @@ public class LocalVariableEntry implements Entry {
 		this.ownerEntry = ownerEntry;
 		this.name = name;
 		this.index = index;
+		this.parameter = parameter;
+	}
+
+	public boolean isParameter() {
+		return this.parameter;
 	}
 
 	public MethodEntry getOwnerEntry() {
@@ -50,7 +61,7 @@ public class LocalVariableEntry implements Entry {
 
 	@Override
 	public LocalVariableEntry updateOwnership(ClassEntry classEntry) {
-		return new LocalVariableEntry(ownerEntry.updateOwnership(classEntry), index, name);
+		return new LocalVariableEntry(ownerEntry.updateOwnership(classEntry), index, name, parameter);
 	}
 
 	public String getMethodName() {
