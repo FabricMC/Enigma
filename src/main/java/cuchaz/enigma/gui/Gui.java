@@ -16,6 +16,7 @@ import cuchaz.enigma.Constants;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
@@ -306,6 +307,9 @@ public class Gui {
 		panel.setLayout(new FlowLayout());
 		panel.add(new JLabel("Loading..."));
 		this.classesPanel.add(panel);
+
+		Themes.updateTheme(this);
+
 		redraw();
 	}
 
@@ -327,6 +331,8 @@ public class Gui {
 		this.menuBar.closeMappingsMenu.setEnabled(true);
 		this.menuBar.exportSourceMenu.setEnabled(true);
 		this.menuBar.exportJarMenu.setEnabled(true);
+
+		Themes.updateTheme(this);
 
 		redraw();
 	}
@@ -350,6 +356,8 @@ public class Gui {
 		this.menuBar.closeMappingsMenu.setEnabled(false);
 		this.menuBar.exportSourceMenu.setEnabled(false);
 		this.menuBar.exportJarMenu.setEnabled(false);
+
+		Themes.updateTheme(this);
 
 		redraw();
 	}
@@ -599,6 +607,8 @@ public class Gui {
 		else
 			text.selectAll();
 
+		Themes.updateTheme(this);
+
 		redraw();
 	}
 
@@ -654,6 +664,9 @@ public class Gui {
 		}
 
 		tabs.setSelectedIndex(0);
+
+		Themes.updateTheme(this);
+
 		redraw();
 	}
 
@@ -683,6 +696,9 @@ public class Gui {
 		}
 
 		tabs.setSelectedIndex(1);
+
+		Themes.updateTheme(this);
+
 		redraw();
 	}
 
@@ -703,6 +719,9 @@ public class Gui {
 		}
 
 		tabs.setSelectedIndex(2);
+
+		Themes.updateTheme(this);
+
 		redraw();
 	}
 

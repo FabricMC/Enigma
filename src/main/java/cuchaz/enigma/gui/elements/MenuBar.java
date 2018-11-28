@@ -225,27 +225,11 @@ public class MenuBar extends JMenuBar {
 			{
 				JMenu themes = new JMenu("Themes");
 				menu.add(themes);
-				{
-					JMenuItem defaultTheme = new JMenuItem("Default");
-					themes.add(defaultTheme);
-					defaultTheme.addActionListener(event -> Themes.setDefault(gui));
-					JMenuItem dark = new JMenuItem("Dank");
-					themes.add(dark);
-					dark.addActionListener(event -> Themes.setDark(gui));
-					themes.addSeparator();
-					JMenuItem refresh = new JMenuItem("Reload From config");
-					themes.add(refresh);
-					refresh.addActionListener(event -> {
-						try {
-							Config.getInstance().reset();
-							Config.getInstance().saveConfig();
-							Themes.updateTheme(gui);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					});
+				for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
+					JMenuItem theme = new JMenuItem(lookAndFeel.getName());
+					themes.add(theme);
+					theme.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));
 				}
-
 			}
 		}
 		{

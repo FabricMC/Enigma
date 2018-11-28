@@ -1,14 +1,94 @@
 package cuchaz.enigma.config;
 
+import com.bulenkov.darcula.DarculaLaf;
 import com.google.common.io.Files;
 import com.google.gson.*;
 
+import javax.swing.*;
+import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 public class Config {
+	public enum LookAndFeel {
+		DEFAULT("Default"),
+		DARCULA("Dank");
+
+		private final String name;
+
+		LookAndFeel(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setGlobalLAF() {
+			try {
+				switch (this) {
+					case DEFAULT:
+						UIManager.setLookAndFeel(new MetalLookAndFeel());
+						break;
+					case DARCULA:
+						UIManager.setLookAndFeel(new DarculaLaf());
+						break;
+				}
+			} catch (Exception e){
+				throw new Error("Failed to set global look and feel", e);
+			}
+		}
+
+		public void apply(Config config) {
+			switch (this) {
+				case DEFAULT:
+					config.obfuscatedColor = 0xFFDCDC;
+					config.obfuscatedHiglightAlpha = 1.0F;
+					config.obfuscatedColorOutline = 0xA05050;
+					config.obfuscatedOutlineAlpha = 1.0F;
+					config.deobfuscatedColor = 0xDCFFDC;
+					config.deobfuscatedHiglightAlpha = 1.0F;
+					config.deobfuscatedColorOutline = 0x50A050;
+					config.deobfuscatedOutlineAlpha = 1.0F;
+					config.otherColorOutline = 0xB4B4B4;
+					config.otherOutlineAlpha = 1.0F;
+					config.editorBackground = 0xFFFFFF;
+					config.highlightColor = 0x3333EE;
+					config.stringColor = 0xCC6600;
+					config.numberColor = 0x999933;
+					config.operatorColor = 0x000000;
+					config.delimiterColor = 0x000000;
+					config.typeColor = 0x000000;
+					config.identifierColor = 0x000000;
+					config.defaultTextColor = 0x000000;
+					break;
+				case DARCULA:
+					//Based off colors found here: https://github.com/dracula/dracula-theme/
+					config.obfuscatedColor = 0xFF5555;
+					config.obfuscatedHiglightAlpha = 0.3F;
+					config.obfuscatedColorOutline = 0xFF5555;
+					config.obfuscatedOutlineAlpha = 0.5F;
+					config.deobfuscatedColor = 0x50FA7B;
+					config.deobfuscatedHiglightAlpha = 0.3F;
+					config.deobfuscatedColorOutline = 0x50FA7B;
+					config.deobfuscatedOutlineAlpha = 0.5F;
+					config.otherColorOutline = 0xB4B4B4;
+					config.otherOutlineAlpha = 0.0F;
+					config.editorBackground = 0x282A36;
+					config.highlightColor = 0xFF79C6;
+					config.stringColor = 0xF1FA8C;
+					config.numberColor = 0xBD93F9;
+					config.operatorColor = 0xF8F8F2;
+					config.delimiterColor = 0xF8F8F2;
+					config.typeColor = 0xF8F8F2;
+					config.identifierColor = 0xF8F8F2;
+					config.defaultTextColor = 0xF8F8F2;
+					break;
+			}
+		}
+	}
 
 	private static final File DIR_HOME = new File(System.getProperty("user.home"));
 	private static final File ENIGMA_DIR = new File(DIR_HOME, ".enigma");
@@ -40,8 +120,7 @@ public class Config {
 	public Integer identifierColor;
 	public Integer defaultTextColor;
 
-	public boolean useSystemLAF;
-	public boolean useDraculaLAF;
+	public LookAndFeel lookAndFeel = LookAndFeel.DEFAULT;
 
 	private Config() {
 		gson = new GsonBuilder()
@@ -76,27 +155,8 @@ public class Config {
 	}
 
 	public void reset() throws IOException {
-		this.obfuscatedColor = 0xFFDCDC;
-		this.obfuscatedHiglightAlpha = 1.0F;
-		this.obfuscatedColorOutline = 0xA05050;
-		this.obfuscatedOutlineAlpha = 1.0F;
-		this.deobfuscatedColor = 0xDCFFDC;
-		this.deobfuscatedHiglightAlpha = 1.0F;
-		this.deobfuscatedColorOutline = 0x50A050;
-		this.deobfuscatedOutlineAlpha = 1.0F;
-		this.otherColorOutline = 0xB4B4B4;
-		this.otherOutlineAlpha = 1.0F;
-		this.editorBackground = 0xFFFFFF;
-		this.highlightColor = 0x3333EE;
-		this.stringColor = 0xCC6600;
-		this.numberColor = 0x999933;
-		this.operatorColor = 0x000000;
-		this.delimiterColor = 0x000000;
-		this.typeColor = 0x000000;
-		this.identifierColor = 0x000000;
-		this.defaultTextColor = 0x000000;
-		this.useSystemLAF = true;
-		this.useDraculaLAF = false;
+		this.lookAndFeel = LookAndFeel.DEFAULT;
+		this.lookAndFeel.apply(this);
 		this.saveConfig();
 	}
 

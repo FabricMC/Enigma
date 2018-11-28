@@ -11,6 +11,7 @@
 
 package cuchaz.enigma;
 
+import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 
@@ -20,8 +21,8 @@ import java.util.jar.JarFile;
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		Themes.setLAF();
 		Gui gui = new Gui();
+		Config.LookAndFeel.DEFAULT.setGlobalLAF();
 
 		// parse command-line args
 		if (args.length >= 1) {
