@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 public class Config {
-	public enum LookAndFeel {
+    public enum LookAndFeel {
 		DEFAULT("Default"),
 		DARCULA("Dank");
 
@@ -44,6 +44,9 @@ public class Config {
 		public void apply(Config config) {
 			switch (this) {
 				case DEFAULT:
+					config.lineNumbersForeground = 0x333300;
+					config.lineNumbersBackground = 0xEEEEFF;
+					config.lineNumbersSelected = 0xCCCCEE;
 					config.obfuscatedColor = 0xFFDCDC;
 					config.obfuscatedHiglightAlpha = 1.0F;
 					config.obfuscatedColorOutline = 0xA05050;
@@ -66,6 +69,9 @@ public class Config {
 					break;
 				case DARCULA:
 					//Based off colors found here: https://github.com/dracula/dracula-theme/
+					config.lineNumbersForeground = 0xA4A4A3;
+					config.lineNumbersBackground = 0x313335;
+					config.lineNumbersSelected = 0x606366;
 					config.obfuscatedColor = 0xFF5555;
 					config.obfuscatedHiglightAlpha = 0.3F;
 					config.obfuscatedColorOutline = 0xFF5555;
@@ -119,6 +125,10 @@ public class Config {
 	public Integer typeColor;
 	public Integer identifierColor;
 	public Integer defaultTextColor;
+
+	public Integer lineNumbersBackground;
+	public Integer lineNumbersSelected;
+	public Integer lineNumbersForeground;
 
 	public LookAndFeel lookAndFeel = LookAndFeel.DEFAULT;
 

@@ -16,6 +16,8 @@ import com.google.common.collect.Queues;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.ClassEntry;
@@ -353,6 +355,7 @@ public class GuiController {
 					otherTokens.add(token);
 				}
 			}
+			gui.setEditorTheme(Config.getInstance().lookAndFeel);
 			gui.setHighlightedTokens(obfuscatedTokens, deobfuscatedTokens, otherTokens);
 		}).start();
 	}

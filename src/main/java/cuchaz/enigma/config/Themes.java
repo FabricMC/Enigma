@@ -33,9 +33,7 @@ public class Themes {
         gui.obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
         gui.deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
         gui.otherHighlightPainter = new OtherHighlightPainter();
-        gui.editor.updateUI();
-        gui.editor.setBackground(new Color(Config.getInstance().editorBackground));
-	    SwingUtilities.updateComponentTreeUI(gui.getFrame());
-        gui.getController().refreshCurrentClass();
+        gui.setEditorTheme(Config.getInstance().lookAndFeel);
+        SwingUtilities.updateComponentTreeUI(gui.getFrame());
     }
 }

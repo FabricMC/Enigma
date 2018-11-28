@@ -70,6 +70,7 @@ public class Gui {
 	public FileDialog exportJarFileChooser;
 	private GuiController controller;
 	private JFrame frame;
+	public Config.LookAndFeel editorFeel;
 	public PanelEditor editor;
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
@@ -84,12 +85,25 @@ public class Gui {
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
 
-	public Gui() {
+	public void setEditorTheme(Config.LookAndFeel feel) {
+		if (editor != null && (editorFeel == null || editorFeel != feel)) {
+			editor.updateUI();
+			editor.setBackground(new Color(Config.getInstance().editorBackground));
+			if (editorFeel != null) {
+				getController().refreshCurrentClass();
+			}
 
+			editorFeel = feel;
+		}
+	}
+
+	public Gui() {
 		// init frame
 		this.frame = new JFrame(Constants.NAME);
 		final Container pane = this.frame.getContentPane();
 		pane.setLayout(new BorderLayout());
+
+		Config.getInstance().lookAndFeel.setGlobalLAF();
 
 		if (Boolean.parseBoolean(System.getProperty("enigma.catchExceptions", "true"))) {
 			// install a global exception handler to the event thread
@@ -127,11 +141,7 @@ public class Gui {
 		infoPanel.clearReference();
 
 		// init editor
-		DefaultSyntaxKit.initKit();
-		DefaultSyntaxKit.registerContentType("text/minecraft", MinecraftSyntaxKit.class.getName());
-		obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
-		deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
-		otherHighlightPainter = new OtherHighlightPainter();
+		Themes.updateTheme(this);
 		selectionHighlightPainter = new SelectionHighlightPainter();
 		this.editor = new PanelEditor(this);
 		JScrollPane sourceScroller = new JScrollPane(this.editor);
@@ -308,8 +318,6 @@ public class Gui {
 		panel.add(new JLabel("Loading..."));
 		this.classesPanel.add(panel);
 
-		Themes.updateTheme(this);
-
 		redraw();
 	}
 
@@ -331,8 +339,6 @@ public class Gui {
 		this.menuBar.closeMappingsMenu.setEnabled(true);
 		this.menuBar.exportSourceMenu.setEnabled(true);
 		this.menuBar.exportJarMenu.setEnabled(true);
-
-		Themes.updateTheme(this);
 
 		redraw();
 	}
@@ -356,8 +362,6 @@ public class Gui {
 		this.menuBar.closeMappingsMenu.setEnabled(false);
 		this.menuBar.exportSourceMenu.setEnabled(false);
 		this.menuBar.exportJarMenu.setEnabled(false);
-
-		Themes.updateTheme(this);
 
 		redraw();
 	}
@@ -489,13 +493,14 @@ public class Gui {
 	private void addNameValue(JPanel container, String name, String value) {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
-		container.add(panel);
 
 		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
 		label.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
 		panel.add(label);
 
 		panel.add(Utils.unboldLabel(new JLabel(value, JLabel.LEFT)));
+
+		container.add(panel);
 	}
 
 	private JComboBox<Mappings.EntryModifier> addModifierComboBox(JPanel container, String name, Entry entry) {
@@ -503,7 +508,6 @@ public class Gui {
 			return null;
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
-		container.add(panel);
 		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
 		label.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
 		panel.add(label);
@@ -513,6 +517,9 @@ public class Gui {
 		combo.setSelectedIndex(getController().getDeobfuscator().getModifier(entry).ordinal());
 		combo.addItemListener(getController()::modifierChange);
 		panel.add(combo);
+
+		container.add(panel);
+
 		return combo;
 	}
 
@@ -607,8 +614,6 @@ public class Gui {
 		else
 			text.selectAll();
 
-		Themes.updateTheme(this);
-
 		redraw();
 	}
 
@@ -665,8 +670,6 @@ public class Gui {
 
 		tabs.setSelectedIndex(0);
 
-		Themes.updateTheme(this);
-
 		redraw();
 	}
 
@@ -697,8 +700,6 @@ public class Gui {
 
 		tabs.setSelectedIndex(1);
 
-		Themes.updateTheme(this);
-
 		redraw();
 	}
 
@@ -719,8 +720,6 @@ public class Gui {
 		}
 
 		tabs.setSelectedIndex(2);
-
-		Themes.updateTheme(this);
 
 		redraw();
 	}

@@ -1,6 +1,7 @@
 package cuchaz.enigma.gui;
 
 import cuchaz.enigma.config.Config;
+import de.sciss.syntaxpane.components.LineNumbersRuler;
 import de.sciss.syntaxpane.syntaxkits.JavaSyntaxKit;
 import de.sciss.syntaxpane.util.Configuration;
 
@@ -29,6 +30,9 @@ public class MinecraftSyntaxKit extends JavaSyntaxKit {
         configuration.put("Style.TYPE2", Config.getInstance().typeColor + ", 1");
         configuration.put("Style.IDENTIFIER", Config.getInstance().identifierColor + ", 0");
         configuration.put("Style.DEFAULT", Config.getInstance().defaultTextColor + ", 0");
+        configuration.put(LineNumbersRuler.PROPERTY_BACKGROUND, Config.getInstance().lineNumbersBackground + "");
+        configuration.put(LineNumbersRuler.PROPERTY_FOREGROUND, Config.getInstance().lineNumbersForeground + "");
+        configuration.put(LineNumbersRuler.PROPERTY_CURRENT_BACK, Config.getInstance().lineNumbersSelected + "");
         configuration.put("RightMarginColumn", "999"); //No need to have a right margin, if someone wants it add a config
     }
 
