@@ -23,7 +23,13 @@ public class ReferencedEntryPool {
 	private final Map<String, Map<String, FieldEntry>> fieldEntries = new HashMap<>();
 
 	public ClassEntry getClass(String name) {
-		return this.classEntries.computeIfAbsent(name, s -> new ClassEntry(name));
+		// TODO: FIXME - I'm a hack!
+		if ("[T".equals(name) || "[[T".equals(name) || "[[[T".equals(name)) {
+			name = name.replaceAll("T", "Ljava/lang/Object;");
+		}
+
+		final String computeName = name;
+		return this.classEntries.computeIfAbsent(name, s -> new ClassEntry(computeName));
 	}
 
 	public MethodEntry getMethod(ClassEntry ownerEntry, String name, String desc) {
