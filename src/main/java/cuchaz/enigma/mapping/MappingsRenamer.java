@@ -42,7 +42,7 @@ public class MappingsRenamer {
 
 	public void setClassName(ClassEntry obf, String deobfName) {
 
-		deobfName = NameValidator.validateClassName(deobfName, !obf.isInnerClass());
+		deobfName = NameValidator.validateClassName(deobfName.replace('.', '/'), !obf.isInnerClass());
 
 		List<ClassMapping> mappingChain = getOrCreateClassMappingChain(obf);
 		if (mappingChain.size() == 1) {
