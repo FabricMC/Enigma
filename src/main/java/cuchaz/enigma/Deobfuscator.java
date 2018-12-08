@@ -603,8 +603,10 @@ public class Deobfuscator {
 			if (((MethodEntry) obfEntry).isConstructor()) {
 				throw new IllegalArgumentException("Cannot rename constructors");
 			}
+
 			this.renamer.setMethodTreeName((MethodEntry) obfEntry, newName);
 		} else if (obfEntry instanceof LocalVariableEntry) {
+			// TODO: Discern between arguments (propagate) and local vars (don't)
 			this.renamer.setLocalVariableTreeName((LocalVariableEntry) obfEntry, newName);
 		} else {
 			throw new Error("Unknown entry desc: " + obfEntry.getClass().getName());

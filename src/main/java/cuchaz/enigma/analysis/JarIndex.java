@@ -363,6 +363,11 @@ public class JarIndex {
 	}
 
 	public Set<MethodEntry> getRelatedMethodImplementations(MethodEntry obfMethodEntry) {
+		AccessFlags flags = getAccessFlags(obfMethodEntry);
+		if (flags.isPrivate() || flags.isStatic()) {
+			return Collections.singleton(obfMethodEntry);
+		}
+
 		Set<MethodEntry> methodEntries = Sets.newHashSet();
 		getRelatedMethodImplementations(methodEntries, getMethodInheritance(new DirectionalTranslator(entryPool), obfMethodEntry));
 		return methodEntries;
@@ -375,8 +380,11 @@ public class JarIndex {
 		}
 
 		if (containsObfMethod(methodEntry)) {
-			// collect the entry
-			methodEntries.add(methodEntry);
+			AccessFlags flags = getAccessFlags(methodEntry);
+			if (!flags.isPrivate() && !flags.isStatic()) {
+				// collect the entry
+				methodEntries.add(methodEntry);
+			}
 		}
 
 		// look at bridge methods!
@@ -400,8 +408,11 @@ public class JarIndex {
 	private void getRelatedMethodImplementations(Set<MethodEntry> methodEntries, MethodImplementationsTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
 		if (containsObfMethod(methodEntry)) {
-			// collect the entry
-			methodEntries.add(methodEntry);
+			AccessFlags flags = getAccessFlags(methodEntry);
+			if (!flags.isPrivate() && !flags.isStatic()) {
+				// collect the entry
+				methodEntries.add(methodEntry);
+			}
 		}
 
 		// look at bridge methods!
