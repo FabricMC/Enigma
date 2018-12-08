@@ -183,3 +183,8 @@ artifacts {
 build.dependsOn install
 
 apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/maven.gradle'
+
+uploadArchives.repositories.mavenDeployer.pom.withXml {
+	asNode().dependencies.'*'.findAll() { it.artifactId.text() == 'darcula' }
+	.each() { it.parent().remove(it) }
+}
