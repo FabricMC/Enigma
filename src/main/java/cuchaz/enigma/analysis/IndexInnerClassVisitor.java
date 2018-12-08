@@ -11,6 +11,11 @@ public class IndexInnerClassVisitor extends ClassVisitor {
 		this.index = index;
 	}
 
+	public IndexInnerClassVisitor(JarIndex index, int api, ClassVisitor cv) {
+		super(api, cv);
+		this.index = index;
+	}
+
 	@Override
 	public void visitInnerClass(String name, String outerName, String innerName, int access) {
 		ClassEntry entry = new ClassEntry(name);
@@ -19,5 +24,6 @@ public class IndexInnerClassVisitor extends ClassVisitor {
 			ClassEntry outerEntry = new ClassEntry(outerName);
 			index.indexInnerClass(entry, outerEntry);
 		}
+		super.visitInnerClass(name, outerName, innerName, access);
 	}
 }

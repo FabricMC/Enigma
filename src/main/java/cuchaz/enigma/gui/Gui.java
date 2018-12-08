@@ -22,9 +22,7 @@ import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
-import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
-import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
-import cuchaz.enigma.gui.highlight.OtherHighlightPainter;
+import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.gui.panels.PanelDeobf;
@@ -48,10 +46,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.Vector;
 import java.util.function.Function;
 
 public class Gui {
@@ -75,9 +71,7 @@ public class Gui {
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
 	private PanelIdentifier infoPanel;
-	public ObfuscatedHighlightPainter obfuscatedHighlightPainter;
-	public DeobfuscatedHighlightPainter deobfuscatedHighlightPainter;
-	public OtherHighlightPainter otherHighlightPainter;
+	public Map<String, BoxHighlightPainter> boxHighlightPainters;
 	private SelectionHighlightPainter selectionHighlightPainter;
 	private JTree inheritanceTree;
 	private JTree implementationsTree;
@@ -145,7 +139,7 @@ public class Gui {
 		selectionHighlightPainter = new SelectionHighlightPainter();
 		this.editor = new PanelEditor(this);
 		JScrollPane sourceScroller = new JScrollPane(this.editor);
-		this.editor.setContentType("text/minecraft");
+		this.editor.setContentType("text/enigma-sources");
 		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
@@ -311,11 +305,11 @@ public class Gui {
 		return this.controller;
 	}
 
-	public void onStartOpenJar() {
+	public void onStartOpenJar(String message) {
 		this.classesPanel.removeAll();
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout());
-		panel.add(new JLabel("Loading..."));
+		panel.add(new JLabel(message));
 		this.classesPanel.add(panel);
 
 		redraw();
@@ -407,20 +401,17 @@ public class Gui {
 		showToken(sortedTokens.get(0));
 	}
 
-	public void setHighlightedTokens(Iterable<Token> obfuscatedTokens, Iterable<Token> deobfuscatedTokens, Iterable<Token> otherTokens) {
-
+	public void setHighlightedTokens(Map<String, Iterable<Token>> tokens) {
 		// remove any old highlighters
 		this.editor.getHighlighter().removeAllHighlights();
 
-		// color things based on the index
-		if (obfuscatedTokens != null) {
-			setHighlightedTokens(obfuscatedTokens, obfuscatedHighlightPainter);
-		}
-		if (deobfuscatedTokens != null) {
-			setHighlightedTokens(deobfuscatedTokens, deobfuscatedHighlightPainter);
-		}
-		if (otherTokens != null) {
-			setHighlightedTokens(otherTokens, otherHighlightPainter);
+		if (boxHighlightPainters != null) {
+			for (String s : tokens.keySet()) {
+				BoxHighlightPainter painter = boxHighlightPainters.get(s);
+				if (painter != null) {
+					setHighlightedTokens(tokens.get(s), painter);
+				}
+			}
 		}
 
 		redraw();
@@ -582,7 +573,7 @@ public class Gui {
 
 		// init the text box
 		final JTextField text = new JTextField();
-		text.setText(reference.getNamableName());
+		text.setText(reference.getNameableName());
 		text.setPreferredSize(new Dimension(360, text.getPreferredSize().height));
 		text.addKeyListener(new KeyAdapter() {
 			@Override
@@ -633,7 +624,7 @@ public class Gui {
 		// abort the rename
 		JPanel panel = (JPanel) infoPanel.getComponent(0);
 		panel.remove(panel.getComponentCount() - 1);
-		panel.add(Utils.unboldLabel(new JLabel(reference.getNamableName(), JLabel.LEFT)));
+		panel.add(Utils.unboldLabel(new JLabel(reference.getNameableName(), JLabel.LEFT)));
 
 		this.editor.grabFocus();
 

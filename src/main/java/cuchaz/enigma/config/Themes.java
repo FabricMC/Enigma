@@ -1,15 +1,12 @@
 package cuchaz.enigma.config;
 
-import com.bulenkov.darcula.DarculaLaf;
+import com.google.common.collect.ImmutableMap;
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.MinecraftSyntaxKit;
-import cuchaz.enigma.gui.highlight.DeobfuscatedHighlightPainter;
-import cuchaz.enigma.gui.highlight.ObfuscatedHighlightPainter;
-import cuchaz.enigma.gui.highlight.OtherHighlightPainter;
+import cuchaz.enigma.gui.EnigmaSyntaxKit;
+import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 
 public class Themes {
@@ -27,12 +24,15 @@ public class Themes {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        MinecraftSyntaxKit.invalidate();
+        EnigmaSyntaxKit.invalidate();
         DefaultSyntaxKit.initKit();
-        DefaultSyntaxKit.registerContentType("text/minecraft", MinecraftSyntaxKit.class.getName());
-        gui.obfuscatedHighlightPainter = new ObfuscatedHighlightPainter();
-        gui.deobfuscatedHighlightPainter = new DeobfuscatedHighlightPainter();
-        gui.otherHighlightPainter = new OtherHighlightPainter();
+        DefaultSyntaxKit.registerContentType("text/enigma-sources", EnigmaSyntaxKit.class.getName());
+        gui.boxHighlightPainters = ImmutableMap.of(
+                "obfuscated", BoxHighlightPainter.create(Config.getInstance().obfuscatedColor, Config.getInstance().obfuscatedColorOutline),
+                "proposed", BoxHighlightPainter.create(Config.getInstance().proposedColor, Config.getInstance().proposedColorOutline),
+                "deobfuscated", BoxHighlightPainter.create(Config.getInstance().deobfuscatedColor, Config.getInstance().deobfuscatedColorOutline),
+                "other", BoxHighlightPainter.create(null, Config.getInstance().otherColorOutline)
+        );
         gui.setEditorTheme(Config.getInstance().lookAndFeel);
         SwingUtilities.updateComponentTreeUI(gui.getFrame());
     }

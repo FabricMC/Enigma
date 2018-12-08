@@ -15,6 +15,8 @@ import com.google.common.collect.*;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;
@@ -62,10 +64,15 @@ public class JarIndex {
 		obfClassEntries.addAll(jar.getClassEntries());
 
 		// step 2: index classes, fields, methods, interfaces
-		jar.visit(node -> node.accept(new IndexClassVisitor(this, Opcodes.ASM5)));
+		if (buildInnerClasses) {
+			// + step 5: index inner classes
+			jar.visitReader(name -> new IndexClassVisitor(this, Opcodes.ASM5, new IndexInnerClassVisitor(this, Opcodes.ASM5)), ClassReader.SKIP_CODE);
+		} else {
+			jar.visitReader(name -> new IndexClassVisitor(this, Opcodes.ASM5), ClassReader.SKIP_CODE);
+		}
 
 		// step 3: index field, method, constructor references
-		jar.visit(node -> node.accept(new IndexReferenceVisitor(this, Opcodes.ASM5)));
+		jar.visitReader(name -> new IndexReferenceVisitor(this, Opcodes.ASM5), ClassReader.SKIP_FRAMES);
 
 		// step 4: index access and bridged methods
 		for (MethodDefEntry methodEntry : methods.values()) {
@@ -79,9 +86,6 @@ public class JarIndex {
 		}
 
 		if (buildInnerClasses) {
-			// step 5: index inner classes and anonymous classes
-			jar.visit(node -> node.accept(new IndexInnerClassVisitor(this, Opcodes.ASM5)));
-
 			// step 6: update other indices with inner class info
 			Map<String, String> renames = Maps.newHashMap();
 			for (ClassEntry innerClassEntry : this.innerClassesByOuter.values()) {

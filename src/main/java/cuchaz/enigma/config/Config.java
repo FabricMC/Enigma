@@ -6,12 +6,32 @@ import com.google.gson.*;
 
 import javax.swing.*;
 import javax.swing.plaf.metal.MetalLookAndFeel;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 public class Config {
+	public static class AlphaColorEntry {
+		public Integer rgb;
+		public float alpha = 1.0f;
+
+		public AlphaColorEntry(Integer rgb, float alpha) {
+			this.rgb = rgb;
+			this.alpha = alpha;
+		}
+
+		public Color get() {
+			if (rgb == null) {
+				return new Color(0, 0, 0, 0);
+			}
+
+			Color baseColor = new Color(rgb);
+			return new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), (int)(255 * alpha));
+		}
+	}
+
     public enum LookAndFeel {
 		DEFAULT("Default"),
 		DARCULA("Dank");
@@ -47,16 +67,13 @@ public class Config {
 					config.lineNumbersForeground = 0x333300;
 					config.lineNumbersBackground = 0xEEEEFF;
 					config.lineNumbersSelected = 0xCCCCEE;
-					config.obfuscatedColor = 0xFFDCDC;
-					config.obfuscatedHiglightAlpha = 1.0F;
-					config.obfuscatedColorOutline = 0xA05050;
-					config.obfuscatedOutlineAlpha = 1.0F;
-					config.deobfuscatedColor = 0xDCFFDC;
-					config.deobfuscatedHiglightAlpha = 1.0F;
-					config.deobfuscatedColorOutline = 0x50A050;
-					config.deobfuscatedOutlineAlpha = 1.0F;
-					config.otherColorOutline = 0xB4B4B4;
-					config.otherOutlineAlpha = 1.0F;
+					config.obfuscatedColor = new AlphaColorEntry(0xFFDCDC, 1.0f);
+					config.obfuscatedColorOutline = new AlphaColorEntry(0xA05050, 1.0f);
+					config.proposedColor = new AlphaColorEntry(0x000000, 0.075f);
+					config.proposedColorOutline = new AlphaColorEntry(0x000000, 0.15f);
+					config.deobfuscatedColor = new AlphaColorEntry(0xDCFFDC, 1.0f);
+					config.deobfuscatedColorOutline = new AlphaColorEntry(0x50A050, 1.0f);
+					config.otherColorOutline = new AlphaColorEntry(0xB4B4B4, 1.0f);
 					config.editorBackground = 0xFFFFFF;
 					config.highlightColor = 0x3333EE;
 					config.stringColor = 0xCC6600;
@@ -72,16 +89,13 @@ public class Config {
 					config.lineNumbersForeground = 0xA4A4A3;
 					config.lineNumbersBackground = 0x313335;
 					config.lineNumbersSelected = 0x606366;
-					config.obfuscatedColor = 0xFF5555;
-					config.obfuscatedHiglightAlpha = 0.3F;
-					config.obfuscatedColorOutline = 0xFF5555;
-					config.obfuscatedOutlineAlpha = 0.5F;
-					config.deobfuscatedColor = 0x50FA7B;
-					config.deobfuscatedHiglightAlpha = 0.3F;
-					config.deobfuscatedColorOutline = 0x50FA7B;
-					config.deobfuscatedOutlineAlpha = 0.5F;
-					config.otherColorOutline = 0xB4B4B4;
-					config.otherOutlineAlpha = 0.0F;
+					config.obfuscatedColor = new AlphaColorEntry(0xFF5555, 0.3f);
+					config.obfuscatedColorOutline = new AlphaColorEntry(0xFF5555, 0.5f);
+					config.deobfuscatedColor = new AlphaColorEntry(0x50FA7B, 0.3f);
+					config.deobfuscatedColorOutline = new AlphaColorEntry(0x50FA7B, 0.5f);
+					config.proposedColor = new AlphaColorEntry(0x606366, 0.3f);
+					config.proposedColorOutline = new AlphaColorEntry(0x606366, 0.5f);
+					config.otherColorOutline = new AlphaColorEntry(0xB4B4B4, 0.0f);
 					config.editorBackground = 0x282A36;
 					config.highlightColor = 0xFF79C6;
 					config.stringColor = 0xF1FA8C;
@@ -103,16 +117,13 @@ public class Config {
 
 	private final transient Gson gson; // transient to exclude it from being exposed
 
-	public Integer obfuscatedColor;
-	public float obfuscatedHiglightAlpha;
-	public Integer obfuscatedColorOutline;
-	public float obfuscatedOutlineAlpha;
-	public Integer deobfuscatedColor;
-	public float deobfuscatedHiglightAlpha;
-	public Integer deobfuscatedColorOutline;
-	public float deobfuscatedOutlineAlpha;
-	public Integer otherColorOutline;
-	public float otherOutlineAlpha;
+	public AlphaColorEntry obfuscatedColor;
+	public AlphaColorEntry obfuscatedColorOutline;
+	public AlphaColorEntry proposedColor;
+	public AlphaColorEntry proposedColorOutline;
+	public AlphaColorEntry deobfuscatedColor;
+	public AlphaColorEntry deobfuscatedColorOutline;
+	public AlphaColorEntry otherColorOutline;
 
 	//Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
 	public Integer editorBackground;
@@ -152,8 +163,18 @@ public class Config {
 	public void loadConfig() throws IOException {
 		if (!ENIGMA_DIR.exists()) ENIGMA_DIR.mkdirs();
 		File configFile = new File(ENIGMA_DIR, "config.json");
-		if (configFile.exists()) gson.fromJson(Files.asCharSource(configFile, Charset.defaultCharset()).read(), Config.class);
-		else {
+		boolean loaded = false;
+
+		if (configFile.exists()) {
+			try {
+				gson.fromJson(Files.asCharSource(configFile, Charset.defaultCharset()).read(), Config.class);
+				loaded = true;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (!loaded) {
 			this.reset();
 			Files.touch(configFile);
 		}

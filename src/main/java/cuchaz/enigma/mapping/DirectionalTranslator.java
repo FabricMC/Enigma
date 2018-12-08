@@ -20,6 +20,7 @@ import cuchaz.enigma.mapping.entry.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 public class DirectionalTranslator implements Translator {
 	private final TranslationDirection direction;

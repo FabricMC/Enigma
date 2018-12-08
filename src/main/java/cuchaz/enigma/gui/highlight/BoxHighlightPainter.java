@@ -11,19 +11,24 @@
 
 package cuchaz.enigma.gui.highlight;
 
+import cuchaz.enigma.config.Config;
+
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 
-public abstract class BoxHighlightPainter implements Highlighter.HighlightPainter {
-
+public class BoxHighlightPainter implements Highlighter.HighlightPainter {
 	private Color fillColor;
 	private Color borderColor;
 
 	protected BoxHighlightPainter(Color fillColor, Color borderColor) {
 		this.fillColor = fillColor;
 		this.borderColor = borderColor;
+	}
+
+	public static BoxHighlightPainter create(Config.AlphaColorEntry entry, Config.AlphaColorEntry entryOutline) {
+		return new BoxHighlightPainter(entry != null ? entry.get() : null, entryOutline != null ? entryOutline.get() : null);
 	}
 
 	public static Rectangle getBounds(JTextComponent text, int start, int end) {
@@ -59,8 +64,4 @@ public abstract class BoxHighlightPainter implements Highlighter.HighlightPainte
 		g.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
 	}
 
-	protected static Color getColor(int rgb, float alpha){
-		Color baseColor = new Color(rgb);
-		return new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), (int)(255 * alpha));
-	}
 }

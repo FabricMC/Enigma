@@ -5,7 +5,7 @@ import de.sciss.syntaxpane.components.LineNumbersRuler;
 import de.sciss.syntaxpane.syntaxkits.JavaSyntaxKit;
 import de.sciss.syntaxpane.util.Configuration;
 
-public class MinecraftSyntaxKit extends JavaSyntaxKit {
+public class EnigmaSyntaxKit extends JavaSyntaxKit {
     private static Configuration configuration = null;
 
     @Override

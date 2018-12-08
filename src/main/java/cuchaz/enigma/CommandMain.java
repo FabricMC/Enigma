@@ -28,10 +28,6 @@ public class CommandMain {
 				deobfuscate(args);
 			} else if (command.equalsIgnoreCase("decompile")) {
 				decompile(args);
-			} else if (command.equalsIgnoreCase("protectify")) {
-				protectify(args);
-			} else if (command.equalsIgnoreCase("publify")) {
-				publify(args);
 			} else if (command.equalsIgnoreCase("convertmappings")) {
 				convertMappings(args);
 			} else {
@@ -50,8 +46,6 @@ public class CommandMain {
 		System.out.println("\twhere <command> is one of:");
 		System.out.println("\t\tdeobfuscate <in jar> <out jar> [<mappings file>]");
 		System.out.println("\t\tdecompile <in jar> <out folder> [<mappings file>]");
-		System.out.println("\t\tprotectify <in jar> <out jar>");
-		System.out.println("\t\tpublify <in jar> <out jar>");
 		System.out.println("\t\tconvertmappings <enigma mappings> <converted mappings> <ENIGMA_FILE|ENIGMA_DIRECTORY|SRG_FILE>");
 	}
 
@@ -69,20 +63,6 @@ public class CommandMain {
 		File fileMappings = getReadableFile(getArg(args, 3, "mappings file", false));
 		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeJar(fileJarOut, new ConsoleProgressListener());
-	}
-
-	private static void protectify(String[] args) throws Exception {
-		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
-		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
-		Deobfuscator deobfuscator = getDeobfuscator(null, new JarFile(fileJarIn));
-		deobfuscator.protectifyJar(fileJarOut, new ConsoleProgressListener());
-	}
-
-	private static void publify(String[] args) throws Exception {
-		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
-		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
-		Deobfuscator deobfuscator = getDeobfuscator(null, new JarFile(fileJarIn));
-		deobfuscator.publifyJar(fileJarOut, new ConsoleProgressListener());
 	}
 
 	private static Deobfuscator getDeobfuscator(File fileMappings, JarFile jar) throws Exception {

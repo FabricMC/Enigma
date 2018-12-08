@@ -11,8 +11,10 @@
 
 package cuchaz.enigma.analysis;
 
+import com.google.common.io.ByteStreams;
 import cuchaz.enigma.mapping.entry.ClassEntry;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedInputStream;
@@ -20,14 +22,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 
 public class ParsedJar {
-	private final Map<String, ClassNode> nodes = new LinkedHashMap<>();
+	private final Map<String, byte[]> classBytes;
+	private final Map<String, ClassNode> nodeCache = new HashMap<>();
 
 	public ParsedJar(JarFile jar) throws IOException {
+		Map<String, byte[]> uClassBytes = new LinkedHashMap<>();;
 		try {
 			// get the jar entries that correspond to classes
 			Enumeration<JarEntry> entries = jar.entries();
@@ -36,60 +41,75 @@ public class ParsedJar {
 				// is this a class file?
 				if (entry.getName().endsWith(".class")) {
 					try (InputStream input = new BufferedInputStream(jar.getInputStream(entry))) {
-						// read the ClassNode from the jar
-						ClassReader reader = new ClassReader(input);
-						ClassNode node = new ClassNode();
-						reader.accept(node, 0);
 						String path = entry.getName().substring(0, entry.getName().length() - ".class".length());
-						nodes.put(path, node);
+						uClassBytes.put(path, ByteStreams.toByteArray(input));
 					}
 				}
 			}
 		} finally {
 			jar.close();
+			classBytes = Collections.unmodifiableMap(uClassBytes);
 		}
 	}
 
 	public ParsedJar(JarInputStream jar) throws IOException {
+		Map<String, byte[]> uClassBytes = new LinkedHashMap<>();
 		try {
 			// get the jar entries that correspond to classes
 			JarEntry entry;
 			while ((entry = jar.getNextJarEntry()) != null) {
 				// is this a class file?
 				if (entry.getName().endsWith(".class")) {
-					// read the ClassNode from the jar
-					ClassReader reader = new ClassReader(jar);
-					ClassNode node = new ClassNode();
-					reader.accept(node, 0);
 					String path = entry.getName().substring(0, entry.getName().length() - ".class".length());
-					nodes.put(path, node);
+					uClassBytes.put(path, ByteStreams.toByteArray(jar));
 					jar.closeEntry();
 				}
 			}
 		} finally {
 			jar.close();
+			classBytes = Collections.unmodifiableMap(uClassBytes);
 		}
 	}
 
-	public void visit(Consumer<ClassNode> visitor) {
-		for (ClassNode node : nodes.values()) {
-			visitor.accept(node);
+	public void visitReader(Function<String, ClassVisitor> visitorFunction, int options) {
+		for (String s : classBytes.keySet()) {
+			ClassNode nodeCached = nodeCache.get(s);
+			if (nodeCached != null) {
+				nodeCached.accept(visitorFunction.apply(s));
+			} else {
+				new ClassReader(classBytes.get(s)).accept(visitorFunction.apply(s), options);
+			}
+		}
+	}
+
+	public void visitNode(Consumer<ClassNode> consumer) {
+		for (String s : classBytes.keySet()) {
+			consumer.accept(getClassNode(s));
 		}
 	}
 
 	public int getClassCount() {
-		return nodes.size();
+		return classBytes.size();
 	}
 
 	public List<ClassEntry> getClassEntries() {
-		List<ClassEntry> entries = new ArrayList<>(nodes.size());
-		for (ClassNode node : nodes.values()) {
-			entries.add(new ClassEntry(node.name));
+		List<ClassEntry> entries = new ArrayList<>(classBytes.size());
+		for (String s : classBytes.keySet()) {
+			entries.add(new ClassEntry(s));
 		}
 		return entries;
 	}
 
 	public ClassNode getClassNode(String name) {
-		return nodes.get(name);
+		return nodeCache.computeIfAbsent(name, (n) -> {
+			ClassReader reader = new ClassReader(classBytes.get(name));
+			ClassNode node = new ClassNode();
+			reader.accept(node, 0);
+			return node;
+		});
 	}
+
+    public Map<String, byte[]> getClassDataMap() {
+		return classBytes;
+    }
 }

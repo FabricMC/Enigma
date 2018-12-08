@@ -28,8 +28,7 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
 import cuchaz.enigma.analysis.*;
-import cuchaz.enigma.bytecode.ClassProtectifier;
-import cuchaz.enigma.bytecode.ClassPublifier;
+import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.*;
 import cuchaz.enigma.throwables.IllegalNameException;
@@ -40,19 +39,20 @@ import oml.ast.transformers.ObfuscatedEnumSwitchRewriterTransform;
 import oml.ast.transformers.RemoveObjectCasts;
 import oml.ast.transformers.VarargsFixer;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
 public class Deobfuscator {
 
+	private final ServiceLoader<EnigmaPlugin> plugins = ServiceLoader.load(EnigmaPlugin.class);
 	private final ReferencedEntryPool entryPool = new ReferencedEntryPool();
 	private final ParsedJar parsedJar;
 	private final DecompilerSettings settings;
@@ -61,13 +61,20 @@ public class Deobfuscator {
 	private final Map<TranslationDirection, Translator> translatorCache;
 	private Mappings mappings;
 
-	public Deobfuscator(ParsedJar jar) {
+	public Deobfuscator(ParsedJar jar, Consumer<String> listener) {
 		this.parsedJar = jar;
 
 		// build the jar index
+        listener.accept("Indexing JAR...");
 		this.jarIndex = new JarIndex(entryPool);
 		this.jarIndex.indexJar(this.parsedJar, true);
 
+        listener.accept("Initializing plugins...");
+		for (EnigmaPlugin plugin : getPlugins()) {
+			plugin.onClassesLoaded(parsedJar.getClassDataMap(), parsedJar::getClassNode);
+		}
+
+        listener.accept("Preparing...");
 		// config the decompiler
 		this.settings = DecompilerSettings.javaDefaults();
 		this.settings.setMergeVariables(Utils.getSystemPropertyAsBoolean("enigma.mergeVariables", true));
@@ -85,8 +92,20 @@ public class Deobfuscator {
 		setMappings(new Mappings());
 	}
 
-	public Deobfuscator(JarFile jar) throws IOException {
-		this(new ParsedJar(jar));
+	public Deobfuscator(JarFile jar, Consumer<String> listener) throws IOException {
+		this(new ParsedJar(jar), listener);
+	}
+
+	public Deobfuscator(ParsedJar jar) throws IOException {
+	    this(jar, (msg) -> {});
+    }
+
+    public Deobfuscator(JarFile jar) throws IOException {
+        this(jar, (msg) -> {});
+    }
+
+	public ServiceLoader<EnigmaPlugin> getPlugins() {
+		return plugins;
 	}
 
 	public ParsedJar getJar() {
@@ -442,20 +461,6 @@ public class Deobfuscator {
 		transformJar(out, progress, createTypeLoader()::transformInto);
 	}
 
-	public void protectifyJar(File out, ProgressListener progress) {
-		transformJar(out, progress, (node, writer) -> {
-			node.accept(new ClassProtectifier(Opcodes.ASM5, writer));
-			return node.name;
-		});
-	}
-
-	public void publifyJar(File out, ProgressListener progress) {
-		transformJar(out, progress, (node, writer) -> {
-			node.accept(new ClassPublifier(Opcodes.ASM5, writer));
-			return node.name;
-		});
-	}
-
 	public void transformJar(File out, ProgressListener progress, ClassTransformer transformer) {
 		try (JarOutputStream outJar = new JarOutputStream(new FileOutputStream(out))) {
 			if (progress != null) {
@@ -463,7 +468,7 @@ public class Deobfuscator {
 			}
 
 			AtomicInteger i = new AtomicInteger();
-			parsedJar.visit(node -> {
+			parsedJar.visitNode(node -> {
 				if (progress != null) {
 					progress.onProgress(i.getAndIncrement(), node.name);
 				}
@@ -524,13 +529,7 @@ public class Deobfuscator {
 	}
 
 	public boolean isObfuscatedIdentifier(Entry obfEntry) {
-		return isObfuscatedIdentifier(obfEntry, false);
-	}
-
-	public boolean isObfuscatedIdentifier(Entry obfEntry, boolean hack) {
-
 		if (obfEntry instanceof MethodEntry) {
-
 			// HACKHACK: Object methods are not obfuscated identifiers
 			MethodEntry obfMethodEntry = (MethodEntry) obfEntry;
 			String name = obfMethodEntry.getName();
@@ -558,21 +557,13 @@ public class Deobfuscator {
 			} else if (name.equals("wait") && sig.equals("(JI)V")) {
 				return false;
 			}
-
-			// FIXME: HACK EVEN MORE HACK!
-			if (hack && this.jarIndex.containsObfEntry(obfEntry.getOwnerClassEntry()))
-				return true;
 		}
 
 		return this.jarIndex.containsObfEntry(obfEntry);
 	}
 
-	public boolean isRenameable(EntryReference<Entry, Entry> obfReference, boolean activeHack) {
-		return obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry(), activeHack);
-	}
-
 	public boolean isRenameable(EntryReference<Entry, Entry> obfReference) {
-		return isRenameable(obfReference, false);
+		return obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry());
 	}
 
 	public boolean hasDeobfuscatedName(Entry obfEntry) {

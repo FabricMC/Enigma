@@ -25,6 +25,25 @@ public class Token implements Comparable<Token> {
 		}
 	}
 
+	public int getRenameOffset(String to) {
+		int length = this.end - this.start;
+		return to.length() - length;
+	}
+
+	public String rename(String source, String to) {
+		int oldEnd = this.end;
+		this.text = to;
+		this.end = this.start + to.length();
+
+		return source.substring(0, this.start) + to + source.substring(oldEnd);
+	}
+
+	public Token move(int offset) {
+		Token token = new Token(this.start + offset, this.end + offset, null);
+		token.text = text;
+		return token;
+	}
+
 	public boolean contains(int pos) {
 		return pos >= start && pos <= end;
 	}
@@ -41,7 +60,7 @@ public class Token implements Comparable<Token> {
 
 	@Override
 	public int hashCode() {
-		return Integer.hashCode(start) + Integer.hashCode(end) + (text != null ? text.hashCode() : 0);
+		return start * 37 + end;
 	}
 
 	public boolean equals(Token other) {

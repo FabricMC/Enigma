@@ -11,13 +11,14 @@
 
 package cuchaz.enigma.gui;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.config.Config;
-import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.ClassEntry;
@@ -30,9 +31,7 @@ import cuchaz.enigma.utils.ReadableToken;
 import java.awt.event.ItemEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 import java.util.jar.JarFile;
 
 public class GuiController {
@@ -58,8 +57,10 @@ public class GuiController {
 	}
 
 	public void openJar(final JarFile jar) throws IOException {
-		this.gui.onStartOpenJar();
-		this.deobfuscator = new Deobfuscator(jar);
+		this.gui.onStartOpenJar("Loading JAR...");
+		this.deobfuscator = new Deobfuscator(jar, (msg) -> {
+			this.gui.onStartOpenJar(msg);
+		});
 		this.gui.onFinishOpenJar(jar.getName());
 		refreshClasses();
 	}
@@ -162,7 +163,7 @@ public class GuiController {
 	}
 
 	public boolean referenceIsRenameable(EntryReference<Entry, Entry> deobfReference) {
-		return this.deobfuscator.isRenameable(this.deobfuscator.obfuscateReference(deobfReference), true);
+		return this.deobfuscator.isRenameable(this.deobfuscator.obfuscateReference(deobfReference));
 	}
 
 	public ClassInheritanceTreeNode getClassInheritance(ClassEntry deobfClassEntry) {
@@ -334,29 +335,73 @@ public class GuiController {
 			}
 			String source = deobfuscator.getSource(sourceTree);
 			index = deobfuscator.getSourceIndex(sourceTree, source);
-			gui.setSource(index.getSource());
-			if (obfReference != null) {
-				showReference(obfReference);
-			}
+
+			String sourceString = index.getSource();
 
 			// set the highlighted tokens
 			List<Token> obfuscatedTokens = Lists.newArrayList();
+			List<Token> proposedTokens = Lists.newArrayList();
 			List<Token> deobfuscatedTokens = Lists.newArrayList();
 			List<Token> otherTokens = Lists.newArrayList();
-			for (Token token : index.referenceTokens()) {
-				EntryReference<Entry, Entry> reference = index.getDeobfReference(token);
+
+			int offset = 0;
+			Map<Token, Token> tokenRemap = new IdentityHashMap<>();
+			boolean remapped = false;
+
+			for (Token inToken : index.referenceTokens()) {
+				EntryReference<Entry, Entry> reference = index.getDeobfReference(inToken);
+				Token token = inToken.move(offset);
+
 				if (referenceIsRenameable(reference)) {
-					if (entryHasDeobfuscatedName(reference.getNameableEntry())) {
-						deobfuscatedTokens.add(token);
-					} else {
-						obfuscatedTokens.add(token);
+					boolean renamed = false;
+
+					if (!entryHasDeobfuscatedName(reference.getNameableEntry())) {
+						Entry obfEntry = deobfuscator.obfuscateEntry(reference.getNameableEntry());
+						if (obfEntry instanceof FieldEntry) {
+							for (EnigmaPlugin plugin : deobfuscator.getPlugins()) {
+								String proposal = plugin.proposeFieldName(obfEntry.getClassName(), obfEntry.getName(), ((FieldEntry) obfEntry).getDesc().toString());
+								if (proposal != null) {
+									proposedTokens.add(token);
+									offset += token.getRenameOffset(proposal);
+									sourceString = token.rename(sourceString, proposal);
+									renamed = true;
+									remapped = true;
+									break;
+								}
+							}
+						}
+					}
+
+					if (!renamed) {
+						if (entryHasDeobfuscatedName(reference.getNameableEntry())) {
+							deobfuscatedTokens.add(token);
+						} else {
+							obfuscatedTokens.add(token);
+						}
 					}
 				} else {
 					otherTokens.add(token);
 				}
+
+				tokenRemap.put(inToken, token);
 			}
+
+			if (remapped) {
+				index.remap(sourceString, tokenRemap);
+			}
+
+			gui.setSource(sourceString);
+			if (obfReference != null) {
+				showReference(obfReference);
+			}
+
 			gui.setEditorTheme(Config.getInstance().lookAndFeel);
-			gui.setHighlightedTokens(obfuscatedTokens, deobfuscatedTokens, otherTokens);
+			gui.setHighlightedTokens(ImmutableMap.of(
+					"obfuscated", obfuscatedTokens,
+					"proposed", proposedTokens,
+					"deobfuscated", deobfuscatedTokens,
+					"other", otherTokens
+			));
 		}).start();
 	}
 

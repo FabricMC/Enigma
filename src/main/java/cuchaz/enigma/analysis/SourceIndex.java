@@ -22,10 +22,7 @@ import com.strobel.decompiler.languages.java.ast.Identifier;
 import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
 import cuchaz.enigma.mapping.entry.Entry;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class SourceIndex {
@@ -48,14 +45,43 @@ public class SourceIndex {
 		this.tokenToReference = Maps.newTreeMap();
 		this.referenceToTokens = HashMultimap.create();
 		this.declarationToToken = Maps.newHashMap();
-		this.lineOffsets = Lists.newArrayList();
+		calculateLineOffsets();
+	}
 
+	private void calculateLineOffsets() {
 		// count the lines
+		this.lineOffsets = Lists.newArrayList();
 		this.lineOffsets.add(0);
 		for (int i = 0; i < source.length(); i++) {
 			if (source.charAt(i) == '\n') {
 				this.lineOffsets.add(i + 1);
 			}
+		}
+	}
+
+	public void remap(String source, Map<Token, Token> tokenMap) {
+		this.source = source;
+		calculateLineOffsets();
+
+		for (Entry entry : Lists.newArrayList(declarationToToken.keySet())) {
+			Token token = declarationToToken.get(entry);
+			declarationToToken.put(entry, tokenMap.getOrDefault(token, token));
+		}
+
+		for (Token token : Lists.newArrayList(tokenToReference.keySet())) {
+			EntryReference<Entry, Entry> e = tokenToReference.remove(token);
+			tokenToReference.put(tokenMap.getOrDefault(token, token), e);
+		}
+
+		for (EntryReference<Entry, Entry> ref : Lists.newArrayList(referenceToTokens.keySet())) {
+			List<Token> newTokens = new ArrayList<>();
+
+			for (Token token : referenceToTokens.get(ref)) {
+				newTokens.add(tokenMap.getOrDefault(token, token));
+			}
+
+			referenceToTokens.removeAll(ref);
+			referenceToTokens.putAll(ref, newTokens);
 		}
 	}
 

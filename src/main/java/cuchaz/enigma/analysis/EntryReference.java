@@ -70,7 +70,7 @@ public class EntryReference<E extends Entry, C extends Entry> {
 		return entry;
 	}
 
-	public String getNamableName() {
+	public String getNameableName() {
 		if (getNameableEntry() instanceof ClassEntry) {
 			ClassEntry classEntry = (ClassEntry) getNameableEntry();
 			if (classEntry.isInnerClass()) {

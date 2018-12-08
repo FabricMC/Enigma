@@ -14,6 +14,11 @@ public class IndexClassVisitor extends ClassVisitor {
 		this.index = index;
 	}
 
+	public IndexClassVisitor(JarIndex index, int api, ClassVisitor cv) {
+		super(api, cv);
+		this.index = index;
+	}
+
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 		this.classEntry = this.index.indexClass(access, name, signature, superName, interfaces);

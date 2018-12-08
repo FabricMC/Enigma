@@ -143,6 +143,7 @@ public class CodeReader extends JEditorPane {
 		{
 
 			// decompile it
+
 			CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClassName());
 			String source = deobfuscator.getSource(sourceTree);
 			setCode(source);
