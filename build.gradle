@@ -19,7 +19,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.12.1'
+version = '0.12.2'
 
 def ENV = System.getenv()
 if (ENV.BUILD_NUMBER) {

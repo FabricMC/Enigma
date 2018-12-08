@@ -27,7 +27,15 @@ import java.util.List;
 public class Utils {
 
 	public static int combineHashesOrdered(Object... objs) {
-		return combineHashesOrdered(Arrays.asList(objs));
+		final int prime = 67;
+		int result = 1;
+		for (Object obj : objs) {
+			result *= prime;
+			if (obj != null) {
+				result += obj.hashCode();
+			}
+		}
+		return result;
 	}
 
 	public static int combineHashesOrdered(List<Object> objs) {

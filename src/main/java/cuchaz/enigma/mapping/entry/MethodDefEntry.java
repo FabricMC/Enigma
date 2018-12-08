@@ -16,7 +16,7 @@ import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.MethodDescriptor;
 import cuchaz.enigma.mapping.Signature;
 
-public class MethodDefEntry extends MethodEntry {
+public class MethodDefEntry extends MethodEntry implements DefEntry {
 
 	private final AccessFlags access;
 	private final Signature signature;
@@ -29,6 +29,7 @@ public class MethodDefEntry extends MethodEntry {
 		this.signature = signature;
 	}
 
+	@Override
 	public AccessFlags getAccess() {
 		return access;
 	}

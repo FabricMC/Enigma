@@ -11,6 +11,8 @@
 
 package cuchaz.enigma.analysis;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -19,15 +21,13 @@ import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.*;
 import cuchaz.enigma.mapping.entry.*;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class TranslationIndex {
 
 	private final ReferencedEntryPool entryPool;
 	private Map<ClassEntry, ClassEntry> superclasses;
+	private Map<Entry, DefEntry> defEntries = new HashMap<>();
 	private Multimap<ClassEntry, FieldDefEntry> fieldEntries;
 	private Multimap<ClassEntry, MethodDefEntry> methodEntries;
 	private Multimap<ClassEntry, ClassEntry> interfaces;
@@ -38,6 +38,14 @@ public class TranslationIndex {
 		this.fieldEntries = HashMultimap.create();
 		this.methodEntries = HashMultimap.create();
 		this.interfaces = HashMultimap.create();
+
+		for (FieldDefEntry entry : fieldEntries.values()) {
+			defEntries.put(entry, entry);
+		}
+
+		for (MethodDefEntry entry : methodEntries.values()) {
+			defEntries.put(entry, entry);
+		}
 	}
 
 	public TranslationIndex(TranslationIndex other, Translator translator) {
@@ -74,6 +82,14 @@ public class TranslationIndex {
 					translator.getTranslatedMethodDef(mapEntry.getValue())
 			);
 		}
+
+		for (FieldDefEntry entry : fieldEntries.values()) {
+			defEntries.put(entry, entry);
+		}
+
+		for (MethodDefEntry entry : methodEntries.values()) {
+			defEntries.put(entry, entry);
+		}
 	}
 
 	protected ClassDefEntry indexClass(int access, String name, String signature, String superName, String[] interfaces) {
@@ -101,16 +117,27 @@ public class TranslationIndex {
 
 	protected void indexField(FieldDefEntry fieldEntry) {
 		this.fieldEntries.put(fieldEntry.getOwnerClassEntry(), fieldEntry);
+		this.defEntries.put(fieldEntry, fieldEntry);
 	}
 
 	protected void indexMethod(MethodDefEntry methodEntry) {
 		this.methodEntries.put(methodEntry.getOwnerClassEntry(), methodEntry);
+		this.defEntries.put(methodEntry, methodEntry);
 	}
 
 	public void renameClasses(Map<String, String> renames) {
 		EntryRenamer.renameClassesInMap(renames, this.superclasses);
 		EntryRenamer.renameClassesInMultimap(renames, this.fieldEntries);
 		EntryRenamer.renameClassesInMultimap(renames, this.methodEntries);
+
+		this.defEntries.clear();
+		for (FieldDefEntry entry : fieldEntries.values()) {
+			defEntries.put(entry, entry);
+		}
+
+		for (MethodDefEntry entry : methodEntries.values()) {
+			defEntries.put(entry, entry);
+		}
 	}
 
 	public ClassEntry getSuperclass(ClassEntry classEntry) {
@@ -171,6 +198,7 @@ public class TranslationIndex {
 		if (entry == null) {
 			return false;
 		}
+
 		if (entry instanceof FieldEntry) {
 			return fieldExists((FieldEntry) entry);
 		} else if (entry instanceof MethodEntry) {
@@ -190,95 +218,42 @@ public class TranslationIndex {
 	}
 
 	public ClassEntry resolveEntryOwner(Entry entry) {
-		return resolveEntryOwner(entry, false);
-	}
-
-	public ClassEntry resolveEntryOwner(Entry entry, boolean checkSuperclassBeforeChild) {
 		if (entry instanceof ClassEntry) {
 			return (ClassEntry) entry;
 		}
 
-		ClassEntry superclassEntry = resolveSuperclass(entry, checkSuperclassBeforeChild);
-		if (superclassEntry != null) {
-			return superclassEntry;
+		if (entryExists(entry)) {
+			return entry.getOwnerClassEntry();
 		}
 
-		ClassEntry interfaceEntry = resolveInterface(entry);
-		if (interfaceEntry != null) {
-			return interfaceEntry;
+		DefEntry def = defEntries.get(entry);
+		if (def != null && (def.getAccess().isPrivate())) {
+			return null;
 		}
 
-		return null;
-	}
+		// if we're protected/public/non-static, chances are we're somewhere down
+		LinkedList<ClassEntry> classEntries = new LinkedList<>();
+		classEntries.add(entry.getOwnerClassEntry());
+		while (!classEntries.isEmpty()) {
+			ClassEntry c = classEntries.remove();
+			Entry cEntry = entry.updateOwnership(c);
 
-	public ClassEntry resolveSuperclass(Entry entry, boolean checkSuperclassBeforeChild) {
-
-		// Default case
-		if (!checkSuperclassBeforeChild)
-			return resolveSuperclass(entry);
-
-		// Save the original entry
-		Entry originalEntry = entry;
-
-		// Get all possible superclasses and reverse the list
-		List<ClassEntry> superclasses = Lists.reverse(getAncestry(originalEntry.getOwnerClassEntry()));
-
-		boolean existInEntry = false;
-
-		for (ClassEntry classEntry : superclasses) {
-			entry = entry.updateOwnership(classEntry);
-			existInEntry = entryExists(entry);
-
-			// Check for possible entry in interfaces of superclasses
-			ClassEntry interfaceEntry = resolveInterface(entry);
-			if (interfaceEntry != null)
-				return interfaceEntry;
-			if (existInEntry)
-				break;
-		}
-
-		// Doesn't exists in superclasses? check the child or return null
-		if (!existInEntry)
-			return !entryExists(originalEntry) ? null : originalEntry.getOwnerClassEntry();
-
-		return entry.getOwnerClassEntry();
-	}
-
-	public ClassEntry resolveSuperclass(Entry entry) {
-		// this entry could refer to a method on a class where the method is not actually implemented
-		// travel up the inheritance tree to find the closest implementation
-
-		while (!entryExists(entry)) {
-			// is there a parent class?
-			ClassEntry superclassEntry = getSuperclass(entry.getOwnerClassEntry());
-			if (superclassEntry == null) {
-				// this is probably a method from a class in a library
-				// we can't trace the implementation up any higher unless we index the library
-				return null;
+			if (entryExists(cEntry)) {
+				def = defEntries.get(cEntry);
+				if (def == null || (!def.getAccess().isPrivate())) {
+					return cEntry.getOwnerClassEntry();
+				}
 			}
 
-			// move up to the parent class
-			entry = entry.updateOwnership(superclassEntry);
-		}
-		return entry.getOwnerClassEntry();
-	}
-
-	public ClassEntry resolveInterface(Entry entry) {
-		// the interfaces for any class is a forest
-		// so let's look at all the trees
-
-		for (ClassEntry interfaceEntry : this.interfaces.get(entry.getOwnerClassEntry())) {
-			Collection<ClassEntry> subInterface = this.interfaces.get(interfaceEntry);
-			if (subInterface != null && !subInterface.isEmpty()) {
-				ClassEntry result = resolveInterface(entry.updateOwnership(interfaceEntry));
-				if (result != null)
-					return result;
+			ClassEntry superC = getSuperclass(c);
+			if (superC != null) {
+				classEntries.add(superC);
 			}
-			ClassEntry resolvedClassEntry = resolveSuperclass(entry.updateOwnership(interfaceEntry));
-			if (resolvedClassEntry != null) {
-				return resolvedClassEntry;
+			if (entry instanceof MethodEntry) {
+				classEntries.addAll(getInterfaces(c));
 			}
 		}
+
 		return null;
 	}
 

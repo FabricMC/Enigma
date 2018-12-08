@@ -92,9 +92,9 @@ public class MappingsRenamer {
 		deobfName = NameValidator.validateFieldName(deobfName);
 		FieldEntry targetEntry = entryPool.getField(obf.getOwnerClassEntry(), deobfName, obf.getDesc());
 		ClassEntry definedClass = null;
-		if (mappings.containsDeobfField(obf.getOwnerClassEntry(), deobfName) || index.containsEntryWithSameName(targetEntry))
+		if (mappings.containsDeobfField(obf.getOwnerClassEntry(), deobfName) || index.containsEntryWithSameName(targetEntry)) {
 			definedClass = obf.getOwnerClassEntry();
-		else {
+		} else {
 			for (ClassEntry ancestorEntry : this.index.getTranslationIndex().getAncestry(obf.getOwnerClassEntry())) {
 				if (mappings.containsDeobfField(ancestorEntry, deobfName) || index.containsEntryWithSameName(targetEntry.updateOwnership(ancestorEntry))) {
 					definedClass = ancestorEntry;

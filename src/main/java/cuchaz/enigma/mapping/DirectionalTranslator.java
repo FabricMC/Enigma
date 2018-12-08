@@ -131,7 +131,7 @@ public class DirectionalTranslator implements Translator {
 
 	private String translateFieldName(FieldEntry entry) {
 		// resolve the class entry
-		ClassEntry resolvedClassEntry = this.index.resolveEntryOwner(entry, true);
+		ClassEntry resolvedClassEntry = this.index.resolveEntryOwner(entry);
 		if (resolvedClassEntry != null) {
 			// look for the class
 			ClassMapping classMapping = findClassMapping(resolvedClassEntry);
@@ -175,7 +175,7 @@ public class DirectionalTranslator implements Translator {
 
 	private String translateMethodName(MethodEntry entry) {
 		// resolve the class entry
-		ClassEntry resolvedOwner = this.index.resolveEntryOwner(entry, true);
+		ClassEntry resolvedOwner = this.index.resolveEntryOwner(entry);
 		if (resolvedOwner != null) {
 			// look for class
 			ClassMapping classMapping = findClassMapping(resolvedOwner);

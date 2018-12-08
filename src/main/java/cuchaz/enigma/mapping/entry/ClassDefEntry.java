@@ -15,7 +15,7 @@ import com.google.common.base.Preconditions;
 import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.mapping.Signature;
 
-public class ClassDefEntry extends ClassEntry {
+public class ClassDefEntry extends ClassEntry implements DefEntry {
 	private final AccessFlags access;
 	private final Signature signature;
 
@@ -31,6 +31,7 @@ public class ClassDefEntry extends ClassEntry {
 		return signature;
 	}
 
+	@Override
 	public AccessFlags getAccess() {
 		return access;
 	}
