@@ -447,8 +447,22 @@ public class JarIndex {
 		return this.methodsReferencingClasses.get(classEntry);
 	}
 
+	@Deprecated
 	public Collection<EntryReference<MethodEntry, MethodDefEntry>> getMethodsReferencing(MethodEntry methodEntry) {
-		return this.methodsReferencing.get(methodEntry);
+		return getMethodsReferencing(methodEntry, false);
+	}
+
+	public Collection<EntryReference<MethodEntry, MethodDefEntry>> getMethodsReferencing(MethodEntry methodEntry, boolean recurse) {
+		if (!recurse) {
+			return this.methodsReferencing.get(methodEntry);
+		}
+
+		List<EntryReference<MethodEntry, MethodDefEntry>> references = new ArrayList<>();
+		Set<MethodEntry> methodEntries = getRelatedMethodImplementations(methodEntry);
+		for (MethodEntry entry : methodEntries) {
+			references.addAll(getMethodsReferencing(entry, false));
+		}
+		return references;
 	}
 
 	public Collection<MethodEntry> getReferencedMethods(MethodDefEntry methodEntry) {

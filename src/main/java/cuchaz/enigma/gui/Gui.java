@@ -537,6 +537,7 @@ public class Gui {
 		this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
 		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
+		this.popupMenu.showCallsSpecificMenu.setEnabled(isMethodEntry);
 		this.popupMenu.openEntryMenu.setEnabled(isInJar && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
 		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
@@ -694,7 +695,7 @@ public class Gui {
 		redraw();
 	}
 
-	public void showCalls() {
+	public void showCalls(boolean recurse) {
 		if (reference == null) {
 			return;
 		}
@@ -706,7 +707,7 @@ public class Gui {
 			FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) reference.entry);
 			callsTree.setModel(new DefaultTreeModel(node));
 		} else if (reference.entry instanceof MethodEntry) {
-			MethodReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) reference.entry);
+			MethodReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) reference.entry, recurse);
 			callsTree.setModel(new DefaultTreeModel(node));
 		}
 

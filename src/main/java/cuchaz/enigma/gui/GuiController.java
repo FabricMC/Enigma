@@ -209,10 +209,10 @@ public class GuiController {
 		return rootNode;
 	}
 
-	public MethodReferenceTreeNode getMethodReferences(MethodEntry deobfMethodEntry) {
+	public MethodReferenceTreeNode getMethodReferences(MethodEntry deobfMethodEntry, boolean recursive) {
 		MethodEntry obfMethodEntry = this.deobfuscator.obfuscateEntry(deobfMethodEntry);
 		MethodReferenceTreeNode rootNode = new MethodReferenceTreeNode(this.deobfuscator.getTranslator(TranslationDirection.DEOBFUSCATING), obfMethodEntry);
-		rootNode.load(this.deobfuscator.getJarIndex(), true);
+		rootNode.load(this.deobfuscator.getJarIndex(), true, recursive);
 		return rootNode;
 	}
 

@@ -3,6 +3,7 @@ package cuchaz.enigma.gui.elements;
 import cuchaz.enigma.gui.Gui;
 
 import javax.swing.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 public class PopupMenuBar extends JPopupMenu {
@@ -11,6 +12,7 @@ public class PopupMenuBar extends JPopupMenu {
 	public final JMenuItem showInheritanceMenu;
 	public final JMenuItem showImplementationsMenu;
 	public final JMenuItem showCallsMenu;
+	public final JMenuItem showCallsSpecificMenu;
 	public final JMenuItem openEntryMenu;
 	public final JMenuItem openPreviousMenu;
 	public final JMenuItem toggleMappingMenu;
@@ -42,11 +44,19 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem("Show Calls");
-			menu.addActionListener(event -> gui.showCalls());
+			menu.addActionListener(event -> gui.showCalls(true));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
 			menu.setEnabled(false);
 			this.add(menu);
 			this.showCallsMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem("Show Calls (Specific)");
+			menu.addActionListener(event -> gui.showCalls(false));
+			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_DOWN_MASK));
+			menu.setEnabled(false);
+			this.add(menu);
+			this.showCallsSpecificMenu = menu;
 		}
 		{
 			JMenuItem menu = new JMenuItem("Go to Declaration");
