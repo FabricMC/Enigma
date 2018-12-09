@@ -345,7 +345,7 @@ public class GuiController {
 			List<Token> otherTokens = Lists.newArrayList();
 
 			int offset = 0;
-			Map<Token, Token> tokenRemap = new IdentityHashMap<>();
+			Map<Token, Token> tokenRemap = new HashMap<>();
 			boolean remapped = false;
 
 			for (Token inToken : index.referenceTokens()) {
@@ -353,7 +353,7 @@ public class GuiController {
 				Token token = inToken.move(offset);
 
 				if (referenceIsRenameable(reference)) {
-					boolean renamed = false;
+					boolean added = false;
 
 					if (!entryHasDeobfuscatedName(reference.getNameableEntry())) {
 						Entry obfEntry = deobfuscator.obfuscateEntry(reference.getNameableEntry());
@@ -364,7 +364,7 @@ public class GuiController {
 									proposedTokens.add(token);
 									offset += token.getRenameOffset(proposal);
 									sourceString = token.rename(sourceString, proposal);
-									renamed = true;
+									added = true;
 									remapped = true;
 									break;
 								}
@@ -372,7 +372,7 @@ public class GuiController {
 						}
 					}
 
-					if (!renamed) {
+					if (!added) {
 						if (entryHasDeobfuscatedName(reference.getNameableEntry())) {
 							deobfuscatedTokens.add(token);
 						} else {

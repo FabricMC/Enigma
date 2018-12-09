@@ -77,8 +77,7 @@ dependencies {
     compile 'org.ow2.asm:asm-tree:7.0'
     compile 'org.ow2.asm:asm-util:7.0'
 
-    compile name: "darcula", version: "1.0.0"
-
+    application name: "darcula", version: "1.0.0"
     application 'de.sciss:syntaxpane:1.1.+'
 
     testCompile 'junit:junit:4.+'

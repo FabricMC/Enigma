@@ -68,20 +68,21 @@ public class SourceIndex {
 			declarationToToken.put(entry, tokenMap.getOrDefault(token, token));
 		}
 
-		for (Token token : Lists.newArrayList(tokenToReference.keySet())) {
-			EntryReference<Entry, Entry> e = tokenToReference.remove(token);
-			tokenToReference.put(tokenMap.getOrDefault(token, token), e);
-		}
+		for (EntryReference<Entry, Entry> ref : referenceToTokens.keySet()) {
+			Collection<Token> oldTokens = referenceToTokens.get(ref);
+			List<Token> newTokens = new ArrayList<>(oldTokens.size());
 
-		for (EntryReference<Entry, Entry> ref : Lists.newArrayList(referenceToTokens.keySet())) {
-			List<Token> newTokens = new ArrayList<>();
-
-			for (Token token : referenceToTokens.get(ref)) {
+			for (Token token : oldTokens) {
 				newTokens.add(tokenMap.getOrDefault(token, token));
 			}
 
-			referenceToTokens.removeAll(ref);
-			referenceToTokens.putAll(ref, newTokens);
+			referenceToTokens.replaceValues(ref, newTokens);
+		}
+
+		Map<Token, EntryReference<Entry, Entry>> tokenToReferenceCopy = Maps.newHashMap(tokenToReference);
+		tokenToReference.clear();
+		for (Token token : tokenToReferenceCopy.keySet()) {
+			tokenToReference.put(tokenMap.getOrDefault(token, token), tokenToReferenceCopy.get(token));
 		}
 	}
 
