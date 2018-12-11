@@ -1,5 +1,6 @@
 package cuchaz.enigma.gui.panels;
 
+import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.BrowserCaret;
 import cuchaz.enigma.gui.Gui;
 
@@ -67,5 +68,10 @@ public class PanelEditor extends JEditorPane {
 				}
 			}
 		});
+	}
+
+	@Override
+	public Color getCaretColor() {
+		return new Color(Config.getInstance().caretColor);
 	}
 }

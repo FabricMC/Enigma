@@ -11,6 +11,8 @@
 
 package cuchaz.enigma.gui.highlight;
 
+import cuchaz.enigma.config.Config;
+
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
@@ -22,7 +24,7 @@ public class SelectionHighlightPainter implements Highlighter.HighlightPainter {
 		// draw a thick border
 		Graphics2D g2d = (Graphics2D) g;
 		Rectangle bounds = BoxHighlightPainter.getBounds(text, start, end);
-		g2d.setColor(Color.black);
+		g2d.setColor(new Color(Config.getInstance().selectionHighlightColor));
 		g2d.setStroke(new BasicStroke(2.0f));
 		g2d.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
 	}

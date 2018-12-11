@@ -64,6 +64,7 @@ public class Config {
 		public void apply(Config config) {
 			switch (this) {
 				case DEFAULT:
+					//Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
 					config.lineNumbersForeground = 0x333300;
 					config.lineNumbersBackground = 0xEEEEFF;
 					config.lineNumbersSelected = 0xCCCCEE;
@@ -76,6 +77,8 @@ public class Config {
 					config.otherColorOutline = new AlphaColorEntry(0xB4B4B4, 1.0f);
 					config.editorBackground = 0xFFFFFF;
 					config.highlightColor = 0x3333EE;
+					config.caretColor = 0x000000;
+					config.selectionHighlightColor = 0x000000;
 					config.stringColor = 0xCC6600;
 					config.numberColor = 0x999933;
 					config.operatorColor = 0x000000;
@@ -98,6 +101,8 @@ public class Config {
 					config.otherColorOutline = new AlphaColorEntry(0xB4B4B4, 0.0f);
 					config.editorBackground = 0x282A36;
 					config.highlightColor = 0xFF79C6;
+					config.caretColor = 0xF8F8F2;
+					config.selectionHighlightColor = 0xF8F8F2;
 					config.stringColor = 0xF1FA8C;
 					config.numberColor = 0xBD93F9;
 					config.operatorColor = 0xF8F8F2;
@@ -125,9 +130,10 @@ public class Config {
 	public AlphaColorEntry deobfuscatedColorOutline;
 	public AlphaColorEntry otherColorOutline;
 
-	//Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
 	public Integer editorBackground;
 	public Integer highlightColor;
+	public Integer caretColor;
+	public Integer selectionHighlightColor;
 
 	public Integer stringColor;
 	public Integer numberColor;
