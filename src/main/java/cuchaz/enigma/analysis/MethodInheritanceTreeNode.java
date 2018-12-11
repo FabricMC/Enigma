@@ -89,6 +89,11 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 			nodes.add(new MethodInheritanceTreeNode(this.deobfuscatingTranslator, methodEntry, index.containsObfMethod(methodEntry)));
 		}
 
+		for (ClassEntry subclassEntry : index.getTranslationIndex().getImplementers(this.entry.getOwnerClassEntry())) {
+			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
+			nodes.add(new MethodInheritanceTreeNode(this.deobfuscatingTranslator, methodEntry, index.containsObfMethod(methodEntry)));
+		}
+
 		// add them to this node
 		nodes.forEach(this::add);
 

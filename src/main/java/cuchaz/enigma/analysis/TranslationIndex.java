@@ -155,6 +155,17 @@ public class TranslationIndex {
 		return ancestors;
 	}
 
+	public List<ClassEntry> getImplementers(ClassEntry classEntry) {
+		// linear search is fast enough for now
+		List<ClassEntry> implementers = Lists.newArrayList();
+		for (ClassEntry itf : this.interfaces.keySet()) {
+			if (this.interfaces.containsEntry(itf, classEntry)) {
+				implementers.add(itf);
+			}
+		}
+		return implementers;
+	}
+
 	public List<ClassEntry> getSubclass(ClassEntry classEntry) {
 		// linear search is fast enough for now
 		List<ClassEntry> subclasses = Lists.newArrayList();
