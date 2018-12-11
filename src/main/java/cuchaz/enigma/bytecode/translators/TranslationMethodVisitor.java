@@ -147,7 +147,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		// If we didn't receive any parameter metadata, generate it
 		if (!hasParameterMeta) {
 			List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
-			int offset = 0;
+			int offset = ((ownerEntry.getAccess().getFlags() & Opcodes.ACC_INTERFACE) != 0) ? 1 : 0;
 
 			for (int index = 0; index < arguments.size(); index++) {
 				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "", true);
