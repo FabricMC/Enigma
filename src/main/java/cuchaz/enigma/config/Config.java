@@ -34,7 +34,7 @@ public class Config {
 
     public enum LookAndFeel {
 		DEFAULT("Default"),
-		DARCULA("Dank");
+		DARCULA("Darcula");
 
 		private final String name;
 
