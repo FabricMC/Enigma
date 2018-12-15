@@ -42,4 +42,20 @@ public class MethodDefEntry extends MethodEntry implements DefEntry {
 	public MethodDefEntry updateOwnership(ClassEntry classEntry) {
 		return new MethodDefEntry(new ClassEntry(classEntry.getName()), name, descriptor, signature, access);
 	}
+
+	public int getArgumentIndex(ClassDefEntry ownerEntry, int localVariableIndex) {
+		int argumentIndex = localVariableIndex;
+
+		// Enum constructors have an implicit "name" and "ordinal" parameter as well as "this"
+		if (ownerEntry.getAccess().isEnum() && getName().startsWith("<")) {
+			argumentIndex -= 2;
+		}
+
+		// If we're not static, "this" is bound to index 0
+		if (!getAccess().isStatic()) {
+			argumentIndex -= 1;
+		}
+
+		return argumentIndex;
+	}
 }

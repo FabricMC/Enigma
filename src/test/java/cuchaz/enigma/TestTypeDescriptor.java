@@ -51,13 +51,13 @@ public class TestTypeDescriptor {
 
 	@Test
 	public void getPrimitive() {
-		assertThat(new TypeDescriptor("Z").getPrimitive(), is(TypeDescriptor.Primitive.Boolean));
-		assertThat(new TypeDescriptor("B").getPrimitive(), is(TypeDescriptor.Primitive.Byte));
-		assertThat(new TypeDescriptor("C").getPrimitive(), is(TypeDescriptor.Primitive.Character));
-		assertThat(new TypeDescriptor("I").getPrimitive(), is(TypeDescriptor.Primitive.Integer));
-		assertThat(new TypeDescriptor("J").getPrimitive(), is(TypeDescriptor.Primitive.Long));
-		assertThat(new TypeDescriptor("F").getPrimitive(), is(TypeDescriptor.Primitive.Float));
-		assertThat(new TypeDescriptor("D").getPrimitive(), is(TypeDescriptor.Primitive.Double));
+		assertThat(new TypeDescriptor("Z").getPrimitive(), is(TypeDescriptor.Primitive.BOOLEAN));
+		assertThat(new TypeDescriptor("B").getPrimitive(), is(TypeDescriptor.Primitive.BYTE));
+		assertThat(new TypeDescriptor("C").getPrimitive(), is(TypeDescriptor.Primitive.CHARACTER));
+		assertThat(new TypeDescriptor("I").getPrimitive(), is(TypeDescriptor.Primitive.INTEGER));
+		assertThat(new TypeDescriptor("J").getPrimitive(), is(TypeDescriptor.Primitive.LONG));
+		assertThat(new TypeDescriptor("F").getPrimitive(), is(TypeDescriptor.Primitive.FLOAT));
+		assertThat(new TypeDescriptor("D").getPrimitive(), is(TypeDescriptor.Primitive.DOUBLE));
 	}
 
 	@Test
