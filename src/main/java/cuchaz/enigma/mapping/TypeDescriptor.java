@@ -223,14 +223,14 @@ public class TypeDescriptor {
 	}
 
 	public enum Primitive {
-		Byte('B'),
-		Character('C'),
-		Short('S'),
-		Integer('I'),
-		Long('J'),
-		Float('F'),
-		Double('D'),
-		Boolean('Z');
+		BYTE('B'),
+		CHARACTER('C'),
+		SHORT('S'),
+		INTEGER('I'),
+		LONG('J'),
+		FLOAT('F'),
+		DOUBLE('D'),
+		BOOLEAN('Z');
 
 		private static final Map<Character, Primitive> lookup;
 

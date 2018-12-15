@@ -66,4 +66,8 @@ public class NameValidator {
 	public static String validateArgumentName(String name) {
 		return validateFieldName(name);
 	}
+
+	public static boolean isReserved(String name) {
+		return ReservedWords.contains(name);
+	}
 }
