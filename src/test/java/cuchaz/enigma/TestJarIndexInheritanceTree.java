@@ -12,7 +12,7 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.*;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.representation.*;
 import org.junit.Test;
 
 import java.util.Collection;

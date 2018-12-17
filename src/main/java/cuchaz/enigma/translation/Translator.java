@@ -9,9 +9,9 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation;
 
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.representation.*;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 

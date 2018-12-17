@@ -9,9 +9,9 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.ClassEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
 
 import java.util.Arrays;

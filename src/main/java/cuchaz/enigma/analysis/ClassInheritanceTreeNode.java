@@ -12,8 +12,8 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.Translator;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;

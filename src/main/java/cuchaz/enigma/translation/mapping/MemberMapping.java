@@ -9,12 +9,13 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.analysis;
+package cuchaz.enigma.translation.mapping;
 
+import cuchaz.enigma.translation.representation.ClassEntry;
 import cuchaz.enigma.translation.representation.Entry;
 
-public interface ReferenceTreeNode<E extends Entry, C extends Entry> {
-	E getEntry();
+public interface MemberMapping<T extends Entry> {
+	T getObfEntry(ClassEntry classEntry);
 
-	EntryReference<E, C> getReference();
+	String getObfName();
 }

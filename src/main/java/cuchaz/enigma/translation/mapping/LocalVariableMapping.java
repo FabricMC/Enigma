@@ -9,10 +9,10 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.mapping.entry.LocalVariableEntry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.MethodEntry;
 
 public class LocalVariableMapping implements Comparable<LocalVariableMapping> {
 

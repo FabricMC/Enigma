@@ -13,10 +13,10 @@ package cuchaz.enigma.analysis;
 
 import com.google.common.collect.*;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.*;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.representation.*;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;

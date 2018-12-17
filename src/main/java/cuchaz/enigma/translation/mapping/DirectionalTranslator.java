@@ -9,18 +9,19 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cuchaz.enigma.analysis.TranslationIndex;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.TranslationDirection;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 public class DirectionalTranslator implements Translator {
 	private final TranslationDirection direction;

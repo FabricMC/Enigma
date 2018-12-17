@@ -9,10 +9,11 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.FieldEntry;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.throwables.IllegalNameException;
 
 public class FieldMapping implements Comparable<FieldMapping>, MemberMapping<FieldEntry> {

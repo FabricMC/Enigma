@@ -11,9 +11,9 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.mapping.entry.Entry;
-import cuchaz.enigma.mapping.Mappings;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.translation.representation.Entry;
+import cuchaz.enigma.translation.mapping.Mappings;
+import cuchaz.enigma.translation.Translator;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

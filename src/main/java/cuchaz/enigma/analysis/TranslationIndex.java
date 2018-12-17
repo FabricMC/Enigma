@@ -11,15 +11,13 @@
 
 package cuchaz.enigma.analysis;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.*;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.*;
 
 import java.util.*;
 

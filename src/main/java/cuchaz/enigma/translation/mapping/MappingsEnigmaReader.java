@@ -1,7 +1,9 @@
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Queues;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.throwables.MappingConflict;
 import cuchaz.enigma.throwables.MappingParseException;
 

@@ -1,9 +1,9 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.mapping.Translator;
-import cuchaz.enigma.mapping.TypeDescriptor;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.FieldEntry;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.FieldEntry;
 import org.objectweb.asm.AnnotationVisitor;
 
 public class TranslationAnnotationVisitor extends AnnotationVisitor {

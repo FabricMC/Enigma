@@ -17,8 +17,8 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.Entry;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.Entry;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import javax.swing.*;

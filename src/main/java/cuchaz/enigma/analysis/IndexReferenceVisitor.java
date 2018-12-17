@@ -1,10 +1,10 @@
 package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.MethodDescriptor;
-import cuchaz.enigma.mapping.Signature;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.Signature;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.MethodDefEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;

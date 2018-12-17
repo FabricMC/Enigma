@@ -17,8 +17,8 @@ import com.strobel.assembler.metadata.*;
 import com.strobel.decompiler.ast.Variable;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-import cuchaz.enigma.mapping.TypeDescriptor;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.*;
 
 import java.lang.Error;
 import java.util.HashMap;

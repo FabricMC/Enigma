@@ -1,8 +1,9 @@
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
 import com.google.common.base.Charsets;
 import cuchaz.enigma.analysis.TranslationIndex;
-import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
+import cuchaz.enigma.translation.TranslationDirection;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 
 import java.io.*;
 import java.util.ArrayList;

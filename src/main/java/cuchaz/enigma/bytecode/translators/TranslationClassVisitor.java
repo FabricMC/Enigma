@@ -13,11 +13,11 @@ package cuchaz.enigma.bytecode.translators;
 
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.MethodDescriptor;
-import cuchaz.enigma.mapping.Signature;
-import cuchaz.enigma.mapping.Translator;
-import cuchaz.enigma.mapping.TypeDescriptor;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.Signature;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.*;
 import org.objectweb.asm.*;
 
 public class TranslationClassVisitor extends ClassVisitor {

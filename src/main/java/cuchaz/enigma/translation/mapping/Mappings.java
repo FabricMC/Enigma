@@ -9,22 +9,24 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import cuchaz.enigma.analysis.TranslationIndex;
-import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.translation.TranslationDirection;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.MethodEntry;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.throwables.MappingConflict;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Mappings {
 

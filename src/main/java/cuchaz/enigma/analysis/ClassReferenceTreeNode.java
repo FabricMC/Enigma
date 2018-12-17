@@ -13,11 +13,10 @@ package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.Translator;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.Entry;
-import cuchaz.enigma.mapping.entry.MethodDefEntry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.Entry;
+import cuchaz.enigma.translation.representation.MethodDefEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;

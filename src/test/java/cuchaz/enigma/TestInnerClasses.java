@@ -13,8 +13,8 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import org.junit.Test;
 
 import java.util.jar.JarFile;

@@ -11,9 +11,9 @@
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.Entry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.Entry;
+import cuchaz.enigma.translation.representation.MethodEntry;
 import cuchaz.enigma.utils.Utils;
 
 import java.util.Arrays;

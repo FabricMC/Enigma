@@ -11,7 +11,7 @@
 
 package cuchaz.enigma.gui;
 
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.ClassEntry;
 
 public class ScoredClassEntry extends ClassEntry {
 

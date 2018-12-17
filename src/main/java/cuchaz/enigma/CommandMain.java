@@ -12,8 +12,8 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.Deobfuscator.ProgressListener;
-import cuchaz.enigma.mapping.Mappings;
-import cuchaz.enigma.mapping.MappingsEnigmaReader;
+import cuchaz.enigma.translation.mapping.Mappings;
+import cuchaz.enigma.translation.mapping.MappingsEnigmaReader;
 
 import java.io.File;
 import java.util.jar.JarFile;

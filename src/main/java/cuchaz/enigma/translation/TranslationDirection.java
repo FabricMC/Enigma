@@ -9,13 +9,28 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation;
 
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.Entry;
+public enum TranslationDirection {
 
-public interface MemberMapping<T extends Entry> {
-	T getObfEntry(ClassEntry classEntry);
+	DEOBFUSCATING {
+		@Override
+		public <T> T choose(T deobfChoice, T obfChoice) {
+			if (deobfChoice == null) {
+				return obfChoice;
+			}
+			return deobfChoice;
+		}
+	},
+	OBFUSCATING {
+		@Override
+		public <T> T choose(T deobfChoice, T obfChoice) {
+			if (obfChoice == null) {
+				return deobfChoice;
+			}
+			return obfChoice;
+		}
+	};
 
-	String getObfName();
+	public abstract <T> T choose(T deobfChoice, T obfChoice);
 }

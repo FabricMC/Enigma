@@ -9,7 +9,7 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation;
 
 import com.google.common.collect.Lists;
 

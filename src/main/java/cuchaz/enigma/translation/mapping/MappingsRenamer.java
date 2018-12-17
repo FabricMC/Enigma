@@ -9,11 +9,13 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.mapping;
+package cuchaz.enigma.translation.mapping;
 
 import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.TranslationDirection;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.throwables.MappingConflict;
 

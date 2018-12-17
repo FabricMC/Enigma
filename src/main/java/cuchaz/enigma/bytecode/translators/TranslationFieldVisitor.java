@@ -1,8 +1,8 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.mapping.Translator;
-import cuchaz.enigma.mapping.TypeDescriptor;
-import cuchaz.enigma.mapping.entry.FieldDefEntry;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.FieldDefEntry;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.TypePath;

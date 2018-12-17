@@ -16,7 +16,7 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.mapping.entry.Entry;
+import cuchaz.enigma.translation.representation.Entry;
 
 import java.io.IOException;
 import java.util.Collection;

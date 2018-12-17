@@ -11,7 +11,7 @@
 
 package cuchaz.enigma.gui.node;
 
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.ClassEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 

@@ -18,8 +18,8 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.Signature;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.representation.Signature;
+import cuchaz.enigma.translation.representation.*;
 
 public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	private final ReferencedEntryPool entryPool;

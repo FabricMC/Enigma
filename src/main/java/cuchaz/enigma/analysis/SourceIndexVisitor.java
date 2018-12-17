@@ -15,9 +15,9 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.patterns.Pattern;
 import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.Signature;
-import cuchaz.enigma.mapping.entry.ClassDefEntry;
-import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
+import cuchaz.enigma.translation.representation.Signature;
+import cuchaz.enigma.translation.representation.ClassDefEntry;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 
 public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void> {
 	private final ReferencedEntryPool entryPool;

@@ -20,11 +20,12 @@ import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
-import cuchaz.enigma.mapping.*;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.Entry;
-import cuchaz.enigma.mapping.entry.FieldEntry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.translation.TranslationDirection;
+import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.Entry;
+import cuchaz.enigma.translation.representation.FieldEntry;
+import cuchaz.enigma.translation.representation.MethodEntry;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.utils.ReadableToken;
 

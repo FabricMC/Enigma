@@ -11,7 +11,7 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.mapping.TypeDescriptor;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 import org.junit.Test;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
