@@ -13,7 +13,7 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
-import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import org.junit.Test;
 
@@ -71,24 +71,24 @@ public class TestInnerClasses {
 
 		// level 1
 		ClassEntry fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
-			+ "$" + ClassTreeLevel1.getInnermostClassName());
+			+ "$" + ClassTreeLevel1.getSimpleName());
 		assertThat(index.containsObfClass(fullClassEntry), is(true));
 		assertThat(index.getOuterClass(ClassTreeLevel1), is(ClassTreeRoot));
 		assertThat(index.getInnerClasses(ClassTreeLevel1), containsInAnyOrder(ClassTreeLevel2));
 
 		// level 2
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
-			+ "$" + ClassTreeLevel1.getInnermostClassName()
-			+ "$" + ClassTreeLevel2.getInnermostClassName());
+			+ "$" + ClassTreeLevel1.getSimpleName()
+			+ "$" + ClassTreeLevel2.getSimpleName());
 		assertThat(index.containsObfClass(fullClassEntry), is(true));
 		assertThat(index.getOuterClass(ClassTreeLevel2), is(ClassTreeLevel1));
 		assertThat(index.getInnerClasses(ClassTreeLevel2), containsInAnyOrder(ClassTreeLevel3));
 
 		// level 3
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
-			+ "$" + ClassTreeLevel1.getInnermostClassName()
-			+ "$" + ClassTreeLevel2.getInnermostClassName()
-			+ "$" + ClassTreeLevel3.getInnermostClassName());
+			+ "$" + ClassTreeLevel1.getSimpleName()
+			+ "$" + ClassTreeLevel2.getSimpleName()
+			+ "$" + ClassTreeLevel3.getSimpleName());
 		assertThat(index.containsObfClass(fullClassEntry), is(true));
 		assertThat(index.getOuterClass(ClassTreeLevel3), is(ClassTreeLevel2));
 		assertThat(index.getInnerClasses(ClassTreeLevel3), is(empty()));

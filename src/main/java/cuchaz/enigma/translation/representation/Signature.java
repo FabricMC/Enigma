@@ -1,6 +1,11 @@
 package cuchaz.enigma.translation.representation;
 
 import cuchaz.enigma.bytecode.translators.TranslationSignatureVisitor;
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingSet;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 import org.objectweb.asm.signature.SignatureWriter;
@@ -8,7 +13,7 @@ import org.objectweb.asm.signature.SignatureWriter;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public class Signature {
+public class Signature implements Translatable {
 	private static final Pattern OBJECT_PATTERN = Pattern.compile(".*:Ljava/lang/Object;:.*");
 
 	private final String signature;
@@ -78,5 +83,10 @@ public class Signature {
 	@Override
 	public String toString() {
 		return signature;
+	}
+
+	@Override
+	public Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
+		return remap(name -> translator.translate(new ClassEntry(name)).getName());
 	}
 }

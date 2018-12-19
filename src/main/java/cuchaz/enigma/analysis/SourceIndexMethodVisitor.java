@@ -19,6 +19,7 @@ import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.entry.*;
 
 import java.lang.Error;
 import java.util.HashMap;
@@ -26,19 +27,15 @@ import java.util.Map;
 
 public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	private final ReferencedEntryPool entryPool;
-	private final ProcyonEntryFactory entryFactory;
 
-	private final ClassDefEntry ownerEntry;
 	private final MethodDefEntry methodEntry;
 
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
 	private Map<String, Entry> identifierEntryCache = new HashMap<>();
 
-	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, ClassDefEntry ownerEntry, MethodDefEntry methodEntry) {
+	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, MethodDefEntry methodEntry) {
 		super(entryPool);
 		this.entryPool = entryPool;
-		this.entryFactory = new ProcyonEntryFactory(entryPool);
-		this.ownerEntry = ownerEntry;
 		this.methodEntry = methodEntry;
 	}
 

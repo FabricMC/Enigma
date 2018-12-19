@@ -13,6 +13,9 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class TestEntryFactory {
 

@@ -12,10 +12,16 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.Deobfuscator.ProgressListener;
-import cuchaz.enigma.translation.mapping.Mappings;
-import cuchaz.enigma.translation.mapping.MappingsEnigmaReader;
+import cuchaz.enigma.translation.mapping.BidirectionalMapper;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.tree.MappingTree;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.jar.JarFile;
 
 public class CommandMain {
@@ -52,51 +58,55 @@ public class CommandMain {
 	private static void decompile(String[] args) throws Exception {
 		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
 		File fileJarOut = getWritableFolder(getArg(args, 2, "out folder", true));
-		File fileMappings = getReadableFile(getArg(args, 3, "mappings file", false));
-		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
+		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
+		Deobfuscator deobfuscator = getDeobfuscator(chooseEnigmaFormat(fileMappings), fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeSources(fileJarOut, new ConsoleProgressListener());
 	}
 
 	private static void deobfuscate(String[] args) throws Exception {
 		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
 		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
-		File fileMappings = getReadableFile(getArg(args, 3, "mappings file", false));
-		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
+		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
+		Deobfuscator deobfuscator = getDeobfuscator(chooseEnigmaFormat(fileMappings), fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeJar(fileJarOut, new ConsoleProgressListener());
 	}
 
-	private static Deobfuscator getDeobfuscator(File fileMappings, JarFile jar) throws Exception {
+	private static Deobfuscator getDeobfuscator(MappingFormat mappingFormat, Path fileMappings, JarFile jar) throws Exception {
 		System.out.println("Reading jar...");
 		Deobfuscator deobfuscator = new Deobfuscator(jar);
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
-			Mappings mappings = new MappingsEnigmaReader().read(fileMappings);
-			deobfuscator.setMappings(mappings);
+			MappingTree<EntryMapping> mappings = mappingFormat.read(fileMappings);
+			deobfuscator.setMapper(new BidirectionalMapper(deobfuscator.getJarIndex(), mappings));
 		}
 		return deobfuscator;
 	}
 
 	private static void convertMappings(String[] args) throws Exception {
-		File fileMappings = getReadableFile(getArg(args, 1, "enigma mapping", true));
+		Path fileMappings = getReadablePath(getArg(args, 1, "enigma mapping", true));
 		File result = getWritableFile(getArg(args, 2, "enigma mapping", true));
 		String name = getArg(args, 3, "format desc", true);
-		Mappings.FormatType formatType;
+		MappingFormat saveFormat;
 		try {
-			formatType = Mappings.FormatType.valueOf(name.toUpperCase());
+			saveFormat = MappingFormat.valueOf(name.toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException(name + "is not a valid mapping format!");
 		}
 
 		System.out.println("Reading mappings...");
-		Mappings mappings = new MappingsEnigmaReader().read(fileMappings);
+
+		MappingFormat readFormat = chooseEnigmaFormat(fileMappings);
+		MappingTree<EntryMapping> mappings = readFormat.read(fileMappings);
 		System.out.println("Saving new mappings...");
-		switch (formatType) {
-			case SRG_FILE:
-				mappings.saveSRGMappings(result);
-				break;
-			default:
-				mappings.saveEnigmaMappings(result, Mappings.FormatType.ENIGMA_FILE != formatType);
-				break;
+
+		saveFormat.write(mappings, result.toPath());
+	}
+
+	private static MappingFormat chooseEnigmaFormat(Path path) {
+		if (Files.isDirectory(path)) {
+			return MappingFormat.ENIGMA_DIRECTORY;
+		} else {
+			return MappingFormat.ENIGMA_FILE;
 		}
 	}
 
@@ -145,6 +155,17 @@ public class CommandMain {
 		File file = new File(path).getAbsoluteFile();
 		if (!file.exists()) {
 			throw new IllegalArgumentException("Cannot find file: " + file.getAbsolutePath());
+		}
+		return file;
+	}
+
+	private static Path getReadablePath(String path) {
+		if (path == null) {
+			return null;
+		}
+		Path file = Paths.get(path).toAbsolutePath();
+		if (!Files.exists(file)) {
+			throw new IllegalArgumentException("Cannot find file: " + file.toString());
 		}
 		return file;
 	}

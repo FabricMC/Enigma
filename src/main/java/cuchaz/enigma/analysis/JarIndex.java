@@ -12,17 +12,14 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.*;
-import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.entry.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;
 
 public class JarIndex {
-
 	private final ReferencedEntryPool entryPool;
 
 	private Set<ClassEntry> obfClassEntries;
@@ -59,7 +56,6 @@ public class JarIndex {
 	}
 
 	public void indexJar(ParsedJar jar, boolean buildInnerClasses) {
-
 		// step 1: read the class names
 		obfClassEntries.addAll(jar.getClassEntries());
 
@@ -84,27 +80,6 @@ public class JarIndex {
 				}
 			}
 		}
-
-		if (buildInnerClasses) {
-			// step 6: update other indices with inner class info
-			Map<String, String> renames = Maps.newHashMap();
-			for (ClassEntry innerClassEntry : this.innerClassesByOuter.values()) {
-				String newName = innerClassEntry.buildClassEntry(getObfClassChain(innerClassEntry)).getName();
-				if (!innerClassEntry.getName().equals(newName)) {
-					// DEBUG
-					//System.out.println("REPLACE: " + innerClassEntry.getName() + " WITH " + newName);
-					renames.put(innerClassEntry.getName(), newName);
-				}
-			}
-			EntryRenamer.renameClassesInSet(renames, this.obfClassEntries);
-			this.translationIndex.renameClasses(renames);
-			EntryRenamer.renameClassesInMultimap(renames, this.methodImplementations);
-			EntryRenamer.renameClassesInMultimap(renames, this.methodsReferencingClasses);
-			EntryRenamer.renameClassesInMultimap(renames, this.methodsReferencing);
-			EntryRenamer.renameClassesInMultimap(renames, this.methodReferences);
-			EntryRenamer.renameClassesInMultimap(renames, this.fieldReferences);
-			EntryRenamer.renameClassesInMap(renames, this.access);
-		}
 	}
 
 	protected ClassDefEntry indexClass(int access, String name, String signature, String superName, String[] interfaces) {
@@ -122,14 +97,14 @@ public class JarIndex {
 		FieldDefEntry fieldEntry = new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexField(fieldEntry);
 		this.access.put(fieldEntry, fieldEntry.getAccess());
-		this.fields.put(fieldEntry.getOwnerClassEntry(), fieldEntry);
+		this.fields.put(fieldEntry.getParent(), fieldEntry);
 	}
 
 	protected void indexMethod(ClassDefEntry owner, int access, String name, String desc, String signature) {
 		MethodDefEntry methodEntry = new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
 		this.translationIndex.indexMethod(methodEntry);
 		this.access.put(methodEntry, methodEntry.getAccess());
-		this.methods.put(methodEntry.getOwnerClassEntry(), methodEntry);
+		this.methods.put(methodEntry.getParent(), methodEntry);
 
 		if (new AccessFlags(access).isSynthetic()) {
 			syntheticMethods.add(methodEntry);
@@ -138,7 +113,7 @@ public class JarIndex {
 		// we don't care about constructors here
 		if (!methodEntry.isConstructor()) {
 			// index implementation
-			this.methodImplementations.put(methodEntry.getClassName(), methodEntry);
+			this.methodImplementations.put(methodEntry.getParentName(), methodEntry);
 		}
 	}
 
@@ -146,8 +121,8 @@ public class JarIndex {
 		ClassEntry referencedClass = entryPool.getClass(owner);
 		MethodEntry referencedMethod = new MethodEntry(referencedClass, name, new MethodDescriptor(desc));
 		ClassEntry resolvedClassEntry = translationIndex.resolveEntryOwner(referencedMethod);
-		if (resolvedClassEntry != null && !resolvedClassEntry.equals(referencedMethod.getOwnerClassEntry())) {
-			referencedMethod = referencedMethod.updateOwnership(resolvedClassEntry);
+		if (resolvedClassEntry != null && !resolvedClassEntry.equals(referencedMethod.getParent())) {
+			referencedMethod = referencedMethod.withParent(resolvedClassEntry);
 		}
 		methodsReferencing.put(referencedMethod, new EntryReference<>(referencedMethod, referencedMethod.getName(), callerEntry));
 		if (referencedMethod.isConstructor()) {
@@ -159,8 +134,8 @@ public class JarIndex {
 	protected void indexFieldAccess(MethodDefEntry callerEntry, String owner, String name, String desc) {
 		FieldEntry referencedField = new FieldEntry(entryPool.getClass(owner), name, new TypeDescriptor(desc));
 		ClassEntry resolvedClassEntry = translationIndex.resolveEntryOwner(referencedField);
-		if (resolvedClassEntry != null && !resolvedClassEntry.equals(referencedField.getOwnerClassEntry())) {
-			referencedField = referencedField.updateOwnership(resolvedClassEntry);
+		if (resolvedClassEntry != null && !resolvedClassEntry.equals(referencedField.getParent())) {
+			referencedField = referencedField.withParent(resolvedClassEntry);
 		}
 		fieldReferences.put(referencedField, new EntryReference<>(referencedField, referencedField.getName(), callerEntry));
 	}
@@ -254,7 +229,7 @@ public class JarIndex {
 		return this.access.get(entry);
 	}
 
-	public ClassInheritanceTreeNode getClassInheritance(Translator deobfuscatingTranslator, ClassEntry obfClassEntry) {
+	public ClassInheritanceTreeNode getClassInheritance(ClassEntry obfClassEntry) {
 
 		// get the root node
 		List<String> ancestry = Lists.newArrayList();
@@ -264,10 +239,7 @@ public class JarIndex {
 				ancestry.add(classEntry.getName());
 			}
 		}
-		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode(
-				deobfuscatingTranslator,
-				ancestry.get(ancestry.size() - 1)
-		);
+		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode(ancestry.get(ancestry.size() - 1));
 
 		// expand all children recursively
 		rootNode.load(this.translationIndex, true);
@@ -275,27 +247,27 @@ public class JarIndex {
 		return rootNode;
 	}
 
-	public ClassImplementationsTreeNode getClassImplementations(Translator deobfuscatingTranslator, ClassEntry obfClassEntry) {
+	public ClassImplementationsTreeNode getClassImplementations(ClassEntry obfClassEntry) {
 
 		// is this even an interface?
-		if (isInterface(obfClassEntry.getClassName())) {
-			ClassImplementationsTreeNode node = new ClassImplementationsTreeNode(deobfuscatingTranslator, obfClassEntry);
+		if (isInterface(obfClassEntry.getName())) {
+			ClassImplementationsTreeNode node = new ClassImplementationsTreeNode(obfClassEntry);
 			node.load(this);
 			return node;
 		}
 		return null;
 	}
 
-	public MethodInheritanceTreeNode getMethodInheritance(Translator deobfuscatingTranslator, MethodEntry obfMethodEntry) {
+	public MethodInheritanceTreeNode getMethodInheritance(MethodEntry obfMethodEntry) {
 		// travel to the ancestor implementation
 		LinkedList<ClassEntry> entries = new LinkedList<>();
-		entries.add(obfMethodEntry.getOwnerClassEntry());
+		entries.add(obfMethodEntry.getParent());
 
 		// TODO: This could be optimized to not go through interfaces repeatedly...
 
-		ClassEntry baseImplementationClassEntry = obfMethodEntry.getOwnerClassEntry();
+		ClassEntry baseImplementationClassEntry = obfMethodEntry.getParent();
 
-		for (ClassEntry itf : getInterfaces(obfMethodEntry.getOwnerClassEntry().getClassName())) {
+		for (ClassEntry itf : getInterfaces(obfMethodEntry.getParent().getName())) {
 			MethodEntry itfMethodEntry = entryPool.getMethod(itf, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
 			if (itfMethodEntry != null && containsObfMethod(itfMethodEntry)) {
 				baseImplementationClassEntry = itf;
@@ -309,7 +281,7 @@ public class JarIndex {
 					baseImplementationClassEntry = ancestorClassEntry;
 				}
 
-				for (ClassEntry itf : getInterfaces(ancestorClassEntry.getClassName())) {
+				for (ClassEntry itf : getInterfaces(ancestorClassEntry.getName())) {
 					MethodEntry itfMethodEntry = entryPool.getMethod(itf, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
 					if (itfMethodEntry != null && containsObfMethod(itfMethodEntry)) {
 						baseImplementationClassEntry = itf;
@@ -321,7 +293,6 @@ public class JarIndex {
 		// make a root node at the base
 		MethodEntry methodEntry = entryPool.getMethod(baseImplementationClassEntry, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
 		MethodInheritanceTreeNode rootNode = new MethodInheritanceTreeNode(
-				deobfuscatingTranslator,
 				methodEntry,
 				containsObfMethod(methodEntry)
 		);
@@ -332,16 +303,15 @@ public class JarIndex {
 		return rootNode;
 	}
 
-	public List<MethodImplementationsTreeNode> getMethodImplementations(Translator deobfuscatingTranslator, MethodEntry obfMethodEntry) {
-
+	public List<MethodImplementationsTreeNode> getMethodImplementations(MethodEntry obfMethodEntry) {
 		List<MethodEntry> interfaceMethodEntries = Lists.newArrayList();
 
 		// is this method on an interface?
-		if (isInterface(obfMethodEntry.getClassName())) {
+		if (isInterface(obfMethodEntry.getParentName())) {
 			interfaceMethodEntries.add(obfMethodEntry);
 		} else {
 			// get the interface class
-			for (ClassEntry interfaceEntry : getInterfaces(obfMethodEntry.getClassName())) {
+			for (ClassEntry interfaceEntry : getInterfaces(obfMethodEntry.getParentName())) {
 
 				// is this method defined in this interface?
 				MethodEntry methodInterface = entryPool.getMethod(interfaceEntry, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
@@ -354,7 +324,7 @@ public class JarIndex {
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
 		if (!interfaceMethodEntries.isEmpty()) {
 			for (MethodEntry interfaceMethodEntry : interfaceMethodEntries) {
-				MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(deobfuscatingTranslator, interfaceMethodEntry);
+				MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(interfaceMethodEntry);
 				node.load(this);
 				nodes.add(node);
 			}
@@ -364,12 +334,16 @@ public class JarIndex {
 
 	public Set<MethodEntry> getRelatedMethodImplementations(MethodEntry obfMethodEntry) {
 		AccessFlags flags = getAccessFlags(obfMethodEntry);
+		if (flags == null) {
+			throw new IllegalArgumentException("Could not find method " + obfMethodEntry);
+		}
+
 		if (flags.isPrivate() || flags.isStatic()) {
 			return Collections.singleton(obfMethodEntry);
 		}
 
 		Set<MethodEntry> methodEntries = Sets.newHashSet();
-		getRelatedMethodImplementations(methodEntries, getMethodInheritance(new DirectionalTranslator(entryPool), obfMethodEntry));
+		getRelatedMethodImplementations(methodEntries, getMethodInheritance(obfMethodEntry));
 		return methodEntries;
 	}
 
@@ -395,7 +369,7 @@ public class JarIndex {
 		}
 
 		// look at interface methods too
-		for (MethodImplementationsTreeNode implementationsNode : getMethodImplementations(new DirectionalTranslator(entryPool), methodEntry)) {
+		for (MethodImplementationsTreeNode implementationsNode : getMethodImplementations(methodEntry)) {
 			getRelatedMethodImplementations(methodEntries, implementationsNode);
 		}
 
@@ -498,7 +472,7 @@ public class JarIndex {
 			ClassEntry classEntry = entry.getKey();
 			ClassEntry interfaceEntry = entry.getValue();
 			if (interfaceEntry.getName().equals(targetInterfaceName)) {
-				String className = classEntry.getClassName();
+				String className = classEntry.getName();
 				classNames.add(className);
 				if (isInterface(className)) {
 					classNames.addAll(getImplementingClasses(className));
@@ -526,20 +500,9 @@ public class JarIndex {
 		return this.access.containsKey(obfMethodEntry);
 	}
 
-	public boolean containsEntryWithSameName(Entry entry) {
-		for (Entry target : this.access.keySet())
-			if (target.getName().equals(entry.getName()) && entry.getClass().isInstance(target.getClass()))
-				return true;
-		return false;
-	}
-
 	public boolean containsObfVariable(LocalVariableEntry obfVariableEntry) {
 		// check the behavior
-		if (!containsObfMethod(obfVariableEntry.getOwnerEntry())) {
-			return false;
-		}
-
-		return true;
+		return containsObfMethod(obfVariableEntry.getParent());
 	}
 
 	public boolean containsObfEntry(Entry obfEntry) {

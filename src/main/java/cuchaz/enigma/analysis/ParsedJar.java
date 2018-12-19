@@ -12,7 +12,7 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.io.ByteStreams;
-import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.ClassNode;

@@ -5,6 +5,7 @@ import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.throwables.MappingParseException;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 
 import javax.swing.*;
 import java.awt.event.InputEvent;
@@ -68,7 +69,9 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						try {
-							this.gui.getController().openEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
+							File selectedFile = this.gui.enigmaMappingsFileChooser.getSelectedFile();
+							MappingFormat format = selectedFile.isDirectory() ? MappingFormat.ENIGMA_DIRECTORY : MappingFormat.ENIGMA_FILE;
+							this.gui.getController().openMappings(format, selectedFile.toPath());
 						} catch (IOException ex) {
 							throw new Error(ex);
 						} catch (MappingParseException ex) {
@@ -85,7 +88,7 @@ public class MenuBar extends JMenuBar {
 					File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
 					if (file.exists()) {
 						try {
-							this.gui.getController().openTinyMappings(file);
+							this.gui.getController().openMappings(MappingFormat.TINY_FILE, file.toPath());
 						} catch (IOException ex) {
 							throw new Error(ex);
 						} catch (MappingParseException ex) {
@@ -100,7 +103,7 @@ public class MenuBar extends JMenuBar {
 				menu.add(item);
 				item.addActionListener(event -> {
 					try {
-						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
+						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
 					} catch (IOException ex) {
 						throw new Error(ex);
 					}
@@ -117,7 +120,7 @@ public class MenuBar extends JMenuBar {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						try {
-							this.gui.getController().saveEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile(), false);
+							this.gui.getController().saveMappings(MappingFormat.ENIGMA_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
 							this.saveMappingsMenu.setEnabled(true);
 						} catch (IOException ex) {
 							throw new Error(ex);
@@ -133,7 +136,7 @@ public class MenuBar extends JMenuBar {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						try {
-							this.gui.getController().saveEnigmaMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile(), true);
+							this.gui.getController().saveMappings(MappingFormat.ENIGMA_DIRECTORY, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
 							this.saveMappingsMenu.setEnabled(true);
 						} catch (IOException ex) {
 							throw new Error(ex);
@@ -150,7 +153,7 @@ public class MenuBar extends JMenuBar {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						try {
-							this.gui.getController().saveSRGMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile());
+							this.gui.getController().saveMappings(MappingFormat.SRG_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
 							this.saveMappingsMenu.setEnabled(true);
 						} catch (IOException ex) {
 							throw new Error(ex);

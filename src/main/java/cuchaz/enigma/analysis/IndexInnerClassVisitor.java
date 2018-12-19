@@ -1,6 +1,6 @@
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassVisitor;
 
 public class IndexInnerClassVisitor extends ClassVisitor {

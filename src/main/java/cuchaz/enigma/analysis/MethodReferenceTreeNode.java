@@ -12,33 +12,27 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
-import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.Entry;
-import cuchaz.enigma.translation.representation.MethodDefEntry;
-import cuchaz.enigma.translation.representation.MethodEntry;
+import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.util.Set;
 
-public class MethodReferenceTreeNode extends DefaultMutableTreeNode
-	implements ReferenceTreeNode<MethodEntry, MethodDefEntry> {
+public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<MethodEntry, MethodDefEntry> {
 
-	private Translator deobfuscatingTranslator;
 	private MethodEntry entry;
 	private EntryReference<MethodEntry, MethodDefEntry> reference;
 	private AccessFlags access;
 
-	public MethodReferenceTreeNode(Translator deobfuscatingTranslator, MethodEntry entry) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public MethodReferenceTreeNode(MethodEntry entry) {
 		this.entry = entry;
 		this.reference = null;
 	}
 
-	public MethodReferenceTreeNode(Translator deobfuscatingTranslator,
-								   EntryReference<MethodEntry, MethodDefEntry> reference, AccessFlags access) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public MethodReferenceTreeNode(EntryReference<MethodEntry, MethodDefEntry> reference, AccessFlags access) {
 		this.entry = reference.entry;
 		this.reference = reference;
 		this.access = access;
@@ -57,10 +51,10 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", this.deobfuscatingTranslator.getTranslatedMethodDef(this.reference.context),
+			return String.format("%s (%s)", this.reference.context,
 				this.access);
 		}
-		return this.deobfuscatingTranslator.getTranslatedMethod(this.entry).getName();
+		return this.entry.getName();
 	}
 
 	@Deprecated
@@ -71,7 +65,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 	public void load(JarIndex index, boolean recurse, boolean recurseMethod) {
 		// get all the child nodes
 		for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.entry, recurseMethod)) {
-			add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccessFlags(this.entry)));
+			add(new MethodReferenceTreeNode(reference, index.getAccessFlags(this.entry)));
 		}
 
 		if (recurse && this.children != null) {

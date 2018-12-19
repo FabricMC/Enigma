@@ -20,7 +20,7 @@ import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
 import com.strobel.decompiler.languages.java.ast.Identifier;
 import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
-import cuchaz.enigma.translation.representation.Entry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.util.*;
 import java.util.regex.Pattern;

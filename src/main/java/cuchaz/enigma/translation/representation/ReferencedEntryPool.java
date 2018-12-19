@@ -11,6 +11,10 @@
 
 package cuchaz.enigma.translation.representation;
 
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
+
 import java.util.HashMap;
 import java.util.Map;
 

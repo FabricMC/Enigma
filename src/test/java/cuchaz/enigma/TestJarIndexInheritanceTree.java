@@ -13,6 +13,10 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
 import java.util.Collection;

@@ -14,9 +14,9 @@ package cuchaz.enigma;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
-import cuchaz.enigma.translation.representation.ClassEntry;
-import cuchaz.enigma.translation.representation.MethodDefEntry;
-import cuchaz.enigma.translation.representation.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import org.junit.Test;
 

@@ -12,21 +12,18 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.translation.representation.ClassEntry;
-import cuchaz.enigma.translation.representation.MethodEntry;
-import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
 public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
-	private Translator deobfuscatingTranslator;
 	private MethodEntry entry;
 	private boolean isImplemented;
 
-	public MethodInheritanceTreeNode(Translator deobfuscatingTranslator, MethodEntry entry, boolean isImplemented) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public MethodInheritanceTreeNode(MethodEntry entry, boolean isImplemented) {
 		this.entry = entry;
 		this.isImplemented = isImplemented;
 	}
@@ -51,32 +48,18 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		return this.entry;
 	}
 
-	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.getTranslatedClass(this.entry.getOwnerClassEntry()).getName();
-	}
-
-	public String getDeobfMethodName() {
-		return this.deobfuscatingTranslator.getTranslatedMethod(this.entry).getName();
-	}
-
 	public boolean isImplemented() {
 		return this.isImplemented;
 	}
 
 	@Override
 	public String toString() {
-		String className = getDeobfClassName();
-		if (className == null) {
-			className = this.entry.getClassName();
-		}
+		String className = entry.getContainingClass().getName();
 
 		if (!this.isImplemented) {
 			return className;
 		} else {
-			String methodName = getDeobfMethodName();
-			if (methodName == null) {
-				methodName = this.entry.getName();
-			}
+			String methodName = entry.getName();
 			return className + "." + methodName + "()";
 		}
 	}
@@ -84,14 +67,14 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-		for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(this.entry.getOwnerClassEntry())) {
+		for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(this.entry.getParent())) {
 			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
-			nodes.add(new MethodInheritanceTreeNode(this.deobfuscatingTranslator, methodEntry, index.containsObfMethod(methodEntry)));
+			nodes.add(new MethodInheritanceTreeNode(methodEntry, index.containsObfMethod(methodEntry)));
 		}
 
-		for (ClassEntry subclassEntry : index.getTranslationIndex().getImplementers(this.entry.getOwnerClassEntry())) {
+		for (ClassEntry subclassEntry : index.getTranslationIndex().getImplementers(this.entry.getParent())) {
 			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
-			nodes.add(new MethodInheritanceTreeNode(this.deobfuscatingTranslator, methodEntry, index.containsObfMethod(methodEntry)));
+			nodes.add(new MethodInheritanceTreeNode(methodEntry, index.containsObfMethod(methodEntry)));
 		}
 
 		// add them to this node

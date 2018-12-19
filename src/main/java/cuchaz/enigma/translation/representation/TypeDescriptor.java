@@ -13,11 +13,16 @@ package cuchaz.enigma.translation.representation;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingSet;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import java.util.Map;
 import java.util.function.Function;
 
-public class TypeDescriptor {
+public class TypeDescriptor implements Translatable {
 
 	protected final String desc;
 
@@ -163,7 +168,7 @@ public class TypeDescriptor {
 		if (!isArray()) {
 			throw new IllegalStateException("not an array");
 		}
-		return new TypeDescriptor(this.desc.substring(getArrayDimension(), this.desc.length()));
+		return new TypeDescriptor(this.desc.substring(getArrayDimension()));
 	}
 
 	public boolean containsType() {
@@ -219,6 +224,11 @@ public class TypeDescriptor {
 			default:
 				return 1;
 		}
+	}
+
+	@Override
+	public Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
+		return remap(name -> translator.translate(new ClassEntry(name)).getName());
 	}
 
 	public enum Primitive {

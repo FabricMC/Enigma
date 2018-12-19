@@ -2,7 +2,7 @@ package cuchaz.enigma.gui.panels;
 
 import cuchaz.enigma.gui.ClassSelector;
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import javax.swing.*;
 import java.awt.*;

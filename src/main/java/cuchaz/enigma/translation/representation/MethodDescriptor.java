@@ -12,13 +12,18 @@
 package cuchaz.enigma.translation.representation;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingSet;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class MethodDescriptor {
+public class MethodDescriptor implements Translatable {
 
 	private List<TypeDescriptor> argumentDescs;
 	private TypeDescriptor returnDesc;
@@ -109,5 +114,14 @@ public class MethodDescriptor {
 			argumentDescs.add(desc.remap(remapper));
 		}
 		return new MethodDescriptor(argumentDescs, returnDesc.remap(remapper));
+	}
+
+	@Override
+	public Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
+		List<TypeDescriptor> translatedArguments = new ArrayList<>(argumentDescs.size());
+		for (TypeDescriptor argument : argumentDescs) {
+			translatedArguments.add(translator.translate(argument));
+		}
+		return new MethodDescriptor(translatedArguments, translator.translate(returnDesc));
 	}
 }

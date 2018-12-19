@@ -1,6 +1,6 @@
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.translation.representation.ClassDefEntry;
+import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;

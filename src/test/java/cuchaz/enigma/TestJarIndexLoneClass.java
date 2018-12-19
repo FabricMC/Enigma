@@ -12,8 +12,11 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.*;
-import cuchaz.enigma.translation.mapping.*;
-import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -62,7 +65,7 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void classInheritance() {
-		ClassInheritanceTreeNode node = index.getClassInheritance(new DirectionalTranslator(new ReferencedEntryPool()), newClass("a"));
+		ClassInheritanceTreeNode node = index.getClassInheritance(newClass("a"));
 		assertThat(node, is(not(nullValue())));
 		assertThat(node.getObfClassName(), is("a"));
 		assertThat(node.getChildCount(), is(0));
@@ -71,7 +74,7 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void methodInheritance() {
 		MethodEntry source = newMethod("a", "a", "()Ljava/lang/String;");
-		MethodInheritanceTreeNode node = index.getMethodInheritance(new DirectionalTranslator(new ReferencedEntryPool()), source);
+		MethodInheritanceTreeNode node = index.getMethodInheritance(source);
 		assertThat(node, is(not(nullValue())));
 		assertThat(node.getMethodEntry(), is(source));
 		assertThat(node.getChildCount(), is(0));
@@ -79,14 +82,14 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void classImplementations() {
-		ClassImplementationsTreeNode node = index.getClassImplementations(new DirectionalTranslator(new ReferencedEntryPool()), newClass("a"));
+		ClassImplementationsTreeNode node = index.getClassImplementations(newClass("a"));
 		assertThat(node, is(nullValue()));
 	}
 
 	@Test
 	public void methodImplementations() {
 		MethodEntry source = newMethod("a", "a", "()Ljava/lang/String;");
-		assertThat(index.getMethodImplementations(new DirectionalTranslator(new ReferencedEntryPool()), source), is(empty()));
+		assertThat(index.getMethodImplementations(source), is(empty()));
 	}
 
 	@Test

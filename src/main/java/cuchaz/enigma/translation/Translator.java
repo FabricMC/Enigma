@@ -11,99 +11,16 @@
 
 package cuchaz.enigma.translation;
 
-import cuchaz.enigma.translation.representation.*;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 
 public interface Translator {
-	ClassEntry getTranslatedClass(ClassEntry entry);
+	<T extends Translatable> T translate(T translatable);
 
-	ClassDefEntry getTranslatedClassDef(ClassDefEntry entry);
+	// TODO: These can be static helpers? They are all specific to ASM
+	Type translateType(Type type);
 
-	FieldEntry getTranslatedField(FieldEntry entry);
+	Handle translateHandle(Handle handle);
 
-	FieldDefEntry getTranslatedFieldDef(FieldDefEntry entry);
-
-	MethodEntry getTranslatedMethod(MethodEntry entry);
-
-	MethodDefEntry getTranslatedMethodDef(MethodDefEntry entry);
-
-	LocalVariableEntry getTranslatedVariable(LocalVariableEntry entry);
-
-	LocalVariableDefEntry getTranslatedVariableDef(LocalVariableDefEntry entry);
-
-	boolean hasClassMapping(ClassEntry entry);
-
-	boolean hasFieldMapping(FieldEntry entry);
-
-	boolean hasMethodMapping(MethodEntry entry);
-
-	boolean hasLocalVariableMapping(LocalVariableEntry entry);
-
-	TypeDescriptor getTranslatedTypeDesc(TypeDescriptor desc);
-
-	MethodDescriptor getTranslatedMethodDesc(MethodDescriptor descriptor);
-
-	Signature getTranslatedSignature(Signature signature);
-
-	default Type getTranslatedType(Type type) {
-		String descString = type.getDescriptor();
-		switch (type.getSort()) {
-			case Type.OBJECT: {
-				ClassEntry classEntry = new ClassEntry(type.getInternalName());
-				return Type.getObjectType(getTranslatedClass(classEntry).getName());
-			}
-			case Type.ARRAY: {
-				TypeDescriptor descriptor = new TypeDescriptor(descString);
-				return Type.getType(getTranslatedTypeDesc(descriptor).toString());
-			}
-			case Type.METHOD: {
-				MethodDescriptor descriptor = new MethodDescriptor(descString);
-				return Type.getMethodType(getTranslatedMethodDesc(descriptor).toString());
-			}
-		}
-		return type;
-	}
-
-	default Handle getTranslatedHandle(Handle handle) {
-		MethodEntry entry = new MethodEntry(new ClassEntry(handle.getOwner()), handle.getName(), new MethodDescriptor(handle.getDesc()));
-		MethodEntry translatedMethod = getTranslatedMethod(entry);
-		ClassEntry ownerClass = translatedMethod.getOwnerClassEntry();
-		return new Handle(handle.getTag(), ownerClass.getName(), translatedMethod.getName(), translatedMethod.getDesc().toString(), handle.isInterface());
-	}
-
-	default Object getTranslatedValue(Object value) {
-		if (value instanceof Type) {
-			return this.getTranslatedType((Type) value);
-		} else if (value instanceof Handle) {
-			return getTranslatedHandle((Handle) value);
-		}
-		return value;
-	}
-
-	@SuppressWarnings("unchecked")
-	default <T extends Entry> T getTranslatedEntry(T entry) {
-		if (entry instanceof ClassDefEntry) {
-			return (T) getTranslatedClassDef((ClassDefEntry) entry);
-		} else if (entry instanceof ClassEntry) {
-			return (T) getTranslatedClass((ClassEntry) entry);
-		} else if (entry instanceof FieldDefEntry) {
-			return (T) getTranslatedFieldDef((FieldDefEntry) entry);
-		} else if (entry instanceof MethodDefEntry) {
-			return (T) getTranslatedMethodDef((MethodDefEntry) entry);
-		} else if (entry instanceof FieldEntry) {
-			return (T) getTranslatedField((FieldEntry) entry);
-		} else if (entry instanceof MethodEntry) {
-			return (T) getTranslatedMethod((MethodEntry) entry);
-		} else if (entry instanceof LocalVariableDefEntry) {
-			return (T) getTranslatedVariableDef((LocalVariableDefEntry) entry);
-		} else if (entry instanceof LocalVariableEntry) {
-			return (T) getTranslatedVariable((LocalVariableEntry) entry);
-		} else if (entry instanceof TypeDescriptor) {
-			return (T) getTranslatedTypeDesc((TypeDescriptor) entry);
-		} else if (entry instanceof MethodDescriptor) {
-			return (T) getTranslatedMethodDesc((MethodDescriptor) entry);
-		}
-		throw new IllegalArgumentException("Cannot translate unknown entry type");
-	}
+	Object translateValue(Object value);
 }

@@ -14,7 +14,7 @@ package cuchaz.enigma.translation.representation;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
-import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.translation.representation.entry.*;
 
 public class ProcyonEntryFactory {
 	private final ReferencedEntryPool entryPool;

@@ -12,11 +12,11 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
-import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.ClassEntry;
-import cuchaz.enigma.translation.representation.Entry;
-import cuchaz.enigma.translation.representation.MethodDefEntry;
+import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
@@ -57,10 +57,10 @@ public class ClassReferenceTreeNode extends DefaultMutableTreeNode
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", this.deobfuscatingTranslator.getTranslatedMethodDef(this.reference.context),
+			return String.format("%s (%s)", this.deobfuscatingTranslator.translate(this.reference.context),
 				this.access);
 		}
-		return this.deobfuscatingTranslator.getTranslatedClass(this.entry).getName();
+		return this.deobfuscatingTranslator.translate(this.entry).getName();
 	}
 
 	public void load(JarIndex index, boolean recurse) {

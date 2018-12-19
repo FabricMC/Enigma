@@ -11,91 +11,102 @@
 
 package cuchaz.enigma.translation.mapping;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import cuchaz.enigma.analysis.JarIndex;
-import cuchaz.enigma.translation.representation.ClassEntry;
-import cuchaz.enigma.translation.representation.EntryFactory;
-import cuchaz.enigma.translation.representation.FieldEntry;
-import cuchaz.enigma.translation.representation.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
+import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MappingsChecker {
+	private final JarIndex index;
+	private final BidirectionalMapper mapper;
 
-	private JarIndex index;
-	private Map<ClassEntry, ClassMapping> droppedClassMappings;
-	private Map<ClassEntry, ClassMapping> droppedInnerClassMappings;
-	private Map<FieldEntry, FieldMapping> droppedFieldMappings;
-	private Map<MethodEntry, MethodMapping> droppedMethodMappings;
-
-	public MappingsChecker(JarIndex index) {
+	public MappingsChecker(JarIndex index, BidirectionalMapper mapper) {
 		this.index = index;
-		this.droppedClassMappings = Maps.newHashMap();
-		this.droppedInnerClassMappings = Maps.newHashMap();
-		this.droppedFieldMappings = Maps.newHashMap();
-		this.droppedMethodMappings = Maps.newHashMap();
+		this.mapper = mapper;
 	}
 
-	public Map<ClassEntry, ClassMapping> getDroppedClassMappings() {
-		return this.droppedClassMappings;
+	public Dropped dropBrokenMappings() {
+		Dropped dropped = new Dropped();
+		for (Entry entry : mapper.getObfEntries()) {
+			if (entry instanceof ClassEntry) {
+				tryDropClass(dropped, (ClassEntry) entry);
+			} else if (entry instanceof FieldEntry) {
+				tryDropField(dropped, (FieldEntry) entry);
+			} else if (entry instanceof MethodEntry) {
+				tryDropMethod(dropped, (MethodEntry) entry);
+			}
+		}
+		return dropped;
 	}
 
-	public Map<ClassEntry, ClassMapping> getDroppedInnerClassMappings() {
-		return this.droppedInnerClassMappings;
-	}
-
-	public Map<FieldEntry, FieldMapping> getDroppedFieldMappings() {
-		return this.droppedFieldMappings;
-	}
-
-	public Map<MethodEntry, MethodMapping> getDroppedMethodMappings() {
-		return this.droppedMethodMappings;
-	}
-
-	public void dropBrokenMappings(Mappings mappings) {
-		for (ClassMapping classMapping : Lists.newArrayList(mappings.classes())) {
-			if (!checkClassMapping(classMapping)) {
-				mappings.removeClassMapping(classMapping);
-				this.droppedClassMappings.put(EntryFactory.getObfClassEntry(this.index, classMapping), classMapping);
+	private void tryDropClass(Dropped dropped, ClassEntry entry) {
+		if (!index.containsObfClass(entry)) {
+			EntryMapping mapping = dropMapping(entry);
+			if (mapping != null) {
+				dropped.drop(entry, mapping);
 			}
 		}
 	}
 
-	private boolean checkClassMapping(ClassMapping classMapping) {
-
-		// check the class
-		ClassEntry classEntry = EntryFactory.getObfClassEntry(this.index, classMapping);
-		if (!this.index.getObfClassEntries().contains(classEntry)) {
-			return false;
-		}
-
-		// check the fields
-		for (FieldMapping fieldMapping : Lists.newArrayList(classMapping.fields())) {
-			FieldEntry obfFieldEntry = EntryFactory.getObfFieldEntry(classMapping, fieldMapping);
-			if (!this.index.containsObfField(obfFieldEntry)) {
-				classMapping.removeFieldMapping(fieldMapping);
-				this.droppedFieldMappings.put(obfFieldEntry, fieldMapping);
+	private void tryDropField(Dropped dropped, FieldEntry entry) {
+		if (!index.containsObfField(entry)) {
+			EntryMapping mapping = dropMapping(entry);
+			if (mapping != null) {
+				dropped.drop(entry, mapping);
 			}
 		}
+	}
 
-		// check methods
-		for (MethodMapping methodMapping : Lists.newArrayList(classMapping.methods())) {
-			MethodEntry obfMethodEntry = EntryFactory.getObfMethodEntry(classEntry, methodMapping);
-			if (!this.index.containsObfMethod(obfMethodEntry)) {
-				classMapping.removeMethodMapping(methodMapping);
-				this.droppedMethodMappings.put(obfMethodEntry, methodMapping);
+	private void tryDropMethod(Dropped dropped, MethodEntry entry) {
+		if (!index.containsObfMethod(entry)) {
+			EntryMapping mapping = dropMapping(entry);
+			if (mapping != null) {
+				dropped.drop(entry, mapping);
 			}
 		}
+	}
 
-		// check inner classes
-		for (ClassMapping innerClassMapping : Lists.newArrayList(classMapping.innerClasses())) {
-			if (!checkClassMapping(innerClassMapping)) {
-				classMapping.removeInnerClassMapping(innerClassMapping);
-				this.droppedInnerClassMappings.put(EntryFactory.getObfClassEntry(this.index, innerClassMapping), innerClassMapping);
-			}
+	@Nullable
+	private EntryMapping dropMapping(Entry entry) {
+		EntryMapping mapping = mapper.getDeobfMapping(entry);
+		if (mapping != null) {
+			mapper.removeByObf(entry);
+		}
+		return mapping;
+	}
+
+	public static class Dropped {
+		private final Map<ClassEntry, String> droppedClassMappings = new HashMap<>();
+		private final Map<FieldEntry, String> droppedFieldMappings = new HashMap<>();
+		private final Map<MethodEntry, String> droppedMethodMappings = new HashMap<>();
+
+		public void drop(ClassEntry entry, EntryMapping mapping) {
+			droppedClassMappings.put(entry, mapping.getTargetName());
 		}
 
-		return true;
+		public void drop(FieldEntry entry, EntryMapping mapping) {
+			droppedFieldMappings.put(entry, mapping.getTargetName());
+		}
+
+		public void drop(MethodEntry entry, EntryMapping mapping) {
+			droppedMethodMappings.put(entry, mapping.getTargetName());
+		}
+
+		public Map<ClassEntry, String> getDroppedClassMappings() {
+			return droppedClassMappings;
+		}
+
+		public Map<FieldEntry, String> getDroppedFieldMappings() {
+			return droppedFieldMappings;
+		}
+
+		public Map<MethodEntry, String> getDroppedMethodMappings() {
+			return droppedMethodMappings;
+		}
 	}
 }

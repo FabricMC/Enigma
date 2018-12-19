@@ -16,7 +16,7 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.translation.representation.Entry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -34,7 +34,7 @@ public class TokenChecker {
 
 	protected String getDeclarationToken(Entry entry) {
 		// decompile the class
-		CompilationUnit tree = deobfuscator.getSourceTree(entry.getClassName());
+		CompilationUnit tree = deobfuscator.getSourceTree(entry.getName());
 		// DEBUG
 		// tree.acceptVisitor( new TreeDumpVisitor( new File( "tree." + entry.getClassName().replace( '/', '.' ) + ".txt" ) ), null );
 		String source = deobfuscator.getSource(tree);
@@ -51,7 +51,7 @@ public class TokenChecker {
 	@SuppressWarnings("unchecked")
 	protected Collection<String> getReferenceTokens(EntryReference<? extends Entry, ? extends Entry> reference) {
 		// decompile the class
-		CompilationUnit tree = deobfuscator.getSourceTree(reference.context.getClassName());
+		CompilationUnit tree = deobfuscator.getSourceTree(reference.context.getName());
 		String source = deobfuscator.getSource(tree);
 		SourceIndex index = deobfuscator.getSourceIndex(tree, source);
 

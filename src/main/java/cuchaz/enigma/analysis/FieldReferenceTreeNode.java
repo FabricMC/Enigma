@@ -11,29 +11,25 @@
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.FieldEntry;
-import cuchaz.enigma.translation.representation.MethodDefEntry;
-import cuchaz.enigma.translation.representation.MethodEntry;
+import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<FieldEntry, MethodDefEntry> {
 
-	private Translator deobfuscatingTranslator;
 	private FieldEntry entry;
 	private EntryReference<FieldEntry, MethodDefEntry> reference;
 	private AccessFlags access;
 
-	public FieldReferenceTreeNode(Translator deobfuscatingTranslator, FieldEntry entry) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public FieldReferenceTreeNode(FieldEntry entry) {
 		this.entry = entry;
 		this.reference = null;
 	}
 
-	private FieldReferenceTreeNode(Translator deobfuscatingTranslator, EntryReference<FieldEntry, MethodDefEntry> reference, AccessFlags access) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	private FieldReferenceTreeNode(EntryReference<FieldEntry, MethodDefEntry> reference, AccessFlags access) {
 		this.entry = reference.entry;
 		this.reference = reference;
 		this.access = access;
@@ -52,20 +48,20 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", this.deobfuscatingTranslator.getTranslatedMethodDef(this.reference.context), this.access);
+			return String.format("%s (%s)", this.reference.context, this.access);
 		}
-		return deobfuscatingTranslator.getTranslatedField(entry).getName();
+		return entry.toString();
 	}
 
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		if (this.reference == null) {
 			for (EntryReference<FieldEntry, MethodDefEntry> reference : index.getFieldReferences(this.entry)) {
-				add(new FieldReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccessFlags(this.entry)));
+				add(new FieldReferenceTreeNode(reference, index.getAccessFlags(this.entry)));
 			}
 		} else {
-			for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.reference.context)) {
-				add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccessFlags(this.reference.context)));
+			for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.reference.context, false)) {
+				add(new MethodReferenceTreeNode(reference, index.getAccessFlags(this.reference.context)));
 			}
 		}
 

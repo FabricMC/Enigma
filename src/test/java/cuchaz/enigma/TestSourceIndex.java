@@ -13,7 +13,7 @@ package cuchaz.enigma;
 
 import com.google.common.collect.Sets;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import cuchaz.enigma.translation.representation.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
 import java.io.File;

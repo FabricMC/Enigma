@@ -12,26 +12,23 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.translation.representation.ClassEntry;
-import cuchaz.enigma.translation.representation.MethodEntry;
-import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
 public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
-	private final Translator deobfuscatingTranslator;
 	private final ClassEntry entry;
 
-	public ClassImplementationsTreeNode(Translator deobfuscatingTranslator, ClassEntry entry) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public ClassImplementationsTreeNode(ClassEntry entry) {
 		this.entry = entry;
 	}
 
 	public static ClassImplementationsTreeNode findNode(ClassImplementationsTreeNode node, MethodEntry entry) {
 		// is this the node?
-		if (node.entry.equals(entry.getOwnerClassEntry())) {
+		if (node.entry.equals(entry.getParent())) {
 			return node;
 		}
 
@@ -49,24 +46,16 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 		return this.entry;
 	}
 
-	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.getTranslatedClass(entry).getClassName();
-	}
-
 	@Override
 	public String toString() {
-		String className = getDeobfClassName();
-		if (className == null) {
-			className = this.entry.getClassName();
-		}
-		return className;
+		return entry.toString();
 	}
 
 	public void load(JarIndex index) {
 		// get all method implementations
 		List<ClassImplementationsTreeNode> nodes = Lists.newArrayList();
-		for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {
-			nodes.add(new ClassImplementationsTreeNode(this.deobfuscatingTranslator, new ClassEntry(implementingClassName)));
+		for (String implementingClassName : index.getImplementingClasses(this.entry.getName())) {
+			nodes.add(new ClassImplementationsTreeNode(new ClassEntry(implementingClassName)));
 		}
 
 		// add them to this node

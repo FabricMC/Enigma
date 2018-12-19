@@ -17,9 +17,9 @@ import com.strobel.assembler.metadata.ITypeLoader;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
-import cuchaz.enigma.translation.representation.ClassEntry;
-import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -64,7 +64,7 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 
 		// NOTE: don't know if class name is obf or deobf
 		ClassEntry classEntry = new ClassEntry(className);
-		ClassEntry obfClassEntry = this.obfuscatingTranslator.getTranslatedClass(classEntry);
+		ClassEntry obfClassEntry = this.obfuscatingTranslator.translate(classEntry);
 
 		// is this an inner class referenced directly? (ie trying to load b instead of a$b)
 		if (!obfClassEntry.isInnerClass()) {
@@ -140,7 +140,7 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 
 	@Override
 	public List<String> getClassNamesToTry(String className) {
-		return getClassNamesToTry(this.obfuscatingTranslator.getTranslatedClass(new ClassEntry(className)));
+		return getClassNamesToTry(this.obfuscatingTranslator.translate(new ClassEntry(className)));
 	}
 
 	@Override
@@ -148,8 +148,7 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 		List<String> classNamesToTry = Lists.newArrayList();
 		classNamesToTry.add(obfClassEntry.getName());
 		if (obfClassEntry.isInnerClass()) {
-			// try just the inner class name
-			classNamesToTry.add(obfClassEntry.getInnermostClassName());
+			classNamesToTry.add(obfClassEntry.getFullName());
 		}
 		return classNamesToTry;
 	}
@@ -157,7 +156,7 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 	@Override
 	public String transformInto(ClassNode node, ClassWriter writer) {
 		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, jarIndex, entryPool, Opcodes.ASM5, writer));
-		return deobfuscatingTranslator.getTranslatedClass(new ClassEntry(node.name)).getName();
+		return deobfuscatingTranslator.translate(new ClassEntry(node.name)).getName();
 	}
 
 }

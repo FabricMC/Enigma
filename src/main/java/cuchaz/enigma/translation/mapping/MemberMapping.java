@@ -11,8 +11,8 @@
 
 package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.translation.representation.ClassEntry;
-import cuchaz.enigma.translation.representation.Entry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public interface MemberMapping<T extends Entry> {
 	T getObfEntry(ClassEntry classEntry);

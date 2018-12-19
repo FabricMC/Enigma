@@ -15,9 +15,11 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import cuchaz.enigma.bytecode.AccessFlags;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
+import cuchaz.enigma.translation.representation.Signature;
+import cuchaz.enigma.translation.representation.entry.*;
 
 import java.util.*;
 
@@ -52,15 +54,15 @@ public class TranslationIndex {
 		// translate the superclasses
 		this.superclasses = Maps.newHashMap();
 		for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.superclasses.entrySet()) {
-			this.superclasses.put(translator.getTranslatedClass(mapEntry.getKey()), translator.getTranslatedClass(mapEntry.getValue()));
+			this.superclasses.put(translator.translate(mapEntry.getKey()), translator.translate(mapEntry.getValue()));
 		}
 
 		// translate the interfaces
 		this.interfaces = HashMultimap.create();
 		for (Map.Entry<ClassEntry, ClassEntry> mapEntry : other.interfaces.entries()) {
 			this.interfaces.put(
-					translator.getTranslatedClass(mapEntry.getKey()),
-					translator.getTranslatedClass(mapEntry.getValue())
+					translator.translate(mapEntry.getKey()),
+					translator.translate(mapEntry.getValue())
 			);
 		}
 
@@ -68,16 +70,16 @@ public class TranslationIndex {
 		this.fieldEntries = HashMultimap.create();
 		for (Map.Entry<ClassEntry, FieldDefEntry> mapEntry : other.fieldEntries.entries()) {
 			this.fieldEntries.put(
-					translator.getTranslatedClass(mapEntry.getKey()),
-					translator.getTranslatedFieldDef(mapEntry.getValue())
+					translator.translate(mapEntry.getKey()),
+					translator.translate(mapEntry.getValue())
 			);
 		}
 
 		this.methodEntries = HashMultimap.create();
 		for (Map.Entry<ClassEntry, MethodDefEntry> mapEntry : other.methodEntries.entries()) {
 			this.methodEntries.put(
-					translator.getTranslatedClass(mapEntry.getKey()),
-					translator.getTranslatedMethodDef(mapEntry.getValue())
+					translator.translate(mapEntry.getKey()),
+					translator.translate(mapEntry.getValue())
 			);
 		}
 
@@ -114,28 +116,13 @@ public class TranslationIndex {
 	}
 
 	protected void indexField(FieldDefEntry fieldEntry) {
-		this.fieldEntries.put(fieldEntry.getOwnerClassEntry(), fieldEntry);
+		this.fieldEntries.put(fieldEntry.getParent(), fieldEntry);
 		this.defEntries.put(fieldEntry, fieldEntry);
 	}
 
 	protected void indexMethod(MethodDefEntry methodEntry) {
-		this.methodEntries.put(methodEntry.getOwnerClassEntry(), methodEntry);
+		this.methodEntries.put(methodEntry.getParent(), methodEntry);
 		this.defEntries.put(methodEntry, methodEntry);
-	}
-
-	public void renameClasses(Map<String, String> renames) {
-		EntryRenamer.renameClassesInMap(renames, this.superclasses);
-		EntryRenamer.renameClassesInMultimap(renames, this.fieldEntries);
-		EntryRenamer.renameClassesInMultimap(renames, this.methodEntries);
-
-		this.defEntries.clear();
-		for (FieldDefEntry entry : fieldEntries.values()) {
-			defEntries.put(entry, entry);
-		}
-
-		for (MethodDefEntry entry : methodEntries.values()) {
-			defEntries.put(entry, entry);
-		}
 	}
 
 	public ClassEntry getSuperclass(ClassEntry classEntry) {
@@ -213,53 +200,76 @@ public class TranslationIndex {
 		} else if (entry instanceof MethodEntry) {
 			return methodExists((MethodEntry) entry);
 		} else if (entry instanceof LocalVariableEntry) {
-			return methodExists(((LocalVariableEntry) entry).getOwnerEntry());
+			return methodExists(((LocalVariableEntry) entry).getParent());
 		}
 		throw new IllegalArgumentException("Cannot check existence for " + entry.getClass());
 	}
 
 	public boolean fieldExists(FieldEntry fieldEntry) {
-		return this.fieldEntries.containsEntry(fieldEntry.getOwnerClassEntry(), fieldEntry);
+		return this.fieldEntries.containsEntry(fieldEntry.getParent(), fieldEntry);
 	}
 
 	public boolean methodExists(MethodEntry methodEntry) {
-		return this.methodEntries.containsEntry(methodEntry.getOwnerClassEntry(), methodEntry);
+		return this.methodEntries.containsEntry(methodEntry.getParent(), methodEntry);
 	}
 
+	@SuppressWarnings("unchecked")
 	public ClassEntry resolveEntryOwner(Entry entry) {
 		if (entry instanceof ClassEntry) {
 			return (ClassEntry) entry;
 		}
 
 		if (entryExists(entry)) {
-			return entry.getOwnerClassEntry();
+			return entry.getContainingClass();
 		}
 
-		DefEntry def = defEntries.get(entry);
+		if (entry instanceof ChildEntry) {
+			DefEntry def = defEntries.get(entry);
+			if (def != null && (def.getAccess().isPrivate())) {
+				return null;
+			}
+
+			// if we're protected/public/non-static, chances are we're somewhere down
+
+			// find the child of a class in our ancestry
+			List<Entry> ancestry = entry.getAncestry();
+			for (int i = ancestry.size() - 1; i > 0; i--) {
+				Entry child = ancestry.get(i);
+				if (child instanceof ChildEntry && ((ChildEntry) child).getParent() instanceof ClassEntry) {
+					return resolveEntryOwner((ChildEntry<ClassEntry>) child);
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private ClassEntry resolveEntryOwner(ChildEntry<ClassEntry> childEntry) {
+		DefEntry def = defEntries.get(childEntry);
 		if (def != null && (def.getAccess().isPrivate())) {
 			return null;
 		}
 
-		// if we're protected/public/non-static, chances are we're somewhere down
 		LinkedList<ClassEntry> classEntries = new LinkedList<>();
-		classEntries.add(entry.getOwnerClassEntry());
+		classEntries.add(childEntry.getContainingClass());
+
 		while (!classEntries.isEmpty()) {
-			ClassEntry c = classEntries.remove();
-			Entry cEntry = entry.updateOwnership(c);
+			ClassEntry parent = classEntries.remove();
+			ChildEntry<ClassEntry> cEntry = childEntry.withParent(parent);
 
 			if (entryExists(cEntry)) {
 				def = defEntries.get(cEntry);
 				if (def == null || (!def.getAccess().isPrivate())) {
-					return cEntry.getOwnerClassEntry();
+					return cEntry.getParent();
 				}
 			}
 
-			ClassEntry superC = getSuperclass(c);
-			if (superC != null) {
-				classEntries.add(superC);
+			ClassEntry superclass = getSuperclass(parent);
+			if (superclass != null) {
+				classEntries.add(superclass);
 			}
-			if (entry instanceof MethodEntry) {
-				classEntries.addAll(getInterfaces(c));
+			if (childEntry instanceof MethodEntry) {
+				classEntries.addAll(getInterfaces(parent));
 			}
 		}
 

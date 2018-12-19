@@ -11,22 +11,13 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.translation.representation.Entry;
-import cuchaz.enigma.translation.mapping.Mappings;
-import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.entry.Entry;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static cuchaz.enigma.TestEntryFactory.newClass;
-import static cuchaz.enigma.TestEntryFactory.newField;
-import static cuchaz.enigma.TestEntryFactory.newMethod;
+import static cuchaz.enigma.TestEntryFactory.*;
 
 public class TestTranslator {
-
-	private static Deobfuscator deobfuscator;
-	private static Mappings mappings;
-	private static Translator deobfTranslator;
-	private static Translator obfTranslator;
 
 	@BeforeClass
 	public static void beforeClass()
