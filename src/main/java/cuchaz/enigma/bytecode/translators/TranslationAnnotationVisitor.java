@@ -18,7 +18,7 @@ public class TranslationAnnotationVisitor extends AnnotationVisitor {
 
 	@Override
 	public void visit(String name, Object value) {
-		super.visit(name, translator.translateValue(value));
+		super.visit(name, AsmObjectTranslator.translateValue(translator, value));
 	}
 
 	@Override

@@ -43,12 +43,13 @@ public class ClassDefEntry extends ClassEntry implements DefEntry {
 	@Override
 	public ClassDefEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		Signature translatedSignature = translator.translate(signature);
-		String mappedName = mapping != null ? mapping.getTargetName() : name;
+		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		AccessFlags translatedAccess = mapping != null ? mapping.getAccessModifier().transform(access) : access;
+		ClassDefEntry translatedClass = new ClassDefEntry(translatedName, translatedSignature, translatedAccess);
 		if (isInnerClass()) {
 			ClassEntry outerClass = translator.translate(getOuterClass());
-			return new ClassDefEntry(outerClass.name + "$" + mappedName, translatedSignature, translatedAccess);
+			return new ClassDefEntry(outerClass.name + "$" + translatedClass.getSimpleName(), translatedSignature, translatedAccess);
 		}
-		return new ClassDefEntry(mappedName, translatedSignature, translatedAccess);
+		return translatedClass;
 	}
 }

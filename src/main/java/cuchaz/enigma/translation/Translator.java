@@ -11,16 +11,6 @@
 
 package cuchaz.enigma.translation;
 
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Type;
-
 public interface Translator {
 	<T extends Translatable> T translate(T translatable);
-
-	// TODO: These can be static helpers? They are all specific to ASM
-	Type translateType(Type type);
-
-	Handle translateHandle(Handle handle);
-
-	Object translateValue(Object value);
 }

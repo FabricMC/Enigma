@@ -52,7 +52,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
-// TODO: deobfuscation handler and gui handler class
 public class Deobfuscator {
 
 	private final ServiceLoader<EnigmaPlugin> plugins = ServiceLoader.load(EnigmaPlugin.class);
@@ -512,33 +511,6 @@ public class Deobfuscator {
 	public void markAsDeobfuscated(Entry obfEntry) {
 		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()));
 	}
-
-	// TODO: Modifiers
-	/*public void changeModifier(Entry entry, Mappings.EntryModifier modifierEntry) {
-		Entry obfEntry = obfuscate(entry);
-		if (obfEntry instanceof ClassEntry)
-			this.renamer.setClassModifier((ClassEntry) obfEntry, modifierEntry);
-		else if (obfEntry instanceof FieldEntry)
-			this.renamer.setFieldModifier((FieldEntry) obfEntry, modifierEntry);
-		else if (obfEntry instanceof MethodEntry)
-			this.renamer.setMethodModifier((MethodEntry) obfEntry, modifierEntry);
-		else
-			throw new Error("Unknown entry desc: " + obfEntry);
-	}
-
-	public Mappings.EntryModifier getModifier(Entry obfEntry) {
-		Entry entry = obfuscate(obfEntry);
-		if (entry != null)
-			obfEntry = entry;
-		if (obfEntry instanceof ClassEntry)
-			return this.renamer.getClassModifier((ClassEntry) obfEntry);
-		else if (obfEntry instanceof FieldEntry)
-			return this.renamer.getFieldModifier((FieldEntry) obfEntry);
-		else if (obfEntry instanceof MethodEntry)
-			return this.renamer.getMethodModfifier((MethodEntry) obfEntry);
-		else
-			throw new Error("Unknown entry desc: " + obfEntry);
-	}*/
 
 	public static void runCustomTransforms(AstBuilder builder, DecompilerContext context) {
 		List<IAstTransform> transformers = Arrays.asList(

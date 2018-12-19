@@ -128,14 +128,14 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		MethodDescriptor translatedMethodDesc = translator.translate(new MethodDescriptor(desc));
 		Object[] translatedBsmArgs = new Object[bsmArgs.length];
 		for (int i = 0; i < bsmArgs.length; i++) {
-			translatedBsmArgs[i] = translator.translateValue(bsmArgs[i]);
+			translatedBsmArgs[i] = AsmObjectTranslator.translateValue(translator, bsmArgs[i]);
 		}
-		super.visitInvokeDynamicInsn(name, translatedMethodDesc.toString(), translator.translateHandle(bsm), translatedBsmArgs);
+		super.visitInvokeDynamicInsn(name, translatedMethodDesc.toString(), AsmObjectTranslator.translateHandle(translator, bsm), translatedBsmArgs);
 	}
 
 	@Override
 	public void visitLdcInsn(Object cst) {
-		super.visitLdcInsn(translator.translateValue(cst));
+		super.visitLdcInsn(AsmObjectTranslator.translateValue(translator, cst));
 	}
 
 	@Override

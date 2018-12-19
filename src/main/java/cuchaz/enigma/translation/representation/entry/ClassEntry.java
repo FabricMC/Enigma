@@ -20,7 +20,7 @@ import cuchaz.enigma.translation.mapping.NameValidator;
 import javax.annotation.Nullable;
 import java.util.List;
 
-// TODO: Warnings in log relating to bad inner classes
+// TODO: Unable to rename inner class (inner class mappings must be stored as just inner class name!)
 public class ClassEntry implements Entry {
 	protected final String name;
 	protected final boolean innerClass;
@@ -46,14 +46,13 @@ public class ClassEntry implements Entry {
 
 	@Override
 	public ClassEntry translate(Translator translator, @Nullable EntryMapping mapping) {
-		if (mapping == null) {
-			return this;
-		}
+		String translatedName = mapping != null ? mapping.getTargetName() : name;
+		ClassEntry translatedClass = new ClassEntry(translatedName);
 		if (isInnerClass()) {
 			ClassEntry outerClass = translator.translate(getOuterClass());
-			return new ClassEntry(outerClass.name + "$" + mapping.getTargetName());
+			return new ClassEntry(outerClass.name + "$" + translatedClass.getSimpleName());
 		}
-		return new ClassEntry(mapping.getTargetName());
+		return translatedClass;
 	}
 
 	@Override
@@ -102,7 +101,7 @@ public class ClassEntry implements Entry {
 	public String getSimpleName() {
 		int packagePos = name.lastIndexOf('/');
 		int innerClassPos = name.lastIndexOf('$');
-		if (packagePos > 0) {
+		if (packagePos > 0 || innerClassPos > 0) {
 			return name.substring(Math.max(packagePos, innerClassPos) + 1);
 		}
 		return name;
