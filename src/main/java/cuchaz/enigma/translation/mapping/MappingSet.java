@@ -17,5 +17,5 @@ public interface MappingSet<M> {
 		return getMapping(entry) != null;
 	}
 
-	Collection<Entry> getEntries();
+	Collection<Entry> getAllEntries();
 }

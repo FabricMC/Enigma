@@ -4,6 +4,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class HashMappingTree<M> implements MappingTree<M> {
 	private final Map<Entry, MappingNode<M>> root = new HashMap<>();
@@ -28,7 +29,7 @@ public class HashMappingTree<M> implements MappingTree<M> {
 	@Override
 	@Nullable
 	public M getMapping(Entry entry) {
-		MappingNode<M> node = leaf(entry);
+		MappingNode<M> node = findNode(entry);
 		if (node == null) {
 			return null;
 		}
@@ -42,7 +43,7 @@ public class HashMappingTree<M> implements MappingTree<M> {
 
 	@Override
 	public Collection<Entry> getChildren(Entry entry) {
-		MappingNode<M> leaf = leaf(entry);
+		MappingNode<M> leaf = findNode(entry);
 		if (leaf == null) {
 			return Collections.emptyList();
 		}
@@ -67,7 +68,7 @@ public class HashMappingTree<M> implements MappingTree<M> {
 
 	@Override
 	@Nullable
-	public MappingNode<M> leaf(Entry target) {
+	public MappingNode<M> findNode(Entry target) {
 		List<Entry> parentChain = target.getAncestry();
 		if (parentChain.isEmpty()) {
 			return null;
@@ -105,11 +106,15 @@ public class HashMappingTree<M> implements MappingTree<M> {
 	}
 
 	private void removeDeadAlong(List<MappingNode<M>> path) {
-		for (int i = path.size() - 1; i > 0; i--) {
+		for (int i = path.size() - 1; i >= 0; i--) {
 			MappingNode<M> node = path.get(i);
 			if (node.isEmpty()) {
-				MappingNode<M> parentNode = path.get(i - 1);
-				parentNode.remove(node.getEntry());
+				if (i > 0) {
+					MappingNode<M> parentNode = path.get(i - 1);
+					parentNode.remove(node.getEntry());
+				} else {
+					root.remove(node.getEntry());
+				}
 			} else {
 				break;
 			}
@@ -122,11 +127,13 @@ public class HashMappingTree<M> implements MappingTree<M> {
 	}
 
 	@Override
-	public Collection<Entry> getEntries() {
-		Collection<Entry> entries = new ArrayList<>();
+	public Collection<Entry> getAllEntries() {
+		Collection<MappingNode<M>> nodes = new ArrayList<>();
 		for (MappingNode<M> node : root.values()) {
-			entries.addAll(node.collectEntries());
+			nodes.addAll(node.getNodesRecursively());
 		}
-		return entries;
+		return nodes.stream()
+				.map(MappingNode::getEntry)
+				.collect(Collectors.toList());
 	}
 }

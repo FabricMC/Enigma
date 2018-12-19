@@ -56,15 +56,12 @@ public class MappingNode<M> implements Iterable<MappingNode<M>> {
 		return children.values().iterator();
 	}
 
-	public Collection<Entry> collectEntries() {
-		if (children.isEmpty()) {
-			return Collections.emptyList();
-		}
-		Collection<Entry> entries = new ArrayList<>();
-		entries.add(entry);
+	public Collection<MappingNode<M>> getNodesRecursively() {
+		Collection<MappingNode<M>> nodes = new ArrayList<>();
+		nodes.add(this);
 		for (MappingNode<M> node : children.values()) {
-			entries.addAll(node.collectEntries());
+			nodes.addAll(node.getNodesRecursively());
 		}
-		return entries;
+		return nodes;
 	}
 }

@@ -12,5 +12,5 @@ public interface MappingTree<M> extends MappingSet<M>, Iterable<MappingNode<M>> 
 	Collection<Entry> getSiblings(Entry entry);
 
 	@Nullable
-	MappingNode<M> leaf(Entry entry);
+	MappingNode<M> findNode(Entry entry);
 }

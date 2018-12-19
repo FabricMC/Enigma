@@ -1,11 +1,13 @@
 package cuchaz.enigma.translation.mapping;
 
+import com.strobel.core.Mapping;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.HashMappingTree;
+import cuchaz.enigma.translation.mapping.tree.MappingNode;
 import cuchaz.enigma.translation.mapping.tree.MappingTree;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
@@ -45,7 +47,7 @@ public class BidirectionalMapper {
 		MappingTree<EntryMapping> inverse = new HashMappingTree<>();
 
 		// Naive approach, could operate on the nodes of the tree. However, this runs infrequently.
-		Collection<Entry> entries = tree.getEntries();
+		Collection<Entry> entries = tree.getAllEntries();
 		for (Entry sourceEntry : entries) {
 			Entry targetEntry = translator.translate(sourceEntry);
 			inverse.insert(targetEntry, new EntryMapping(sourceEntry.getName()));
@@ -84,13 +86,26 @@ public class BidirectionalMapper {
 	}
 
 	private <E extends Entry> void setObfToDeobf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		EntryMapping obfMapping = new EntryMapping(obfuscatedEntry.getName());
-
 		E prevDeobf = deobfuscate(obfuscatedEntry);
-		deobfToObf.remove(prevDeobf);
-
 		obfToDeobf.insert(obfuscatedEntry, deobfMapping);
-		deobfToObf.insert(deobfuscate((obfuscatedEntry)), obfMapping);
+
+		E newDeobf = deobfuscate(obfuscatedEntry);
+
+		// Reconstruct the children of this node in the deobf -> obf tree with our new mapping
+		// We only need to do this for deobf -> obf because the obf tree is always consistent on the left hand side
+		// We lookup by obf, and the obf never changes. This is not the case for deobf so we need to update the tree.
+
+		MappingNode<EntryMapping> node = deobfToObf.findNode(prevDeobf);
+		if (node != null) {
+			for (MappingNode<EntryMapping> child : node.getNodesRecursively()) {
+				Entry entry = child.getEntry();
+				EntryMapping mapping = new EntryMapping(obfuscate(entry).getName());
+				deobfToObf.insert(entry.replaceAncestor(prevDeobf, newDeobf), mapping);
+				deobfToObf.remove(entry);
+			}
+		} else {
+			deobfToObf.insert(newDeobf, new EntryMapping(obfuscatedEntry.getName()));
+		}
 	}
 
 	@Nullable
@@ -128,11 +143,11 @@ public class BidirectionalMapper {
 	}
 
 	public Collection<Entry> getObfEntries() {
-		return obfToDeobf.getEntries();
+		return obfToDeobf.getAllEntries();
 	}
 
 	public Collection<Entry> getDeobfEntries() {
-		return deobfToObf.getEntries();
+		return deobfToObf.getAllEntries();
 	}
 
 	public Collection<Entry> getObfChildren(Entry obfuscatedEntry) {

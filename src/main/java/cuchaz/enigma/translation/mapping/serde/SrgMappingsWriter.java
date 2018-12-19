@@ -33,7 +33,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		List<String> methodLines = new ArrayList<>();
 
 		// TODO: sort alphabetically
-		Collection<Entry> entries = mappings.getEntries();
+		Collection<Entry> entries = mappings.getAllEntries();
 		for (Entry entry : entries) {
 			if (entry instanceof ClassEntry) {
 				classLines.add(generateClassLine((ClassEntry) entry, translator));

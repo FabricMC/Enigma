@@ -67,13 +67,13 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 
 	@Nullable
 	@Override
-	public MappingNode<M> leaf(Entry entry) {
-		return delegate.leaf(entry);
+	public MappingNode<M> findNode(Entry entry) {
+		return delegate.findNode(entry);
 	}
 
 	@Override
-	public Collection<Entry> getEntries() {
-		return delegate.getEntries();
+	public Collection<Entry> getAllEntries() {
+		return delegate.getAllEntries();
 	}
 
 	@Override

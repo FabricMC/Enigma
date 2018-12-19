@@ -108,7 +108,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected void writeEntry(PrintWriter writer, MappingTree<EntryMapping> mappings, Entry entry, int depth) {
-		MappingNode<EntryMapping> node = mappings.leaf(entry);
+		MappingNode<EntryMapping> node = mappings.findNode(entry);
 		if (node == null) {
 			return;
 		}
