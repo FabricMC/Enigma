@@ -27,7 +27,7 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 
 	public static ClassInheritanceTreeNode findNode(ClassInheritanceTreeNode node, ClassEntry entry) {
 		// is this the node?
-		if (node.getObfClassName().equals(entry.getName())) {
+		if (node.getObfClassName().equals(entry.getFullName())) {
 			return node;
 		}
 
@@ -42,19 +42,19 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public String getObfClassName() {
-		return this.obfClassEntry.getName();
+		return this.obfClassEntry.getFullName();
 	}
 
 	@Override
 	public String toString() {
-		return this.obfClassEntry.getName();
+		return this.obfClassEntry.getFullName();
 	}
 
 	public void load(TranslationIndex ancestries, boolean recurse) {
 		// get all the child nodes
 		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
 		for (ClassEntry subclassEntry : ancestries.getSubclass(this.obfClassEntry)) {
-			nodes.add(new ClassInheritanceTreeNode(subclassEntry.getName()));
+			nodes.add(new ClassInheritanceTreeNode(subclassEntry.getFullName()));
 		}
 
 		// add them to this node

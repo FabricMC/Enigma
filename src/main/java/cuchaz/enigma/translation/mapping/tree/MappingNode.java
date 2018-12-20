@@ -6,11 +6,11 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public class MappingNode<M> implements Iterable<MappingNode<M>> {
-	private final Entry entry;
-	private final Map<Entry, MappingNode<M>> children = new HashMap<>();
+	private final Entry<?> entry;
+	private final Map<Entry<?>, MappingNode<M>> children = new HashMap<>();
 	private M mapping;
 
-	MappingNode(Entry entry) {
+	MappingNode(Entry<?> entry) {
 		this.entry = entry;
 	}
 
@@ -22,11 +22,15 @@ public class MappingNode<M> implements Iterable<MappingNode<M>> {
 		this.mapping = null;
 	}
 
-	MappingNode<M> child(Entry entry) {
-		return children.computeIfAbsent(entry, MappingNode::new);
+	MappingNode<M> getChild(Entry<?> entry, boolean create) {
+		if (create) {
+			return children.computeIfAbsent(entry, MappingNode::new);
+		} else {
+			return children.get(entry);
+		}
 	}
 
-	void remove(Entry entry) {
+	void remove(Entry<?> entry) {
 		children.remove(entry);
 	}
 
@@ -35,7 +39,7 @@ public class MappingNode<M> implements Iterable<MappingNode<M>> {
 		return mapping;
 	}
 
-	public Entry getEntry() {
+	public Entry<?> getEntry() {
 		return entry;
 	}
 
@@ -43,7 +47,7 @@ public class MappingNode<M> implements Iterable<MappingNode<M>> {
 		return children.isEmpty() && mapping == null;
 	}
 
-	public Collection<Entry> getChildren() {
+	public Collection<Entry<?>> getChildren() {
 		return children.keySet();
 	}
 

@@ -31,7 +31,7 @@ import java.util.List;
 
 public class ClassSelector extends JTree {
 
-	public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = Comparator.comparing(ClassEntry::getName);
+	public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = Comparator.comparing(ClassEntry::getFullName);
 	private DefaultMutableTreeNode rootNodes;
 	private ClassSelectionListener selectionListener;
 	private RenameSelectionListener renameSelectionListener;

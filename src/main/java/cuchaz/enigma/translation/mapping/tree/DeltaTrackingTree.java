@@ -22,7 +22,7 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	}
 
 	@Override
-	public void insert(Entry entry, M mapping) {
+	public void insert(Entry<?> entry, M mapping) {
 		if (mapping != null) {
 			trackAddition(entry, mapping);
 		} else {
@@ -32,17 +32,17 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	}
 
 	@Override
-	public void remove(Entry entry) {
+	public void remove(Entry<?> entry) {
 		delegate.remove(entry);
 		trackDeletion(entry);
 	}
 
-	private void trackAddition(Entry entry, M mapping) {
+	private void trackAddition(Entry<?> entry, M mapping) {
 		deletions.remove(entry);
 		additions.insert(entry, mapping);
 	}
 
-	private void trackDeletion(Entry entry) {
+	private void trackDeletion(Entry<?> entry) {
 		additions.remove(entry);
 
 		M previousMapping = delegate.getMapping(entry);
@@ -51,28 +51,28 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 
 	@Nullable
 	@Override
-	public M getMapping(Entry entry) {
+	public M getMapping(Entry<?> entry) {
 		return delegate.getMapping(entry);
 	}
 
 	@Override
-	public Collection<Entry> getChildren(Entry entry) {
+	public Collection<Entry<?>> getChildren(Entry<?> entry) {
 		return delegate.getChildren(entry);
 	}
 
 	@Override
-	public Collection<Entry> getSiblings(Entry entry) {
+	public Collection<Entry<?>> getSiblings(Entry<?> entry) {
 		return delegate.getSiblings(entry);
 	}
 
 	@Nullable
 	@Override
-	public MappingNode<M> findNode(Entry entry) {
+	public MappingNode<M> findNode(Entry<?> entry) {
 		return delegate.findNode(entry);
 	}
 
 	@Override
-	public Collection<Entry> getAllEntries() {
+	public Collection<Entry<?>> getAllEntries() {
 		return delegate.getAllEntries();
 	}
 

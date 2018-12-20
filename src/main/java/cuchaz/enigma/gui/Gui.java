@@ -58,7 +58,7 @@ public class Gui {
 
 	private final MenuBar menuBar;
 	// state
-	public EntryReference<Entry, Entry> reference;
+	public EntryReference<Entry<?>, Entry<?>> reference;
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
 	public JFileChooser enigmaMappingsFileChooser;
@@ -222,7 +222,7 @@ public class Gui {
 
 					Object node = path.getLastPathComponent();
 					if (node instanceof ReferenceTreeNode) {
-						ReferenceTreeNode<Entry, Entry> referenceNode = ((ReferenceTreeNode<Entry, Entry>) node);
+						ReferenceTreeNode<Entry<?>, Entry<?>> referenceNode = ((ReferenceTreeNode<Entry<?>, Entry<?>>) node);
 						if (referenceNode.getReference() != null) {
 							navigateTo(referenceNode.getReference());
 						} else {
@@ -427,7 +427,7 @@ public class Gui {
 		}
 	}
 
-	private void showReference(EntryReference<Entry, Entry> reference) {
+	private void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		if (reference == null) {
 			infoPanel.clearReference();
 			return;
@@ -453,19 +453,19 @@ public class Gui {
 
 	private void showLocalVariableEntry(LocalVariableEntry entry) {
 		addNameValue(infoPanel, "Variable", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getParent().getName());
+		addNameValue(infoPanel, "Class", entry.getContainingClass().getFullName());
 		addNameValue(infoPanel, "Method", entry.getParent().getName());
 		addNameValue(infoPanel, "Index", Integer.toString(entry.getIndex()));
 	}
 
 	private void showClassEntry(ClassEntry entry) {
-		addNameValue(infoPanel, "Class", entry.getName());
+		addNameValue(infoPanel, "Class", entry.getFullName());
 		addModifierComboBox(infoPanel, "Modifier", entry);
 	}
 
 	private void showFieldEntry(FieldEntry entry) {
 		addNameValue(infoPanel, "Field", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getParent().getName());
+		addNameValue(infoPanel, "Class", entry.getParent().getFullName());
 		addNameValue(infoPanel, "TypeDescriptor", entry.getDesc().toString());
 		addModifierComboBox(infoPanel, "Modifier", entry);
 	}
@@ -475,7 +475,7 @@ public class Gui {
 			addNameValue(infoPanel, "Constructor", entry.getParent().getName());
 		} else {
 			addNameValue(infoPanel, "Method", entry.getName());
-			addNameValue(infoPanel, "Class", entry.getParent().getName());
+			addNameValue(infoPanel, "Class", entry.getParent().getFullName());
 		}
 		addNameValue(infoPanel, "MethodDescriptor", entry.getDesc().toString());
 		addModifierComboBox(infoPanel, "Modifier", entry);
@@ -549,7 +549,7 @@ public class Gui {
 		}
 	}
 
-	public void navigateTo(Entry entry) {
+	public void navigateTo(Entry<?> entry) {
 		if (!this.controller.entryIsInJar(entry)) {
 			// entry is not in the jar. Ignore it
 			return;
@@ -560,7 +560,7 @@ public class Gui {
 		this.controller.openDeclaration(entry);
 	}
 
-	private void navigateTo(EntryReference<Entry, Entry> reference) {
+	private void navigateTo(EntryReference<Entry<?>, Entry<?>> reference) {
 		if (!this.controller.entryIsInJar(reference.getLocationClassEntry())) {
 			return;
 		}
@@ -782,7 +782,7 @@ public class Gui {
 				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
-				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getName()), dataChild.getName(), false);
+				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
 				childNode.setUserObject(dataChild);
 			}
 			node.setUserObject(data);
@@ -791,10 +791,10 @@ public class Gui {
 		}
 		// class rename
 		else if (data instanceof ClassEntry)
-			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getName()), ((ClassEntry) data).getName(), false);
+			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
 	}
 
-	public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName) {
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, String newName) {
 		String oldEntry = deobfReference.entry.getContainingClass().getPackageName();
 		String newEntry = new ClassEntry(newName).getPackageName();
 		moveClassTree(deobfReference, newName, oldEntry == null,
@@ -802,7 +802,7 @@ public class Gui {
 	}
 
 	// TODO: getExpansionState will *not* actually update itself based on name changes!
-	public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb) {
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, String newName, boolean isOldOb, boolean isNewOb) {
 		ClassEntry oldEntry = deobfReference.entry.getContainingClass();
 		ClassEntry newEntry = new ClassEntry(newName);
 

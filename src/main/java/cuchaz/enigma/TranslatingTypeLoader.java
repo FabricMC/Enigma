@@ -47,12 +47,12 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
 	}
 
-	protected byte[] doLoad(String className){
+	protected byte[] doLoad(String className) {
 		byte[] data = loadType(className);
 		if (data == null) {
 			// chain to default desc loader
 			Buffer parentBuf = new Buffer();
-			if (defaultTypeLoader.tryLoadType(className, parentBuf)){
+			if (defaultTypeLoader.tryLoadType(className, parentBuf)) {
 				return parentBuf.array();
 			}
 			return EMPTY_ARRAY;//need to return *something* as null means no store
@@ -97,15 +97,15 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 		//	DUP
 		//	INVOKEVIRTUAL java/lang/Object.getClass ()Ljava/lang/Class;
 		//	POP
-		for (MethodNode methodNode : node.methods){
+		for (MethodNode methodNode : node.methods) {
 			AbstractInsnNode insnNode = methodNode.instructions.getFirst();
-			while (insnNode != null){
-				if (insnNode instanceof MethodInsnNode && insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL){
-					MethodInsnNode methodInsnNode = (MethodInsnNode)insnNode;
-					if (methodInsnNode.name.equals("getClass") && methodInsnNode.owner.equals("java/lang/Object") && methodInsnNode.desc.equals("()Ljava/lang/Class;")){
+			while (insnNode != null) {
+				if (insnNode instanceof MethodInsnNode && insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+					MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
+					if (methodInsnNode.name.equals("getClass") && methodInsnNode.owner.equals("java/lang/Object") && methodInsnNode.desc.equals("()Ljava/lang/Class;")) {
 						AbstractInsnNode previous = methodInsnNode.getPrevious();
 						AbstractInsnNode next = methodInsnNode.getNext();
-						if (previous.getOpcode() == Opcodes.DUP && next.getOpcode() == Opcodes.POP){
+						if (previous.getOpcode() == Opcodes.DUP && next.getOpcode() == Opcodes.POP) {
 							insnNode = previous.getPrevious();//reset the iterator so it gets the new next instruction
 							methodNode.instructions.remove(previous);
 							methodNode.instructions.remove(methodInsnNode);
@@ -146,17 +146,20 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 	@Override
 	public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
 		List<String> classNamesToTry = Lists.newArrayList();
-		classNamesToTry.add(obfClassEntry.getName());
-		if (obfClassEntry.isInnerClass()) {
-			classNamesToTry.add(obfClassEntry.getFullName());
+		classNamesToTry.add(obfClassEntry.getFullName());
+
+		ClassEntry outerClass = obfClassEntry.getOuterClass();
+		if (outerClass != null) {
+			classNamesToTry.addAll(getClassNamesToTry(outerClass));
 		}
+
 		return classNamesToTry;
 	}
 
 	@Override
 	public String transformInto(ClassNode node, ClassWriter writer) {
 		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, jarIndex, entryPool, Opcodes.ASM5, writer));
-		return deobfuscatingTranslator.translate(new ClassEntry(node.name)).getName();
+		return deobfuscatingTranslator.translate(new ClassEntry(node.name)).getFullName();
 	}
 
 }

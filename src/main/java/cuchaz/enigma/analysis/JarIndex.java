@@ -24,7 +24,7 @@ public class JarIndex {
 
 	private Set<ClassEntry> obfClassEntries;
 	private TranslationIndex translationIndex;
-	private Map<Entry, AccessFlags> access;
+	private Map<Entry<?>, AccessFlags> access;
 	private Multimap<ClassEntry, FieldDefEntry> fields;
 	private Multimap<ClassEntry, MethodDefEntry> methods;
 	private Multimap<String, MethodDefEntry> methodImplementations;
@@ -113,7 +113,7 @@ public class JarIndex {
 		// we don't care about constructors here
 		if (!methodEntry.isConstructor()) {
 			// index implementation
-			this.methodImplementations.put(methodEntry.getParentName(), methodEntry);
+			this.methodImplementations.put(methodEntry.getParent().getFullName(), methodEntry);
 		}
 	}
 
@@ -220,12 +220,12 @@ public class JarIndex {
 	}
 
 	@Deprecated
-	public Access getAccess(Entry entry) {
+	public Access getAccess(Entry<?> entry) {
 		AccessFlags flags = getAccessFlags(entry);
 		return flags != null ? Access.get(flags) : null;
 	}
 
-	public AccessFlags getAccessFlags(Entry entry) {
+	public AccessFlags getAccessFlags(Entry<?> entry) {
 		return this.access.get(entry);
 	}
 
@@ -233,10 +233,10 @@ public class JarIndex {
 
 		// get the root node
 		List<String> ancestry = Lists.newArrayList();
-		ancestry.add(obfClassEntry.getName());
+		ancestry.add(obfClassEntry.getFullName());
 		for (ClassEntry classEntry : this.translationIndex.getAncestry(obfClassEntry)) {
 			if (containsObfClass(classEntry)) {
-				ancestry.add(classEntry.getName());
+				ancestry.add(classEntry.getFullName());
 			}
 		}
 		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode(ancestry.get(ancestry.size() - 1));
@@ -250,7 +250,7 @@ public class JarIndex {
 	public ClassImplementationsTreeNode getClassImplementations(ClassEntry obfClassEntry) {
 
 		// is this even an interface?
-		if (isInterface(obfClassEntry.getName())) {
+		if (isInterface(obfClassEntry.getFullName())) {
 			ClassImplementationsTreeNode node = new ClassImplementationsTreeNode(obfClassEntry);
 			node.load(this);
 			return node;
@@ -267,7 +267,7 @@ public class JarIndex {
 
 		ClassEntry baseImplementationClassEntry = obfMethodEntry.getParent();
 
-		for (ClassEntry itf : getInterfaces(obfMethodEntry.getParent().getName())) {
+		for (ClassEntry itf : getInterfaces(obfMethodEntry.getParent().getFullName())) {
 			MethodEntry itfMethodEntry = entryPool.getMethod(itf, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
 			if (itfMethodEntry != null && containsObfMethod(itfMethodEntry)) {
 				baseImplementationClassEntry = itf;
@@ -281,7 +281,7 @@ public class JarIndex {
 					baseImplementationClassEntry = ancestorClassEntry;
 				}
 
-				for (ClassEntry itf : getInterfaces(ancestorClassEntry.getName())) {
+				for (ClassEntry itf : getInterfaces(ancestorClassEntry.getFullName())) {
 					MethodEntry itfMethodEntry = entryPool.getMethod(itf, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
 					if (itfMethodEntry != null && containsObfMethod(itfMethodEntry)) {
 						baseImplementationClassEntry = itf;
@@ -307,11 +307,11 @@ public class JarIndex {
 		List<MethodEntry> interfaceMethodEntries = Lists.newArrayList();
 
 		// is this method on an interface?
-		if (isInterface(obfMethodEntry.getParentName())) {
+		if (isInterface(obfMethodEntry.getParent().getFullName())) {
 			interfaceMethodEntries.add(obfMethodEntry);
 		} else {
 			// get the interface class
-			for (ClassEntry interfaceEntry : getInterfaces(obfMethodEntry.getParentName())) {
+			for (ClassEntry interfaceEntry : getInterfaces(obfMethodEntry.getParent().getFullName())) {
 
 				// is this method defined in this interface?
 				MethodEntry methodInterface = entryPool.getMethod(interfaceEntry, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
@@ -471,8 +471,8 @@ public class JarIndex {
 		for (Map.Entry<ClassEntry, ClassEntry> entry : this.translationIndex.getClassInterfaces()) {
 			ClassEntry classEntry = entry.getKey();
 			ClassEntry interfaceEntry = entry.getValue();
-			if (interfaceEntry.getName().equals(targetInterfaceName)) {
-				String className = classEntry.getName();
+			if (interfaceEntry.getFullName().equals(targetInterfaceName)) {
+				String className = classEntry.getFullName();
 				classNames.add(className);
 				if (isInterface(className)) {
 					classNames.addAll(getImplementingClasses(className));
@@ -505,7 +505,11 @@ public class JarIndex {
 		return containsObfMethod(obfVariableEntry.getParent());
 	}
 
-	public boolean containsObfEntry(Entry obfEntry) {
+	public boolean containsObfEntry(Entry<?> obfEntry) {
+		if (obfEntry == null) {
+			throw new IllegalArgumentException("Cannot check for null entry");
+		}
+
 		if (obfEntry instanceof ClassEntry) {
 			return containsObfClass((ClassEntry) obfEntry);
 		} else if (obfEntry instanceof FieldEntry) {

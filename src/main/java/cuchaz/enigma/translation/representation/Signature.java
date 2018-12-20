@@ -87,6 +87,6 @@ public class Signature implements Translatable {
 
 	@Override
 	public Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
-		return remap(name -> translator.translate(new ClassEntry(name)).getName());
+		return remap(name -> translator.translate(new ClassEntry(name)).getFullName());
 	}
 }

@@ -20,36 +20,16 @@ import cuchaz.enigma.utils.Utils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class FieldEntry implements ChildEntry<ClassEntry> {
-	protected final ClassEntry parent;
-	protected final String name;
+public class FieldEntry extends ParentedEntry<ClassEntry> {
 	protected final TypeDescriptor desc;
 
 	public FieldEntry(ClassEntry parent, String name, TypeDescriptor desc) {
+		super(parent, name);
+
 		Preconditions.checkNotNull(parent, "Owner cannot be null");
-		Preconditions.checkNotNull(name, "Field name cannot be null");
 		Preconditions.checkNotNull(desc, "Field descriptor cannot be null");
 
-		this.parent = parent;
-		this.name = name;
 		this.desc = desc;
-	}
-
-	@Nonnull
-	@Override
-	public ClassEntry getParent() {
-		return parent;
-	}
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
-
-	@Override
-	public FieldEntry translateSelf(Translator translator, @Nullable EntryMapping mapping) {
-		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		return new FieldEntry(parent, translatedName, translator.translate(desc));
 	}
 
 	public TypeDescriptor getDesc() {
@@ -57,8 +37,20 @@ public class FieldEntry implements ChildEntry<ClassEntry> {
 	}
 
 	@Override
+	@Nonnull
+	public ClassEntry getParent() {
+		return parent;
+	}
+
+	@Override
 	public FieldEntry withParent(ClassEntry parent) {
 		return new FieldEntry(parent, this.name, this.desc);
+	}
+
+	@Override
+	protected FieldEntry translate(Translator translator, @Nullable EntryMapping mapping) {
+		String translatedName = mapping != null ? mapping.getTargetName() : name;
+		return new FieldEntry(parent, translatedName, translator.translate(desc));
 	}
 
 	@Override
@@ -76,7 +68,7 @@ public class FieldEntry implements ChildEntry<ClassEntry> {
 	}
 
 	@Override
-	public boolean shallowEquals(Entry entry) {
+	public boolean shallowEquals(Entry<?> entry) {
 		if (entry instanceof FieldEntry) {
 			FieldEntry fieldEntry = (FieldEntry) entry;
 			return fieldEntry.name.equals(name) && fieldEntry.desc.equals(desc);
@@ -85,12 +77,12 @@ public class FieldEntry implements ChildEntry<ClassEntry> {
 	}
 
 	@Override
-	public boolean canConflictWith(Entry entry) {
+	public boolean canConflictWith(Entry<?> entry) {
 		return entry instanceof FieldEntry && ((FieldEntry) entry).parent.equals(parent);
 	}
 
 	@Override
 	public String toString() {
-		return this.parent.getName() + "." + this.name + ":" + this.desc;
+		return this.parent.getFullName() + "." + this.name + ":" + this.desc;
 	}
 }

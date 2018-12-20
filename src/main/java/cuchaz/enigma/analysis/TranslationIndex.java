@@ -27,7 +27,7 @@ public class TranslationIndex {
 
 	private final ReferencedEntryPool entryPool;
 	private Map<ClassEntry, ClassEntry> superclasses;
-	private Map<Entry, DefEntry> defEntries = new HashMap<>();
+	private Map<Entry<?>, DefEntry<?>> defEntries = new HashMap<>();
 	private Multimap<ClassEntry, FieldDefEntry> fieldEntries;
 	private Multimap<ClassEntry, MethodDefEntry> methodEntries;
 	private Multimap<ClassEntry, ClassEntry> interfaces;
@@ -173,7 +173,7 @@ public class TranslationIndex {
 
 	public void getSubclassNamesRecursively(Set<String> out, ClassEntry classEntry) {
 		for (ClassEntry subclassEntry : getSubclass(classEntry)) {
-			out.add(subclassEntry.getName());
+			out.add(subclassEntry.getFullName());
 			getSubclassNamesRecursively(out, subclassEntry);
 		}
 	}
@@ -190,7 +190,7 @@ public class TranslationIndex {
 		return this.interfaces.containsValue(classEntry);
 	}
 
-	public boolean entryExists(Entry entry) {
+	public boolean entryExists(Entry<?> entry) {
 		if (entry == null) {
 			return false;
 		}
@@ -214,7 +214,7 @@ public class TranslationIndex {
 	}
 
 	@SuppressWarnings("unchecked")
-	public ClassEntry resolveEntryOwner(Entry entry) {
+	public ClassEntry resolveEntryOwner(Entry<?> entry) {
 		if (entry instanceof ClassEntry) {
 			return (ClassEntry) entry;
 		}
@@ -223,8 +223,8 @@ public class TranslationIndex {
 			return entry.getContainingClass();
 		}
 
-		if (entry instanceof ChildEntry) {
-			DefEntry def = defEntries.get(entry);
+		if (entry instanceof ParentedEntry) {
+			DefEntry<?> def = defEntries.get(entry);
 			if (def != null && (def.getAccess().isPrivate())) {
 				return null;
 			}
@@ -232,11 +232,12 @@ public class TranslationIndex {
 			// if we're protected/public/non-static, chances are we're somewhere down
 
 			// find the child of a class in our ancestry
-			List<Entry> ancestry = entry.getAncestry();
+			List<Entry<?>> ancestry = entry.getAncestry();
 			for (int i = ancestry.size() - 1; i > 0; i--) {
-				Entry child = ancestry.get(i);
-				if (child instanceof ChildEntry && ((ChildEntry) child).getParent() instanceof ClassEntry) {
-					return resolveEntryOwner((ChildEntry<ClassEntry>) child);
+				Entry<?> child = ancestry.get(i);
+				Entry<ClassEntry> cast = child.castParent(ClassEntry.class);
+				if (cast != null && !(cast instanceof ClassEntry)) {
+					return resolveChildEntryOwner(cast);
 				}
 			}
 		}
@@ -244,18 +245,18 @@ public class TranslationIndex {
 		return null;
 	}
 
-	private ClassEntry resolveEntryOwner(ChildEntry<ClassEntry> childEntry) {
-		DefEntry def = defEntries.get(childEntry);
+	private ClassEntry resolveChildEntryOwner(Entry<ClassEntry> parentedEntry) {
+		DefEntry<?> def = defEntries.get(parentedEntry);
 		if (def != null && (def.getAccess().isPrivate())) {
 			return null;
 		}
 
 		LinkedList<ClassEntry> classEntries = new LinkedList<>();
-		classEntries.add(childEntry.getContainingClass());
+		classEntries.add(parentedEntry.getContainingClass());
 
 		while (!classEntries.isEmpty()) {
 			ClassEntry parent = classEntries.remove();
-			ChildEntry<ClassEntry> cEntry = childEntry.withParent(parent);
+			Entry<ClassEntry> cEntry = parentedEntry.withParent(parent);
 
 			if (entryExists(cEntry)) {
 				def = defEntries.get(cEntry);
@@ -268,7 +269,7 @@ public class TranslationIndex {
 			if (superclass != null) {
 				classEntries.add(superclass);
 			}
-			if (childEntry instanceof MethodEntry) {
+			if (parentedEntry instanceof MethodEntry) {
 				classEntries.addAll(getInterfaces(parent));
 			}
 		}

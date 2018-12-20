@@ -2,7 +2,6 @@ package cuchaz.enigma.translation.mapping;
 
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.translation.mapping.tree.MappingTree;
-import cuchaz.enigma.translation.representation.entry.ChildEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
@@ -21,25 +20,25 @@ public class MappingPropagator {
 		this.mappings = mappings;
 	}
 
-	public void propagateAction(Entry entry, Consumer<Entry> propagator) {
+	public void propagateAction(Entry<?> entry, Consumer<Entry<?>> propagator) {
 		getPropagationTargets(entry).forEach(propagator);
 	}
 
-	public Collection<Entry> getPropagationTargets(Entry entry) {
+	public Collection<Entry<?>> getPropagationTargets(Entry<?> entry) {
 		MethodEntry relevantMethod = getRelevantMethod(entry);
 		if (relevantMethod == null || !jarIndex.containsObfMethod(relevantMethod)) {
 			return Collections.singletonList(entry);
 		}
 
-		Collection<Entry> propagationTargets = new HashSet<>();
+		Collection<Entry<?>> propagationTargets = new HashSet<>();
 		propagationTargets.add(entry);
 
 		Collection<MethodEntry> equivalentMethods = getEquivalentMethods(relevantMethod);
 		for (MethodEntry equivalentMethod : equivalentMethods) {
 			propagationTargets.add(equivalentMethod);
 
-			Collection<Entry> equivalentChildren = mappings.getChildren(equivalentMethod);
-			for (Entry equivalentChild : equivalentChildren) {
+			Collection<Entry<?>> equivalentChildren = mappings.getChildren(equivalentMethod);
+			for (Entry<?> equivalentChild : equivalentChildren) {
 				if (equivalentChild.shallowEquals(entry)) {
 					propagationTargets.add(equivalentChild);
 				}
@@ -50,17 +49,8 @@ public class MappingPropagator {
 	}
 
 	@Nullable
-	private MethodEntry getRelevantMethod(Entry entry) {
-		if (entry instanceof MethodEntry) {
-			return (MethodEntry) entry;
-		} else if (entry instanceof ChildEntry) {
-			ChildEntry<?> childEntry = (ChildEntry<?>) entry;
-			Entry parent = childEntry.getParent();
-			if (parent instanceof MethodEntry) {
-				return (MethodEntry) parent;
-			}
-		}
-		return null;
+	private MethodEntry getRelevantMethod(Entry<?> entry) {
+		return entry.findAncestor(MethodEntry.class);
 	}
 
 	private Collection<MethodEntry> getEquivalentMethods(MethodEntry method) {

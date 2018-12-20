@@ -74,7 +74,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements R
 					MethodReferenceTreeNode node = (MethodReferenceTreeNode) child;
 
 					// don't recurse into ancestor
-					Set<Entry> ancestors = Sets.newHashSet();
+					Set<Entry<?>> ancestors = Sets.newHashSet();
 					TreeNode n = node;
 					while (n.getParent() != null) {
 						n = n.getParent();

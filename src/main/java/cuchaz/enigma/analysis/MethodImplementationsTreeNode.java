@@ -53,7 +53,7 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public String toString() {
-		String className = this.entry.getParentName();
+		String className = this.entry.getParent().getFullName();
 		String methodName = this.entry.getName();
 		return className + "." + methodName + "()";
 	}
@@ -61,7 +61,7 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 	public void load(JarIndex index) {
 		// get all method implementations
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
-		for (String implementingClassName : index.getImplementingClasses(this.entry.getParentName())) {
+		for (String implementingClassName : index.getImplementingClasses(this.entry.getParent().getFullName())) {
 			MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getDesc());
 			if (index.containsObfMethod(methodEntry)) {
 				nodes.add(new MethodImplementationsTreeNode(methodEntry));

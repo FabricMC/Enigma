@@ -13,32 +13,52 @@ package cuchaz.enigma.translation.representation.entry;
 
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.Translatable;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.MappingSet;
 import cuchaz.enigma.translation.mapping.NameValidator;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface Entry extends Translatable {
+public interface Entry<P extends Entry<?>> extends Translatable {
 	String getName();
 
-	ClassEntry getContainingClass();
+	@Nullable
+	P getParent();
 
-	default List<Entry> getAncestry() {
-		List<Entry> entries = new ArrayList<>();
+	Entry<P> withParent(P parent);
+
+	boolean shallowEquals(Entry<?> entry);
+
+	boolean canConflictWith(Entry<?> entry);
+
+	@Nullable
+	default ClassEntry getContainingClass() {
+		P parent = getParent();
+		if (parent == null) {
+			return null;
+		}
+		if (parent instanceof ClassEntry) {
+			return (ClassEntry) parent;
+		}
+		return parent.getContainingClass();
+	}
+
+	default List<Entry<?>> getAncestry() {
+		P parent = getParent();
+		List<Entry<?>> entries = new ArrayList<>();
+		if (parent != null) {
+			entries.addAll(parent.getAncestry());
+		}
 		entries.add(this);
 		return entries;
 	}
 
 	@Nullable
 	@SuppressWarnings("unchecked")
-	default <E extends Entry> E findAncestor(Class<E> type) {
-		List<Entry> ancestry = getAncestry();
+	default <E extends Entry<?>> E findAncestor(Class<E> type) {
+		List<Entry<?>> ancestry = getAncestry();
 		for (int i = ancestry.size() - 1; i >= 0; i--) {
-			Entry ancestor = ancestry.get(i);
+			Entry<?> ancestor = ancestry.get(i);
 			if (type.isAssignableFrom(ancestor.getClass())) {
 				return (E) ancestor;
 			}
@@ -46,25 +66,29 @@ public interface Entry extends Translatable {
 		return null;
 	}
 
-	default <E extends Entry> Entry replaceAncestor(E target, E replacement) {
+	@SuppressWarnings("unchecked")
+	default <E extends Entry<?>> Entry<P> replaceAncestor(E target, E replacement) {
+		P parent = getParent();
 		if (equals(target)) {
-			return replacement;
+			return (Entry<P>) replacement;
 		}
-		return this;
+		if (parent == null) {
+			return this;
+		}
+		return withParent((P) parent.replaceAncestor(target, replacement));
 	}
-
-	@Override
-	default Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
-		return translate(translator, mappings.getMapping(this));
-	}
-
-	Entry translate(Translator translator, @Nullable EntryMapping mapping);
-
-	boolean shallowEquals(Entry entry);
-
-	boolean canConflictWith(Entry entry);
 
 	default void validateName(String name) throws IllegalNameException {
 		NameValidator.validateIdentifier(name);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Nullable
+	default <C extends Entry<?>> Entry<C> castParent(Class<C> parentType) {
+		P parent = getParent();
+		if (parent != null && parentType.isAssignableFrom(parent.getClass())) {
+			return (Entry<C>) this;
+		}
+		return null;
 	}
 }

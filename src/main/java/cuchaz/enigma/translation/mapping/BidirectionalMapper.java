@@ -1,6 +1,5 @@
 package cuchaz.enigma.translation.mapping;
 
-import com.strobel.core.Mapping;
 import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translatable;
@@ -47,17 +46,17 @@ public class BidirectionalMapper {
 		MappingTree<EntryMapping> inverse = new HashMappingTree<>();
 
 		// Naive approach, could operate on the nodes of the tree. However, this runs infrequently.
-		Collection<Entry> entries = tree.getAllEntries();
-		for (Entry sourceEntry : entries) {
-			Entry targetEntry = translator.translate(sourceEntry);
+		Collection<Entry<?>> entries = tree.getAllEntries();
+		for (Entry<?> sourceEntry : entries) {
+			Entry<?> targetEntry = translator.translate(sourceEntry);
 			inverse.insert(targetEntry, new EntryMapping(sourceEntry.getName()));
 		}
 
 		return inverse;
 	}
 
-	public <E extends Entry> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		Collection<Entry> targets = propagator.getPropagationTargets(obfuscatedEntry);
+	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
+		Collection<Entry<?>> targets = propagator.getPropagationTargets(obfuscatedEntry);
 		if (deobfMapping != null) {
 			validator.validateRename(targets, deobfMapping.getTargetName());
 		}
@@ -65,27 +64,27 @@ public class BidirectionalMapper {
 		targets.forEach(target -> setObfToDeobf(target, deobfMapping));
 	}
 
-	public <E extends Entry> void mapFromDeobf(E deobfuscatedEntry, @Nullable EntryMapping deobfMapping) {
+	public <E extends Entry<?>> void mapFromDeobf(E deobfuscatedEntry, @Nullable EntryMapping deobfMapping) {
 		E obfuscatedEntry = obfuscate(deobfuscatedEntry);
 		mapFromObf(obfuscatedEntry, deobfMapping);
 	}
 
-	public <E extends Entry> void propagateFromObf(E obfuscatedEntry) {
+	public <E extends Entry<?>> void propagateFromObf(E obfuscatedEntry) {
 		EntryMapping mapping = getDeobfMapping(obfuscatedEntry);
 
-		Collection<Entry> targets = propagator.getPropagationTargets(obfuscatedEntry);
+		Collection<Entry<?>> targets = propagator.getPropagationTargets(obfuscatedEntry);
 		targets.forEach(target -> mapFromObf(target, mapping));
 	}
 
-	public void removeByObf(Entry obfuscatedEntry) {
+	public void removeByObf(Entry<?> obfuscatedEntry) {
 		mapFromObf(obfuscatedEntry, null);
 	}
 
-	public void removeByDeobf(Entry deobfuscatedEntry) {
+	public void removeByDeobf(Entry<?> deobfuscatedEntry) {
 		mapFromObf(obfuscate(deobfuscatedEntry), null);
 	}
 
-	private <E extends Entry> void setObfToDeobf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
+	private <E extends Entry<?>> void setObfToDeobf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
 		E prevDeobf = deobfuscate(obfuscatedEntry);
 		obfToDeobf.insert(obfuscatedEntry, deobfMapping);
 
@@ -98,7 +97,7 @@ public class BidirectionalMapper {
 		MappingNode<EntryMapping> node = deobfToObf.findNode(prevDeobf);
 		if (node != null) {
 			for (MappingNode<EntryMapping> child : node.getNodesRecursively()) {
-				Entry entry = child.getEntry();
+				Entry<?> entry = child.getEntry();
 				EntryMapping mapping = new EntryMapping(obfuscate(entry).getName());
 				deobfToObf.insert(entry.replaceAncestor(prevDeobf, newDeobf), mapping);
 				deobfToObf.remove(entry);
@@ -109,20 +108,20 @@ public class BidirectionalMapper {
 	}
 
 	@Nullable
-	public EntryMapping getDeobfMapping(Entry entry) {
+	public EntryMapping getDeobfMapping(Entry<?> entry) {
 		return obfToDeobf.getMapping(entry);
 	}
 
 	@Nullable
-	public EntryMapping getObfMapping(Entry entry) {
+	public EntryMapping getObfMapping(Entry<?> entry) {
 		return deobfToObf.getMapping(entry);
 	}
 
-	public boolean hasDeobfMapping(Entry obfEntry) {
+	public boolean hasDeobfMapping(Entry<?> obfEntry) {
 		return obfToDeobf.hasMapping(obfEntry);
 	}
 
-	public boolean hasObfMapping(Entry deobfEntry) {
+	public boolean hasObfMapping(Entry<?> deobfEntry) {
 		return deobfToObf.hasMapping(deobfEntry);
 	}
 
@@ -142,19 +141,19 @@ public class BidirectionalMapper {
 		return obfuscator;
 	}
 
-	public Collection<Entry> getObfEntries() {
+	public Collection<Entry<?>> getObfEntries() {
 		return obfToDeobf.getAllEntries();
 	}
 
-	public Collection<Entry> getDeobfEntries() {
+	public Collection<Entry<?>> getDeobfEntries() {
 		return deobfToObf.getAllEntries();
 	}
 
-	public Collection<Entry> getObfChildren(Entry obfuscatedEntry) {
+	public Collection<Entry<?>> getObfChildren(Entry<?> obfuscatedEntry) {
 		return obfToDeobf.getChildren(obfuscatedEntry);
 	}
 
-	public Collection<Entry> getDeobfChildren(Entry deobfuscatedEntry) {
+	public Collection<Entry<?>> getDeobfChildren(Entry<?> deobfuscatedEntry) {
 		return deobfToObf.getChildren(deobfuscatedEntry);
 	}
 

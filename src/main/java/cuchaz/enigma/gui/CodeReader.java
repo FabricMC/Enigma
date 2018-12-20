@@ -152,6 +152,6 @@ public class CodeReader extends JEditorPane {
 	}
 
 	public interface SelectionListener {
-		void onSelect(EntryReference<Entry, Entry> reference);
+		void onSelect(EntryReference<Entry<?>, Entry<?>> reference);
 	}
 }

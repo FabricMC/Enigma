@@ -13,10 +13,8 @@ import javax.annotation.Nullable;
  * Created by Thog
  * 19/10/2016
  */
-public class LocalVariableEntry implements ChildEntry<MethodEntry> {
+public class LocalVariableEntry extends ParentedEntry<MethodEntry> {
 
-	protected final MethodEntry parent;
-	protected final String name;
 	protected final int index;
 	protected final boolean parameter;
 
@@ -26,12 +24,11 @@ public class LocalVariableEntry implements ChildEntry<MethodEntry> {
 	}
 
 	public LocalVariableEntry(MethodEntry parent, int index, String name, boolean parameter) {
+		super(parent, name);
+
 		Preconditions.checkNotNull(parent, "Variable owner cannot be null");
-		Preconditions.checkNotNull(name, "Variable name cannot be null");
 		Preconditions.checkArgument(index >= 0, "Index must be positive");
 
-		this.parent = parent;
-		this.name = name;
 		this.index = index;
 		this.parameter = parameter;
 	}
@@ -56,7 +53,7 @@ public class LocalVariableEntry implements ChildEntry<MethodEntry> {
 	}
 
 	@Override
-	public LocalVariableEntry translateSelf(Translator translator, @Nullable EntryMapping mapping) {
+	public LocalVariableEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		return new LocalVariableEntry(parent, index, translatedName, parameter);
 	}
@@ -81,12 +78,12 @@ public class LocalVariableEntry implements ChildEntry<MethodEntry> {
 	}
 
 	@Override
-	public boolean shallowEquals(Entry entry) {
+	public boolean shallowEquals(Entry<?> entry) {
 		return entry instanceof LocalVariableEntry && ((LocalVariableEntry) entry).index == index;
 	}
 
 	@Override
-	public boolean canConflictWith(Entry entry) {
+	public boolean canConflictWith(Entry<?> entry) {
 		return entry instanceof LocalVariableEntry && ((LocalVariableEntry) entry).parent.equals(parent);
 	}
 

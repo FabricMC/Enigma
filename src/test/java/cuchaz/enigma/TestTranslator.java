@@ -138,7 +138,7 @@ public class TestTranslator {
 		assertMapping(newMethod("i$b", "a", "()Ljava/lang/Object;"), newMethod("deobf/I_Generics$B_Generic", "m1", "()Ljava/lang/Object;"));
 	}
 
-	private void assertMapping(Entry obf, Entry deobf) {
+	private void assertMapping(Entry<?> obf, Entry<?> deobf) {
 		//assertThat(deobfTranslator.translateEntry(obf), is(deobf));
 		//assertThat(obfTranslator.translateEntry(deobf), is(obf));
 

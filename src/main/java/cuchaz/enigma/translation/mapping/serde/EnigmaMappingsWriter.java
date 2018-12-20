@@ -11,8 +11,6 @@
 
 package cuchaz.enigma.translation.mapping.serde;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
@@ -24,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 
 // TODO: sorted mappings in all writers
@@ -32,12 +29,11 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
 		public void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException {
-			Multimap<ClassEntry, ClassEntry> innerClasses = collectInnerClasses(mappings);
 			try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
 				for (MappingNode<EntryMapping> node : mappings) {
 					if (node.getEntry() instanceof ClassEntry) {
 						ClassEntry classEntry = (ClassEntry) node.getEntry();
-						writeRoot(writer, mappings, innerClasses, classEntry);
+						writeRoot(writer, mappings, classEntry);
 					}
 				}
 			}
@@ -46,12 +42,10 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	DIRECTORY {
 		@Override
 		public void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException {
-			Multimap<ClassEntry, ClassEntry> innerClasses = collectInnerClasses(mappings);
-
 			applyDeletions(delta.getDeletions(), path);
 
 			for (MappingNode<EntryMapping> node : delta.getAdditions()) {
-				Entry entry = node.getEntry();
+				Entry<?> entry = node.getEntry();
 				if (entry instanceof ClassEntry && !((ClassEntry) entry).isInnerClass()) {
 					ClassEntry classEntry = (ClassEntry) entry;
 
@@ -60,7 +54,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 					Files.createDirectories(classPath.getParent());
 
 					try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(classPath))) {
-						writeRoot(writer, mappings, innerClasses, classEntry);
+						writeRoot(writer, mappings, classEntry);
 					}
 				}
 			}
@@ -68,7 +62,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 		private void applyDeletions(MappingTree<EntryMapping> deletions, Path path) throws IOException {
 			for (MappingNode<EntryMapping> node : deletions) {
-				Entry entry = node.getEntry();
+				Entry<?> entry = node.getEntry();
 				if (entry instanceof ClassEntry && !((ClassEntry) entry).isInnerClass()) {
 					Path classPath = resolve(path, (ClassEntry) entry);
 					Files.deleteIfExists(classPath);
@@ -81,33 +75,16 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 	};
 
-	protected Multimap<ClassEntry, ClassEntry> collectInnerClasses(MappingTree<EntryMapping> mappings) {
-		Multimap<ClassEntry, ClassEntry> innerClasses = HashMultimap.create();
-
-		for (MappingNode<EntryMapping> node : mappings) {
-			Entry entry = node.getEntry();
-			if (entry instanceof ClassEntry) {
-				ClassEntry classEntry = (ClassEntry) entry;
-				if (classEntry.isInnerClass()) {
-					innerClasses.put(classEntry.getOuterClass(), classEntry);
-				}
-			}
-		}
-
-		return innerClasses;
-	}
-
-	protected void writeRoot(PrintWriter writer, MappingTree<EntryMapping> mappings, Multimap<ClassEntry, ClassEntry> innerClasses, ClassEntry classEntry) {
-		Collection<Entry> children = new ArrayList<>(mappings.getChildren(classEntry));
-		children.addAll(innerClasses.get(classEntry));
+	protected void writeRoot(PrintWriter writer, MappingTree<EntryMapping> mappings, ClassEntry classEntry) {
+		Collection<Entry<?>> children = mappings.getChildren(classEntry);
 
 		writer.println(writeClass(classEntry, mappings.getMapping(classEntry)));
-		for (Entry child : children) {
+		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
 		}
 	}
 
-	protected void writeEntry(PrintWriter writer, MappingTree<EntryMapping> mappings, Entry entry, int depth) {
+	protected void writeEntry(PrintWriter writer, MappingTree<EntryMapping> mappings, Entry<?> entry, int depth) {
 		MappingNode<EntryMapping> node = mappings.findNode(entry);
 		if (node == null) {
 			return;
@@ -128,7 +105,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			writer.println(indent(line, depth));
 		}
 
-		for (Entry child : node.getChildren()) {
+		for (Entry<?> child : node.getChildren()) {
 			writeEntry(writer, mappings, child, depth + 1);
 		}
 	}

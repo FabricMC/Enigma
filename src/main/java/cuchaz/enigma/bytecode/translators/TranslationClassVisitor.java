@@ -40,9 +40,9 @@ public class TranslationClassVisitor extends ClassVisitor {
 		ClassEntry superEntry = translator.translate(entryPool.getClass(superName));
 		String[] translatedInterfaces = new String[interfaces.length];
 		for (int i = 0; i < interfaces.length; i++) {
-			translatedInterfaces[i] = translator.translate(entryPool.getClass(interfaces[i])).getName();
+			translatedInterfaces[i] = translator.translate(entryPool.getClass(interfaces[i])).getFullName();
 		}
-		super.visit(version, translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getSignature().toString(), superEntry.getName(), translatedInterfaces);
+		super.visit(version, translatedEntry.getAccess().getFlags(), translatedEntry.getFullName(), translatedEntry.getSignature().toString(), superEntry.getFullName(), translatedInterfaces);
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class TranslationClassVisitor extends ClassVisitor {
 		}
 		String[] translatedExceptions = new String[exceptions.length];
 		for (int i = 0; i < exceptions.length; i++) {
-			translatedExceptions[i] = translator.translate(entryPool.getClass(exceptions[i])).getName();
+			translatedExceptions[i] = translator.translate(entryPool.getClass(exceptions[i])).getFullName();
 		}
 		MethodVisitor mv = super.visitMethod(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedEntry.getSignature().toString(), translatedExceptions);
 		return new TranslationMethodVisitor(translator, obfClassEntry, entry, api, mv);
@@ -71,16 +71,15 @@ public class TranslationClassVisitor extends ClassVisitor {
 	@Override
 	public void visitInnerClass(String name, String outerName, String innerName, int access) {
 		ClassDefEntry translatedEntry = translator.translate(new ClassDefEntry(name, obfSignature, new AccessFlags(access)));
-		String translatedName = translatedEntry.getName();
-		int separatorIndex = translatedName.lastIndexOf("$");
-		String parentName = translatedName.substring(0, separatorIndex);
-		String childName = translatedName.substring(separatorIndex + 1);
-
-		ClassEntry outerEntry = translator.translate(entryPool.getClass(parentName));
+		ClassEntry translatedOuterClass = translatedEntry.getOuterClass();
+		if (translatedOuterClass == null) {
+			throw new IllegalStateException("Translated inner class did not have outer class");
+		}
 
 		// Anonymous classes do not specify an outer or inner name. As we do not translate from the given parameter, ignore if the input is null
-		String translatedOuterName = outerName != null ? outerEntry.getName() : null;
-		String translatedInnerName = innerName != null ? childName : null;
+		String translatedName = translatedEntry.getFullName();
+		String translatedOuterName = outerName != null ? translatedOuterClass.getFullName() : null;
+		String translatedInnerName = innerName != null ? translatedEntry.getName() : null;
 		super.visitInnerClass(translatedName, translatedOuterName, translatedInnerName, translatedEntry.getAccess().getFlags());
 	}
 
@@ -88,7 +87,7 @@ public class TranslationClassVisitor extends ClassVisitor {
 	public void visitOuterClass(String owner, String name, String desc) {
 		if (desc != null) {
 			MethodEntry translatedEntry = translator.translate(new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc)));
-			super.visitOuterClass(translatedEntry.getParentName(), translatedEntry.getName(), translatedEntry.getDesc().toString());
+			super.visitOuterClass(translatedEntry.getParent().getFullName(), translatedEntry.getName(), translatedEntry.getDesc().toString());
 		} else {
 			super.visitOuterClass(owner, name, desc);
 		}

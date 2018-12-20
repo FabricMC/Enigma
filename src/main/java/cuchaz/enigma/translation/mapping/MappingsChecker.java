@@ -32,7 +32,7 @@ public class MappingsChecker {
 
 	public Dropped dropBrokenMappings() {
 		Dropped dropped = new Dropped();
-		for (Entry entry : mapper.getObfEntries()) {
+		for (Entry<?> entry : mapper.getObfEntries()) {
 			if (entry instanceof ClassEntry) {
 				tryDropClass(dropped, (ClassEntry) entry);
 			} else if (entry instanceof FieldEntry) {
@@ -72,7 +72,7 @@ public class MappingsChecker {
 	}
 
 	@Nullable
-	private EntryMapping dropMapping(Entry entry) {
+	private EntryMapping dropMapping(Entry<?> entry) {
 		EntryMapping mapping = mapper.getDeobfMapping(entry);
 		if (mapping != null) {
 			mapper.removeByObf(entry);

@@ -60,7 +60,7 @@ public class ClassReferenceTreeNode extends DefaultMutableTreeNode
 			return String.format("%s (%s)", this.deobfuscatingTranslator.translate(this.reference.context),
 				this.access);
 		}
-		return this.deobfuscatingTranslator.translate(this.entry).getName();
+		return this.deobfuscatingTranslator.translate(this.entry).getFullName();
 	}
 
 	public void load(JarIndex index, boolean recurse) {
@@ -75,7 +75,7 @@ public class ClassReferenceTreeNode extends DefaultMutableTreeNode
 					ClassReferenceTreeNode node = (ClassReferenceTreeNode) child;
 
 					// don't recurse into ancestor
-					Set<Entry> ancestors = Sets.newHashSet();
+					Set<Entry<?>> ancestors = Sets.newHashSet();
 					TreeNode n = node;
 					while (n.getParent() != null) {
 						n = n.getParent();

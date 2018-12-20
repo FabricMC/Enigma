@@ -23,7 +23,7 @@ import cuchaz.enigma.utils.Utils;
 import java.util.Arrays;
 import java.util.List;
 
-public class EntryReference<E extends Entry, C extends Entry> implements Translatable {
+public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements Translatable {
 
 	private static final List<String> CONSTRUCTOR_NON_NAMES = Arrays.asList("this", "super", "static");
 	public E entry;
@@ -66,7 +66,7 @@ public class EntryReference<E extends Entry, C extends Entry> implements Transla
 		return this.sourceName;
 	}
 
-	public Entry getNameableEntry() {
+	public Entry<?> getNameableEntry() {
 		if (entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor()) {
 			// renaming a constructor really means renaming the class
 			return entry.getContainingClass();

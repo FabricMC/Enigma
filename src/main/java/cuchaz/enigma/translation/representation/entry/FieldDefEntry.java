@@ -20,7 +20,7 @@ import cuchaz.enigma.translation.representation.TypeDescriptor;
 
 import javax.annotation.Nullable;
 
-public class FieldDefEntry extends FieldEntry implements DefEntry {
+public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;
 	private final Signature signature;
 
@@ -42,7 +42,7 @@ public class FieldDefEntry extends FieldEntry implements DefEntry {
 	}
 
 	@Override
-	public FieldDefEntry translateSelf(Translator translator, @Nullable EntryMapping mapping) {
+	public FieldDefEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		TypeDescriptor translatedDesc = translator.translate(desc);
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;

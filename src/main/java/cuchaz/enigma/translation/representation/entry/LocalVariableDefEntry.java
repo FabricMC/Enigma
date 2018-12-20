@@ -27,7 +27,7 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 	}
 
 	@Override
-	public LocalVariableDefEntry translateSelf(Translator translator, @Nullable EntryMapping mapping) {
+	public LocalVariableDefEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		TypeDescriptor translatedDesc = translator.translate(desc);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		return new LocalVariableDefEntry(parent, index, translatedName, parameter, translatedDesc);

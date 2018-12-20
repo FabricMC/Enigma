@@ -242,16 +242,20 @@ public class Deobfuscator {
 
 		// resolve all the classes in the source references
 		for (Token token : index.referenceTokens()) {
-			EntryReference<Entry, Entry> deobfReference = index.getDeobfReference(token);
+			EntryReference<Entry<?>, Entry<?>> deobfReference = index.getDeobfReference(token);
 
 			// get the obfuscated entry
-			Entry obfEntry = obfuscate(deobfReference.entry);
+			Entry<?> obfEntry = obfuscate(deobfReference.entry);
 
 			// try to resolve the class
 			ClassEntry resolvedObfClassEntry = this.jarIndex.getTranslationIndex().resolveEntryOwner(obfEntry);
 			if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(obfEntry.getContainingClass())) {
+				Entry<?> l = obfEntry;
 				// change the class of the entry
 				obfEntry = obfEntry.replaceAncestor(obfEntry.getContainingClass(), resolvedObfClassEntry);
+				if (obfEntry.toString().equals("c$a$a")) {
+					obfEntry = l.replaceAncestor(l.getContainingClass(), resolvedObfClassEntry);
+				}
 
 				// save the new deobfuscated reference
 				deobfReference.entry = deobfuscate(obfEntry);
@@ -360,10 +364,10 @@ public class Deobfuscator {
 	public void rebuildMethodNames(ProgressListener progressListener) {
 		final AtomicInteger progress = new AtomicInteger();
 
-		Collection<Entry> rootEntries = getMapper().getObfEntries();
+		Collection<Entry<?>> rootEntries = getMapper().getObfEntries();
 		progressListener.init(rootEntries.size() * 2, "Rebuilding method names");
 
-		Map<Entry, Collection<Entry>> providerEntries = new ConcurrentHashMap<>();
+		Map<Entry, Collection<Entry<?>>> providerEntries = new ConcurrentHashMap<>();
 		rootEntries.parallelStream().forEach(classEntry -> {
 			progressListener.onProgress(progress.getAndIncrement(), mapper.deobfuscate(classEntry).getName());
 			providerEntries.put(classEntry, collectProviderEntries(classEntry));
@@ -375,10 +379,10 @@ public class Deobfuscator {
 		});
 	}
 
-	private Collection<Entry> collectProviderEntries(Entry entry) {
-		Collection<Entry> providerEntries = new ArrayList<>();
+	private Collection<Entry<?>> collectProviderEntries(Entry<?> entry) {
+		Collection<Entry<?>> providerEntries = new ArrayList<>();
 
-		for (Entry child : mapper.getObfChildren(entry)) {
+		for (Entry<?> child : mapper.getObfChildren(entry)) {
 			if (!hasDeobfuscatedName(child)) {
 				continue;
 			}
@@ -441,7 +445,7 @@ public class Deobfuscator {
 		return mapper.deobfuscate(translatable);
 	}
 
-	public AccessModifier getModifier(Entry entry) {
+	public AccessModifier getModifier(Entry<?> entry) {
 		EntryMapping mapping = mapper.getDeobfMapping(entry);
 		if (mapping == null) {
 			return AccessModifier.UNCHANGED;
@@ -449,7 +453,7 @@ public class Deobfuscator {
 		return mapping.getAccessModifier();
 	}
 
-	public void changeModifier(Entry entry, AccessModifier modifier) {
+	public void changeModifier(Entry<?> entry, AccessModifier modifier) {
 		EntryMapping mapping = mapper.getDeobfMapping(entry);
 		if (mapping != null) {
 			mapper.mapFromObf(entry, new EntryMapping(mapping.getTargetName(), modifier));
@@ -458,7 +462,7 @@ public class Deobfuscator {
 		}
 	}
 
-	public boolean isObfuscatedIdentifier(Entry obfEntry) {
+	public boolean isObfuscatedIdentifier(Entry<?> obfEntry) {
 		if (obfEntry instanceof MethodEntry) {
 			// HACKHACK: Object methods are not obfuscated identifiers
 			MethodEntry obfMethodEntry = (MethodEntry) obfEntry;
@@ -492,23 +496,23 @@ public class Deobfuscator {
 		return this.jarIndex.containsObfEntry(obfEntry);
 	}
 
-	public boolean isRenameable(EntryReference<Entry, Entry> obfReference) {
+	public boolean isRenameable(EntryReference<Entry<?>, Entry<?>> obfReference) {
 		return obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry());
 	}
 
-	public boolean hasDeobfuscatedName(Entry obfEntry) {
+	public boolean hasDeobfuscatedName(Entry<?> obfEntry) {
 		return mapper.hasDeobfMapping(obfEntry);
 	}
 
-	public void rename(Entry obfEntry, String newName) {
+	public void rename(Entry<?> obfEntry, String newName) {
 		mapper.mapFromObf(obfEntry, new EntryMapping(newName));
 	}
 
-	public void removeMapping(Entry obfEntry) {
+	public void removeMapping(Entry<?> obfEntry) {
 		mapper.removeByObf(obfEntry);
 	}
 
-	public void markAsDeobfuscated(Entry obfEntry) {
+	public void markAsDeobfuscated(Entry<?> obfEntry) {
 		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()));
 	}
 

@@ -19,12 +19,16 @@ import cuchaz.enigma.translation.representation.Signature;
 
 import javax.annotation.Nullable;
 
-public class ClassDefEntry extends ClassEntry implements DefEntry {
+public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;
 	private final Signature signature;
 
 	public ClassDefEntry(String className, Signature signature, AccessFlags access) {
-		super(className);
+		this(getOuterClass(className), getInnerName(className), signature, access);
+	}
+
+	public ClassDefEntry(ClassEntry parent, String className, Signature signature, AccessFlags access) {
+		super(parent, className);
 		Preconditions.checkNotNull(signature, "Class signature cannot be null");
 		Preconditions.checkNotNull(access, "Class access cannot be null");
 		this.signature = signature;
@@ -45,11 +49,11 @@ public class ClassDefEntry extends ClassEntry implements DefEntry {
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		AccessFlags translatedAccess = mapping != null ? mapping.getAccessModifier().transform(access) : access;
-		ClassDefEntry translatedClass = new ClassDefEntry(translatedName, translatedSignature, translatedAccess);
-		if (isInnerClass()) {
-			ClassEntry outerClass = translator.translate(getOuterClass());
-			return new ClassDefEntry(outerClass.name + "$" + translatedClass.getSimpleName(), translatedSignature, translatedAccess);
-		}
-		return translatedClass;
+		return new ClassDefEntry(parent, translatedName, translatedSignature, translatedAccess);
+	}
+
+	@Override
+	public ClassDefEntry withParent(ClassEntry parent) {
+		return new ClassDefEntry(parent, name, signature, access);
 	}
 }

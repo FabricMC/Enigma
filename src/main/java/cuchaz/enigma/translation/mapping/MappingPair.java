@@ -4,7 +4,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 
-public class MappingPair<E extends Entry, M> {
+public class MappingPair<E extends Entry<?>, M> {
 	private final E entry;
 	private final M mapping;
 

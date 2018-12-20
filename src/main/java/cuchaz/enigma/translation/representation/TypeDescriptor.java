@@ -192,7 +192,7 @@ public class TypeDescriptor implements Translatable {
 	public TypeDescriptor remap(Function<String, String> remapper) {
 		String desc = this.desc;
 		if (isType() || (isArray() && containsType())) {
-			String replacedName = remapper.apply(this.getTypeEntry().getName());
+			String replacedName = remapper.apply(this.getTypeEntry().getFullName());
 			if (replacedName != null) {
 				if (this.isType()) {
 					desc = "L" + replacedName + ";";
@@ -228,7 +228,7 @@ public class TypeDescriptor implements Translatable {
 
 	@Override
 	public Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
-		return remap(name -> translator.translate(new ClassEntry(name)).getName());
+		return remap(name -> translator.translate(new ClassEntry(name)).getFullName());
 	}
 
 	public enum Primitive {

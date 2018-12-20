@@ -13,7 +13,7 @@ package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-public interface ReferenceTreeNode<E extends Entry, C extends Entry> {
+public interface ReferenceTreeNode<E extends Entry<?>, C extends Entry<?>> {
 	E getEntry();
 
 	EntryReference<E, C> getReference();

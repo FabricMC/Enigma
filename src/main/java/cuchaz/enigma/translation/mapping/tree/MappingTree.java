@@ -7,10 +7,10 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 public interface MappingTree<M> extends MappingSet<M>, Iterable<MappingNode<M>> {
-	Collection<Entry> getChildren(Entry entry);
+	Collection<Entry<?>> getChildren(Entry<?> entry);
 
-	Collection<Entry> getSiblings(Entry entry);
+	Collection<Entry<?>> getSiblings(Entry<?> entry);
 
 	@Nullable
-	MappingNode<M> findNode(Entry entry);
+	MappingNode<M> findNode(Entry<?> entry);
 }

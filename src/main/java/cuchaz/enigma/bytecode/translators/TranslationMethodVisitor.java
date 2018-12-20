@@ -31,14 +31,14 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 		FieldEntry entry = new FieldEntry(new ClassEntry(owner), name, new TypeDescriptor(desc));
 		FieldEntry translatedEntry = translator.translate(entry);
-		super.visitFieldInsn(opcode, translatedEntry.getParentName(), translatedEntry.getName(), translatedEntry.getDesc().toString());
+		super.visitFieldInsn(opcode, translatedEntry.getParent().getFullName(), translatedEntry.getName(), translatedEntry.getDesc().toString());
 	}
 
 	@Override
 	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
 		MethodEntry entry = new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc));
 		MethodEntry translatedEntry = translator.translate(entry);
-		super.visitMethodInsn(opcode, translatedEntry.getParentName(), translatedEntry.getName(), translatedEntry.getDesc().toString(), itf);
+		super.visitMethodInsn(opcode, translatedEntry.getParent().getFullName(), translatedEntry.getName(), translatedEntry.getDesc().toString(), itf);
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			Object object = array[i];
 			if (object instanceof String) {
 				String type = (String) object;
-				array[i] = translator.translate(new ClassEntry(type)).getName();
+				array[i] = translator.translate(new ClassEntry(type)).getFullName();
 			}
 		}
 		return array;
@@ -120,7 +120,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	@Override
 	public void visitTypeInsn(int opcode, String type) {
 		ClassEntry translatedEntry = translator.translate(new ClassEntry(type));
-		super.visitTypeInsn(opcode, translatedEntry.getName());
+		super.visitTypeInsn(opcode, translatedEntry.getFullName());
 	}
 
 	@Override
@@ -147,7 +147,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
 		if (type != null) {
 			ClassEntry translatedEntry = translator.translate(new ClassEntry(type));
-			super.visitTryCatchBlock(start, end, handler, translatedEntry.getName());
+			super.visitTryCatchBlock(start, end, handler, translatedEntry.getFullName());
 		} else {
 			super.visitTryCatchBlock(start, end, handler, type);
 		}

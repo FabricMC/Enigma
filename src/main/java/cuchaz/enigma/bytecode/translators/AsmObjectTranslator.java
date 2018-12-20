@@ -14,7 +14,7 @@ public class AsmObjectTranslator {
 		switch (type.getSort()) {
 			case Type.OBJECT: {
 				ClassEntry classEntry = new ClassEntry(type.getInternalName());
-				return Type.getObjectType(translator.translate(classEntry).getName());
+				return Type.getObjectType(translator.translate(classEntry).getFullName());
 			}
 			case Type.ARRAY: {
 				TypeDescriptor descriptor = new TypeDescriptor(descString);
@@ -32,7 +32,7 @@ public class AsmObjectTranslator {
 		MethodEntry entry = new MethodEntry(new ClassEntry(handle.getOwner()), handle.getName(), new MethodDescriptor(handle.getDesc()));
 		MethodEntry translatedMethod = translator.translate(entry);
 		ClassEntry ownerClass = translatedMethod.getParent();
-		return new Handle(handle.getTag(), ownerClass.getName(), translatedMethod.getName(), translatedMethod.getDesc().toString(), handle.isInterface());
+		return new Handle(handle.getTag(), ownerClass.getFullName(), translatedMethod.getName(), translatedMethod.getDesc().toString(), handle.isInterface());
 	}
 
 	public static Object translateValue(Translator translator, Object value) {

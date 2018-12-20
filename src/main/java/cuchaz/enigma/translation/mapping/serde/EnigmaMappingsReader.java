@@ -52,7 +52,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 	protected void readFile(Path path, MappingTree<EntryMapping> mappings) throws IOException, MappingParseException {
 		List<String> lines = Files.readAllLines(path, Charsets.UTF_8);
-		Deque<Entry> mappingStack = new ArrayDeque<>();
+		Deque<Entry<?>> mappingStack = new ArrayDeque<>();
 
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
 			String line = lines.get(lineNumber);
@@ -111,7 +111,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		return indent;
 	}
 
-	private MappingPair<?, EntryMapping> parseLine(@Nullable Entry parent, String line) {
+	private MappingPair<?, EntryMapping> parseLine(@Nullable Entry<?> parent, String line) {
 		String[] tokens = line.trim().split("\\s");
 		String keyToken = tokens[0].toLowerCase(Locale.ROOT);
 
@@ -129,9 +129,15 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		}
 	}
 
-	private MappingPair<ClassEntry, EntryMapping> parseClass(@Nullable Entry parent, String[] tokens) {
-		String obfuscatedName = tokens[1];
-		ClassEntry obfuscatedEntry = new ClassEntry(obfuscatedName);
+	private MappingPair<ClassEntry, EntryMapping> parseClass(@Nullable Entry<?> parent, String[] tokens) {
+		String obfuscatedName = ClassEntry.getInnerName(tokens[1]);
+		ClassEntry obfuscatedEntry;
+		if (parent instanceof ClassEntry) {
+			obfuscatedEntry = new ClassEntry((ClassEntry) parent, obfuscatedName);
+		} else {
+			obfuscatedEntry = new ClassEntry(obfuscatedName);
+		}
+
 		String mapping = obfuscatedName;
 		AccessModifier modifier = AccessModifier.UNCHANGED;
 
@@ -154,7 +160,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		}
 	}
 
-	private MappingPair<FieldEntry, EntryMapping> parseField(@Nullable Entry parent, String[] tokens) {
+	private MappingPair<FieldEntry, EntryMapping> parseField(@Nullable Entry<?> parent, String[] tokens) {
 		if (!(parent instanceof ClassEntry)) {
 			throw new RuntimeException("Field must be a child of a class!");
 		}
@@ -191,7 +197,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		}
 	}
 
-	private MappingPair<MethodEntry, EntryMapping> parseMethod(@Nullable Entry parent, String[] tokens) {
+	private MappingPair<MethodEntry, EntryMapping> parseMethod(@Nullable Entry<?> parent, String[] tokens) {
 		if (!(parent instanceof ClassEntry)) {
 			throw new RuntimeException("Method must be a child of a class!");
 		}
@@ -230,7 +236,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		}
 	}
 
-	private MappingPair<LocalVariableEntry, EntryMapping> parseArgument(@Nullable Entry parent, String[] tokens) {
+	private MappingPair<LocalVariableEntry, EntryMapping> parseArgument(@Nullable Entry<?> parent, String[] tokens) {
 		if (!(parent instanceof MethodEntry)) {
 			throw new RuntimeException("Method arg must be a child of a method!");
 		}

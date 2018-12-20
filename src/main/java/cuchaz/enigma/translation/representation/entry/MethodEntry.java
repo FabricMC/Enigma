@@ -20,31 +20,17 @@ import cuchaz.enigma.utils.Utils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class MethodEntry implements ChildEntry<ClassEntry> {
+public class MethodEntry extends ParentedEntry<ClassEntry> {
 
-	protected final ClassEntry parent;
-	protected final String name;
 	protected final MethodDescriptor descriptor;
 
 	public MethodEntry(ClassEntry parent, String name, MethodDescriptor descriptor) {
+		super(parent, name);
+
 		Preconditions.checkNotNull(parent, "Parent cannot be null");
-		Preconditions.checkNotNull(name, "Method name cannot be null");
 		Preconditions.checkNotNull(descriptor, "Method descriptor cannot be null");
 
-		this.parent = parent;
-		this.name = name;
 		this.descriptor = descriptor;
-	}
-
-	@Nonnull
-	@Override
-	public ClassEntry getParent() {
-		return this.parent;
-	}
-
-	@Override
-	public String getName() {
-		return this.name;
 	}
 
 	public MethodDescriptor getDesc() {
@@ -56,14 +42,20 @@ public class MethodEntry implements ChildEntry<ClassEntry> {
 	}
 
 	@Override
-	public MethodEntry translateSelf(Translator translator, @Nullable EntryMapping mapping) {
+	@Nonnull
+	public ClassEntry getParent() {
+		return parent;
+	}
+
+	@Override
+	public MethodEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		return new MethodEntry(parent, translatedName, translator.translate(descriptor));
 	}
 
 	@Override
 	public MethodEntry withParent(ClassEntry parent) {
-		return new MethodEntry(new ClassEntry(parent.getName()), name, descriptor);
+		return new MethodEntry(new ClassEntry(parent.getFullName()), name, descriptor);
 	}
 
 	@Override
@@ -81,7 +73,7 @@ public class MethodEntry implements ChildEntry<ClassEntry> {
 	}
 
 	@Override
-	public boolean shallowEquals(Entry entry) {
+	public boolean shallowEquals(Entry<?> entry) {
 		if (entry instanceof MethodEntry) {
 			MethodEntry methodEntry = (MethodEntry) entry;
 			return methodEntry.name.equals(name) && methodEntry.descriptor.equals(descriptor);
@@ -90,7 +82,7 @@ public class MethodEntry implements ChildEntry<ClassEntry> {
 	}
 
 	@Override
-	public boolean canConflictWith(Entry entry) {
+	public boolean canConflictWith(Entry<?> entry) {
 		if (entry instanceof MethodEntry) {
 			MethodEntry methodEntry = (MethodEntry) entry;
 			return methodEntry.parent.equals(parent) && methodEntry.descriptor.equals(descriptor);
@@ -100,6 +92,6 @@ public class MethodEntry implements ChildEntry<ClassEntry> {
 
 	@Override
 	public String toString() {
-		return this.parent.getName() + "." + this.name + this.descriptor;
+		return this.parent.getFullName() + "." + this.name + this.descriptor;
 	}
 }

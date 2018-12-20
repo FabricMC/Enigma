@@ -29,9 +29,9 @@ public class SourceIndex {
 	private static Pattern ANONYMOUS_INNER = Pattern.compile("\\$\\d+$");
 
 	private String source;
-	private TreeMap<Token, EntryReference<Entry, Entry>> tokenToReference;
-	private Multimap<EntryReference<Entry, Entry>, Token> referenceToTokens;
-	private Map<Entry, Token> declarationToToken;
+	private TreeMap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReference;
+	private Multimap<EntryReference<Entry<?>, Entry<?>>, Token> referenceToTokens;
+	private Map<Entry<?>, Token> declarationToToken;
 	private List<Integer> lineOffsets;
 	private boolean ignoreBadTokens;
 
@@ -63,12 +63,12 @@ public class SourceIndex {
 		this.source = source;
 		calculateLineOffsets();
 
-		for (Entry entry : Lists.newArrayList(declarationToToken.keySet())) {
+		for (Entry<?> entry : Lists.newArrayList(declarationToToken.keySet())) {
 			Token token = declarationToToken.get(entry);
 			declarationToToken.put(entry, tokenMap.getOrDefault(token, token));
 		}
 
-		for (EntryReference<Entry, Entry> ref : referenceToTokens.keySet()) {
+		for (EntryReference<Entry<?>, Entry<?>> ref : referenceToTokens.keySet()) {
 			Collection<Token> oldTokens = referenceToTokens.get(ref);
 			List<Token> newTokens = new ArrayList<>(oldTokens.size());
 
@@ -79,7 +79,7 @@ public class SourceIndex {
 			referenceToTokens.replaceValues(ref, newTokens);
 		}
 
-		Map<Token, EntryReference<Entry, Entry>> tokenToReferenceCopy = Maps.newHashMap(tokenToReference);
+		Map<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReferenceCopy = Maps.newHashMap(tokenToReference);
 		tokenToReference.clear();
 		for (Token token : tokenToReferenceCopy.keySet()) {
 			tokenToReference.put(tokenMap.getOrDefault(token, token), tokenToReferenceCopy.get(token));
@@ -133,19 +133,19 @@ public class SourceIndex {
 		return token;
 	}
 
-	public void addReference(AstNode node, Entry deobfEntry, Entry deobfContext) {
+	public void addReference(AstNode node, Entry<?> deobfEntry, Entry<?> deobfContext) {
 		Token token = getToken(node);
 		if (token != null) {
-			EntryReference<Entry, Entry> deobfReference = new EntryReference<>(deobfEntry, token.text, deobfContext);
+			EntryReference<Entry<?>, Entry<?>> deobfReference = new EntryReference<>(deobfEntry, token.text, deobfContext);
 			this.tokenToReference.put(token, deobfReference);
 			this.referenceToTokens.put(deobfReference, token);
 		}
 	}
 
-	public void addDeclaration(AstNode node, Entry deobfEntry) {
+	public void addDeclaration(AstNode node, Entry<?> deobfEntry) {
 		Token token = getToken(node);
 		if (token != null) {
-			EntryReference<Entry, Entry> reference = new EntryReference<>(deobfEntry, token.text);
+			EntryReference<Entry<?>, Entry<?>> reference = new EntryReference<>(deobfEntry, token.text);
 			this.tokenToReference.put(token, reference);
 			this.referenceToTokens.put(reference, token);
 			this.declarationToToken.put(deobfEntry, token);
@@ -160,19 +160,19 @@ public class SourceIndex {
 		return null;
 	}
 
-	public Collection<Token> getReferenceTokens(EntryReference<Entry, Entry> deobfReference) {
+	public Collection<Token> getReferenceTokens(EntryReference<Entry<?>, Entry<?>> deobfReference) {
 		return this.referenceToTokens.get(deobfReference);
 	}
 
-	public EntryReference<Entry, Entry> getDeobfReference(Token token) {
+	public EntryReference<Entry<?>, Entry<?>> getDeobfReference(Token token) {
 		if (token == null) {
 			return null;
 		}
 		return this.tokenToReference.get(token);
 	}
 
-	public void replaceDeobfReference(Token token, EntryReference<Entry, Entry> newDeobfReference) {
-		EntryReference<Entry, Entry> oldDeobfReference = this.tokenToReference.get(token);
+	public void replaceDeobfReference(Token token, EntryReference<Entry<?>, Entry<?>> newDeobfReference) {
+		EntryReference<Entry<?>, Entry<?>> oldDeobfReference = this.tokenToReference.get(token);
 		this.tokenToReference.put(token, newDeobfReference);
 		Collection<Token> tokens = this.referenceToTokens.get(oldDeobfReference);
 		this.referenceToTokens.removeAll(oldDeobfReference);
@@ -187,11 +187,11 @@ public class SourceIndex {
 		return this.declarationToToken.values();
 	}
 
-	public Iterable<Entry> declarations() {
+	public Iterable<Entry<?>> declarations() {
 		return this.declarationToToken.keySet();
 	}
 
-	public Token getDeclarationToken(Entry deobfEntry) {
+	public Token getDeclarationToken(Entry<?> deobfEntry) {
 		return this.declarationToToken.get(deobfEntry);
 	}
 

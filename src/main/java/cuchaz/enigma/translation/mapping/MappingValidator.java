@@ -15,28 +15,28 @@ public class MappingValidator {
 		this.propagator = propagator;
 	}
 
-	public void validateRename(Entry entry, String name) throws IllegalNameException {
+	public void validateRename(Entry<?> entry, String name) throws IllegalNameException {
 		validateRename(propagator.getPropagationTargets(entry), name);
 	}
 
-	public void validateRename(Collection<Entry> targets, String name) throws IllegalNameException {
-		for (Entry entry : targets) {
+	public void validateRename(Collection<Entry<?>> targets, String name) throws IllegalNameException {
+		for (Entry<?> entry : targets) {
 			entry.validateName(name);
 		}
 		validateUnique(targets, name);
 	}
 
-	private void validateUnique(Collection<Entry> targets, String name) {
-		for (Entry target : targets) {
-			Collection<Entry> siblings = obfToDeobf.getSiblings(target);
+	private void validateUnique(Collection<Entry<?>> targets, String name) {
+		for (Entry<?> target : targets) {
+			Collection<Entry<?>> siblings = obfToDeobf.getSiblings(target);
 			if (!isUnique(target, siblings, name)) {
 				throw new IllegalNameException(name, "Name is not unique in " + target + "!");
 			}
 		}
 	}
 
-	private boolean isUnique(Entry entry, Collection<Entry> siblings, String name) {
-		for (Entry child : siblings) {
+	private boolean isUnique(Entry<?> entry, Collection<Entry<?>> siblings, String name) {
+		for (Entry<?> child : siblings) {
 			if (entry.canConflictWith(child) && child.getName().equals(name)) {
 				return false;
 			}

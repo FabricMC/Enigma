@@ -39,7 +39,7 @@ public class ReferencedEntryPool {
 
 	public MethodEntry getMethod(ClassEntry ownerEntry, String name, MethodDescriptor desc) {
 		String key = name + desc.toString();
-		return getClassMethods(ownerEntry.getName()).computeIfAbsent(key, s -> new MethodEntry(ownerEntry, name, desc));
+		return getClassMethods(ownerEntry.getFullName()).computeIfAbsent(key, s -> new MethodEntry(ownerEntry, name, desc));
 	}
 
 	public FieldEntry getField(ClassEntry ownerEntry, String name, String desc) {
@@ -47,7 +47,7 @@ public class ReferencedEntryPool {
 	}
 
 	public FieldEntry getField(ClassEntry ownerEntry, String name, TypeDescriptor desc) {
-		return getClassFields(ownerEntry.getName()).computeIfAbsent(name, s -> new FieldEntry(ownerEntry, name, desc));
+		return getClassFields(ownerEntry.getFullName()).computeIfAbsent(name, s -> new FieldEntry(ownerEntry, name, desc));
 	}
 
 	private Map<String, MethodEntry> getClassMethods(String name) {

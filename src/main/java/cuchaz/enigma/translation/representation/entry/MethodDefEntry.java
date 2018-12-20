@@ -20,7 +20,7 @@ import cuchaz.enigma.translation.representation.Signature;
 
 import javax.annotation.Nullable;
 
-public class MethodDefEntry extends MethodEntry implements DefEntry {
+public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;
 	private final Signature signature;
 
@@ -42,7 +42,7 @@ public class MethodDefEntry extends MethodEntry implements DefEntry {
 	}
 
 	@Override
-	public MethodDefEntry translateSelf(Translator translator, @Nullable EntryMapping mapping) {
+	public MethodDefEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		MethodDescriptor translatedDesc = translator.translate(descriptor);
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
@@ -52,7 +52,7 @@ public class MethodDefEntry extends MethodEntry implements DefEntry {
 
 	@Override
 	public MethodDefEntry withParent(ClassEntry parent) {
-		return new MethodDefEntry(new ClassEntry(parent.getName()), name, descriptor, signature, access);
+		return new MethodDefEntry(new ClassEntry(parent.getFullName()), name, descriptor, signature, access);
 	}
 
 	public int getArgumentIndex(ClassDefEntry ownerEntry, int localVariableIndex) {

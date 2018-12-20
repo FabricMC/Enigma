@@ -11,7 +11,6 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import com.google.common.base.Preconditions;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -19,20 +18,26 @@ import cuchaz.enigma.translation.mapping.NameValidator;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 
-// TODO: Unable to rename inner class (inner class mappings must be stored as just inner class name!)
-public class ClassEntry implements Entry {
-	protected final String name;
-	protected final boolean innerClass;
+public class ClassEntry extends ParentedEntry<ClassEntry> {
+	private final String fullName;
 
 	public ClassEntry(String className) {
-		Preconditions.checkNotNull(className, "Class name cannot be null");
-		if (className.indexOf('.') >= 0) {
-			throw new IllegalArgumentException("Class name must be in JVM format. ie, path/to/package/class$inner : " + className);
+		this(getOuterClass(className), getInnerName(className));
+	}
+
+	public ClassEntry(@Nullable ClassEntry parent, String className) {
+		super(parent, className);
+		if (parent != null) {
+			fullName = parent.getFullName() + "$" + name;
+		} else {
+			fullName = name;
 		}
 
-		this.name = className;
-		this.innerClass = name.indexOf('$') >= 0;
+		if (parent == null && className.indexOf('.') >= 0) {
+			throw new IllegalArgumentException("Class name must be in JVM format. ie, path/to/package/class$inner : " + className);
+		}
 	}
 
 	@Override
@@ -41,18 +46,13 @@ public class ClassEntry implements Entry {
 	}
 
 	public String getFullName() {
-		return this.name;
+		return fullName;
 	}
 
 	@Override
 	public ClassEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		ClassEntry translatedClass = new ClassEntry(translatedName);
-		if (isInnerClass()) {
-			ClassEntry outerClass = translator.translate(getOuterClass());
-			return new ClassEntry(outerClass.name + "$" + translatedClass.getSimpleName());
-		}
-		return translatedClass;
+		return new ClassEntry(parent, translatedName);
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class ClassEntry implements Entry {
 
 	@Override
 	public int hashCode() {
-		return this.name.hashCode();
+		return fullName.hashCode();
 	}
 
 	@Override
@@ -71,27 +71,32 @@ public class ClassEntry implements Entry {
 	}
 
 	public boolean equals(ClassEntry other) {
-		return other != null && this.name.equals(other.name);
+		return other != null && Objects.equals(parent, other.parent) && this.name.equals(other.name);
 	}
 
 	@Override
-	public boolean shallowEquals(Entry entry) {
+	public boolean shallowEquals(Entry<?> entry) {
 		return entry instanceof ClassEntry && ((ClassEntry) entry).name.equals(name);
 	}
 
 	@Override
-	public boolean canConflictWith(Entry entry) {
+	public boolean canConflictWith(Entry<?> entry) {
 		return true;
 	}
 
 	@Override
 	public void validateName(String name) throws IllegalNameException {
-		NameValidator.validateClassName(name, true);
+		NameValidator.validateClassName(name, !isInnerClass());
+	}
+
+	@Override
+	public ClassEntry withParent(ClassEntry parent) {
+		return new ClassEntry(parent, name);
 	}
 
 	@Override
 	public String toString() {
-		return this.name;
+		return getFullName();
 	}
 
 	public String getPackageName() {
@@ -100,23 +105,19 @@ public class ClassEntry implements Entry {
 
 	public String getSimpleName() {
 		int packagePos = name.lastIndexOf('/');
-		int innerClassPos = name.lastIndexOf('$');
-		if (packagePos > 0 || innerClassPos > 0) {
-			return name.substring(Math.max(packagePos, innerClassPos) + 1);
+		if (packagePos > 0) {
+			return name.substring(packagePos + 1);
 		}
 		return name;
 	}
 
 	public boolean isInnerClass() {
-		return innerClass;
+		return parent != null;
 	}
 
 	@Nullable
 	public ClassEntry getOuterClass() {
-		if (!innerClass) {
-			return null;
-		}
-		return new ClassEntry(name.substring(0, name.lastIndexOf('$')));
+		return parent;
 	}
 
 	public ClassEntry buildClassEntry(List<ClassEntry> classChain) {
@@ -124,7 +125,7 @@ public class ClassEntry implements Entry {
 		StringBuilder buf = new StringBuilder();
 		for (ClassEntry chainEntry : classChain) {
 			if (buf.length() == 0) {
-				buf.append(chainEntry.getName());
+				buf.append(chainEntry.getFullName());
 			} else {
 				buf.append("$");
 				buf.append(chainEntry.getSimpleName());
@@ -143,5 +144,22 @@ public class ClassEntry implements Entry {
 			return name.substring(0, pos);
 		}
 		return null;
+	}
+
+	@Nullable
+	public static ClassEntry getOuterClass(String name) {
+		int index = name.lastIndexOf('$');
+		if (index >= 0) {
+			return new ClassEntry(name.substring(0, index));
+		}
+		return null;
+	}
+
+	public static String getInnerName(String name) {
+		int innerClassPos = name.lastIndexOf('$');
+		if (innerClassPos > 0) {
+			return name.substring(innerClassPos + 1);
+		}
+		return name;
 	}
 }

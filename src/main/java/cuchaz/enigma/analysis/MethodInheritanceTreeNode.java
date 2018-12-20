@@ -54,7 +54,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public String toString() {
-		String className = entry.getContainingClass().getName();
+		String className = entry.getContainingClass().getFullName();
 
 		if (!this.isImplemented) {
 			return className;
