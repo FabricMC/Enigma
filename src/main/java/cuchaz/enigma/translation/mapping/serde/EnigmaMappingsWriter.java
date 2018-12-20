@@ -11,6 +11,9 @@
 
 package cuchaz.enigma.translation.mapping.serde;
 
+import com.google.common.collect.Lists;
+import cuchaz.enigma.translation.MappingTranslator;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
@@ -22,9 +25,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.*;
 
-// TODO: sorted mappings in all writers
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
@@ -44,12 +46,13 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		public void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException {
 			applyDeletions(delta.getDeletions(), path);
 
+			Translator translator = new MappingTranslator(mappings);
 			for (MappingNode<EntryMapping> node : delta.getAdditions()) {
 				Entry<?> entry = node.getEntry();
-				if (entry instanceof ClassEntry && !((ClassEntry) entry).isInnerClass()) {
+				if (entry instanceof ClassEntry) {
 					ClassEntry classEntry = (ClassEntry) entry;
 
-					Path classPath = resolve(path, classEntry);
+					Path classPath = resolve(path, translator.translate(classEntry));
 					Files.deleteIfExists(classPath);
 					Files.createDirectories(classPath.getParent());
 
@@ -76,7 +79,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	};
 
 	protected void writeRoot(PrintWriter writer, MappingTree<EntryMapping> mappings, ClassEntry classEntry) {
-		Collection<Entry<?>> children = mappings.getChildren(classEntry);
+		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
 		writer.println(writeClass(classEntry, mappings.getMapping(classEntry)));
 		for (Entry<?> child : children) {
@@ -105,9 +108,21 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			writer.println(indent(line, depth));
 		}
 
-		for (Entry<?> child : node.getChildren()) {
+		Collection<Entry<?>> children = groupChildren(node.getChildren());
+		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, depth + 1);
 		}
+	}
+
+	private Collection<Entry<?>> groupChildren(Collection<Entry<?>> children) {
+		Collection<Entry<?>> result = new ArrayList<>(children.size());
+
+		children.stream().filter(e -> e instanceof ClassEntry).forEach(result::add);
+		children.stream().filter(e -> e instanceof FieldEntry).forEach(result::add);
+		children.stream().filter(e -> e instanceof MethodEntry).forEach(result::add);
+		children.stream().filter(e -> e instanceof LocalVariableEntry).forEach(result::add);
+
+		return result;
 	}
 
 	protected String writeClass(ClassEntry entry, EntryMapping mapping) {
@@ -119,11 +134,11 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeMethod(MethodEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("FIELD ");
+		StringBuilder builder = new StringBuilder("METHOD ");
 		builder.append(entry.getName()).append(' ');
-		builder.append(entry.getDesc().toString()).append(' ');
-
 		writeMapping(builder, mapping);
+
+		builder.append(entry.getDesc().toString()).append(' ');
 
 		return builder.toString();
 	}
@@ -131,9 +146,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected String writeField(FieldEntry entry, EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder("FIELD ");
 		builder.append(entry.getName()).append(' ');
-		builder.append(entry.getDesc().toString()).append(' ');
-
 		writeMapping(builder, mapping);
+
+		builder.append(entry.getDesc().toString()).append(' ');
 
 		return builder.toString();
 	}
@@ -163,6 +178,15 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			builder.append("\t");
 		}
 		builder.append(line);
-		return builder.toString().trim();
+		return builder.toString();
+	}
+
+	private Collection<Entry<?>> sorted(Iterable<Entry<?>> iterable) {
+		if (iterable == null) {
+			return Collections.emptyList();
+		}
+		List<Entry<?>> sorted = Lists.newArrayList(iterable);
+		sorted.sort(Comparator.comparing(Entry::getName));
+		return sorted;
 	}
 }

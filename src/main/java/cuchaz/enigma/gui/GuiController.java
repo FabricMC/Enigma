@@ -91,6 +91,8 @@ public class GuiController {
 	}
 
 	public void saveMappings(MappingFormat format, Path path) throws IOException {
+		loadedMappingFormat = format;
+
 		BidirectionalMapper mapper = deobfuscator.getMapper();
 
 		MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();

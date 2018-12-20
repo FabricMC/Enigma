@@ -19,7 +19,6 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
-// TODO: These have probably been made obf -- need to fix that
 public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
 	private final Translator translator;
