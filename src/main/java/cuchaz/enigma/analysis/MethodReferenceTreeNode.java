@@ -12,6 +12,7 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
@@ -23,16 +24,19 @@ import java.util.Set;
 
 public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<MethodEntry, MethodDefEntry> {
 
+	private final Translator translator;
 	private MethodEntry entry;
 	private EntryReference<MethodEntry, MethodDefEntry> reference;
 	private AccessFlags access;
 
-	public MethodReferenceTreeNode(MethodEntry entry) {
+	public MethodReferenceTreeNode(Translator translator, MethodEntry entry) {
+		this.translator = translator;
 		this.entry = entry;
 		this.reference = null;
 	}
 
-	public MethodReferenceTreeNode(EntryReference<MethodEntry, MethodDefEntry> reference, AccessFlags access) {
+	public MethodReferenceTreeNode(Translator translator, EntryReference<MethodEntry, MethodDefEntry> reference, AccessFlags access) {
+		this.translator = translator;
 		this.entry = reference.entry;
 		this.reference = reference;
 		this.access = access;
@@ -51,10 +55,9 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements R
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", this.reference.context,
-				this.access);
+			return String.format("%s (%s)", translator.translate(this.reference.context), this.access);
 		}
-		return this.entry.getName();
+		return translator.translate(this.entry).getName();
 	}
 
 	@Deprecated
@@ -65,7 +68,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements R
 	public void load(JarIndex index, boolean recurse, boolean recurseMethod) {
 		// get all the child nodes
 		for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.entry, recurseMethod)) {
-			add(new MethodReferenceTreeNode(reference, index.getAccessFlags(this.entry)));
+			add(new MethodReferenceTreeNode(translator, reference, index.getAccessFlags(this.entry)));
 		}
 
 		if (recurse && this.children != null) {

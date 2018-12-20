@@ -20,7 +20,7 @@ public abstract class CachingTypeLoader implements ITypeLoader {
 	public boolean tryLoadType(String className, Buffer out) {
 
 		// check the cache
-		byte[] data = doLoad(className);//this.cache.computeIfAbsent(className, this::doLoad);
+		byte[] data = this.cache.computeIfAbsent(className, this::doLoad);
 
 		if (data == EMPTY_ARRAY) {
 			return false;

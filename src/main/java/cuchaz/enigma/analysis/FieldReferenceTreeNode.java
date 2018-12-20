@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.analysis;
 
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
@@ -20,16 +21,19 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<FieldEntry, MethodDefEntry> {
 
+	private final Translator translator;
 	private FieldEntry entry;
 	private EntryReference<FieldEntry, MethodDefEntry> reference;
 	private AccessFlags access;
 
-	public FieldReferenceTreeNode(FieldEntry entry) {
+	public FieldReferenceTreeNode(Translator translator, FieldEntry entry) {
+		this.translator = translator;
 		this.entry = entry;
 		this.reference = null;
 	}
 
-	private FieldReferenceTreeNode(EntryReference<FieldEntry, MethodDefEntry> reference, AccessFlags access) {
+	private FieldReferenceTreeNode(Translator translator, EntryReference<FieldEntry, MethodDefEntry> reference, AccessFlags access) {
+		this.translator = translator;
 		this.entry = reference.entry;
 		this.reference = reference;
 		this.access = access;
@@ -48,20 +52,20 @@ public class FieldReferenceTreeNode extends DefaultMutableTreeNode implements Re
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", this.reference.context, this.access);
+			return String.format("%s (%s)", translator.translate(this.reference.context), this.access);
 		}
-		return entry.toString();
+		return translator.translate(entry).toString();
 	}
 
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		if (this.reference == null) {
 			for (EntryReference<FieldEntry, MethodDefEntry> reference : index.getFieldReferences(this.entry)) {
-				add(new FieldReferenceTreeNode(reference, index.getAccessFlags(this.entry)));
+				add(new FieldReferenceTreeNode(translator, reference, index.getAccessFlags(this.entry)));
 			}
 		} else {
 			for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.reference.context, false)) {
-				add(new MethodReferenceTreeNode(reference, index.getAccessFlags(this.reference.context)));
+				add(new MethodReferenceTreeNode(translator, reference, index.getAccessFlags(this.reference.context)));
 			}
 		}
 

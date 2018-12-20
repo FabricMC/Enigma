@@ -12,16 +12,18 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
 public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
-
+	private final Translator translator;
 	private final ClassEntry obfClassEntry;
 
-	public ClassInheritanceTreeNode(String obfClassName) {
+	public ClassInheritanceTreeNode(Translator translator, String obfClassName) {
+		this.translator = translator;
 		this.obfClassEntry = new ClassEntry(obfClassName);
 	}
 
@@ -47,14 +49,14 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public String toString() {
-		return this.obfClassEntry.getFullName();
+		return translator.translate(obfClassEntry).getFullName();
 	}
 
 	public void load(TranslationIndex ancestries, boolean recurse) {
 		// get all the child nodes
 		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
 		for (ClassEntry subclassEntry : ancestries.getSubclass(this.obfClassEntry)) {
-			nodes.add(new ClassInheritanceTreeNode(subclassEntry.getFullName()));
+			nodes.add(new ClassInheritanceTreeNode(translator, subclassEntry.getFullName()));
 		}
 
 		// add them to this node

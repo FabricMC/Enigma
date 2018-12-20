@@ -197,7 +197,7 @@ public class Deobfuscator {
 		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
 		// the decompiler only sees classes after deobfuscation, so we need to load it by the deobfuscated name if there is one
 
-		String deobfClassName = mapper.deobfuscate(new ClassEntry(className)).getName();
+		String deobfClassName = mapper.deobfuscate(new ClassEntry(className)).getFullName();
 
 		// set the desc loader
 		this.settings.setTypeLoader(loader);

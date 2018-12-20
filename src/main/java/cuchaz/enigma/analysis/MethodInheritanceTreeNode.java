@@ -12,6 +12,7 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
@@ -20,10 +21,12 @@ import java.util.List;
 
 public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
+	private final Translator translator;
 	private MethodEntry entry;
 	private boolean isImplemented;
 
-	public MethodInheritanceTreeNode(MethodEntry entry, boolean isImplemented) {
+	public MethodInheritanceTreeNode(Translator translator, MethodEntry entry, boolean isImplemented) {
+		this.translator = translator;
 		this.entry = entry;
 		this.isImplemented = isImplemented;
 	}
@@ -54,12 +57,13 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public String toString() {
-		String className = entry.getContainingClass().getFullName();
+		MethodEntry translatedEntry = translator.translate(entry);
+		String className = translatedEntry.getContainingClass().getFullName();
 
 		if (!this.isImplemented) {
 			return className;
 		} else {
-			String methodName = entry.getName();
+			String methodName = translatedEntry.getName();
 			return className + "." + methodName + "()";
 		}
 	}
@@ -69,12 +73,12 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
 		for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(this.entry.getParent())) {
 			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
-			nodes.add(new MethodInheritanceTreeNode(methodEntry, index.containsObfMethod(methodEntry)));
+			nodes.add(new MethodInheritanceTreeNode(translator, methodEntry, index.containsObfMethod(methodEntry)));
 		}
 
 		for (ClassEntry subclassEntry : index.getTranslationIndex().getImplementers(this.entry.getParent())) {
 			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
-			nodes.add(new MethodInheritanceTreeNode(methodEntry, index.containsObfMethod(methodEntry)));
+			nodes.add(new MethodInheritanceTreeNode(translator, methodEntry, index.containsObfMethod(methodEntry)));
 		}
 
 		// add them to this node

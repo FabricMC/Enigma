@@ -12,6 +12,7 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
@@ -21,9 +22,11 @@ import java.util.List;
 // TODO: These have probably been made obf -- need to fix that
 public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
+	private final Translator translator;
 	private MethodEntry entry;
 
-	public MethodImplementationsTreeNode(MethodEntry entry) {
+	public MethodImplementationsTreeNode(Translator translator, MethodEntry entry) {
+		this.translator = translator;
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
@@ -53,8 +56,9 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public String toString() {
-		String className = this.entry.getParent().getFullName();
-		String methodName = this.entry.getName();
+		MethodEntry translatedEntry = translator.translate(entry);
+		String className = translatedEntry.getParent().getFullName();
+		String methodName = translatedEntry.getName();
 		return className + "." + methodName + "()";
 	}
 
@@ -64,7 +68,7 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 		for (String implementingClassName : index.getImplementingClasses(this.entry.getParent().getFullName())) {
 			MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getDesc());
 			if (index.containsObfMethod(methodEntry)) {
-				nodes.add(new MethodImplementationsTreeNode(methodEntry));
+				nodes.add(new MethodImplementationsTreeNode(translator, methodEntry));
 			}
 		}
 

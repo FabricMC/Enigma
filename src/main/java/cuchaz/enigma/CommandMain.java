@@ -59,7 +59,7 @@ public class CommandMain {
 		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
 		File fileJarOut = getWritableFolder(getArg(args, 2, "out folder", true));
 		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
-		Deobfuscator deobfuscator = getDeobfuscator(chooseEnigmaFormat(fileMappings), fileMappings, new JarFile(fileJarIn));
+		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeSources(fileJarOut, new ConsoleProgressListener());
 	}
 
@@ -67,16 +67,16 @@ public class CommandMain {
 		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
 		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
 		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
-		Deobfuscator deobfuscator = getDeobfuscator(chooseEnigmaFormat(fileMappings), fileMappings, new JarFile(fileJarIn));
+		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
 		deobfuscator.writeJar(fileJarOut, new ConsoleProgressListener());
 	}
 
-	private static Deobfuscator getDeobfuscator(MappingFormat mappingFormat, Path fileMappings, JarFile jar) throws Exception {
+	private static Deobfuscator getDeobfuscator(Path fileMappings, JarFile jar) throws Exception {
 		System.out.println("Reading jar...");
 		Deobfuscator deobfuscator = new Deobfuscator(jar);
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
-			MappingTree<EntryMapping> mappings = mappingFormat.read(fileMappings);
+			MappingTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings);
 			deobfuscator.setMapper(new BidirectionalMapper(deobfuscator.getJarIndex(), mappings));
 		}
 		return deobfuscator;

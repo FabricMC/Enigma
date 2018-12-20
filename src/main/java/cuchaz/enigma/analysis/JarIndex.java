@@ -12,6 +12,8 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.*;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.VoidTranslator;
 import cuchaz.enigma.translation.representation.*;
 import cuchaz.enigma.translation.representation.entry.*;
 import org.objectweb.asm.ClassReader;
@@ -229,7 +231,7 @@ public class JarIndex {
 		return this.access.get(entry);
 	}
 
-	public ClassInheritanceTreeNode getClassInheritance(ClassEntry obfClassEntry) {
+	public ClassInheritanceTreeNode getClassInheritance(Translator translator, ClassEntry obfClassEntry) {
 
 		// get the root node
 		List<String> ancestry = Lists.newArrayList();
@@ -239,7 +241,7 @@ public class JarIndex {
 				ancestry.add(classEntry.getFullName());
 			}
 		}
-		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode(ancestry.get(ancestry.size() - 1));
+		ClassInheritanceTreeNode rootNode = new ClassInheritanceTreeNode(translator, ancestry.get(ancestry.size() - 1));
 
 		// expand all children recursively
 		rootNode.load(this.translationIndex, true);
@@ -247,18 +249,18 @@ public class JarIndex {
 		return rootNode;
 	}
 
-	public ClassImplementationsTreeNode getClassImplementations(ClassEntry obfClassEntry) {
+	public ClassImplementationsTreeNode getClassImplementations(Translator translator, ClassEntry obfClassEntry) {
 
 		// is this even an interface?
 		if (isInterface(obfClassEntry.getFullName())) {
-			ClassImplementationsTreeNode node = new ClassImplementationsTreeNode(obfClassEntry);
+			ClassImplementationsTreeNode node = new ClassImplementationsTreeNode(translator, obfClassEntry);
 			node.load(this);
 			return node;
 		}
 		return null;
 	}
 
-	public MethodInheritanceTreeNode getMethodInheritance(MethodEntry obfMethodEntry) {
+	public MethodInheritanceTreeNode getMethodInheritance(Translator translator, MethodEntry obfMethodEntry) {
 		// travel to the ancestor implementation
 		LinkedList<ClassEntry> entries = new LinkedList<>();
 		entries.add(obfMethodEntry.getParent());
@@ -293,7 +295,7 @@ public class JarIndex {
 		// make a root node at the base
 		MethodEntry methodEntry = entryPool.getMethod(baseImplementationClassEntry, obfMethodEntry.getName(), obfMethodEntry.getDesc().toString());
 		MethodInheritanceTreeNode rootNode = new MethodInheritanceTreeNode(
-				methodEntry,
+				translator, methodEntry,
 				containsObfMethod(methodEntry)
 		);
 
@@ -303,7 +305,7 @@ public class JarIndex {
 		return rootNode;
 	}
 
-	public List<MethodImplementationsTreeNode> getMethodImplementations(MethodEntry obfMethodEntry) {
+	public List<MethodImplementationsTreeNode> getMethodImplementations(Translator translator, MethodEntry obfMethodEntry) {
 		List<MethodEntry> interfaceMethodEntries = Lists.newArrayList();
 
 		// is this method on an interface?
@@ -324,7 +326,7 @@ public class JarIndex {
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
 		if (!interfaceMethodEntries.isEmpty()) {
 			for (MethodEntry interfaceMethodEntry : interfaceMethodEntries) {
-				MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(interfaceMethodEntry);
+				MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(translator, interfaceMethodEntry);
 				node.load(this);
 				nodes.add(node);
 			}
@@ -343,7 +345,7 @@ public class JarIndex {
 		}
 
 		Set<MethodEntry> methodEntries = Sets.newHashSet();
-		getRelatedMethodImplementations(methodEntries, getMethodInheritance(obfMethodEntry));
+		getRelatedMethodImplementations(methodEntries, getMethodInheritance(VoidTranslator.INSTANCE, obfMethodEntry));
 		return methodEntries;
 	}
 
@@ -369,7 +371,7 @@ public class JarIndex {
 		}
 
 		// look at interface methods too
-		for (MethodImplementationsTreeNode implementationsNode : getMethodImplementations(methodEntry)) {
+		for (MethodImplementationsTreeNode implementationsNode : getMethodImplementations(VoidTranslator.INSTANCE, methodEntry)) {
 			getRelatedMethodImplementations(methodEntries, implementationsNode);
 		}
 

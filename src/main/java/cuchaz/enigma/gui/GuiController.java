@@ -158,24 +158,28 @@ public class GuiController {
 
 	public ClassInheritanceTreeNode getClassInheritance(ClassEntry deobfClassEntry) {
 		ClassEntry obfClassEntry = this.deobfuscator.obfuscate(deobfClassEntry);
-		ClassInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getClassInheritance(obfClassEntry);
+		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
+		ClassInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getClassInheritance(translator, obfClassEntry);
 		return ClassInheritanceTreeNode.findNode(rootNode, obfClassEntry);
 	}
 
 	public ClassImplementationsTreeNode getClassImplementations(ClassEntry deobfClassEntry) {
 		ClassEntry obfClassEntry = this.deobfuscator.obfuscate(deobfClassEntry);
-		return this.deobfuscator.getJarIndex().getClassImplementations(obfClassEntry);
+		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
+		return this.deobfuscator.getJarIndex().getClassImplementations(translator, obfClassEntry);
 	}
 
 	public MethodInheritanceTreeNode getMethodInheritance(MethodEntry deobfMethodEntry) {
 		MethodEntry obfMethodEntry = this.deobfuscator.obfuscate(deobfMethodEntry);
-		MethodInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getMethodInheritance(obfMethodEntry);
+		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
+		MethodInheritanceTreeNode rootNode = this.deobfuscator.getJarIndex().getMethodInheritance(translator, obfMethodEntry);
 		return MethodInheritanceTreeNode.findNode(rootNode, obfMethodEntry);
 	}
 
 	public MethodImplementationsTreeNode getMethodImplementations(MethodEntry deobfMethodEntry) {
 		MethodEntry obfMethodEntry = this.deobfuscator.obfuscate(deobfMethodEntry);
-		List<MethodImplementationsTreeNode> rootNodes = this.deobfuscator.getJarIndex().getMethodImplementations(obfMethodEntry);
+		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
+		List<MethodImplementationsTreeNode> rootNodes = this.deobfuscator.getJarIndex().getMethodImplementations(translator, obfMethodEntry);
 		if (rootNodes.isEmpty()) {
 			return null;
 		}
@@ -195,14 +199,16 @@ public class GuiController {
 
 	public FieldReferenceTreeNode getFieldReferences(FieldEntry deobfFieldEntry) {
 		FieldEntry obfFieldEntry = this.deobfuscator.obfuscate(deobfFieldEntry);
-		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(obfFieldEntry);
+		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
+		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(translator, obfFieldEntry);
 		rootNode.load(this.deobfuscator.getJarIndex(), true);
 		return rootNode;
 	}
 
 	public MethodReferenceTreeNode getMethodReferences(MethodEntry deobfMethodEntry, boolean recursive) {
 		MethodEntry obfMethodEntry = this.deobfuscator.obfuscate(deobfMethodEntry);
-		MethodReferenceTreeNode rootNode = new MethodReferenceTreeNode(obfMethodEntry);
+		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
+		MethodReferenceTreeNode rootNode = new MethodReferenceTreeNode(translator, obfMethodEntry);
 		rootNode.load(this.deobfuscator.getJarIndex(), true, recursive);
 		return rootNode;
 	}

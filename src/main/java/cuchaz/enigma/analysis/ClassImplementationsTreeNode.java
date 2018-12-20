@@ -12,6 +12,7 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
@@ -19,10 +20,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
 public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
-
+	private final Translator translator;
 	private final ClassEntry entry;
 
-	public ClassImplementationsTreeNode(ClassEntry entry) {
+	public ClassImplementationsTreeNode(Translator translator, ClassEntry entry) {
+		this.translator = translator;
 		this.entry = entry;
 	}
 
@@ -48,14 +50,14 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public String toString() {
-		return entry.toString();
+		return translator.translate(entry).toString();
 	}
 
 	public void load(JarIndex index) {
 		// get all method implementations
 		List<ClassImplementationsTreeNode> nodes = Lists.newArrayList();
 		for (String implementingClassName : index.getImplementingClasses(this.entry.getFullName())) {
-			nodes.add(new ClassImplementationsTreeNode(new ClassEntry(implementingClassName)));
+			nodes.add(new ClassImplementationsTreeNode(translator, new ClassEntry(implementingClassName)));
 		}
 
 		// add them to this node

@@ -472,7 +472,7 @@ public class Gui {
 
 	private void showMethodEntry(MethodEntry entry) {
 		if (entry.isConstructor()) {
-			addNameValue(infoPanel, "Constructor", entry.getParent().getName());
+			addNameValue(infoPanel, "Constructor", entry.getParent().getFullName());
 		} else {
 			addNameValue(infoPanel, "Method", entry.getName());
 			addNameValue(infoPanel, "Class", entry.getParent().getFullName());

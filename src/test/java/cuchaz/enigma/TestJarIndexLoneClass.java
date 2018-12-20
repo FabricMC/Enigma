@@ -12,6 +12,7 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.translation.VoidTranslator;
 import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -65,7 +66,7 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void classInheritance() {
-		ClassInheritanceTreeNode node = index.getClassInheritance(newClass("a"));
+		ClassInheritanceTreeNode node = index.getClassInheritance(VoidTranslator.INSTANCE, newClass("a"));
 		assertThat(node, is(not(nullValue())));
 		assertThat(node.getObfClassName(), is("a"));
 		assertThat(node.getChildCount(), is(0));
@@ -74,7 +75,7 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void methodInheritance() {
 		MethodEntry source = newMethod("a", "a", "()Ljava/lang/String;");
-		MethodInheritanceTreeNode node = index.getMethodInheritance(source);
+		MethodInheritanceTreeNode node = index.getMethodInheritance(VoidTranslator.INSTANCE, source);
 		assertThat(node, is(not(nullValue())));
 		assertThat(node.getMethodEntry(), is(source));
 		assertThat(node.getChildCount(), is(0));
@@ -82,14 +83,14 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void classImplementations() {
-		ClassImplementationsTreeNode node = index.getClassImplementations(newClass("a"));
+		ClassImplementationsTreeNode node = index.getClassImplementations(VoidTranslator.INSTANCE, newClass("a"));
 		assertThat(node, is(nullValue()));
 	}
 
 	@Test
 	public void methodImplementations() {
 		MethodEntry source = newMethod("a", "a", "()Ljava/lang/String;");
-		assertThat(index.getMethodImplementations(source), is(empty()));
+		assertThat(index.getMethodImplementations(VoidTranslator.INSTANCE, source), is(empty()));
 	}
 
 	@Test
