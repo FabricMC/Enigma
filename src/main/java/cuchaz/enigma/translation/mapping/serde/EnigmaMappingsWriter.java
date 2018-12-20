@@ -23,14 +23,14 @@ import cuchaz.enigma.translation.representation.entry.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
-		public void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException {
+		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
 			try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
 				for (MappingNode<EntryMapping> node : mappings) {
 					if (node.getEntry() instanceof ClassEntry) {
@@ -43,11 +43,11 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	},
 	DIRECTORY {
 		@Override
-		public void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException {
+		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
 			applyDeletions(delta.getDeletions(), path);
 
 			Translator translator = new MappingTranslator(mappings);
-			for (MappingNode<EntryMapping> node : delta.getAdditions()) {
+			for (MappingNode<?> node : delta.getAdditions()) {
 				Entry<?> entry = node.getEntry();
 				if (entry instanceof ClassEntry) {
 					ClassEntry classEntry = (ClassEntry) entry;
@@ -63,18 +63,45 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			}
 		}
 
-		private void applyDeletions(MappingTree<EntryMapping> deletions, Path path) throws IOException {
-			for (MappingNode<EntryMapping> node : deletions) {
-				Entry<?> entry = node.getEntry();
-				if (entry instanceof ClassEntry && !((ClassEntry) entry).isInnerClass()) {
-					Path classPath = resolve(path, (ClassEntry) entry);
-					Files.deleteIfExists(classPath);
+		private void applyDeletions(MappingTree<?> deletions, Path root) throws IOException {
+			Collection<ClassEntry> deletedClasses = deletions.getRootEntries().stream()
+					.filter(e -> e instanceof ClassEntry)
+					.map(e -> (ClassEntry) e)
+					.collect(Collectors.toList());
+
+			for (ClassEntry classEntry : deletedClasses) {
+				Files.deleteIfExists(resolve(root, classEntry));
+			}
+
+			for (ClassEntry classEntry : deletedClasses) {
+				String packageName = classEntry.getPackageName();
+				if (packageName != null) {
+					Path packagePath = Paths.get(packageName);
+					deleteDeadPackages(root, packagePath);
 				}
 			}
 		}
 
+		private void deleteDeadPackages(Path root, Path packagePath) throws IOException {
+			for (int i = packagePath.getNameCount() - 1; i >= 0; i--) {
+				Path subPath = packagePath.subpath(0, i + 1);
+				Path packagePart = root.resolve(subPath);
+				if (isEmpty(packagePart)) {
+					Files.deleteIfExists(packagePart);
+				}
+			}
+		}
+
+		private boolean isEmpty(Path path) {
+			try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+				return !stream.iterator().hasNext();
+			} catch (IOException e) {
+				return false;
+			}
+		}
+
 		private Path resolve(Path root, ClassEntry classEntry) {
-			return root.resolve(classEntry.getFullName().replace('.', '/') + ".mapping");
+			return root.resolve(classEntry.getFullName() + ".mapping");
 		}
 	};
 

@@ -23,7 +23,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 	INSTANCE;
 
 	@Override
-	public void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException {
+	public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
 		Files.deleteIfExists(path);
 		Files.createFile(path);
 

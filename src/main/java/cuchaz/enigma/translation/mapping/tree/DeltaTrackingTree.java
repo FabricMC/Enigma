@@ -10,8 +10,8 @@ import java.util.Iterator;
 public class DeltaTrackingTree<M> implements MappingTree<M> {
 	private final MappingTree<M> delegate;
 
-	private MappingTree<M> additions = new HashMappingTree<>();
-	private MappingTree<M> deletions = new HashMappingTree<>();
+	private MappingTree<Object> additions = new HashMappingTree<>();
+	private MappingTree<Object> deletions = new HashMappingTree<>();
 
 	public DeltaTrackingTree(MappingTree<M> delegate) {
 		this.delegate = delegate;
@@ -24,7 +24,7 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	@Override
 	public void insert(Entry<?> entry, M mapping) {
 		if (mapping != null) {
-			trackAddition(entry, mapping);
+			trackAddition(entry);
 		} else {
 			trackDeletion(entry);
 		}
@@ -37,16 +37,14 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 		trackDeletion(entry);
 	}
 
-	private void trackAddition(Entry<?> entry, M mapping) {
+	private void trackAddition(Entry<?> entry) {
 		deletions.remove(entry);
-		additions.insert(entry, mapping);
+		additions.insert(entry, MappingDelta.PLACEHOLDER);
 	}
 
 	private void trackDeletion(Entry<?> entry) {
 		additions.remove(entry);
-
-		M previousMapping = delegate.getMapping(entry);
-		deletions.insert(entry, previousMapping);
+		deletions.insert(entry, MappingDelta.PLACEHOLDER);
 	}
 
 	@Nullable
@@ -72,6 +70,11 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	}
 
 	@Override
+	public Collection<Entry<?>> getRootEntries() {
+		return delegate.getRootEntries();
+	}
+
+	@Override
 	public Collection<Entry<?>> getAllEntries() {
 		return delegate.getAllEntries();
 	}
@@ -81,8 +84,8 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 		return delegate.iterator();
 	}
 
-	public MappingDelta<M> takeDelta() {
-		MappingDelta<M> delta = new MappingDelta<>(additions, deletions);
+	public MappingDelta takeDelta() {
+		MappingDelta delta = new MappingDelta(additions, deletions);
 		resetDelta();
 		return delta;
 	}

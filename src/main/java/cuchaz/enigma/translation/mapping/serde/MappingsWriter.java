@@ -8,5 +8,5 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public interface MappingsWriter {
-	void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException;
+	void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException;
 }

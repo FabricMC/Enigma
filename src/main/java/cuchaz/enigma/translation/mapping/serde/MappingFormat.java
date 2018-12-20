@@ -3,7 +3,6 @@ package cuchaz.enigma.translation.mapping.serde;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
-import cuchaz.enigma.translation.mapping.tree.HashMappingTree;
 import cuchaz.enigma.translation.mapping.tree.MappingTree;
 
 import javax.annotation.Nullable;
@@ -25,10 +24,10 @@ public enum MappingFormat {
 	}
 
 	public void write(MappingTree<EntryMapping> mappings, Path path) throws IOException {
-		write(mappings, new MappingDelta<>(mappings, new HashMappingTree<>()), path);
+		write(mappings, MappingDelta.added(mappings), path);
 	}
 
-	public void write(MappingTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path) throws IOException {
+	public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
 		if (writer == null) {
 			throw new IllegalStateException(name() + " does not support writing");
 		}

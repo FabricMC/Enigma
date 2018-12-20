@@ -24,7 +24,6 @@ import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.BidirectionalMapper;
-import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -49,6 +48,7 @@ public class GuiController {
 	private boolean isDirty;
 	private Deque<EntryReference<Entry<?>, Entry<?>>> referenceStack;
 
+	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
 
 	public GuiController(Gui gui) {
@@ -92,11 +92,16 @@ public class GuiController {
 
 	public void saveMappings(MappingFormat format, Path path) throws IOException {
 		loadedMappingFormat = format;
+		loadedMappingPath = path;
 
 		BidirectionalMapper mapper = deobfuscator.getMapper();
 
-		MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
-		format.write(mapper.getObfToDeobf(), delta, path);
+		MappingDelta delta = mapper.takeMappingDelta();
+		if (path.equals(loadedMappingPath)) {
+			format.write(mapper.getObfToDeobf(), delta, path);
+		} else {
+			format.write(mapper.getObfToDeobf(), path);
+		}
 
 		isDirty = false;
 	}

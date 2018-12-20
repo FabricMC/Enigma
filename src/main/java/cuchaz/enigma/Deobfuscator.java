@@ -51,6 +51,7 @@ import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.stream.Collectors;
 
 public class Deobfuscator {
 
@@ -364,11 +365,14 @@ public class Deobfuscator {
 	public void rebuildMethodNames(ProgressListener progressListener) {
 		final AtomicInteger progress = new AtomicInteger();
 
-		Collection<Entry<?>> rootEntries = getMapper().getObfEntries();
-		progressListener.init(rootEntries.size() * 2, "Rebuilding method names");
+		Collection<Entry<?>> classEntries = getMapper().getObfEntries().stream()
+				.filter(entry -> entry instanceof ClassEntry)
+				.collect(Collectors.toList());
+
+		progressListener.init(classEntries.size() * 2, "Rebuilding method names");
 
 		Map<Entry, Collection<Entry<?>>> providerEntries = new ConcurrentHashMap<>();
-		rootEntries.parallelStream().forEach(classEntry -> {
+		classEntries.parallelStream().forEach(classEntry -> {
 			progressListener.onProgress(progress.getAndIncrement(), mapper.deobfuscate(classEntry).getName());
 			providerEntries.put(classEntry, collectProviderEntries(classEntry));
 		});
@@ -388,7 +392,7 @@ public class Deobfuscator {
 			}
 
 			MethodEntry methodEntry = child.findAncestor(MethodEntry.class);
-			if (isMethodProvider(methodEntry)) {
+			if (methodEntry != null && isMethodProvider(methodEntry)) {
 				providerEntries.add(child);
 			}
 		}

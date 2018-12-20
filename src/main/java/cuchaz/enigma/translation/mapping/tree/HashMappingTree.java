@@ -136,4 +136,9 @@ public class HashMappingTree<M> implements MappingTree<M> {
 				.map(MappingNode::getEntry)
 				.collect(Collectors.toList());
 	}
+
+	@Override
+	public Collection<Entry<?>> getRootEntries() {
+		return root.keySet();
+	}
 }

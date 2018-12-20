@@ -14,8 +14,8 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 
 public class BidirectionalMapper {
-	private final DeltaTrackingTree<EntryMapping> obfToDeobf;
-	private final MappingTree<EntryMapping> deobfToObf;
+	private final MappingTree<EntryMapping> obfToDeobf;
+	private final DeltaTrackingTree<EntryMapping> deobfToObf;
 
 	private final Translator deobfuscator;
 	private final Translator obfuscator;
@@ -24,8 +24,8 @@ public class BidirectionalMapper {
 	private final MappingValidator validator;
 
 	private BidirectionalMapper(JarIndex jarIndex, MappingTree<EntryMapping> obfToDeobf, MappingTree<EntryMapping> deobfToObf) {
-		this.obfToDeobf = new DeltaTrackingTree<>(obfToDeobf);
-		this.deobfToObf = deobfToObf;
+		this.obfToDeobf = obfToDeobf;
+		this.deobfToObf = new DeltaTrackingTree<>(deobfToObf);
 		this.deobfuscator = new MappingTranslator(obfToDeobf);
 		this.obfuscator = new MappingTranslator(deobfToObf);
 
@@ -99,6 +99,7 @@ public class BidirectionalMapper {
 			for (MappingNode<EntryMapping> child : node.getNodesRecursively()) {
 				Entry<?> entry = child.getEntry();
 				EntryMapping mapping = new EntryMapping(obfuscate(entry).getName());
+
 				deobfToObf.insert(entry.replaceAncestor(prevDeobf, newDeobf), mapping);
 				deobfToObf.remove(entry);
 			}
@@ -145,6 +146,10 @@ public class BidirectionalMapper {
 		return obfToDeobf.getAllEntries();
 	}
 
+	public Collection<Entry<?>> getObfRootEntries() {
+		return obfToDeobf.getRootEntries();
+	}
+
 	public Collection<Entry<?>> getDeobfEntries() {
 		return deobfToObf.getAllEntries();
 	}
@@ -165,7 +170,8 @@ public class BidirectionalMapper {
 		return deobfToObf;
 	}
 
-	public MappingDelta<EntryMapping> takeMappingDelta() {
-		return obfToDeobf.takeDelta();
+	public MappingDelta takeMappingDelta() {
+		MappingDelta delta = deobfToObf.takeDelta();
+		return delta.translate(obfuscator, deobfToObf);
 	}
 }
