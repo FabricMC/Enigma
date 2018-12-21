@@ -540,6 +540,9 @@ public class ClassMapping implements Comparable<ClassMapping> {
 
 	public void resetDirty() {
 		this.isDirty = false;
+		for (ClassMapping c : this.innerClasses()) {
+			c.resetDirty();
+		}
 	}
 
 	public void markDirty() {
