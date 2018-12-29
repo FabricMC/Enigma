@@ -1,5 +1,6 @@
 package cuchaz.enigma.translation.mapping.serde;
 
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
@@ -23,15 +24,15 @@ public enum MappingFormat {
 		this.reader = reader;
 	}
 
-	public void write(MappingTree<EntryMapping> mappings, Path path) throws IOException {
-		write(mappings, MappingDelta.added(mappings), path);
+	public void write(MappingTree<EntryMapping> mappings, Path path, ProgressListener progressListener)  {
+		write(mappings, MappingDelta.added(mappings), path, progressListener);
 	}
 
-	public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
+	public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progressListener)  {
 		if (writer == null) {
 			throw new IllegalStateException(name() + " does not support writing");
 		}
-		writer.write(mappings, delta, path);
+		writer.write(mappings, delta, path, progressListener);
 	}
 
 	public MappingTree<EntryMapping> read(Path path) throws IOException, MappingParseException {

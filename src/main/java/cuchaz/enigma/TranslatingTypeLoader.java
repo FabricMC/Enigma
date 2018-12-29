@@ -14,7 +14,7 @@ package cuchaz.enigma;
 import com.google.common.collect.Lists;
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
-import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
 import cuchaz.enigma.translation.Translator;
@@ -66,19 +66,8 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 		ClassEntry classEntry = new ClassEntry(className);
 		ClassEntry obfClassEntry = this.obfuscatingTranslator.translate(classEntry);
 
-		// is this an inner class referenced directly? (ie trying to load b instead of a$b)
-		if (!obfClassEntry.isInnerClass()) {
-			List<ClassEntry> classChain = this.jarIndex.getObfClassChain(obfClassEntry);
-			if (classChain.size() > 1) {
-				System.err.println(String.format("WARNING: no class %s after inner class reconstruction. Try %s",
-						className, obfClassEntry.buildClassEntry(classChain)
-				));
-				return null;
-			}
-		}
-
 		// is this a class we should even know about?
-		if (!this.jarIndex.containsObfClass(obfClassEntry)) {
+		if (!jarIndex.getEntryIndex().hasClass(obfClassEntry)) {
 			return null;
 		}
 

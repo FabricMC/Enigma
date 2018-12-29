@@ -14,6 +14,7 @@ package cuchaz.enigma.analysis;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.MappingSet;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
@@ -119,7 +120,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	@Override
-	public Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
+	public Translatable translate(Translator translator, EntryResolver resolver, MappingSet<EntryMapping> mappings) {
 		return new EntryReference<>(translator.translate(entry), translator.translate(context), this);
 	}
 }

@@ -17,9 +17,8 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-import cuchaz.enigma.translation.representation.AccessFlags;
-import cuchaz.enigma.translation.representation.Signature;
-import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.ProcyonEntryFactory;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldDefEntry;
@@ -41,7 +40,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 	public Void visitTypeDeclaration(TypeDeclaration node, SourceIndex index) {
 		// is this this class, or a subtype?
 		TypeDefinition def = node.getUserData(Keys.TYPE_DEFINITION);
-		ClassDefEntry classEntry = new ClassDefEntry(def.getInternalName(), Signature.createSignature(def.getSignature()), new AccessFlags(def.getModifiers()));
+		ClassDefEntry classEntry = ClassDefEntry.parse(def);
 		if (!classEntry.equals(this.classEntry)) {
 			// it's a subtype, recurse
 			index.addDeclaration(node.getNameToken(), classEntry);

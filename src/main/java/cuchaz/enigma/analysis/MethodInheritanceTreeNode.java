@@ -12,6 +12,9 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.analysis.index.EntryIndex;
+import cuchaz.enigma.analysis.index.InheritanceIndex;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
@@ -71,14 +74,12 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 	public void load(JarIndex index, boolean recurse) {
 		// get all the child nodes
 		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
-		for (ClassEntry subclassEntry : index.getTranslationIndex().getSubclass(this.entry.getParent())) {
-			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
-			nodes.add(new MethodInheritanceTreeNode(translator, methodEntry, index.containsObfMethod(methodEntry)));
-		}
+		EntryIndex entryIndex = index.getEntryIndex();
+		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
 
-		for (ClassEntry subclassEntry : index.getTranslationIndex().getImplementers(this.entry.getParent())) {
-			MethodEntry methodEntry = new MethodEntry(subclassEntry, this.entry.getName(), this.entry.getDesc());
-			nodes.add(new MethodInheritanceTreeNode(translator, methodEntry, index.containsObfMethod(methodEntry)));
+		for (ClassEntry inheritorEntry : inheritanceIndex.getChildren(this.entry.getParent())) {
+			MethodEntry methodEntry = new MethodEntry(inheritorEntry, this.entry.getName(), this.entry.getDesc());
+			nodes.add(new MethodInheritanceTreeNode(translator, methodEntry, entryIndex.hasMethod(methodEntry)));
 		}
 
 		// add them to this node

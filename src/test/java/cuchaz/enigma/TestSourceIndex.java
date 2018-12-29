@@ -44,7 +44,7 @@ public class TestSourceIndex {
 
 		// get all classes that aren't inner classes
 		Set<ClassEntry> classEntries = Sets.newHashSet();
-		for (ClassEntry obfClassEntry : deobfuscator.getJarIndex().getObfClassEntries()) {
+		for (ClassEntry obfClassEntry : deobfuscator.getJarIndex().getEntryIndex().getClasses()) {
 			if (!obfClassEntry.isInnerClass()) {
 				classEntries.add(obfClassEntry);
 			}

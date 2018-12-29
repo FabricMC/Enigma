@@ -80,6 +80,11 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	}
 
 	@Override
+	public boolean isEmpty() {
+		return delegate.isEmpty();
+	}
+
+	@Override
 	public Iterator<MappingNode<M>> iterator() {
 		return delegate.iterator();
 	}
@@ -93,5 +98,9 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	private void resetDelta() {
 		additions = new HashMappingTree<>();
 		deletions = new HashMappingTree<>();
+	}
+
+	public boolean isDirty() {
+		return !additions.isEmpty() || !deletions.isEmpty();
 	}
 }

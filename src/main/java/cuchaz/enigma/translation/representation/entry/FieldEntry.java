@@ -32,6 +32,10 @@ public class FieldEntry extends ParentedEntry<ClassEntry> {
 		this.desc = desc;
 	}
 
+	public static FieldEntry parse(String owner, String name, String desc) {
+		return new FieldEntry(new ClassEntry(owner), name, new TypeDescriptor(desc));
+	}
+
 	public TypeDescriptor getDesc() {
 		return this.desc;
 	}
@@ -64,16 +68,7 @@ public class FieldEntry extends ParentedEntry<ClassEntry> {
 	}
 
 	public boolean equals(FieldEntry other) {
-		return this.parent.equals(other.parent) && shallowEquals(other);
-	}
-
-	@Override
-	public boolean shallowEquals(Entry<?> entry) {
-		if (entry instanceof FieldEntry) {
-			FieldEntry fieldEntry = (FieldEntry) entry;
-			return fieldEntry.name.equals(name) && fieldEntry.desc.equals(desc);
-		}
-		return false;
+		return this.parent.equals(other.parent) && name.equals(other.name) && desc.equals(other.desc);
 	}
 
 	@Override

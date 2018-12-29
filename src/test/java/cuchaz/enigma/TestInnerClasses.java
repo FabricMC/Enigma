@@ -11,20 +11,16 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import org.junit.Test;
 
 import java.util.jar.JarFile;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 
 public class TestInnerClasses {
 
@@ -41,23 +37,19 @@ public class TestInnerClasses {
 
 	public TestInnerClasses()
 		throws Exception {
-		index = new JarIndex(new ReferencedEntryPool());
+		index = new JarIndex();
 		ParsedJar jar = new ParsedJar(new JarFile("build/test-obf/innerClasses.jar"));
-		index.indexJar(jar, true);
+		index.indexJar(jar, s -> {});
 		deobfuscator = new Deobfuscator(jar);
 	}
 
 	@Test
 	public void simple() {
-		assertThat(index.getOuterClass(SimpleInner), is(SimpleOuter));
-		assertThat(index.getInnerClasses(SimpleOuter), containsInAnyOrder(SimpleInner));
 		decompile(SimpleOuter);
 	}
 
 	@Test
 	public void constructorArgs() {
-		assertThat(index.getOuterClass(ConstructorArgsInner), is(ConstructorArgsOuter));
-		assertThat(index.getInnerClasses(ConstructorArgsOuter), containsInAnyOrder(ConstructorArgsInner));
 		decompile(ConstructorArgsOuter);
 	}
 
@@ -65,33 +57,25 @@ public class TestInnerClasses {
 	public void classTree() {
 
 		// root level
-		assertThat(index.containsObfClass(ClassTreeRoot), is(true));
-		assertThat(index.getOuterClass(ClassTreeRoot), is(nullValue()));
-		assertThat(index.getInnerClasses(ClassTreeRoot), containsInAnyOrder(ClassTreeLevel1));
+		assertThat(index.getEntryIndex().hasClass(ClassTreeRoot), is(true));
 
 		// level 1
 		ClassEntry fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
 			+ "$" + ClassTreeLevel1.getSimpleName());
-		assertThat(index.containsObfClass(fullClassEntry), is(true));
-		assertThat(index.getOuterClass(ClassTreeLevel1), is(ClassTreeRoot));
-		assertThat(index.getInnerClasses(ClassTreeLevel1), containsInAnyOrder(ClassTreeLevel2));
+		assertThat(index.getEntryIndex().hasClass(fullClassEntry), is(true));
 
 		// level 2
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
 			+ "$" + ClassTreeLevel1.getSimpleName()
 			+ "$" + ClassTreeLevel2.getSimpleName());
-		assertThat(index.containsObfClass(fullClassEntry), is(true));
-		assertThat(index.getOuterClass(ClassTreeLevel2), is(ClassTreeLevel1));
-		assertThat(index.getInnerClasses(ClassTreeLevel2), containsInAnyOrder(ClassTreeLevel3));
+		assertThat(index.getEntryIndex().hasClass(fullClassEntry), is(true));
 
 		// level 3
 		fullClassEntry = new ClassEntry(ClassTreeRoot.getName()
 			+ "$" + ClassTreeLevel1.getSimpleName()
 			+ "$" + ClassTreeLevel2.getSimpleName()
 			+ "$" + ClassTreeLevel3.getSimpleName());
-		assertThat(index.containsObfClass(fullClassEntry), is(true));
-		assertThat(index.getOuterClass(ClassTreeLevel3), is(ClassTreeLevel2));
-		assertThat(index.getInnerClasses(ClassTreeLevel3), is(empty()));
+		assertThat(index.getEntryIndex().hasClass(fullClassEntry), is(true));
 	}
 
 	private void decompile(ClassEntry classEntry) {

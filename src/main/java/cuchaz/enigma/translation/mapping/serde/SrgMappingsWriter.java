@@ -1,10 +1,12 @@
 package cuchaz.enigma.translation.mapping.serde;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.MappingNode;
 import cuchaz.enigma.translation.mapping.tree.MappingTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -16,16 +18,23 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public enum SrgMappingsWriter implements MappingsWriter {
 	INSTANCE;
 
 	@Override
-	public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
-		Files.deleteIfExists(path);
-		Files.createFile(path);
+	public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
+		try {
+			Files.deleteIfExists(path);
+			Files.createFile(path);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		List<String> classLines = new ArrayList<>();
 		List<String> fieldLines = new ArrayList<>();
@@ -34,14 +43,24 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		Collection<Entry<?>> rootEntries = Lists.newArrayList(mappings).stream()
 				.map(MappingNode::getEntry)
 				.collect(Collectors.toList());
+		progress.init(rootEntries.size(), "Generating mappings");
+
+		int steps = 0;
 		for (Entry<?> entry : sorted(rootEntries)) {
+			progress.step(steps++, entry.getName());
 			writeEntry(classLines, fieldLines, methodLines, mappings, entry);
 		}
 
+		progress.init(3, "Writing mappings");
 		try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
+			progress.step(0, "Classes");
 			classLines.forEach(writer::println);
+			progress.step(1, "Fields");
 			fieldLines.forEach(writer::println);
+			progress.step(2, "Methods");
 			methodLines.forEach(writer::println);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -51,7 +70,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 			return;
 		}
 
-		Translator translator = new MappingTranslator(mappings);
+		Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
 		if (entry instanceof ClassEntry) {
 			classes.add(generateClassLine((ClassEntry) entry, translator));
 		} else if (entry instanceof FieldEntry) {

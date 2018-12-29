@@ -141,4 +141,9 @@ public class HashMappingTree<M> implements MappingTree<M> {
 	public Collection<Entry<?>> getRootEntries() {
 		return root.keySet();
 	}
+
+	@Override
+	public boolean isEmpty() {
+		return root.isEmpty();
+	}
 }

@@ -24,12 +24,16 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;
 	private final Signature signature;
 
-	public FieldDefEntry(ClassEntry ownerEntry, String name, TypeDescriptor desc, Signature signature, AccessFlags access) {
-		super(ownerEntry, name, desc);
+	public FieldDefEntry(ClassEntry owner, String name, TypeDescriptor desc, Signature signature, AccessFlags access) {
+		super(owner, name, desc);
 		Preconditions.checkNotNull(access, "Field access cannot be null");
 		Preconditions.checkNotNull(signature, "Field signature cannot be null");
 		this.access = access;
 		this.signature = signature;
+	}
+
+	public static FieldDefEntry parse(ClassEntry owner, int access, String name, String desc, String signature) {
+		return new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access));
 	}
 
 	@Override

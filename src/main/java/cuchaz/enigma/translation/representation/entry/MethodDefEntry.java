@@ -24,12 +24,16 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 	private final AccessFlags access;
 	private final Signature signature;
 
-	public MethodDefEntry(ClassEntry classEntry, String name, MethodDescriptor descriptor, Signature signature, AccessFlags access) {
-		super(classEntry, name, descriptor);
+	public MethodDefEntry(ClassEntry owner, String name, MethodDescriptor descriptor, Signature signature, AccessFlags access) {
+		super(owner, name, descriptor);
 		Preconditions.checkNotNull(access, "Method access cannot be null");
 		Preconditions.checkNotNull(signature, "Method signature cannot be null");
 		this.access = access;
 		this.signature = signature;
+	}
+
+	public static MethodDefEntry parse(ClassEntry owner, int access, String name, String desc, String signature) {
+		return new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
 	}
 
 	@Override

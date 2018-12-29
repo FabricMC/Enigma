@@ -12,14 +12,18 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
+import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.analysis.index.ReferenceIndex;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 
 public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<MethodEntry, MethodDefEntry> {
@@ -27,7 +31,6 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements R
 	private final Translator translator;
 	private MethodEntry entry;
 	private EntryReference<MethodEntry, MethodDefEntry> reference;
-	private AccessFlags access;
 
 	public MethodReferenceTreeNode(Translator translator, MethodEntry entry) {
 		this.translator = translator;
@@ -35,11 +38,10 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements R
 		this.reference = null;
 	}
 
-	public MethodReferenceTreeNode(Translator translator, EntryReference<MethodEntry, MethodDefEntry> reference, AccessFlags access) {
+	public MethodReferenceTreeNode(Translator translator, EntryReference<MethodEntry, MethodDefEntry> reference) {
 		this.translator = translator;
 		this.entry = reference.entry;
 		this.reference = reference;
-		this.access = access;
 	}
 
 	@Override
@@ -55,20 +57,17 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements R
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", translator.translate(this.reference.context), this.access);
+			return String.format("%s", translator.translate(this.reference.context));
 		}
 		return translator.translate(this.entry).getName();
 	}
 
-	@Deprecated
-	public void load(JarIndex index, boolean recurse) {
-		load(index, recurse, false);
-	}
-
 	public void load(JarIndex index, boolean recurse, boolean recurseMethod) {
 		// get all the child nodes
-		for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.entry, recurseMethod)) {
-			add(new MethodReferenceTreeNode(translator, reference, index.getAccessFlags(this.entry)));
+		Collection<EntryReference<MethodEntry, MethodDefEntry>> references = getReferences(index, recurseMethod);
+
+		for (EntryReference<MethodEntry, MethodDefEntry> reference : references) {
+			add(new MethodReferenceTreeNode(translator, reference));
 		}
 
 		if (recurse && this.children != null) {
@@ -89,9 +88,26 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements R
 						continue;
 					}
 
-					node.load(index, true);
+					node.load(index, true, false);
 				}
 			}
+		}
+	}
+
+	private Collection<EntryReference<MethodEntry, MethodDefEntry>> getReferences(JarIndex index, boolean recurseMethod) {
+		ReferenceIndex referenceIndex = index.getReferenceIndex();
+
+		if (recurseMethod) {
+			Collection<EntryReference<MethodEntry, MethodDefEntry>> references = new ArrayList<>();
+
+			EntryResolver entryResolver = index.getEntryResolver();
+			for (MethodEntry methodEntry : entryResolver.resolveEquivalentMethods(entry)) {
+				references.addAll(referenceIndex.getReferencesToMethod(methodEntry));
+			}
+
+			return references;
+		} else {
+			return referenceIndex.getReferencesToMethod(entry);
 		}
 	}
 }

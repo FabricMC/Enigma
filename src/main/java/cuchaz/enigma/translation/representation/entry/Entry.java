@@ -27,8 +27,6 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 
 	Entry<P> withParent(P parent);
 
-	boolean shallowEquals(Entry<?> entry);
-
 	boolean canConflictWith(Entry<?> entry);
 
 	@Nullable
@@ -68,13 +66,19 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 
 	@SuppressWarnings("unchecked")
 	default <E extends Entry<?>> Entry<P> replaceAncestor(E target, E replacement) {
-		P parent = getParent();
+		if (replacement.equals(target)) {
+			return this;
+		}
+
 		if (equals(target)) {
 			return (Entry<P>) replacement;
 		}
+
+		P parent = getParent();
 		if (parent == null) {
 			return this;
 		}
+
 		return withParent((P) parent.replaceAncestor(target, replacement));
 	}
 

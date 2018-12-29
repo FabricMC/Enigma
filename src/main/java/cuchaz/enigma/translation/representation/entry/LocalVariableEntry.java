@@ -78,11 +78,6 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> {
 	}
 
 	@Override
-	public boolean shallowEquals(Entry<?> entry) {
-		return entry instanceof LocalVariableEntry && ((LocalVariableEntry) entry).index == index;
-	}
-
-	@Override
 	public boolean canConflictWith(Entry<?> entry) {
 		return entry instanceof LocalVariableEntry && ((LocalVariableEntry) entry).parent.equals(parent);
 	}

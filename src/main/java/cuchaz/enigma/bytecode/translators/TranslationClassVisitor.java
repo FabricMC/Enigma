@@ -11,11 +11,15 @@
 
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
 import org.objectweb.asm.*;
+
+import java.util.Arrays;
 
 public class TranslationClassVisitor extends ClassVisitor {
 	private final Translator translator;
@@ -23,7 +27,6 @@ public class TranslationClassVisitor extends ClassVisitor {
 	private final ReferencedEntryPool entryPool;
 
 	private ClassDefEntry obfClassEntry;
-	private Signature obfSignature;
 
 	public TranslationClassVisitor(Translator translator, JarIndex jarIndex, ReferencedEntryPool entryPool, int api, ClassVisitor cv) {
 		super(api, cv);
@@ -34,20 +37,18 @@ public class TranslationClassVisitor extends ClassVisitor {
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		obfSignature = Signature.createSignature(signature);
-		obfClassEntry = new ClassDefEntry(name, obfSignature, new AccessFlags(access));
+		obfClassEntry = ClassDefEntry.parse(access, name, signature, superName, interfaces);
+
 		ClassDefEntry translatedEntry = translator.translate(obfClassEntry);
-		ClassEntry superEntry = translator.translate(entryPool.getClass(superName));
-		String[] translatedInterfaces = new String[interfaces.length];
-		for (int i = 0; i < interfaces.length; i++) {
-			translatedInterfaces[i] = translator.translate(entryPool.getClass(interfaces[i])).getFullName();
-		}
-		super.visit(version, translatedEntry.getAccess().getFlags(), translatedEntry.getFullName(), translatedEntry.getSignature().toString(), superEntry.getFullName(), translatedInterfaces);
+		String translatedSuper = translatedEntry.getSuperClass() != null ? translatedEntry.getSuperClass().getFullName() : null;
+		String[] translatedInterfaces = Arrays.stream(translatedEntry.getInterfaces()).map(ClassEntry::getFullName).toArray(String[]::new);
+
+		super.visit(version, translatedEntry.getAccess().getFlags(), translatedEntry.getFullName(), translatedEntry.getSignature().toString(), translatedSuper, translatedInterfaces);
 	}
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-		FieldDefEntry entry = new FieldDefEntry(obfClassEntry, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access));
+		FieldDefEntry entry = FieldDefEntry.parse(obfClassEntry, access, name, desc, signature);
 		FieldDefEntry translatedEntry = translator.translate(entry);
 		FieldVisitor fv = super.visitField(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedEntry.getSignature().toString(), value);
 		return new TranslationFieldVisitor(translator, translatedEntry, api, fv);
@@ -55,11 +56,8 @@ public class TranslationClassVisitor extends ClassVisitor {
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-		MethodDefEntry entry = new MethodDefEntry(obfClassEntry, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
+		MethodDefEntry entry = MethodDefEntry.parse(obfClassEntry, access, name, desc, signature);
 		MethodDefEntry translatedEntry = translator.translate(entry);
-		if (jarIndex.getBridgedMethod(entry) != null) {
-			translatedEntry.getAccess().setBridge();
-		}
 		String[] translatedExceptions = new String[exceptions.length];
 		for (int i = 0; i < exceptions.length; i++) {
 			translatedExceptions[i] = translator.translate(entryPool.getClass(exceptions[i])).getFullName();
@@ -70,7 +68,8 @@ public class TranslationClassVisitor extends ClassVisitor {
 
 	@Override
 	public void visitInnerClass(String name, String outerName, String innerName, int access) {
-		ClassDefEntry translatedEntry = translator.translate(new ClassDefEntry(name, obfSignature, new AccessFlags(access)));
+		ClassDefEntry classEntry = ClassDefEntry.parse(access, name, obfClassEntry.getSignature().toString(), null, new String[0]);
+		ClassDefEntry translatedEntry = translator.translate(classEntry);
 		ClassEntry translatedOuterClass = translatedEntry.getOuterClass();
 		if (translatedOuterClass == null) {
 			throw new IllegalStateException("Translated inner class did not have outer class");

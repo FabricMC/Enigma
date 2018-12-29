@@ -33,6 +33,10 @@ public class MethodEntry extends ParentedEntry<ClassEntry> {
 		this.descriptor = descriptor;
 	}
 
+	public static MethodEntry parse(String owner, String name, String desc) {
+		return new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc));
+	}
+
 	public MethodDescriptor getDesc() {
 		return this.descriptor;
 	}
@@ -70,15 +74,6 @@ public class MethodEntry extends ParentedEntry<ClassEntry> {
 
 	public boolean equals(MethodEntry other) {
 		return this.parent.equals(other.getParent()) && this.name.equals(other.getName()) && this.descriptor.equals(other.getDesc());
-	}
-
-	@Override
-	public boolean shallowEquals(Entry<?> entry) {
-		if (entry instanceof MethodEntry) {
-			MethodEntry methodEntry = (MethodEntry) entry;
-			return methodEntry.name.equals(name) && methodEntry.descriptor.equals(descriptor);
-		}
-		return false;
 	}
 
 	@Override

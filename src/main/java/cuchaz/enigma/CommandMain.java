@@ -11,7 +11,6 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.Deobfuscator.ProgressListener;
 import cuchaz.enigma.translation.mapping.BidirectionalMapper;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -99,7 +98,7 @@ public class CommandMain {
 		MappingTree<EntryMapping> mappings = readFormat.read(fileMappings);
 		System.out.println("Saving new mappings...");
 
-		saveFormat.write(mappings, result.toPath());
+		saveFormat.write(mappings, result.toPath(), new ConsoleProgressListener());
 	}
 
 	private static MappingFormat chooseEnigmaFormat(Path path) {
@@ -187,7 +186,7 @@ public class CommandMain {
 		}
 
 		@Override
-		public void onProgress(int numDone, String message) {
+		public void step(int numDone, String message) {
 			long now = System.currentTimeMillis();
 			boolean isLastUpdate = numDone == this.totalWork;
 			boolean shouldReport = isLastUpdate || now - this.lastReportTime > ReportTime;

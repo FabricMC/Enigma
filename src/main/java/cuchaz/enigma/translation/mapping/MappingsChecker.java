@@ -11,7 +11,7 @@
 
 package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -22,10 +22,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MappingsChecker {
-	private final JarIndex index;
+	private final EntryIndex index;
 	private final BidirectionalMapper mapper;
 
-	public MappingsChecker(JarIndex index, BidirectionalMapper mapper) {
+	public MappingsChecker(EntryIndex index, BidirectionalMapper mapper) {
 		this.index = index;
 		this.mapper = mapper;
 	}
@@ -45,7 +45,7 @@ public class MappingsChecker {
 	}
 
 	private void tryDropClass(Dropped dropped, ClassEntry entry) {
-		if (!index.containsObfClass(entry)) {
+		if (!index.hasClass(entry)) {
 			EntryMapping mapping = dropMapping(entry);
 			if (mapping != null) {
 				dropped.drop(entry, mapping);
@@ -54,7 +54,7 @@ public class MappingsChecker {
 	}
 
 	private void tryDropField(Dropped dropped, FieldEntry entry) {
-		if (!index.containsObfField(entry)) {
+		if (!index.hasField(entry)) {
 			EntryMapping mapping = dropMapping(entry);
 			if (mapping != null) {
 				dropped.drop(entry, mapping);
@@ -63,7 +63,7 @@ public class MappingsChecker {
 	}
 
 	private void tryDropMethod(Dropped dropped, MethodEntry entry) {
-		if (!index.containsObfMethod(entry)) {
+		if (!index.hasMethod(entry)) {
 			EntryMapping mapping = dropMapping(entry);
 			if (mapping != null) {
 				dropped.drop(entry, mapping);

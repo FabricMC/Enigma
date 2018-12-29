@@ -1,43 +1,40 @@
-package cuchaz.enigma.analysis;
+package cuchaz.enigma.analysis.index;
 
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
+import cuchaz.enigma.translation.representation.entry.FieldDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 public class IndexClassVisitor extends ClassVisitor {
-	private final JarIndex index;
+	private final JarIndexer indexer;
 	private ClassDefEntry classEntry;
 
-	public IndexClassVisitor(JarIndex index, int api) {
+	public IndexClassVisitor(JarIndex indexer, int api) {
 		super(api);
-		this.index = index;
-	}
-
-	public IndexClassVisitor(JarIndex index, int api, ClassVisitor cv) {
-		super(api, cv);
-		this.index = index;
+		this.indexer = indexer;
 	}
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		this.classEntry = this.index.indexClass(access, name, signature, superName, interfaces);
+		classEntry = ClassDefEntry.parse(access, name, signature, superName, interfaces);
+		indexer.indexClass(classEntry);
+
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-		if (this.classEntry != null) {
-			this.index.indexField(this.classEntry, access, name, desc, signature);
-		}
+		indexer.indexField(FieldDefEntry.parse(classEntry, access, name, desc, signature));
+
 		return super.visitField(access, name, desc, signature, value);
 	}
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-		if (this.classEntry != null) {
-			this.index.indexMethod(this.classEntry, access, name, desc, signature);
-		}
+		indexer.indexMethod(MethodDefEntry.parse(classEntry, access, name, desc, signature));
+
 		return super.visitMethod(access, name, desc, signature, exceptions);
 	}
 }

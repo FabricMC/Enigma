@@ -12,7 +12,6 @@
 package cuchaz.enigma;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -26,8 +25,8 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
-import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.BidirectionalMapper;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -60,20 +59,22 @@ public class Deobfuscator {
 	private final ParsedJar parsedJar;
 	private final DecompilerSettings settings;
 	private final JarIndex jarIndex;
+	private final IndexTreeBuilder indexTreeBuilder;
 	private BidirectionalMapper mapper;
 
 	public Deobfuscator(ParsedJar jar, Consumer<String> listener) {
 		this.parsedJar = jar;
 
 		// build the jar index
-		listener.accept("Indexing JAR...");
-		this.jarIndex = new JarIndex(entryPool);
-		this.jarIndex.indexJar(this.parsedJar, true);
+		this.jarIndex = new JarIndex();
+		this.jarIndex.indexJar(this.parsedJar, listener);
 
 		listener.accept("Initializing plugins...");
 		for (EnigmaPlugin plugin : getPlugins()) {
 			plugin.onClassesLoaded(parsedJar.getClassDataMap(), parsedJar::getClassNode);
 		}
+
+		this.indexTreeBuilder = new IndexTreeBuilder(jarIndex);
 
 		listener.accept("Preparing...");
 		// config the decompiler
@@ -116,6 +117,10 @@ public class Deobfuscator {
 		return this.jarIndex;
 	}
 
+	public IndexTreeBuilder getIndexTreeBuilder() {
+		return indexTreeBuilder;
+	}
+
 	public BidirectionalMapper getMapper() {
 		return this.mapper;
 	}
@@ -134,7 +139,7 @@ public class Deobfuscator {
 		}
 
 		// drop mappings that don't match the jar
-		MappingsChecker checker = new MappingsChecker(this.jarIndex, mapper);
+		MappingsChecker checker = new MappingsChecker(this.jarIndex.getEntryIndex(), mapper);
 		MappingsChecker.Dropped dropped = checker.dropBrokenMappings();
 
 		if (warnAboutDrops) {
@@ -153,14 +158,14 @@ public class Deobfuscator {
 	}
 
 	public void getSeparatedClasses(List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses) {
-		for (ClassEntry obfClassEntry : this.jarIndex.getObfClassEntries()) {
+		for (ClassEntry obfClassEntry : this.jarIndex.getEntryIndex().getClasses()) {
 			// skip inner classes
 			if (obfClassEntry.isInnerClass()) {
 				continue;
 			}
 
 			// separate the classes
-			ClassEntry deobfClassEntry = deobfuscate(obfClassEntry);
+			ClassEntry deobfClassEntry = mapper.deobfuscate(obfClassEntry);
 			if (!deobfClassEntry.equals(obfClassEntry)) {
 				// if the class has a mapping, clearly it's deobfuscated
 				deobfClasses.add(deobfClassEntry);
@@ -224,47 +229,28 @@ public class Deobfuscator {
 	}
 
 	public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source) {
-		return getSourceIndex(sourceTree, source, null);
+		return getSourceIndex(sourceTree, source, true);
 	}
 
-	public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source, Boolean ignoreBadTokens) {
+	public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source, boolean ignoreBadTokens) {
 
 		// build the source index
-		SourceIndex index;
-		if (ignoreBadTokens != null) {
-			index = new SourceIndex(source, ignoreBadTokens);
-		} else {
-			index = new SourceIndex(source);
-		}
+		SourceIndex index = new SourceIndex(source, ignoreBadTokens);
 		sourceTree.acceptVisitor(new SourceIndexVisitor(entryPool), index);
-
-		// DEBUG
-		// sourceTree.acceptVisitor( new TreeDumpVisitor( new File( "tree.txt" ) ), null );
 
 		// resolve all the classes in the source references
 		for (Token token : index.referenceTokens()) {
 			EntryReference<Entry<?>, Entry<?>> deobfReference = index.getDeobfReference(token);
 
 			// get the obfuscated entry
-			Entry<?> obfEntry = obfuscate(deobfReference.entry);
+			Entry<?> obfEntry = mapper.obfuscate(deobfReference.entry);
 
-			// try to resolve the class
-			ClassEntry resolvedObfClassEntry = this.jarIndex.getTranslationIndex().resolveEntryOwner(obfEntry);
-			if (resolvedObfClassEntry != null && !resolvedObfClassEntry.equals(obfEntry.getContainingClass())) {
-				Entry<?> l = obfEntry;
-				// change the class of the entry
-				obfEntry = obfEntry.replaceAncestor(obfEntry.getContainingClass(), resolvedObfClassEntry);
-				if (obfEntry.toString().equals("c$a$a")) {
-					obfEntry = l.replaceAncestor(l.getContainingClass(), resolvedObfClassEntry);
-				}
+			// try to resolve the entry
+			Entry<?> resolvedObfEntry = jarIndex.getEntryResolver().resolveEntry(obfEntry);
 
-				// save the new deobfuscated reference
-				deobfReference.entry = deobfuscate(obfEntry);
-				index.replaceDeobfReference(token, deobfReference);
-			}
-
-			// DEBUG
-			// System.out.println( token + " -> " + reference + " -> " + index.getReferenceToken( reference ) );
+			// save the new deobfuscated reference
+			deobfReference.entry = mapper.deobfuscate(resolvedObfEntry);
+			index.replaceDeobfReference(token, deobfReference);
 		}
 
 		return index;
@@ -280,15 +266,9 @@ public class Deobfuscator {
 
 	public void writeSources(File dirOut, ProgressListener progress) {
 		// get the classes to decompile
-		Set<ClassEntry> classEntries = Sets.newHashSet();
-		for (ClassEntry obfClassEntry : this.jarIndex.getObfClassEntries()) {
-			// skip inner classes
-			if (obfClassEntry.isInnerClass()) {
-				continue;
-			}
-
-			classEntries.add(obfClassEntry);
-		}
+		Set<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses().stream()
+				.filter(classEntry -> !classEntry.isInnerClass())
+				.collect(Collectors.toSet());
 
 		if (progress != null) {
 			progress.init(classEntries.size(), "Decompiling classes...");
@@ -305,9 +285,9 @@ public class Deobfuscator {
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		AtomicInteger count = new AtomicInteger();
 		classEntries.parallelStream().forEach(obfClassEntry -> {
-			ClassEntry deobfClassEntry = deobfuscate(obfClassEntry);
+			ClassEntry deobfClassEntry = mapper.deobfuscate(obfClassEntry);
 			if (progress != null) {
-				progress.onProgress(count.getAndIncrement(), deobfClassEntry.toString());
+				progress.step(count.getAndIncrement(), deobfClassEntry.toString());
 			}
 
 			try {
@@ -324,80 +304,15 @@ public class Deobfuscator {
 			} catch (Throwable t) {
 				// don't crash the whole world here, just log the error and keep going
 				// TODO: set up logback via log4j
-				System.err.println("Unable to deobfuscate class " + deobfClassEntry + " (" + obfClassEntry + ")");
+				System.err.println("Unable to decompile class " + deobfClassEntry + " (" + obfClassEntry + ")");
 				t.printStackTrace(System.err);
 			}
 		});
 		stopwatch.stop();
 		System.out.println("writeSources Done in : " + stopwatch.toString());
 		if (progress != null) {
-			progress.onProgress(count.get(), "Done:");
+			progress.step(count.get(), "Done:");
 		}
-	}
-
-	private void addAllPotentialAncestors(Set<ClassEntry> classEntries, ClassEntry classObfEntry) {
-		for (ClassEntry interfaceEntry : jarIndex.getTranslationIndex().getInterfaces(classObfEntry)) {
-			if (classEntries.add(interfaceEntry)) {
-				addAllPotentialAncestors(classEntries, interfaceEntry);
-			}
-		}
-
-		ClassEntry superClassEntry = jarIndex.getTranslationIndex().getSuperclass(classObfEntry);
-		if (superClassEntry != null && classEntries.add(superClassEntry)) {
-			addAllPotentialAncestors(classEntries, superClassEntry);
-		}
-	}
-
-	public boolean isMethodProvider(MethodEntry methodEntry) {
-		Set<ClassEntry> classEntries = new HashSet<>();
-		addAllPotentialAncestors(classEntries, methodEntry.getParent());
-
-		for (ClassEntry parentEntry : classEntries) {
-			MethodEntry ancestorMethodEntry = entryPool.getMethod(parentEntry, methodEntry.getName(), methodEntry.getDesc());
-			if (jarIndex.containsObfMethod(ancestorMethodEntry)) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	public void rebuildMethodNames(ProgressListener progressListener) {
-		final AtomicInteger progress = new AtomicInteger();
-
-		Collection<Entry<?>> classEntries = getMapper().getObfEntries().stream()
-				.filter(entry -> entry instanceof ClassEntry)
-				.collect(Collectors.toList());
-
-		progressListener.init(classEntries.size() * 2, "Rebuilding method names");
-
-		Map<Entry, Collection<Entry<?>>> providerEntries = new ConcurrentHashMap<>();
-		classEntries.parallelStream().forEach(classEntry -> {
-			progressListener.onProgress(progress.getAndIncrement(), mapper.deobfuscate(classEntry).getName());
-			providerEntries.put(classEntry, collectProviderEntries(classEntry));
-		});
-
-		providerEntries.forEach((rootEntry, providers) -> {
-			progressListener.onProgress(progress.getAndIncrement(), mapper.deobfuscate(rootEntry).getName());
-			providers.forEach(mapper::propagateFromObf);
-		});
-	}
-
-	private Collection<Entry<?>> collectProviderEntries(Entry<?> entry) {
-		Collection<Entry<?>> providerEntries = new ArrayList<>();
-
-		for (Entry<?> child : mapper.getObfChildren(entry)) {
-			if (!hasDeobfuscatedName(child)) {
-				continue;
-			}
-
-			MethodEntry methodEntry = child.findAncestor(MethodEntry.class);
-			if (methodEntry != null && isMethodProvider(methodEntry)) {
-				providerEntries.add(child);
-			}
-		}
-
-		return providerEntries;
 	}
 
 	public void writeJar(File out, ProgressListener progress) {
@@ -413,7 +328,7 @@ public class Deobfuscator {
 			AtomicInteger i = new AtomicInteger();
 			parsedJar.visitNode(node -> {
 				if (progress != null) {
-					progress.onProgress(i.getAndIncrement(), node.name);
+					progress.step(i.getAndIncrement(), node.name);
 				}
 
 				try {
@@ -428,25 +343,11 @@ public class Deobfuscator {
 			});
 
 			if (progress != null) {
-				progress.onProgress(i.get(), "Done!");
+				progress.step(i.get(), "Done!");
 			}
 		} catch (IOException ex) {
 			throw new Error("Unable to write to Jar file!");
 		}
-	}
-
-	public <T extends Translatable> T obfuscate(T translatable) {
-		if (translatable == null) {
-			return null;
-		}
-		return mapper.obfuscate(translatable);
-	}
-
-	public <T extends Translatable> T deobfuscate(T translatable) {
-		if (translatable == null) {
-			return null;
-		}
-		return mapper.deobfuscate(translatable);
 	}
 
 	public AccessModifier getModifier(Entry<?> entry) {
@@ -497,7 +398,7 @@ public class Deobfuscator {
 			}
 		}
 
-		return this.jarIndex.containsObfEntry(obfEntry);
+		return this.jarIndex.getEntryIndex().hasEntry(obfEntry);
 	}
 
 	public boolean isRenameable(EntryReference<Entry<?>, Entry<?>> obfReference) {
@@ -531,12 +432,6 @@ public class Deobfuscator {
 		for (IAstTransform transform : transformers) {
 			transform.run(builder.getCompilationUnit());
 		}
-	}
-
-	public interface ProgressListener {
-		void init(int totalWork, String title);
-
-		void onProgress(int numDone, String message);
 	}
 
 	public interface ClassTransformer {

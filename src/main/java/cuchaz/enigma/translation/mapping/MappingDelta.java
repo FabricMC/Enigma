@@ -39,7 +39,7 @@ public class MappingDelta implements Translatable {
 	}
 
 	@Override
-	public MappingDelta translate(Translator translator, MappingSet<EntryMapping> mappings) {
+	public MappingDelta translate(Translator translator, EntryResolver resolver, MappingSet<EntryMapping> mappings) {
 		return new MappingDelta(
 				translate(translator, additions),
 				translate(translator, deletions)

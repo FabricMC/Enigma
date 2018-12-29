@@ -40,6 +40,10 @@ public class AccessFlags {
 		return (flags & Opcodes.ACC_BRIDGE) != 0;
 	}
 
+	public boolean isFinal() {
+		return (flags & Opcodes.ACC_FINAL) != 0;
+	}
+
 	public AccessFlags setPrivate() {
 		this.setVisibility(Opcodes.ACC_PRIVATE);
 		return this;

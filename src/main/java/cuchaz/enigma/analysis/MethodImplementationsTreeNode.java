@@ -12,11 +12,15 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
+import cuchaz.enigma.analysis.index.EntryIndex;
+import cuchaz.enigma.analysis.index.InheritanceIndex;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.Collection;
 import java.util.List;
 
 public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
@@ -64,9 +68,13 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 	public void load(JarIndex index) {
 		// get all method implementations
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
-		for (String implementingClassName : index.getImplementingClasses(this.entry.getParent().getFullName())) {
-			MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getDesc());
-			if (index.containsObfMethod(methodEntry)) {
+		EntryIndex entryIndex = index.getEntryIndex();
+		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
+
+		Collection<ClassEntry> inheritors = inheritanceIndex.getChildren(entry.getParent());
+		for (ClassEntry inheritor : inheritors) {
+			MethodEntry methodEntry = entry.withParent(inheritor);
+			if (entryIndex.hasMethod(methodEntry)) {
 				nodes.add(new MethodImplementationsTreeNode(translator, methodEntry));
 			}
 		}

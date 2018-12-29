@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.MappingSet;
 
 import javax.annotation.Nullable;
@@ -47,9 +48,9 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	}
 
 	@Override
-	public Translatable translate(Translator translator, MappingSet<EntryMapping> mappings) {
+	public Translatable translate(Translator translator, EntryResolver resolver, MappingSet<EntryMapping> mappings) {
 		P parent = getParent();
-		EntryMapping mapping = mappings.getMapping(this);
+		EntryMapping mapping = mappings.getMapping(resolver.resolveEntry(this));
 		if (parent == null) {
 			return translate(translator, mapping);
 		}

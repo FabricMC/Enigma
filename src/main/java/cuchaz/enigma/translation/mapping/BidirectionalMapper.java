@@ -1,6 +1,6 @@
 package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
@@ -17,20 +17,25 @@ public class BidirectionalMapper {
 	private final MappingTree<EntryMapping> obfToDeobf;
 	private final DeltaTrackingTree<EntryMapping> deobfToObf;
 
+	private final EntryResolver entryResolver;
+
 	private final Translator deobfuscator;
 	private final Translator obfuscator;
 
-	private final MappingPropagator propagator;
 	private final MappingValidator validator;
 
 	private BidirectionalMapper(JarIndex jarIndex, MappingTree<EntryMapping> obfToDeobf, MappingTree<EntryMapping> deobfToObf) {
 		this.obfToDeobf = obfToDeobf;
 		this.deobfToObf = new DeltaTrackingTree<>(deobfToObf);
-		this.deobfuscator = new MappingTranslator(obfToDeobf);
-		this.obfuscator = new MappingTranslator(deobfToObf);
 
-		this.propagator = new MappingPropagator(jarIndex, obfToDeobf);
-		this.validator = new MappingValidator(obfToDeobf, propagator);
+		this.entryResolver = jarIndex.getEntryResolver();
+
+		this.deobfuscator = new MappingTranslator(obfToDeobf, entryResolver);
+
+		// TODO: We need to be able to resolve entries from obf!
+		this.obfuscator = new MappingTranslator(deobfToObf, entryResolver);
+
+		this.validator = new MappingValidator(obfToDeobf, entryResolver);
 	}
 
 	public BidirectionalMapper(JarIndex jarIndex) {
@@ -42,7 +47,7 @@ public class BidirectionalMapper {
 	}
 
 	private static MappingTree<EntryMapping> inverse(MappingTree<EntryMapping> tree) {
-		Translator translator = new MappingTranslator(tree);
+		Translator translator = new MappingTranslator(tree, VoidEntryResolver.INSTANCE);
 		MappingTree<EntryMapping> inverse = new HashMappingTree<>();
 
 		// Naive approach, could operate on the nodes of the tree. However, this runs infrequently.
@@ -56,24 +61,18 @@ public class BidirectionalMapper {
 	}
 
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		Collection<Entry<?>> targets = propagator.getPropagationTargets(obfuscatedEntry);
+		E resolvedEntry = entryResolver.resolveEntry(obfuscatedEntry);
+
 		if (deobfMapping != null) {
-			validator.validateRename(targets, deobfMapping.getTargetName());
+			validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
 		}
 
-		targets.forEach(target -> setObfToDeobf(target, deobfMapping));
+		setObfToDeobf(resolvedEntry, deobfMapping);
 	}
 
 	public <E extends Entry<?>> void mapFromDeobf(E deobfuscatedEntry, @Nullable EntryMapping deobfMapping) {
 		E obfuscatedEntry = obfuscate(deobfuscatedEntry);
 		mapFromObf(obfuscatedEntry, deobfMapping);
-	}
-
-	public <E extends Entry<?>> void propagateFromObf(E obfuscatedEntry) {
-		EntryMapping mapping = getDeobfMapping(obfuscatedEntry);
-
-		Collection<Entry<?>> targets = propagator.getPropagationTargets(obfuscatedEntry);
-		targets.forEach(target -> mapFromObf(target, mapping));
 	}
 
 	public void removeByObf(Entry<?> obfuscatedEntry) {
@@ -172,6 +171,10 @@ public class BidirectionalMapper {
 
 	public MappingDelta takeMappingDelta() {
 		MappingDelta delta = deobfToObf.takeDelta();
-		return delta.translate(obfuscator, deobfToObf);
+		return delta.translate(obfuscator, VoidEntryResolver.INSTANCE, deobfToObf);
+	}
+
+	public boolean isDirty() {
+		return deobfToObf.isDirty();
 	}
 }

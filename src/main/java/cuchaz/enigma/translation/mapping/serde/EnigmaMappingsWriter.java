@@ -11,47 +11,70 @@
 
 package cuchaz.enigma.translation.mapping.serde;
 
-import com.google.common.collect.Lists;
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.MappingNode;
 import cuchaz.enigma.translation.mapping.tree.MappingTree;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
-		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
+		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
+			Collection<ClassEntry> classes = mappings.getRootEntries().stream()
+					.filter(entry -> entry instanceof ClassEntry)
+					.map(entry -> (ClassEntry) entry)
+					.collect(Collectors.toList());
+
+			progress.init(classes.size(), "Writing classes");
+
+			int steps = 0;
 			try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
-				for (MappingNode<EntryMapping> node : mappings) {
-					if (node.getEntry() instanceof ClassEntry) {
-						ClassEntry classEntry = (ClassEntry) node.getEntry();
-						writeRoot(writer, mappings, classEntry);
-					}
+				for (ClassEntry classEntry : classes) {
+					progress.step(steps++, classEntry.getFullName());
+					writeRoot(writer, mappings, classEntry);
 				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	},
 	DIRECTORY {
 		@Override
-		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path) throws IOException {
+		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
 			applyDeletions(delta.getDeletions(), path);
 
-			Translator translator = new MappingTranslator(mappings);
-			for (MappingNode<?> node : delta.getAdditions()) {
-				Entry<?> entry = node.getEntry();
-				if (entry instanceof ClassEntry) {
-					ClassEntry classEntry = (ClassEntry) entry;
+			Collection<ClassEntry> classes = delta.getAdditions().getRootEntries().stream()
+					.filter(entry -> entry instanceof ClassEntry)
+					.map(entry -> (ClassEntry) entry)
+					.collect(Collectors.toList());
 
+			progress.init(classes.size(), "Writing classes");
+
+			Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
+			AtomicInteger steps = new AtomicInteger();
+
+			classes.parallelStream().forEach(classEntry -> {
+				progress.step(steps.getAndIncrement(), classEntry.getFullName());
+
+				try {
 					Path classPath = resolve(path, translator.translate(classEntry));
 					Files.deleteIfExists(classPath);
 					Files.createDirectories(classPath.getParent());
@@ -59,25 +82,38 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 					try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(classPath))) {
 						writeRoot(writer, mappings, classEntry);
 					}
+				} catch (Throwable t) {
+					System.err.println("Failed to write class '" + classEntry.getFullName() + "'");
+					t.printStackTrace();
 				}
-			}
+			});
 		}
 
-		private void applyDeletions(MappingTree<?> deletions, Path root) throws IOException {
+		private void applyDeletions(MappingTree<?> deletions, Path root) {
 			Collection<ClassEntry> deletedClasses = deletions.getRootEntries().stream()
 					.filter(e -> e instanceof ClassEntry)
 					.map(e -> (ClassEntry) e)
 					.collect(Collectors.toList());
 
 			for (ClassEntry classEntry : deletedClasses) {
-				Files.deleteIfExists(resolve(root, classEntry));
+				try {
+					Files.deleteIfExists(resolve(root, classEntry));
+				} catch (IOException e) {
+					System.err.println("Failed to delete deleted class '" + classEntry + "'");
+					e.printStackTrace();
+				}
 			}
 
 			for (ClassEntry classEntry : deletedClasses) {
 				String packageName = classEntry.getPackageName();
 				if (packageName != null) {
 					Path packagePath = Paths.get(packageName);
-					deleteDeadPackages(root, packagePath);
+					try {
+						System.err.println("Failed to delete dead package '" + packageName + "'");
+						deleteDeadPackages(root, packagePath);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -144,10 +180,18 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	private Collection<Entry<?>> groupChildren(Collection<Entry<?>> children) {
 		Collection<Entry<?>> result = new ArrayList<>(children.size());
 
-		children.stream().filter(e -> e instanceof ClassEntry).forEach(result::add);
-		children.stream().filter(e -> e instanceof FieldEntry).forEach(result::add);
-		children.stream().filter(e -> e instanceof MethodEntry).forEach(result::add);
-		children.stream().filter(e -> e instanceof LocalVariableEntry).forEach(result::add);
+		children.stream().filter(e -> e instanceof ClassEntry)
+				.sorted(Comparator.comparing(Entry::getName))
+				.forEach(result::add);
+		children.stream().filter(e -> e instanceof FieldEntry)
+				.sorted(Comparator.comparing(Entry::getName))
+				.forEach(result::add);
+		children.stream().filter(e -> e instanceof MethodEntry)
+				.sorted(Comparator.comparing(Entry::getName))
+				.forEach(result::add);
+		children.stream().filter(e -> e instanceof LocalVariableEntry)
+				.sorted(Comparator.comparing(Entry::getName))
+				.forEach(result::add);
 
 		return result;
 	}
@@ -206,14 +250,5 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 		builder.append(line);
 		return builder.toString();
-	}
-
-	private Collection<Entry<?>> sorted(Iterable<Entry<?>> iterable) {
-		if (iterable == null) {
-			return Collections.emptyList();
-		}
-		List<Entry<?>> sorted = Lists.newArrayList(iterable);
-		sorted.sort(Comparator.comparing(Entry::getName));
-		return sorted;
 	}
 }

@@ -8,29 +8,26 @@ import java.util.Collection;
 
 public class MappingValidator {
 	private final MappingTree<EntryMapping> obfToDeobf;
-	private final MappingPropagator propagator;
+	private final EntryResolver entryResolver;
 
-	public MappingValidator(MappingTree<EntryMapping> obfToDeobf, MappingPropagator propagator) {
+	public MappingValidator(MappingTree<EntryMapping> obfToDeobf, EntryResolver entryResolver) {
 		this.obfToDeobf = obfToDeobf;
-		this.propagator = propagator;
+		this.entryResolver = entryResolver;
 	}
 
 	public void validateRename(Entry<?> entry, String name) throws IllegalNameException {
-		validateRename(propagator.getPropagationTargets(entry), name);
-	}
-
-	public void validateRename(Collection<Entry<?>> targets, String name) throws IllegalNameException {
-		for (Entry<?> entry : targets) {
-			entry.validateName(name);
+		Collection<Entry<?>> equivalentEntries = entryResolver.resolveEquivalentEntries(entry);
+		for (Entry<?> e : equivalentEntries) {
+			e.validateName(name);
 		}
-		validateUnique(targets, name);
+		validateUnique(equivalentEntries, name);
 	}
 
-	private void validateUnique(Collection<Entry<?>> targets, String name) {
-		for (Entry<?> target : targets) {
-			Collection<Entry<?>> siblings = obfToDeobf.getSiblings(target);
-			if (!isUnique(target, siblings, name)) {
-				throw new IllegalNameException(name, "Name is not unique in " + target + "!");
+	private void validateUnique(Collection<Entry<?>> hierarchy, String name) {
+		for (Entry<?> entry : hierarchy) {
+			Collection<Entry<?>> siblings = obfToDeobf.getSiblings(entry);
+			if (!isUnique(entry, siblings, name)) {
+				throw new IllegalNameException(name, "Name is not unique in " + entry + "!");
 			}
 		}
 	}

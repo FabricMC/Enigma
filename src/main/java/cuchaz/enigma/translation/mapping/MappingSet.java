@@ -18,4 +18,6 @@ public interface MappingSet<M> {
 	}
 
 	Collection<Entry<?>> getAllEntries();
+
+	boolean isEmpty();
 }

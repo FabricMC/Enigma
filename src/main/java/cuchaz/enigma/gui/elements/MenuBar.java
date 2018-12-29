@@ -24,7 +24,6 @@ public class MenuBar extends JMenuBar {
 	public final JMenuItem saveMappingEnigmaDirectoryMenu;
 	public final JMenuItem saveMappingsSrgMenu;
 	public final JMenuItem closeMappingsMenu;
-	public final JMenuItem rebuildMethodNamesMenu;
 	public final JMenuItem exportSourceMenu;
 	public final JMenuItem exportJarMenu;
 	private final Gui gui;
@@ -102,11 +101,7 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("Save Mappings");
 				menu.add(item);
 				item.addActionListener(event -> {
-					try {
-						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-					} catch (IOException ex) {
-						throw new Error(ex);
-					}
+					this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
 				});
 				item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 				this.saveMappingsMenu = item;
@@ -119,12 +114,8 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						try {
-							this.gui.getController().saveMappings(MappingFormat.ENIGMA_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-							this.saveMappingsMenu.setEnabled(true);
-						} catch (IOException ex) {
-							throw new Error(ex);
-						}
+						this.gui.getController().saveMappings(MappingFormat.ENIGMA_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+						this.saveMappingsMenu.setEnabled(true);
 					}
 				});
 				this.saveMappingEnigmaFileMenu = item;
@@ -135,12 +126,8 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						try {
-							this.gui.getController().saveMappings(MappingFormat.ENIGMA_DIRECTORY, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-							this.saveMappingsMenu.setEnabled(true);
-						} catch (IOException ex) {
-							throw new Error(ex);
-						}
+						this.gui.getController().saveMappings(MappingFormat.ENIGMA_DIRECTORY, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+						this.saveMappingsMenu.setEnabled(true);
 					}
 				});
 				item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
@@ -152,12 +139,8 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						try {
-							this.gui.getController().saveMappings(MappingFormat.SRG_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-							this.saveMappingsMenu.setEnabled(true);
-						} catch (IOException ex) {
-							throw new Error(ex);
-						}
+						this.gui.getController().saveMappings(MappingFormat.SRG_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+						this.saveMappingsMenu.setEnabled(true);
 					}
 				});
 				this.saveMappingsSrgMenu = item;
@@ -184,13 +167,6 @@ public class MenuBar extends JMenuBar {
 
 				});
 				this.closeMappingsMenu = item;
-			}
-			menu.addSeparator();
-			{
-				JMenuItem item = new JMenuItem("Rebuild Method Names");
-				menu.add(item);
-				item.addActionListener(event -> this.gui.getController().rebuildMethodNames());
-				this.rebuildMethodNamesMenu = item;
 			}
 			menu.addSeparator();
 			{
