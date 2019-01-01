@@ -14,14 +14,52 @@ package cuchaz.enigma.analysis.index;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.util.*;
 
-// TODO: we have to create a copy and remap to deobf names
-public class InheritanceIndex implements JarIndexer {
+public class InheritanceIndex implements JarIndexer, RemappableIndex {
 	private final Multimap<ClassEntry, ClassEntry> classParents = HashMultimap.create();
 	private final Multimap<ClassEntry, ClassEntry> classChildren = HashMultimap.create();
+
+	@Override
+	public InheritanceIndex remapped(Translator translator) {
+		InheritanceIndex index = new InheritanceIndex();
+		for (Map.Entry<ClassEntry, ClassEntry> entry : classChildren.entries()) {
+			index.classChildren.put(translator.translate(entry.getKey()), translator.translate(entry.getValue()));
+		}
+		for (Map.Entry<ClassEntry, ClassEntry> entry : classParents.entries()) {
+			index.classParents.put(translator.translate(entry.getKey()), translator.translate(entry.getValue()));
+		}
+
+		return index;
+	}
+
+	@Override
+	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
+		if (entry instanceof ClassEntry) {
+			ClassEntry classEntry = (ClassEntry) entry;
+
+			Collection<ClassEntry> parents = classParents.removeAll(classEntry);
+			classParents.putAll((ClassEntry) newEntry, parents);
+
+			// Find all the parents of this class and remap their children
+			for (ClassEntry parent : parents) {
+				classChildren.remove(parent, entry);
+				classChildren.put(parent, (ClassEntry) newEntry);
+			}
+
+			Collection<ClassEntry> children = classChildren.removeAll(classEntry);
+			classChildren.putAll((ClassEntry) newEntry, children);
+
+			// Find all the children of this class and remap their parents
+			for (ClassEntry child : children) {
+				classParents.remove(child, entry);
+				classParents.put(child, (ClassEntry) newEntry);
+			}
+		}
+	}
 
 	@Override
 	public void indexClass(ClassDefEntry classEntry) {

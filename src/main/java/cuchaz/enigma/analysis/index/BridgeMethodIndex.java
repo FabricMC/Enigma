@@ -1,22 +1,53 @@
 package cuchaz.enigma.analysis.index;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
-public class BridgeMethodIndex implements JarIndexer {
+public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 	private final EntryIndex entryIndex;
 	private final ReferenceIndex referenceIndex;
 
 	private final Map<MethodEntry, MethodEntry> bridgedMethods = Maps.newHashMap();
+	private final Multimap<MethodEntry, MethodEntry> inverseBridges = HashMultimap.create();
 
 	public BridgeMethodIndex(EntryIndex entryIndex, ReferenceIndex referenceIndex) {
 		this.entryIndex = entryIndex;
 		this.referenceIndex = referenceIndex;
+	}
+
+	@Override
+	public BridgeMethodIndex remapped(Translator translator) {
+		BridgeMethodIndex remapped = new BridgeMethodIndex(entryIndex, referenceIndex);
+		for (Map.Entry<MethodEntry, MethodEntry> entry : bridgedMethods.entrySet()) {
+			MethodEntry key = translator.translate(entry.getKey());
+			MethodEntry value = translator.translate(entry.getValue());
+			remapped.bridgedMethods.put(key, value);
+			remapped.inverseBridges.put(value, key);
+		}
+
+		return remapped;
+	}
+
+	@Override
+	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
+		if (entry instanceof MethodEntry) {
+			MethodEntry bridgedMethod = bridgedMethods.remove(entry);
+			bridgedMethods.put((MethodEntry) newEntry, bridgedMethod);
+
+			Collection<MethodEntry> accessorEntries = inverseBridges.removeAll(entry);
+			for (MethodEntry accessorEntry : accessorEntries) {
+				bridgedMethods.put(accessorEntry, (MethodEntry) newEntry);
+			}
+
+			inverseBridges.putAll((MethodEntry) newEntry, accessorEntries);
+		}
 	}
 
 	@Override
@@ -37,6 +68,7 @@ public class BridgeMethodIndex implements JarIndexer {
 			MethodEntry accessedMethod = findAccessMethod(methodEntry);
 			if (accessedMethod != null) {
 				bridgedMethods.put(methodEntry, accessedMethod);
+				inverseBridges.put(accessedMethod, methodEntry);
 			}
 		}
 	}

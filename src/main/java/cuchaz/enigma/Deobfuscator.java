@@ -66,7 +66,7 @@ public class Deobfuscator {
 		this.parsedJar = jar;
 
 		// build the jar index
-		this.jarIndex = new JarIndex();
+		this.jarIndex = JarIndex.empty();
 		this.jarIndex.indexJar(this.parsedJar, listener);
 
 		listener.accept("Initializing plugins...");

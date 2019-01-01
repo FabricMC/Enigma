@@ -11,7 +11,6 @@
 
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.ReferencedEntryPool;
@@ -23,15 +22,13 @@ import java.util.Arrays;
 
 public class TranslationClassVisitor extends ClassVisitor {
 	private final Translator translator;
-	private final JarIndex jarIndex;
 	private final ReferencedEntryPool entryPool;
 
 	private ClassDefEntry obfClassEntry;
 
-	public TranslationClassVisitor(Translator translator, JarIndex jarIndex, ReferencedEntryPool entryPool, int api, ClassVisitor cv) {
+	public TranslationClassVisitor(Translator translator, ReferencedEntryPool entryPool, int api, ClassVisitor cv) {
 		super(api, cv);
 		this.translator = translator;
-		this.jarIndex = jarIndex;
 		this.entryPool = entryPool;
 	}
 

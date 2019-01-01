@@ -14,6 +14,7 @@ package cuchaz.enigma.analysis.index;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -24,16 +25,52 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-public class JarIndex implements JarIndexer {
-	private final EntryIndex entryIndex = new EntryIndex();
-	private final InheritanceIndex inheritanceIndex = new InheritanceIndex();
-	private final ReferenceIndex referenceIndex = new ReferenceIndex();
-	private final BridgeMethodIndex bridgeMethodIndex = new BridgeMethodIndex(entryIndex, referenceIndex);
-	private final EntryResolver entryResolver = new IndexEntryResolver(this);
+public class JarIndex implements JarIndexer, RemappableIndex {
+	private final EntryIndex entryIndex;
+	private final InheritanceIndex inheritanceIndex;
+	private final ReferenceIndex referenceIndex;
+	private final BridgeMethodIndex bridgeMethodIndex;
+	private final EntryResolver entryResolver;
 
-	private final Collection<JarIndexer> indexers = Arrays.asList(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex);
+	private final Collection<JarIndexer> indexers;
 
 	private final Multimap<String, MethodDefEntry> methodImplementations = HashMultimap.create();
+
+	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex) {
+		this.entryIndex = entryIndex;
+		this.inheritanceIndex = inheritanceIndex;
+		this.referenceIndex = referenceIndex;
+		this.bridgeMethodIndex = bridgeMethodIndex;
+		this.indexers = Arrays.asList(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex);
+		this.entryResolver = new IndexEntryResolver(this);
+	}
+
+	public static JarIndex empty() {
+		EntryIndex entryIndex = new EntryIndex();
+		InheritanceIndex inheritanceIndex = new InheritanceIndex();
+		ReferenceIndex referenceIndex = new ReferenceIndex();
+		BridgeMethodIndex bridgeMethodIndex = new BridgeMethodIndex(entryIndex, referenceIndex);
+		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex);
+	}
+
+	@Override
+	public JarIndex remapped(Translator translator) {
+		EntryIndex entryIndex = this.entryIndex.remapped(translator);
+		InheritanceIndex inheritanceIndex = this.inheritanceIndex.remapped(translator);
+		BridgeMethodIndex bridgeMethodIndex = this.bridgeMethodIndex.remapped(translator);
+
+		JarIndex remappedIndex = new JarIndex(entryIndex, inheritanceIndex, this.referenceIndex, bridgeMethodIndex);
+		remappedIndex.methodImplementations.putAll(methodImplementations);
+
+		return remappedIndex;
+	}
+
+	@Override
+	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
+		this.entryIndex.remapEntry(entry, newEntry);
+		this.inheritanceIndex.remapEntry(entry, newEntry);
+		this.bridgeMethodIndex.remapEntry(entry, newEntry);
+	}
 
 	public void indexJar(ParsedJar jar, Consumer<String> progress) {
 		progress.accept("Indexing entries (1/3)");

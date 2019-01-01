@@ -31,7 +31,7 @@ public class TestDeobfed {
 	public static void beforeClass()
 		throws Exception {
 		jar = new ParsedJar(new JarFile("build/test-deobf/translation.jar"));
-		index = new JarIndex();
+		index = JarIndex.empty();
 		index.indexJar(jar, s -> {});
 	}
 

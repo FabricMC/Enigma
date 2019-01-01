@@ -17,7 +17,9 @@ public class BidirectionalMapper {
 	private final MappingTree<EntryMapping> obfToDeobf;
 	private final DeltaTrackingTree<EntryMapping> deobfToObf;
 
-	private final EntryResolver entryResolver;
+	private final JarIndex deobfIndex;
+
+	private final EntryResolver obfResolver;
 
 	private final Translator deobfuscator;
 	private final Translator obfuscator;
@@ -28,14 +30,15 @@ public class BidirectionalMapper {
 		this.obfToDeobf = obfToDeobf;
 		this.deobfToObf = new DeltaTrackingTree<>(deobfToObf);
 
-		this.entryResolver = jarIndex.getEntryResolver();
+		this.obfResolver = jarIndex.getEntryResolver();
 
-		this.deobfuscator = new MappingTranslator(obfToDeobf, entryResolver);
+		this.deobfuscator = new MappingTranslator(obfToDeobf, obfResolver);
+		this.deobfIndex = jarIndex.remapped(this.deobfuscator);
 
-		// TODO: We need to be able to resolve entries from obf!
-		this.obfuscator = new MappingTranslator(deobfToObf, entryResolver);
+		EntryResolver deobfResolver = deobfIndex.getEntryResolver();
+		this.obfuscator = new MappingTranslator(deobfToObf, deobfResolver);
 
-		this.validator = new MappingValidator(obfToDeobf, entryResolver);
+		this.validator = new MappingValidator(obfToDeobf, obfResolver);
 	}
 
 	public BidirectionalMapper(JarIndex jarIndex) {
@@ -61,7 +64,7 @@ public class BidirectionalMapper {
 	}
 
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		E resolvedEntry = entryResolver.resolveEntry(obfuscatedEntry);
+		E resolvedEntry = obfResolver.resolveEntry(obfuscatedEntry);
 
 		if (deobfMapping != null) {
 			validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
@@ -88,6 +91,8 @@ public class BidirectionalMapper {
 		obfToDeobf.insert(obfuscatedEntry, deobfMapping);
 
 		E newDeobf = deobfuscate(obfuscatedEntry);
+
+		deobfIndex.remapEntry(prevDeobf, newDeobf);
 
 		// Reconstruct the children of this node in the deobf -> obf tree with our new mapping
 		// We only need to do this for deobf -> obf because the obf tree is always consistent on the left hand side

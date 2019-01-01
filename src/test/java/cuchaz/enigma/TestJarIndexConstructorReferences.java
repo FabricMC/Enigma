@@ -40,7 +40,7 @@ public class TestJarIndexConstructorReferences {
 	public TestJarIndexConstructorReferences()
 			throws Exception {
 		File jarFile = new File("build/test-obf/constructors.jar");
-		index = new JarIndex();
+		index = JarIndex.empty();
 		index.indexJar(new ParsedJar(new JarFile(jarFile)), s -> {});
 	}
 

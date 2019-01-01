@@ -35,7 +35,7 @@ public class TestJarIndexLoneClass {
 
 	public TestJarIndexLoneClass()
 			throws Exception {
-		index = new JarIndex();
+		index = JarIndex.empty();
 		index.indexJar(new ParsedJar(new JarFile("build/test-obf/loneClass.jar")), s -> {});
 	}
 

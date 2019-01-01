@@ -46,7 +46,7 @@ public class TestJarIndexInheritanceTree {
 
 	public TestJarIndexInheritanceTree()
 			throws Exception {
-		index = new JarIndex();
+		index = JarIndex.empty();
 		index.indexJar(new ParsedJar(new JarFile("build/test-obf/inheritanceTree.jar")), s -> {});
 	}
 

@@ -147,7 +147,7 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 
 	@Override
 	public String transformInto(ClassNode node, ClassWriter writer) {
-		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, jarIndex, entryPool, Opcodes.ASM5, writer));
+		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, entryPool, Opcodes.ASM5, writer));
 		return deobfuscatingTranslator.translate(new ClassEntry(node.name)).getFullName();
 	}
 
