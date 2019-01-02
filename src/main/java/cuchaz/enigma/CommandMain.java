@@ -11,7 +11,6 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.translation.mapping.BidirectionalMapper;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -76,7 +75,7 @@ public class CommandMain {
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
 			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings);
-			deobfuscator.setMapper(new BidirectionalMapper(deobfuscator.getJarIndex(), mappings));
+			deobfuscator.setMappings(mappings);
 		}
 		return deobfuscator;
 	}

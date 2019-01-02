@@ -127,12 +127,17 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	@Override
-	public Collection<Entry<?>> getAllEntries() {
+	public Collection<HashTreeNode<T>> getAllNodes() {
 		Collection<HashTreeNode<T>> nodes = new ArrayList<>();
 		for (HashTreeNode<T> node : root.values()) {
 			nodes.addAll(node.getNodesRecursively());
 		}
-		return nodes.stream()
+		return nodes;
+	}
+
+	@Override
+	public Collection<Entry<?>> getAllEntries() {
+		return getAllNodes().stream()
 				.map(HashTreeNode::getEntry)
 				.collect(Collectors.toList());
 	}

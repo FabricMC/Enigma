@@ -4,6 +4,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class HashTreeNode<T> implements Iterable<HashTreeNode<T>> {
 	private final Entry<?> entry;
@@ -67,5 +68,11 @@ public class HashTreeNode<T> implements Iterable<HashTreeNode<T>> {
 			nodes.addAll(node.getNodesRecursively());
 		}
 		return nodes;
+	}
+
+	public Collection<Entry<?>> getChildrenRecursively() {
+		return getNodesRecursively().stream()
+				.map(HashTreeNode::getEntry)
+				.collect(Collectors.toList());
 	}
 }

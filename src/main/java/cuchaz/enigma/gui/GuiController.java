@@ -106,7 +106,7 @@ public class GuiController {
 	}
 
 	public void closeMappings() {
-		this.deobfuscator.setMapper(null);
+		this.deobfuscator.setMappings(null);
 		this.gui.setMappingsFile(null);
 		refreshClasses();
 		refreshCurrentClass();

@@ -85,7 +85,7 @@ public class Deobfuscator {
 		this.settings.setShowSyntheticMembers(Utils.getSystemPropertyAsBoolean("enigma.showSyntheticMembers", false));
 
 		// init mappings
-		setMapper(new BidirectionalMapper(jarIndex));
+		mapper = new BidirectionalMapper(jarIndex);
 	}
 
 	public Deobfuscator(JarFile jar, Consumer<String> listener) throws IOException {
@@ -123,35 +123,28 @@ public class Deobfuscator {
 	}
 
 	public void setMappings(EntryTree<EntryMapping> mappings) {
-		setMapper(new BidirectionalMapper(jarIndex, mappings), true);
-	}
-
-	public void setMapper(BidirectionalMapper mapper) {
-		setMapper(mapper, true);
-	}
-
-	public void setMapper(BidirectionalMapper mapper, boolean warnAboutDrops) {
-		if (mapper == null) {
+		if (mappings != null) {
+			dropMappings(mappings);
+			this.mapper = new BidirectionalMapper(jarIndex, mappings);
+		} else {
 			mapper = new BidirectionalMapper(jarIndex);
 		}
+	}
 
+	private void dropMappings(EntryTree<EntryMapping> mappings) {
 		// drop mappings that don't match the jar
-		MappingsChecker checker = new MappingsChecker(this.jarIndex.getEntryIndex(), mapper);
+		MappingsChecker checker = new MappingsChecker(jarIndex, mappings);
 		MappingsChecker.Dropped dropped = checker.dropBrokenMappings();
 
-		if (warnAboutDrops) {
-			for (Map.Entry<ClassEntry, String> mapping : dropped.getDroppedClassMappings().entrySet()) {
-				System.out.println("WARNING: Couldn't find class entry " + mapping.getKey() + " (" + mapping.getValue() + ") in jar. Mapping was dropped.");
-			}
-			for (Map.Entry<FieldEntry, String> mapping : dropped.getDroppedFieldMappings().entrySet()) {
-				System.out.println("WARNING: Couldn't find field entry " + mapping.getKey() + " (" + mapping.getValue() + ") in jar. Mapping was dropped.");
-			}
-			for (Map.Entry<MethodEntry, String> mapping : dropped.getDroppedMethodMappings().entrySet()) {
-				System.out.println("WARNING: Couldn't find method entry " + mapping.getKey() + " (" + mapping.getValue() + ") in jar. Mapping was dropped.");
-			}
+		for (Map.Entry<ClassEntry, String> mapping : dropped.getDroppedClassMappings().entrySet()) {
+			System.out.println("WARNING: Couldn't find class entry " + mapping.getKey() + " (" + mapping.getValue() + ") in jar. Mapping was dropped.");
 		}
-
-		this.mapper = mapper;
+		for (Map.Entry<FieldEntry, String> mapping : dropped.getDroppedFieldMappings().entrySet()) {
+			System.out.println("WARNING: Couldn't find field entry " + mapping.getKey() + " (" + mapping.getValue() + ") in jar. Mapping was dropped.");
+		}
+		for (Map.Entry<MethodEntry, String> mapping : dropped.getDroppedMethodMappings().entrySet()) {
+			System.out.println("WARNING: Couldn't find method entry " + mapping.getKey() + " (" + mapping.getValue() + ") in jar. Mapping was dropped.");
+		}
 	}
 
 	public void getSeparatedClasses(List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses) {

@@ -70,6 +70,11 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 	}
 
 	@Override
+	public Collection<HashTreeNode<M>> getAllNodes() {
+		return delegate.getAllNodes();
+	}
+
+	@Override
 	public Collection<Entry<?>> getRootEntries() {
 		return delegate.getRootEntries();
 	}

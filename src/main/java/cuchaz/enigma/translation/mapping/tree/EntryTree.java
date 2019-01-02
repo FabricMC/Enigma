@@ -14,5 +14,7 @@ public interface EntryTree<T> extends EntryMap<T>, Iterable<HashTreeNode<T>> {
 	@Nullable
 	HashTreeNode<T> findNode(Entry<?> entry);
 
+	Collection<HashTreeNode<T>> getAllNodes();
+
 	Collection<Entry<?>> getRootEntries();
 }
