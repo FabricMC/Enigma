@@ -7,28 +7,28 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class DeltaTrackingTree<M> implements MappingTree<M> {
-	private final MappingTree<M> delegate;
+public class DeltaTrackingTree<M> implements EntryTree<M> {
+	private final EntryTree<M> delegate;
 
-	private MappingTree<Object> additions = new HashMappingTree<>();
-	private MappingTree<Object> deletions = new HashMappingTree<>();
+	private EntryTree<Object> additions = new HashEntryTree<>();
+	private EntryTree<Object> deletions = new HashEntryTree<>();
 
-	public DeltaTrackingTree(MappingTree<M> delegate) {
+	public DeltaTrackingTree(EntryTree<M> delegate) {
 		this.delegate = delegate;
 	}
 
 	public DeltaTrackingTree() {
-		this(new HashMappingTree<>());
+		this(new HashEntryTree<>());
 	}
 
 	@Override
-	public void insert(Entry<?> entry, M mapping) {
-		if (mapping != null) {
+	public void insert(Entry<?> entry, M value) {
+		if (value != null) {
 			trackAddition(entry);
 		} else {
 			trackDeletion(entry);
 		}
-		delegate.insert(entry, mapping);
+		delegate.insert(entry, value);
 	}
 
 	@Override
@@ -49,8 +49,8 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 
 	@Nullable
 	@Override
-	public M getMapping(Entry<?> entry) {
-		return delegate.getMapping(entry);
+	public M get(Entry<?> entry) {
+		return delegate.get(entry);
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 
 	@Nullable
 	@Override
-	public MappingNode<M> findNode(Entry<?> entry) {
+	public HashTreeNode<M> findNode(Entry<?> entry) {
 		return delegate.findNode(entry);
 	}
 
@@ -85,7 +85,7 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	}
 
 	@Override
-	public Iterator<MappingNode<M>> iterator() {
+	public Iterator<HashTreeNode<M>> iterator() {
 		return delegate.iterator();
 	}
 
@@ -96,8 +96,8 @@ public class DeltaTrackingTree<M> implements MappingTree<M> {
 	}
 
 	private void resetDelta() {
-		additions = new HashMappingTree<>();
-		deletions = new HashMappingTree<>();
+		additions = new HashEntryTree<>();
+		deletions = new HashEntryTree<>();
 	}
 
 	public boolean isDirty() {

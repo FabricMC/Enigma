@@ -5,8 +5,8 @@ import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
-import cuchaz.enigma.translation.mapping.tree.HashMappingTree;
-import cuchaz.enigma.translation.mapping.tree.MappingTree;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -24,16 +24,16 @@ import java.util.stream.Collectors;
 public enum EnigmaMappingsReader implements MappingsReader {
 	FILE {
 		@Override
-		public MappingTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
-			MappingTree<EntryMapping> mappings = new HashMappingTree<>();
+		public EntryTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
+			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 			readFile(path, mappings);
 			return mappings;
 		}
 	},
 	DIRECTORY {
 		@Override
-		public MappingTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
-			MappingTree<EntryMapping> mappings = new HashMappingTree<>();
+		public EntryTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
+			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
 			List<Path> files = Files.walk(path)
 					.filter(f -> !Files.isDirectory(f))
@@ -50,7 +50,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		}
 	};
 
-	protected void readFile(Path path, MappingTree<EntryMapping> mappings) throws IOException, MappingParseException {
+	protected void readFile(Path path, EntryTree<EntryMapping> mappings) throws IOException, MappingParseException {
 		List<String> lines = Files.readAllLines(path, Charsets.UTF_8);
 		Deque<Entry<?>> mappingStack = new ArrayDeque<>();
 

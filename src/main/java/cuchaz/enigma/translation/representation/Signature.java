@@ -5,7 +5,7 @@ import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.MappingSet;
+import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
@@ -87,7 +87,7 @@ public class Signature implements Translatable {
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, MappingSet<EntryMapping> mappings) {
+	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		return remap(name -> translator.translate(new ClassEntry(name)).getFullName());
 	}
 }

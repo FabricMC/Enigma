@@ -1,16 +1,16 @@
 package cuchaz.enigma.translation.mapping;
 
 import cuchaz.enigma.throwables.IllegalNameException;
-import cuchaz.enigma.translation.mapping.tree.MappingTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.util.Collection;
 
 public class MappingValidator {
-	private final MappingTree<EntryMapping> obfToDeobf;
+	private final EntryTree<EntryMapping> obfToDeobf;
 	private final EntryResolver entryResolver;
 
-	public MappingValidator(MappingTree<EntryMapping> obfToDeobf, EntryResolver entryResolver) {
+	public MappingValidator(EntryTree<EntryMapping> obfToDeobf, EntryResolver entryResolver) {
 		this.obfToDeobf = obfToDeobf;
 		this.entryResolver = entryResolver;
 	}

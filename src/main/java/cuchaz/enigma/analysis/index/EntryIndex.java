@@ -1,77 +1,70 @@
 package cuchaz.enigma.analysis.index;
 
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class EntryIndex implements JarIndexer, RemappableIndex {
-	private final Set<ClassEntry> classes = new HashSet<>();
-	private final Map<MethodEntry, AccessFlags> methods = new HashMap<>();
-	private final Map<FieldEntry, AccessFlags> fields = new HashMap<>();
+	private final EntryTree<AccessFlags> entries = new HashEntryTree<>();
 
 	@Override
 	public EntryIndex remapped(Translator translator) {
 		EntryIndex remapped = new EntryIndex();
-
-		for (ClassEntry classEntry : classes) {
-			remapped.classes.add(translator.translate(classEntry));
-		}
-		for (Map.Entry<MethodEntry, AccessFlags> entry : methods.entrySet()) {
-			remapped.methods.put(translator.translate(entry.getKey()), entry.getValue());
-		}
-		for (Map.Entry<FieldEntry, AccessFlags> entry : fields.entrySet()) {
-			remapped.fields.put(translator.translate(entry.getKey()), entry.getValue());
+		for (Entry<?> entry : entries.getAllEntries()) {
+			remapped.entries.insert(translator.translate(entry), entries.get(entry));
 		}
 
 		return remapped;
 	}
 
 	@Override
-	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
-		if (entry instanceof ClassEntry) {
-			classes.remove(entry);
-			classes.add((ClassEntry) newEntry);
-		} else if (entry instanceof MethodEntry) {
-			AccessFlags access = methods.remove(entry);
-			if (access != null) {
-				methods.put((MethodEntry) newEntry, access);
-			}
-		} else if (entry instanceof FieldEntry) {
-			AccessFlags access = fields.remove(entry);
-			if (access != null) {
-				fields.put((FieldEntry) newEntry, access);
-			}
+	public void remapEntry(Entry<?> prevEntry, Entry<?> newEntry) {
+		HashTreeNode<AccessFlags> node = entries.findNode(prevEntry);
+		if (node == null) {
+			return;
+		}
+
+		for (HashTreeNode<AccessFlags> child : node.getNodesRecursively()) {
+			Entry<?> entry = child.getEntry();
+			AccessFlags access = child.getValue();
+
+			entries.remove(entry);
+			entries.insert(entry.replaceAncestor(prevEntry, newEntry), access);
 		}
 	}
 
 	@Override
 	public void indexClass(ClassDefEntry classEntry) {
-		classes.add(classEntry);
+		entries.insert(classEntry, classEntry.getAccess());
 	}
 
 	@Override
 	public void indexMethod(MethodDefEntry methodEntry) {
-		methods.put(methodEntry, methodEntry.getAccess());
+		entries.insert(methodEntry, methodEntry.getAccess());
 	}
 
 	@Override
 	public void indexField(FieldDefEntry fieldEntry) {
-		fields.put(fieldEntry, fieldEntry.getAccess());
+		entries.insert(fieldEntry, fieldEntry.getAccess());
 	}
 
 	public boolean hasClass(ClassEntry entry) {
-		return classes.contains(entry);
+		return entries.contains(entry);
 	}
 
 	public boolean hasMethod(MethodEntry entry) {
-		return methods.containsKey(entry);
+		return entries.contains(entry);
 	}
 
 	public boolean hasField(FieldEntry entry) {
-		return fields.containsKey(entry);
+		return entries.contains(entry);
 	}
 
 	public boolean hasEntry(Entry<?> entry) {
@@ -90,12 +83,12 @@ public class EntryIndex implements JarIndexer, RemappableIndex {
 
 	@Nullable
 	public AccessFlags getMethodAccess(MethodEntry entry) {
-		return methods.get(entry);
+		return entries.get(entry);
 	}
 
 	@Nullable
 	public AccessFlags getFieldAccess(FieldEntry entry) {
-		return fields.get(entry);
+		return entries.get(entry);
 	}
 
 	@Nullable
@@ -112,14 +105,23 @@ public class EntryIndex implements JarIndexer, RemappableIndex {
 	}
 
 	public Collection<ClassEntry> getClasses() {
-		return Collections.unmodifiableCollection(classes);
+		return entries.getAllEntries().stream()
+				.filter(entry -> entry instanceof ClassEntry)
+				.map(entry -> (ClassEntry) entry)
+				.collect(Collectors.toSet());
 	}
 
 	public Collection<MethodEntry> getMethods() {
-		return methods.keySet();
+		return entries.getAllEntries().stream()
+				.filter(entry -> entry instanceof MethodEntry)
+				.map(entry -> (MethodEntry) entry)
+				.collect(Collectors.toSet());
 	}
 
 	public Collection<FieldEntry> getFields() {
-		return fields.keySet();
+		return entries.getAllEntries().stream()
+				.filter(entry -> entry instanceof FieldEntry)
+				.map(entry -> (FieldEntry) entry)
+				.collect(Collectors.toSet());
 	}
 }

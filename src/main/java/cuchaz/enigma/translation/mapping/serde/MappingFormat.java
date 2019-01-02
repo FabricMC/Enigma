@@ -4,7 +4,7 @@ import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
-import cuchaz.enigma.translation.mapping.tree.MappingTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -24,18 +24,18 @@ public enum MappingFormat {
 		this.reader = reader;
 	}
 
-	public void write(MappingTree<EntryMapping> mappings, Path path, ProgressListener progressListener)  {
+	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener)  {
 		write(mappings, MappingDelta.added(mappings), path, progressListener);
 	}
 
-	public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progressListener)  {
+	public void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progressListener)  {
 		if (writer == null) {
 			throw new IllegalStateException(name() + " does not support writing");
 		}
 		writer.write(mappings, delta, path, progressListener);
 	}
 
-	public MappingTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
+	public EntryTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
 		if (reader == null) {
 			throw new IllegalStateException(name() + " does not support reading");
 		}

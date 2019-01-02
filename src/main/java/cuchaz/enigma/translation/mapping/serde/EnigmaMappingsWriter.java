@@ -18,8 +18,8 @@ import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
-import cuchaz.enigma.translation.mapping.tree.MappingNode;
-import cuchaz.enigma.translation.mapping.tree.MappingTree;
+import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
-		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
+		public void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
 			Collection<ClassEntry> classes = mappings.getRootEntries().stream()
 					.filter(entry -> entry instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry)
@@ -58,7 +58,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	},
 	DIRECTORY {
 		@Override
-		public void write(MappingTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
+		public void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
 			applyDeletions(delta.getDeletions(), path);
 
 			Collection<ClassEntry> classes = delta.getAdditions().getRootEntries().stream()
@@ -89,7 +89,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			});
 		}
 
-		private void applyDeletions(MappingTree<?> deletions, Path root) {
+		private void applyDeletions(EntryTree<?> deletions, Path root) {
 			Collection<ClassEntry> deletedClasses = deletions.getRootEntries().stream()
 					.filter(e -> e instanceof ClassEntry)
 					.map(e -> (ClassEntry) e)
@@ -141,22 +141,22 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 	};
 
-	protected void writeRoot(PrintWriter writer, MappingTree<EntryMapping> mappings, ClassEntry classEntry) {
+	protected void writeRoot(PrintWriter writer, EntryTree<EntryMapping> mappings, ClassEntry classEntry) {
 		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
-		writer.println(writeClass(classEntry, mappings.getMapping(classEntry)));
+		writer.println(writeClass(classEntry, mappings.get(classEntry)));
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
 		}
 	}
 
-	protected void writeEntry(PrintWriter writer, MappingTree<EntryMapping> mappings, Entry<?> entry, int depth) {
-		MappingNode<EntryMapping> node = mappings.findNode(entry);
+	protected void writeEntry(PrintWriter writer, EntryTree<EntryMapping> mappings, Entry<?> entry, int depth) {
+		HashTreeNode<EntryMapping> node = mappings.findNode(entry);
 		if (node == null) {
 			return;
 		}
 
-		EntryMapping mapping = node.getMapping();
+		EntryMapping mapping = node.getValue();
 		if (entry instanceof ClassEntry) {
 			String line = writeClass((ClassEntry) entry, mapping);
 			writer.println(indent(line, depth));

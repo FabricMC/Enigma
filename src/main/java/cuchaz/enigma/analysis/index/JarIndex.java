@@ -67,9 +67,9 @@ public class JarIndex implements JarIndexer, RemappableIndex {
 
 	@Override
 	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
-		this.entryIndex.remapEntry(entry, newEntry);
-		this.inheritanceIndex.remapEntry(entry, newEntry);
-		this.bridgeMethodIndex.remapEntry(entry, newEntry);
+		entryIndex.remapEntry(entry, newEntry);
+		inheritanceIndex.remapEntry(entry, newEntry);
+		bridgeMethodIndex.remapEntry(entry, newEntry);
 	}
 
 	public void indexJar(ParsedJar jar, Consumer<String> progress) {

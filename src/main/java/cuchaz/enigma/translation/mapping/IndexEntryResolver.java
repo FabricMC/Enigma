@@ -1,6 +1,6 @@
 package cuchaz.enigma.translation.mapping;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.IndexTreeBuilder;
 import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
@@ -14,7 +14,10 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 // TODO: This only resolves if not contained in the current class. Do we want that behaviour everywhere?
 public class IndexEntryResolver implements EntryResolver {
@@ -36,7 +39,7 @@ public class IndexEntryResolver implements EntryResolver {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E extends Entry<?>> E resolveEntry(E entry) {
-		if (entry instanceof ClassEntry) {
+		if (entry == null || entry instanceof ClassEntry) {
 			return entry;
 		}
 
@@ -86,14 +89,14 @@ public class IndexEntryResolver implements EntryResolver {
 	}
 
 	@Override
-	public Collection<Entry<?>> resolveEquivalentEntries(Entry<?> entry) {
+	public List<Entry<?>> resolveEquivalentEntries(Entry<?> entry) {
 		MethodEntry relevantMethod = entry.findAncestor(MethodEntry.class);
 		if (relevantMethod == null || !entryIndex.hasMethod(relevantMethod)) {
 			return Collections.singletonList(entry);
 		}
 
-		Collection<MethodEntry> equivalentMethods = resolveEquivalentMethods(relevantMethod);
-		Collection<Entry<?>> equivalentEntries = new HashSet<>(equivalentMethods.size());
+		List<MethodEntry> equivalentMethods = resolveEquivalentMethods(relevantMethod);
+		List<Entry<?>> equivalentEntries = new ArrayList<>(equivalentMethods.size());
 
 		for (MethodEntry equivalentMethod : equivalentMethods) {
 			Entry<?> equivalentEntry = entry.replaceAncestor(relevantMethod, equivalentMethod);
@@ -104,22 +107,22 @@ public class IndexEntryResolver implements EntryResolver {
 	}
 
 	@Override
-	public Collection<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry) {
+	public List<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry) {
 		AccessFlags access = entryIndex.getMethodAccess(methodEntry);
 		if (access == null) {
 			throw new IllegalArgumentException("Could not find method " + methodEntry);
 		}
 
 		if (!canInherit(methodEntry, access)) {
-			return Collections.singleton(methodEntry);
+			return Collections.singletonList(methodEntry);
 		}
 
-		Set<MethodEntry> methodEntries = Sets.newHashSet();
+		List<MethodEntry> methodEntries = Lists.newArrayList();
 		resolveEquivalentMethods(methodEntries, treeBuilder.buildMethodInheritance(VoidTranslator.INSTANCE, methodEntry));
 		return methodEntries;
 	}
 
-	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
+	private void resolveEquivalentMethods(List<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
 		if (methodEntries.contains(methodEntry)) {
 			return;
@@ -149,7 +152,7 @@ public class IndexEntryResolver implements EntryResolver {
 		}
 	}
 
-	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodImplementationsTreeNode node) {
+	private void resolveEquivalentMethods(List<MethodEntry> methodEntries, MethodImplementationsTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
 		AccessFlags flags = entryIndex.getMethodAccess(methodEntry);
 		if (flags != null && !flags.isPrivate() && !flags.isStatic()) {

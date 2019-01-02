@@ -15,9 +15,14 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 public class InheritanceIndex implements JarIndexer, RemappableIndex {
 	private final Multimap<ClassEntry, ClassEntry> classParents = HashMultimap.create();
@@ -37,16 +42,16 @@ public class InheritanceIndex implements JarIndexer, RemappableIndex {
 	}
 
 	@Override
-	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
-		if (entry instanceof ClassEntry) {
-			ClassEntry classEntry = (ClassEntry) entry;
+	public void remapEntry(Entry<?> prevEntry, Entry<?> newEntry) {
+		if (prevEntry instanceof ClassEntry) {
+			ClassEntry classEntry = (ClassEntry) prevEntry;
 
 			Collection<ClassEntry> parents = classParents.removeAll(classEntry);
 			classParents.putAll((ClassEntry) newEntry, parents);
 
 			// Find all the parents of this class and remap their children
 			for (ClassEntry parent : parents) {
-				classChildren.remove(parent, entry);
+				classChildren.remove(parent, prevEntry);
 				classChildren.put(parent, (ClassEntry) newEntry);
 			}
 
@@ -55,7 +60,7 @@ public class InheritanceIndex implements JarIndexer, RemappableIndex {
 
 			// Find all the children of this class and remap their parents
 			for (ClassEntry child : children) {
-				classParents.remove(child, entry);
+				classParents.remove(child, prevEntry);
 				classParents.put(child, (ClassEntry) newEntry);
 			}
 		}

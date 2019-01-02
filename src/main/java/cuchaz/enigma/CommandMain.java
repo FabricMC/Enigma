@@ -14,7 +14,7 @@ package cuchaz.enigma;
 import cuchaz.enigma.translation.mapping.BidirectionalMapper;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.translation.mapping.tree.MappingTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -75,7 +75,7 @@ public class CommandMain {
 		Deobfuscator deobfuscator = new Deobfuscator(jar);
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
-			MappingTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings);
+			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings);
 			deobfuscator.setMapper(new BidirectionalMapper(deobfuscator.getJarIndex(), mappings));
 		}
 		return deobfuscator;
@@ -95,7 +95,7 @@ public class CommandMain {
 		System.out.println("Reading mappings...");
 
 		MappingFormat readFormat = chooseEnigmaFormat(fileMappings);
-		MappingTree<EntryMapping> mappings = readFormat.read(fileMappings);
+		EntryTree<EntryMapping> mappings = readFormat.read(fileMappings);
 		System.out.println("Saving new mappings...");
 
 		saveFormat.write(mappings, result.toPath(), new ConsoleProgressListener());

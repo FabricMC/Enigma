@@ -268,7 +268,9 @@ public class GuiController {
 	}
 
 	private void showReference(EntryReference<Entry<?>, Entry<?>> obfReference) {
-		EntryReference<Entry<?>, Entry<?>> deobfReference = this.deobfuscator.getMapper().deobfuscate(obfReference);
+		BidirectionalMapper mapper = this.deobfuscator.getMapper();
+		EntryReference<Entry<?>, Entry<?>> resolvedReference = mapper.getObfResolver().resolveReference(obfReference);
+		EntryReference<Entry<?>, Entry<?>> deobfReference = mapper.deobfuscate(resolvedReference);
 		Collection<Token> tokens = this.index.getReferenceTokens(deobfReference);
 		if (tokens.isEmpty()) {
 			// DEBUG

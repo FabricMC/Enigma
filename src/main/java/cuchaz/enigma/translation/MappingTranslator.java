@@ -2,13 +2,13 @@ package cuchaz.enigma.translation;
 
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.MappingSet;
+import cuchaz.enigma.translation.mapping.EntryMap;
 
 public class MappingTranslator implements Translator {
-	private final MappingSet<EntryMapping> mappings;
+	private final EntryMap<EntryMapping> mappings;
 	private final EntryResolver resolver;
 
-	public MappingTranslator(MappingSet<EntryMapping> mappings, EntryResolver resolver) {
+	public MappingTranslator(EntryMap<EntryMapping> mappings, EntryResolver resolver) {
 		this.mappings = mappings;
 		this.resolver = resolver;
 	}

@@ -5,28 +5,31 @@ import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
-import cuchaz.enigma.translation.mapping.tree.HashMappingTree;
-import cuchaz.enigma.translation.mapping.tree.MappingNode;
-import cuchaz.enigma.translation.mapping.tree.MappingTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class BidirectionalMapper {
-	private final MappingTree<EntryMapping> obfToDeobf;
+	private final EntryTree<EntryMapping> obfToDeobf;
 	private final DeltaTrackingTree<EntryMapping> deobfToObf;
 
 	private final JarIndex deobfIndex;
 
 	private final EntryResolver obfResolver;
+	private final EntryResolver deobfResolver;
 
 	private final Translator deobfuscator;
 	private final Translator obfuscator;
 
 	private final MappingValidator validator;
 
-	private BidirectionalMapper(JarIndex jarIndex, MappingTree<EntryMapping> obfToDeobf, MappingTree<EntryMapping> deobfToObf) {
+	private BidirectionalMapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf, EntryTree<EntryMapping> deobfToObf) {
 		this.obfToDeobf = obfToDeobf;
 		this.deobfToObf = new DeltaTrackingTree<>(deobfToObf);
 
@@ -35,23 +38,23 @@ public class BidirectionalMapper {
 		this.deobfuscator = new MappingTranslator(obfToDeobf, obfResolver);
 		this.deobfIndex = jarIndex.remapped(this.deobfuscator);
 
-		EntryResolver deobfResolver = deobfIndex.getEntryResolver();
+		this.deobfResolver = deobfIndex.getEntryResolver();
 		this.obfuscator = new MappingTranslator(deobfToObf, deobfResolver);
 
 		this.validator = new MappingValidator(obfToDeobf, obfResolver);
 	}
 
 	public BidirectionalMapper(JarIndex jarIndex) {
-		this(jarIndex, new HashMappingTree<>(), new HashMappingTree<>());
+		this(jarIndex, new HashEntryTree<>(), new HashEntryTree<>());
 	}
 
-	public BidirectionalMapper(JarIndex jarIndex, MappingTree<EntryMapping> deobfuscationTrees) {
+	public BidirectionalMapper(JarIndex jarIndex, EntryTree<EntryMapping> deobfuscationTrees) {
 		this(jarIndex, deobfuscationTrees, inverse(deobfuscationTrees));
 	}
 
-	private static MappingTree<EntryMapping> inverse(MappingTree<EntryMapping> tree) {
+	private static EntryTree<EntryMapping> inverse(EntryTree<EntryMapping> tree) {
 		Translator translator = new MappingTranslator(tree, VoidEntryResolver.INSTANCE);
-		MappingTree<EntryMapping> inverse = new HashMappingTree<>();
+		EntryTree<EntryMapping> inverse = new HashEntryTree<>();
 
 		// Naive approach, could operate on the nodes of the tree. However, this runs infrequently.
 		Collection<Entry<?>> entries = tree.getAllEntries();
@@ -87,20 +90,31 @@ public class BidirectionalMapper {
 	}
 
 	private <E extends Entry<?>> void setObfToDeobf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
+		List<Entry<?>> equivalentEntries = obfResolver.resolveEquivalentEntries(obfuscatedEntry);
+		List<Entry<?>> prevDeobfEquivalent = equivalentEntries.stream()
+				.map(this::deobfuscate)
+				.collect(Collectors.toList());
+
 		E prevDeobf = deobfuscate(obfuscatedEntry);
 		obfToDeobf.insert(obfuscatedEntry, deobfMapping);
 
 		E newDeobf = deobfuscate(obfuscatedEntry);
 
-		deobfIndex.remapEntry(prevDeobf, newDeobf);
+		List<Entry<?>> newDeobfEquivalent = equivalentEntries.stream()
+				.map(this::deobfuscate)
+				.collect(Collectors.toList());
+
+		for (int i = 0; i < prevDeobfEquivalent.size(); i++) {
+			deobfIndex.remapEntry(prevDeobfEquivalent.get(i), newDeobfEquivalent.get(i));
+		}
 
 		// Reconstruct the children of this node in the deobf -> obf tree with our new mapping
 		// We only need to do this for deobf -> obf because the obf tree is always consistent on the left hand side
 		// We lookup by obf, and the obf never changes. This is not the case for deobf so we need to update the tree.
 
-		MappingNode<EntryMapping> node = deobfToObf.findNode(prevDeobf);
+		HashTreeNode<EntryMapping> node = deobfToObf.findNode(prevDeobf);
 		if (node != null) {
-			for (MappingNode<EntryMapping> child : node.getNodesRecursively()) {
+			for (HashTreeNode<EntryMapping> child : node.getNodesRecursively()) {
 				Entry<?> entry = child.getEntry();
 				EntryMapping mapping = new EntryMapping(obfuscate(entry).getName());
 
@@ -114,20 +128,20 @@ public class BidirectionalMapper {
 
 	@Nullable
 	public EntryMapping getDeobfMapping(Entry<?> entry) {
-		return obfToDeobf.getMapping(entry);
+		return obfToDeobf.get(entry);
 	}
 
 	@Nullable
 	public EntryMapping getObfMapping(Entry<?> entry) {
-		return deobfToObf.getMapping(entry);
+		return deobfToObf.get(entry);
 	}
 
 	public boolean hasDeobfMapping(Entry<?> obfEntry) {
-		return obfToDeobf.hasMapping(obfEntry);
+		return obfToDeobf.contains(obfEntry);
 	}
 
 	public boolean hasObfMapping(Entry<?> deobfEntry) {
-		return deobfToObf.hasMapping(deobfEntry);
+		return deobfToObf.contains(deobfEntry);
 	}
 
 	public <T extends Translatable> T deobfuscate(T translatable) {
@@ -166,11 +180,11 @@ public class BidirectionalMapper {
 		return deobfToObf.getChildren(deobfuscatedEntry);
 	}
 
-	public MappingTree<EntryMapping> getObfToDeobf() {
+	public EntryTree<EntryMapping> getObfToDeobf() {
 		return obfToDeobf;
 	}
 
-	public MappingTree<EntryMapping> getDeobfToObf() {
+	public EntryTree<EntryMapping> getDeobfToObf() {
 		return deobfToObf;
 	}
 
@@ -181,5 +195,13 @@ public class BidirectionalMapper {
 
 	public boolean isDirty() {
 		return deobfToObf.isDirty();
+	}
+
+	public EntryResolver getObfResolver() {
+		return obfResolver;
+	}
+
+	public EntryResolver getDeobfResolver() {
+		return deobfResolver;
 	}
 }

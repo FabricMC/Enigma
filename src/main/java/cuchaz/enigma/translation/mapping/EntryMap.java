@@ -5,16 +5,16 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import javax.annotation.Nullable;
 import java.util.Collection;
 
-public interface MappingSet<M> {
-	void insert(Entry<?> entry, M mapping);
+public interface EntryMap<T> {
+	void insert(Entry<?> entry, T value);
 
 	void remove(Entry<?> entry);
 
 	@Nullable
-	M getMapping(Entry<?> entry);
+	T get(Entry<?> entry);
 
-	default boolean hasMapping(Entry<?> entry) {
-		return getMapping(entry) != null;
+	default boolean contains(Entry<?> entry) {
+		return get(entry) != null;
 	}
 
 	Collection<Entry<?>> getAllEntries();

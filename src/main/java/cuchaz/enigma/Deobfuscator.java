@@ -27,11 +27,8 @@ import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
-import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.BidirectionalMapper;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.MappingsChecker;
-import cuchaz.enigma.translation.mapping.tree.MappingTree;
+import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
@@ -125,7 +122,7 @@ public class Deobfuscator {
 		return this.mapper;
 	}
 
-	public void setMappings(MappingTree<EntryMapping> mappings) {
+	public void setMappings(EntryTree<EntryMapping> mappings) {
 		setMapper(new BidirectionalMapper(jarIndex, mappings), true);
 	}
 
@@ -242,15 +239,8 @@ public class Deobfuscator {
 		for (Token token : index.referenceTokens()) {
 			EntryReference<Entry<?>, Entry<?>> deobfReference = index.getDeobfReference(token);
 
-			// get the obfuscated entry
-			Entry<?> obfEntry = mapper.obfuscate(deobfReference.entry);
-
-			// try to resolve the entry
-			Entry<?> resolvedObfEntry = jarIndex.getEntryResolver().resolveEntry(obfEntry);
-
-			// save the new deobfuscated reference
-			deobfReference.entry = mapper.deobfuscate(resolvedObfEntry);
-			index.replaceDeobfReference(token, deobfReference);
+			EntryResolver resolver = mapper.getDeobfResolver();
+			index.replaceDeobfReference(token, resolver.resolveReference(deobfReference));
 		}
 
 		return index;

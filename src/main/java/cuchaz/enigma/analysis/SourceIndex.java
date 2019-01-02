@@ -112,9 +112,9 @@ public class SourceIndex {
 			return null;
 		}
 
-		if (node instanceof Identifier && name.indexOf('$') >=0 && node.getParent() instanceof ConstructorDeclaration && name.lastIndexOf('$') >= 0 && !ANONYMOUS_INNER.matcher(name).matches()){
+		if (node instanceof Identifier && name.indexOf('$') >= 0 && node.getParent() instanceof ConstructorDeclaration && name.lastIndexOf('$') >= 0 && !ANONYMOUS_INNER.matcher(name).matches()) {
 			TypeDeclaration type = node.getParent().getParent() instanceof TypeDeclaration ? (TypeDeclaration) node.getParent().getParent() : null;
-			if (type != null){
+			if (type != null) {
 				name = type.getName();
 				token.end = token.start + name.length();
 			}
@@ -172,10 +172,8 @@ public class SourceIndex {
 	}
 
 	public void replaceDeobfReference(Token token, EntryReference<Entry<?>, Entry<?>> newDeobfReference) {
-		EntryReference<Entry<?>, Entry<?>> oldDeobfReference = this.tokenToReference.get(token);
-		this.tokenToReference.put(token, newDeobfReference);
-		Collection<Token> tokens = this.referenceToTokens.get(oldDeobfReference);
-		this.referenceToTokens.removeAll(oldDeobfReference);
+		EntryReference<Entry<?>, Entry<?>> oldDeobfReference = this.tokenToReference.put(token, newDeobfReference);
+		Collection<Token> tokens = this.referenceToTokens.removeAll(oldDeobfReference);
 		this.referenceToTokens.putAll(newDeobfReference, tokens);
 	}
 

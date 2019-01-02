@@ -15,7 +15,7 @@ import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.MappingSet;
+import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
@@ -120,7 +120,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, MappingSet<EntryMapping> mappings) {
+	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		return new EntryReference<>(translator.translate(entry), translator.translate(context), this);
 	}
 }

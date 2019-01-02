@@ -6,44 +6,44 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class HashMappingTree<M> implements MappingTree<M> {
-	private final Map<Entry<?>, MappingNode<M>> root = new HashMap<>();
+public class HashEntryTree<T> implements EntryTree<T> {
+	private final Map<Entry<?>, HashTreeNode<T>> root = new HashMap<>();
 
 	@Override
-	public void insert(Entry<?> entry, M mapping) {
-		List<MappingNode<M>> path = computePath(entry);
-		path.get(path.size() - 1).putMapping(mapping);
-		if (mapping == null) {
+	public void insert(Entry<?> entry, T value) {
+		List<HashTreeNode<T>> path = computePath(entry);
+		path.get(path.size() - 1).putValue(value);
+		if (value == null) {
 			removeDeadAlong(path);
 		}
 	}
 
 	@Override
 	public void remove(Entry<?> entry) {
-		List<MappingNode<M>> path = computePath(entry);
-		path.get(path.size() - 1).removeMapping();
+		List<HashTreeNode<T>> path = computePath(entry);
+		path.get(path.size() - 1).removeValue();
 
 		removeDeadAlong(path);
 	}
 
 	@Override
 	@Nullable
-	public M getMapping(Entry<?> entry) {
-		MappingNode<M> node = findNode(entry);
+	public T get(Entry<?> entry) {
+		HashTreeNode<T> node = findNode(entry);
 		if (node == null) {
 			return null;
 		}
-		return node.getMapping();
+		return node.getValue();
 	}
 
 	@Override
-	public boolean hasMapping(Entry<?> entry) {
-		return getMapping(entry) != null;
+	public boolean contains(Entry<?> entry) {
+		return get(entry) != null;
 	}
 
 	@Override
 	public Collection<Entry<?>> getChildren(Entry<?> entry) {
-		MappingNode<M> leaf = findNode(entry);
+		HashTreeNode<T> leaf = findNode(entry);
 		if (leaf == null) {
 			return Collections.emptyList();
 		}
@@ -52,11 +52,11 @@ public class HashMappingTree<M> implements MappingTree<M> {
 
 	@Override
 	public Collection<Entry<?>> getSiblings(Entry<?> entry) {
-		List<MappingNode<M>> path = computePath(entry);
+		List<HashTreeNode<T>> path = computePath(entry);
 		if (path.size() <= 1) {
 			return getSiblings(entry, root.keySet());
 		}
-		MappingNode<M> parent = path.get(path.size() - 2);
+		HashTreeNode<T> parent = path.get(path.size() - 2);
 		return getSiblings(entry, parent.getChildren());
 	}
 
@@ -68,13 +68,13 @@ public class HashMappingTree<M> implements MappingTree<M> {
 
 	@Override
 	@Nullable
-	public MappingNode<M> findNode(Entry<?> target) {
+	public HashTreeNode<T> findNode(Entry<?> target) {
 		List<Entry<?>> parentChain = target.getAncestry();
 		if (parentChain.isEmpty()) {
 			return null;
 		}
 
-		MappingNode<M> node = root.get(parentChain.get(0));
+		HashTreeNode<T> node = root.get(parentChain.get(0));
 		for (int i = 1; i < parentChain.size(); i++) {
 			if (node == null) {
 				return null;
@@ -85,16 +85,16 @@ public class HashMappingTree<M> implements MappingTree<M> {
 		return node;
 	}
 
-	private List<MappingNode<M>> computePath(Entry<?> target) {
+	private List<HashTreeNode<T>> computePath(Entry<?> target) {
 		List<Entry<?>> ancestry = target.getAncestry();
 		if (ancestry.isEmpty()) {
 			return Collections.emptyList();
 		}
 
-		List<MappingNode<M>> path = new ArrayList<>(ancestry.size());
+		List<HashTreeNode<T>> path = new ArrayList<>(ancestry.size());
 
 		Entry<?> rootEntry = ancestry.get(0);
-		MappingNode<M> node = root.computeIfAbsent(rootEntry, MappingNode::new);
+		HashTreeNode<T> node = root.computeIfAbsent(rootEntry, HashTreeNode::new);
 		path.add(node);
 
 		for (int i = 1; i < ancestry.size(); i++) {
@@ -105,12 +105,12 @@ public class HashMappingTree<M> implements MappingTree<M> {
 		return path;
 	}
 
-	private void removeDeadAlong(List<MappingNode<M>> path) {
+	private void removeDeadAlong(List<HashTreeNode<T>> path) {
 		for (int i = path.size() - 1; i >= 0; i--) {
-			MappingNode<M> node = path.get(i);
+			HashTreeNode<T> node = path.get(i);
 			if (node.isEmpty()) {
 				if (i > 0) {
-					MappingNode<M> parentNode = path.get(i - 1);
+					HashTreeNode<T> parentNode = path.get(i - 1);
 					parentNode.remove(node.getEntry());
 				} else {
 					root.remove(node.getEntry());
@@ -122,18 +122,18 @@ public class HashMappingTree<M> implements MappingTree<M> {
 	}
 
 	@Override
-	public Iterator<MappingNode<M>> iterator() {
+	public Iterator<HashTreeNode<T>> iterator() {
 		return root.values().iterator();
 	}
 
 	@Override
 	public Collection<Entry<?>> getAllEntries() {
-		Collection<MappingNode<M>> nodes = new ArrayList<>();
-		for (MappingNode<M> node : root.values()) {
+		Collection<HashTreeNode<T>> nodes = new ArrayList<>();
+		for (HashTreeNode<T> node : root.values()) {
 			nodes.addAll(node.getNodesRecursively());
 		}
 		return nodes.stream()
-				.map(MappingNode::getEntry)
+				.map(HashTreeNode::getEntry)
 				.collect(Collectors.toList());
 	}
 

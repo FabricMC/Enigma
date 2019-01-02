@@ -1,14 +1,19 @@
 package cuchaz.enigma.analysis.index;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 	private final EntryIndex entryIndex;
@@ -36,12 +41,20 @@ public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 	}
 
 	@Override
-	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
-		if (entry instanceof MethodEntry) {
-			MethodEntry bridgedMethod = bridgedMethods.remove(entry);
+	public void remapEntry(Entry<?> prevEntry, Entry<?> newEntry) {
+		if (prevEntry instanceof ClassEntry) {
+			List<MethodEntry> remappedMethods = bridgedMethods.entrySet().stream()
+					.filter(e -> e.getKey().getParent().equals(prevEntry) || e.getValue().getParent().equals(newEntry))
+					.map(Map.Entry::getKey)
+					.collect(Collectors.toList());
+			for (MethodEntry entry : remappedMethods) {
+				remapEntry(entry, entry.replaceAncestor(prevEntry, newEntry));
+			}
+		} else if (prevEntry instanceof MethodEntry) {
+			MethodEntry bridgedMethod = bridgedMethods.remove(prevEntry);
 			bridgedMethods.put((MethodEntry) newEntry, bridgedMethod);
 
-			Collection<MethodEntry> accessorEntries = inverseBridges.removeAll(entry);
+			Collection<MethodEntry> accessorEntries = inverseBridges.removeAll(prevEntry);
 			for (MethodEntry accessorEntry : accessorEntries) {
 				bridgedMethods.put(accessorEntry, (MethodEntry) newEntry);
 			}

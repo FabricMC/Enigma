@@ -16,7 +16,7 @@ import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.MappingSet;
+import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Utils;
 
@@ -118,7 +118,7 @@ public class MethodDescriptor implements Translatable {
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, MappingSet<EntryMapping> mappings) {
+	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		List<TypeDescriptor> translatedArguments = new ArrayList<>(argumentDescs.size());
 		for (TypeDescriptor argument : argumentDescs) {
 			translatedArguments.add(translator.translate(argument));
