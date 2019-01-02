@@ -20,7 +20,7 @@ import cuchaz.enigma.utils.Utils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class FieldEntry extends ParentedEntry<ClassEntry> {
+public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<FieldEntry> {
 	protected final TypeDescriptor desc;
 
 	public FieldEntry(ClassEntry parent, String name, TypeDescriptor desc) {
@@ -79,5 +79,10 @@ public class FieldEntry extends ParentedEntry<ClassEntry> {
 	@Override
 	public String toString() {
 		return this.parent.getFullName() + "." + this.name + ":" + this.desc;
+	}
+
+	@Override
+	public int compareTo(FieldEntry entry) {
+		return (name + desc.toString()).compareTo(entry.name + entry.desc.toString());
 	}
 }

@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
  * Created by Thog
  * 19/10/2016
  */
-public class LocalVariableEntry extends ParentedEntry<MethodEntry> {
+public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Comparable<LocalVariableEntry> {
 
 	protected final int index;
 	protected final boolean parameter;
@@ -85,5 +85,10 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> {
 	@Override
 	public String toString() {
 		return this.parent + "(" + this.index + ":" + this.name + ")";
+	}
+
+	@Override
+	public int compareTo(LocalVariableEntry entry) {
+		return Integer.compare(index, entry.index);
 	}
 }

@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-public class ClassEntry extends ParentedEntry<ClassEntry> {
+public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<ClassEntry> {
 	private final String fullName;
 
 	public ClassEntry(String className) {
@@ -166,5 +166,10 @@ public class ClassEntry extends ParentedEntry<ClassEntry> {
 			return name.substring(innerClassPos + 1);
 		}
 		return name;
+	}
+
+	@Override
+	public int compareTo(ClassEntry entry) {
+		return name.compareTo(entry.name);
 	}
 }

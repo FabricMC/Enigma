@@ -18,8 +18,8 @@ import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
-import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.io.IOException;
@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -144,7 +143,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected void writeRoot(PrintWriter writer, EntryTree<EntryMapping> mappings, ClassEntry classEntry) {
 		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
-		writer.println(writeClass(classEntry, mappings.get(classEntry)));
+		writer.println(writeClass(classEntry, mappings.get(classEntry)).trim());
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
 		}
@@ -181,16 +180,23 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		Collection<Entry<?>> result = new ArrayList<>(children.size());
 
 		children.stream().filter(e -> e instanceof ClassEntry)
-				.sorted(Comparator.comparing(Entry::getName))
+				.map(e -> (ClassEntry) e)
+				.sorted()
 				.forEach(result::add);
+
 		children.stream().filter(e -> e instanceof FieldEntry)
-				.sorted(Comparator.comparing(Entry::getName))
+				.map(e -> (FieldEntry) e)
+				.sorted()
 				.forEach(result::add);
+
 		children.stream().filter(e -> e instanceof MethodEntry)
-				.sorted(Comparator.comparing(Entry::getName))
+				.map(e -> (MethodEntry) e)
+				.sorted()
 				.forEach(result::add);
+
 		children.stream().filter(e -> e instanceof LocalVariableEntry)
-				.sorted(Comparator.comparing(Entry::getName))
+				.map(e -> (LocalVariableEntry) e)
+				.sorted()
 				.forEach(result::add);
 
 		return result;
@@ -209,7 +215,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
-		builder.append(entry.getDesc().toString()).append(' ');
+		builder.append(entry.getDesc().toString());
 
 		return builder.toString();
 	}
@@ -219,7 +225,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
-		builder.append(entry.getDesc().toString()).append(' ');
+		builder.append(entry.getDesc().toString());
 
 		return builder.toString();
 	}
@@ -229,7 +235,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		builder.append(entry.getIndex()).append(' ');
 
 		String mappedName = mapping != null ? mapping.getTargetName() : entry.getName();
-		builder.append(mappedName).append(' ');
+		builder.append(mappedName);
 
 		return builder.toString();
 	}
@@ -248,7 +254,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		for (int i = 0; i < depth; i++) {
 			builder.append("\t");
 		}
-		builder.append(line);
+		builder.append(line.trim());
 		return builder.toString();
 	}
 }

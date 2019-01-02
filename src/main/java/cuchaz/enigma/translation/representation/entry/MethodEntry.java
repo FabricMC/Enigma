@@ -20,7 +20,7 @@ import cuchaz.enigma.utils.Utils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class MethodEntry extends ParentedEntry<ClassEntry> {
+public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable<MethodEntry> {
 
 	protected final MethodDescriptor descriptor;
 
@@ -88,5 +88,10 @@ public class MethodEntry extends ParentedEntry<ClassEntry> {
 	@Override
 	public String toString() {
 		return this.parent.getFullName() + "." + this.name + this.descriptor;
+	}
+
+	@Override
+	public int compareTo(MethodEntry entry) {
+		return (name + descriptor.toString()).compareTo(entry.name + entry.descriptor.toString());
 	}
 }
