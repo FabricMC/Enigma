@@ -11,7 +11,6 @@
 
 package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
@@ -20,7 +19,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,90 +34,58 @@ public class MappingsChecker {
 
 	public Dropped dropBrokenMappings() {
 		Dropped dropped = new Dropped();
-		for (Entry<?> entry : mappings.getAllEntries()) {
-			if (entry instanceof ClassEntry) {
-				tryDropClass(dropped, (ClassEntry) entry);
-			} else if (entry instanceof FieldEntry) {
-				tryDropField(dropped, (FieldEntry) entry);
-			} else if (entry instanceof MethodEntry) {
-				tryDropMethod(dropped, (MethodEntry) entry);
+
+		Collection<Entry<?>> obfEntries = mappings.getAllEntries();
+		for (Entry<?> entry : obfEntries) {
+			if (entry instanceof ClassEntry || entry instanceof MethodEntry || entry instanceof FieldEntry) {
+				tryDropEntry(dropped, entry);
 			}
 		}
+
+		dropped.apply(mappings);
+
 		return dropped;
 	}
 
-	private void tryDropClass(Dropped dropped, ClassEntry entry) {
-		EntryIndex entryIndex = index.getEntryIndex();
-		EntryResolver resolver = index.getEntryResolver();
-		if (!entryIndex.hasClass(entry) || !entry.equals(resolver.resolveEntry(entry))) {
-			EntryMapping mapping = dropMapping(entry);
+	private void tryDropEntry(Dropped dropped, Entry<?> entry) {
+		if (shouldDropEntry(entry)) {
+			EntryMapping mapping = mappings.get(entry);
 			if (mapping != null) {
 				dropped.drop(entry, mapping);
 			}
 		}
 	}
 
-	private void tryDropField(Dropped dropped, FieldEntry entry) {
-		EntryIndex entryIndex = index.getEntryIndex();
-		EntryResolver resolver = index.getEntryResolver();
-		if (!entryIndex.hasField(entry) || !entry.equals(resolver.resolveEntry(entry))) {
-			EntryMapping mapping = dropMapping(entry);
-			if (mapping != null) {
-				dropped.drop(entry, mapping);
-			}
+	private boolean shouldDropEntry(Entry<?> entry) {
+		if (!index.getEntryIndex().hasEntry(entry)) {
+			return true;
 		}
-	}
-
-	private void tryDropMethod(Dropped dropped, MethodEntry entry) {
-		EntryIndex entryIndex = index.getEntryIndex();
-		EntryResolver resolver = index.getEntryResolver();
-		if (!entryIndex.hasMethod(entry) || !entry.equals(resolver.resolveEntry(entry))) {
-			EntryMapping mapping = dropMapping(entry);
-			if (mapping != null) {
-				dropped.drop(entry, mapping);
-			}
-		}
-	}
-
-	@Nullable
-	private EntryMapping dropMapping(Entry<?> entry) {
-		HashTreeNode<EntryMapping> node = mappings.findNode(entry);
-		if (node != null && node.getValue() != null) {
-			for (Entry<?> childEntry : node.getChildrenRecursively()) {
-				mappings.remove(childEntry);
-			}
-			return node.getValue();
-		}
-		return null;
+		Entry<?> resolvedEntry = index.getEntryResolver().resolveEntry(entry);
+		return !entry.equals(resolvedEntry);
 	}
 
 	public static class Dropped {
-		private final Map<ClassEntry, String> droppedClassMappings = new HashMap<>();
-		private final Map<FieldEntry, String> droppedFieldMappings = new HashMap<>();
-		private final Map<MethodEntry, String> droppedMethodMappings = new HashMap<>();
+		private final Map<Entry<?>, String> droppedMappings = new HashMap<>();
 
-		public void drop(ClassEntry entry, EntryMapping mapping) {
-			droppedClassMappings.put(entry, mapping.getTargetName());
+		public void drop(Entry<?> entry, EntryMapping mapping) {
+			droppedMappings.put(entry, mapping.getTargetName());
 		}
 
-		public void drop(FieldEntry entry, EntryMapping mapping) {
-			droppedFieldMappings.put(entry, mapping.getTargetName());
+		void apply(EntryTree<EntryMapping> mappings) {
+			for (Entry<?> entry : droppedMappings.keySet()) {
+				HashTreeNode<EntryMapping> node = mappings.findNode(entry);
+				if (node == null) {
+					continue;
+				}
+
+				for (Entry<?> childEntry : node.getChildrenRecursively()) {
+					mappings.remove(childEntry);
+				}
+			}
 		}
 
-		public void drop(MethodEntry entry, EntryMapping mapping) {
-			droppedMethodMappings.put(entry, mapping.getTargetName());
-		}
-
-		public Map<ClassEntry, String> getDroppedClassMappings() {
-			return droppedClassMappings;
-		}
-
-		public Map<FieldEntry, String> getDroppedFieldMappings() {
-			return droppedFieldMappings;
-		}
-
-		public Map<MethodEntry, String> getDroppedMethodMappings() {
-			return droppedMethodMappings;
+		public Map<Entry<?>, String> getDroppedMappings() {
+			return droppedMappings;
 		}
 	}
 }

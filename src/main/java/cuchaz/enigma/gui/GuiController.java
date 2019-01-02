@@ -24,8 +24,10 @@ import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.BidirectionalMapper;
+import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -75,7 +77,9 @@ public class GuiController {
 	}
 
 	public void openMappings(MappingFormat format, Path path) throws IOException, MappingParseException {
-		deobfuscator.setMappings(format.read(path));
+		EntryTree<EntryMapping> mappings = format.read(path);
+		deobfuscator.setMappings(mappings);
+
 		gui.setMappingsFile(path);
 		loadedMappingFormat = format;
 

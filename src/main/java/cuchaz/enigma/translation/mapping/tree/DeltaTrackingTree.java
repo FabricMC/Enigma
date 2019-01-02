@@ -37,12 +37,12 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 		trackDeletion(entry);
 	}
 
-	private void trackAddition(Entry<?> entry) {
+	public void trackAddition(Entry<?> entry) {
 		deletions.remove(entry);
 		additions.insert(entry, MappingDelta.PLACEHOLDER);
 	}
 
-	private void trackDeletion(Entry<?> entry) {
+	public void trackDeletion(Entry<?> entry) {
 		additions.remove(entry);
 		deletions.insert(entry, MappingDelta.PLACEHOLDER);
 	}

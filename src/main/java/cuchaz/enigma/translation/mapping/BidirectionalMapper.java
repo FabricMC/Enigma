@@ -184,7 +184,7 @@ public class BidirectionalMapper {
 		return obfToDeobf;
 	}
 
-	public EntryTree<EntryMapping> getDeobfToObf() {
+	public DeltaTrackingTree<EntryMapping> getDeobfToObf() {
 		return deobfToObf;
 	}
 
