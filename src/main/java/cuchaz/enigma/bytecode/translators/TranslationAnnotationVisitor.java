@@ -23,21 +23,29 @@ public class TranslationAnnotationVisitor extends AnnotationVisitor {
 
 	@Override
 	public AnnotationVisitor visitArray(String name) {
-		return this;
+		return new TranslationAnnotationVisitor(translator, annotationEntry, api, super.visitArray(name));
 	}
 
 	@Override
 	public AnnotationVisitor visitAnnotation(String name, String desc) {
 		TypeDescriptor type = new TypeDescriptor(desc);
-		FieldEntry annotationField = translator.getTranslatedField(new FieldEntry(annotationEntry, name, type));
-		return super.visitAnnotation(annotationField.getName(), annotationField.getDesc().toString());
+		if (name != null) {
+			FieldEntry annotationField = translator.getTranslatedField(new FieldEntry(annotationEntry, name, type));
+			return super.visitAnnotation(annotationField.getName(), annotationField.getDesc().toString());
+		} else {
+			return super.visitAnnotation(null, translator.getTranslatedTypeDesc(type).toString());
+		}
 	}
 
 	@Override
 	public void visitEnum(String name, String desc, String value) {
 		TypeDescriptor type = new TypeDescriptor(desc);
-		FieldEntry annotationField = translator.getTranslatedField(new FieldEntry(annotationEntry, name, type));
 		FieldEntry enumField = translator.getTranslatedField(new FieldEntry(type.getTypeEntry(), value, type));
-		super.visitEnum(annotationField.getName(), annotationField.getDesc().toString(), enumField.getName());
+		if (name != null) {
+			FieldEntry annotationField = translator.getTranslatedField(new FieldEntry(annotationEntry, name, type));
+			super.visitEnum(annotationField.getName(), annotationField.getDesc().toString(), enumField.getName());
+		} else {
+			super.visitEnum(null, translator.getTranslatedTypeDesc(type).toString(), enumField.getName());
+		}
 	}
 }
