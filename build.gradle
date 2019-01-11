@@ -12,6 +12,8 @@ buildscript {
     }
 }
 
+import org.apache.tools.ant.filters.ReplaceTokens
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -20,6 +22,8 @@ apply plugin: 'maven'
 
 group = 'cuchaz'
 version = '0.12.2'
+
+def filteredSourceDir = file("${buildDir}/filtered")
 
 def ENV = System.getenv()
 if (ENV.BUILD_NUMBER) {
@@ -39,7 +43,23 @@ sourceSets {
         java { srcDir 'src/test/java' }
         resources { srcDir 'test' }
     }
+    filtered {
+        java { srcDir filteredSourceDir }
+    }
 }
+
+compileJava.source = sourceSets.filtered.java
+
+task processVersion(type: Copy) {
+    from sourceSets.main.java
+    into filteredSourceDir
+
+    filter { String line ->
+        ("$line".replaceAll('@VERSION@', version))
+    }
+}
+
+compileJava.dependsOn processVersion
 
 repositories {
     mavenLocal()
@@ -169,7 +189,8 @@ task('libJar', type: Jar, dependsOn: classes) {
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
-    from sourceSets.main.allSource
+    from sourceSets.main.resources
+    from sourceSets.filtered.java
 }
 
 artifacts {
