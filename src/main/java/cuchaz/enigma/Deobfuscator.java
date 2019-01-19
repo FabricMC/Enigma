@@ -57,7 +57,7 @@ public class Deobfuscator {
 	private final DecompilerSettings settings;
 	private final JarIndex jarIndex;
 	private final IndexTreeBuilder indexTreeBuilder;
-	private BidirectionalMapper mapper;
+	private EntryRemapper mapper;
 
 	public Deobfuscator(ParsedJar jar, Consumer<String> listener) {
 		this.parsedJar = jar;
@@ -85,7 +85,7 @@ public class Deobfuscator {
 		this.settings.setShowSyntheticMembers(Utils.getSystemPropertyAsBoolean("enigma.showSyntheticMembers", false));
 
 		// init mappings
-		mapper = new BidirectionalMapper(jarIndex);
+		mapper = new EntryRemapper(jarIndex);
 	}
 
 	public Deobfuscator(JarFile jar, Consumer<String> listener) throws IOException {
@@ -118,21 +118,21 @@ public class Deobfuscator {
 		return indexTreeBuilder;
 	}
 
-	public BidirectionalMapper getMapper() {
+	public EntryRemapper getMapper() {
 		return this.mapper;
 	}
 
 	public void setMappings(EntryTree<EntryMapping> mappings) {
 		if (mappings != null) {
 			Collection<Entry<?>> dropped = dropMappings(mappings);
-			mapper = new BidirectionalMapper(jarIndex, mappings);
+			mapper = new EntryRemapper(jarIndex, mappings);
 
 			DeltaTrackingTree<EntryMapping> deobfToObf = mapper.getDeobfToObf();
 			for (Entry<?> entry : dropped) {
 				deobfToObf.trackDeletion(entry);
 			}
 		} else {
-			mapper = new BidirectionalMapper(jarIndex);
+			mapper = new EntryRemapper(jarIndex);
 		}
 	}
 

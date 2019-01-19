@@ -41,6 +41,7 @@ public class InheritanceIndex implements JarIndexer, RemappableIndex {
 		return index;
 	}
 
+	// TODO: inner classes don't get remapped
 	@Override
 	public void remapEntry(Entry<?> prevEntry, Entry<?> newEntry) {
 		if (prevEntry instanceof ClassEntry) {

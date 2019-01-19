@@ -11,6 +11,15 @@
 
 package cuchaz.enigma.translation;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 public interface Translator {
 	<T extends Translatable> T translate(T translatable);
+
+	default <T extends Translatable> Collection<T> translate(Collection<T> translatable) {
+		return translatable.stream()
+				.map(this::translate)
+				.collect(Collectors.toList());
+	}
 }

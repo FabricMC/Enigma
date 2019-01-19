@@ -7,13 +7,13 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class DeltaTrackingTree<M> implements EntryTree<M> {
-	private final EntryTree<M> delegate;
+public class DeltaTrackingTree<T> implements EntryTree<T> {
+	private final EntryTree<T> delegate;
 
 	private EntryTree<Object> additions = new HashEntryTree<>();
 	private EntryTree<Object> deletions = new HashEntryTree<>();
 
-	public DeltaTrackingTree(EntryTree<M> delegate) {
+	public DeltaTrackingTree(EntryTree<T> delegate) {
 		this.delegate = delegate;
 	}
 
@@ -22,7 +22,7 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 	}
 
 	@Override
-	public void insert(Entry<?> entry, M value) {
+	public void insert(Entry<?> entry, T value) {
 		if (value != null) {
 			trackAddition(entry);
 		} else {
@@ -31,10 +31,12 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 		delegate.insert(entry, value);
 	}
 
+	@Nullable
 	@Override
-	public void remove(Entry<?> entry) {
-		delegate.remove(entry);
+	public T remove(Entry<?> entry) {
+		T value = delegate.remove(entry);
 		trackDeletion(entry);
+		return value;
 	}
 
 	public void trackAddition(Entry<?> entry) {
@@ -49,7 +51,7 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 
 	@Nullable
 	@Override
-	public M get(Entry<?> entry) {
+	public T get(Entry<?> entry) {
 		return delegate.get(entry);
 	}
 
@@ -65,12 +67,12 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 
 	@Nullable
 	@Override
-	public EntryTreeNode<M> findNode(Entry<?> entry) {
+	public EntryTreeNode<T> findNode(Entry<?> entry) {
 		return delegate.findNode(entry);
 	}
 
 	@Override
-	public Collection<EntryTreeNode<M>> getAllNodes() {
+	public Collection<EntryTreeNode<T>> getAllNodes() {
 		return delegate.getAllNodes();
 	}
 
@@ -90,7 +92,7 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 	}
 
 	@Override
-	public Iterator<EntryTreeNode<M>> iterator() {
+	public Iterator<EntryTreeNode<T>> iterator() {
 		return delegate.iterator();
 	}
 

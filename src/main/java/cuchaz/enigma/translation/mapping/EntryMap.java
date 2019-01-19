@@ -8,7 +8,8 @@ import java.util.Collection;
 public interface EntryMap<T> {
 	void insert(Entry<?> entry, T value);
 
-	void remove(Entry<?> entry);
+	@Nullable
+	T remove(Entry<?> entry);
 
 	@Nullable
 	T get(Entry<?> entry);

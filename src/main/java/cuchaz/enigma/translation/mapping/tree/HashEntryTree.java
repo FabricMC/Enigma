@@ -19,11 +19,14 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	@Override
-	public void remove(Entry<?> entry) {
+	@Nullable
+	public T remove(Entry<?> entry) {
 		List<HashTreeNode<T>> path = computePath(entry);
-		path.get(path.size() - 1).removeValue();
+		T value = path.get(path.size() - 1).removeValue();
 
 		removeDeadAlong(path);
+
+		return value;
 	}
 
 	@Override

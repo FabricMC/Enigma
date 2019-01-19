@@ -23,7 +23,7 @@ import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.BidirectionalMapper;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -92,7 +92,7 @@ public class GuiController {
 	}
 
 	public void saveMappings(MappingFormat format, Path path) {
-		BidirectionalMapper mapper = deobfuscator.getMapper();
+		EntryRemapper mapper = deobfuscator.getMapper();
 
 		MappingDelta delta = mapper.takeMappingDelta();
 		boolean saveAll = !path.equals(loadedMappingPath);
@@ -272,7 +272,7 @@ public class GuiController {
 	}
 
 	private void showReference(EntryReference<Entry<?>, Entry<?>> obfReference) {
-		BidirectionalMapper mapper = this.deobfuscator.getMapper();
+		EntryRemapper mapper = this.deobfuscator.getMapper();
 		EntryReference<Entry<?>, Entry<?>> resolvedReference = mapper.getObfResolver().resolveReference(obfReference);
 		EntryReference<Entry<?>, Entry<?>> deobfReference = mapper.deobfuscate(resolvedReference);
 		Collection<Token> tokens = this.index.getReferenceTokens(deobfReference);

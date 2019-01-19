@@ -21,8 +21,10 @@ public class HashTreeNode<T> implements EntryTreeNode<T>, Iterable<HashTreeNode<
 		this.value = value;
 	}
 
-	void removeValue() {
+	T removeValue() {
+		T value = this.value;
 		this.value = null;
+		return value;
 	}
 
 	HashTreeNode<T> getChild(Entry<?> entry, boolean create) {

@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BidirectionalMapper {
+public class EntryRemapper {
 	private final EntryTree<EntryMapping> obfToDeobf;
 	private final DeltaTrackingTree<EntryMapping> deobfToObf;
 
@@ -29,7 +29,7 @@ public class BidirectionalMapper {
 
 	private final MappingValidator validator;
 
-	private BidirectionalMapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf, EntryTree<EntryMapping> deobfToObf) {
+	private EntryRemapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf, EntryTree<EntryMapping> deobfToObf) {
 		this.obfToDeobf = obfToDeobf;
 		this.deobfToObf = new DeltaTrackingTree<>(deobfToObf);
 
@@ -44,11 +44,11 @@ public class BidirectionalMapper {
 		this.validator = new MappingValidator(obfToDeobf, obfResolver);
 	}
 
-	public BidirectionalMapper(JarIndex jarIndex) {
+	public EntryRemapper(JarIndex jarIndex) {
 		this(jarIndex, new HashEntryTree<>(), new HashEntryTree<>());
 	}
 
-	public BidirectionalMapper(JarIndex jarIndex, EntryTree<EntryMapping> deobfuscationTrees) {
+	public EntryRemapper(JarIndex jarIndex, EntryTree<EntryMapping> deobfuscationTrees) {
 		this(jarIndex, deobfuscationTrees, inverse(deobfuscationTrees));
 	}
 
