@@ -6,8 +6,8 @@ import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
-import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
@@ -112,9 +112,9 @@ public class BidirectionalMapper {
 		// We only need to do this for deobf -> obf because the obf tree is always consistent on the left hand side
 		// We lookup by obf, and the obf never changes. This is not the case for deobf so we need to update the tree.
 
-		HashTreeNode<EntryMapping> node = deobfToObf.findNode(prevDeobf);
+		EntryTreeNode<EntryMapping> node = deobfToObf.findNode(prevDeobf);
 		if (node != null) {
-			for (HashTreeNode<EntryMapping> child : node.getNodesRecursively()) {
+			for (EntryTreeNode<EntryMapping> child : node.getNodesRecursively()) {
 				Entry<?> entry = child.getEntry();
 				EntryMapping mapping = new EntryMapping(obfuscate(entry).getName());
 

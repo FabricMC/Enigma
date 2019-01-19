@@ -3,10 +3,12 @@ package cuchaz.enigma.translation.mapping.tree;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-public class HashTreeNode<T> implements Iterable<HashTreeNode<T>> {
+public class HashTreeNode<T> implements EntryTreeNode<T>, Iterable<HashTreeNode<T>> {
 	private final Entry<?> entry;
 	private final Map<Entry<?>, HashTreeNode<T>> children = new HashMap<>();
 	private T value;
@@ -35,44 +37,34 @@ public class HashTreeNode<T> implements Iterable<HashTreeNode<T>> {
 		children.remove(entry);
 	}
 
+	@Override
 	@Nullable
 	public T getValue() {
 		return value;
 	}
 
+	@Override
 	public Entry<?> getEntry() {
 		return entry;
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return children.isEmpty() && value == null;
 	}
 
+	@Override
 	public Collection<Entry<?>> getChildren() {
 		return children.keySet();
 	}
 
-	public Collection<HashTreeNode<T>> getChildNodes() {
+	@Override
+	public Collection<? extends EntryTreeNode<T>> getChildNodes() {
 		return children.values();
 	}
 
 	@Override
 	public Iterator<HashTreeNode<T>> iterator() {
 		return children.values().iterator();
-	}
-
-	public Collection<HashTreeNode<T>> getNodesRecursively() {
-		Collection<HashTreeNode<T>> nodes = new ArrayList<>();
-		nodes.add(this);
-		for (HashTreeNode<T> node : children.values()) {
-			nodes.addAll(node.getNodesRecursively());
-		}
-		return nodes;
-	}
-
-	public Collection<Entry<?>> getChildrenRecursively() {
-		return getNodesRecursively().stream()
-				.map(HashTreeNode::getEntry)
-				.collect(Collectors.toList());
 	}
 }

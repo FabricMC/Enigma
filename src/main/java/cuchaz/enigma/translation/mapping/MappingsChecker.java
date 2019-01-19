@@ -13,7 +13,7 @@ package cuchaz.enigma.translation.mapping;
 
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -73,7 +73,7 @@ public class MappingsChecker {
 
 		void apply(EntryTree<EntryMapping> mappings) {
 			for (Entry<?> entry : droppedMappings.keySet()) {
-				HashTreeNode<EntryMapping> node = mappings.findNode(entry);
+				EntryTreeNode<EntryMapping> node = mappings.findNode(entry);
 				if (node == null) {
 					continue;
 				}

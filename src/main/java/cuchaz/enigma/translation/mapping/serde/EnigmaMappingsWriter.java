@@ -19,7 +19,7 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.io.IOException;
@@ -150,7 +150,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected void writeEntry(PrintWriter writer, EntryTree<EntryMapping> mappings, Entry<?> entry, int depth) {
-		HashTreeNode<EntryMapping> node = mappings.findNode(entry);
+		EntryTreeNode<EntryMapping> node = mappings.findNode(entry);
 		if (node == null) {
 			return;
 		}

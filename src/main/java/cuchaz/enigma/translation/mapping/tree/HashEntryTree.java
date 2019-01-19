@@ -122,14 +122,16 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	@Override
-	public Iterator<HashTreeNode<T>> iterator() {
-		return root.values().iterator();
+	@SuppressWarnings("unchecked")
+	public Iterator<EntryTreeNode<T>> iterator() {
+		Collection<EntryTreeNode<T>> values = (Collection) root.values();
+		return values.iterator();
 	}
 
 	@Override
-	public Collection<HashTreeNode<T>> getAllNodes() {
-		Collection<HashTreeNode<T>> nodes = new ArrayList<>();
-		for (HashTreeNode<T> node : root.values()) {
+	public Collection<EntryTreeNode<T>> getAllNodes() {
+		Collection<EntryTreeNode<T>> nodes = new ArrayList<>();
+		for (EntryTreeNode<T> node : root.values()) {
 			nodes.addAll(node.getNodesRecursively());
 		}
 		return nodes;
@@ -138,7 +140,7 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	@Override
 	public Collection<Entry<?>> getAllEntries() {
 		return getAllNodes().stream()
-				.map(HashTreeNode::getEntry)
+				.map(EntryTreeNode::getEntry)
 				.collect(Collectors.toList());
 	}
 

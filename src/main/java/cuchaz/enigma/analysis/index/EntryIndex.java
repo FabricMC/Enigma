@@ -2,8 +2,8 @@ package cuchaz.enigma.analysis.index;
 
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
-import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.*;
 
@@ -26,12 +26,12 @@ public class EntryIndex implements JarIndexer, RemappableIndex {
 
 	@Override
 	public void remapEntry(Entry<?> prevEntry, Entry<?> newEntry) {
-		HashTreeNode<AccessFlags> node = entries.findNode(prevEntry);
+		EntryTreeNode<AccessFlags> node = entries.findNode(prevEntry);
 		if (node == null) {
 			return;
 		}
 
-		for (HashTreeNode<AccessFlags> child : node.getNodesRecursively()) {
+		for (EntryTreeNode<AccessFlags> child : node.getNodesRecursively()) {
 			Entry<?> entry = child.getEntry();
 			AccessFlags access = child.getValue();
 

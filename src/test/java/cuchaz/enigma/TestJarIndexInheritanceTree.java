@@ -11,7 +11,6 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.Access;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.EntryIndex;
@@ -19,11 +18,13 @@ import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
+import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
+import org.objectweb.asm.Opcodes;
 
 import java.util.Collection;
 import java.util.jar.JarFile;
@@ -64,30 +65,30 @@ public class TestJarIndexInheritanceTree {
 
 		// base class
 		assertThat(index.getParents(baseClass), contains(objectClass));
-		assertThat(index.getAncestors(baseClass), contains(objectClass));
+		assertThat(index.getAncestors(baseClass), containsInAnyOrder(objectClass));
 		assertThat(index.getChildren(baseClass), containsInAnyOrder(subClassA, subClassB
 		));
 
 		// subclass a
 		assertThat(index.getParents(subClassA), contains(baseClass));
-		assertThat(index.getAncestors(subClassA), contains(baseClass, objectClass));
+		assertThat(index.getAncestors(subClassA), containsInAnyOrder(baseClass, objectClass));
 		assertThat(index.getChildren(subClassA), contains(subClassAA));
 
 		// subclass aa
 		assertThat(index.getParents(subClassAA), contains(subClassA));
-		assertThat(index.getAncestors(subClassAA), contains(subClassA, baseClass, objectClass));
+		assertThat(index.getAncestors(subClassAA), containsInAnyOrder(subClassA, baseClass, objectClass));
 		assertThat(index.getChildren(subClassAA), is(empty()));
 
 		// subclass b
 		assertThat(index.getParents(subClassB), contains(baseClass));
-		assertThat(index.getAncestors(subClassB), contains(baseClass, objectClass));
+		assertThat(index.getAncestors(subClassB), containsInAnyOrder(baseClass, objectClass));
 		assertThat(index.getChildren(subClassB), is(empty()));
 	}
 
 	@Test
 	public void access() {
-		assertThat(index.getEntryIndex().getFieldAccess(nameField), is(Access.PRIVATE));
-		assertThat(index.getEntryIndex().getFieldAccess(numThingsField), is(Access.PRIVATE));
+		assertThat(index.getEntryIndex().getFieldAccess(nameField), is(new AccessFlags(Opcodes.ACC_PRIVATE)));
+		assertThat(index.getEntryIndex().getFieldAccess(numThingsField), is(new AccessFlags(Opcodes.ACC_PRIVATE)));
 	}
 
 	@Test

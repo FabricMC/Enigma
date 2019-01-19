@@ -65,12 +65,12 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 
 	@Nullable
 	@Override
-	public HashTreeNode<M> findNode(Entry<?> entry) {
+	public EntryTreeNode<M> findNode(Entry<?> entry) {
 		return delegate.findNode(entry);
 	}
 
 	@Override
-	public Collection<HashTreeNode<M>> getAllNodes() {
+	public Collection<EntryTreeNode<M>> getAllNodes() {
 		return delegate.getAllNodes();
 	}
 
@@ -90,7 +90,7 @@ public class DeltaTrackingTree<M> implements EntryTree<M> {
 	}
 
 	@Override
-	public Iterator<HashTreeNode<M>> iterator() {
+	public Iterator<EntryTreeNode<M>> iterator() {
 		return delegate.iterator();
 	}
 

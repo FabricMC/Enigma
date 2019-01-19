@@ -7,8 +7,8 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
-import cuchaz.enigma.translation.mapping.tree.HashTreeNode;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -41,7 +41,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		List<String> methodLines = new ArrayList<>();
 
 		Collection<Entry<?>> rootEntries = Lists.newArrayList(mappings).stream()
-				.map(HashTreeNode::getEntry)
+				.map(EntryTreeNode::getEntry)
 				.collect(Collectors.toList());
 		progress.init(rootEntries.size(), "Generating mappings");
 
@@ -65,7 +65,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 	}
 
 	private void writeEntry(List<String> classes, List<String> fields, List<String> methods, EntryTree<EntryMapping> mappings, Entry<?> entry) {
-		HashTreeNode<EntryMapping> node = mappings.findNode(entry);
+		EntryTreeNode<EntryMapping> node = mappings.findNode(entry);
 		if (node == null) {
 			return;
 		}
