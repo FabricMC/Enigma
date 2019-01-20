@@ -54,6 +54,13 @@ public class JarIndex implements JarIndexer, RemappableIndex {
 	}
 
 	@Override
+	public void remap(Translator translator) {
+		entryIndex.remap(translator);
+		inheritanceIndex.remap(translator);
+		bridgeMethodIndex.remap(translator);
+	}
+
+	@Override
 	public JarIndex remapped(Translator translator) {
 		EntryIndex entryIndex = this.entryIndex.remapped(translator);
 		InheritanceIndex inheritanceIndex = this.inheritanceIndex.remapped(translator);
@@ -63,13 +70,6 @@ public class JarIndex implements JarIndexer, RemappableIndex {
 		remappedIndex.methodImplementations.putAll(methodImplementations);
 
 		return remappedIndex;
-	}
-
-	@Override
-	public void remapEntry(Entry<?> entry, Entry<?> newEntry) {
-		entryIndex.remapEntry(entry, newEntry);
-		inheritanceIndex.remapEntry(entry, newEntry);
-		bridgeMethodIndex.remapEntry(entry, newEntry);
 	}
 
 	public void indexJar(ParsedJar jar, Consumer<String> progress) {

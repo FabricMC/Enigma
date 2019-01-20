@@ -17,54 +17,28 @@ import com.google.common.collect.Sets;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 
 public class InheritanceIndex implements JarIndexer, RemappableIndex {
-	private final Multimap<ClassEntry, ClassEntry> classParents = HashMultimap.create();
-	private final Multimap<ClassEntry, ClassEntry> classChildren = HashMultimap.create();
+	private Multimap<ClassEntry, ClassEntry> classParents = HashMultimap.create();
+	private Multimap<ClassEntry, ClassEntry> classChildren = HashMultimap.create();
+
+	@Override
+	public void remap(Translator translator) {
+		classChildren = translator.translate(classChildren);
+		classParents = translator.translate(classParents);
+	}
 
 	@Override
 	public InheritanceIndex remapped(Translator translator) {
 		InheritanceIndex index = new InheritanceIndex();
-		for (Map.Entry<ClassEntry, ClassEntry> entry : classChildren.entries()) {
-			index.classChildren.put(translator.translate(entry.getKey()), translator.translate(entry.getValue()));
-		}
-		for (Map.Entry<ClassEntry, ClassEntry> entry : classParents.entries()) {
-			index.classParents.put(translator.translate(entry.getKey()), translator.translate(entry.getValue()));
-		}
+		index.classParents = translator.translate(classParents);
+		index.classChildren = translator.translate(classChildren);
 
 		return index;
-	}
-
-	// TODO: inner classes don't get remapped
-	@Override
-	public void remapEntry(Entry<?> prevEntry, Entry<?> newEntry) {
-		if (prevEntry instanceof ClassEntry) {
-			ClassEntry classEntry = (ClassEntry) prevEntry;
-
-			Collection<ClassEntry> parents = classParents.removeAll(classEntry);
-			classParents.putAll((ClassEntry) newEntry, parents);
-
-			// Find all the parents of this class and remap their children
-			for (ClassEntry parent : parents) {
-				classChildren.remove(parent, prevEntry);
-				classChildren.put(parent, (ClassEntry) newEntry);
-			}
-
-			Collection<ClassEntry> children = classChildren.removeAll(classEntry);
-			classChildren.putAll((ClassEntry) newEntry, children);
-
-			// Find all the children of this class and remap their parents
-			for (ClassEntry child : children) {
-				classParents.remove(child, prevEntry);
-				classParents.put(child, (ClassEntry) newEntry);
-			}
-		}
 	}
 
 	@Override
@@ -114,5 +88,10 @@ public class InheritanceIndex implements JarIndexer, RemappableIndex {
 
 	public boolean isParent(ClassEntry classEntry) {
 		return classChildren.containsKey(classEntry);
+	}
+
+	public boolean hasParents(ClassEntry classEntry) {
+		Collection<ClassEntry> parents = classParents.get(classEntry);
+		return parents != null && !parents.isEmpty();
 	}
 }

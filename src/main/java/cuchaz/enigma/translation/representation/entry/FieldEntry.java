@@ -17,7 +17,6 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.utils.Utils;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<FieldEntry> {
@@ -36,14 +35,13 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return new FieldEntry(new ClassEntry(owner), name, new TypeDescriptor(desc));
 	}
 
-	public TypeDescriptor getDesc() {
-		return this.desc;
+	@Override
+	public Class<ClassEntry> getParentType() {
+		return ClassEntry.class;
 	}
 
-	@Override
-	@Nonnull
-	public ClassEntry getParent() {
-		return parent;
+	public TypeDescriptor getDesc() {
+		return this.desc;
 	}
 
 	@Override

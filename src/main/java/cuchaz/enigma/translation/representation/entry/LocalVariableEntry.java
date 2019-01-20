@@ -5,7 +5,6 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.utils.Utils;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -33,6 +32,11 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 		this.parameter = parameter;
 	}
 
+	@Override
+	public Class<MethodEntry> getParentType() {
+		return MethodEntry.class;
+	}
+
 	public boolean isParameter() {
 		return this.parameter;
 	}
@@ -44,12 +48,6 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	@Override
 	public String getName() {
 		return this.name;
-	}
-
-	@Nonnull
-	@Override
-	public MethodEntry getParent() {
-		return this.parent;
 	}
 
 	@Override

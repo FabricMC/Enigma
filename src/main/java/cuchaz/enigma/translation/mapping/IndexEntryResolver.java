@@ -73,6 +73,10 @@ public class IndexEntryResolver implements EntryResolver {
 		LinkedList<ClassEntry> queue = new LinkedList<>();
 		queue.add(entry.getParent());
 
+		if (!inheritanceIndex.hasParents(resolvedOwner)) {
+			return resolvedOwner;
+		}
+
 		while (!queue.isEmpty()) {
 			ClassEntry parentClass = queue.poll();
 

@@ -25,6 +25,8 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 	@Nullable
 	P getParent();
 
+	Class<P> getParentType();
+
 	Entry<P> withParent(P parent);
 
 	boolean canConflictWith(Entry<?> entry);
@@ -89,8 +91,7 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 	@SuppressWarnings("unchecked")
 	@Nullable
 	default <C extends Entry<?>> Entry<C> castParent(Class<C> parentType) {
-		P parent = getParent();
-		if (parent != null && parentType.isAssignableFrom(parent.getClass())) {
+		if (parentType.equals(getParentType())) {
 			return (Entry<C>) this;
 		}
 		return null;

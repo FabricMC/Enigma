@@ -17,7 +17,6 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.utils.Utils;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable<MethodEntry> {
@@ -37,18 +36,17 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 		return new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc));
 	}
 
+	@Override
+	public Class<ClassEntry> getParentType() {
+		return ClassEntry.class;
+	}
+
 	public MethodDescriptor getDesc() {
 		return this.descriptor;
 	}
 
 	public boolean isConstructor() {
 		return name.equals("<init>") || name.equals("<clinit>");
-	}
-
-	@Override
-	@Nonnull
-	public ClassEntry getParent() {
-		return parent;
 	}
 
 	@Override

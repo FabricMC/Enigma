@@ -46,6 +46,11 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
+	public Class<ClassEntry> getParentType() {
+		return ClassEntry.class;
+	}
+
+	@Override
 	public String getName() {
 		return this.name;
 	}

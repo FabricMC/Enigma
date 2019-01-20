@@ -12,20 +12,19 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class EntryRemapper {
 	private final EntryTree<EntryMapping> obfToDeobf;
 	private final DeltaTrackingTree<EntryMapping> deobfToObf;
 
-	private final JarIndex deobfIndex;
+	private final JarIndex obfIndex;
+	private JarIndex deobfIndex;
 
 	private final EntryResolver obfResolver;
-	private final EntryResolver deobfResolver;
+	private EntryResolver deobfResolver;
 
 	private final Translator deobfuscator;
-	private final Translator obfuscator;
+	private Translator obfuscator;
 
 	private final MappingValidator validator;
 
@@ -33,13 +32,11 @@ public class EntryRemapper {
 		this.obfToDeobf = obfToDeobf;
 		this.deobfToObf = new DeltaTrackingTree<>(deobfToObf);
 
+		this.obfIndex = jarIndex;
 		this.obfResolver = jarIndex.getEntryResolver();
 
 		this.deobfuscator = new MappingTranslator(obfToDeobf, obfResolver);
-		this.deobfIndex = jarIndex.remapped(this.deobfuscator);
-
-		this.deobfResolver = deobfIndex.getEntryResolver();
-		this.obfuscator = new MappingTranslator(deobfToObf, deobfResolver);
+		rebuildDeobfIndex();
 
 		this.validator = new MappingValidator(obfToDeobf, obfResolver);
 	}
@@ -66,6 +63,13 @@ public class EntryRemapper {
 		return inverse;
 	}
 
+	private void rebuildDeobfIndex() {
+		this.deobfIndex = obfIndex.remapped(deobfuscator);
+
+		this.deobfResolver = deobfIndex.getEntryResolver();
+		this.obfuscator = new MappingTranslator(deobfToObf, deobfResolver);
+	}
+
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
 		E resolvedEntry = obfResolver.resolveEntry(obfuscatedEntry);
 
@@ -90,23 +94,13 @@ public class EntryRemapper {
 	}
 
 	private <E extends Entry<?>> void setObfToDeobf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		List<Entry<?>> equivalentEntries = obfResolver.resolveEquivalentEntries(obfuscatedEntry);
-		List<Entry<?>> prevDeobfEquivalent = equivalentEntries.stream()
-				.map(this::deobfuscate)
-				.collect(Collectors.toList());
-
 		E prevDeobf = deobfuscate(obfuscatedEntry);
 		obfToDeobf.insert(obfuscatedEntry, deobfMapping);
 
 		E newDeobf = deobfuscate(obfuscatedEntry);
 
-		List<Entry<?>> newDeobfEquivalent = equivalentEntries.stream()
-				.map(this::deobfuscate)
-				.collect(Collectors.toList());
-
-		for (int i = 0; i < prevDeobfEquivalent.size(); i++) {
-			deobfIndex.remapEntry(prevDeobfEquivalent.get(i), newDeobfEquivalent.get(i));
-		}
+		// Temporary hack, not very performant
+		rebuildDeobfIndex();
 
 		// Reconstruct the children of this node in the deobf -> obf tree with our new mapping
 		// We only need to do this for deobf -> obf because the obf tree is always consistent on the left hand side
