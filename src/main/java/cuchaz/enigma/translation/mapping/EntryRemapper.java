@@ -70,8 +70,7 @@ public class EntryRemapper {
 	}
 
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry);
-
+		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, ResolutionStrategy.RESOLVE_ROOT);
 		for (E resolvedEntry : resolvedEntries) {
 			if (deobfMapping != null) {
 				validator.validateRename(resolvedEntry, deobfMapping.getTargetName());

@@ -237,12 +237,8 @@ public class Deobfuscator {
 
 		// resolve all the classes in the source references
 		for (Token token : tokens) {
-			Collection<EntryReference<Entry<?>, Entry<?>>> deobfReferences = index.getDeobfReferences(token);
-			Collection<EntryReference<Entry<?>, Entry<?>>> resolvedReferences = deobfReferences.stream()
-					.flatMap(reference -> resolver.resolveReference(reference).stream())
-					.collect(Collectors.toList());
-
-			index.replaceDeobfReference(token, resolvedReferences);
+			EntryReference<Entry<?>, Entry<?>> deobfReference = index.getDeobfReference(token);
+			index.replaceDeobfReference(token, resolver.resolveFirstReference(deobfReference, ResolutionStrategy.RESOLVE_CLOSEST));
 		}
 
 		return index;

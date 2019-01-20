@@ -19,6 +19,7 @@ import com.strobel.decompiler.languages.java.ast.Identifier;
 import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -26,7 +27,7 @@ public class SourceIndex {
 	private static Pattern ANONYMOUS_INNER = Pattern.compile("\\$\\d+$");
 
 	private String source;
-	private TreeMultimap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReference;
+	private TreeMap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReference;
 	private Multimap<EntryReference<Entry<?>, Entry<?>>, Token> referenceToTokens;
 	private Map<Entry<?>, Token> declarationToToken;
 	private List<Integer> lineOffsets;
@@ -39,7 +40,7 @@ public class SourceIndex {
 	public SourceIndex(String source, boolean ignoreBadTokens) {
 		this.source = source;
 		this.ignoreBadTokens = ignoreBadTokens;
-		this.tokenToReference = TreeMultimap.create(Ordering.natural(), Ordering.arbitrary());
+		this.tokenToReference = new TreeMap<>();
 		this.referenceToTokens = HashMultimap.create();
 		this.declarationToToken = Maps.newHashMap();
 		calculateLineOffsets();
@@ -76,12 +77,11 @@ public class SourceIndex {
 			referenceToTokens.replaceValues(ref, newTokens);
 		}
 
-		Multimap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReferenceCopy = TreeMultimap.create(Ordering.natural(), Ordering.arbitrary());
-		tokenToReferenceCopy.putAll(tokenToReference);
+		TreeMap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReferenceCopy = new TreeMap<>(tokenToReference);
 
 		tokenToReference.clear();
 		for (Token token : tokenToReferenceCopy.keySet()) {
-			tokenToReference.putAll(tokenMap.getOrDefault(token, token), tokenToReferenceCopy.get(token));
+			tokenToReference.put(tokenMap.getOrDefault(token, token), tokenToReferenceCopy.get(token));
 		}
 	}
 
@@ -152,7 +152,7 @@ public class SourceIndex {
 	}
 
 	public Token getReferenceToken(int pos) {
-		Token token = this.tokenToReference.asMap().floorKey(new Token(pos, pos, null));
+		Token token = this.tokenToReference.floorKey(new Token(pos, pos, null));
 		if (token != null && token.contains(pos)) {
 			return token;
 		}
@@ -163,20 +163,19 @@ public class SourceIndex {
 		return this.referenceToTokens.get(deobfReference);
 	}
 
-	public Collection<EntryReference<Entry<?>, Entry<?>>> getDeobfReferences(Token token) {
+	@Nullable
+	public EntryReference<Entry<?>, Entry<?>> getDeobfReference(Token token) {
 		if (token == null) {
-			return Collections.emptyList();
+			return null;
 		}
 		return this.tokenToReference.get(token);
 	}
 
-	public void replaceDeobfReference(Token token, Collection<EntryReference<Entry<?>, Entry<?>>> newDeobfReferences) {
-		Collection<EntryReference<Entry<?>, Entry<?>>> oldDeobfReferences = this.tokenToReference.replaceValues(token, newDeobfReferences);
+	public void replaceDeobfReference(Token token, EntryReference<Entry<?>, Entry<?>> newDeobfReference) {
+		EntryReference<Entry<?>, Entry<?>> oldDeobfReferences = this.tokenToReference.replace(token, newDeobfReference);
 
 		Collection<Token> tokens = this.referenceToTokens.removeAll(oldDeobfReferences);
-		for (EntryReference<Entry<?>, Entry<?>> reference : newDeobfReferences) {
-			this.referenceToTokens.putAll(reference, tokens);
-		}
+		this.referenceToTokens.putAll(newDeobfReference, tokens);
 	}
 
 	public Iterable<Token> referenceTokens() {

@@ -1,6 +1,5 @@
 package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
@@ -12,13 +11,8 @@ public enum VoidEntryResolver implements EntryResolver {
 	INSTANCE;
 
 	@Override
-	public <E extends Entry<?>> Collection<E> resolveEntry(E entry) {
+	public <E extends Entry<?>> Collection<E> resolveEntry(E entry, ResolutionStrategy strategy) {
 		return Collections.singleton(entry);
-	}
-
-	@Override
-	public <E extends Entry<ClassEntry>> Collection<ClassEntry> resolveEntryOwners(E entry) {
-		return Collections.singleton(entry.getParent());
 	}
 
 	@Override

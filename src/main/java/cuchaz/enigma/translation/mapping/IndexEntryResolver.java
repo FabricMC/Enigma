@@ -35,18 +35,24 @@ public class IndexEntryResolver implements EntryResolver {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E extends Entry<?>> Collection<E> resolveEntry(E entry) {
-		if (entry == null || entry instanceof ClassEntry) {
-			return Collections.singleton(entry);
+	public <E extends Entry<?>> Collection<E> resolveEntry(E entry, ResolutionStrategy strategy) {
+		if (entry == null) {
+			return Collections.emptySet();
 		}
 
 		Entry<ClassEntry> classChild = getClassChild(entry);
 		if (classChild != null && !(classChild instanceof ClassEntry)) {
-			// we found the entry which is a child of a class, we are now able to resolve the owner of this entry
-			Collection<ClassEntry> resolvedOwners = resolveEntryOwners(classChild);
-			return resolvedOwners.stream()
-					.map(owner -> (E) entry.replaceAncestor(classChild.getParent(), owner))
-					.collect(Collectors.toList());
+			AccessFlags access = entryIndex.getEntryAccess(classChild);
+
+			// TODO: bridges
+			if (canBeInherited(access)) {
+				Collection<Entry<ClassEntry>> resolvedChildren = resolveChildEntry(classChild, strategy);
+				if (!resolvedChildren.isEmpty()) {
+					return resolvedChildren.stream()
+							.map(resolvedChild -> (E) entry.replaceAncestor(classChild, resolvedChild))
+							.collect(Collectors.toList());
+				}
+			}
 		}
 
 		return Collections.singleton(entry);
@@ -54,7 +60,11 @@ public class IndexEntryResolver implements EntryResolver {
 
 	@Nullable
 	private Entry<ClassEntry> getClassChild(Entry<?> entry) {
-		// get the entry in the heirarchy that is the child of a class
+		if (entry instanceof ClassEntry) {
+			return null;
+		}
+
+		// get the entry in the hierarchy that is the child of a class
 		List<Entry<?>> ancestry = entry.getAncestry();
 		for (int i = ancestry.size() - 1; i > 0; i--) {
 			Entry<?> child = ancestry.get(i);
@@ -64,46 +74,54 @@ public class IndexEntryResolver implements EntryResolver {
 				return cast;
 			}
 		}
+
 		return null;
 	}
 
-	// TODO: bridges
-	@Override
-	public <E extends Entry<ClassEntry>> Collection<ClassEntry> resolveEntryOwners(E entry) {
-		AccessFlags access = entryIndex.getEntryAccess(entry);
-
-		// If we're private, it's impossible that this could be inherited from a parent class
-		if (access != null && access.isPrivate()) {
-			return Collections.singleton(entry.getParent());
-		}
-
-		Set<ClassEntry> owners = resolveParentOwners(entry);
-		if (owners.isEmpty()) {
-			owners.add(entry.getParent());
-		}
-
-		return owners;
+	private boolean canBeInherited(AccessFlags access) {
+		return access == null || !access.isPrivate();
 	}
 
-	private Set<ClassEntry> resolveParentOwners(Entry<ClassEntry> entry) {
+	private Set<Entry<ClassEntry>> resolveChildEntry(Entry<ClassEntry> entry, ResolutionStrategy strategy) {
 		ClassEntry ownerClass = entry.getParent();
 
-		Set<ClassEntry> owners = new HashSet<>();
+		Set<Entry<ClassEntry>> resolvedEntries = new HashSet<>();
+
 		for (ClassEntry parentClass : inheritanceIndex.getParents(ownerClass)) {
 			Entry<ClassEntry> parentEntry = entry.withParent(parentClass);
-			Set<ClassEntry> parentOwners = resolveParentOwners(parentEntry);
 
-			if (!parentOwners.isEmpty()) {
-				owners.addAll(parentOwners);
+			if (strategy == ResolutionStrategy.RESOLVE_ROOT) {
+				resolvedEntries.addAll(resolveRoot(parentEntry, strategy));
 			} else {
-				AccessFlags parentAccess = entryIndex.getEntryAccess(parentEntry);
-				if (parentAccess != null && !parentAccess.isPrivate()) {
-					owners.add(parentClass);
-				}
+				resolvedEntries.addAll(resolveClosest(parentEntry, strategy));
 			}
 		}
 
-		return owners;
+		return resolvedEntries;
+	}
+
+	private Collection<Entry<ClassEntry>> resolveRoot(Entry<ClassEntry> entry, ResolutionStrategy strategy) {
+		// When resolving root, we want to first look for the lowest entry before returning ourselves
+		Set<Entry<ClassEntry>> parentResolution = resolveChildEntry(entry, strategy);
+
+		if (parentResolution.isEmpty()) {
+			AccessFlags parentAccess = entryIndex.getEntryAccess(entry);
+			if (parentAccess != null && !parentAccess.isPrivate()) {
+				return Collections.singleton(entry);
+			}
+		}
+
+		return parentResolution;
+	}
+
+	private Collection<Entry<ClassEntry>> resolveClosest(Entry<ClassEntry> entry, ResolutionStrategy strategy) {
+		// When resolving closest, we want to first check if we exist before looking further down
+		AccessFlags parentAccess = entryIndex.getEntryAccess(entry);
+		if (parentAccess != null && !parentAccess.isPrivate()) {
+			return Collections.singleton(entry);
+		} else {
+			return resolveChildEntry(entry, strategy);
+		}
 	}
 
 	@Override

@@ -17,9 +17,9 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 
 import javax.annotation.Nullable;
-import java.util.Objects;
 
 public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	protected final P parent;
@@ -60,8 +60,12 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	}
 
 	private EntryMapping resolveMapping(EntryResolver resolver, EntryMap<EntryMapping> mappings) {
-		return resolver.resolveEntry(this).stream()
-					.map(mappings::get).filter(Objects::nonNull)
-					.findFirst().orElse(null);
+		for (ParentedEntry<P> entry : resolver.resolveEntry(this, ResolutionStrategy.RESOLVE_ROOT)) {
+			EntryMapping mapping = mappings.get(entry);
+			if (mapping != null) {
+				return mapping;
+			}
+		}
+		return null;
 	}
 }

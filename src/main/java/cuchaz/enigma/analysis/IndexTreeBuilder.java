@@ -4,10 +4,10 @@ import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-import java.util.Collection;
 import java.util.List;
 
 public class IndexTreeBuilder {
@@ -43,8 +43,7 @@ public class IndexTreeBuilder {
 	}
 
 	public MethodInheritanceTreeNode buildMethodInheritance(Translator translator, MethodEntry obfMethodEntry) {
-		Collection<MethodEntry> resolvedEntries = index.getEntryResolver().resolveEntry(obfMethodEntry);
-		MethodEntry resolvedEntry = resolvedEntries.stream().findAny().orElse(obfMethodEntry);
+		MethodEntry resolvedEntry = index.getEntryResolver().resolveFirstEntry(obfMethodEntry, ResolutionStrategy.RESOLVE_ROOT);
 
 		// make a root node at the base
 		MethodInheritanceTreeNode rootNode = new MethodInheritanceTreeNode(

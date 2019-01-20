@@ -60,7 +60,7 @@ public class MappingsChecker {
 		if (!index.getEntryIndex().hasEntry(entry)) {
 			return true;
 		}
-		Collection<Entry<?>> resolvedEntries = index.getEntryResolver().resolveEntry(entry);
+		Collection<Entry<?>> resolvedEntries = index.getEntryResolver().resolveEntry(entry, ResolutionStrategy.RESOLVE_ROOT);
 		return !resolvedEntries.contains(entry);
 	}
 
