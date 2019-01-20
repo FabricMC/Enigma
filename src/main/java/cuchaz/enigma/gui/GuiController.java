@@ -150,7 +150,9 @@ public class GuiController {
 	}
 
 	public boolean entryHasDeobfuscatedName(Entry<?> deobfEntry) {
-		return this.deobfuscator.hasDeobfuscatedName(this.deobfuscator.getMapper().obfuscate(deobfEntry));
+		EntryResolver resolver = this.deobfuscator.getMapper().getDeobfResolver();
+		Entry<?> resolvedEntry = resolver.resolveFirstEntry(deobfEntry, ResolutionStrategy.RESOLVE_ROOT);
+		return this.deobfuscator.hasDeobfuscatedName(this.deobfuscator.getMapper().obfuscate(resolvedEntry));
 	}
 
 	public boolean entryIsInJar(Entry<?> deobfEntry) {

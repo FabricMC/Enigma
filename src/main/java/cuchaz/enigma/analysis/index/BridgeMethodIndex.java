@@ -13,8 +13,7 @@ public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 	private final EntryIndex entryIndex;
 	private final ReferenceIndex referenceIndex;
 
-	private Map<MethodEntry, MethodEntry> bridgeMethods = Maps.newHashMap();
-	private Map<MethodEntry, MethodEntry> bridgedMethods = Maps.newHashMap();
+	private Map<MethodEntry, MethodEntry> accessedToBridge = Maps.newHashMap();
 
 	public BridgeMethodIndex(EntryIndex entryIndex, ReferenceIndex referenceIndex) {
 		this.entryIndex = entryIndex;
@@ -23,15 +22,13 @@ public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 
 	@Override
 	public void remap(Translator translator) {
-		bridgeMethods = translator.translate(bridgeMethods);
-		bridgedMethods = translator.translate(bridgedMethods);
+		accessedToBridge = translator.translate(accessedToBridge);
 	}
 
 	@Override
 	public BridgeMethodIndex remapped(Translator translator) {
 		BridgeMethodIndex index = new BridgeMethodIndex(entryIndex, referenceIndex);
-		index.bridgeMethods = translator.translate(bridgeMethods);
-		index.bridgedMethods = translator.translate(bridgedMethods);
+		index.accessedToBridge = translator.translate(accessedToBridge);
 
 		return index;
 	}
@@ -49,12 +46,11 @@ public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 		}
 	}
 
-	private void indexSyntheticMethod(MethodEntry methodEntry, AccessFlags access) {
+	private void indexSyntheticMethod(MethodEntry syntheticMethod, AccessFlags access) {
 		if (access.isBridge()) {
-			MethodEntry accessedMethod = findAccessMethod(methodEntry);
+			MethodEntry accessedMethod = findAccessMethod(syntheticMethod);
 			if (accessedMethod != null) {
-				bridgeMethods.put(methodEntry, accessedMethod);
-				bridgedMethods.put(accessedMethod, methodEntry);
+				accessedToBridge.put(accessedMethod, syntheticMethod);
 			}
 		}
 	}
@@ -74,12 +70,7 @@ public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 	}
 
 	@Nullable
-	public MethodEntry getBridgedMethod(MethodEntry entry) {
-		return bridgeMethods.get(entry);
-	}
-
-	@Nullable
-	public MethodEntry getBridgeMethod(MethodEntry entry) {
-		return bridgedMethods.get(entry);
+	public MethodEntry getBridgeFromAccessed(MethodEntry entry) {
+		return accessedToBridge.get(entry);
 	}
 }

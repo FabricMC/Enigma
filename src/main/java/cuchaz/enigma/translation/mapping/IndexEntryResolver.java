@@ -44,8 +44,12 @@ public class IndexEntryResolver implements EntryResolver {
 		if (classChild != null && !(classChild instanceof ClassEntry)) {
 			AccessFlags access = entryIndex.getEntryAccess(classChild);
 
-			// TODO: bridges
-			if (canBeInherited(access)) {
+			// If we're looking for the closest and this entry exists, we're done looking
+			if (strategy == ResolutionStrategy.RESOLVE_CLOSEST && access != null) {
+				return Collections.singleton(entry);
+			}
+
+			if (access == null || !access.isPrivate()) {
 				Collection<Entry<ClassEntry>> resolvedChildren = resolveChildEntry(classChild, strategy);
 				if (!resolvedChildren.isEmpty()) {
 					return resolvedChildren.stream()
@@ -78,12 +82,18 @@ public class IndexEntryResolver implements EntryResolver {
 		return null;
 	}
 
-	private boolean canBeInherited(AccessFlags access) {
-		return access == null || !access.isPrivate();
-	}
-
 	private Set<Entry<ClassEntry>> resolveChildEntry(Entry<ClassEntry> entry, ResolutionStrategy strategy) {
 		ClassEntry ownerClass = entry.getParent();
+
+		if (entry instanceof MethodEntry) {
+			MethodEntry bridgeMethod = bridgeMethodIndex.getBridgeFromAccessed((MethodEntry) entry);
+			if (bridgeMethod != null && ownerClass.equals(bridgeMethod.getParent())) {
+				Set<Entry<ClassEntry>> resolvedBridge = resolveChildEntry(bridgeMethod, strategy);
+				if (!resolvedBridge.isEmpty()) {
+					return resolvedBridge;
+				}
+			}
+		}
 
 		Set<Entry<ClassEntry>> resolvedEntries = new HashSet<>();
 
@@ -170,12 +180,11 @@ public class IndexEntryResolver implements EntryResolver {
 			methodEntries.add(methodEntry);
 		}
 
-		// TODO: This might be the wrong direction
 		// look at bridge methods!
-		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgedMethod(methodEntry);
+		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(methodEntry);
 		while (bridgedMethod != null) {
 			methodEntries.addAll(resolveEquivalentMethods(bridgedMethod));
-			bridgedMethod = bridgeMethodIndex.getBridgedMethod(bridgedMethod);
+			bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(bridgedMethod);
 		}
 
 		// look at interface methods too
@@ -198,10 +207,10 @@ public class IndexEntryResolver implements EntryResolver {
 		}
 
 		// look at bridge methods!
-		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgedMethod(methodEntry);
+		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(methodEntry);
 		while (bridgedMethod != null) {
 			methodEntries.addAll(resolveEquivalentMethods(bridgedMethod));
-			bridgedMethod = bridgeMethodIndex.getBridgedMethod(bridgedMethod);
+			bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(bridgedMethod);
 		}
 
 		// recurse

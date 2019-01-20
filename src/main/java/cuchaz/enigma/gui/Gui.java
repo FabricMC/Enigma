@@ -519,8 +519,6 @@ public class Gui {
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
-		// TODO: When we select a reference with multiple parents, only one will be selected. This means when a rename
-		// happens, siblings won't be renamed. We need to have the highest-level reference. Possibly should shallow resolve
 		reference = this.controller.getDeobfReference(token);
 
 		Entry<?> referenceEntry = reference != null ? reference.entry : null;
