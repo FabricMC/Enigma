@@ -6,7 +6,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public interface EntryResolver {
@@ -29,7 +29,7 @@ public interface EntryResolver {
 		return new EntryReference<>(entry, context, reference);
 	}
 
-	List<Entry<?>> resolveEquivalentEntries(Entry<?> entry);
+	Set<Entry<?>> resolveEquivalentEntries(Entry<?> entry);
 
-	List<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry);
+	Set<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry);
 }

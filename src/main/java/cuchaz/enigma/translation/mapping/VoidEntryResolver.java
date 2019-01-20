@@ -5,7 +5,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 public enum VoidEntryResolver implements EntryResolver {
 	INSTANCE;
@@ -16,12 +16,12 @@ public enum VoidEntryResolver implements EntryResolver {
 	}
 
 	@Override
-	public List<Entry<?>> resolveEquivalentEntries(Entry<?> entry) {
-		return Collections.singletonList(entry);
+	public Set<Entry<?>> resolveEquivalentEntries(Entry<?> entry) {
+		return Collections.singleton(entry);
 	}
 
 	@Override
-	public List<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry) {
-		return Collections.singletonList(methodEntry);
+	public Set<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry) {
+		return Collections.singleton(methodEntry);
 	}
 }

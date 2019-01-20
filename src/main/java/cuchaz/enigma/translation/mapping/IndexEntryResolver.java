@@ -1,6 +1,6 @@
 package cuchaz.enigma.translation.mapping;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import cuchaz.enigma.analysis.IndexTreeBuilder;
 import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
@@ -135,14 +135,14 @@ public class IndexEntryResolver implements EntryResolver {
 	}
 
 	@Override
-	public List<Entry<?>> resolveEquivalentEntries(Entry<?> entry) {
+	public Set<Entry<?>> resolveEquivalentEntries(Entry<?> entry) {
 		MethodEntry relevantMethod = entry.findAncestor(MethodEntry.class);
 		if (relevantMethod == null || !entryIndex.hasMethod(relevantMethod)) {
-			return Collections.singletonList(entry);
+			return Collections.singleton(entry);
 		}
 
-		List<MethodEntry> equivalentMethods = resolveEquivalentMethods(relevantMethod);
-		List<Entry<?>> equivalentEntries = new ArrayList<>(equivalentMethods.size());
+		Set<MethodEntry> equivalentMethods = resolveEquivalentMethods(relevantMethod);
+		Set<Entry<?>> equivalentEntries = new HashSet<>(equivalentMethods.size());
 
 		for (MethodEntry equivalentMethod : equivalentMethods) {
 			Entry<?> equivalentEntry = entry.replaceAncestor(relevantMethod, equivalentMethod);
@@ -153,22 +153,22 @@ public class IndexEntryResolver implements EntryResolver {
 	}
 
 	@Override
-	public List<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry) {
+	public Set<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry) {
 		AccessFlags access = entryIndex.getMethodAccess(methodEntry);
 		if (access == null) {
 			throw new IllegalArgumentException("Could not find method " + methodEntry);
 		}
 
 		if (!canInherit(methodEntry, access)) {
-			return Collections.singletonList(methodEntry);
+			return Collections.singleton(methodEntry);
 		}
 
-		List<MethodEntry> methodEntries = Lists.newArrayList();
+		Set<MethodEntry> methodEntries = Sets.newHashSet();
 		resolveEquivalentMethods(methodEntries, treeBuilder.buildMethodInheritance(VoidTranslator.INSTANCE, methodEntry));
 		return methodEntries;
 	}
 
-	private void resolveEquivalentMethods(List<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
+	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
 		if (methodEntries.contains(methodEntry)) {
 			return;
@@ -198,7 +198,7 @@ public class IndexEntryResolver implements EntryResolver {
 		}
 	}
 
-	private void resolveEquivalentMethods(List<MethodEntry> methodEntries, MethodImplementationsTreeNode node) {
+	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodImplementationsTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
 		AccessFlags flags = entryIndex.getMethodAccess(methodEntry);
 		if (flags != null && !flags.isPrivate() && !flags.isStatic()) {

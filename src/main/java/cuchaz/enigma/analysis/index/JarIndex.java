@@ -79,13 +79,13 @@ public class JarIndex implements JarIndexer, RemappableIndex {
 		progress.accept("Indexing entry references (2/3)");
 		jar.visitReader(name -> new IndexReferenceVisitor(this, Opcodes.ASM5), ClassReader.SKIP_FRAMES);
 
-		progress.accept("Processing index (3/3");
-		processIndex();
+		progress.accept("Processing index (3/3)");
+		processIndex(entryResolver);
 	}
 
 	@Override
-	public void processIndex() {
-		indexers.forEach(JarIndexer::processIndex);
+	public void processIndex(EntryResolver resolver) {
+		indexers.forEach(indexer -> indexer.processIndex(entryResolver));
 	}
 
 	@Override

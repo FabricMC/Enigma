@@ -6,6 +6,9 @@ import org.objectweb.asm.Opcodes;
 import java.lang.reflect.Modifier;
 
 public class AccessFlags {
+	public static final AccessFlags PRIVATE = new AccessFlags(Opcodes.ACC_PRIVATE);
+	public static final AccessFlags PUBLIC = new AccessFlags(Opcodes.ACC_PUBLIC);
+
 	private int flags;
 
 	public AccessFlags(int flags) {

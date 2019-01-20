@@ -37,7 +37,6 @@ public class TestJarIndexInheritanceTree {
 
 	private JarIndex index;
 
-	private ClassEntry objectClass = newClass("java/lang/Object");
 	private ClassEntry baseClass = newClass("a");
 	private ClassEntry subClassA = newClass("b");
 	private ClassEntry subClassAA = newClass("d");
@@ -64,24 +63,24 @@ public class TestJarIndexInheritanceTree {
 		InheritanceIndex index = this.index.getInheritanceIndex();
 
 		// base class
-		assertThat(index.getParents(baseClass), contains(objectClass));
-		assertThat(index.getAncestors(baseClass), containsInAnyOrder(objectClass));
+		assertThat(index.getParents(baseClass), is(empty()));
+		assertThat(index.getAncestors(baseClass), is(empty()));
 		assertThat(index.getChildren(baseClass), containsInAnyOrder(subClassA, subClassB
 		));
 
 		// subclass a
 		assertThat(index.getParents(subClassA), contains(baseClass));
-		assertThat(index.getAncestors(subClassA), containsInAnyOrder(baseClass, objectClass));
+		assertThat(index.getAncestors(subClassA), containsInAnyOrder(baseClass));
 		assertThat(index.getChildren(subClassA), contains(subClassAA));
 
 		// subclass aa
 		assertThat(index.getParents(subClassAA), contains(subClassA));
-		assertThat(index.getAncestors(subClassAA), containsInAnyOrder(subClassA, baseClass, objectClass));
+		assertThat(index.getAncestors(subClassAA), containsInAnyOrder(subClassA, baseClass));
 		assertThat(index.getChildren(subClassAA), is(empty()));
 
 		// subclass b
 		assertThat(index.getParents(subClassB), contains(baseClass));
-		assertThat(index.getAncestors(subClassB), containsInAnyOrder(baseClass, objectClass));
+		assertThat(index.getAncestors(subClassB), containsInAnyOrder(baseClass));
 		assertThat(index.getChildren(subClassB), is(empty()));
 	}
 

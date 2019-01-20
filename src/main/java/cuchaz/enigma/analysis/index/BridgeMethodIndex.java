@@ -2,6 +2,7 @@ package cuchaz.enigma.analysis.index;
 
 import com.google.common.collect.Maps;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
@@ -34,7 +35,7 @@ public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 	}
 
 	@Override
-	public void processIndex() {
+	public void processIndex(EntryResolver resolver) {
 		// look for access and bridged methods
 		for (MethodEntry methodEntry : entryIndex.getMethods()) {
 			AccessFlags access = entryIndex.getMethodAccess(methodEntry);

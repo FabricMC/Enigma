@@ -3,24 +3,22 @@ package cuchaz.enigma.analysis.index;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
+import cuchaz.enigma.translation.representation.entry.*;
 
 import java.util.Collection;
+import java.util.Map;
 
 public class ReferenceIndex implements JarIndexer {
-	private final Multimap<MethodEntry, MethodEntry> methodReferences = HashMultimap.create();
-	private final Multimap<MethodEntry, EntryReference<MethodEntry, MethodDefEntry>> referencesToMethods = HashMultimap.create();
-	private final Multimap<ClassEntry, EntryReference<ClassEntry, MethodDefEntry>> referencesToClasses = HashMultimap.create();
+	private Multimap<MethodEntry, MethodEntry> methodReferences = HashMultimap.create();
 
-	private final Multimap<MethodEntry, FieldEntry> fieldReferences = HashMultimap.create();
-	private final Multimap<FieldEntry, EntryReference<FieldEntry, MethodDefEntry>> referencesToFields = HashMultimap.create();
+	private Multimap<MethodEntry, EntryReference<MethodEntry, MethodDefEntry>> referencesToMethods = HashMultimap.create();
+	private Multimap<ClassEntry, EntryReference<ClassEntry, MethodDefEntry>> referencesToClasses = HashMultimap.create();
+	private Multimap<FieldEntry, EntryReference<FieldEntry, MethodDefEntry>> referencesToFields = HashMultimap.create();
 
 	@Override
 	public void indexMethodReference(MethodDefEntry callerEntry, MethodEntry referencedEntry) {
-		// TODO: should references be resolved? should they be resolved to original entry or just closest? (fields too)
 		referencesToMethods.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry));
 		methodReferences.put(callerEntry, referencedEntry);
 
@@ -32,16 +30,43 @@ public class ReferenceIndex implements JarIndexer {
 
 	@Override
 	public void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry) {
-		fieldReferences.put(callerEntry, referencedEntry);
 		referencesToFields.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry));
+	}
+
+	@Override
+	public void processIndex(EntryResolver resolver) {
+		methodReferences = resolveReferences(resolver, methodReferences);
+		referencesToMethods = resolveReferencesTo(resolver, referencesToMethods);
+		referencesToClasses = resolveReferencesTo(resolver, referencesToClasses);
+		referencesToFields = resolveReferencesTo(resolver, referencesToFields);
+	}
+
+	private <K extends Entry<?>, V extends Entry<?>> Multimap<K, V> resolveReferences(EntryResolver resolver, Multimap<K, V> multimap) {
+		Multimap<K, V> resolved = HashMultimap.create();
+		for (Map.Entry<K, V> entry : multimap.entries()) {
+			resolved.put(resolve(resolver, entry.getKey()), resolve(resolver, entry.getValue()));
+		}
+		return resolved;
+	}
+
+	private <E extends Entry<?>, C extends Entry<?>> Multimap<E, EntryReference<E, C>> resolveReferencesTo(EntryResolver resolver, Multimap<E, EntryReference<E, C>> multimap) {
+		Multimap<E, EntryReference<E, C>> resolved = HashMultimap.create();
+		for (Map.Entry<E, EntryReference<E, C>> entry : multimap.entries()) {
+			resolved.put(resolve(resolver, entry.getKey()), resolve(resolver, entry.getValue()));
+		}
+		return resolved;
+	}
+
+	private <E extends Entry<?>> E resolve(EntryResolver resolver, E entry) {
+		return resolver.resolveFirstEntry(entry, ResolutionStrategy.RESOLVE_CLOSEST);
+	}
+
+	private <E extends Entry<?>, C extends Entry<?>> EntryReference<E, C> resolve(EntryResolver resolver, EntryReference<E, C> reference) {
+		return resolver.resolveFirstReference(reference, ResolutionStrategy.RESOLVE_CLOSEST);
 	}
 
 	public Collection<MethodEntry> getMethodsReferencedBy(MethodEntry entry) {
 		return methodReferences.get(entry);
-	}
-
-	public Collection<FieldEntry> getFieldsReferencedBy(MethodEntry entry) {
-		return fieldReferences.get(entry);
 	}
 
 	public Collection<EntryReference<FieldEntry, MethodDefEntry>> getReferencesToField(FieldEntry entry) {

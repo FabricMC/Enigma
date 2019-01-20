@@ -16,6 +16,7 @@ import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.VoidTranslator;
+import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
@@ -23,6 +24,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.jar.JarFile;
 
 import static cuchaz.enigma.TestEntryFactory.*;
@@ -50,10 +52,10 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void translationIndex() {
 		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
-		assertThat(inheritanceIndex.getParents(new ClassEntry("a")), contains(new ClassEntry("java/lang/Object")));
-		assertThat(inheritanceIndex.getParents(new ClassEntry("cuchaz/enigma/inputs/Keep")), contains(new ClassEntry("java/lang/Object")));
-		assertThat(inheritanceIndex.getAncestors(new ClassEntry("a")), contains(new ClassEntry("java/lang/Object")));
-		assertThat(inheritanceIndex.getAncestors(new ClassEntry("cuchaz/enigma/inputs/Keep")), contains(new ClassEntry("java/lang/Object")));
+		assertThat(inheritanceIndex.getParents(new ClassEntry("a")), is(empty()));
+		assertThat(inheritanceIndex.getParents(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(empty()));
+		assertThat(inheritanceIndex.getAncestors(new ClassEntry("a")), is(empty()));
+		assertThat(inheritanceIndex.getAncestors(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(empty()));
 		assertThat(inheritanceIndex.getChildren(new ClassEntry("a")), is(empty()));
 		assertThat(inheritanceIndex.getChildren(new ClassEntry("cuchaz/enigma/inputs/Keep")), is(empty()));
 	}
@@ -61,8 +63,8 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void access() {
 		EntryIndex entryIndex = index.getEntryIndex();
-		assertThat(entryIndex.getFieldAccess(newField("a", "a", "Ljava/lang/String;")), is(Access.PRIVATE));
-		assertThat(entryIndex.getMethodAccess(newMethod("a", "a", "()Ljava/lang/String;")), is(Access.PUBLIC));
+		assertThat(entryIndex.getFieldAccess(newField("a", "a", "Ljava/lang/String;")), is(AccessFlags.PRIVATE));
+		assertThat(entryIndex.getMethodAccess(newMethod("a", "a", "()Ljava/lang/String;")), is(AccessFlags.PUBLIC));
 		assertThat(entryIndex.getFieldAccess(newField("a", "b", "Ljava/lang/String;")), is(nullValue()));
 		assertThat(entryIndex.getFieldAccess(newField("a", "a", "LFoo;")), is(nullValue()));
 	}
@@ -97,7 +99,10 @@ public class TestJarIndexLoneClass {
 	public void methodImplementations() {
 		IndexTreeBuilder treeBuilder = new IndexTreeBuilder(index);
 		MethodEntry source = newMethod("a", "a", "()Ljava/lang/String;");
-		assertThat(treeBuilder.buildMethodImplementations(VoidTranslator.INSTANCE, source), is(empty()));
+
+		List<MethodImplementationsTreeNode> nodes = treeBuilder.buildMethodImplementations(VoidTranslator.INSTANCE, source);
+		assertThat(nodes, hasSize(1));
+		assertThat(nodes.get(0).getMethodEntry(), is(source));
 	}
 
 	@Test
