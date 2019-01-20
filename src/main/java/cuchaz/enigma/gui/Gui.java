@@ -519,12 +519,14 @@ public class Gui {
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
-		reference = this.controller.getDeobfReference(token);
-		boolean isClassEntry = isToken && reference.entry instanceof ClassEntry;
-		boolean isFieldEntry = isToken && reference.entry instanceof FieldEntry;
-		boolean isMethodEntry = isToken && reference.entry instanceof MethodEntry && !((MethodEntry) reference.entry).isConstructor();
-		boolean isConstructorEntry = isToken && reference.entry instanceof MethodEntry && ((MethodEntry) reference.entry).isConstructor();
-		boolean isInJar = isToken && this.controller.entryIsInJar(reference.entry);
+		reference = this.controller.getDeobfReference(token).stream().findFirst().orElse(null);
+
+		Entry<?> referenceEntry = reference != null ? reference.entry : null;
+		boolean isClassEntry = isToken && referenceEntry instanceof ClassEntry;
+		boolean isFieldEntry = isToken && referenceEntry instanceof FieldEntry;
+		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
+		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
+		boolean isInJar = isToken && this.controller.entryIsInJar(referenceEntry);
 		boolean isRenameable = isToken && this.controller.referenceIsRenameable(reference);
 
 		if (isToken) {
@@ -542,7 +544,7 @@ public class Gui {
 		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
 
-		if (isToken && this.controller.entryHasDeobfuscatedName(reference.entry)) {
+		if (isToken && this.controller.entryHasDeobfuscatedName(referenceEntry)) {
 			this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
 		} else {
 			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");

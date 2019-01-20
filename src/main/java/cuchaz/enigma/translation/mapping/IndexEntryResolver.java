@@ -14,12 +14,10 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.stream.Collectors;
 
-// TODO: This only resolves if not contained in the current class. Do we want that behaviour everywhere?
 public class IndexEntryResolver implements EntryResolver {
 	private final EntryIndex entryIndex;
 	private final InheritanceIndex inheritanceIndex;
@@ -35,61 +33,77 @@ public class IndexEntryResolver implements EntryResolver {
 		this.treeBuilder = new IndexTreeBuilder(index);
 	}
 
-	// TODO: bridge methods!
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E extends Entry<?>> E resolveEntry(E entry) {
+	public <E extends Entry<?>> Collection<E> resolveEntry(E entry) {
 		if (entry == null || entry instanceof ClassEntry) {
-			return entry;
+			return Collections.singleton(entry);
 		}
 
+		Entry<ClassEntry> classChild = getClassChild(entry);
+		if (classChild != null && !(classChild instanceof ClassEntry)) {
+			// we found the entry which is a child of a class, we are now able to resolve the owner of this entry
+			Collection<ClassEntry> resolvedOwners = resolveEntryOwners(classChild);
+			return resolvedOwners.stream()
+					.map(owner -> (E) entry.replaceAncestor(classChild.getParent(), owner))
+					.collect(Collectors.toList());
+		}
+
+		return Collections.singleton(entry);
+	}
+
+	@Nullable
+	private Entry<ClassEntry> getClassChild(Entry<?> entry) {
+		// get the entry in the heirarchy that is the child of a class
 		List<Entry<?>> ancestry = entry.getAncestry();
 		for (int i = ancestry.size() - 1; i > 0; i--) {
 			Entry<?> child = ancestry.get(i);
 			Entry<ClassEntry> cast = child.castParent(ClassEntry.class);
 			if (cast != null && !(cast instanceof ClassEntry)) {
 				// we found the entry which is a child of a class, we are now able to resolve the owner of this entry
-				ClassEntry resolvedOwner = resolveEntryOwner(cast);
-				if (resolvedOwner != null) {
-					return (E) entry.replaceAncestor(cast.getParent(), resolvedOwner);
+				return cast;
+			}
+		}
+		return null;
+	}
+
+	// TODO: bridges
+	@Override
+	public <E extends Entry<ClassEntry>> Collection<ClassEntry> resolveEntryOwners(E entry) {
+		AccessFlags access = entryIndex.getEntryAccess(entry);
+
+		// If we're private, it's impossible that this could be inherited from a parent class
+		if (access != null && access.isPrivate()) {
+			return Collections.singleton(entry.getParent());
+		}
+
+		Set<ClassEntry> owners = resolveParentOwners(entry);
+		if (owners.isEmpty()) {
+			owners.add(entry.getParent());
+		}
+
+		return owners;
+	}
+
+	private Set<ClassEntry> resolveParentOwners(Entry<ClassEntry> entry) {
+		ClassEntry ownerClass = entry.getParent();
+
+		Set<ClassEntry> owners = new HashSet<>();
+		for (ClassEntry parentClass : inheritanceIndex.getParents(ownerClass)) {
+			Entry<ClassEntry> parentEntry = entry.withParent(parentClass);
+			Set<ClassEntry> parentOwners = resolveParentOwners(parentEntry);
+
+			if (!parentOwners.isEmpty()) {
+				owners.addAll(parentOwners);
+			} else {
+				AccessFlags parentAccess = entryIndex.getEntryAccess(parentEntry);
+				if (parentAccess != null && !parentAccess.isPrivate()) {
+					owners.add(parentClass);
 				}
 			}
 		}
 
-		return entry;
-	}
-
-	@Override
-	public <E extends Entry<ClassEntry>> ClassEntry resolveEntryOwner(E entry) {
-		AccessFlags access = entryIndex.getEntryAccess(entry);
-
-		// If we're private or static, it's impossible that this could be inherited from a parent class
-		if (access != null && (access.isPrivate() || access.isStatic())) {
-			return entry.getParent();
-		}
-
-		ClassEntry resolvedOwner = entry.getParent();
-
-		LinkedList<ClassEntry> queue = new LinkedList<>();
-		queue.add(entry.getParent());
-
-		if (!inheritanceIndex.hasParents(resolvedOwner)) {
-			return resolvedOwner;
-		}
-
-		while (!queue.isEmpty()) {
-			ClassEntry parentClass = queue.poll();
-
-			Entry<ClassEntry> inheritedEntry = entry.withParent(parentClass);
-			if (entryIndex.hasEntry(inheritedEntry)) {
-				// We want to find the last parent class to contain this entry
-				resolvedOwner = parentClass;
-			}
-
-			queue.addAll(inheritanceIndex.getParents(parentClass));
-		}
-
-		return resolvedOwner;
+		return owners;
 	}
 
 	@Override
@@ -138,6 +152,7 @@ public class IndexEntryResolver implements EntryResolver {
 			methodEntries.add(methodEntry);
 		}
 
+		// TODO: This might be the wrong direction
 		// look at bridge methods!
 		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgedMethod(methodEntry);
 		while (bridgedMethod != null) {

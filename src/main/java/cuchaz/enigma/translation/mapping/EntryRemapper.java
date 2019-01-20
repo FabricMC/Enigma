@@ -18,7 +18,6 @@ public class EntryRemapper {
 	private final DeltaTrackingTree<EntryMapping> deobfToObf;
 
 	private final JarIndex obfIndex;
-	private JarIndex deobfIndex;
 
 	private final EntryResolver obfResolver;
 	private EntryResolver deobfResolver;
@@ -64,20 +63,25 @@ public class EntryRemapper {
 	}
 
 	private void rebuildDeobfIndex() {
-		this.deobfIndex = obfIndex.remapped(deobfuscator);
+		JarIndex deobfIndex = obfIndex.remapped(deobfuscator);
 
 		this.deobfResolver = deobfIndex.getEntryResolver();
 		this.obfuscator = new MappingTranslator(deobfToObf, deobfResolver);
 	}
 
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		E resolvedEntry = obfResolver.resolveEntry(obfuscatedEntry);
+		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry);
 
-		if (deobfMapping != null) {
-			validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
+		for (E resolvedEntry : resolvedEntries) {
+			if (deobfMapping != null) {
+				validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
+			}
+
+			setObfToDeobf(resolvedEntry, deobfMapping);
 		}
 
-		setObfToDeobf(resolvedEntry, deobfMapping);
+		// Temporary hack, not very performant
+		rebuildDeobfIndex();
 	}
 
 	public <E extends Entry<?>> void mapFromDeobf(E deobfuscatedEntry, @Nullable EntryMapping deobfMapping) {
@@ -98,9 +102,6 @@ public class EntryRemapper {
 		obfToDeobf.insert(obfuscatedEntry, deobfMapping);
 
 		E newDeobf = deobfuscate(obfuscatedEntry);
-
-		// Temporary hack, not very performant
-		rebuildDeobfIndex();
 
 		// Reconstruct the children of this node in the deobf -> obf tree with our new mapping
 		// We only need to do this for deobf -> obf because the obf tree is always consistent on the left hand side

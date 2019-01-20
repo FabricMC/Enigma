@@ -23,8 +23,8 @@ import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 public class GuiController {
 
@@ -131,11 +132,11 @@ public class GuiController {
 		return this.index.getReferenceToken(pos);
 	}
 
-	public EntryReference<Entry<?>, Entry<?>> getDeobfReference(Token token) {
+	public Collection<EntryReference<Entry<?>, Entry<?>>> getDeobfReference(Token token) {
 		if (this.index == null) {
-			return null;
+			return Collections.emptyList();
 		}
-		return this.index.getDeobfReference(token);
+		return this.index.getDeobfReferences(token);
 	}
 
 	public ReadableToken getReadableToken(Token token) {
@@ -273,12 +274,14 @@ public class GuiController {
 
 	private void showReference(EntryReference<Entry<?>, Entry<?>> obfReference) {
 		EntryRemapper mapper = this.deobfuscator.getMapper();
-		EntryReference<Entry<?>, Entry<?>> resolvedReference = mapper.getObfResolver().resolveReference(obfReference);
-		EntryReference<Entry<?>, Entry<?>> deobfReference = mapper.deobfuscate(resolvedReference);
-		Collection<Token> tokens = this.index.getReferenceTokens(deobfReference);
+
+		Collection<Token> tokens = mapper.getObfResolver().resolveReference(obfReference).stream()
+				.map(mapper::deobfuscate)
+				.flatMap(reference -> index.getReferenceTokens(reference).stream())
+				.collect(Collectors.toList());
 		if (tokens.isEmpty()) {
 			// DEBUG
-			System.err.println(String.format("WARNING: no tokens found for %s in %s", deobfReference, this.currentObfClass));
+			System.err.println(String.format("WARNING: no tokens found for %s in %s", tokens, this.currentObfClass));
 		} else {
 			this.gui.showTokens(tokens);
 		}
@@ -346,10 +349,16 @@ public class GuiController {
 			boolean remapped = false;
 
 			for (Token inToken : index.referenceTokens()) {
-				EntryReference<Entry<?>, Entry<?>> reference = index.getDeobfReference(inToken);
 				Token token = inToken.move(offset);
 
-				if (referenceIsRenameable(reference)) {
+				Collection<EntryReference<Entry<?>, Entry<?>>> references = index.getDeobfReferences(inToken);
+				Optional<EntryReference<Entry<?>, Entry<?>>> renamableReference = references.stream()
+						.filter(this::referenceIsRenameable)
+						.findFirst();
+
+				if (renamableReference.isPresent()) {
+					EntryReference<Entry<?>, Entry<?>> reference = renamableReference.get();
+
 					boolean added = false;
 
 					if (!entryHasDeobfuscatedName(reference.getNameableEntry())) {

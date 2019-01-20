@@ -14,11 +14,12 @@ package cuchaz.enigma.translation.representation.entry;
 import com.google.common.base.Preconditions;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.EntryMap;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	protected final P parent;
@@ -50,11 +51,17 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	@Override
 	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		P parent = getParent();
-		EntryMapping mapping = mappings.get(resolver.resolveEntry(this));
+		EntryMapping mapping = resolveMapping(resolver, mappings);
 		if (parent == null) {
 			return translate(translator, mapping);
 		}
 		P translatedParent = translator.translate(parent);
 		return withParent(translatedParent).translate(translator, mapping);
+	}
+
+	private EntryMapping resolveMapping(EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		return resolver.resolveEntry(this).stream()
+					.map(mappings::get).filter(Objects::nonNull)
+					.findFirst().orElse(null);
 	}
 }

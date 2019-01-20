@@ -4,6 +4,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,13 +12,13 @@ public enum VoidEntryResolver implements EntryResolver {
 	INSTANCE;
 
 	@Override
-	public <E extends Entry<?>> E resolveEntry(E entry) {
-		return entry;
+	public <E extends Entry<?>> Collection<E> resolveEntry(E entry) {
+		return Collections.singleton(entry);
 	}
 
 	@Override
-	public <E extends Entry<ClassEntry>> ClassEntry resolveEntryOwner(E entry) {
-		return entry.getParent();
+	public <E extends Entry<ClassEntry>> Collection<ClassEntry> resolveEntryOwners(E entry) {
+		return Collections.singleton(entry.getParent());
 	}
 
 	@Override

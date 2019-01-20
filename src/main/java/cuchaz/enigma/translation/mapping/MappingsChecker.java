@@ -60,8 +60,8 @@ public class MappingsChecker {
 		if (!index.getEntryIndex().hasEntry(entry)) {
 			return true;
 		}
-		Entry<?> resolvedEntry = index.getEntryResolver().resolveEntry(entry);
-		return !entry.equals(resolvedEntry);
+		Collection<Entry<?>> resolvedEntries = index.getEntryResolver().resolveEntry(entry);
+		return !resolvedEntries.contains(entry);
 	}
 
 	public static class Dropped {

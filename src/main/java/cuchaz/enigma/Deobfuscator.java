@@ -12,6 +12,7 @@
 package cuchaz.enigma;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -230,12 +231,18 @@ public class Deobfuscator {
 		SourceIndex index = new SourceIndex(source, ignoreBadTokens);
 		sourceTree.acceptVisitor(new SourceIndexVisitor(entryPool), index);
 
-		// resolve all the classes in the source references
-		for (Token token : index.referenceTokens()) {
-			EntryReference<Entry<?>, Entry<?>> deobfReference = index.getDeobfReference(token);
+		EntryResolver resolver = mapper.getDeobfResolver();
 
-			EntryResolver resolver = mapper.getDeobfResolver();
-			index.replaceDeobfReference(token, resolver.resolveReference(deobfReference));
+		Collection<Token> tokens = Lists.newArrayList(index.referenceTokens());
+
+		// resolve all the classes in the source references
+		for (Token token : tokens) {
+			Collection<EntryReference<Entry<?>, Entry<?>>> deobfReferences = index.getDeobfReferences(token);
+			Collection<EntryReference<Entry<?>, Entry<?>>> resolvedReferences = deobfReferences.stream()
+					.flatMap(reference -> resolver.resolveReference(reference).stream())
+					.collect(Collectors.toList());
+
+			index.replaceDeobfReference(token, resolvedReferences);
 		}
 
 		return index;

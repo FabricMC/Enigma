@@ -26,6 +26,7 @@ import javax.swing.text.Highlighter.HighlightPainter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
 
 public class CodeReader extends JEditorPane {
 
@@ -50,7 +51,8 @@ public class CodeReader extends JEditorPane {
 			if (selectionListener != null && sourceIndex != null) {
 				Token token = sourceIndex.getReferenceToken(event.getDot());
 				if (token != null) {
-					selectionListener.onSelect(sourceIndex.getDeobfReference(token));
+					Collection<EntryReference<Entry<?>, Entry<?>>> references = sourceIndex.getDeobfReferences(token);
+					references.stream().findFirst().ifPresent(selectionListener::onSelect);
 				} else {
 					selectionListener.onSelect(null);
 				}
