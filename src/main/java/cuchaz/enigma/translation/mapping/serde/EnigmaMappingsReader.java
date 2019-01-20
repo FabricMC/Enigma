@@ -138,13 +138,14 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			obfuscatedEntry = new ClassEntry(obfuscatedName);
 		}
 
-		String mapping = obfuscatedName;
+		String mapping = null;
 		AccessModifier modifier = AccessModifier.UNCHANGED;
 
 		if (tokens.length == 3) {
 			AccessModifier parsedModifier = parseModifier(tokens[2]);
 			if (parsedModifier != null) {
 				modifier = parsedModifier;
+				mapping = obfuscatedName;
 			} else {
 				mapping = tokens[2];
 			}
@@ -205,7 +206,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		ClassEntry ownerEntry = (ClassEntry) parent;
 
 		String obfuscatedName = tokens[1];
-		String mapping = obfuscatedName;
+		String mapping = null;
 		AccessModifier modifier = AccessModifier.UNCHANGED;
 		MethodDescriptor descriptor;
 
@@ -215,6 +216,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			AccessModifier parsedModifier = parseModifier(tokens[3]);
 			if (parsedModifier != null) {
 				modifier = parsedModifier;
+				mapping = obfuscatedName;
 				descriptor = new MethodDescriptor(tokens[2]);
 			} else {
 				mapping = tokens[2];

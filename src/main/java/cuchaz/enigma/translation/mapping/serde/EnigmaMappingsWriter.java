@@ -108,9 +108,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 				if (packageName != null) {
 					Path packagePath = Paths.get(packageName);
 					try {
-						System.err.println("Failed to delete dead package '" + packageName + "'");
 						deleteDeadPackages(root, packagePath);
 					} catch (IOException e) {
+						System.err.println("Failed to delete dead package '" + packageName + "'");
 						e.printStackTrace();
 					}
 				}
