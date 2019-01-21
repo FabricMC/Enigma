@@ -78,7 +78,7 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	public boolean canConflictWith(Entry<?> entry) {
 		if (entry instanceof MethodEntry) {
 			MethodEntry methodEntry = (MethodEntry) entry;
-			return methodEntry.parent.equals(parent) && methodEntry.descriptor.equals(descriptor);
+			return methodEntry.parent.equals(parent) && methodEntry.descriptor.canConflictWith(descriptor);
 		}
 		return false;
 	}

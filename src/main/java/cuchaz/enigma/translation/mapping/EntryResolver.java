@@ -18,9 +18,15 @@ public interface EntryResolver {
 
 	default <E extends Entry<?>, C extends Entry<?>> Collection<EntryReference<E, C>> resolveReference(EntryReference<E, C> reference, ResolutionStrategy strategy) {
 		Collection<E> entry = resolveEntry(reference.entry, strategy);
-		Collection<C> context = resolveEntry(reference.context, strategy);
-		return Streams.zip(entry.stream(), context.stream(), (e, c) -> new EntryReference<>(e, c, reference))
-				.collect(Collectors.toList());
+		if (reference.context != null) {
+			Collection<C> context = resolveEntry(reference.context, strategy);
+			return Streams.zip(entry.stream(), context.stream(), (e, c) -> new EntryReference<>(e, c, reference))
+					.collect(Collectors.toList());
+		} else {
+			return entry.stream()
+					.map(e -> new EntryReference<>(e, null, reference))
+					.collect(Collectors.toList());
+		}
 	}
 
 	default <E extends Entry<?>, C extends Entry<?>> EntryReference<E, C> resolveFirstReference(EntryReference<E, C> reference, ResolutionStrategy strategy) {

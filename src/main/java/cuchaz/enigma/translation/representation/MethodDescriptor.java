@@ -125,4 +125,8 @@ public class MethodDescriptor implements Translatable {
 		}
 		return new MethodDescriptor(translatedArguments, translator.translate(returnDesc));
 	}
+
+	public boolean canConflictWith(MethodDescriptor descriptor) {
+		return descriptor.argumentDescs.equals(argumentDescs);
+	}
 }
