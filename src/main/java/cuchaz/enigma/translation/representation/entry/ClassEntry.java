@@ -125,6 +125,13 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return parent;
 	}
 
+	public ClassEntry getOutermostClass() {
+		if (parent == null) {
+			return this;
+		}
+		return parent.getOutermostClass();
+	}
+
 	public ClassEntry buildClassEntry(List<ClassEntry> classChain) {
 		assert (classChain.contains(this));
 		StringBuilder buf = new StringBuilder();

@@ -332,7 +332,7 @@ public class GuiController {
 		new Thread(() ->
 		{
 			// decompile,deobfuscate the bytecode
-			CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getFullName());
+			CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClass().getFullName());
 			if (sourceTree == null) {
 				// decompilation of this class is not supported
 				gui.setSource("Unable to find class: " + classEntry);
