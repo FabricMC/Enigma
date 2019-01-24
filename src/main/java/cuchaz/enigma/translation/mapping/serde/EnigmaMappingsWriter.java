@@ -21,6 +21,7 @@ import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.utils.LFPrintWriter;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -45,7 +46,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			progress.init(classes.size(), "Writing classes");
 
 			int steps = 0;
-			try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
+			try (PrintWriter writer = new LFPrintWriter(Files.newBufferedWriter(path))) {
 				for (ClassEntry classEntry : classes) {
 					progress.step(steps++, classEntry.getFullName());
 					writeRoot(writer, mappings, classEntry);
@@ -78,7 +79,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 					Files.deleteIfExists(classPath);
 					Files.createDirectories(classPath.getParent());
 
-					try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(classPath))) {
+					try (PrintWriter writer = new LFPrintWriter(Files.newBufferedWriter(classPath))) {
 						writeRoot(writer, mappings, classEntry);
 					}
 				} catch (Throwable t) {

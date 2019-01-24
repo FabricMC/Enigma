@@ -13,6 +13,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.LFPrintWriter;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -52,7 +53,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		}
 
 		progress.init(3, "Writing mappings");
-		try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
+		try (PrintWriter writer = new LFPrintWriter(Files.newBufferedWriter(path))) {
 			progress.step(0, "Classes");
 			classLines.forEach(writer::println);
 			progress.step(1, "Fields");
