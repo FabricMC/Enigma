@@ -29,9 +29,9 @@ import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
-import cuchaz.enigma.mapping.*;
-import cuchaz.enigma.mapping.entry.*;
 import cuchaz.enigma.throwables.IllegalNameException;
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
@@ -44,8 +44,8 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
@@ -58,7 +58,7 @@ public class Gui {
 
 	private final MenuBar menuBar;
 	// state
-	public EntryReference<Entry, Entry> reference;
+	public EntryReference<Entry<?>, Entry<?>> reference;
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
 	public JFileChooser enigmaMappingsFileChooser;
@@ -222,7 +222,7 @@ public class Gui {
 
 					Object node = path.getLastPathComponent();
 					if (node instanceof ReferenceTreeNode) {
-						ReferenceTreeNode<Entry, Entry> referenceNode = ((ReferenceTreeNode<Entry, Entry>) node);
+						ReferenceTreeNode<Entry<?>, Entry<?>> referenceNode = ((ReferenceTreeNode<Entry<?>, Entry<?>>) node);
 						if (referenceNode.getReference() != null) {
 							navigateTo(referenceNode.getReference());
 						} else {
@@ -250,10 +250,10 @@ public class Gui {
 		tokens.setPreferredSize(new Dimension(0, 200));
 		tokens.setMinimumSize(new Dimension(0, 200));
 		JSplitPane callPanel = new JSplitPane(
-			JSplitPane.VERTICAL_SPLIT,
-			true,
-			new JScrollPane(callsTree),
-			new JScrollPane(tokens)
+				JSplitPane.VERTICAL_SPLIT,
+				true,
+				new JScrollPane(callsTree),
+				new JScrollPane(tokens)
 		);
 		callPanel.setResizeWeight(1); // let the top side take all the slack
 		callPanel.resetToPreferredSizes();
@@ -368,9 +368,9 @@ public class Gui {
 		this.deobfPanel.deobfClasses.setClasses(deobfClasses);
 	}
 
-	public void setMappingsFile(File file) {
-		this.enigmaMappingsFileChooser.setSelectedFile(file);
-		this.menuBar.saveMappingsMenu.setEnabled(file != null);
+	public void setMappingsFile(Path path) {
+		this.enigmaMappingsFileChooser.setSelectedFile(path != null ? path.toFile() : null);
+		this.menuBar.saveMappingsMenu.setEnabled(path != null);
 	}
 
 	public void setSource(String source) {
@@ -427,7 +427,7 @@ public class Gui {
 		}
 	}
 
-	private void showReference(EntryReference<Entry, Entry> reference) {
+	private void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		if (reference == null) {
 			infoPanel.clearReference();
 			return;
@@ -453,29 +453,29 @@ public class Gui {
 
 	private void showLocalVariableEntry(LocalVariableEntry entry) {
 		addNameValue(infoPanel, "Variable", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getOwnerClassEntry().getName());
-		addNameValue(infoPanel, "Method", entry.getOwnerEntry().getName());
+		addNameValue(infoPanel, "Class", entry.getContainingClass().getFullName());
+		addNameValue(infoPanel, "Method", entry.getParent().getName());
 		addNameValue(infoPanel, "Index", Integer.toString(entry.getIndex()));
 	}
 
 	private void showClassEntry(ClassEntry entry) {
-		addNameValue(infoPanel, "Class", entry.getName());
+		addNameValue(infoPanel, "Class", entry.getFullName());
 		addModifierComboBox(infoPanel, "Modifier", entry);
 	}
 
 	private void showFieldEntry(FieldEntry entry) {
 		addNameValue(infoPanel, "Field", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getOwnerClassEntry().getName());
+		addNameValue(infoPanel, "Class", entry.getParent().getFullName());
 		addNameValue(infoPanel, "TypeDescriptor", entry.getDesc().toString());
 		addModifierComboBox(infoPanel, "Modifier", entry);
 	}
 
 	private void showMethodEntry(MethodEntry entry) {
 		if (entry.isConstructor()) {
-			addNameValue(infoPanel, "Constructor", entry.getOwnerClassEntry().getName());
+			addNameValue(infoPanel, "Constructor", entry.getParent().getFullName());
 		} else {
 			addNameValue(infoPanel, "Method", entry.getName());
-			addNameValue(infoPanel, "Class", entry.getOwnerClassEntry().getName());
+			addNameValue(infoPanel, "Class", entry.getParent().getFullName());
 		}
 		addNameValue(infoPanel, "MethodDescriptor", entry.getDesc().toString());
 		addModifierComboBox(infoPanel, "Modifier", entry);
@@ -494,7 +494,7 @@ public class Gui {
 		container.add(panel);
 	}
 
-	private JComboBox<Mappings.EntryModifier> addModifierComboBox(JPanel container, String name, Entry entry) {
+	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry entry) {
 		if (!getController().entryIsInJar(entry))
 			return null;
 		JPanel panel = new JPanel();
@@ -502,7 +502,7 @@ public class Gui {
 		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
 		label.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
 		panel.add(label);
-		JComboBox<Mappings.EntryModifier> combo = new JComboBox<>(Mappings.EntryModifier.values());
+		JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
 		((JLabel) combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
 		combo.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
 		combo.setSelectedIndex(getController().getDeobfuscator().getModifier(entry).ordinal());
@@ -520,11 +520,13 @@ public class Gui {
 		boolean isToken = token != null;
 
 		reference = this.controller.getDeobfReference(token);
-		boolean isClassEntry = isToken && reference.entry instanceof ClassEntry;
-		boolean isFieldEntry = isToken && reference.entry instanceof FieldEntry;
-		boolean isMethodEntry = isToken && reference.entry instanceof MethodEntry && !((MethodEntry) reference.entry).isConstructor();
-		boolean isConstructorEntry = isToken && reference.entry instanceof MethodEntry && ((MethodEntry) reference.entry).isConstructor();
-		boolean isInJar = isToken && this.controller.entryIsInJar(reference.entry);
+
+		Entry<?> referenceEntry = reference != null ? reference.entry : null;
+		boolean isClassEntry = isToken && referenceEntry instanceof ClassEntry;
+		boolean isFieldEntry = isToken && referenceEntry instanceof FieldEntry;
+		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
+		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
+		boolean isInJar = isToken && this.controller.entryIsInJar(referenceEntry);
 		boolean isRenameable = isToken && this.controller.referenceIsRenameable(reference);
 
 		if (isToken) {
@@ -542,14 +544,14 @@ public class Gui {
 		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
 
-		if (isToken && this.controller.entryHasDeobfuscatedName(reference.entry)) {
+		if (isToken && this.controller.entryHasDeobfuscatedName(referenceEntry)) {
 			this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
 		} else {
 			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
 		}
 	}
 
-	public void navigateTo(Entry entry) {
+	public void navigateTo(Entry<?> entry) {
 		if (!this.controller.entryIsInJar(entry)) {
 			// entry is not in the jar. Ignore it
 			return;
@@ -560,7 +562,7 @@ public class Gui {
 		this.controller.openDeclaration(entry);
 	}
 
-	private void navigateTo(EntryReference<Entry, Entry> reference) {
+	private void navigateTo(EntryReference<Entry<?>, Entry<?>> reference) {
 		if (!this.controller.entryIsInJar(reference.getLocationClassEntry())) {
 			return;
 		}
@@ -613,7 +615,7 @@ public class Gui {
 		String newName = text.getText();
 		if (saveName && newName != null && !newName.isEmpty()) {
 			try {
-				this.controller.rename(reference, newName);
+				this.controller.rename(reference, newName, true);
 			} catch (IllegalNameException ex) {
 				text.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				text.setToolTipText(ex.getReason());
@@ -737,13 +739,13 @@ public class Gui {
 
 	public void showDiscardDiag(Function<Integer, Void> callback, String... options) {
 		int response = JOptionPane.showOptionDialog(this.frame, "Your mappings have not been saved yet. Do you want to save?", "Save your changes?", JOptionPane.YES_NO_CANCEL_OPTION,
-			JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
 		callback.apply(response);
 	}
 
 	public void saveMapping() throws IOException {
 		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION)
-			this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile());
+			this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile().toPath());
 	}
 
 	public void close() {
@@ -782,7 +784,7 @@ public class Gui {
 				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
-				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getName()), dataChild.getName(), false, i + 1 == node.getChildCount());
+				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
 				childNode.setUserObject(dataChild);
 			}
 			node.setUserObject(data);
@@ -791,19 +793,19 @@ public class Gui {
 		}
 		// class rename
 		else if (data instanceof ClassEntry)
-			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getName()), ((ClassEntry) data).getName(), false, true);
+			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
 	}
 
-	public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName) {
-		String oldEntry = deobfReference.entry.getOwnerClassEntry().getPackageName();
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, String newName) {
+		String oldEntry = deobfReference.entry.getContainingClass().getPackageName();
 		String newEntry = new ClassEntry(newName).getPackageName();
 		moveClassTree(deobfReference, newName, oldEntry == null,
-			newEntry == null);
+				newEntry == null);
 	}
 
 	// TODO: getExpansionState will *not* actually update itself based on name changes!
-	public void moveClassTree(EntryReference<Entry, Entry> deobfReference, String newName, boolean isOldOb, boolean isNewOb) {
-		ClassEntry oldEntry = deobfReference.entry.getOwnerClassEntry();
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, String newName, boolean isOldOb, boolean isNewOb) {
+		ClassEntry oldEntry = deobfReference.entry.getContainingClass();
 		ClassEntry newEntry = new ClassEntry(newName);
 
 		// Ob -> deob

@@ -12,11 +12,12 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.io.ByteStreams;
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.ClassNode;
 
+import javax.annotation.Nullable;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -100,9 +101,14 @@ public class ParsedJar {
 		return entries;
 	}
 
+	@Nullable
 	public ClassNode getClassNode(String name) {
 		return nodeCache.computeIfAbsent(name, (n) -> {
-			ClassReader reader = new ClassReader(classBytes.get(name));
+			byte[] bytes = classBytes.get(name);
+			if (bytes == null) {
+				return null;
+			}
+			ClassReader reader = new ClassReader(bytes);
 			ClassNode node = new ClassNode();
 			reader.accept(node, 0);
 			return node;

@@ -12,24 +12,28 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.analysis.index.EntryIndex;
+import cuchaz.enigma.analysis.index.InheritanceIndex;
+import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.Collection;
 import java.util.List;
 
 public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 
-	private Translator deobfuscatingTranslator;
+	private final Translator translator;
 	private MethodEntry entry;
 
-	public MethodImplementationsTreeNode(Translator deobfuscatingTranslator, MethodEntry entry) {
+	public MethodImplementationsTreeNode(Translator translator, MethodEntry entry) {
+		this.translator = translator;
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
 
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
 		this.entry = entry;
 	}
 
@@ -53,35 +57,25 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 		return this.entry;
 	}
 
-	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.getTranslatedClass(this.entry.getOwnerClassEntry()).getClassName();
-	}
-
-	public String getDeobfMethodName() {
-		return this.deobfuscatingTranslator.getTranslatedMethod(this.entry).getName();
-	}
-
 	@Override
 	public String toString() {
-		String className = getDeobfClassName();
-		if (className == null) {
-			className = this.entry.getClassName();
-		}
-
-		String methodName = getDeobfMethodName();
-		if (methodName == null) {
-			methodName = this.entry.getName();
-		}
+		MethodEntry translatedEntry = translator.translate(entry);
+		String className = translatedEntry.getParent().getFullName();
+		String methodName = translatedEntry.getName();
 		return className + "." + methodName + "()";
 	}
 
 	public void load(JarIndex index) {
 		// get all method implementations
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
-		for (String implementingClassName : index.getImplementingClasses(this.entry.getClassName())) {
-			MethodEntry methodEntry = new MethodEntry(new ClassEntry(implementingClassName), this.entry.getName(), this.entry.getDesc());
-			if (index.containsObfMethod(methodEntry)) {
-				nodes.add(new MethodImplementationsTreeNode(this.deobfuscatingTranslator, methodEntry));
+		EntryIndex entryIndex = index.getEntryIndex();
+		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
+
+		Collection<ClassEntry> inheritors = inheritanceIndex.getChildren(entry.getParent());
+		for (ClassEntry inheritor : inheritors) {
+			MethodEntry methodEntry = entry.withParent(inheritor);
+			if (entryIndex.hasMethod(methodEntry)) {
+				nodes.add(new MethodImplementationsTreeNode(translator, methodEntry));
 			}
 		}
 

@@ -1,7 +1,11 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.mapping.*;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.NameValidator;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.Signature;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.*;
 import org.objectweb.asm.*;
 
 import java.util.Collection;
@@ -26,15 +30,15 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 		FieldEntry entry = new FieldEntry(new ClassEntry(owner), name, new TypeDescriptor(desc));
-		FieldEntry translatedEntry = translator.getTranslatedField(entry);
-		super.visitFieldInsn(opcode, translatedEntry.getClassName(), translatedEntry.getName(), translatedEntry.getDesc().toString());
+		FieldEntry translatedEntry = translator.translate(entry);
+		super.visitFieldInsn(opcode, translatedEntry.getParent().getFullName(), translatedEntry.getName(), translatedEntry.getDesc().toString());
 	}
 
 	@Override
 	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
 		MethodEntry entry = new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc));
-		MethodEntry translatedEntry = translator.getTranslatedMethod(entry);
-		super.visitMethodInsn(opcode, translatedEntry.getClassName(), translatedEntry.getName(), translatedEntry.getDesc().toString(), itf);
+		MethodEntry translatedEntry = translator.translate(entry);
+		super.visitMethodInsn(opcode, translatedEntry.getParent().getFullName(), translatedEntry.getName(), translatedEntry.getDesc().toString(), itf);
 	}
 
 	@Override
@@ -52,7 +56,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			Object object = array[i];
 			if (object instanceof String) {
 				String type = (String) object;
-				array[i] = translator.getTranslatedClass(new ClassEntry(type)).getName();
+				array[i] = translator.translate(new ClassEntry(type)).getFullName();
 			}
 		}
 		return array;
@@ -60,21 +64,21 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 	@Override
 	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		TypeDescriptor typeDesc = translator.translate(new TypeDescriptor(desc));
 		AnnotationVisitor av = super.visitAnnotation(typeDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
 	public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		TypeDescriptor typeDesc = translator.translate(new TypeDescriptor(desc));
 		AnnotationVisitor av = super.visitParameterAnnotation(parameter, typeDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
 	public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		TypeDescriptor typeDesc = translator.translate(new TypeDescriptor(desc));
 		AnnotationVisitor av = super.visitTypeAnnotation(typeRef, typePath, typeDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
@@ -83,19 +87,18 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
 		hasParameterMeta = true;
 
-		String translatedSignature = translator.getTranslatedSignature(Signature.createTypedSignature(signature)).toString();
+		String translatedSignature = translator.translate(Signature.createTypedSignature(signature)).toString();
 		int argumentIndex = methodEntry.getArgumentIndex(ownerEntry, index);
 
 		if (argumentIndex >= 0) {
-			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, new TypeDescriptor(desc));
-			LocalVariableDefEntry translatedEntry = translator.getTranslatedVariableDef(entry);
+			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, true, new TypeDescriptor(desc));
+			LocalVariableDefEntry translatedEntry = translator.translate(entry);
 			String translatedName = translatedEntry.getName();
 
-			// TODO: Better name inference
 			if (translatedName.equals(entry.getName())) {
 				List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
 				List<TypeDescriptor> translatedArguments = arguments.stream()
-						.map(translator::getTranslatedTypeDesc)
+						.map(translator::translate)
 						.collect(Collectors.toList());
 
 				boolean argument = argumentIndex < arguments.size();
@@ -109,42 +112,42 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
 		} else {
 			// Handle "this" variable
-			TypeDescriptor translatedDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+			TypeDescriptor translatedDesc = translator.translate(new TypeDescriptor(desc));
 			super.visitLocalVariable(name, translatedDesc.toString(), translatedSignature, start, end, index);
 		}
 	}
 
 	@Override
 	public void visitTypeInsn(int opcode, String type) {
-		ClassEntry translatedEntry = translator.getTranslatedClass(new ClassEntry(type));
-		super.visitTypeInsn(opcode, translatedEntry.getName());
+		ClassEntry translatedEntry = translator.translate(new ClassEntry(type));
+		super.visitTypeInsn(opcode, translatedEntry.getFullName());
 	}
 
 	@Override
 	public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-		MethodDescriptor translatedMethodDesc = translator.getTranslatedMethodDesc(new MethodDescriptor(desc));
+		MethodDescriptor translatedMethodDesc = translator.translate(new MethodDescriptor(desc));
 		Object[] translatedBsmArgs = new Object[bsmArgs.length];
 		for (int i = 0; i < bsmArgs.length; i++) {
-			translatedBsmArgs[i] = translator.getTranslatedValue(bsmArgs[i]);
+			translatedBsmArgs[i] = AsmObjectTranslator.translateValue(translator, bsmArgs[i]);
 		}
-		super.visitInvokeDynamicInsn(name, translatedMethodDesc.toString(), translator.getTranslatedHandle(bsm), translatedBsmArgs);
+		super.visitInvokeDynamicInsn(name, translatedMethodDesc.toString(), AsmObjectTranslator.translateHandle(translator, bsm), translatedBsmArgs);
 	}
 
 	@Override
 	public void visitLdcInsn(Object cst) {
-		super.visitLdcInsn(translator.getTranslatedValue(cst));
+		super.visitLdcInsn(AsmObjectTranslator.translateValue(translator, cst));
 	}
 
 	@Override
 	public void visitMultiANewArrayInsn(String desc, int dims) {
-		super.visitMultiANewArrayInsn(translator.getTranslatedTypeDesc(new TypeDescriptor(desc)).toString(), dims);
+		super.visitMultiANewArrayInsn(translator.translate(new TypeDescriptor(desc)).toString(), dims);
 	}
 
 	@Override
 	public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
 		if (type != null) {
-			ClassEntry translatedEntry = translator.getTranslatedClass(new ClassEntry(type));
-			super.visitTryCatchBlock(start, end, handler, translatedEntry.getName());
+			ClassEntry translatedEntry = translator.translate(new ClassEntry(type));
+			super.visitTryCatchBlock(start, end, handler, translatedEntry.getFullName());
 		} else {
 			super.visitTryCatchBlock(start, end, handler, type);
 		}
@@ -159,7 +162,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 			for (int argumentIndex = 0; argumentIndex < arguments.size(); argumentIndex++) {
 				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "", true);
-				LocalVariableEntry translatedEntry = translator.getTranslatedVariable(entry);
+				LocalVariableEntry translatedEntry = translator.translate(entry);
 				String translatedName = translatedEntry.getName();
 				if (translatedName.equals(entry.getName())) {
 					super.visitParameter(inferArgumentName(argumentIndex, arguments.get(argumentIndex), arguments), 0);

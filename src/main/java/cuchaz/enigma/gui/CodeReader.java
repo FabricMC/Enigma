@@ -16,9 +16,8 @@ import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import javax.swing.*;
@@ -33,7 +32,6 @@ public class CodeReader extends JEditorPane {
 	private static final long serialVersionUID = 3673180950485748810L;
 
 	private static final Object lock = new Object();
-	private SelectionHighlightPainter selectionHighlightPainter;
 	private SourceIndex sourceIndex;
 	private SelectionListener selectionListener;
 
@@ -58,8 +56,6 @@ public class CodeReader extends JEditorPane {
 				}
 			}
 		});
-
-		selectionHighlightPainter = new SelectionHighlightPainter();
 	}
 
 	// HACKHACK: someday we can update the main GUI to use this code reader
@@ -144,7 +140,7 @@ public class CodeReader extends JEditorPane {
 
 			// decompile it
 
-			CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getOutermostClassName());
+			CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getName());
 			String source = deobfuscator.getSource(sourceTree);
 			setCode(source);
 			sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);
@@ -155,52 +151,7 @@ public class CodeReader extends JEditorPane {
 		}).start();
 	}
 
-	public void navigateToClassDeclaration(ClassEntry classEntry) {
-
-		// navigate to the class declaration
-		Token token = sourceIndex.getDeclarationToken(classEntry);
-		if (token == null) {
-			// couldn't find the class declaration token, might be an anonymous class
-			// look for any declaration in that class instead
-			for (Entry entry : sourceIndex.declarations()) {
-				if (entry.getOwnerClassEntry().equals(classEntry)) {
-					token = sourceIndex.getDeclarationToken(entry);
-					break;
-				}
-			}
-		}
-
-		if (token != null) {
-			navigateToToken(token);
-		} else {
-			// couldn't find anything =(
-			System.out.println("Unable to find declaration in source for " + classEntry);
-		}
-	}
-
-	public void navigateToToken(final Token token) {
-		navigateToToken(this, token, selectionHighlightPainter);
-	}
-
-	public void setHighlightedTokens(Iterable<Token> tokens, HighlightPainter painter) {
-		for (Token token : tokens) {
-			setHighlightedToken(token, painter);
-		}
-	}
-
-	public void setHighlightedToken(Token token, HighlightPainter painter) {
-		try {
-			getHighlighter().addHighlight(token.start, token.end, painter);
-		} catch (BadLocationException ex) {
-			throw new IllegalArgumentException(ex);
-		}
-	}
-
-	public void clearHighlights() {
-		getHighlighter().removeAllHighlights();
-	}
-
 	public interface SelectionListener {
-		void onSelect(EntryReference<Entry, Entry> reference);
+		void onSelect(EntryReference<Entry<?>, Entry<?>> reference);
 	}
 }

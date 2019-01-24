@@ -12,7 +12,7 @@
 package cuchaz.enigma.gui.dialog;
 
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.Deobfuscator.ProgressListener;
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -81,7 +81,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 	}
 
 	@Override
-	public void onProgress(int numDone, String message) {
+	public void step(int numDone, String message) {
 		this.labelText.setText(message);
 		this.progress.setValue(numDone);
 

@@ -11,7 +11,7 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
 import java.util.jar.JarFile;

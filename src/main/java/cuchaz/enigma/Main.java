@@ -11,12 +11,12 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.config.Config;
-import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 
-import javax.swing.*;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.jar.JarFile;
 
 public class Main {
@@ -29,7 +29,12 @@ public class Main {
 			gui.getController().openJar(new JarFile(getFile(args[0])));
 		}
 		if (args.length >= 2) {
-			gui.getController().openEnigmaMappings(getFile(args[1]));
+			Path mappingsFile = getFile(args[1]).toPath();
+			if (Files.isDirectory(mappingsFile)) {
+				gui.getController().openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsFile);
+			} else {
+				gui.getController().openMappings(MappingFormat.ENIGMA_FILE, mappingsFile);
+			}
 		}
 
 		// DEBUG

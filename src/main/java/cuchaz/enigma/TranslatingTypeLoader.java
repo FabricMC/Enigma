@@ -14,12 +14,12 @@ package cuchaz.enigma;
 import com.google.common.collect.Lists;
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
-import cuchaz.enigma.analysis.JarIndex;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.ReferencedEntryPool;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.ReferencedEntryPool;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -47,12 +47,12 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 		this.deobfuscatingTranslator = deobfuscatingTranslator;
 	}
 
-	protected byte[] doLoad(String className){
+	protected byte[] doLoad(String className) {
 		byte[] data = loadType(className);
 		if (data == null) {
 			// chain to default desc loader
 			Buffer parentBuf = new Buffer();
-			if (defaultTypeLoader.tryLoadType(className, parentBuf)){
+			if (defaultTypeLoader.tryLoadType(className, parentBuf)) {
 				return parentBuf.array();
 			}
 			return EMPTY_ARRAY;//need to return *something* as null means no store
@@ -64,21 +64,10 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 
 		// NOTE: don't know if class name is obf or deobf
 		ClassEntry classEntry = new ClassEntry(className);
-		ClassEntry obfClassEntry = this.obfuscatingTranslator.getTranslatedClass(classEntry);
-
-		// is this an inner class referenced directly? (ie trying to load b instead of a$b)
-		if (!obfClassEntry.isInnerClass()) {
-			List<ClassEntry> classChain = this.jarIndex.getObfClassChain(obfClassEntry);
-			if (classChain.size() > 1) {
-				System.err.println(String.format("WARNING: no class %s after inner class reconstruction. Try %s",
-						className, obfClassEntry.buildClassEntry(classChain)
-				));
-				return null;
-			}
-		}
+		ClassEntry obfClassEntry = this.obfuscatingTranslator.translate(classEntry);
 
 		// is this a class we should even know about?
-		if (!this.jarIndex.containsObfClass(obfClassEntry)) {
+		if (!jarIndex.getEntryIndex().hasClass(obfClassEntry)) {
 			return null;
 		}
 
@@ -97,15 +86,15 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 		//	DUP
 		//	INVOKEVIRTUAL java/lang/Object.getClass ()Ljava/lang/Class;
 		//	POP
-		for (MethodNode methodNode : node.methods){
+		for (MethodNode methodNode : node.methods) {
 			AbstractInsnNode insnNode = methodNode.instructions.getFirst();
-			while (insnNode != null){
-				if (insnNode instanceof MethodInsnNode && insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL){
-					MethodInsnNode methodInsnNode = (MethodInsnNode)insnNode;
-					if (methodInsnNode.name.equals("getClass") && methodInsnNode.owner.equals("java/lang/Object") && methodInsnNode.desc.equals("()Ljava/lang/Class;")){
+			while (insnNode != null) {
+				if (insnNode instanceof MethodInsnNode && insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+					MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
+					if (methodInsnNode.name.equals("getClass") && methodInsnNode.owner.equals("java/lang/Object") && methodInsnNode.desc.equals("()Ljava/lang/Class;")) {
 						AbstractInsnNode previous = methodInsnNode.getPrevious();
 						AbstractInsnNode next = methodInsnNode.getNext();
-						if (previous.getOpcode() == Opcodes.DUP && next.getOpcode() == Opcodes.POP){
+						if (previous.getOpcode() == Opcodes.DUP && next.getOpcode() == Opcodes.POP) {
 							insnNode = previous.getPrevious();//reset the iterator so it gets the new next instruction
 							methodNode.instructions.remove(previous);
 							methodNode.instructions.remove(methodInsnNode);
@@ -140,24 +129,26 @@ public class TranslatingTypeLoader extends CachingTypeLoader implements ITransla
 
 	@Override
 	public List<String> getClassNamesToTry(String className) {
-		return getClassNamesToTry(this.obfuscatingTranslator.getTranslatedClass(new ClassEntry(className)));
+		return getClassNamesToTry(this.obfuscatingTranslator.translate(new ClassEntry(className)));
 	}
 
 	@Override
 	public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
 		List<String> classNamesToTry = Lists.newArrayList();
-		classNamesToTry.add(obfClassEntry.getName());
-		if (obfClassEntry.isInnerClass()) {
-			// try just the inner class name
-			classNamesToTry.add(obfClassEntry.getInnermostClassName());
+		classNamesToTry.add(obfClassEntry.getFullName());
+
+		ClassEntry outerClass = obfClassEntry.getOuterClass();
+		if (outerClass != null) {
+			classNamesToTry.addAll(getClassNamesToTry(outerClass));
 		}
+
 		return classNamesToTry;
 	}
 
 	@Override
 	public String transformInto(ClassNode node, ClassWriter writer) {
-		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, jarIndex, entryPool, Opcodes.ASM5, writer));
-		return deobfuscatingTranslator.getTranslatedClass(new ClassEntry(node.name)).getName();
+		node.accept(new TranslationClassVisitor(deobfuscatingTranslator, entryPool, Opcodes.ASM5, writer));
+		return deobfuscatingTranslator.translate(new ClassEntry(node.name)).getFullName();
 	}
 
 }

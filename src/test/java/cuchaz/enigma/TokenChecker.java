@@ -16,7 +16,7 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.mapping.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -32,9 +32,9 @@ public class TokenChecker {
 		deobfuscator = new Deobfuscator(jarFile);
 	}
 
-	protected String getDeclarationToken(Entry entry) {
+	protected String getDeclarationToken(Entry<?> entry) {
 		// decompile the class
-		CompilationUnit tree = deobfuscator.getSourceTree(entry.getClassName());
+		CompilationUnit tree = deobfuscator.getSourceTree(entry.getContainingClass().getFullName());
 		// DEBUG
 		// tree.acceptVisitor( new TreeDumpVisitor( new File( "tree." + entry.getClassName().replace( '/', '.' ) + ".txt" ) ), null );
 		String source = deobfuscator.getSource(tree);
@@ -49,15 +49,15 @@ public class TokenChecker {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Collection<String> getReferenceTokens(EntryReference<? extends Entry, ? extends Entry> reference) {
+	protected Collection<String> getReferenceTokens(EntryReference<? extends Entry<?>, ? extends Entry<?>> reference) {
 		// decompile the class
-		CompilationUnit tree = deobfuscator.getSourceTree(reference.context.getClassName());
+		CompilationUnit tree = deobfuscator.getSourceTree(reference.context.getContainingClass().getFullName());
 		String source = deobfuscator.getSource(tree);
 		SourceIndex index = deobfuscator.getSourceIndex(tree, source);
 
 		// get the token values
 		List<String> values = Lists.newArrayList();
-		for (Token token : index.getReferenceTokens((EntryReference<Entry, Entry>) reference)) {
+		for (Token token : index.getReferenceTokens((EntryReference<Entry<?>, Entry<?>>) reference)) {
 			values.add(source.substring(token.start, token.end));
 		}
 		return values;

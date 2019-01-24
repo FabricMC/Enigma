@@ -1,8 +1,8 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.mapping.Translator;
-import cuchaz.enigma.mapping.TypeDescriptor;
-import cuchaz.enigma.mapping.entry.FieldDefEntry;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.FieldDefEntry;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.TypePath;
@@ -19,14 +19,14 @@ public class TranslationFieldVisitor extends FieldVisitor {
 
 	@Override
 	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		TypeDescriptor typeDesc = translator.translate(new TypeDescriptor(desc));
 		AnnotationVisitor av = super.visitAnnotation(typeDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}
 
 	@Override
 	public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-		TypeDescriptor typeDesc = translator.getTranslatedTypeDesc(new TypeDescriptor(desc));
+		TypeDescriptor typeDesc = translator.translate(new TypeDescriptor(desc));
 		AnnotationVisitor av = super.visitAnnotation(typeDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, typeDesc.getTypeEntry(), api, av);
 	}

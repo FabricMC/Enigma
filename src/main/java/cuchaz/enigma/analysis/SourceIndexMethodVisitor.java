@@ -17,8 +17,9 @@ import com.strobel.assembler.metadata.*;
 import com.strobel.decompiler.ast.Variable;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
-import cuchaz.enigma.mapping.TypeDescriptor;
-import cuchaz.enigma.mapping.entry.*;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.*;
+import cuchaz.enigma.translation.representation.entry.*;
 
 import java.lang.Error;
 import java.util.HashMap;
@@ -26,19 +27,15 @@ import java.util.Map;
 
 public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	private final ReferencedEntryPool entryPool;
-	private final ProcyonEntryFactory entryFactory;
 
-	private final ClassDefEntry ownerEntry;
 	private final MethodDefEntry methodEntry;
 
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
-	private Map<String, Entry> identifierEntryCache = new HashMap<>();
+	private Map<String, Entry<?>> identifierEntryCache = new HashMap<>();
 
-	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, ClassDefEntry ownerEntry, MethodDefEntry methodEntry) {
+	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, MethodDefEntry methodEntry) {
 		super(entryPool);
 		this.entryPool = entryPool;
-		this.entryFactory = new ProcyonEntryFactory(entryPool);
-		this.ownerEntry = ownerEntry;
 		this.methodEntry = methodEntry;
 	}
 
@@ -86,7 +83,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
 			FieldEntry fieldEntry = entryPool.getField(classEntry, ref.getName(), new TypeDescriptor(erasedSignature));
 			if (fieldEntry == null) {
-				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getName());
+				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getFullName());
 			}
 			index.addReference(node.getMemberNameToken(), fieldEntry, this.methodEntry);
 		}
@@ -128,7 +125,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
 			FieldEntry fieldEntry = entryPool.getField(classEntry, ref.getName(), new TypeDescriptor(ref.getErasedSignature()));
 			if (fieldEntry == null) {
-				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getName());
+				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getFullName());
 			}
 			index.addReference(node.getIdentifierToken(), fieldEntry, this.methodEntry);
 		} else
@@ -144,7 +141,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	}
 
 	private void addDeclarationToUnmatched(String key, SourceIndex index) {
-		Entry entry = identifierEntryCache.get(key);
+		Entry<?> entry = identifierEntryCache.get(key);
 
 		// This cannot happened in theory
 		if (entry == null)

@@ -12,25 +12,25 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.analysis.index.InheritanceIndex;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
 public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
-
-	private final Translator deobfuscatingTranslator;
+	private final Translator translator;
 	private final ClassEntry obfClassEntry;
 
-	public ClassInheritanceTreeNode(Translator deobfuscatingTranslator, String obfClassName) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public ClassInheritanceTreeNode(Translator translator, String obfClassName) {
+		this.translator = translator;
 		this.obfClassEntry = new ClassEntry(obfClassName);
 	}
 
 	public static ClassInheritanceTreeNode findNode(ClassInheritanceTreeNode node, ClassEntry entry) {
 		// is this the node?
-		if (node.getObfClassName().equals(entry.getName())) {
+		if (node.getObfClassName().equals(entry.getFullName())) {
 			return node;
 		}
 
@@ -45,27 +45,19 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public String getObfClassName() {
-		return this.obfClassEntry.getClassName();
-	}
-
-	public String getDeobfClassName() {
-		return this.deobfuscatingTranslator.getTranslatedClass(this.obfClassEntry).getClassName();
+		return this.obfClassEntry.getFullName();
 	}
 
 	@Override
 	public String toString() {
-		String deobfClassName = getDeobfClassName();
-		if (deobfClassName != null) {
-			return deobfClassName;
-		}
-		return this.obfClassEntry.getName();
+		return translator.translate(obfClassEntry).getFullName();
 	}
 
-	public void load(TranslationIndex ancestries, boolean recurse) {
+	public void load(InheritanceIndex ancestries, boolean recurse) {
 		// get all the child nodes
 		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
-		for (ClassEntry subclassEntry : ancestries.getSubclass(this.obfClassEntry)) {
-			nodes.add(new ClassInheritanceTreeNode(this.deobfuscatingTranslator, subclassEntry.getName()));
+		for (ClassEntry inheritor : ancestries.getChildren(this.obfClassEntry)) {
+			nodes.add(new ClassInheritanceTreeNode(translator, inheritor.getFullName()));
 		}
 
 		// add them to this node

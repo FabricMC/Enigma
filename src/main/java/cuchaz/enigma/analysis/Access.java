@@ -11,7 +11,7 @@
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.bytecode.AccessFlags;
+import cuchaz.enigma.translation.representation.AccessFlags;
 
 import java.lang.reflect.Modifier;
 

@@ -11,15 +11,20 @@
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.mapping.entry.ClassEntry;
-import cuchaz.enigma.mapping.entry.Entry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.mapping.EntryMap;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.Utils;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class EntryReference<E extends Entry, C extends Entry> {
+public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements Translatable {
 
 	private static final List<String> CONSTRUCTOR_NON_NAMES = Arrays.asList("this", "super", "static");
 	public E entry;
@@ -53,32 +58,24 @@ public class EntryReference<E extends Entry, C extends Entry> {
 
 	public ClassEntry getLocationClassEntry() {
 		if (context != null) {
-			return context.getOwnerClassEntry();
+			return context.getContainingClass();
 		}
-		return entry.getOwnerClassEntry();
+		return entry.getContainingClass();
 	}
 
 	public boolean isNamed() {
 		return this.sourceName;
 	}
 
-	public Entry getNameableEntry() {
+	public Entry<?> getNameableEntry() {
 		if (entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor()) {
 			// renaming a constructor really means renaming the class
-			return entry.getOwnerClassEntry();
+			return entry.getContainingClass();
 		}
 		return entry;
 	}
 
 	public String getNameableName() {
-		if (getNameableEntry() instanceof ClassEntry) {
-			ClassEntry classEntry = (ClassEntry) getNameableEntry();
-			if (classEntry.isInnerClass()) {
-				// make sure we only rename the inner class name
-				return classEntry.getInnermostClassName();
-			}
-		}
-
 		return getNameableEntry().getName();
 	}
 
@@ -120,5 +117,10 @@ public class EntryReference<E extends Entry, C extends Entry> {
 			buf.append(context);
 		}
 		return buf.toString();
+	}
+
+	@Override
+	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		return new EntryReference<>(translator.translate(entry), translator.translate(context), this);
 	}
 }

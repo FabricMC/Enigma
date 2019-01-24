@@ -13,7 +13,7 @@ package cuchaz.enigma;
 
 import com.google.common.collect.Sets;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
 import java.io.File;
@@ -44,7 +44,7 @@ public class TestSourceIndex {
 
 		// get all classes that aren't inner classes
 		Set<ClassEntry> classEntries = Sets.newHashSet();
-		for (ClassEntry obfClassEntry : deobfuscator.getJarIndex().getObfClassEntries()) {
+		for (ClassEntry obfClassEntry : deobfuscator.getJarIndex().getEntryIndex().getClasses()) {
 			if (!obfClassEntry.isInnerClass()) {
 				classEntries.add(obfClassEntry);
 			}

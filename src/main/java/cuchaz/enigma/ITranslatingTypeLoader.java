@@ -1,7 +1,7 @@
 package cuchaz.enigma;
 
 import com.strobel.assembler.metadata.ITypeLoader;
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 

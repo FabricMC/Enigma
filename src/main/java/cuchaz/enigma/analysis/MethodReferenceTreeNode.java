@@ -12,36 +12,36 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Sets;
-import cuchaz.enigma.bytecode.AccessFlags;
-import cuchaz.enigma.mapping.*;
-import cuchaz.enigma.mapping.entry.Entry;
-import cuchaz.enigma.mapping.entry.MethodDefEntry;
-import cuchaz.enigma.mapping.entry.MethodEntry;
+import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.analysis.index.ReferenceIndex;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 
-public class MethodReferenceTreeNode extends DefaultMutableTreeNode
-	implements ReferenceTreeNode<MethodEntry, MethodDefEntry> {
+public class MethodReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<MethodEntry, MethodDefEntry> {
 
-	private Translator deobfuscatingTranslator;
+	private final Translator translator;
 	private MethodEntry entry;
 	private EntryReference<MethodEntry, MethodDefEntry> reference;
-	private AccessFlags access;
 
-	public MethodReferenceTreeNode(Translator deobfuscatingTranslator, MethodEntry entry) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public MethodReferenceTreeNode(Translator translator, MethodEntry entry) {
+		this.translator = translator;
 		this.entry = entry;
 		this.reference = null;
 	}
 
-	public MethodReferenceTreeNode(Translator deobfuscatingTranslator,
-								   EntryReference<MethodEntry, MethodDefEntry> reference, AccessFlags access) {
-		this.deobfuscatingTranslator = deobfuscatingTranslator;
+	public MethodReferenceTreeNode(Translator translator, EntryReference<MethodEntry, MethodDefEntry> reference) {
+		this.translator = translator;
 		this.entry = reference.entry;
 		this.reference = reference;
-		this.access = access;
 	}
 
 	@Override
@@ -57,21 +57,17 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 	@Override
 	public String toString() {
 		if (this.reference != null) {
-			return String.format("%s (%s)", this.deobfuscatingTranslator.getTranslatedMethodDef(this.reference.context),
-				this.access);
+			return String.format("%s", translator.translate(this.reference.context));
 		}
-		return this.deobfuscatingTranslator.getTranslatedMethod(this.entry).getName();
-	}
-
-	@Deprecated
-	public void load(JarIndex index, boolean recurse) {
-		load(index, recurse, false);
+		return translator.translate(this.entry).getName();
 	}
 
 	public void load(JarIndex index, boolean recurse, boolean recurseMethod) {
 		// get all the child nodes
-		for (EntryReference<MethodEntry, MethodDefEntry> reference : index.getMethodsReferencing(this.entry, recurseMethod)) {
-			add(new MethodReferenceTreeNode(this.deobfuscatingTranslator, reference, index.getAccessFlags(this.entry)));
+		Collection<EntryReference<MethodEntry, MethodDefEntry>> references = getReferences(index, recurseMethod);
+
+		for (EntryReference<MethodEntry, MethodDefEntry> reference : references) {
+			add(new MethodReferenceTreeNode(translator, reference));
 		}
 
 		if (recurse && this.children != null) {
@@ -80,7 +76,7 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 					MethodReferenceTreeNode node = (MethodReferenceTreeNode) child;
 
 					// don't recurse into ancestor
-					Set<Entry> ancestors = Sets.newHashSet();
+					Set<Entry<?>> ancestors = Sets.newHashSet();
 					TreeNode n = node;
 					while (n.getParent() != null) {
 						n = n.getParent();
@@ -92,9 +88,26 @@ public class MethodReferenceTreeNode extends DefaultMutableTreeNode
 						continue;
 					}
 
-					node.load(index, true);
+					node.load(index, true, false);
 				}
 			}
+		}
+	}
+
+	private Collection<EntryReference<MethodEntry, MethodDefEntry>> getReferences(JarIndex index, boolean recurseMethod) {
+		ReferenceIndex referenceIndex = index.getReferenceIndex();
+
+		if (recurseMethod) {
+			Collection<EntryReference<MethodEntry, MethodDefEntry>> references = new ArrayList<>();
+
+			EntryResolver entryResolver = index.getEntryResolver();
+			for (MethodEntry methodEntry : entryResolver.resolveEquivalentMethods(entry)) {
+				references.addAll(referenceIndex.getReferencesToMethod(methodEntry));
+			}
+
+			return references;
+		} else {
+			return referenceIndex.getReferencesToMethod(entry);
 		}
 	}
 }

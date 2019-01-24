@@ -2,7 +2,7 @@ package cuchaz.enigma.gui.panels;
 
 import cuchaz.enigma.gui.ClassSelector;
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.mapping.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,8 +17,8 @@ public class PanelObf extends JPanel {
 		this.gui = gui;
 
 		Comparator<ClassEntry> obfClassComparator = (a, b) -> {
-			String aname = a.getName();
-			String bname = b.getName();
+			String aname = a.getFullName();
+			String bname = b.getFullName();
 			if (aname.length() != bname.length()) {
 				return aname.length() - bname.length();
 			}

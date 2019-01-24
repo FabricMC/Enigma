@@ -11,22 +11,13 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.mapping.entry.Entry;
-import cuchaz.enigma.mapping.Mappings;
-import cuchaz.enigma.mapping.Translator;
+import cuchaz.enigma.translation.representation.entry.Entry;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static cuchaz.enigma.TestEntryFactory.newClass;
-import static cuchaz.enigma.TestEntryFactory.newField;
-import static cuchaz.enigma.TestEntryFactory.newMethod;
+import static cuchaz.enigma.TestEntryFactory.*;
 
 public class TestTranslator {
-
-	private static Deobfuscator deobfuscator;
-	private static Mappings mappings;
-	private static Translator deobfTranslator;
-	private static Translator obfTranslator;
 
 	@BeforeClass
 	public static void beforeClass()
@@ -147,7 +138,7 @@ public class TestTranslator {
 		assertMapping(newMethod("i$b", "a", "()Ljava/lang/Object;"), newMethod("deobf/I_Generics$B_Generic", "m1", "()Ljava/lang/Object;"));
 	}
 
-	private void assertMapping(Entry obf, Entry deobf) {
+	private void assertMapping(Entry<?> obf, Entry<?> deobf) {
 		//assertThat(deobfTranslator.translateEntry(obf), is(deobf));
 		//assertThat(obfTranslator.translateEntry(deobf), is(obf));
 
