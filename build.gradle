@@ -21,13 +21,13 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.13.0-SNAPSHOT'
+version = '0.13.0'
 
 def filteredSourceDir = file("${buildDir}/filtered")
 
 def ENV = System.getenv()
 if (ENV.BUILD_NUMBER) {
-//    version = version + "." + "${System.getenv().BUILD_NUMBER}"
+    version = version + "." + "${System.getenv().BUILD_NUMBER}"
 }
 
 sourceCompatibility = 1.8
