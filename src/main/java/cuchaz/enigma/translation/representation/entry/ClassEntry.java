@@ -105,7 +105,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	public String getPackageName() {
-		return getPackageName(this.name);
+		return getPackageName(fullName);
 	}
 
 	public String getSimpleName() {
