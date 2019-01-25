@@ -122,7 +122,6 @@ public class SearchDialog {
 			return;
 		}
 		deobfClasses.stream()
-			.filter(classEntry -> !classEntry.isInnerClass())
 			.filter(classEntry -> classEntry.getSimpleName().equals(classList.getSelectedValue())).
 			findFirst()
 			.ifPresent(classEntry -> {
