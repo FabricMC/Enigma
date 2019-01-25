@@ -16,32 +16,30 @@ import java.util.stream.Collectors;
 
 public class SearchDialog {
 
-	JPanel pane;
+	private JTextField searchField;
+	private JList<String> classList;
+	private JFrame frame;
 
-	JTextField searchField;
-	JList<String> list;
+	private Gui parent;
+	private List<ClassEntry> deobfClasses;
 
-	JFrame frame;
-	Gui gui;
-	List<ClassEntry> deobfClasses;
+	private KeyEventDispatcher keyEventDispatcher;
 
-	KeyEventDispatcher keyEventDispatcher;
-
-	public SearchDialog(Gui gui) {
-		this.gui = gui;
+	public SearchDialog(Gui parent) {
+		this.parent = parent;
 
 		deobfClasses = Lists.newArrayList();
-		this.gui.getController().getDeobfuscator().getSeparatedClasses(Lists.newArrayList(), deobfClasses);
+		this.parent.getController().getDeobfuscator().getSeparatedClasses(Lists.newArrayList(), deobfClasses);
 		deobfClasses.removeIf(ClassEntry::isInnerClass);
 	}
 
 	public void show() {
-		frame = new JFrame("SearchDialog classes");
+		frame = new JFrame("Search");
 		frame.setVisible(false);
-		pane = new JPanel();
+		JPanel pane = new JPanel();
 		pane.setBorder(new EmptyBorder(5, 10, 5, 10));
 
-		addRow(jPanel -> {
+		addRow(pane, jPanel -> {
 			searchField = new JTextField("", 20);
 
 			searchField.addKeyListener(new KeyAdapter() {
@@ -54,20 +52,20 @@ public class SearchDialog {
 			jPanel.add(searchField);
 		});
 
-		addRow(jPanel -> {
-			list = new JList<>();
-			list.setLayoutOrientation(JList.VERTICAL);
-			list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		addRow(pane, jPanel -> {
+			classList = new JList<>();
+			classList.setLayoutOrientation(JList.VERTICAL);
+			classList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-			list.addMouseListener(new MouseAdapter() {
+			classList.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent mouseEvent) {
 					if(mouseEvent.getClickCount() >= 2){
-						select();
+						openSelected();
 					}
 				}
 			});
-			jPanel.add(list);
+			jPanel.add(classList);
 		});
 
 
@@ -76,15 +74,15 @@ public class SearchDialog {
 				return false;
 			}
 			if(keyEvent.getKeyCode() == KeyEvent.VK_DOWN){
-				int next = list.isSelectionEmpty() ? 0 : list.getSelectedIndex() + 1;
-				list.setSelectedIndex(next);
+				int next = classList.isSelectionEmpty() ? 0 : classList.getSelectedIndex() + 1;
+				classList.setSelectedIndex(next);
 			}
 			if(keyEvent.getKeyCode() == KeyEvent.VK_UP){
-				int next = list.isSelectionEmpty() ? list.getModel().getSize() : list.getSelectedIndex() - 1;
-				list.setSelectedIndex(next);
+				int next = classList.isSelectionEmpty() ? classList.getModel().getSize() : classList.getSelectedIndex() - 1;
+				classList.setSelectedIndex(next);
 			}
 			if(keyEvent.getKeyCode() == KeyEvent.VK_ENTER){
-				select();
+				openSelected();
 			}
 			if(keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE){
 				close();
@@ -100,22 +98,25 @@ public class SearchDialog {
 		frame.setSize(360, 500);
 		frame.setAlwaysOnTop(true);
 		frame.setResizable(false);
-		frame.setLocationRelativeTo(gui.getFrame());
+		frame.setLocationRelativeTo(parent.getFrame());
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		searchField.requestFocusInWindow();
 	}
 
-	private void select(){
+	private void openSelected(){
 		close();
+		if(classList.isSelectionEmpty()){
+			return;
+		}
 		deobfClasses.stream()
 			.filter(classEntry -> !classEntry.isInnerClass())
-			.filter(classEntry -> classEntry.getSimpleName().equals(list.getSelectedValue())).
+			.filter(classEntry -> classEntry.getSimpleName().equals(classList.getSelectedValue())).
 			findFirst()
 			.ifPresent(classEntry -> {
-				gui.navigateTo(classEntry);
-				gui.getDeobfPanel().deobfClasses.setSelectionClass(classEntry);
+				parent.navigateTo(classEntry);
+				parent.getDeobfPanel().deobfClasses.setSelectionClass(classEntry);
 			});
 	}
 
@@ -124,19 +125,22 @@ public class SearchDialog {
 		KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(keyEventDispatcher);
 	}
 
-	private void addRow(Consumer<JPanel> consumer) {
+	private void addRow(JPanel pane, Consumer<JPanel> consumer) {
 		JPanel panel = new JPanel(new FlowLayout());
 		consumer.accept(panel);
 		pane.add(panel, BorderLayout.CENTER);
 	}
 
+	//Updates the list of class names
 	private void updateList() {
 		DefaultListModel<String> listModel = new DefaultListModel<>();
 
+		//Basic search using the Fuzzy libary
+		//TODO improve on this, to not just work from string and to keep the ClassEntry
 		List<ExtractedResult> results = FuzzySearch.extractTop(searchField.getText(), deobfClasses.stream().map(ClassEntry::getSimpleName).collect(Collectors.toList()), 25);
 		results.forEach(extractedResult -> listModel.addElement(extractedResult.getString()));
 
-		list.setModel(listModel);
+		classList.setModel(listModel);
 	}
 
 

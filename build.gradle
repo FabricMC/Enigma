@@ -64,7 +64,6 @@ compileJava.dependsOn processVersion
 repositories {
     mavenLocal()
     mavenCentral()
-	jcenter()
 
     maven {
         name "Cuchaz Custom Repository"
