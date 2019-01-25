@@ -4,6 +4,7 @@ import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
+import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 
@@ -209,6 +210,12 @@ public class MenuBar extends JMenuBar {
 					themes.add(theme);
 					theme.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));
 				}
+
+				JMenuItem search = new JMenuItem("Search");
+				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
+				menu.add(search);
+				search.addActionListener(event -> new SearchDialog(this.gui).show());
+
 			}
 		}
 		{
