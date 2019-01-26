@@ -8,9 +8,7 @@ import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
 import com.strobel.decompiler.languages.java.JavaOutputVisitor;
-import com.strobel.decompiler.languages.java.ast.AstBuilder;
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
+import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
 import cuchaz.enigma.utils.Utils;
 import oml.ast.transformers.*;
@@ -19,6 +17,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class SourceProvider {
 	private final DecompilerSettings settings;
@@ -88,10 +87,34 @@ public class SourceProvider {
 				new VarargsFixer(context),
 				new RemoveObjectCasts(context),
 				new Java8Generics(),
-				new InvalidIdentifierFix()
+				new InvalidIdentifierFix(),
+				new UnicodeVariableFixer()
 		);
 		for (IAstTransform transform : transformers) {
 			transform.run(builder.getCompilationUnit());
+		}
+	}
+
+	private static class UnicodeVariableFixer implements IAstTransform {
+		private static final Pattern VALID_PATTERN = Pattern.compile("^.*[^a-zA-Z0-9 ].*$");
+
+		@Override
+		public void run(AstNode compilationUnit) {
+			compilationUnit.acceptVisitor(new Visitor(), null);
+		}
+
+		private static class Visitor extends DepthFirstAstVisitor<Void, Void> {
+			@Override
+			public Void visitIdentifier(Identifier node, Void data) {
+				if (isInvalidName(node.getName())) {
+					node.setName("unk");
+				}
+				return super.visitIdentifier(node, data);
+			}
+
+			private boolean isInvalidName(String name) {
+				return VALID_PATTERN.matcher(name).matches();
+			}
 		}
 	}
 }
