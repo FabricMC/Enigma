@@ -440,17 +440,19 @@ public class Gui {
 
 		this.reference = reference;
 
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
+
 		infoPanel.removeAll();
-		if (reference.entry instanceof ClassEntry) {
-			showClassEntry((ClassEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof FieldEntry) {
-			showFieldEntry((FieldEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof MethodEntry) {
-			showMethodEntry((MethodEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof LocalVariableEntry) {
-			showLocalVariableEntry((LocalVariableEntry) this.reference.entry);
+		if (translatedReference.entry instanceof ClassEntry) {
+			showClassEntry((ClassEntry) translatedReference.entry);
+		} else if (translatedReference.entry instanceof FieldEntry) {
+			showFieldEntry((FieldEntry) translatedReference.entry);
+		} else if (translatedReference.entry instanceof MethodEntry) {
+			showMethodEntry((MethodEntry) translatedReference.entry);
+		} else if (translatedReference.entry instanceof LocalVariableEntry) {
+			showLocalVariableEntry((LocalVariableEntry) translatedReference.entry);
 		} else {
-			throw new Error("Unknown entry desc: " + this.reference.entry.getClass().getName());
+			throw new Error("Unknown entry desc: " + translatedReference.entry.getClass().getName());
 		}
 
 		redraw();
@@ -581,7 +583,10 @@ public class Gui {
 
 		// init the text box
 		final JTextField text = new JTextField();
-		text.setText(reference.getNameableName());
+
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
+		text.setText(translatedReference.getNameableName());
+
 		text.setPreferredSize(new Dimension(360, text.getPreferredSize().height));
 		text.addKeyListener(new KeyAdapter() {
 			@Override
@@ -608,7 +613,7 @@ public class Gui {
 
 		int offset = text.getText().lastIndexOf('/') + 1;
 		// If it's a class and isn't in the default package, assume that it's deobfuscated.
-		if (reference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
+		if (translatedReference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
 			text.select(offset, text.getText().length());
 		else
 			text.selectAll();
