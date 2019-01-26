@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.EnigmaSyntaxKit;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
+import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import javax.swing.*;
@@ -17,10 +18,11 @@ public class Themes {
     }
 
     public static void updateTheme(Gui gui) {
-        Config.getInstance().lookAndFeel.apply(Config.getInstance());
-        Config.getInstance().lookAndFeel.setGlobalLAF();
+        Config config = Config.getInstance();
+        config.lookAndFeel.apply(config);
+        config.lookAndFeel.setGlobalLAF();
         try {
-	        Config.getInstance().saveConfig();
+	        config.saveConfig();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -28,12 +30,11 @@ public class Themes {
         DefaultSyntaxKit.initKit();
         DefaultSyntaxKit.registerContentType("text/enigma-sources", EnigmaSyntaxKit.class.getName());
         gui.boxHighlightPainters = ImmutableMap.of(
-                "obfuscated", BoxHighlightPainter.create(Config.getInstance().obfuscatedColor, Config.getInstance().obfuscatedColorOutline),
-                "proposed", BoxHighlightPainter.create(Config.getInstance().proposedColor, Config.getInstance().proposedColorOutline),
-                "deobfuscated", BoxHighlightPainter.create(Config.getInstance().deobfuscatedColor, Config.getInstance().deobfuscatedColorOutline),
-                "other", BoxHighlightPainter.create(null, Config.getInstance().otherColorOutline)
+                TokenHighlightType.OBFUSCATED, BoxHighlightPainter.create(config.obfuscatedColor, config.obfuscatedColorOutline),
+                TokenHighlightType.PROPOSED, BoxHighlightPainter.create(config.proposedColor, config.proposedColorOutline),
+                TokenHighlightType.DEOBFUSCATED, BoxHighlightPainter.create(config.deobfuscatedColor, config.deobfuscatedColorOutline)
         );
-        gui.setEditorTheme(Config.getInstance().lookAndFeel);
+        gui.setEditorTheme(config.lookAndFeel);
         SwingUtilities.updateComponentTreeUI(gui.getFrame());
     }
 }

@@ -58,7 +58,7 @@ public class CommandMain {
 		File fileJarOut = getWritableFolder(getArg(args, 2, "out folder", true));
 		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
 		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
-		deobfuscator.writeSources(fileJarOut, new ConsoleProgressListener());
+		deobfuscator.writeSources(fileJarOut.toPath(), new ConsoleProgressListener());
 	}
 
 	private static void deobfuscate(String[] args) throws Exception {
@@ -66,7 +66,7 @@ public class CommandMain {
 		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
 		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
 		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
-		deobfuscator.writeJar(fileJarOut, new ConsoleProgressListener());
+		deobfuscator.writeTransformedJar(fileJarOut, new ConsoleProgressListener());
 	}
 
 	private static Deobfuscator getDeobfuscator(Path fileMappings, JarFile jar) throws Exception {

@@ -1,6 +1,5 @@
 package cuchaz.enigma.analysis.index;
 
-import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.*;
 
@@ -9,27 +8,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EntryIndex implements JarIndexer, RemappableIndex {
+public class EntryIndex implements JarIndexer {
 	private Map<ClassEntry, AccessFlags> classes = new HashMap<>();
 	private Map<FieldEntry, AccessFlags> fields = new HashMap<>();
 	private Map<MethodEntry, AccessFlags> methods = new HashMap<>();
-
-	@Override
-	public void remap(Translator translator) {
-		classes = translator.translateKeys(classes);
-		fields = translator.translateKeys(fields);
-		methods = translator.translateKeys(methods);
-	}
-
-	@Override
-	public EntryIndex remapped(Translator translator) {
-		EntryIndex index = new EntryIndex();
-		index.classes = translator.translateKeys(classes);
-		index.fields = translator.translateKeys(fields);
-		index.methods = translator.translateKeys(methods);
-
-		return index;
-	}
 
 	@Override
 	public void indexClass(ClassDefEntry classEntry) {

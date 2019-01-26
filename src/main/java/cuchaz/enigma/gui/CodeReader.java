@@ -11,14 +11,7 @@
 
 package cuchaz.enigma.gui;
 
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import cuchaz.enigma.Deobfuscator;
-import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -28,35 +21,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class CodeReader extends JEditorPane {
-
 	private static final long serialVersionUID = 3673180950485748810L;
-
-	private static final Object lock = new Object();
-	private SourceIndex sourceIndex;
-	private SelectionListener selectionListener;
-
-	public CodeReader() {
-
-		setEditable(false);
-		setContentType("text/java");
-
-		// turn off token highlighting (it's wrong most of the time anyway...)
-		DefaultSyntaxKit kit = (DefaultSyntaxKit) getEditorKit();
-		kit.toggleComponent(this, "de.sciss.syntaxpane.components.TokenMarker");
-
-		// hook events
-		addCaretListener(event ->
-		{
-			if (selectionListener != null && sourceIndex != null) {
-				Token token = sourceIndex.getReferenceToken(event.getDot());
-				if (token != null) {
-					selectionListener.onSelect(sourceIndex.getDeobfReference(token));
-				} else {
-					selectionListener.onSelect(null);
-				}
-			}
-		});
-	}
 
 	// HACKHACK: someday we can update the main GUI to use this code reader
 	public static void navigateToToken(final JEditorPane editor, final Token token, final HighlightPainter highlightPainter) {
@@ -100,58 +65,5 @@ public class CodeReader extends JEditorPane {
 			}
 		});
 		timer.start();
-	}
-
-	public void setSelectionListener(SelectionListener val) {
-		selectionListener = val;
-	}
-
-	public void setCode(String code) {
-		// sadly, the java lexer is not thread safe, so we have to serialize all these calls
-		synchronized (lock) {
-			setText(code);
-		}
-	}
-
-	public SourceIndex getSourceIndex() {
-		return sourceIndex;
-	}
-
-	public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator) {
-		decompileClass(classEntry, deobfuscator, null);
-	}
-
-	public void decompileClass(ClassEntry classEntry, Deobfuscator deobfuscator, Runnable callback) {
-		decompileClass(classEntry, deobfuscator, null, callback);
-	}
-
-	public void decompileClass(final ClassEntry classEntry, final Deobfuscator deobfuscator, final Boolean ignoreBadTokens, final Runnable callback) {
-
-		if (classEntry == null) {
-			setCode(null);
-			return;
-		}
-
-		setCode("(decompiling...)");
-
-		// run decompilation in a separate thread to keep ui responsive
-		new Thread(() ->
-		{
-
-			// decompile it
-
-			CompilationUnit sourceTree = deobfuscator.getSourceTree(classEntry.getName());
-			String source = deobfuscator.getSource(sourceTree);
-			setCode(source);
-			sourceIndex = deobfuscator.getSourceIndex(sourceTree, source, ignoreBadTokens);
-
-			if (callback != null) {
-				callback.run();
-			}
-		}).start();
-	}
-
-	public interface SelectionListener {
-		void onSelect(EntryReference<Entry<?>, Entry<?>> reference);
 	}
 }

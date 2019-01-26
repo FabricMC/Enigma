@@ -24,6 +24,7 @@ import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
+import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
@@ -44,10 +45,9 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 public class Gui {
@@ -71,7 +71,7 @@ public class Gui {
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
 	private PanelIdentifier infoPanel;
-	public Map<String, BoxHighlightPainter> boxHighlightPainters;
+	public Map<TokenHighlightType, BoxHighlightPainter> boxHighlightPainters;
 	private SelectionHighlightPainter selectionHighlightPainter;
 	private JTree inheritanceTree;
 	private JTree implementationsTree;
@@ -320,7 +320,7 @@ public class Gui {
 		this.frame.setTitle(Constants.NAME + " - " + jarName);
 		this.classesPanel.removeAll();
 		this.classesPanel.add(splitClasses);
-		setSource(null);
+		setEditorText(null);
 
 		// update menu
 		this.menuBar.closeJarMenu.setEnabled(true);
@@ -342,7 +342,7 @@ public class Gui {
 		this.frame.setTitle(Constants.NAME);
 		setObfClasses(null);
 		setDeobfClasses(null);
-		setSource(null);
+		setEditorText(null);
 		this.classesPanel.removeAll();
 
 		// update menu
@@ -373,9 +373,14 @@ public class Gui {
 		this.menuBar.saveMappingsMenu.setEnabled(path != null);
 	}
 
-	public void setSource(String source) {
+	public void setEditorText(String source) {
 		this.editor.getHighlighter().removeAllHighlights();
 		this.editor.setText(source);
+	}
+
+	public void setSource(DecompiledClassSource source) {
+		editor.setText(source.toString());
+		setHighlightedTokens(source.getHighlightedTokens());
 	}
 
 	public void showToken(final Token token) {
@@ -401,15 +406,15 @@ public class Gui {
 		showToken(sortedTokens.get(0));
 	}
 
-	public void setHighlightedTokens(Map<String, Iterable<Token>> tokens) {
+	public void setHighlightedTokens(Map<TokenHighlightType, Collection<Token>> tokens) {
 		// remove any old highlighters
 		this.editor.getHighlighter().removeAllHighlights();
 
 		if (boxHighlightPainters != null) {
-			for (String s : tokens.keySet()) {
-				BoxHighlightPainter painter = boxHighlightPainters.get(s);
+			for (TokenHighlightType type : tokens.keySet()) {
+				BoxHighlightPainter painter = boxHighlightPainters.get(type);
 				if (painter != null) {
-					setHighlightedTokens(tokens.get(s), painter);
+					setHighlightedTokens(tokens.get(type), painter);
 				}
 			}
 		}
@@ -527,7 +532,7 @@ public class Gui {
 		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
 		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
 		boolean isInJar = isToken && this.controller.entryIsInJar(referenceEntry);
-		boolean isRenameable = isToken && this.controller.referenceIsRenameable(reference);
+		boolean isRenameable = isToken && this.controller.getDeobfuscator().isRenamable(reference);
 
 		if (isToken) {
 			showReference(reference);
@@ -544,7 +549,7 @@ public class Gui {
 		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
 
-		if (isToken && this.controller.entryHasDeobfuscatedName(referenceEntry)) {
+		if (isToken && this.controller.getDeobfuscator().isRemapped(referenceEntry)) {
 			this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
 		} else {
 			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
@@ -719,7 +724,7 @@ public class Gui {
 	}
 
 	public void toggleMapping() {
-		if (this.controller.entryHasDeobfuscatedName(reference.entry)) {
+		if (this.controller.getDeobfuscator().isRemapped(reference.entry)) {
 			this.controller.removeMapping(reference);
 		} else {
 			this.controller.markAsDeobfuscated(reference);
@@ -743,7 +748,7 @@ public class Gui {
 		callback.apply(response);
 	}
 
-	public void saveMapping() throws IOException {
+	public void saveMapping() {
 		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION)
 			this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile().toPath());
 	}
@@ -757,13 +762,8 @@ public class Gui {
 			// ask to save before closing
 			showDiscardDiag((response) -> {
 				if (response == JOptionPane.YES_OPTION) {
-					try {
-						this.saveMapping();
-						this.frame.dispose();
-
-					} catch (IOException ex) {
-						throw new Error(ex);
-					}
+					this.saveMapping();
+					this.frame.dispose();
 				} else if (response == JOptionPane.NO_OPTION)
 					this.frame.dispose();
 

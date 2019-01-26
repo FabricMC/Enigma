@@ -13,6 +13,7 @@ package cuchaz.enigma;
 
 import com.google.common.collect.Sets;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
+import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
@@ -50,11 +51,13 @@ public class TestSourceIndex {
 			}
 		}
 
+		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
 		for (ClassEntry obfClassEntry : classEntries) {
 			try {
-				CompilationUnit tree = deobfuscator.getSourceTree(obfClassEntry.getName());
-				String source = deobfuscator.getSource(tree);
-				deobfuscator.getSourceIndex(tree, source);
+				CompilationUnit tree = sourceProvider.getSources(obfClassEntry.getName());
+				String source = sourceProvider.writeSourceToString(tree);
+
+				SourceIndex.buildIndex(source, tree, true);
 			} catch (Throwable t) {
 				throw new Error("Unable to index " + obfClassEntry, t);
 			}

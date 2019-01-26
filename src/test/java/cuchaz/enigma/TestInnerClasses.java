@@ -79,6 +79,6 @@ public class TestInnerClasses {
 	}
 
 	private void decompile(ClassEntry classEntry) {
-		deobfuscator.getSourceTree(classEntry.getName());
+		deobfuscator.getObfSourceProvider().getSources(classEntry.getName());
 	}
 }

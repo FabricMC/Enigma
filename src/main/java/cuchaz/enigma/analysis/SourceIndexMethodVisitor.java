@@ -17,8 +17,8 @@ import com.strobel.assembler.metadata.*;
 import com.strobel.decompiler.ast.Variable;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.*;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.lang.Error;
@@ -26,16 +26,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SourceIndexMethodVisitor extends SourceIndexVisitor {
-	private final ReferencedEntryPool entryPool;
-
 	private final MethodDefEntry methodEntry;
 
 	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
 	private Map<String, Entry<?>> identifierEntryCache = new HashMap<>();
 
-	public SourceIndexMethodVisitor(ReferencedEntryPool entryPool, MethodDefEntry methodEntry) {
-		super(entryPool);
-		this.entryPool = entryPool;
+	public SourceIndexMethodVisitor(MethodDefEntry methodEntry) {
 		this.methodEntry = methodEntry;
 	}
 
@@ -44,10 +40,10 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 
 		// get the behavior entry
-		ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
+		ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
 		MethodEntry methodEntry = null;
 		if (ref instanceof MethodReference) {
-			methodEntry = entryPool.getMethod(classEntry, ref.getName(), ref.getErasedSignature());
+			methodEntry = new MethodEntry(classEntry, ref.getName(), new MethodDescriptor(ref.getErasedSignature()));
 		}
 		if (methodEntry != null) {
 			// get the node for the token
@@ -80,11 +76,8 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 				throw new Error("Expected a field here! got " + ref);
 			}
 
-			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = entryPool.getField(classEntry, ref.getName(), new TypeDescriptor(erasedSignature));
-			if (fieldEntry == null) {
-				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getFullName());
-			}
+			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
+			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new TypeDescriptor(erasedSignature));
 			index.addReference(node.getMemberNameToken(), fieldEntry, this.methodEntry);
 		}
 
@@ -95,7 +88,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	public Void visitSimpleType(SimpleType node, SourceIndex index) {
 		TypeReference ref = node.getUserData(Keys.TYPE_REFERENCE);
 		if (node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY) {
-			ClassEntry classEntry = entryPool.getClass(ref.getInternalName());
+			ClassEntry classEntry = new ClassEntry(ref.getInternalName());
 			index.addReference(node.getIdentifierToken(), classEntry, this.methodEntry);
 		}
 
@@ -122,11 +115,8 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	public Void visitIdentifierExpression(IdentifierExpression node, SourceIndex index) {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 		if (ref != null) {
-			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
-			FieldEntry fieldEntry = entryPool.getField(classEntry, ref.getName(), new TypeDescriptor(ref.getErasedSignature()));
-			if (fieldEntry == null) {
-				throw new Error("Failed to find field " + ref.getName() + " on " + classEntry.getFullName());
-			}
+			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
+			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new TypeDescriptor(ref.getErasedSignature()));
 			index.addReference(node.getIdentifierToken(), fieldEntry, this.methodEntry);
 		} else
 			this.checkIdentifier(node, index);
@@ -154,13 +144,11 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	@Override
 	public Void visitObjectCreationExpression(ObjectCreationExpression node, SourceIndex index) {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
-		if (ref != null) {
-			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
-			MethodEntry constructorEntry = entryPool.getMethod(classEntry, "<init>", ref.getErasedSignature());
-			if (node.getType() instanceof SimpleType) {
-				SimpleType simpleTypeNode = (SimpleType) node.getType();
-				index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, this.methodEntry);
-			}
+		if (ref != null && node.getType() instanceof SimpleType) {
+			SimpleType simpleTypeNode = (SimpleType) node.getType();
+			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
+			MethodEntry constructorEntry = new MethodEntry(classEntry, "<init>", new MethodDescriptor(ref.getErasedSignature()));
+			index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, this.methodEntry);
 		}
 
 		return recurse(node, index);
@@ -199,13 +187,12 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 
 		if (ref instanceof MethodReference) {
 			// get the behavior entry
-			ClassEntry classEntry = entryPool.getClass(ref.getDeclaringType().getInternalName());
-			MethodEntry methodEntry = null;
+			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
+			MethodEntry methodEntry = new MethodEntry(classEntry, ref.getName(), new MethodDescriptor(ref.getErasedSignature()));
 
-			methodEntry = entryPool.getMethod(classEntry, ref.getName(), ref.getErasedSignature());
 			// get the node for the token
 			AstNode tokenNode = node.getMethodNameToken();
-			if (tokenNode == null || (tokenNode.getRegion().getBeginLine() == 0 || tokenNode.getRegion().getEndLine() == 0)){
+			if (tokenNode == null || (tokenNode.getRegion().getBeginLine() == 0 || tokenNode.getRegion().getEndLine() == 0)) {
 				tokenNode = node.getTarget();
 			}
 			if (tokenNode != null) {

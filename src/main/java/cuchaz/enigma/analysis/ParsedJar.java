@@ -12,6 +12,7 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.io.ByteStreams;
+import cuchaz.enigma.CompiledSource;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -28,7 +29,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 
-public class ParsedJar {
+public class ParsedJar implements CompiledSource {
 	private final Map<String, byte[]> classBytes;
 	private final Map<String, ClassNode> nodeCache = new HashMap<>();
 
@@ -93,15 +94,8 @@ public class ParsedJar {
 		return classBytes.size();
 	}
 
-	public List<ClassEntry> getClassEntries() {
-		List<ClassEntry> entries = new ArrayList<>(classBytes.size());
-		for (String s : classBytes.keySet()) {
-			entries.add(new ClassEntry(s));
-		}
-		return entries;
-	}
-
 	@Nullable
+	@Override
 	public ClassNode getClassNode(String name) {
 		return nodeCache.computeIfAbsent(name, (n) -> {
 			byte[] bytes = classBytes.get(name);
@@ -113,6 +107,14 @@ public class ParsedJar {
 			reader.accept(node, 0);
 			return node;
 		});
+	}
+
+	public List<ClassEntry> getClassEntries() {
+		List<ClassEntry> entries = new ArrayList<>(classBytes.size());
+		for (String s : classBytes.keySet()) {
+			entries.add(new ClassEntry(s));
+		}
+		return entries;
 	}
 
     public Map<String, byte[]> getClassDataMap() {

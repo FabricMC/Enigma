@@ -64,7 +64,7 @@ public class Token implements Comparable<Token> {
 	}
 
 	public boolean equals(Token other) {
-		return start == other.start && end == other.end;
+		return start == other.start && end == other.end && text.equals(other.text);
 	}
 
 	@Override
