@@ -1,5 +1,6 @@
 package cuchaz.enigma;
 
+import com.google.common.base.CharMatcher;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -17,7 +18,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class SourceProvider {
 	private final DecompilerSettings settings;
@@ -96,8 +96,6 @@ public class SourceProvider {
 	}
 
 	private static class UnicodeVariableFixer implements IAstTransform {
-		private static final Pattern VALID_PATTERN = Pattern.compile("^.*[^a-zA-Z0-9 ].*$");
-
 		@Override
 		public void run(AstNode compilationUnit) {
 			compilationUnit.acceptVisitor(new Visitor(), null);
@@ -113,7 +111,7 @@ public class SourceProvider {
 			}
 
 			private boolean isInvalidName(String name) {
-				return VALID_PATTERN.matcher(name).matches();
+				return !CharMatcher.ascii().matchesAllOf(name);
 			}
 		}
 	}
