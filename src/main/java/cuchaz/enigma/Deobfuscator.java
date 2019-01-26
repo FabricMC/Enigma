@@ -25,7 +25,6 @@ import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
-import cuchaz.enigma.translation.CachingTranslator;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
@@ -176,15 +175,15 @@ public class Deobfuscator {
 
 	public void writeSources(Path outputDirectory, ProgressListener progress) {
 		// get the classes to decompile
-		Set<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses().stream()
-				.filter(entry -> !entry.isInnerClass())
-				.collect(Collectors.toSet());
+		Collection<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses();
 
 		Stopwatch stopwatch = Stopwatch.createStarted();
 
 		try {
+			Translator deobfuscator = mapper.getDeobfuscator();
+
 			// deobfuscate everything first
-			Map<String, ClassNode> translatedNodes = deobfuscateClasses(progress, classEntries, mapper.getDeobfuscator());
+			Map<String, ClassNode> translatedNodes = deobfuscateClasses(progress, classEntries, deobfuscator);
 
 			decompileClasses(outputDirectory, progress, translatedNodes);
 		} finally {
@@ -194,42 +193,44 @@ public class Deobfuscator {
 		}
 	}
 
-	private Map<String, ClassNode> deobfuscateClasses(ProgressListener progress, Set<ClassEntry> classEntries, Translator translator) {
+	private Map<String, ClassNode> deobfuscateClasses(ProgressListener progress, Collection<ClassEntry> classEntries, Translator translator) {
 		AtomicInteger count = new AtomicInteger();
 		if (progress != null) {
 			progress.init(classEntries.size(), "Deobfuscating classes...");
 		}
 
-		try (CachingTranslator cachingTranslator = new CachingTranslator(translator)) {
-			return classEntries.parallelStream()
-					.map(entry -> {
-						ClassEntry translatedEntry = cachingTranslator.translate(entry);
-						if (progress != null) {
-							progress.step(count.getAndIncrement(), translatedEntry.toString());
-						}
+		return classEntries.parallelStream()
+				.map(entry -> {
+					ClassEntry translatedEntry = translator.translate(entry);
+					if (progress != null) {
+						progress.step(count.getAndIncrement(), translatedEntry.toString());
+					}
 
-						ClassNode node = parsedJar.getClassNode(entry.getFullName());
-						if (node != null) {
-							ClassNode translatedNode = new ClassNode();
-							node.accept(new TranslationClassVisitor(cachingTranslator, Opcodes.ASM5, translatedNode));
-							return translatedNode;
-						}
+					ClassNode node = parsedJar.getClassNode(entry.getFullName());
+					if (node != null) {
+						ClassNode translatedNode = new ClassNode();
+						node.accept(new TranslationClassVisitor(translator, Opcodes.ASM5, translatedNode));
+						return translatedNode;
+					}
 
-						return null;
-					})
-					.filter(Objects::nonNull)
-					.collect(Collectors.toMap(n -> n.name, Functions.identity()));
-		}
+					return null;
+				})
+				.filter(Objects::nonNull)
+				.collect(Collectors.toMap(n -> n.name, Functions.identity()));
 	}
 
-	private void decompileClasses(Path outputDirectory, ProgressListener progress, Map<String, ClassNode> classes) {
+	private void decompileClasses(Path outputDirectory, ProgressListener progress, Map<String, ClassNode> translatedClasses) {
+		Collection<ClassNode> decompileClasses = translatedClasses.values().stream()
+				.filter(classNode -> classNode.name.indexOf('$') == -1)
+				.collect(Collectors.toList());
+
 		if (progress != null) {
-			progress.init(classes.size(), "Decompiling classes...");
+			progress.init(decompileClasses.size(), "Decompiling classes...");
 		}
 
 		//create a common instance outside the loop as mappings shouldn't be changing while this is happening
 		//synchronized to make sure the parallelStream doesn't CME with the cache
-		ITypeLoader typeLoader = new SynchronizedTypeLoader(new CompiledSourceTypeLoader(classes::get));
+		ITypeLoader typeLoader = new SynchronizedTypeLoader(new CompiledSourceTypeLoader(translatedClasses::get));
 
 		MetadataSystem metadataSystem = new Deobfuscator.NoRetryMetadataSystem(typeLoader);
 
@@ -241,28 +242,32 @@ public class Deobfuscator {
 
 		AtomicInteger count = new AtomicInteger();
 
-		classes.values().parallelStream().forEach(translatedClass -> {
+		decompileClasses.parallelStream().forEach(translatedNode -> {
 			if (progress != null) {
-				progress.step(count.getAndIncrement(), translatedClass.name);
+				progress.step(count.getAndIncrement(), translatedNode.name);
 			}
 
-			try {
-				// get the source
-				CompilationUnit sourceTree = sourceProvider.getSources(translatedClass.name);
-
-				Path path = outputDirectory.resolve(translatedClass.name.replace('.', '/') + ".java");
-				Files.createDirectories(path.getParent());
-
-				try (Writer writer = Files.newBufferedWriter(path)) {
-					sourceProvider.writeSource(writer, sourceTree);
-				}
-			} catch (Throwable t) {
-				// don't crash the whole world here, just log the error and keep going
-				// TODO: set up logback via log4j
-				System.err.println("Unable to decompile class " + translatedClass.name);
-				t.printStackTrace(System.err);
-			}
+			decompileClass(outputDirectory, translatedNode, sourceProvider);
 		});
+	}
+
+	private void decompileClass(Path outputDirectory, ClassNode translatedNode, SourceProvider sourceProvider) {
+		try {
+			// get the source
+			CompilationUnit sourceTree = sourceProvider.getSources(translatedNode.name);
+
+			Path path = outputDirectory.resolve(translatedNode.name.replace('.', '/') + ".java");
+			Files.createDirectories(path.getParent());
+
+			try (Writer writer = Files.newBufferedWriter(path)) {
+				sourceProvider.writeSource(writer, sourceTree);
+			}
+		} catch (Throwable t) {
+			// don't crash the whole world here, just log the error and keep going
+			// TODO: set up logback via log4j
+			System.err.println("Unable to decompile class " + translatedNode.name);
+			t.printStackTrace(System.err);
+		}
 	}
 
 	public void writeTransformedJar(File out, ProgressListener progress) {

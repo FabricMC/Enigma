@@ -18,7 +18,6 @@ import com.google.common.collect.Multimap;
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.throwables.IllegalNameException;
-import cuchaz.enigma.translation.CachingTranslator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
@@ -153,75 +152,73 @@ public class ClassSelector extends JTree {
 
 		Translator translator = controller.getDeobfuscator().getMapper().getDeobfuscator();
 
-		try (CachingTranslator cachingTranslator = new CachingTranslator(translator)) {
-			// build the package names
-			Map<String, ClassSelectorPackageNode> packages = Maps.newHashMap();
-			for (ClassEntry obfClass : classEntries) {
-				ClassEntry deobfClass = cachingTranslator.translate(obfClass);
-				packages.put(deobfClass.getPackageName(), null);
-			}
-
-			// sort the packages
-			List<String> sortedPackageNames = Lists.newArrayList(packages.keySet());
-			sortedPackageNames.sort((a, b) ->
-			{
-				// I can never keep this rule straight when writing these damn things...
-				// a < b => -1, a == b => 0, a > b => +1
-
-				if (b == null || a == null) {
-					return 0;
-				}
-
-				String[] aparts = a.split("/");
-				String[] bparts = b.split("/");
-				for (int i = 0; true; i++) {
-					if (i >= aparts.length) {
-						return -1;
-					} else if (i >= bparts.length) {
-						return 1;
-					}
-
-					int result = aparts[i].compareTo(bparts[i]);
-					if (result != 0) {
-						return result;
-					}
-				}
-			});
-
-			// create the rootNodes node and the package nodes
-			rootNodes = new DefaultMutableTreeNode();
-			for (String packageName : sortedPackageNames) {
-				ClassSelectorPackageNode node = new ClassSelectorPackageNode(packageName);
-				packages.put(packageName, node);
-				rootNodes.add(node);
-			}
-
-			// put the classes into packages
-			Multimap<String, ClassEntry> packagedClassEntries = ArrayListMultimap.create();
-			for (ClassEntry obfClass : classEntries) {
-				ClassEntry deobfClass = cachingTranslator.translate(obfClass);
-				packagedClassEntries.put(deobfClass.getPackageName(), obfClass);
-			}
-
-			// build the class nodes
-			for (String packageName : packagedClassEntries.keySet()) {
-				// sort the class entries
-				List<ClassEntry> classEntriesInPackage = Lists.newArrayList(packagedClassEntries.get(packageName));
-				classEntriesInPackage.sort(this.comparator);
-
-				// create the nodes in order
-				for (ClassEntry obfClass : classEntriesInPackage) {
-					ClassEntry deobfClass = cachingTranslator.translate(obfClass);
-					ClassSelectorPackageNode node = packages.get(packageName);
-					node.add(new ClassSelectorClassNode(obfClass, deobfClass));
-				}
-			}
-
-			// finally, update the tree control
-			setModel(new DefaultTreeModel(rootNodes));
-
-			restoreExpansionState(this, state);
+		// build the package names
+		Map<String, ClassSelectorPackageNode> packages = Maps.newHashMap();
+		for (ClassEntry obfClass : classEntries) {
+			ClassEntry deobfClass = translator.translate(obfClass);
+			packages.put(deobfClass.getPackageName(), null);
 		}
+
+		// sort the packages
+		List<String> sortedPackageNames = Lists.newArrayList(packages.keySet());
+		sortedPackageNames.sort((a, b) ->
+		{
+			// I can never keep this rule straight when writing these damn things...
+			// a < b => -1, a == b => 0, a > b => +1
+
+			if (b == null || a == null) {
+				return 0;
+			}
+
+			String[] aparts = a.split("/");
+			String[] bparts = b.split("/");
+			for (int i = 0; true; i++) {
+				if (i >= aparts.length) {
+					return -1;
+				} else if (i >= bparts.length) {
+					return 1;
+				}
+
+				int result = aparts[i].compareTo(bparts[i]);
+				if (result != 0) {
+					return result;
+				}
+			}
+		});
+
+		// create the rootNodes node and the package nodes
+		rootNodes = new DefaultMutableTreeNode();
+		for (String packageName : sortedPackageNames) {
+			ClassSelectorPackageNode node = new ClassSelectorPackageNode(packageName);
+			packages.put(packageName, node);
+			rootNodes.add(node);
+		}
+
+		// put the classes into packages
+		Multimap<String, ClassEntry> packagedClassEntries = ArrayListMultimap.create();
+		for (ClassEntry obfClass : classEntries) {
+			ClassEntry deobfClass = translator.translate(obfClass);
+			packagedClassEntries.put(deobfClass.getPackageName(), obfClass);
+		}
+
+		// build the class nodes
+		for (String packageName : packagedClassEntries.keySet()) {
+			// sort the class entries
+			List<ClassEntry> classEntriesInPackage = Lists.newArrayList(packagedClassEntries.get(packageName));
+			classEntriesInPackage.sort(this.comparator);
+
+			// create the nodes in order
+			for (ClassEntry obfClass : classEntriesInPackage) {
+				ClassEntry deobfClass = translator.translate(obfClass);
+				ClassSelectorPackageNode node = packages.get(packageName);
+				node.add(new ClassSelectorClassNode(obfClass, deobfClass));
+			}
+		}
+
+		// finally, update the tree control
+		setModel(new DefaultTreeModel(rootNodes));
+
+		restoreExpansionState(this, state);
 	}
 
 	public ClassEntry getSelectedClass() {
