@@ -193,12 +193,15 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			MethodEntry methodEntry = new MethodEntry(classEntry, ref.getName(), new MethodDescriptor(ref.getErasedSignature()));
 
 			// get the node for the token
-			AstNode tokenNode = node.getMethodNameToken();
-			if (tokenNode == null || (tokenNode.getRegion().getBeginLine() == 0 || tokenNode.getRegion().getEndLine() == 0)) {
-				tokenNode = node.getTarget();
+			AstNode methodNameToken = node.getMethodNameToken();
+			AstNode targetToken = node.getTarget();
+
+			if (methodNameToken != null) {
+				index.addReference(methodNameToken, methodEntry, this.methodEntry);
 			}
-			if (tokenNode != null) {
-				index.addReference(tokenNode, methodEntry, this.methodEntry);
+
+			if (targetToken != null && !(targetToken instanceof ThisReferenceExpression)) {
+				index.addReference(targetToken, methodEntry.getParent(), this.methodEntry);
 			}
 		}
 
