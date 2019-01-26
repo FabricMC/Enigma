@@ -37,7 +37,6 @@ public class ParsedJar implements CompiledSource {
 
 	public ParsedJar(JarFile jar) throws IOException {
 		Map<String, byte[]> uClassBytes = new LinkedHashMap<>();
-		;
 		try {
 			// get the jar entries that correspond to classes
 			Enumeration<JarEntry> entries = jar.entries();

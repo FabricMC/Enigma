@@ -339,6 +339,8 @@ public class GuiController {
 			return;
 		}
 
+		DropImportAstTransform.INSTANCE.run(sourceTree);
+
 		String sourceString = sourceProvider.writeSourceToString(sourceTree);
 
 		SourceIndex index = SourceIndex.buildIndex(sourceString, sourceTree, true);
