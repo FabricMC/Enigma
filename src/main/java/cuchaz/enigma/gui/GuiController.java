@@ -134,7 +134,7 @@ public class GuiController {
 	}
 
 	@Nullable
-	public EntryReference<Entry<?>, Entry<?>> getDeobfReference(Token token) {
+	public EntryReference<Entry<?>, Entry<?>> getReference(Token token) {
 		if (this.currentSource == null) {
 			return null;
 		}

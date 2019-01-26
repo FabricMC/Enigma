@@ -1,6 +1,5 @@
 package cuchaz.enigma;
 
-import com.google.common.base.CharMatcher;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -9,7 +8,9 @@ import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
 import com.strobel.decompiler.languages.java.JavaOutputVisitor;
-import com.strobel.decompiler.languages.java.ast.*;
+import com.strobel.decompiler.languages.java.ast.AstBuilder;
+import com.strobel.decompiler.languages.java.ast.CompilationUnit;
+import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
 import cuchaz.enigma.utils.Utils;
 import oml.ast.transformers.*;
@@ -87,32 +88,10 @@ public class SourceProvider {
 				new VarargsFixer(context),
 				new RemoveObjectCasts(context),
 				new Java8Generics(),
-				new InvalidIdentifierFix(),
-				new UnicodeVariableFixer()
+				new InvalidIdentifierFix()
 		);
 		for (IAstTransform transform : transformers) {
 			transform.run(builder.getCompilationUnit());
-		}
-	}
-
-	private static class UnicodeVariableFixer implements IAstTransform {
-		@Override
-		public void run(AstNode compilationUnit) {
-			compilationUnit.acceptVisitor(new Visitor(), null);
-		}
-
-		private static class Visitor extends DepthFirstAstVisitor<Void, Void> {
-			@Override
-			public Void visitIdentifier(Identifier node, Void data) {
-				if (isInvalidName(node.getName())) {
-					node.setName("unk");
-				}
-				return super.visitIdentifier(node, data);
-			}
-
-			private boolean isInvalidName(String name) {
-				return !CharMatcher.ascii().matchesAllOf(name);
-			}
 		}
 	}
 }

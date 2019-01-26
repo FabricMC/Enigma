@@ -13,9 +13,11 @@ package cuchaz.enigma.analysis;
 
 import com.google.common.io.ByteStreams;
 import cuchaz.enigma.CompiledSource;
+import cuchaz.enigma.bytecode.translators.LocalVariableFixVisitor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
@@ -34,7 +36,8 @@ public class ParsedJar implements CompiledSource {
 	private final Map<String, ClassNode> nodeCache = new HashMap<>();
 
 	public ParsedJar(JarFile jar) throws IOException {
-		Map<String, byte[]> uClassBytes = new LinkedHashMap<>();;
+		Map<String, byte[]> uClassBytes = new LinkedHashMap<>();
+		;
 		try {
 			// get the jar entries that correspond to classes
 			Enumeration<JarEntry> entries = jar.entries();
@@ -102,9 +105,13 @@ public class ParsedJar implements CompiledSource {
 			if (bytes == null) {
 				return null;
 			}
+
 			ClassReader reader = new ClassReader(bytes);
 			ClassNode node = new ClassNode();
-			reader.accept(node, 0);
+
+			LocalVariableFixVisitor visitor = new LocalVariableFixVisitor(Opcodes.ASM5, node);
+			reader.accept(visitor, 0);
+
 			return node;
 		});
 	}
@@ -117,7 +124,7 @@ public class ParsedJar implements CompiledSource {
 		return entries;
 	}
 
-    public Map<String, byte[]> getClassDataMap() {
+	public Map<String, byte[]> getClassDataMap() {
 		return classBytes;
-    }
+	}
 }

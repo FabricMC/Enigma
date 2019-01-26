@@ -526,7 +526,7 @@ public class Gui {
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
-		reference = this.controller.getDeobfReference(token);
+		reference = this.controller.getReference(token);
 
 		Entry<?> referenceEntry = reference != null ? reference.entry : null;
 		boolean isClassEntry = isToken && referenceEntry instanceof ClassEntry;
