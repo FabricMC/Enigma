@@ -219,14 +219,14 @@ public class GuiController {
 	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference) {
 		this.deobfuscator.removeMapping(reference.getNameableEntry());
 		if (reference.entry instanceof ClassEntry)
-			this.gui.moveClassTree(reference, reference.entry.getName(), false, true);
+			this.gui.moveClassTree(reference, false, true);
 		refreshCurrentClass(reference);
 	}
 
 	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference) {
 		this.deobfuscator.markAsDeobfuscated(reference.getNameableEntry());
 		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
-			this.gui.moveClassTree(reference, reference.entry.getName(), true, false);
+			this.gui.moveClassTree(reference, true, false);
 		refreshCurrentClass(reference);
 	}
 

@@ -25,6 +25,7 @@ import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
+import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
@@ -157,7 +158,7 @@ public class Deobfuscator {
 			ClassEntry deobfClassEntry = mapper.deobfuscate(obfClassEntry);
 			if (!deobfClassEntry.equals(obfClassEntry)) {
 				// if the class has a mapping, clearly it's deobfuscated
-				deobfClasses.add(deobfClassEntry);
+				deobfClasses.add(obfClassEntry);
 			} else if (obfClassEntry.getPackageName() != null) {
 				// also call it deobufscated if it's not in the none package
 				deobfClasses.add(obfClassEntry);
@@ -369,6 +370,10 @@ public class Deobfuscator {
 
 	public void markAsDeobfuscated(Entry<?> obfEntry) {
 		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()));
+	}
+
+	public <T extends Translatable> T deobfuscate(T translatable) {
+		return mapper.deobfuscate(translatable);
 	}
 
 	public interface ClassTransformer {
