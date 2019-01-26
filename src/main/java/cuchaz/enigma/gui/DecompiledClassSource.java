@@ -5,14 +5,15 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
+import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableDefEntry;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 
 // TODO: decompile after remapping when changes are more complex (with current solution, for example, package declarations won't be added)
 public class DecompiledClassSource {
@@ -48,15 +49,41 @@ public class DecompiledClassSource {
 			Entry<?> entry = reference.getNameableEntry();
 			Entry<?> translatedEntry = translator.translate(entry);
 
-			if (!entry.getName().equals(translatedEntry.getName())) {
+			if (isDeobfuscated(entry, translatedEntry)) {
 				highlightToken(movedToken, TokenHighlightType.DEOBFUSCATED);
 				return translatedEntry.getSourceRemapName();
 			} else {
 				highlightToken(movedToken, TokenHighlightType.OBFUSCATED);
+
+				String defaultName = generateDefaultName(translatedEntry);
+				if (defaultName != null) {
+					return defaultName;
+				}
 			}
 		}
 
 		return null;
+	}
+
+	@Nullable
+	private String generateDefaultName(Entry<?> entry) {
+		if (entry instanceof LocalVariableDefEntry) {
+			LocalVariableDefEntry localVariable = (LocalVariableDefEntry) entry;
+
+			int index = localVariable.getIndex();
+			if (localVariable.isArgument()) {
+				List<TypeDescriptor> arguments = localVariable.getParent().getDesc().getArgumentDescs();
+				return LocalNameGenerator.generateArgumentName(index, localVariable.getDesc(), arguments);
+			} else {
+				return LocalNameGenerator.generateLocalVariableName(index, localVariable.getDesc());
+			}
+		}
+
+		return null;
+	}
+
+	private boolean isDeobfuscated(Entry<?> entry, Entry<?> translatedEntry) {
+		return !entry.getName().equals(translatedEntry.getName());
 	}
 
 	public ClassEntry getEntry() {
