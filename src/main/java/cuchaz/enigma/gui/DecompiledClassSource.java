@@ -4,6 +4,7 @@ import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
+import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import cuchaz.enigma.translation.CachingTranslator;
 import cuchaz.enigma.translation.LocalNameGenerator;
@@ -11,12 +12,12 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableDefEntry;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-// TODO: decompile after remapping when changes are more complex (with current solution, for example, package declarations won't be added)
 public class DecompiledClassSource {
 	private final ClassEntry classEntry;
 	private final Deobfuscator deobfuscator;
@@ -47,7 +48,6 @@ public class DecompiledClassSource {
 	private String remapToken(Token token, Token movedToken, Translator translator) {
 		EntryReference<Entry<?>, Entry<?>> reference = obfuscatedIndex.getReference(token);
 
-		// TODO: Proposed names
 		if (deobfuscator.isRenamable(reference)) {
 			Entry<?> entry = reference.getNameableEntry();
 			Entry<?> translatedEntry = translator.translate(entry);
@@ -56,6 +56,12 @@ public class DecompiledClassSource {
 				highlightToken(movedToken, TokenHighlightType.DEOBFUSCATED);
 				return translatedEntry.getSourceRemapName();
 			} else {
+				String proposedName = proposeName(entry);
+				if (proposedName != null) {
+					highlightToken(movedToken, TokenHighlightType.PROPOSED);
+					return proposedName;
+				}
+
 				highlightToken(movedToken, TokenHighlightType.OBFUSCATED);
 
 				String defaultName = generateDefaultName(translatedEntry);
@@ -65,6 +71,20 @@ public class DecompiledClassSource {
 			}
 		}
 
+		return null;
+	}
+
+	@Nullable
+	private String proposeName(Entry<?> entry) {
+		if (entry instanceof FieldEntry) {
+			for (EnigmaPlugin plugin : deobfuscator.getPlugins()) {
+				String owner = entry.getContainingClass().getFullName();
+				String proposal = plugin.proposeFieldName(owner, entry.getName(), ((FieldEntry) entry).getDesc().toString());
+				if (proposal != null) {
+					return proposal;
+				}
+			}
+		}
 		return null;
 	}
 
