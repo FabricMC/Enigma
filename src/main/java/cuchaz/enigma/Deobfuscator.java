@@ -25,6 +25,7 @@ import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
+import cuchaz.enigma.translation.CachingTranslator;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
@@ -199,24 +200,26 @@ public class Deobfuscator {
 			progress.init(classEntries.size(), "Deobfuscating classes...");
 		}
 
-		return classEntries.parallelStream()
-				.map(entry -> {
-					ClassEntry translatedEntry = translator.translate(entry);
-					if (progress != null) {
-						progress.step(count.getAndIncrement(), translatedEntry.toString());
-					}
+		try (CachingTranslator cachingTranslator = new CachingTranslator(translator)) {
+			return classEntries.parallelStream()
+					.map(entry -> {
+						ClassEntry translatedEntry = cachingTranslator.translate(entry);
+						if (progress != null) {
+							progress.step(count.getAndIncrement(), translatedEntry.toString());
+						}
 
-					ClassNode node = parsedJar.getClassNode(entry.getFullName());
-					if (node != null) {
-						ClassNode translatedNode = new ClassNode();
-						node.accept(new TranslationClassVisitor(translator, Opcodes.ASM5, translatedNode));
-						return translatedNode;
-					}
+						ClassNode node = parsedJar.getClassNode(entry.getFullName());
+						if (node != null) {
+							ClassNode translatedNode = new ClassNode();
+							node.accept(new TranslationClassVisitor(cachingTranslator, Opcodes.ASM5, translatedNode));
+							return translatedNode;
+						}
 
-					return null;
-				})
-				.filter(Objects::nonNull)
-				.collect(Collectors.toMap(n -> n.name, Functions.identity()));
+						return null;
+					})
+					.filter(Objects::nonNull)
+					.collect(Collectors.toMap(n -> n.name, Functions.identity()));
+		}
 	}
 
 	private void decompileClasses(Path outputDirectory, ProgressListener progress, Map<String, ClassNode> classes) {

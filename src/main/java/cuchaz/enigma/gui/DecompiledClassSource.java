@@ -5,6 +5,7 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
+import cuchaz.enigma.translation.CachingTranslator;
 import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
@@ -37,8 +38,10 @@ public class DecompiledClassSource {
 
 		SourceRemapper remapper = new SourceRemapper(obfuscatedIndex.getSource(), obfuscatedIndex.referenceTokens());
 
-		SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(token, movedToken, translator));
-		remappedIndex = obfuscatedIndex.remapTo(remapResult);
+		try (CachingTranslator cachingTranslator = new CachingTranslator(translator)) {
+			SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(token, movedToken, cachingTranslator));
+			remappedIndex = obfuscatedIndex.remapTo(remapResult);
+		}
 	}
 
 	private String remapToken(Token token, Token movedToken, Translator translator) {
