@@ -15,6 +15,7 @@ import cuchaz.enigma.analysis.Token;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 import javax.swing.text.Highlighter.HighlightPainter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -27,7 +28,10 @@ public class CodeReader extends JEditorPane {
 	public static void navigateToToken(final JEditorPane editor, final Token token, final HighlightPainter highlightPainter) {
 
 		// set the caret position to the token
-		editor.setCaretPosition(token.start);
+		Document document = editor.getDocument();
+		int clampedPosition = Math.min(Math.max(token.start, 0), document.getLength());
+
+		editor.setCaretPosition(clampedPosition);
 		editor.grabFocus();
 
 		try {

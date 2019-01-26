@@ -354,8 +354,8 @@ public class GuiController {
 
 		currentSource.remapSource(translator);
 
-		gui.setSource(currentSource);
 		gui.setEditorTheme(Config.getInstance().lookAndFeel);
+		gui.setSource(currentSource);
 	}
 
 	public Deobfuscator getDeobfuscator() {
