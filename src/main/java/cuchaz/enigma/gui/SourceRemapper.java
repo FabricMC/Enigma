@@ -15,7 +15,7 @@ public class SourceRemapper {
 	}
 
 	public Result remap(Remapper remapper) {
-		String remappedSource = source;
+		StringBuffer remappedSource = new StringBuffer(source);
 		Map<Token, Token> remappedTokens = new HashMap<>();
 
 		int accumulatedOffset = 0;
@@ -25,7 +25,7 @@ public class SourceRemapper {
 			String remappedName = remapper.remap(token, movedToken);
 			if (remappedName != null) {
 				accumulatedOffset += movedToken.getRenameOffset(remappedName);
-				remappedSource = movedToken.rename(remappedSource, remappedName);
+				movedToken.rename(remappedSource, remappedName);
 			}
 
 			if (!token.equals(movedToken)) {
@@ -33,7 +33,7 @@ public class SourceRemapper {
 			}
 		}
 
-		return new Result(remappedSource, remappedTokens);
+		return new Result(remappedSource.toString(), remappedTokens);
 	}
 
 	public static class Result {
