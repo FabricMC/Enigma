@@ -25,7 +25,6 @@ import cuchaz.enigma.gui.filechooser.FileChooserFolder;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
-import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
@@ -801,45 +800,39 @@ public class Gui {
 			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
 	}
 
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, String newName) {
-		String oldEntry = deobfReference.entry.getContainingClass().getPackageName();
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, String newName) {
+		String oldEntry = obfReference.entry.getContainingClass().getPackageName();
 		String newEntry = new ClassEntry(newName).getPackageName();
-		moveClassTree(deobfReference, oldEntry == null, newEntry == null);
+		moveClassTree(obfReference, oldEntry == null, newEntry == null);
 	}
 
 	// TODO: getExpansionState will *not* actually update itself based on name changes!
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, boolean isOldOb, boolean isNewOb) {
-		ClassEntry classEntry = deobfReference.entry.getContainingClass();
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, boolean isOldOb, boolean isNewOb) {
+		ClassEntry classEntry = obfReference.entry.getContainingClass();
 
 		// Ob -> deob
 		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
 		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
 
 		if (isOldOb && !isNewOb) {
-			this.deobfPanel.deobfClasses.moveClassTree(classEntry, obfPanel.obfClasses);
-			ClassSelectorPackageNode packageNode = this.obfPanel.obfClasses.getPackageNode(classEntry);
-			this.obfPanel.obfClasses.removeNode(packageNode, classEntry);
-			this.obfPanel.obfClasses.removeNodeIfEmpty(packageNode);
+			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
+			this.obfPanel.obfClasses.moveClassOut(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
 		// Deob -> ob
 		else if (isNewOb && !isOldOb) {
-			this.obfPanel.obfClasses.moveClassTree(classEntry, deobfPanel.deobfClasses);
-			ClassSelectorPackageNode packageNode = this.deobfPanel.deobfClasses.getPackageNode(classEntry);
-			this.deobfPanel.deobfClasses.removeNode(packageNode, classEntry);
-			this.deobfPanel.deobfClasses.removeNodeIfEmpty(packageNode);
+			this.obfPanel.obfClasses.moveClassIn(classEntry);
+			this.deobfPanel.deobfClasses.moveClassOut(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
 		// Local move
 		else if (isOldOb) {
-			this.obfPanel.obfClasses.moveClassTree(classEntry, null);
-			this.obfPanel.obfClasses.removeNodeIfEmpty(this.obfPanel.obfClasses.getPackageNode(classEntry));
+			this.obfPanel.obfClasses.moveClassIn(classEntry);
 			this.obfPanel.obfClasses.reload();
 		} else {
-			this.deobfPanel.deobfClasses.moveClassTree(classEntry, null);
-			this.deobfPanel.deobfClasses.removeNodeIfEmpty(this.deobfPanel.deobfClasses.getPackageNode(classEntry));
+			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 		}
 

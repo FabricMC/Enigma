@@ -21,6 +21,7 @@ import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
@@ -39,6 +40,8 @@ public class ClassSelector extends JTree {
 	private ClassSelectionListener selectionListener;
 	private RenameSelectionListener renameSelectionListener;
 	private Comparator<ClassEntry> comparator;
+
+	private final Map<ClassEntry, ClassEntry> displayedObfToDeobf = new HashMap<>();
 
 	public ClassSelector(Gui gui, Comparator<ClassEntry> comparator, boolean isRenamable) {
 		this.comparator = comparator;
@@ -144,6 +147,8 @@ public class ClassSelector extends JTree {
 	}
 
 	public void setClasses(Collection<ClassEntry> classEntries) {
+		displayedObfToDeobf.clear();
+
 		List<StateEntry> state = getExpansionState(this);
 		if (classEntries == null) {
 			setModel(null);
@@ -205,13 +210,15 @@ public class ClassSelector extends JTree {
 		for (String packageName : packagedClassEntries.keySet()) {
 			// sort the class entries
 			List<ClassEntry> classEntriesInPackage = Lists.newArrayList(packagedClassEntries.get(packageName));
-			classEntriesInPackage.sort(this.comparator);
+			classEntriesInPackage.sort((o1, o2) -> comparator.compare(translator.translate(o1), translator.translate(o2)));
 
 			// create the nodes in order
 			for (ClassEntry obfClass : classEntriesInPackage) {
 				ClassEntry deobfClass = translator.translate(obfClass);
 				ClassSelectorPackageNode node = packages.get(packageName);
-				node.add(new ClassSelectorClassNode(obfClass, deobfClass));
+				ClassSelectorClassNode classNode = new ClassSelectorClassNode(obfClass, deobfClass);
+				displayedObfToDeobf.put(obfClass, deobfClass);
+				node.add(classNode);
 			}
 		}
 
@@ -367,6 +374,11 @@ public class ClassSelector extends JTree {
 		return null;
 	}
 
+	@Nullable
+	public ClassEntry getDisplayedDeobf(ClassEntry obfEntry) {
+		return displayedObfToDeobf.get(obfEntry);
+	}
+
 	public ClassSelectorPackageNode getPackageNode(ClassSelector selector, ClassEntry entry) {
 		ClassSelectorPackageNode packageNode = getPackageNode(entry);
 
@@ -424,6 +436,9 @@ public class ClassSelector extends JTree {
 			DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) packageNode.getChildAt(i);
 			if (childNode.getUserObject() instanceof ClassEntry && childNode.getUserObject().equals(entry)) {
 				model.removeNodeFromParent(childNode);
+				if (childNode instanceof ClassSelectorClassNode) {
+					displayedObfToDeobf.remove(((ClassSelectorClassNode) childNode).getObfEntry());
+				}
 				break;
 			}
 		}
@@ -434,11 +449,22 @@ public class ClassSelector extends JTree {
 			((DefaultTreeModel) getModel()).removeNodeFromParent(packageNode);
 	}
 
-	public void moveClassTree(ClassEntry classEntry, ClassSelector otherSelector) {
-		if (otherSelector == null) {
-			removeNode(getPackageNode(classEntry), classEntry);
-		}
+	public void moveClassIn(ClassEntry classEntry) {
+		removeEntry(classEntry);
 		insertNode(classEntry);
+	}
+
+	public void moveClassOut(ClassEntry classEntry) {
+		removeEntry(classEntry);
+	}
+
+	private void removeEntry(ClassEntry classEntry) {
+		ClassEntry previousDeobf = displayedObfToDeobf.get(classEntry);
+		if (previousDeobf != null) {
+			ClassSelectorPackageNode packageNode = getPackageNode(previousDeobf);
+			removeNode(packageNode, previousDeobf);
+			removeNodeIfEmpty(packageNode);
+		}
 	}
 
 	public ClassSelectorPackageNode getOrCreatePackage(ClassEntry entry) {
@@ -458,6 +484,8 @@ public class ClassSelector extends JTree {
 		DefaultTreeModel model = (DefaultTreeModel) getModel();
 		ClassSelectorClassNode classNode = new ClassSelectorClassNode(obfEntry, deobfEntry);
 		model.insertNodeInto(classNode, packageNode, getPlacementIndex(packageNode, classNode));
+
+		displayedObfToDeobf.put(obfEntry, deobfEntry);
 	}
 
 	public void reload() {
