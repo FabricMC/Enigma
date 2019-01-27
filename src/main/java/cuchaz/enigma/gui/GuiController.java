@@ -96,7 +96,7 @@ public class GuiController {
 	public void saveMappings(MappingFormat format, Path path) {
 		EntryRemapper mapper = deobfuscator.getMapper();
 
-		MappingDelta delta = mapper.takeMappingDelta();
+		MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
 		boolean saveAll = !path.equals(loadedMappingPath);
 
 		ProgressDialog.runInThread(this.gui.getFrame(), progress -> {

@@ -15,8 +15,6 @@ import java.util.Collection;
 public class EntryRemapper {
 	private final DeltaTrackingTree<EntryMapping> obfToDeobf;
 
-	private final JarIndex obfIndex;
-
 	private final EntryResolver obfResolver;
 	private final Translator deobfuscator;
 
@@ -25,7 +23,6 @@ public class EntryRemapper {
 	public EntryRemapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf) {
 		this.obfToDeobf = new DeltaTrackingTree<>(obfToDeobf);
 
-		this.obfIndex = jarIndex;
 		this.obfResolver = jarIndex.getEntryResolver();
 
 		this.deobfuscator = new MappingTranslator(obfToDeobf, obfResolver);
@@ -85,7 +82,7 @@ public class EntryRemapper {
 		return obfToDeobf;
 	}
 
-	public MappingDelta takeMappingDelta() {
+	public MappingDelta<EntryMapping> takeMappingDelta() {
 		return obfToDeobf.takeDelta();
 	}
 

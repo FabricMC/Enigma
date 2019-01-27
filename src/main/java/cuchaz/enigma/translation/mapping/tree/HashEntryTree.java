@@ -1,5 +1,9 @@
 package cuchaz.enigma.translation.mapping.tree;
 
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
@@ -8,6 +12,15 @@ import java.util.stream.Collectors;
 
 public class HashEntryTree<T> implements EntryTree<T> {
 	private final Map<Entry<?>, HashTreeNode<T>> root = new HashMap<>();
+
+	public HashEntryTree() {
+	}
+
+	public HashEntryTree(EntryTree<T> tree) {
+		for (EntryTreeNode<T> node : tree.getAllNodes()) {
+			insert(node.getEntry(), node.getValue());
+		}
+	}
 
 	@Override
 	public void insert(Entry<?> entry, T value) {
@@ -155,5 +168,14 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	@Override
 	public boolean isEmpty() {
 		return root.isEmpty();
+	}
+
+	@Override
+	public HashEntryTree<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		HashEntryTree<T> translatedTree = new HashEntryTree<>();
+		for (EntryTreeNode<T> node : getAllNodes()) {
+			translatedTree.insert(translator.translate(node.getEntry()), node.getValue());
+		}
+		return translatedTree;
 	}
 }

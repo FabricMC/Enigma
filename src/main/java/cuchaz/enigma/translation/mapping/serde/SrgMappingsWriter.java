@@ -29,7 +29,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 	INSTANCE;
 
 	@Override
-	public void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
+	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress) {
 		try {
 			Files.deleteIfExists(path);
 			Files.createFile(path);
