@@ -3,9 +3,9 @@ package cuchaz.enigma.translation.representation;
 import cuchaz.enigma.bytecode.translators.TranslationSignatureVisitor;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
@@ -78,7 +78,12 @@ public class Signature implements Translatable {
 
 	@Override
 	public int hashCode() {
-		return signature.hashCode() | (isType ? 1 : 0) << 16;
+		int hash = (isType ? 1 : 0) << 16;
+		if (signature != null) {
+			hash |= signature.hashCode();
+		}
+
+		return hash;
 	}
 
 	@Override

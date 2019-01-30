@@ -30,12 +30,12 @@ public class Token implements Comparable<Token> {
 		return to.length() - length;
 	}
 
-	public String rename(String source, String to) {
+	public void rename(StringBuffer source, String to) {
 		int oldEnd = this.end;
 		this.text = to;
 		this.end = this.start + to.length();
 
-		return source.substring(0, this.start) + to + source.substring(oldEnd);
+		source.replace(start, oldEnd, to);
 	}
 
 	public Token move(int offset) {
@@ -64,7 +64,7 @@ public class Token implements Comparable<Token> {
 	}
 
 	public boolean equals(Token other) {
-		return start == other.start && end == other.end;
+		return start == other.start && end == other.end && text.equals(other.text);
 	}
 
 	@Override

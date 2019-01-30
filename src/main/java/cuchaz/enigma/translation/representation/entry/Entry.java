@@ -22,6 +22,10 @@ import java.util.List;
 public interface Entry<P extends Entry<?>> extends Translatable {
 	String getName();
 
+	default String getSourceRemapName() {
+		return getName();
+	}
+
 	@Nullable
 	P getParent();
 

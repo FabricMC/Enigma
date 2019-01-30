@@ -6,14 +6,15 @@ import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class MappingValidator {
-	private final EntryTree<EntryMapping> deobfToObf;
+	private final EntryTree<EntryMapping> obfToDeobf;
 	private final Translator deobfuscator;
 	private final EntryResolver entryResolver;
 
-	public MappingValidator(EntryTree<EntryMapping> deobfToObf, Translator deobfuscator, EntryResolver entryResolver) {
-		this.deobfToObf = deobfToObf;
+	public MappingValidator(EntryTree<EntryMapping> obfToDeobf, Translator deobfuscator, EntryResolver entryResolver) {
+		this.obfToDeobf = obfToDeobf;
 		this.deobfuscator = deobfuscator;
 		this.entryResolver = entryResolver;
 	}
@@ -28,8 +29,11 @@ public class MappingValidator {
 
 	private void validateUnique(Entry<?> entry, String name) {
 		Entry<?> translatedEntry = deobfuscator.translate(entry);
-		Collection<Entry<?>> siblings = deobfToObf.getSiblings(translatedEntry);
-		if (!isUnique(translatedEntry, siblings, name)) {
+		Collection<Entry<?>> translatedSiblings = obfToDeobf.getSiblings(entry).stream()
+				.map(deobfuscator::translate)
+				.collect(Collectors.toList());
+
+		if (!isUnique(translatedEntry, translatedSiblings, name)) {
 			throw new IllegalNameException(name, "Name is not unique in " + translatedEntry.getParent() + "!");
 		}
 	}

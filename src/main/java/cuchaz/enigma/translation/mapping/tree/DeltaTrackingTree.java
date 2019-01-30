@@ -1,5 +1,9 @@
 package cuchaz.enigma.translation.mapping.tree;
 
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
@@ -10,11 +14,13 @@ import java.util.Iterator;
 public class DeltaTrackingTree<T> implements EntryTree<T> {
 	private final EntryTree<T> delegate;
 
+	private EntryTree<T> deltaReference;
 	private EntryTree<Object> additions = new HashEntryTree<>();
 	private EntryTree<Object> deletions = new HashEntryTree<>();
 
 	public DeltaTrackingTree(EntryTree<T> delegate) {
 		this.delegate = delegate;
+		this.deltaReference = new HashEntryTree<>(delegate);
 	}
 
 	public DeltaTrackingTree() {
@@ -40,7 +46,7 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 	}
 
 	public void trackAddition(Entry<?> entry) {
-		deletions.remove(entry);
+		deletions.insert(entry, MappingDelta.PLACEHOLDER);
 		additions.insert(entry, MappingDelta.PLACEHOLDER);
 	}
 
@@ -82,6 +88,14 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 	}
 
 	@Override
+	public DeltaTrackingTree<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		DeltaTrackingTree<T> translatedTree = new DeltaTrackingTree<>(delegate.translate(translator, resolver, mappings));
+		translatedTree.additions = additions.translate(translator, resolver, mappings);
+		translatedTree.deletions = deletions.translate(translator, resolver, mappings);
+		return translatedTree;
+	}
+
+	@Override
 	public Collection<Entry<?>> getAllEntries() {
 		return delegate.getAllEntries();
 	}
@@ -96,13 +110,14 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 		return delegate.iterator();
 	}
 
-	public MappingDelta takeDelta() {
-		MappingDelta delta = new MappingDelta(additions, deletions);
+	public MappingDelta<T> takeDelta() {
+		MappingDelta<T> delta = new MappingDelta<>(deltaReference, additions, deletions);
 		resetDelta();
 		return delta;
 	}
 
 	private void resetDelta() {
+		deltaReference = new HashEntryTree<>(delegate);
 		additions = new HashEntryTree<>();
 		deletions = new HashEntryTree<>();
 	}

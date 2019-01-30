@@ -17,6 +17,7 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.NameValidator;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
@@ -125,6 +126,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return parent;
 	}
 
+	@Nonnull
 	public ClassEntry getOutermostClass() {
 		if (parent == null) {
 			return this;
@@ -178,6 +180,15 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 			return name.substring(innerClassPos + 1);
 		}
 		return name;
+	}
+
+	@Override
+	public String getSourceRemapName() {
+		ClassEntry outerClass = getOuterClass();
+		if (outerClass != null) {
+			return outerClass.getSourceRemapName() + "." + name;
+		}
+		return getSimpleName();
 	}
 
 	@Override

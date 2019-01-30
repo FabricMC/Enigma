@@ -68,27 +68,28 @@ public class TestDeobfed {
 	public void decompile()
 		throws Exception {
 		Deobfuscator deobfuscator = new Deobfuscator(jar);
-		deobfuscator.getSourceTree("a");
-		deobfuscator.getSourceTree("b");
-		deobfuscator.getSourceTree("c");
-		deobfuscator.getSourceTree("d");
-		deobfuscator.getSourceTree("d$1");
-		deobfuscator.getSourceTree("e");
-		deobfuscator.getSourceTree("f");
-		deobfuscator.getSourceTree("g");
-		deobfuscator.getSourceTree("g$a");
-		deobfuscator.getSourceTree("g$a$a");
-		deobfuscator.getSourceTree("g$b");
-		deobfuscator.getSourceTree("g$b$a");
-		deobfuscator.getSourceTree("h");
-		deobfuscator.getSourceTree("h$a");
-		deobfuscator.getSourceTree("h$a$a");
-		deobfuscator.getSourceTree("h$b");
-		deobfuscator.getSourceTree("h$b$a");
-		deobfuscator.getSourceTree("h$b$a$a");
-		deobfuscator.getSourceTree("h$b$a$b");
-		deobfuscator.getSourceTree("i");
-		deobfuscator.getSourceTree("i$a");
-		deobfuscator.getSourceTree("i$b");
+		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		sourceProvider.getSources("a");
+		sourceProvider.getSources("b");
+		sourceProvider.getSources("c");
+		sourceProvider.getSources("d");
+		sourceProvider.getSources("d$1");
+		sourceProvider.getSources("e");
+		sourceProvider.getSources("f");
+		sourceProvider.getSources("g");
+		sourceProvider.getSources("g$a");
+		sourceProvider.getSources("g$a$a");
+		sourceProvider.getSources("g$b");
+		sourceProvider.getSources("g$b$a");
+		sourceProvider.getSources("h");
+		sourceProvider.getSources("h$a");
+		sourceProvider.getSources("h$a$a");
+		sourceProvider.getSources("h$b");
+		sourceProvider.getSources("h$b$a");
+		sourceProvider.getSources("h$b$a$a");
+		sourceProvider.getSources("h$b$a$b");
+		sourceProvider.getSources("i");
+		sourceProvider.getSources("i$a");
+		sourceProvider.getSources("i$b");
 	}
 }

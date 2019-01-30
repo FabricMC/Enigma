@@ -14,7 +14,6 @@ package cuchaz.enigma.analysis.index;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.analysis.ParsedJar;
-import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -25,7 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-public class JarIndex implements JarIndexer, RemappableIndex {
+public class JarIndex implements JarIndexer {
 	private final EntryIndex entryIndex;
 	private final InheritanceIndex inheritanceIndex;
 	private final ReferenceIndex referenceIndex;
@@ -51,25 +50,6 @@ public class JarIndex implements JarIndexer, RemappableIndex {
 		ReferenceIndex referenceIndex = new ReferenceIndex();
 		BridgeMethodIndex bridgeMethodIndex = new BridgeMethodIndex(entryIndex, referenceIndex);
 		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex);
-	}
-
-	@Override
-	public void remap(Translator translator) {
-		entryIndex.remap(translator);
-		inheritanceIndex.remap(translator);
-		bridgeMethodIndex.remap(translator);
-	}
-
-	@Override
-	public JarIndex remapped(Translator translator) {
-		EntryIndex entryIndex = this.entryIndex.remapped(translator);
-		InheritanceIndex inheritanceIndex = this.inheritanceIndex.remapped(translator);
-		BridgeMethodIndex bridgeMethodIndex = this.bridgeMethodIndex.remapped(translator);
-
-		JarIndex remappedIndex = new JarIndex(entryIndex, inheritanceIndex, this.referenceIndex, bridgeMethodIndex);
-		remappedIndex.methodImplementations.putAll(methodImplementations);
-
-		return remappedIndex;
 	}
 
 	public void indexJar(ParsedJar jar, Consumer<String> progress) {

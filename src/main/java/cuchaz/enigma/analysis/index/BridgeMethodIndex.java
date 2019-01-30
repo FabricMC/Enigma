@@ -1,7 +1,6 @@
 package cuchaz.enigma.analysis.index;
 
 import com.google.common.collect.Maps;
-import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
@@ -10,7 +9,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
-public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
+public class BridgeMethodIndex implements JarIndexer {
 	private final EntryIndex entryIndex;
 	private final ReferenceIndex referenceIndex;
 
@@ -19,19 +18,6 @@ public class BridgeMethodIndex implements JarIndexer, RemappableIndex {
 	public BridgeMethodIndex(EntryIndex entryIndex, ReferenceIndex referenceIndex) {
 		this.entryIndex = entryIndex;
 		this.referenceIndex = referenceIndex;
-	}
-
-	@Override
-	public void remap(Translator translator) {
-		accessedToBridge = translator.translate(accessedToBridge);
-	}
-
-	@Override
-	public BridgeMethodIndex remapped(Translator translator) {
-		BridgeMethodIndex index = new BridgeMethodIndex(entryIndex, referenceIndex);
-		index.accessedToBridge = translator.translate(accessedToBridge);
-
-		return index;
 	}
 
 	@Override

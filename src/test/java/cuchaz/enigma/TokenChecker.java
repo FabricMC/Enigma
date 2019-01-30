@@ -34,11 +34,12 @@ public class TokenChecker {
 
 	protected String getDeclarationToken(Entry<?> entry) {
 		// decompile the class
-		CompilationUnit tree = deobfuscator.getSourceTree(entry.getContainingClass().getFullName());
+		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		CompilationUnit tree = sourceProvider.getSources(entry.getContainingClass().getFullName());
 		// DEBUG
 		// tree.acceptVisitor( new TreeDumpVisitor( new File( "tree." + entry.getClassName().replace( '/', '.' ) + ".txt" ) ), null );
-		String source = deobfuscator.getSource(tree);
-		SourceIndex index = deobfuscator.getSourceIndex(tree, source);
+		String source = sourceProvider.writeSourceToString(tree);
+		SourceIndex index = SourceIndex.buildIndex(source, tree, true);
 
 		// get the token value
 		Token token = index.getDeclarationToken(entry);
@@ -51,9 +52,10 @@ public class TokenChecker {
 	@SuppressWarnings("unchecked")
 	protected Collection<String> getReferenceTokens(EntryReference<? extends Entry<?>, ? extends Entry<?>> reference) {
 		// decompile the class
-		CompilationUnit tree = deobfuscator.getSourceTree(reference.context.getContainingClass().getFullName());
-		String source = deobfuscator.getSource(tree);
-		SourceIndex index = deobfuscator.getSourceIndex(tree, source);
+		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		CompilationUnit tree = sourceProvider.getSources(reference.context.getContainingClass().getFullName());
+		String source = sourceProvider.writeSourceToString(tree);
+		SourceIndex index = SourceIndex.buildIndex(source, tree, true);
 
 		// get the token values
 		List<String> values = Lists.newArrayList();

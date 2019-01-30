@@ -12,8 +12,6 @@ buildscript {
     }
 }
 
-import org.apache.tools.ant.filters.ReplaceTokens
-
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -21,7 +19,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.13.0'
+version = '0.13.1'
 
 def filteredSourceDir = file("${buildDir}/filtered")
 

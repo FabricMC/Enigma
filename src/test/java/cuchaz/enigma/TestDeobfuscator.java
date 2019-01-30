@@ -51,6 +51,7 @@ public class TestDeobfuscator {
 	public void decompileClass()
 		throws Exception {
 		Deobfuscator deobfuscator = getDeobfuscator();
-		deobfuscator.getSource(deobfuscator.getSourceTree("a"));
+		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		sourceProvider.writeSourceToString(sourceProvider.getSources("a"));
 	}
 }

@@ -14,23 +14,16 @@ package cuchaz.enigma.analysis;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.patterns.Pattern;
-import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 
 public class SourceIndexVisitor implements IAstVisitor<SourceIndex, Void> {
-	private final ReferencedEntryPool entryPool;
-
-	public SourceIndexVisitor(ReferencedEntryPool entryPool) {
-		this.entryPool = entryPool;
-	}
-
 	@Override
 	public Void visitTypeDeclaration(TypeDeclaration node, SourceIndex index) {
 		TypeDefinition def = node.getUserData(Keys.TYPE_DEFINITION);
 		ClassDefEntry classEntry = ClassDefEntry.parse(def);
 		index.addDeclaration(node.getNameToken(), classEntry);
 
-		return node.acceptVisitor(new SourceIndexClassVisitor(entryPool, classEntry), index);
+		return node.acceptVisitor(new SourceIndexClassVisitor(classEntry), index);
 	}
 
 	protected Void recurse(AstNode node, SourceIndex index) {

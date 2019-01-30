@@ -1,16 +1,14 @@
 package cuchaz.enigma.bytecode.translators;
 
+import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.NameValidator;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.Signature;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
 import org.objectweb.asm.*;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class TranslationMethodVisitor extends MethodVisitor {
@@ -84,40 +82,6 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	}
 
 	@Override
-	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-		hasParameterMeta = true;
-
-		String translatedSignature = translator.translate(Signature.createTypedSignature(signature)).toString();
-		int argumentIndex = methodEntry.getArgumentIndex(ownerEntry, index);
-
-		if (argumentIndex >= 0) {
-			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, true, new TypeDescriptor(desc));
-			LocalVariableDefEntry translatedEntry = translator.translate(entry);
-			String translatedName = translatedEntry.getName();
-
-			if (translatedName.equals(entry.getName())) {
-				List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
-				List<TypeDescriptor> translatedArguments = arguments.stream()
-						.map(translator::translate)
-						.collect(Collectors.toList());
-
-				boolean argument = argumentIndex < arguments.size();
-				if (argument) {
-					translatedName = inferArgumentName(argumentIndex, translatedEntry.getDesc(), translatedArguments);
-				} else {
-					translatedName = inferLocalVariableName(argumentIndex, translatedEntry.getDesc());
-				}
-			}
-
-			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
-		} else {
-			// Handle "this" variable
-			TypeDescriptor translatedDesc = translator.translate(new TypeDescriptor(desc));
-			super.visitLocalVariable(name, translatedDesc.toString(), translatedSignature, start, end, index);
-		}
-	}
-
-	@Override
 	public void visitTypeInsn(int opcode, String type) {
 		ClassEntry translatedEntry = translator.translate(new ClassEntry(type));
 		super.visitTypeInsn(opcode, translatedEntry.getFullName());
@@ -154,10 +118,44 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	}
 
 	@Override
+	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+		hasParameterMeta = true;
+
+		String translatedSignature = translator.translate(Signature.createTypedSignature(signature)).toString();
+		int argumentIndex = methodEntry.getArgumentIndex(ownerEntry, index);
+
+		if (argumentIndex >= 0) {
+			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, true, new TypeDescriptor(desc));
+			LocalVariableDefEntry translatedEntry = translator.translate(entry);
+			String translatedName = translatedEntry.getName();
+
+			if (translatedName.equals(entry.getName())) {
+				List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
+				List<TypeDescriptor> translatedArguments = arguments.stream()
+						.map(translator::translate)
+						.collect(Collectors.toList());
+
+				boolean argument = argumentIndex < arguments.size();
+				if (argument) {
+					translatedName = LocalNameGenerator.generateArgumentName(argumentIndex, translatedEntry.getDesc(), translatedArguments);
+				} else {
+					translatedName = LocalNameGenerator.generateLocalVariableName(argumentIndex, translatedEntry.getDesc());
+				}
+			}
+
+			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
+		} else {
+			// Handle "this" variable
+			TypeDescriptor translatedDesc = translator.translate(new TypeDescriptor(desc));
+			super.visitLocalVariable(name, translatedDesc.toString(), translatedSignature, start, end, index);
+		}
+	}
+
+	@Override
 	public void visitEnd() {
 		// If we didn't receive any parameter metadata, generate it
 		if (!hasParameterMeta) {
-			List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
+			List<TypeDescriptor> arguments = translator.translate(methodEntry.getDesc()).getArgumentDescs();
 			int offset = ((methodEntry.getAccess().getFlags() & Opcodes.ACC_ABSTRACT) != 0) ? 1 : 0;
 
 			for (int argumentIndex = 0; argumentIndex < arguments.size(); argumentIndex++) {
@@ -165,7 +163,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 				LocalVariableEntry translatedEntry = translator.translate(entry);
 				String translatedName = translatedEntry.getName();
 				if (translatedName.equals(entry.getName())) {
-					super.visitParameter(inferArgumentName(argumentIndex, arguments.get(argumentIndex), arguments), 0);
+					super.visitParameter(LocalNameGenerator.generateArgumentName(argumentIndex, arguments.get(argumentIndex), arguments), 0);
 				} else {
 					super.visitParameter(translatedName, 0);
 				}
@@ -174,40 +172,5 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			}
 		}
 		super.visitEnd();
-	}
-
-	private String inferArgumentName(int index, TypeDescriptor desc, Collection<TypeDescriptor> arguments) {
-		boolean uniqueType = arguments.stream().filter(desc::equals).count() <= 1;
-		String translatedName;
-		int nameIndex = index + 1;
-		StringBuilder nameBuilder = new StringBuilder(getTypeName(desc));
-		if (!uniqueType || NameValidator.isReserved(nameBuilder.toString())) {
-			nameBuilder.append(nameIndex);
-		}
-		translatedName = nameBuilder.toString();
-		return translatedName;
-	}
-
-	private String inferLocalVariableName(int index, TypeDescriptor desc) {
-		int nameIndex = index + 1;
-		return getTypeName(desc) + nameIndex;
-	}
-
-	private String getTypeName(TypeDescriptor desc) {
-		// Unfortunately each of these have different name getters, so they have different code paths
-		if (desc.isPrimitive()) {
-			TypeDescriptor.Primitive argCls = desc.getPrimitive();
-			return argCls.name().toLowerCase(Locale.ROOT);
-		} else if (desc.isArray()) {
-			// List types would require this whole block again, so just go with aListx
-			return "arr";
-		} else if (desc.isType()) {
-			String typeName = desc.getTypeEntry().getSimpleName().replace("$", "");
-			typeName = typeName.substring(0, 1).toLowerCase(Locale.ROOT) + typeName.substring(1);
-			return typeName;
-		} else {
-			System.err.println("Encountered invalid argument type descriptor " + desc.toString());
-			return "var";
-		}
 	}
 }

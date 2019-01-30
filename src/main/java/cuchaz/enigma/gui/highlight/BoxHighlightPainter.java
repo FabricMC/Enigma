@@ -34,7 +34,9 @@ public class BoxHighlightPainter implements Highlighter.HighlightPainter {
 	public static Rectangle getBounds(JTextComponent text, int start, int end) {
 		try {
 			// determine the bounds of the text
-			Rectangle bounds = text.modelToView(start).union(text.modelToView(end));
+			Rectangle startRect = text.modelToView(start);
+			Rectangle endRect = text.modelToView(end);
+			Rectangle bounds = startRect.union(endRect);
 
 			// adjust the box so it looks nice
 			bounds.x -= 2;

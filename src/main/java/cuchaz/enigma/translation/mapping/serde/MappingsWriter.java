@@ -8,5 +8,9 @@ import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import java.nio.file.Path;
 
 public interface MappingsWriter {
-	void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress);
+	void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress);
+
+	default void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progress) {
+		write(mappings, MappingDelta.added(mappings), path, progress);
+	}
 }
