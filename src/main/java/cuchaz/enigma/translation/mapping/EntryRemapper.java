@@ -36,12 +36,15 @@ public class EntryRemapper {
 
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
 		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, ResolutionStrategy.RESOLVE_ROOT);
-		for (E resolvedEntry : resolvedEntries) {
-			if (deobfMapping != null) {
+
+		if (deobfMapping != null) {
+			for (E resolvedEntry : resolvedEntries) {
 				validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
 			}
+		}
 
-			obfToDeobf.insert(obfuscatedEntry, deobfMapping);
+		for (E resolvedEntry : resolvedEntries) {
+			obfToDeobf.insert(resolvedEntry, deobfMapping);
 		}
 	}
 
