@@ -19,8 +19,8 @@ public class Themes {
 
     public static void updateTheme(Gui gui) {
         Config config = Config.getInstance();
-        config.lookAndFeel.apply(config);
         config.lookAndFeel.setGlobalLAF();
+        config.lookAndFeel.apply(config);
         try {
 	        config.saveConfig();
         } catch (IOException e) {

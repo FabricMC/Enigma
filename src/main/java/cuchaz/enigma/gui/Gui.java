@@ -91,12 +91,12 @@ public class Gui {
 	}
 
 	public Gui() {
+		Config.getInstance().lookAndFeel.setGlobalLAF();
+
 		// init frame
 		this.frame = new JFrame(Constants.NAME);
 		final Container pane = this.frame.getContentPane();
 		pane.setLayout(new BorderLayout());
-
-		Config.getInstance().lookAndFeel.setGlobalLAF();
 
 		if (Boolean.parseBoolean(System.getProperty("enigma.catchExceptions", "true"))) {
 			// install a global exception handler to the event thread
