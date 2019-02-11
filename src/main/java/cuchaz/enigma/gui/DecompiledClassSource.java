@@ -45,10 +45,10 @@ public class DecompiledClassSource {
 	private String remapToken(Token token, Token movedToken, Translator translator) {
 		EntryReference<Entry<?>, Entry<?>> reference = obfuscatedIndex.getReference(token);
 
-		if (deobfuscator.isRenamable(reference)) {
-			Entry<?> entry = reference.getNameableEntry();
-			Entry<?> translatedEntry = translator.translate(entry);
+		Entry<?> entry = reference.getNameableEntry();
+		Entry<?> translatedEntry = translator.translate(entry);
 
+		if (deobfuscator.isRenamable(reference)) {
 			if (isDeobfuscated(entry, translatedEntry)) {
 				highlightToken(movedToken, TokenHighlightType.DEOBFUSCATED);
 				return translatedEntry.getSourceRemapName();
@@ -60,12 +60,12 @@ public class DecompiledClassSource {
 				}
 
 				highlightToken(movedToken, TokenHighlightType.OBFUSCATED);
-
-				String defaultName = generateDefaultName(translatedEntry);
-				if (defaultName != null) {
-					return defaultName;
-				}
 			}
+		}
+
+		String defaultName = generateDefaultName(translatedEntry);
+		if (defaultName != null) {
+			return defaultName;
 		}
 
 		return null;

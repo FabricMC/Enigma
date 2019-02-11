@@ -32,6 +32,7 @@ import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -352,6 +353,8 @@ public class Deobfuscator {
 			} else if (name.equals("wait") && sig.equals("(JI)V")) {
 				return false;
 			}
+		} else if (obfEntry instanceof LocalVariableEntry && !((LocalVariableEntry) obfEntry).isArgument()) {
+			return false;
 		}
 
 		return this.jarIndex.getEntryIndex().hasEntry(obfEntry);
