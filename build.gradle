@@ -88,7 +88,7 @@ configurations {
 
 dependencies {
     compile 'com.google.guava:guava:27.0.1-jre'
-    compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.33.8-enigma'
+    compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.33.6'
     compile 'com.google.code.gson:gson:2.8.5'
     compile 'org.ow2.asm:asm:7.0'
     compile 'org.ow2.asm:asm-commons:7.0'
@@ -96,7 +96,7 @@ dependencies {
     compile 'org.ow2.asm:asm-util:7.0'
 
     application name: "darcula", version: "1.0.0"
-    application 'de.sciss:syntaxpane:1.1.+'
+    application 'de.sciss:syntaxpane:1.2.+'
 
     testCompile 'junit:junit:4.+'
     testCompile 'org.hamcrest:hamcrest-all:1.+'
