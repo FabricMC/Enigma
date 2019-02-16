@@ -165,7 +165,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		} else if (entry instanceof FieldEntry) {
 			String line = writeField((FieldEntry) entry, mapping);
 			writer.println(indent(line, depth));
-		} else if (entry instanceof LocalVariableEntry) {
+		} else if (entry instanceof LocalVariableEntry && mapping != null) {
 			String line = writeArgument((LocalVariableEntry) entry, mapping);
 			writer.println(indent(line, depth));
 		}
@@ -231,13 +231,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeArgument(LocalVariableEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("ARG ");
-		builder.append(entry.getIndex()).append(' ');
-
-		String mappedName = mapping != null ? mapping.getTargetName() : entry.getName();
-		builder.append(mappedName);
-
-		return builder.toString();
+		return "ARG " + entry.getIndex() + ' ' + mapping.getTargetName();
 	}
 
 	private void writeMapping(StringBuilder builder, EntryMapping mapping) {
