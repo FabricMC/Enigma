@@ -24,7 +24,7 @@ public class HashEntryTree<T> implements EntryTree<T> {
 
 	@Override
 	public void insert(Entry<?> entry, T value) {
-		List<HashTreeNode<T>> path = computePath(entry);
+		List<HashTreeNode<T>> path = computePath(entry, true);
 		path.get(path.size() - 1).putValue(value);
 		if (value == null) {
 			removeDeadAlong(path);
@@ -34,7 +34,11 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	@Override
 	@Nullable
 	public T remove(Entry<?> entry) {
-		List<HashTreeNode<T>> path = computePath(entry);
+		List<HashTreeNode<T>> path = computePath(entry, false);
+		if (path.isEmpty()) {
+			return null;
+		}
+
 		T value = path.get(path.size() - 1).removeValue();
 
 		removeDeadAlong(path);
@@ -68,7 +72,7 @@ public class HashEntryTree<T> implements EntryTree<T> {
 
 	@Override
 	public Collection<Entry<?>> getSiblings(Entry<?> entry) {
-		List<HashTreeNode<T>> path = computePath(entry);
+		List<HashTreeNode<T>> path = computePath(entry, false);
 		if (path.size() <= 1) {
 			return getSiblings(entry, root.keySet());
 		}
@@ -95,13 +99,13 @@ public class HashEntryTree<T> implements EntryTree<T> {
 			if (node == null) {
 				return null;
 			}
-			node = node.getChild(parentChain.get(i), false);
+			node = node.getChild(parentChain.get(i));
 		}
 
 		return node;
 	}
 
-	private List<HashTreeNode<T>> computePath(Entry<?> target) {
+	private List<HashTreeNode<T>> computePath(Entry<?> target, boolean make) {
 		List<Entry<?>> ancestry = target.getAncestry();
 		if (ancestry.isEmpty()) {
 			return Collections.emptyList();
@@ -110,11 +114,17 @@ public class HashEntryTree<T> implements EntryTree<T> {
 		List<HashTreeNode<T>> path = new ArrayList<>(ancestry.size());
 
 		Entry<?> rootEntry = ancestry.get(0);
-		HashTreeNode<T> node = root.computeIfAbsent(rootEntry, HashTreeNode::new);
+		HashTreeNode<T> node = make ? root.computeIfAbsent(rootEntry, HashTreeNode::new) : root.get(rootEntry);
 		path.add(node);
 
 		for (int i = 1; i < ancestry.size(); i++) {
-			node = node.getChild(ancestry.get(i), true);
+			if (node == null) {
+				return Collections.emptyList();
+			}
+
+			Entry<?> ancestor = ancestry.get(i);
+			node = make ? node.computeChild(ancestor) : node.getChild(ancestor);
+
 			path.add(node);
 		}
 
