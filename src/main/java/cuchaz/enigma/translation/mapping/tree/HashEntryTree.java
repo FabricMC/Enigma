@@ -115,15 +115,18 @@ public class HashEntryTree<T> implements EntryTree<T> {
 
 		Entry<?> rootEntry = ancestry.get(0);
 		HashTreeNode<T> node = make ? root.computeIfAbsent(rootEntry, HashTreeNode::new) : root.get(rootEntry);
+		if (node == null) {
+			return Collections.emptyList();
+		}
+
 		path.add(node);
 
 		for (int i = 1; i < ancestry.size(); i++) {
+			Entry<?> ancestor = ancestry.get(i);
+			node = make ? node.computeChild(ancestor) : node.getChild(ancestor);
 			if (node == null) {
 				return Collections.emptyList();
 			}
-
-			Entry<?> ancestor = ancestry.get(i);
-			node = make ? node.computeChild(ancestor) : node.getChild(ancestor);
 
 			path.add(node);
 		}
