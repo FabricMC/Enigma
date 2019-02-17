@@ -34,10 +34,6 @@ public class BridgeMethodIndex implements JarIndexer {
 	public void processIndex(EntryResolver resolver) {
 		// look for access and bridged methods
 		for (MethodEntry methodEntry : entryIndex.getMethods()) {
-			if (methodEntry.getParent().getName().equals("fn") && (methodEntry.getName().equals("compareTo") || methodEntry.getName().equals("l"))) {
-				System.out.println();
-			}
-
 			AccessFlags access = entryIndex.getMethodAccess(methodEntry);
 			if (access == null || !access.isSynthetic()) {
 				continue;
