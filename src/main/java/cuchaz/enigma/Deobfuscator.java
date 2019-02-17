@@ -214,7 +214,7 @@ public class Deobfuscator {
 					ClassNode node = parsedJar.getClassNode(entry.getFullName());
 					if (node != null) {
 						ClassNode translatedNode = new ClassNode();
-						node.accept(new TranslationClassVisitor(jarIndex, translator, Opcodes.ASM5, translatedNode));
+						node.accept(new TranslationClassVisitor(translator, Opcodes.ASM5, translatedNode));
 						return translatedNode;
 					}
 
@@ -282,7 +282,7 @@ public class Deobfuscator {
 		Translator deobfuscator = mapper.getDeobfuscator();
 		writeTransformedJar(out, progress, (node, visitor) -> {
 			ClassEntry entry = new ClassEntry(node.name);
-			node.accept(new TranslationClassVisitor(jarIndex, deobfuscator, Opcodes.ASM5, visitor));
+			node.accept(new TranslationClassVisitor(deobfuscator, Opcodes.ASM5, visitor));
 			return deobfuscator.translate(entry).getFullName();
 		});
 	}

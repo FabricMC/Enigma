@@ -11,9 +11,7 @@
 
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -22,14 +20,12 @@ import org.objectweb.asm.*;
 import java.util.Arrays;
 
 public class TranslationClassVisitor extends ClassVisitor {
-	private final JarIndex index;
 	private final Translator translator;
 
 	private ClassDefEntry obfClassEntry;
 
-	public TranslationClassVisitor(JarIndex index, Translator translator, int api, ClassVisitor cv) {
+	public TranslationClassVisitor(Translator translator, int api, ClassVisitor cv) {
 		super(api, cv);
-		this.index = index;
 		this.translator = translator;
 	}
 
@@ -60,8 +56,7 @@ public class TranslationClassVisitor extends ClassVisitor {
 		for (int i = 0; i < exceptions.length; i++) {
 			translatedExceptions[i] = translator.translate(new ClassEntry(exceptions[i])).getFullName();
 		}
-		AccessFlags translatedAccess = translatedEntry.getAccess();
-		MethodVisitor mv = super.visitMethod(translatedAccess.getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedEntry.getSignature().toString(), translatedExceptions);
+		MethodVisitor mv = super.visitMethod(translatedEntry.getAccess().getFlags(), translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedEntry.getSignature().toString(), translatedExceptions);
 		return new TranslationMethodVisitor(translator, obfClassEntry, entry, api, mv);
 	}
 

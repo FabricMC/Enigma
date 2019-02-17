@@ -34,12 +34,14 @@ public class BridgeMethodIndex implements JarIndexer {
 	public void processIndex(EntryResolver resolver) {
 		// look for access and bridged methods
 		for (MethodEntry methodEntry : entryIndex.getMethods()) {
-			AccessFlags access = entryIndex.getMethodAccess(methodEntry);
+			MethodDefEntry methodDefEntry = (MethodDefEntry) methodEntry;
+
+			AccessFlags access = methodDefEntry.getAccess();
 			if (access == null || !access.isSynthetic()) {
 				continue;
 			}
 
-			indexSyntheticMethod((MethodDefEntry) methodEntry, access);
+			indexSyntheticMethod(methodDefEntry, access);
 		}
 	}
 
