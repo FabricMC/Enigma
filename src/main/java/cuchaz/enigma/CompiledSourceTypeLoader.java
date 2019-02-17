@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -23,16 +24,23 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 
 public class CompiledSourceTypeLoader extends CachingTypeLoader {
 	//Store one instance as the classpath shouldn't change during load
 	private static final ITypeLoader CLASSPATH_TYPE_LOADER = new CachingClasspathTypeLoader();
 
 	private final CompiledSource compiledSource;
+	private final LinkedList<Function<ClassVisitor, ClassVisitor>> visitors = new LinkedList<>();
 
 	public CompiledSourceTypeLoader(CompiledSource compiledSource) {
 		this.compiledSource = compiledSource;
+	}
+
+	public void addVisitor(Function<ClassVisitor, ClassVisitor> visitor) {
+		this.visitors.addFirst(visitor);
 	}
 
 	@Override
@@ -66,7 +74,13 @@ public class CompiledSourceTypeLoader extends CachingTypeLoader {
 		removeRedundantClassCalls(node);
 
 		ClassWriter writer = new ClassWriter(0);
-		node.accept(writer);
+
+		ClassVisitor visitor = writer;
+		for (Function<ClassVisitor, ClassVisitor> visitorFunction : this.visitors) {
+			visitor = visitorFunction.apply(visitor);
+		}
+
+		node.accept(visitor);
 
 		// we have a transformed class!
 		return writer.toByteArray();

@@ -22,13 +22,23 @@ import java.util.LinkedList;
 import java.util.Set;
 
 public class InheritanceIndex implements JarIndexer {
+	private final EntryIndex entryIndex;
+
 	private Multimap<ClassEntry, ClassEntry> classParents = HashMultimap.create();
 	private Multimap<ClassEntry, ClassEntry> classChildren = HashMultimap.create();
 
+	public InheritanceIndex(EntryIndex entryIndex) {
+		this.entryIndex = entryIndex;
+	}
+
 	@Override
 	public void indexClass(ClassDefEntry classEntry) {
+		if (classEntry.isJre()) {
+			return;
+		}
+
 		ClassEntry superClass = classEntry.getSuperClass();
-		if (superClass != null) {
+		if (superClass != null && !superClass.getName().equals("java/lang/Object")) {
 			indexParent(classEntry, superClass);
 		}
 
@@ -38,9 +48,6 @@ public class InheritanceIndex implements JarIndexer {
 	}
 
 	private void indexParent(ClassEntry childEntry, ClassEntry parentEntry) {
-		if (childEntry.isJre() || parentEntry.isJre()) {
-			return;
-		}
 		classParents.put(childEntry, parentEntry);
 		classChildren.put(parentEntry, childEntry);
 	}
@@ -70,6 +77,21 @@ public class InheritanceIndex implements JarIndexer {
 		return ancestors;
 	}
 
+	public Relation computeClassRelation(ClassEntry classEntry, ClassEntry potentialAncestor) {
+		if (potentialAncestor.getName().equals("java/lang/Object")) return Relation.RELATED;
+		if (!entryIndex.hasClass(classEntry)) return Relation.UNKNOWN;
+
+		for (ClassEntry ancestor : getAncestors(classEntry)) {
+			if (potentialAncestor.equals(ancestor)) {
+				return Relation.RELATED;
+			} else if (!entryIndex.hasClass(ancestor)) {
+				return Relation.UNKNOWN;
+			}
+		}
+
+		return Relation.UNRELATED;
+	}
+
 	public boolean isParent(ClassEntry classEntry) {
 		return classChildren.containsKey(classEntry);
 	}
@@ -77,5 +99,11 @@ public class InheritanceIndex implements JarIndexer {
 	public boolean hasParents(ClassEntry classEntry) {
 		Collection<ClassEntry> parents = classParents.get(classEntry);
 		return parents != null && !parents.isEmpty();
+	}
+
+	public enum Relation {
+		RELATED,
+		UNRELATED,
+		UNKNOWN
 	}
 }

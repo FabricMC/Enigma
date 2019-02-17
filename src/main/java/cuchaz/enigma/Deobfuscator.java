@@ -24,6 +24,7 @@ import cuchaz.enigma.analysis.IndexTreeBuilder;
 import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
+import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
@@ -81,7 +82,10 @@ public class Deobfuscator {
 
 		listener.accept("Preparing...");
 
-		this.obfSourceProvider = new SourceProvider(SourceProvider.createSettings(), new CompiledSourceTypeLoader(parsedJar));
+		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(parsedJar);
+		typeLoader.addVisitor(visitor -> new SourceFixVisitor(Opcodes.ASM5, visitor, jarIndex));
+
+		this.obfSourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
 
 		// init mappings
 		mapper = new EntryRemapper(jarIndex);
@@ -210,7 +214,7 @@ public class Deobfuscator {
 					ClassNode node = parsedJar.getClassNode(entry.getFullName());
 					if (node != null) {
 						ClassNode translatedNode = new ClassNode();
-						node.accept(new TranslationClassVisitor(translator, Opcodes.ASM5, translatedNode));
+						node.accept(new TranslationClassVisitor(jarIndex, translator, Opcodes.ASM5, translatedNode));
 						return translatedNode;
 					}
 
@@ -230,16 +234,19 @@ public class Deobfuscator {
 		}
 
 		//create a common instance outside the loop as mappings shouldn't be changing while this is happening
-		//synchronized to make sure the parallelStream doesn't CME with the cache
-		ITypeLoader typeLoader = new SynchronizedTypeLoader(new CompiledSourceTypeLoader(translatedClasses::get));
+		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(translatedClasses::get);
+		typeLoader.addVisitor(visitor -> new SourceFixVisitor(Opcodes.ASM5, visitor, jarIndex));
 
-		MetadataSystem metadataSystem = new Deobfuscator.NoRetryMetadataSystem(typeLoader);
+		//synchronized to make sure the parallelStream doesn't CME with the cache
+		ITypeLoader synchronizedTypeLoader = new SynchronizedTypeLoader(typeLoader);
+
+		MetadataSystem metadataSystem = new Deobfuscator.NoRetryMetadataSystem(synchronizedTypeLoader);
 
 		//ensures methods are loaded on classload and prevents race conditions
 		metadataSystem.setEagerMethodLoadingEnabled(true);
 
 		DecompilerSettings settings = SourceProvider.createSettings();
-		SourceProvider sourceProvider = new SourceProvider(settings, typeLoader, metadataSystem);
+		SourceProvider sourceProvider = new SourceProvider(settings, synchronizedTypeLoader, metadataSystem);
 
 		AtomicInteger count = new AtomicInteger();
 
@@ -275,7 +282,7 @@ public class Deobfuscator {
 		Translator deobfuscator = mapper.getDeobfuscator();
 		writeTransformedJar(out, progress, (node, visitor) -> {
 			ClassEntry entry = new ClassEntry(node.name);
-			node.accept(new TranslationClassVisitor(deobfuscator, Opcodes.ASM5, visitor));
+			node.accept(new TranslationClassVisitor(jarIndex, deobfuscator, Opcodes.ASM5, visitor));
 			return deobfuscator.translate(entry).getFullName();
 		});
 	}
