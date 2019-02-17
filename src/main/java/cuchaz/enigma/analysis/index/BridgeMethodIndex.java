@@ -53,10 +53,6 @@ public class BridgeMethodIndex implements JarIndexer {
 			return;
 		}
 
-		if (access.isBridge() && !isPotentialBridge(syntheticMethod, accessedMethod)) {
-			System.out.println("we don't agree here!");
-		}
-
 		if (access.isBridge() || isPotentialBridge(syntheticMethod, accessedMethod)) {
 			bridgeMethods.add(syntheticMethod);
 			accessedToBridge.put(accessedMethod, syntheticMethod);
