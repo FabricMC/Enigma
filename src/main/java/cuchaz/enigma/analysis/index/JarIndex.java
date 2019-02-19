@@ -46,9 +46,9 @@ public class JarIndex implements JarIndexer {
 
 	public static JarIndex empty() {
 		EntryIndex entryIndex = new EntryIndex();
-		InheritanceIndex inheritanceIndex = new InheritanceIndex();
+		InheritanceIndex inheritanceIndex = new InheritanceIndex(entryIndex);
 		ReferenceIndex referenceIndex = new ReferenceIndex();
-		BridgeMethodIndex bridgeMethodIndex = new BridgeMethodIndex(entryIndex, referenceIndex);
+		BridgeMethodIndex bridgeMethodIndex = new BridgeMethodIndex(entryIndex, inheritanceIndex, referenceIndex);
 		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex);
 	}
 
