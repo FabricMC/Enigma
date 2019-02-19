@@ -35,6 +35,8 @@ import javax.annotation.Nullable;
 import java.awt.event.ItemEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Deque;
@@ -320,7 +322,7 @@ public class GuiController {
 		DECOMPILER_SERVICE.submit(() -> {
 			try {
 				if (requiresDecompile) {
-					decompileSource(targetClass, deobfuscator.getObfSourceProvider());
+					currentSource = decompileSource(targetClass, deobfuscator.getObfSourceProvider());
 				}
 
 				remapSource(deobfuscator.getMapper().getDeobfuscator());
@@ -332,21 +334,28 @@ public class GuiController {
 		});
 	}
 
-	private void decompileSource(ClassEntry targetClass, SourceProvider sourceProvider) {
-		CompilationUnit sourceTree = sourceProvider.getSources(targetClass.getFullName());
-		if (sourceTree == null) {
-			gui.setEditorText("Unable to find class: " + targetClass);
-			return;
+	private DecompiledClassSource decompileSource(ClassEntry targetClass, SourceProvider sourceProvider) {
+		try {
+			CompilationUnit sourceTree = sourceProvider.getSources(targetClass.getFullName());
+			if (sourceTree == null) {
+				gui.setEditorText("Unable to find class: " + targetClass);
+				return DecompiledClassSource.text(targetClass, "Unable to find class");
+			}
+
+			DropImportAstTransform.INSTANCE.run(sourceTree);
+
+			String sourceString = sourceProvider.writeSourceToString(sourceTree);
+
+			SourceIndex index = SourceIndex.buildIndex(sourceString, sourceTree, true);
+			index.resolveReferences(deobfuscator.getMapper().getObfResolver());
+
+			return new DecompiledClassSource(targetClass, index);
+		} catch (Exception e) {
+			StringWriter traceWriter = new StringWriter();
+			e.printStackTrace(new PrintWriter(traceWriter));
+
+			return DecompiledClassSource.text(targetClass, traceWriter.toString());
 		}
-
-		DropImportAstTransform.INSTANCE.run(sourceTree);
-
-		String sourceString = sourceProvider.writeSourceToString(sourceTree);
-
-		SourceIndex index = SourceIndex.buildIndex(sourceString, sourceTree, true);
-		index.resolveReferences(deobfuscator.getMapper().getObfResolver());
-
-		currentSource = new DecompiledClassSource(targetClass, deobfuscator, index);
 	}
 
 	private void remapSource(Translator translator) {
@@ -354,7 +363,7 @@ public class GuiController {
 			return;
 		}
 
-		currentSource.remapSource(translator);
+		currentSource.remapSource(deobfuscator, translator);
 
 		gui.setEditorTheme(Config.getInstance().lookAndFeel);
 		gui.setSource(currentSource);

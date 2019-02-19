@@ -19,30 +19,32 @@ import java.util.*;
 
 public class DecompiledClassSource {
 	private final ClassEntry classEntry;
-	private final Deobfuscator deobfuscator;
 
 	private final SourceIndex obfuscatedIndex;
 	private SourceIndex remappedIndex;
 
 	private final Map<TokenHighlightType, Collection<Token>> highlightedTokens = new EnumMap<>(TokenHighlightType.class);
 
-	public DecompiledClassSource(ClassEntry classEntry, Deobfuscator deobfuscator, SourceIndex index) {
+	public DecompiledClassSource(ClassEntry classEntry, SourceIndex index) {
 		this.classEntry = classEntry;
-		this.deobfuscator = deobfuscator;
 		this.obfuscatedIndex = index;
 		this.remappedIndex = index;
 	}
 
-	public void remapSource(Translator translator) {
+	public static DecompiledClassSource text(ClassEntry classEntry, String text) {
+		return new DecompiledClassSource(classEntry, new SourceIndex(text));
+	}
+
+	public void remapSource(Deobfuscator deobfuscator, Translator translator) {
 		highlightedTokens.clear();
 
 		SourceRemapper remapper = new SourceRemapper(obfuscatedIndex.getSource(), obfuscatedIndex.referenceTokens());
 
-		SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(token, movedToken, translator));
+		SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(deobfuscator, token, movedToken, translator));
 		remappedIndex = obfuscatedIndex.remapTo(remapResult);
 	}
 
-	private String remapToken(Token token, Token movedToken, Translator translator) {
+	private String remapToken(Deobfuscator deobfuscator, Token token, Token movedToken, Translator translator) {
 		EntryReference<Entry<?>, Entry<?>> reference = obfuscatedIndex.getReference(token);
 
 		Entry<?> entry = reference.getNameableEntry();
@@ -53,7 +55,7 @@ public class DecompiledClassSource {
 				highlightToken(movedToken, TokenHighlightType.DEOBFUSCATED);
 				return translatedEntry.getSourceRemapName();
 			} else {
-				String proposedName = proposeName(entry);
+				String proposedName = proposeName(deobfuscator, entry);
 				if (proposedName != null) {
 					highlightToken(movedToken, TokenHighlightType.PROPOSED);
 					return proposedName;
@@ -72,7 +74,7 @@ public class DecompiledClassSource {
 	}
 
 	@Nullable
-	private String proposeName(Entry<?> entry) {
+	private String proposeName(Deobfuscator deobfuscator, Entry<?> entry) {
 		if (entry instanceof FieldEntry) {
 			for (EnigmaPlugin plugin : deobfuscator.getPlugins()) {
 				String owner = entry.getContainingClass().getFullName();
