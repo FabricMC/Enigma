@@ -97,6 +97,7 @@ dependencies {
 
     application name: "darcula", version: "1.0.0"
     application 'de.sciss:syntaxpane:1.2.+'
+    application 'me.xdrop:fuzzywuzzy:1.2.0'
 
     testCompile 'junit:junit:4.+'
     testCompile 'org.hamcrest:hamcrest-all:1.+'

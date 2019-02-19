@@ -839,4 +839,8 @@ public class Gui {
 		this.deobfPanel.deobfClasses.restoreExpansionState(this.deobfPanel.deobfClasses, stateDeobf);
 		this.obfPanel.obfClasses.restoreExpansionState(this.obfPanel.obfClasses, stateObf);
 	}
+
+	public PanelDeobf getDeobfPanel() {
+		return deobfPanel;
+	}
 }
