@@ -153,12 +153,8 @@ public class MenuBar extends JMenuBar {
 					if (this.gui.getController().isDirty()) {
 						this.gui.showDiscardDiag((response -> {
 							if (response == JOptionPane.YES_OPTION) {
-								try {
-									gui.saveMapping();
-									this.gui.getController().closeMappings();
-								} catch (IOException e) {
-									throw new Error(e);
-								}
+								gui.saveMapping();
+								this.gui.getController().closeMappings();
 							} else if (response == JOptionPane.NO_OPTION)
 								this.gui.getController().closeMappings();
 							return null;

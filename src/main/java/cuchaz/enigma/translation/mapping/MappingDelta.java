@@ -6,28 +6,35 @@ import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-public class MappingDelta implements Translatable {
+public class MappingDelta<T> implements Translatable {
 	public static final Object PLACEHOLDER = new Object();
+
+	private final EntryTree<T> baseMappings;
 
 	private final EntryTree<Object> additions;
 	private final EntryTree<Object> deletions;
 
-	public MappingDelta(EntryTree<Object> additions, EntryTree<Object> deletions) {
+	public MappingDelta(EntryTree<T> baseMappings, EntryTree<Object> additions, EntryTree<Object> deletions) {
+		this.baseMappings = baseMappings;
 		this.additions = additions;
 		this.deletions = deletions;
 	}
 
-	public MappingDelta() {
-		this(new HashEntryTree<>(), new HashEntryTree<>());
+	public MappingDelta(EntryTree<T> baseMappings) {
+		this(baseMappings, new HashEntryTree<>(), new HashEntryTree<>());
 	}
 
-	public static MappingDelta added(EntryTree<EntryMapping> mappings) {
+	public static <T> MappingDelta<T> added(EntryTree<T> mappings) {
 		EntryTree<Object> additions = new HashEntryTree<>();
 		for (Entry<?> entry : mappings.getAllEntries()) {
 			additions.insert(entry, PLACEHOLDER);
 		}
 
-		return new MappingDelta(additions, new HashEntryTree<>());
+		return new MappingDelta<>(new HashEntryTree<>(), additions, new HashEntryTree<>());
+	}
+
+	public EntryTree<T> getBaseMappings() {
+		return baseMappings;
 	}
 
 	public EntryTree<?> getAdditions() {
@@ -39,18 +46,11 @@ public class MappingDelta implements Translatable {
 	}
 
 	@Override
-	public MappingDelta translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
-		return new MappingDelta(
-				translate(translator, additions),
-				translate(translator, deletions)
+	public MappingDelta<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		return new MappingDelta<>(
+				translator.translate(baseMappings),
+				translator.translate(additions),
+				translator.translate(deletions)
 		);
-	}
-
-	private EntryTree<Object> translate(Translator translator, EntryTree<Object> tree) {
-		EntryTree<Object> translatedTree = new HashEntryTree<>();
-		for (Entry<?> entry : tree.getAllEntries()) {
-			translatedTree.insert(translator.translate(entry), PLACEHOLDER);
-		}
-		return translatedTree;
 	}
 }

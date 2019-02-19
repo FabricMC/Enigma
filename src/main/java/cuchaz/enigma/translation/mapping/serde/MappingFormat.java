@@ -28,7 +28,7 @@ public enum MappingFormat {
 		write(mappings, MappingDelta.added(mappings), path, progressListener);
 	}
 
-	public void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progressListener)  {
+	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener)  {
 		if (writer == null) {
 			throw new IllegalStateException(name() + " does not support writing");
 		}

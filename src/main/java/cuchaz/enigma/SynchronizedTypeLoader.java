@@ -1,35 +1,16 @@
 package cuchaz.enigma;
 
 import com.strobel.assembler.metadata.Buffer;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.tree.ClassNode;
-
-import java.util.List;
+import com.strobel.assembler.metadata.ITypeLoader;
 
 /**
  * Typeloader with synchronized tryLoadType method
  */
-public class SynchronizedTypeLoader implements ITranslatingTypeLoader {
-	private final TranslatingTypeLoader delegate;
+public class SynchronizedTypeLoader implements ITypeLoader {
+	private final ITypeLoader delegate;
 
-	public SynchronizedTypeLoader(TranslatingTypeLoader delegate) {
+	public SynchronizedTypeLoader(ITypeLoader delegate) {
 		this.delegate = delegate;
-	}
-
-	@Override
-	public List<String> getClassNamesToTry(String className) {
-		return delegate.getClassNamesToTry(className);
-	}
-
-	@Override
-	public List<String> getClassNamesToTry(ClassEntry obfClassEntry) {
-		return delegate.getClassNamesToTry(obfClassEntry);
-	}
-
-	@Override
-	public String transformInto(ClassNode node, ClassWriter writer) {
-		return delegate.transformInto(node, writer);
 	}
 
 	@Override

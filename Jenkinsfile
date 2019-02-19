@@ -1,15 +1,26 @@
-node {
-   stage 'Checkout'
+pipeline {
+   agent any
+   stages {
 
-   checkout scm
+      stage ('Build') {
+         steps {
+            sh "rm -rf build/libs/"
+            sh "chmod +x gradlew"
+            sh "./gradlew build"
 
-   stage 'Build'
+            archiveArtifacts artifacts: '**/build/libs/*.jar', fingerprint: true
+         }
+      }
 
-   sh "rm -rf build/libs/"
-   sh "chmod +x gradlew"
-   sh "./gradlew build"
+      stage ('Archive artifacts') {
+         //Only publish to maven when on master branch
+         when {
+            branch 'master'
+         }
+         steps {
+            sh "./gradlew upload"
+         }
+      }
 
-   stage "Archive artifacts"
-
-   sh "./gradlew upload"
+   }
 }

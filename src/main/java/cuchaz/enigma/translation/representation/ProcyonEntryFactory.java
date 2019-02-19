@@ -17,29 +17,23 @@ import com.strobel.assembler.metadata.MethodDefinition;
 import cuchaz.enigma.translation.representation.entry.*;
 
 public class ProcyonEntryFactory {
-	private final ReferencedEntryPool entryPool;
-
-	public ProcyonEntryFactory(ReferencedEntryPool entryPool) {
-		this.entryPool = entryPool;
-	}
-
 	public FieldEntry getFieldEntry(MemberReference def) {
-		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
-		return entryPool.getField(classEntry, def.getName(), def.getErasedSignature());
+		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
+		return new FieldEntry(classEntry, def.getName(), new TypeDescriptor(def.getErasedSignature()));
 	}
 
 	public FieldDefEntry getFieldDefEntry(FieldDefinition def) {
-		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
+		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
 		return new FieldDefEntry(classEntry, def.getName(), new TypeDescriptor(def.getErasedSignature()), Signature.createTypedSignature(def.getSignature()), new AccessFlags(def.getModifiers()));
 	}
 
 	public MethodEntry getMethodEntry(MemberReference def) {
-		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
-		return entryPool.getMethod(classEntry, def.getName(), def.getErasedSignature());
+		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
+		return new MethodEntry(classEntry, def.getName(), new MethodDescriptor(def.getErasedSignature()));
 	}
 
 	public MethodDefEntry getMethodDefEntry(MethodDefinition def) {
-		ClassEntry classEntry = entryPool.getClass(def.getDeclaringType().getInternalName());
+		ClassEntry classEntry = new ClassEntry(def.getDeclaringType().getInternalName());
 		return new MethodDefEntry(classEntry, def.getName(), new MethodDescriptor(def.getErasedSignature()), Signature.createSignature(def.getSignature()), new AccessFlags(def.getModifiers()));
 	}
 }

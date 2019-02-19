@@ -7,6 +7,7 @@ import com.google.gson.*;
 import javax.swing.*;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -34,8 +35,12 @@ public class Config {
 
     public enum LookAndFeel {
 		DEFAULT("Default"),
-		DARCULA("Darcula");
+		DARCULA("Darcula"),
+		SYSTEM("System"),
+		NONE("None (JVM default)");
 
+		// the "JVM default" look and feel, get it at the beginning and store it so we can set it later
+		private static javax.swing.LookAndFeel NONE_LAF = UIManager.getLookAndFeel();
 		private final String name;
 
 		LookAndFeel(String name) {
@@ -49,68 +54,83 @@ public class Config {
 		public void setGlobalLAF() {
 			try {
 				switch (this) {
+					case NONE:
+						UIManager.setLookAndFeel(NONE_LAF);
+						break;
 					case DEFAULT:
 						UIManager.setLookAndFeel(new MetalLookAndFeel());
 						break;
 					case DARCULA:
 						UIManager.setLookAndFeel(new DarculaLaf());
 						break;
+					case SYSTEM:
+						UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 				}
 			} catch (Exception e){
 				throw new Error("Failed to set global look and feel", e);
 			}
 		}
 
+		public static boolean isDarkLaf() {
+			// a bit of a hack because swing doesn't give any API for that, and we need colors that aren't defined in look and feel
+			JPanel panel = new JPanel();
+			panel.setSize(new Dimension(10, 10));
+			panel.doLayout();
+
+			BufferedImage image = new BufferedImage(panel.getSize().width, panel.getSize().height, BufferedImage.TYPE_INT_RGB);
+			panel.printAll(image.getGraphics());
+
+			Color c = new Color(image.getRGB(0, 0));
+
+			// convert the color we got to grayscale
+			int b = (int) (0.3 * c.getRed() + 0.59 * c.getGreen() + 0.11 * c.getBlue());
+			return b < 85;
+		}
+
 		public void apply(Config config) {
-			switch (this) {
-				case DEFAULT:
-					//Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
-					config.lineNumbersForeground = 0x333300;
-					config.lineNumbersBackground = 0xEEEEFF;
-					config.lineNumbersSelected = 0xCCCCEE;
-					config.obfuscatedColor = new AlphaColorEntry(0xFFDCDC, 1.0f);
-					config.obfuscatedColorOutline = new AlphaColorEntry(0xA05050, 1.0f);
-					config.proposedColor = new AlphaColorEntry(0x000000, 0.075f);
-					config.proposedColorOutline = new AlphaColorEntry(0x000000, 0.15f);
-					config.deobfuscatedColor = new AlphaColorEntry(0xDCFFDC, 1.0f);
-					config.deobfuscatedColorOutline = new AlphaColorEntry(0x50A050, 1.0f);
-					config.otherColorOutline = new AlphaColorEntry(0xB4B4B4, 1.0f);
-					config.editorBackground = 0xFFFFFF;
-					config.highlightColor = 0x3333EE;
-					config.caretColor = 0x000000;
-					config.selectionHighlightColor = 0x000000;
-					config.stringColor = 0xCC6600;
-					config.numberColor = 0x999933;
-					config.operatorColor = 0x000000;
-					config.delimiterColor = 0x000000;
-					config.typeColor = 0x000000;
-					config.identifierColor = 0x000000;
-					config.defaultTextColor = 0x000000;
-					break;
-				case DARCULA:
-					//Based off colors found here: https://github.com/dracula/dracula-theme/
-					config.lineNumbersForeground = 0xA4A4A3;
-					config.lineNumbersBackground = 0x313335;
-					config.lineNumbersSelected = 0x606366;
-					config.obfuscatedColor = new AlphaColorEntry(0xFF5555, 0.3f);
-					config.obfuscatedColorOutline = new AlphaColorEntry(0xFF5555, 0.5f);
-					config.deobfuscatedColor = new AlphaColorEntry(0x50FA7B, 0.3f);
-					config.deobfuscatedColorOutline = new AlphaColorEntry(0x50FA7B, 0.5f);
-					config.proposedColor = new AlphaColorEntry(0x606366, 0.3f);
-					config.proposedColorOutline = new AlphaColorEntry(0x606366, 0.5f);
-					config.otherColorOutline = new AlphaColorEntry(0xB4B4B4, 0.0f);
-					config.editorBackground = 0x282A36;
-					config.highlightColor = 0xFF79C6;
-					config.caretColor = 0xF8F8F2;
-					config.selectionHighlightColor = 0xF8F8F2;
-					config.stringColor = 0xF1FA8C;
-					config.numberColor = 0xBD93F9;
-					config.operatorColor = 0xF8F8F2;
-					config.delimiterColor = 0xF8F8F2;
-					config.typeColor = 0xF8F8F2;
-					config.identifierColor = 0xF8F8F2;
-					config.defaultTextColor = 0xF8F8F2;
-					break;
+			boolean isDark = this == LookAndFeel.DARCULA || isDarkLaf();
+			if (!isDark) {//Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
+				config.lineNumbersForeground = 0x333300;
+				config.lineNumbersBackground = 0xEEEEFF;
+				config.lineNumbersSelected = 0xCCCCEE;
+				config.obfuscatedColor = new AlphaColorEntry(0xFFDCDC, 1.0f);
+				config.obfuscatedColorOutline = new AlphaColorEntry(0xA05050, 1.0f);
+				config.proposedColor = new AlphaColorEntry(0x000000, 0.075f);
+				config.proposedColorOutline = new AlphaColorEntry(0x000000, 0.15f);
+				config.deobfuscatedColor = new AlphaColorEntry(0xDCFFDC, 1.0f);
+				config.deobfuscatedColorOutline = new AlphaColorEntry(0x50A050, 1.0f);
+				config.editorBackground = 0xFFFFFF;
+				config.highlightColor = 0x3333EE;
+				config.caretColor = 0x000000;
+				config.selectionHighlightColor = 0x000000;
+				config.stringColor = 0xCC6600;
+				config.numberColor = 0x999933;
+				config.operatorColor = 0x000000;
+				config.delimiterColor = 0x000000;
+				config.typeColor = 0x000000;
+				config.identifierColor = 0x000000;
+				config.defaultTextColor = 0x000000;
+			} else {//Based off colors found here: https://github.com/dracula/dracula-theme/
+				config.lineNumbersForeground = 0xA4A4A3;
+				config.lineNumbersBackground = 0x313335;
+				config.lineNumbersSelected = 0x606366;
+				config.obfuscatedColor = new AlphaColorEntry(0xFF5555, 0.3f);
+				config.obfuscatedColorOutline = new AlphaColorEntry(0xFF5555, 0.5f);
+				config.deobfuscatedColor = new AlphaColorEntry(0x50FA7B, 0.3f);
+				config.deobfuscatedColorOutline = new AlphaColorEntry(0x50FA7B, 0.5f);
+				config.proposedColor = new AlphaColorEntry(0x606366, 0.3f);
+				config.proposedColorOutline = new AlphaColorEntry(0x606366, 0.5f);
+				config.editorBackground = 0x282A36;
+				config.highlightColor = 0xFF79C6;
+				config.caretColor = 0xF8F8F2;
+				config.selectionHighlightColor = 0xF8F8F2;
+				config.stringColor = 0xF1FA8C;
+				config.numberColor = 0xBD93F9;
+				config.operatorColor = 0xF8F8F2;
+				config.delimiterColor = 0xF8F8F2;
+				config.typeColor = 0xF8F8F2;
+				config.identifierColor = 0xF8F8F2;
+				config.defaultTextColor = 0xF8F8F2;
 			}
 		}
 	}
@@ -128,7 +148,6 @@ public class Config {
 	public AlphaColorEntry proposedColorOutline;
 	public AlphaColorEntry deobfuscatedColor;
 	public AlphaColorEntry deobfuscatedColorOutline;
-	public AlphaColorEntry otherColorOutline;
 
 	public Integer editorBackground;
 	public Integer highlightColor;
@@ -198,12 +217,14 @@ public class Config {
 	}
 
 	private static class IntSerializer implements JsonSerializer<Integer> {
+		@Override
 		public JsonElement serialize(Integer src, Type typeOfSrc, JsonSerializationContext context) {
 			return new JsonPrimitive("#" + Integer.toHexString(src).toUpperCase());
 		}
 	}
 
 	private static class IntDeserializer implements JsonDeserializer<Integer> {
+		@Override
 		public Integer deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
 			return (int) Long.parseLong(json.getAsString().replace("#", ""), 16);
 		}

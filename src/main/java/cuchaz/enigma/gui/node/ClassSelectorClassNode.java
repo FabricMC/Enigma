@@ -17,11 +17,17 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 public class ClassSelectorClassNode extends DefaultMutableTreeNode {
 
+	private final ClassEntry obfEntry;
 	private ClassEntry classEntry;
 
-	public ClassSelectorClassNode(ClassEntry classEntry) {
+	public ClassSelectorClassNode(ClassEntry obfEntry, ClassEntry classEntry) {
+		this.obfEntry = obfEntry;
 		this.classEntry = classEntry;
 		this.setUserObject(classEntry);
+	}
+
+	public ClassEntry getObfEntry() {
+		return obfEntry;
 	}
 
 	public ClassEntry getClassEntry() {

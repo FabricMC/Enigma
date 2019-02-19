@@ -14,10 +14,7 @@ package cuchaz.enigma.translation.mapping.serde;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.MappingDelta;
-import cuchaz.enigma.translation.mapping.VoidEntryResolver;
+import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -37,7 +34,7 @@ import java.util.stream.Collectors;
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
-		public void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
+		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress) {
 			Collection<ClassEntry> classes = mappings.getRootEntries().stream()
 					.filter(entry -> entry instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry)
@@ -58,8 +55,8 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	},
 	DIRECTORY {
 		@Override
-		public void write(EntryTree<EntryMapping> mappings, MappingDelta delta, Path path, ProgressListener progress) {
-			applyDeletions(delta.getDeletions(), path);
+		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress) {
+			applyDeletions(delta.getBaseMappings(), delta.getDeletions(), path);
 
 			Collection<ClassEntry> classes = delta.getAdditions().getRootEntries().stream()
 					.filter(entry -> entry instanceof ClassEntry)
@@ -76,8 +73,8 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 				try {
 					Path classPath = resolve(path, translator.translate(classEntry));
-					Files.deleteIfExists(classPath);
 					Files.createDirectories(classPath.getParent());
+					Files.deleteIfExists(classPath);
 
 					try (PrintWriter writer = new LFPrintWriter(Files.newBufferedWriter(classPath))) {
 						writeRoot(writer, mappings, classEntry);
@@ -89,10 +86,12 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			});
 		}
 
-		private void applyDeletions(EntryTree<?> deletions, Path root) {
+		private void applyDeletions(EntryTree<EntryMapping> baseMappings, EntryTree<?> deletions, Path root) {
+			Translator oldMappingTranslator = new MappingTranslator(baseMappings, VoidEntryResolver.INSTANCE);
+
 			Collection<ClassEntry> deletedClasses = deletions.getRootEntries().stream()
 					.filter(e -> e instanceof ClassEntry)
-					.map(e -> (ClassEntry) e)
+					.map(e -> oldMappingTranslator.translate((ClassEntry) e))
 					.collect(Collectors.toList());
 
 			for (ClassEntry classEntry : deletedClasses) {
@@ -166,7 +165,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		} else if (entry instanceof FieldEntry) {
 			String line = writeField((FieldEntry) entry, mapping);
 			writer.println(indent(line, depth));
-		} else if (entry instanceof LocalVariableEntry) {
+		} else if (entry instanceof LocalVariableEntry && mapping != null) {
 			String line = writeArgument((LocalVariableEntry) entry, mapping);
 			writer.println(indent(line, depth));
 		}
@@ -232,13 +231,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeArgument(LocalVariableEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("ARG ");
-		builder.append(entry.getIndex()).append(' ');
-
-		String mappedName = mapping != null ? mapping.getTargetName() : entry.getName();
-		builder.append(mappedName);
-
-		return builder.toString();
+		return "ARG " + entry.getIndex() + ' ' + mapping.getTargetName();
 	}
 
 	private void writeMapping(StringBuilder builder, EntryMapping mapping) {

@@ -11,17 +11,24 @@
 
 package cuchaz.enigma.analysis;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.Region;
-import com.strobel.decompiler.languages.java.ast.AstNode;
-import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
-import com.strobel.decompiler.languages.java.ast.Identifier;
-import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
+import com.strobel.decompiler.languages.java.ast.*;
+import cuchaz.enigma.gui.SourceRemapper;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SourceIndex {
 	private static Pattern ANONYMOUS_INNER = Pattern.compile("\\$\\d+$");
@@ -46,6 +53,13 @@ public class SourceIndex {
 		calculateLineOffsets();
 	}
 
+	public static SourceIndex buildIndex(String sourceString, CompilationUnit sourceTree, boolean ignoreBadTokens) {
+		SourceIndex index = new SourceIndex(sourceString, ignoreBadTokens);
+		sourceTree.acceptVisitor(new SourceIndexVisitor(), index);
+
+		return index;
+	}
+
 	private void calculateLineOffsets() {
 		// count the lines
 		this.lineOffsets = Lists.newArrayList();
@@ -57,32 +71,29 @@ public class SourceIndex {
 		}
 	}
 
-	public void remap(String source, Map<Token, Token> tokenMap) {
-		this.source = source;
-		calculateLineOffsets();
+	public SourceIndex remapTo(SourceRemapper.Result result) {
+		SourceIndex remapped = new SourceIndex(result.getSource(), ignoreBadTokens);
 
-		for (Entry<?> entry : Lists.newArrayList(declarationToToken.keySet())) {
-			Token token = declarationToToken.get(entry);
-			declarationToToken.put(entry, tokenMap.getOrDefault(token, token));
+		for (Map.Entry<Entry<?>, Token> entry : declarationToToken.entrySet()) {
+			remapped.declarationToToken.put(entry.getKey(), result.getRemappedToken(entry.getValue()));
 		}
 
-		for (EntryReference<Entry<?>, Entry<?>> ref : referenceToTokens.keySet()) {
-			Collection<Token> oldTokens = referenceToTokens.get(ref);
-			List<Token> newTokens = new ArrayList<>(oldTokens.size());
+		for (Map.Entry<EntryReference<Entry<?>, Entry<?>>, Collection<Token>> entry : referenceToTokens.asMap().entrySet()) {
+			EntryReference<Entry<?>, Entry<?>> reference = entry.getKey();
+			Collection<Token> oldTokens = entry.getValue();
 
-			for (Token token : oldTokens) {
-				newTokens.add(tokenMap.getOrDefault(token, token));
-			}
+			Collection<Token> newTokens = oldTokens.stream()
+					.map(result::getRemappedToken)
+					.collect(Collectors.toList());
 
-			referenceToTokens.replaceValues(ref, newTokens);
+			remapped.referenceToTokens.putAll(reference, newTokens);
 		}
 
-		TreeMap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReferenceCopy = new TreeMap<>(tokenToReference);
-
-		tokenToReference.clear();
-		for (Token token : tokenToReferenceCopy.keySet()) {
-			tokenToReference.put(tokenMap.getOrDefault(token, token), tokenToReferenceCopy.get(token));
+		for (Map.Entry<Token, EntryReference<Entry<?>, Entry<?>>> entry : tokenToReference.entrySet()) {
+			remapped.tokenToReference.put(result.getRemappedToken(entry.getKey()), entry.getValue());
 		}
+
+		return remapped;
 	}
 
 	public String getSource() {
@@ -164,18 +175,11 @@ public class SourceIndex {
 	}
 
 	@Nullable
-	public EntryReference<Entry<?>, Entry<?>> getDeobfReference(Token token) {
+	public EntryReference<Entry<?>, Entry<?>> getReference(Token token) {
 		if (token == null) {
 			return null;
 		}
 		return this.tokenToReference.get(token);
-	}
-
-	public void replaceDeobfReference(Token token, EntryReference<Entry<?>, Entry<?>> newDeobfReference) {
-		EntryReference<Entry<?>, Entry<?>> oldDeobfReferences = this.tokenToReference.replace(token, newDeobfReference);
-
-		Collection<Token> tokens = this.referenceToTokens.removeAll(oldDeobfReferences);
-		this.referenceToTokens.putAll(newDeobfReference, tokens);
 	}
 
 	public Iterable<Token> referenceTokens() {
@@ -190,8 +194,8 @@ public class SourceIndex {
 		return this.declarationToToken.keySet();
 	}
 
-	public Token getDeclarationToken(Entry<?> deobfEntry) {
-		return this.declarationToToken.get(deobfEntry);
+	public Token getDeclarationToken(Entry<?> entry) {
+		return this.declarationToToken.get(entry);
 	}
 
 	public int getLineNumber(int pos) {
@@ -214,5 +218,19 @@ public class SourceIndex {
 	private int toPos(int line, int col) {
 		// line and col are 1-based
 		return this.lineOffsets.get(line - 1) + col - 1;
+	}
+
+	public void resolveReferences(EntryResolver resolver) {
+		// resolve all the classes in the source references
+		for (Token token : Lists.newArrayList(referenceToTokens.values())) {
+			EntryReference<Entry<?>, Entry<?>> reference = tokenToReference.get(token);
+			EntryReference<Entry<?>, Entry<?>> resolvedReference = resolver.resolveFirstReference(reference, ResolutionStrategy.RESOLVE_CLOSEST);
+
+			// replace the reference
+			tokenToReference.replace(token, resolvedReference);
+
+			Collection<Token> tokens = referenceToTokens.removeAll(reference);
+			referenceToTokens.putAll(resolvedReference, tokens);
+		}
 	}
 }

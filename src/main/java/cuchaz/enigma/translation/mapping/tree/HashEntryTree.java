@@ -1,5 +1,9 @@
 package cuchaz.enigma.translation.mapping.tree;
 
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
@@ -9,9 +13,18 @@ import java.util.stream.Collectors;
 public class HashEntryTree<T> implements EntryTree<T> {
 	private final Map<Entry<?>, HashTreeNode<T>> root = new HashMap<>();
 
+	public HashEntryTree() {
+	}
+
+	public HashEntryTree(EntryTree<T> tree) {
+		for (EntryTreeNode<T> node : tree.getAllNodes()) {
+			insert(node.getEntry(), node.getValue());
+		}
+	}
+
 	@Override
 	public void insert(Entry<?> entry, T value) {
-		List<HashTreeNode<T>> path = computePath(entry);
+		List<HashTreeNode<T>> path = computePath(entry, true);
 		path.get(path.size() - 1).putValue(value);
 		if (value == null) {
 			removeDeadAlong(path);
@@ -21,7 +34,11 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	@Override
 	@Nullable
 	public T remove(Entry<?> entry) {
-		List<HashTreeNode<T>> path = computePath(entry);
+		List<HashTreeNode<T>> path = computePath(entry, false);
+		if (path.isEmpty()) {
+			return null;
+		}
+
 		T value = path.get(path.size() - 1).removeValue();
 
 		removeDeadAlong(path);
@@ -55,7 +72,7 @@ public class HashEntryTree<T> implements EntryTree<T> {
 
 	@Override
 	public Collection<Entry<?>> getSiblings(Entry<?> entry) {
-		List<HashTreeNode<T>> path = computePath(entry);
+		List<HashTreeNode<T>> path = computePath(entry, false);
 		if (path.size() <= 1) {
 			return getSiblings(entry, root.keySet());
 		}
@@ -82,13 +99,13 @@ public class HashEntryTree<T> implements EntryTree<T> {
 			if (node == null) {
 				return null;
 			}
-			node = node.getChild(parentChain.get(i), false);
+			node = node.getChild(parentChain.get(i));
 		}
 
 		return node;
 	}
 
-	private List<HashTreeNode<T>> computePath(Entry<?> target) {
+	private List<HashTreeNode<T>> computePath(Entry<?> target, boolean make) {
 		List<Entry<?>> ancestry = target.getAncestry();
 		if (ancestry.isEmpty()) {
 			return Collections.emptyList();
@@ -97,11 +114,20 @@ public class HashEntryTree<T> implements EntryTree<T> {
 		List<HashTreeNode<T>> path = new ArrayList<>(ancestry.size());
 
 		Entry<?> rootEntry = ancestry.get(0);
-		HashTreeNode<T> node = root.computeIfAbsent(rootEntry, HashTreeNode::new);
+		HashTreeNode<T> node = make ? root.computeIfAbsent(rootEntry, HashTreeNode::new) : root.get(rootEntry);
+		if (node == null) {
+			return Collections.emptyList();
+		}
+
 		path.add(node);
 
 		for (int i = 1; i < ancestry.size(); i++) {
-			node = node.getChild(ancestry.get(i), true);
+			Entry<?> ancestor = ancestry.get(i);
+			node = make ? node.computeChild(ancestor) : node.getChild(ancestor);
+			if (node == null) {
+				return Collections.emptyList();
+			}
+
 			path.add(node);
 		}
 
@@ -155,5 +181,14 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	@Override
 	public boolean isEmpty() {
 		return root.isEmpty();
+	}
+
+	@Override
+	public HashEntryTree<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		HashEntryTree<T> translatedTree = new HashEntryTree<>();
+		for (EntryTreeNode<T> node : getAllNodes()) {
+			translatedTree.insert(translator.translate(node.getEntry()), node.getValue());
+		}
+		return translatedTree;
 	}
 }

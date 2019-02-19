@@ -14,7 +14,6 @@ package cuchaz.enigma.analysis.index;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
@@ -22,24 +21,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Set;
 
-public class InheritanceIndex implements JarIndexer, RemappableIndex {
+public class InheritanceIndex implements JarIndexer {
 	private Multimap<ClassEntry, ClassEntry> classParents = HashMultimap.create();
 	private Multimap<ClassEntry, ClassEntry> classChildren = HashMultimap.create();
-
-	@Override
-	public void remap(Translator translator) {
-		classChildren = translator.translate(classChildren);
-		classParents = translator.translate(classParents);
-	}
-
-	@Override
-	public InheritanceIndex remapped(Translator translator) {
-		InheritanceIndex index = new InheritanceIndex();
-		index.classParents = translator.translate(classParents);
-		index.classChildren = translator.translate(classChildren);
-
-		return index;
-	}
 
 	@Override
 	public void indexClass(ClassDefEntry classEntry) {

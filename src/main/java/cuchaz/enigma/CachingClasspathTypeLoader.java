@@ -16,6 +16,7 @@ public class CachingClasspathTypeLoader extends CachingTypeLoader {
 
 	private final ITypeLoader classpathLoader = new ClasspathTypeLoader();
 
+	@Override
 	protected byte[] doLoad(String className) {
 		Buffer parentBuf = new Buffer();
 		if (classpathLoader.tryLoadType(className, parentBuf)) {

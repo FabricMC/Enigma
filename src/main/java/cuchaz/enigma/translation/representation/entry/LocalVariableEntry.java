@@ -17,11 +17,6 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	protected final int index;
 	protected final boolean parameter;
 
-	@Deprecated
-	public LocalVariableEntry(MethodEntry parent, int index, String name) {
-		this(parent, index, name, true);
-	}
-
 	public LocalVariableEntry(MethodEntry parent, int index, String name, boolean parameter) {
 		super(parent, name);
 
@@ -37,7 +32,7 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 		return MethodEntry.class;
 	}
 
-	public boolean isParameter() {
+	public boolean isArgument() {
 		return this.parameter;
 	}
 

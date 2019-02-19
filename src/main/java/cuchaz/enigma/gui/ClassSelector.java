@@ -17,9 +17,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.throwables.IllegalNameException;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
@@ -27,21 +29,26 @@ import javax.swing.tree.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
-import java.util.List;
 
 public class ClassSelector extends JTree {
 
 	public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = Comparator.comparing(ClassEntry::getFullName);
+
+	private final GuiController controller;
+
 	private DefaultMutableTreeNode rootNodes;
 	private ClassSelectionListener selectionListener;
 	private RenameSelectionListener renameSelectionListener;
 	private Comparator<ClassEntry> comparator;
 
+	private final Map<ClassEntry, ClassEntry> displayedObfToDeobf = new HashMap<>();
+
 	public ClassSelector(Gui gui, Comparator<ClassEntry> comparator, boolean isRenamable) {
 		this.comparator = comparator;
+		this.controller = gui.getController();
 
 		// configure the tree control
-		setEditable(gui != null);
+		setEditable(true);
 		setRootVisible(false);
 		setShowsRootHandles(false);
 		setModel(null);
@@ -55,66 +62,64 @@ public class ClassSelector extends JTree {
 					TreePath path = getSelectionPath();
 					if (path != null && path.getLastPathComponent() instanceof ClassSelectorClassNode) {
 						ClassSelectorClassNode node = (ClassSelectorClassNode) path.getLastPathComponent();
-						selectionListener.onSelectClass(node.getClassEntry());
+						selectionListener.onSelectClass(node.getObfEntry());
 					}
 				}
 			}
 		});
 
-		if (gui != null) {
-			final JTree tree = this;
+		final JTree tree = this;
 
-			final DefaultTreeCellEditor editor = new DefaultTreeCellEditor(tree,
+		final DefaultTreeCellEditor editor = new DefaultTreeCellEditor(tree,
 				(DefaultTreeCellRenderer) tree.getCellRenderer()) {
-				@Override
-				public boolean isCellEditable(EventObject event) {
-					return isRenamable && !(event instanceof MouseEvent) && super.isCellEditable(event);
-				}
-			};
-			this.setCellEditor(editor);
-			editor.addCellEditorListener(new CellEditorListener() {
-				@Override
-				public void editingStopped(ChangeEvent e) {
-					String data = editor.getCellEditorValue().toString();
-					TreePath path = getSelectionPath();
+			@Override
+			public boolean isCellEditable(EventObject event) {
+				return isRenamable && !(event instanceof MouseEvent) && super.isCellEditable(event);
+			}
+		};
+		this.setCellEditor(editor);
+		editor.addCellEditorListener(new CellEditorListener() {
+			@Override
+			public void editingStopped(ChangeEvent e) {
+				String data = editor.getCellEditorValue().toString();
+				TreePath path = getSelectionPath();
 
-					Object realPath = path.getLastPathComponent();
-					if (realPath != null && realPath instanceof DefaultMutableTreeNode && data != null) {
-						DefaultMutableTreeNode node = (DefaultMutableTreeNode) realPath;
-						TreeNode parentNode = node.getParent();
-						if (parentNode == null)
-							return;
-						boolean allowEdit = true;
-						for (int i = 0; i < parentNode.getChildCount(); i++) {
-							TreeNode childNode = parentNode.getChildAt(i);
-							if (childNode != null && childNode.toString().equals(data) && childNode != node) {
-								allowEdit = false;
-								break;
-							}
+				Object realPath = path.getLastPathComponent();
+				if (realPath != null && realPath instanceof DefaultMutableTreeNode && data != null) {
+					DefaultMutableTreeNode node = (DefaultMutableTreeNode) realPath;
+					TreeNode parentNode = node.getParent();
+					if (parentNode == null)
+						return;
+					boolean allowEdit = true;
+					for (int i = 0; i < parentNode.getChildCount(); i++) {
+						TreeNode childNode = parentNode.getChildAt(i);
+						if (childNode != null && childNode.toString().equals(data) && childNode != node) {
+							allowEdit = false;
+							break;
 						}
-						if (allowEdit && renameSelectionListener != null) {
-							Object prevData = node.getUserObject();
-							Object objectData = node.getUserObject() instanceof ClassEntry ? new ClassEntry(((ClassEntry) prevData).getPackageName() + "/" + data) : data;
-							try {
-								renameSelectionListener.onSelectionRename(node.getUserObject(), objectData, node);
-								node.setUserObject(objectData); // Make sure that it's modified
-							} catch (IllegalNameException ex) {
-								JOptionPane.showOptionDialog(gui.getFrame(), ex.getMessage(), "Enigma - Error", JOptionPane.OK_OPTION,
-									JOptionPane.ERROR_MESSAGE, null, new String[] { "Ok" }, "OK");
-								editor.cancelCellEditing();
-							}
-						} else
-							editor.cancelCellEditing();
 					}
-
+					if (allowEdit && renameSelectionListener != null) {
+						Object prevData = node.getUserObject();
+						Object objectData = node.getUserObject() instanceof ClassEntry ? new ClassEntry(((ClassEntry) prevData).getPackageName() + "/" + data) : data;
+						try {
+							renameSelectionListener.onSelectionRename(node.getUserObject(), objectData, node);
+							node.setUserObject(objectData); // Make sure that it's modified
+						} catch (IllegalNameException ex) {
+							JOptionPane.showOptionDialog(gui.getFrame(), ex.getMessage(), "Enigma - Error", JOptionPane.OK_OPTION,
+									JOptionPane.ERROR_MESSAGE, null, new String[]{"Ok"}, "OK");
+							editor.cancelCellEditing();
+						}
+					} else
+						editor.cancelCellEditing();
 				}
 
-				@Override
-				public void editingCanceled(ChangeEvent e) {
-					// NOP
-				}
-			});
-		}
+			}
+
+			@Override
+			public void editingCanceled(ChangeEvent e) {
+				// NOP
+			}
+		});
 		// init defaults
 		this.selectionListener = null;
 		this.renameSelectionListener = null;
@@ -142,16 +147,21 @@ public class ClassSelector extends JTree {
 	}
 
 	public void setClasses(Collection<ClassEntry> classEntries) {
+		displayedObfToDeobf.clear();
+
 		List<StateEntry> state = getExpansionState(this);
 		if (classEntries == null) {
 			setModel(null);
 			return;
 		}
 
+		Translator translator = controller.getDeobfuscator().getMapper().getDeobfuscator();
+
 		// build the package names
 		Map<String, ClassSelectorPackageNode> packages = Maps.newHashMap();
-		for (ClassEntry classEntry : classEntries) {
-			packages.put(classEntry.getPackageName(), null);
+		for (ClassEntry obfClass : classEntries) {
+			ClassEntry deobfClass = translator.translate(obfClass);
+			packages.put(deobfClass.getPackageName(), null);
 		}
 
 		// sort the packages
@@ -191,20 +201,24 @@ public class ClassSelector extends JTree {
 
 		// put the classes into packages
 		Multimap<String, ClassEntry> packagedClassEntries = ArrayListMultimap.create();
-		for (ClassEntry classEntry : classEntries) {
-			packagedClassEntries.put(classEntry.getPackageName(), classEntry);
+		for (ClassEntry obfClass : classEntries) {
+			ClassEntry deobfClass = translator.translate(obfClass);
+			packagedClassEntries.put(deobfClass.getPackageName(), obfClass);
 		}
 
 		// build the class nodes
 		for (String packageName : packagedClassEntries.keySet()) {
 			// sort the class entries
 			List<ClassEntry> classEntriesInPackage = Lists.newArrayList(packagedClassEntries.get(packageName));
-			classEntriesInPackage.sort(this.comparator);
+			classEntriesInPackage.sort((o1, o2) -> comparator.compare(translator.translate(o1), translator.translate(o2)));
 
 			// create the nodes in order
-			for (ClassEntry classEntry : classEntriesInPackage) {
+			for (ClassEntry obfClass : classEntriesInPackage) {
+				ClassEntry deobfClass = translator.translate(obfClass);
 				ClassSelectorPackageNode node = packages.get(packageName);
-				node.add(new ClassSelectorClassNode(classEntry));
+				ClassSelectorClassNode classNode = new ClassSelectorClassNode(obfClass, deobfClass);
+				displayedObfToDeobf.put(obfClass, deobfClass);
+				node.add(classNode);
 			}
 		}
 
@@ -324,7 +338,7 @@ public class ClassSelector extends JTree {
 		}
 		for (ClassSelectorPackageNode packageNode : packageNodes()) {
 			if (packageNode.getPackageName().equals(packageName)) {
-				expandPath(new TreePath(new Object[] { getModel().getRoot(), packageNode }));
+				expandPath(new TreePath(new Object[]{getModel().getRoot(), packageNode}));
 				return;
 			}
 		}
@@ -332,14 +346,13 @@ public class ClassSelector extends JTree {
 
 	public void expandAll() {
 		for (ClassSelectorPackageNode packageNode : packageNodes()) {
-			expandPath(new TreePath(new Object[] { getModel().getRoot(), packageNode }));
+			expandPath(new TreePath(new Object[]{getModel().getRoot(), packageNode}));
 		}
 	}
 
 	public ClassEntry getFirstClass() {
 		ClassSelectorPackageNode packageNode = packageNodes().get(0);
-		if (packageNode != null)
-		{
+		if (packageNode != null) {
 			ClassSelectorClassNode classNode = classNodes(packageNode).get(0);
 			if (classNode != null) {
 				return classNode.getClassEntry();
@@ -350,7 +363,7 @@ public class ClassSelector extends JTree {
 
 	public ClassSelectorPackageNode getPackageNode(ClassEntry entry) {
 		String packageName = entry.getPackageName();
-		if (packageName == null){
+		if (packageName == null) {
 			packageName = "(none)";
 		}
 		for (ClassSelectorPackageNode packageNode : packageNodes()) {
@@ -359,6 +372,11 @@ public class ClassSelector extends JTree {
 			}
 		}
 		return null;
+	}
+
+	@Nullable
+	public ClassEntry getDisplayedDeobf(ClassEntry obfEntry) {
+		return displayedObfToDeobf.get(obfEntry);
 	}
 
 	public ClassSelectorPackageNode getPackageNode(ClassSelector selector, ClassEntry entry) {
@@ -402,7 +420,7 @@ public class ClassSelector extends JTree {
 		for (ClassSelectorPackageNode packageNode : packageNodes()) {
 			for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
 				if (classNode.getClassEntry().equals(classEntry)) {
-					setSelectionPath(new TreePath(new Object[] { getModel().getRoot(), packageNode, classNode }));
+					setSelectionPath(new TreePath(new Object[]{getModel().getRoot(), packageNode, classNode}));
 				}
 			}
 		}
@@ -418,6 +436,9 @@ public class ClassSelector extends JTree {
 			DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) packageNode.getChildAt(i);
 			if (childNode.getUserObject() instanceof ClassEntry && childNode.getUserObject().equals(entry)) {
 				model.removeNodeFromParent(childNode);
+				if (childNode instanceof ClassSelectorClassNode) {
+					displayedObfToDeobf.remove(((ClassSelectorClassNode) childNode).getObfEntry());
+				}
 				break;
 			}
 		}
@@ -428,13 +449,25 @@ public class ClassSelector extends JTree {
 			((DefaultTreeModel) getModel()).removeNodeFromParent(packageNode);
 	}
 
-	public void moveClassTree(ClassEntry oldClassEntry, ClassEntry newClassEntry, ClassSelector otherSelector) {
-		if (otherSelector == null)
-			removeNode(getPackageNode(oldClassEntry), oldClassEntry);
-		insertNode(getOrCreate(newClassEntry), newClassEntry);
+	public void moveClassIn(ClassEntry classEntry) {
+		removeEntry(classEntry);
+		insertNode(classEntry);
 	}
 
-	public ClassSelectorPackageNode getOrCreate(ClassEntry entry) {
+	public void moveClassOut(ClassEntry classEntry) {
+		removeEntry(classEntry);
+	}
+
+	private void removeEntry(ClassEntry classEntry) {
+		ClassEntry previousDeobf = displayedObfToDeobf.get(classEntry);
+		if (previousDeobf != null) {
+			ClassSelectorPackageNode packageNode = getPackageNode(previousDeobf);
+			removeNode(packageNode, previousDeobf);
+			removeNodeIfEmpty(packageNode);
+		}
+	}
+
+	public ClassSelectorPackageNode getOrCreatePackage(ClassEntry entry) {
 		DefaultTreeModel model = (DefaultTreeModel) getModel();
 		ClassSelectorPackageNode newPackageNode = getPackageNode(entry);
 		if (newPackageNode == null) {
@@ -444,10 +477,15 @@ public class ClassSelector extends JTree {
 		return newPackageNode;
 	}
 
-	public void insertNode(ClassSelectorPackageNode packageNode, ClassEntry entry) {
+	public void insertNode(ClassEntry obfEntry) {
+		ClassEntry deobfEntry = controller.getDeobfuscator().deobfuscate(obfEntry);
+		ClassSelectorPackageNode packageNode = getOrCreatePackage(deobfEntry);
+
 		DefaultTreeModel model = (DefaultTreeModel) getModel();
-		ClassSelectorClassNode classNode = new ClassSelectorClassNode(entry);
+		ClassSelectorClassNode classNode = new ClassSelectorClassNode(obfEntry, deobfEntry);
 		model.insertNodeInto(classNode, packageNode, getPlacementIndex(packageNode, classNode));
+
+		displayedObfToDeobf.put(obfEntry, deobfEntry);
 	}
 
 	public void reload() {

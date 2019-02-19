@@ -11,36 +11,40 @@
 
 package cuchaz.enigma;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
-import com.strobel.decompiler.PlainTextOutput;
-import com.strobel.decompiler.languages.java.JavaOutputVisitor;
-import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
-import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
-import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.IndexTreeBuilder;
+import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
+import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.representation.ReferencedEntryPool;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import cuchaz.enigma.utils.Utils;
-import oml.ast.transformers.*;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,11 +57,12 @@ import java.util.stream.Collectors;
 public class Deobfuscator {
 
 	private final ServiceLoader<EnigmaPlugin> plugins = ServiceLoader.load(EnigmaPlugin.class);
-	private final ReferencedEntryPool entryPool = new ReferencedEntryPool();
 	private final ParsedJar parsedJar;
-	private final DecompilerSettings settings;
 	private final JarIndex jarIndex;
 	private final IndexTreeBuilder indexTreeBuilder;
+
+	private final SourceProvider obfSourceProvider;
+
 	private EntryRemapper mapper;
 
 	public Deobfuscator(ParsedJar jar, Consumer<String> listener) {
@@ -75,15 +80,8 @@ public class Deobfuscator {
 		this.indexTreeBuilder = new IndexTreeBuilder(jarIndex);
 
 		listener.accept("Preparing...");
-		// config the decompiler
-		this.settings = DecompilerSettings.javaDefaults();
-		this.settings.setMergeVariables(Utils.getSystemPropertyAsBoolean("enigma.mergeVariables", true));
-		this.settings.setForceExplicitImports(Utils.getSystemPropertyAsBoolean("enigma.forceExplicitImports", true));
-		this.settings.setForceExplicitTypeArguments(
-				Utils.getSystemPropertyAsBoolean("enigma.forceExplicitTypeArguments", true));
-		// DEBUG
-		this.settings.setShowDebugLineNumbers(Utils.getSystemPropertyAsBoolean("enigma.showDebugLineNumbers", false));
-		this.settings.setShowSyntheticMembers(Utils.getSystemPropertyAsBoolean("enigma.showSyntheticMembers", false));
+
+		this.obfSourceProvider = new SourceProvider(SourceProvider.createSettings(), new CompiledSourceTypeLoader(parsedJar));
 
 		// init mappings
 		mapper = new EntryRemapper(jarIndex);
@@ -93,7 +91,7 @@ public class Deobfuscator {
 		this(new ParsedJar(jar), listener);
 	}
 
-	public Deobfuscator(ParsedJar jar) throws IOException {
+	public Deobfuscator(ParsedJar jar) {
 		this(jar, (msg) -> {
 		});
 	}
@@ -128,9 +126,9 @@ public class Deobfuscator {
 			Collection<Entry<?>> dropped = dropMappings(mappings);
 			mapper = new EntryRemapper(jarIndex, mappings);
 
-			DeltaTrackingTree<EntryMapping> deobfToObf = mapper.getDeobfToObf();
+			DeltaTrackingTree<EntryMapping> obfToDeobf = mapper.getObfToDeobf();
 			for (Entry<?> entry : dropped) {
-				deobfToObf.trackDeletion(entry);
+				obfToDeobf.trackDeletion(entry);
 			}
 		} else {
 			mapper = new EntryRemapper(jarIndex);
@@ -161,7 +159,7 @@ public class Deobfuscator {
 			ClassEntry deobfClassEntry = mapper.deobfuscate(obfClassEntry);
 			if (!deobfClassEntry.equals(obfClassEntry)) {
 				// if the class has a mapping, clearly it's deobfuscated
-				deobfClasses.add(deobfClassEntry);
+				deobfClasses.add(obfClassEntry);
 			} else if (obfClassEntry.getPackageName() != null) {
 				// also call it deobufscated if it's not in the none package
 				deobfClasses.add(obfClassEntry);
@@ -172,151 +170,126 @@ public class Deobfuscator {
 		}
 	}
 
-	public TranslatingTypeLoader createTypeLoader() {
-		return new TranslatingTypeLoader(
-				this.parsedJar,
-				this.jarIndex,
-				this.entryPool,
-				this.mapper.getObfuscator(),
-				this.mapper.getDeobfuscator()
-		);
+	public SourceProvider getObfSourceProvider() {
+		return obfSourceProvider;
 	}
 
-	public CompilationUnit getSourceTree(String className) {
-		return getSourceTree(className, createTypeLoader());
-	}
-
-	public CompilationUnit getSourceTree(String className, ITranslatingTypeLoader loader) {
-		return getSourceTree(className, loader, new NoRetryMetadataSystem(loader));
-	}
-
-	public CompilationUnit getSourceTree(String className, ITranslatingTypeLoader loader, MetadataSystem metadataSystem) {
-
-		// we don't know if this class name is obfuscated or deobfuscated
-		// we need to tell the decompiler the deobfuscated name so it doesn't get freaked out
-		// the decompiler only sees classes after deobfuscation, so we need to load it by the deobfuscated name if there is one
-
-		String deobfClassName = mapper.deobfuscate(new ClassEntry(className)).getFullName();
-
-		// set the desc loader
-		this.settings.setTypeLoader(loader);
-
-		// see if procyon can find the desc
-		TypeReference type = metadataSystem.lookupType(deobfClassName);
-		if (type == null) {
-			throw new Error(String.format("Unable to find desc: %s (deobf: %s)\nTried class names: %s",
-					className, deobfClassName, loader.getClassNamesToTry(deobfClassName)
-			));
-		}
-		TypeDefinition resolvedType = type.resolve();
-
-		// decompile it!
-		DecompilerContext context = new DecompilerContext();
-		context.setCurrentType(resolvedType);
-		context.setSettings(this.settings);
-		AstBuilder builder = new AstBuilder(context);
-		builder.addType(resolvedType);
-		builder.runTransformations(null);
-		runCustomTransforms(builder, context);
-		return builder.getCompilationUnit();
-	}
-
-	public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source) {
-		return getSourceIndex(sourceTree, source, true);
-	}
-
-	public SourceIndex getSourceIndex(CompilationUnit sourceTree, String source, boolean ignoreBadTokens) {
-
-		// build the source index
-		SourceIndex index = new SourceIndex(source, ignoreBadTokens);
-		sourceTree.acceptVisitor(new SourceIndexVisitor(entryPool), index);
-
-		EntryResolver resolver = mapper.getDeobfResolver();
-
-		Collection<Token> tokens = Lists.newArrayList(index.referenceTokens());
-
-		// resolve all the classes in the source references
-		for (Token token : tokens) {
-			EntryReference<Entry<?>, Entry<?>> deobfReference = index.getDeobfReference(token);
-			index.replaceDeobfReference(token, resolver.resolveFirstReference(deobfReference, ResolutionStrategy.RESOLVE_CLOSEST));
-		}
-
-		return index;
-	}
-
-	public String getSource(CompilationUnit sourceTree) {
-		// render the AST into source
-		StringWriter buf = new StringWriter();
-		sourceTree.acceptVisitor(new InsertParenthesesVisitor(), null);
-		sourceTree.acceptVisitor(new JavaOutputVisitor(new PlainTextOutput(buf), this.settings), null);
-		return buf.toString();
-	}
-
-	public void writeSources(File dirOut, ProgressListener progress) {
+	public void writeSources(Path outputDirectory, ProgressListener progress) {
 		// get the classes to decompile
-		Set<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses().stream()
-				.filter(classEntry -> !classEntry.isInnerClass())
-				.collect(Collectors.toSet());
+		Collection<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses();
+
+		Stopwatch stopwatch = Stopwatch.createStarted();
+
+		try {
+			Translator deobfuscator = mapper.getDeobfuscator();
+
+			// deobfuscate everything first
+			Map<String, ClassNode> translatedNodes = deobfuscateClasses(progress, classEntries, deobfuscator);
+
+			decompileClasses(outputDirectory, progress, translatedNodes);
+		} finally {
+			stopwatch.stop();
+
+			System.out.println("writeSources Done in : " + stopwatch.toString());
+		}
+	}
+
+	private Map<String, ClassNode> deobfuscateClasses(ProgressListener progress, Collection<ClassEntry> classEntries, Translator translator) {
+		AtomicInteger count = new AtomicInteger();
+		if (progress != null) {
+			progress.init(classEntries.size(), "Deobfuscating classes...");
+		}
+
+		return classEntries.parallelStream()
+				.map(entry -> {
+					ClassEntry translatedEntry = translator.translate(entry);
+					if (progress != null) {
+						progress.step(count.getAndIncrement(), translatedEntry.toString());
+					}
+
+					ClassNode node = parsedJar.getClassNode(entry.getFullName());
+					if (node != null) {
+						ClassNode translatedNode = new ClassNode();
+						node.accept(new TranslationClassVisitor(translator, Opcodes.ASM5, translatedNode));
+						return translatedNode;
+					}
+
+					return null;
+				})
+				.filter(Objects::nonNull)
+				.collect(Collectors.toMap(n -> n.name, Functions.identity()));
+	}
+
+	private void decompileClasses(Path outputDirectory, ProgressListener progress, Map<String, ClassNode> translatedClasses) {
+		Collection<ClassNode> decompileClasses = translatedClasses.values().stream()
+				.filter(classNode -> classNode.name.indexOf('$') == -1)
+				.collect(Collectors.toList());
 
 		if (progress != null) {
-			progress.init(classEntries.size(), "Decompiling classes...");
+			progress.init(decompileClasses.size(), "Decompiling classes...");
 		}
 
 		//create a common instance outside the loop as mappings shouldn't be changing while this is happening
 		//synchronized to make sure the parallelStream doesn't CME with the cache
-		ITranslatingTypeLoader typeLoader = new SynchronizedTypeLoader(createTypeLoader());
+		ITypeLoader typeLoader = new SynchronizedTypeLoader(new CompiledSourceTypeLoader(translatedClasses::get));
 
-		MetadataSystem metadataSystem = new NoRetryMetadataSystem(typeLoader);
-		metadataSystem.setEagerMethodLoadingEnabled(true);//ensures methods are loaded on classload and prevents race conditions
+		MetadataSystem metadataSystem = new Deobfuscator.NoRetryMetadataSystem(typeLoader);
 
-		// DEOBFUSCATE ALL THE THINGS!! @_@
-		Stopwatch stopwatch = Stopwatch.createStarted();
+		//ensures methods are loaded on classload and prevents race conditions
+		metadataSystem.setEagerMethodLoadingEnabled(true);
+
+		DecompilerSettings settings = SourceProvider.createSettings();
+		SourceProvider sourceProvider = new SourceProvider(settings, typeLoader, metadataSystem);
+
 		AtomicInteger count = new AtomicInteger();
-		classEntries.parallelStream().forEach(obfClassEntry -> {
-			ClassEntry deobfClassEntry = mapper.deobfuscate(obfClassEntry);
+
+		decompileClasses.parallelStream().forEach(translatedNode -> {
 			if (progress != null) {
-				progress.step(count.getAndIncrement(), deobfClassEntry.toString());
+				progress.step(count.getAndIncrement(), translatedNode.name);
 			}
 
-			try {
-				// get the source
-				CompilationUnit sourceTree = getSourceTree(obfClassEntry.getName(), typeLoader, metadataSystem);
-
-				// write the file
-				File file = new File(dirOut, deobfClassEntry.getName().replace('.', '/') + ".java");
-				file.getParentFile().mkdirs();
-				try (Writer writer = new BufferedWriter(new FileWriter(file))) {
-					sourceTree.acceptVisitor(new InsertParenthesesVisitor(), null);
-					sourceTree.acceptVisitor(new JavaOutputVisitor(new PlainTextOutput(writer), settings), null);
-				}
-			} catch (Throwable t) {
-				// don't crash the whole world here, just log the error and keep going
-				// TODO: set up logback via log4j
-				System.err.println("Unable to decompile class " + deobfClassEntry + " (" + obfClassEntry + ")");
-				t.printStackTrace(System.err);
-			}
+			decompileClass(outputDirectory, translatedNode, sourceProvider);
 		});
-		stopwatch.stop();
-		System.out.println("writeSources Done in : " + stopwatch.toString());
-		if (progress != null) {
-			progress.step(count.get(), "Done:");
+	}
+
+	private void decompileClass(Path outputDirectory, ClassNode translatedNode, SourceProvider sourceProvider) {
+		try {
+			// get the source
+			CompilationUnit sourceTree = sourceProvider.getSources(translatedNode.name);
+
+			Path path = outputDirectory.resolve(translatedNode.name.replace('.', '/') + ".java");
+			Files.createDirectories(path.getParent());
+
+			try (Writer writer = Files.newBufferedWriter(path)) {
+				sourceProvider.writeSource(writer, sourceTree);
+			}
+		} catch (Throwable t) {
+			// don't crash the whole world here, just log the error and keep going
+			// TODO: set up logback via log4j
+			System.err.println("Unable to decompile class " + translatedNode.name);
+			t.printStackTrace(System.err);
 		}
 	}
 
-	public void writeJar(File out, ProgressListener progress) {
-		transformJar(out, progress, createTypeLoader()::transformInto);
+	public void writeTransformedJar(File out, ProgressListener progress) {
+		Translator deobfuscator = mapper.getDeobfuscator();
+		writeTransformedJar(out, progress, (node, visitor) -> {
+			ClassEntry entry = new ClassEntry(node.name);
+			node.accept(new TranslationClassVisitor(deobfuscator, Opcodes.ASM5, visitor));
+			return deobfuscator.translate(entry).getFullName();
+		});
 	}
 
-	public void transformJar(File out, ProgressListener progress, ClassTransformer transformer) {
+	public void writeTransformedJar(File out, ProgressListener progress, ClassTransformer transformer) {
 		try (JarOutputStream outJar = new JarOutputStream(new FileOutputStream(out))) {
 			if (progress != null) {
 				progress.init(parsedJar.getClassCount(), "Transforming classes...");
 			}
 
-			AtomicInteger i = new AtomicInteger();
+			AtomicInteger count = new AtomicInteger();
 			parsedJar.visitNode(node -> {
 				if (progress != null) {
-					progress.step(i.getAndIncrement(), node.name);
+					progress.step(count.getAndIncrement(), node.name);
 				}
 
 				try {
@@ -329,10 +302,6 @@ public class Deobfuscator {
 					throw new Error("Unable to transform class " + node.name, t);
 				}
 			});
-
-			if (progress != null) {
-				progress.step(i.get(), "Done!");
-			}
 		} catch (IOException ex) {
 			throw new Error("Unable to write to Jar file!");
 		}
@@ -355,7 +324,7 @@ public class Deobfuscator {
 		}
 	}
 
-	public boolean isObfuscatedIdentifier(Entry<?> obfEntry) {
+	public boolean isRenamable(Entry<?> obfEntry) {
 		if (obfEntry instanceof MethodEntry) {
 			// HACKHACK: Object methods are not obfuscated identifiers
 			MethodEntry obfMethodEntry = (MethodEntry) obfEntry;
@@ -384,17 +353,22 @@ public class Deobfuscator {
 			} else if (name.equals("wait") && sig.equals("(JI)V")) {
 				return false;
 			}
+		} else if (obfEntry instanceof LocalVariableEntry && !((LocalVariableEntry) obfEntry).isArgument()) {
+			return false;
 		}
 
 		return this.jarIndex.getEntryIndex().hasEntry(obfEntry);
 	}
 
-	public boolean isRenameable(EntryReference<Entry<?>, Entry<?>> obfReference) {
-		return obfReference.isNamed() && isObfuscatedIdentifier(obfReference.getNameableEntry());
+	public boolean isRenamable(EntryReference<Entry<?>, Entry<?>> obfReference) {
+		return obfReference.isNamed() && isRenamable(obfReference.getNameableEntry());
 	}
 
-	public boolean hasDeobfuscatedName(Entry<?> obfEntry) {
-		return mapper.hasDeobfMapping(obfEntry);
+	public boolean isRemapped(Entry<?> entry) {
+		EntryResolver resolver = mapper.getObfResolver();
+		DeltaTrackingTree<EntryMapping> mappings = mapper.getObfToDeobf();
+		return resolver.resolveEntry(entry, ResolutionStrategy.RESOLVE_ROOT).stream()
+				.anyMatch(mappings::contains);
 	}
 
 	public void rename(Entry<?> obfEntry, String newName) {
@@ -409,21 +383,12 @@ public class Deobfuscator {
 		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()));
 	}
 
-	public static void runCustomTransforms(AstBuilder builder, DecompilerContext context) {
-		List<IAstTransform> transformers = Arrays.asList(
-				new ObfuscatedEnumSwitchRewriterTransform(context),
-				new VarargsFixer(context),
-				new RemoveObjectCasts(context),
-				new Java8Generics(),
-				new InvalidIdentifierFix()
-		);
-		for (IAstTransform transform : transformers) {
-			transform.run(builder.getCompilationUnit());
-		}
+	public <T extends Translatable> T deobfuscate(T translatable) {
+		return mapper.deobfuscate(translatable);
 	}
 
 	public interface ClassTransformer {
-		String transform(ClassNode node, ClassWriter writer);
+		String transform(ClassNode node, ClassVisitor visitor);
 	}
 
 	public static class NoRetryMetadataSystem extends MetadataSystem {
@@ -448,6 +413,7 @@ public class Deobfuscator {
 			return result;
 		}
 
+		@Override
 		public synchronized TypeDefinition resolve(final TypeReference type) {
 			return super.resolve(type);
 		}

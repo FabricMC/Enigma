@@ -24,7 +24,7 @@ import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
-import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
+import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
@@ -44,10 +44,9 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 public class Gui {
@@ -71,7 +70,7 @@ public class Gui {
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
 	private PanelIdentifier infoPanel;
-	public Map<String, BoxHighlightPainter> boxHighlightPainters;
+	public Map<TokenHighlightType, BoxHighlightPainter> boxHighlightPainters;
 	private SelectionHighlightPainter selectionHighlightPainter;
 	private JTree inheritanceTree;
 	private JTree implementationsTree;
@@ -92,12 +91,12 @@ public class Gui {
 	}
 
 	public Gui() {
+		Config.getInstance().lookAndFeel.setGlobalLAF();
+
 		// init frame
 		this.frame = new JFrame(Constants.NAME);
 		final Container pane = this.frame.getContentPane();
 		pane.setLayout(new BorderLayout());
-
-		Config.getInstance().lookAndFeel.setGlobalLAF();
 
 		if (Boolean.parseBoolean(System.getProperty("enigma.catchExceptions", "true"))) {
 			// install a global exception handler to the event thread
@@ -320,7 +319,7 @@ public class Gui {
 		this.frame.setTitle(Constants.NAME + " - " + jarName);
 		this.classesPanel.removeAll();
 		this.classesPanel.add(splitClasses);
-		setSource(null);
+		setEditorText(null);
 
 		// update menu
 		this.menuBar.closeJarMenu.setEnabled(true);
@@ -342,7 +341,7 @@ public class Gui {
 		this.frame.setTitle(Constants.NAME);
 		setObfClasses(null);
 		setDeobfClasses(null);
-		setSource(null);
+		setEditorText(null);
 		this.classesPanel.removeAll();
 
 		// update menu
@@ -373,9 +372,14 @@ public class Gui {
 		this.menuBar.saveMappingsMenu.setEnabled(path != null);
 	}
 
-	public void setSource(String source) {
+	public void setEditorText(String source) {
 		this.editor.getHighlighter().removeAllHighlights();
 		this.editor.setText(source);
+	}
+
+	public void setSource(DecompiledClassSource source) {
+		editor.setText(source.toString());
+		setHighlightedTokens(source.getHighlightedTokens());
 	}
 
 	public void showToken(final Token token) {
@@ -401,15 +405,15 @@ public class Gui {
 		showToken(sortedTokens.get(0));
 	}
 
-	public void setHighlightedTokens(Map<String, Iterable<Token>> tokens) {
+	public void setHighlightedTokens(Map<TokenHighlightType, Collection<Token>> tokens) {
 		// remove any old highlighters
 		this.editor.getHighlighter().removeAllHighlights();
 
 		if (boxHighlightPainters != null) {
-			for (String s : tokens.keySet()) {
-				BoxHighlightPainter painter = boxHighlightPainters.get(s);
+			for (TokenHighlightType type : tokens.keySet()) {
+				BoxHighlightPainter painter = boxHighlightPainters.get(type);
 				if (painter != null) {
-					setHighlightedTokens(tokens.get(s), painter);
+					setHighlightedTokens(tokens.get(type), painter);
 				}
 			}
 		}
@@ -435,17 +439,19 @@ public class Gui {
 
 		this.reference = reference;
 
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
+
 		infoPanel.removeAll();
-		if (reference.entry instanceof ClassEntry) {
-			showClassEntry((ClassEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof FieldEntry) {
-			showFieldEntry((FieldEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof MethodEntry) {
-			showMethodEntry((MethodEntry) this.reference.entry);
-		} else if (this.reference.entry instanceof LocalVariableEntry) {
-			showLocalVariableEntry((LocalVariableEntry) this.reference.entry);
+		if (translatedReference.entry instanceof ClassEntry) {
+			showClassEntry((ClassEntry) translatedReference.entry);
+		} else if (translatedReference.entry instanceof FieldEntry) {
+			showFieldEntry((FieldEntry) translatedReference.entry);
+		} else if (translatedReference.entry instanceof MethodEntry) {
+			showMethodEntry((MethodEntry) translatedReference.entry);
+		} else if (translatedReference.entry instanceof LocalVariableEntry) {
+			showLocalVariableEntry((LocalVariableEntry) translatedReference.entry);
 		} else {
-			throw new Error("Unknown entry desc: " + this.reference.entry.getClass().getName());
+			throw new Error("Unknown entry desc: " + translatedReference.entry.getClass().getName());
 		}
 
 		redraw();
@@ -519,7 +525,7 @@ public class Gui {
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
-		reference = this.controller.getDeobfReference(token);
+		reference = this.controller.getReference(token);
 
 		Entry<?> referenceEntry = reference != null ? reference.entry : null;
 		boolean isClassEntry = isToken && referenceEntry instanceof ClassEntry;
@@ -527,7 +533,7 @@ public class Gui {
 		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
 		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
 		boolean isInJar = isToken && this.controller.entryIsInJar(referenceEntry);
-		boolean isRenameable = isToken && this.controller.referenceIsRenameable(reference);
+		boolean isRenameable = isToken && this.controller.getDeobfuscator().isRenamable(reference);
 
 		if (isToken) {
 			showReference(reference);
@@ -544,7 +550,7 @@ public class Gui {
 		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
 
-		if (isToken && this.controller.entryHasDeobfuscatedName(referenceEntry)) {
+		if (isToken && this.controller.getDeobfuscator().isRemapped(referenceEntry)) {
 			this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
 		} else {
 			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
@@ -576,7 +582,10 @@ public class Gui {
 
 		// init the text box
 		final JTextField text = new JTextField();
-		text.setText(reference.getNameableName());
+
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
+		text.setText(translatedReference.getNameableName());
+
 		text.setPreferredSize(new Dimension(360, text.getPreferredSize().height));
 		text.addKeyListener(new KeyAdapter() {
 			@Override
@@ -603,7 +612,7 @@ public class Gui {
 
 		int offset = text.getText().lastIndexOf('/') + 1;
 		// If it's a class and isn't in the default package, assume that it's deobfuscated.
-		if (reference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
+		if (translatedReference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
 			text.select(offset, text.getText().length());
 		else
 			text.selectAll();
@@ -719,7 +728,7 @@ public class Gui {
 	}
 
 	public void toggleMapping() {
-		if (this.controller.entryHasDeobfuscatedName(reference.entry)) {
+		if (this.controller.getDeobfuscator().isRemapped(reference.entry)) {
 			this.controller.removeMapping(reference);
 		} else {
 			this.controller.markAsDeobfuscated(reference);
@@ -743,7 +752,7 @@ public class Gui {
 		callback.apply(response);
 	}
 
-	public void saveMapping() throws IOException {
+	public void saveMapping() {
 		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION)
 			this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile().toPath());
 	}
@@ -757,13 +766,8 @@ public class Gui {
 			// ask to save before closing
 			showDiscardDiag((response) -> {
 				if (response == JOptionPane.YES_OPTION) {
-					try {
-						this.saveMapping();
-						this.frame.dispose();
-
-					} catch (IOException ex) {
-						throw new Error(ex);
-					}
+					this.saveMapping();
+					this.frame.dispose();
 				} else if (response == JOptionPane.NO_OPTION)
 					this.frame.dispose();
 
@@ -796,47 +800,39 @@ public class Gui {
 			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
 	}
 
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, String newName) {
-		String oldEntry = deobfReference.entry.getContainingClass().getPackageName();
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, String newName) {
+		String oldEntry = obfReference.entry.getContainingClass().getPackageName();
 		String newEntry = new ClassEntry(newName).getPackageName();
-		moveClassTree(deobfReference, newName, oldEntry == null,
-				newEntry == null);
+		moveClassTree(obfReference, oldEntry == null, newEntry == null);
 	}
 
 	// TODO: getExpansionState will *not* actually update itself based on name changes!
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> deobfReference, String newName, boolean isOldOb, boolean isNewOb) {
-		ClassEntry oldEntry = deobfReference.entry.getContainingClass();
-		ClassEntry newEntry = new ClassEntry(newName);
+	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, boolean isOldOb, boolean isNewOb) {
+		ClassEntry classEntry = obfReference.entry.getContainingClass();
 
 		// Ob -> deob
 		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
 		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
 
 		if (isOldOb && !isNewOb) {
-			this.deobfPanel.deobfClasses.moveClassTree(oldEntry, newEntry, obfPanel.obfClasses);
-			ClassSelectorPackageNode packageNode = this.obfPanel.obfClasses.getPackageNode(oldEntry);
-			this.obfPanel.obfClasses.removeNode(packageNode, oldEntry);
-			this.obfPanel.obfClasses.removeNodeIfEmpty(packageNode);
+			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
+			this.obfPanel.obfClasses.moveClassOut(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
 		// Deob -> ob
 		else if (isNewOb && !isOldOb) {
-			this.obfPanel.obfClasses.moveClassTree(oldEntry, newEntry, deobfPanel.deobfClasses);
-			ClassSelectorPackageNode packageNode = this.deobfPanel.deobfClasses.getPackageNode(oldEntry);
-			this.deobfPanel.deobfClasses.removeNode(packageNode, oldEntry);
-			this.deobfPanel.deobfClasses.removeNodeIfEmpty(packageNode);
+			this.obfPanel.obfClasses.moveClassIn(classEntry);
+			this.deobfPanel.deobfClasses.moveClassOut(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
 		// Local move
 		else if (isOldOb) {
-			this.obfPanel.obfClasses.moveClassTree(oldEntry, newEntry, null);
-			this.obfPanel.obfClasses.removeNodeIfEmpty(this.obfPanel.obfClasses.getPackageNode(oldEntry));
+			this.obfPanel.obfClasses.moveClassIn(classEntry);
 			this.obfPanel.obfClasses.reload();
 		} else {
-			this.deobfPanel.deobfClasses.moveClassTree(oldEntry, newEntry, null);
-			this.deobfPanel.deobfClasses.removeNodeIfEmpty(this.deobfPanel.deobfClasses.getPackageNode(oldEntry));
+			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 		}
 
