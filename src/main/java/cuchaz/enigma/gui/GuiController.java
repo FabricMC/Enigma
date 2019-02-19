@@ -86,6 +86,7 @@ public class GuiController {
 
 		gui.setMappingsFile(path);
 		loadedMappingFormat = format;
+		loadedMappingPath = path;
 
 		refreshClasses();
 		refreshCurrentClass();
