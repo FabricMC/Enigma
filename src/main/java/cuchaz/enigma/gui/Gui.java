@@ -38,10 +38,7 @@ import de.sciss.syntaxpane.DefaultSyntaxKit;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.file.Path;
@@ -153,7 +150,7 @@ public class Gui {
 		inheritanceTree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				if (event.getClickCount() == 2) {
+				if (event.getClickCount() >= 2) {
 					// get the selected node
 					TreePath path = inheritanceTree.getSelectionPath();
 					if (path == null) {
@@ -173,6 +170,9 @@ public class Gui {
 				}
 			}
 		});
+		TreeCellRenderer cellRenderer = inheritanceTree.getCellRenderer();
+		inheritanceTree.setCellRenderer(new MethodTreeCellRenderer((DefaultTreeCellRenderer) cellRenderer));
+
 		JPanel inheritancePanel = new JPanel();
 		inheritancePanel.setLayout(new BorderLayout());
 		inheritancePanel.add(new JScrollPane(inheritanceTree));
@@ -183,7 +183,7 @@ public class Gui {
 		implementationsTree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				if (event.getClickCount() == 2) {
+				if (event.getClickCount() >= 2) {
 					// get the selected node
 					TreePath path = implementationsTree.getSelectionPath();
 					if (path == null) {
@@ -212,7 +212,7 @@ public class Gui {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				if (event.getClickCount() == 2) {
+				if (event.getClickCount() >= 2) {
 					// get the selected node
 					TreePath path = callsTree.getSelectionPath();
 					if (path == null) {
