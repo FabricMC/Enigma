@@ -3,12 +3,12 @@ package cuchaz.enigma.analysis.index;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 public class ReferenceIndex implements JarIndexer {
 	private Multimap<MethodEntry, MethodEntry> methodReferences = HashMultimap.create();
@@ -34,35 +34,54 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	@Override
-	public void processIndex(EntryResolver resolver) {
-		methodReferences = resolveReferences(resolver, methodReferences);
-		referencesToMethods = resolveReferencesTo(resolver, referencesToMethods);
-		referencesToClasses = resolveReferencesTo(resolver, referencesToClasses);
-		referencesToFields = resolveReferencesTo(resolver, referencesToFields);
+	public void processIndex(JarIndex index) {
+		methodReferences = remapReferences(index, methodReferences);
+		referencesToMethods = remapReferencesTo(index, referencesToMethods);
+		referencesToClasses = remapReferencesTo(index, referencesToClasses);
+		referencesToFields = remapReferencesTo(index, referencesToFields);
 	}
 
-	private <K extends Entry<?>, V extends Entry<?>> Multimap<K, V> resolveReferences(EntryResolver resolver, Multimap<K, V> multimap) {
+	private <K extends Entry<?>, V extends Entry<?>> Multimap<K, V> remapReferences(JarIndex index, Multimap<K, V> multimap) {
 		Multimap<K, V> resolved = HashMultimap.create();
 		for (Map.Entry<K, V> entry : multimap.entries()) {
-			resolved.put(resolve(resolver, entry.getKey()), resolve(resolver, entry.getValue()));
+			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
 		}
 		return resolved;
 	}
 
-	private <E extends Entry<?>, C extends Entry<?>> Multimap<E, EntryReference<E, C>> resolveReferencesTo(EntryResolver resolver, Multimap<E, EntryReference<E, C>> multimap) {
+	private <E extends Entry<?>, C extends Entry<?>> Multimap<E, EntryReference<E, C>> remapReferencesTo(JarIndex index, Multimap<E, EntryReference<E, C>> multimap) {
 		Multimap<E, EntryReference<E, C>> resolved = HashMultimap.create();
 		for (Map.Entry<E, EntryReference<E, C>> entry : multimap.entries()) {
-			resolved.put(resolve(resolver, entry.getKey()), resolve(resolver, entry.getValue()));
+			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
 		}
 		return resolved;
 	}
 
-	private <E extends Entry<?>> E resolve(EntryResolver resolver, E entry) {
-		return resolver.resolveFirstEntry(entry, ResolutionStrategy.RESOLVE_CLOSEST);
+	private <E extends Entry<?>> E remap(JarIndex index, E entry) {
+		E resolvedEntry = index.getEntryResolver().resolveFirstEntry(entry, ResolutionStrategy.RESOLVE_CLOSEST);
+
+		Optional<E> remappedBridge = getRemappedBridge(index, resolvedEntry);
+		return remappedBridge.orElse(resolvedEntry);
 	}
 
-	private <E extends Entry<?>, C extends Entry<?>> EntryReference<E, C> resolve(EntryResolver resolver, EntryReference<E, C> reference) {
-		return resolver.resolveFirstReference(reference, ResolutionStrategy.RESOLVE_CLOSEST);
+	private <E extends Entry<?>, C extends Entry<?>> EntryReference<E, C> remap(JarIndex index, EntryReference<E, C> reference) {
+		EntryReference<E, C> resolvedReference = index.getEntryResolver().resolveFirstReference(reference, ResolutionStrategy.RESOLVE_CLOSEST);
+
+		getRemappedBridge(index, resolvedReference.entry).ifPresent(e -> resolvedReference.entry = e);
+		getRemappedBridge(index, resolvedReference.context).ifPresent(e -> resolvedReference.context = e);
+
+		return resolvedReference;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <E extends Entry<?>> Optional<E> getRemappedBridge(JarIndex index, E entry) {
+		if (entry instanceof MethodEntry) {
+			MethodEntry bridgeEntry = index.getBridgeMethodIndex().getBridgeFromAccessed((MethodEntry) entry);
+			if (bridgeEntry != null) {
+				return Optional.of((E) entry.withName(bridgeEntry.getName()));
+			}
+		}
+		return Optional.empty();
 	}
 
 	public Collection<MethodEntry> getMethodsReferencedBy(MethodEntry entry) {

@@ -45,6 +45,11 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
+	public FieldEntry withName(String name) {
+		return new FieldEntry(parent, name, desc);
+	}
+
+	@Override
 	public FieldEntry withParent(ClassEntry parent) {
 		return new FieldEntry(parent, this.name, this.desc);
 	}

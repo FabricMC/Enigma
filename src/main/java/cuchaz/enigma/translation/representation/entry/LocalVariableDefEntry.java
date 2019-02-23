@@ -34,6 +34,11 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 	}
 
 	@Override
+	public LocalVariableDefEntry withName(String name) {
+		return new LocalVariableDefEntry(parent, index, name, parameter, desc);
+	}
+
+	@Override
 	public LocalVariableDefEntry withParent(MethodEntry entry) {
 		return new LocalVariableDefEntry(entry, index, name, parameter, desc);
 	}

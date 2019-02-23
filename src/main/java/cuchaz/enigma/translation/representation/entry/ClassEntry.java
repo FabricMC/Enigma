@@ -96,6 +96,11 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
+	public ClassEntry withName(String name) {
+		return new ClassEntry(parent, name);
+	}
+
+	@Override
 	public ClassEntry withParent(ClassEntry parent) {
 		return new ClassEntry(parent, name);
 	}
@@ -193,6 +198,11 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	@Override
 	public int compareTo(ClassEntry entry) {
-		return name.compareTo(entry.name);
+		String fullName = getFullName();
+		String otherFullName = entry.getFullName();
+		if (fullName.length() != otherFullName.length()) {
+			return fullName.length() - otherFullName.length();
+		}
+		return fullName.compareTo(otherFullName);
 	}
 }

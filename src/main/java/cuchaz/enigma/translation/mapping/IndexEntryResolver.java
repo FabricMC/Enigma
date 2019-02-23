@@ -91,6 +91,8 @@ public class IndexEntryResolver implements EntryResolver {
 				Set<Entry<ClassEntry>> resolvedBridge = resolveChildEntry(bridgeMethod, strategy);
 				if (!resolvedBridge.isEmpty()) {
 					return resolvedBridge;
+				} else {
+					return Collections.singleton(bridgeMethod);
 				}
 			}
 		}

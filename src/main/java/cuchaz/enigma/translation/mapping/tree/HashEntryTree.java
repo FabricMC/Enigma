@@ -8,7 +8,9 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class HashEntryTree<T> implements EntryTree<T> {
 	private final Map<Entry<?>, HashTreeNode<T>> root = new HashMap<>();
@@ -17,7 +19,7 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	public HashEntryTree(EntryTree<T> tree) {
-		for (EntryTreeNode<T> node : tree.getAllNodes()) {
+		for (EntryTreeNode<T> node : tree) {
 			insert(node.getEntry(), node.getValue());
 		}
 	}
@@ -151,31 +153,24 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Iterator<EntryTreeNode<T>> iterator() {
-		Collection<EntryTreeNode<T>> values = (Collection) root.values();
-		return values.iterator();
-	}
-
-	@Override
-	public Collection<EntryTreeNode<T>> getAllNodes() {
 		Collection<EntryTreeNode<T>> nodes = new ArrayList<>();
 		for (EntryTreeNode<T> node : root.values()) {
 			nodes.addAll(node.getNodesRecursively());
 		}
-		return nodes;
+		return nodes.iterator();
 	}
 
 	@Override
-	public Collection<Entry<?>> getAllEntries() {
-		return getAllNodes().stream()
-				.map(EntryTreeNode::getEntry)
-				.collect(Collectors.toList());
+	public Stream<Entry<?>> getAllEntries() {
+		return StreamSupport.stream(spliterator(), false)
+				.filter(EntryTreeNode::hasValue)
+				.map(EntryTreeNode::getEntry);
 	}
 
 	@Override
-	public Collection<Entry<?>> getRootEntries() {
-		return root.keySet();
+	public Stream<EntryTreeNode<T>> getRootNodes() {
+		return root.values().stream().map(Function.identity());
 	}
 
 	@Override
@@ -186,7 +181,7 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	@Override
 	public HashEntryTree<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		HashEntryTree<T> translatedTree = new HashEntryTree<>();
-		for (EntryTreeNode<T> node : getAllNodes()) {
+		for (EntryTreeNode<T> node : this) {
 			translatedTree.insert(translator.translate(node.getEntry()), node.getValue());
 		}
 		return translatedTree;

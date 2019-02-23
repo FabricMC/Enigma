@@ -10,13 +10,13 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 public class DeltaTrackingTree<T> implements EntryTree<T> {
 	private final EntryTree<T> delegate;
 
 	private EntryTree<T> deltaReference;
-	private EntryTree<Object> additions = new HashEntryTree<>();
-	private EntryTree<Object> deletions = new HashEntryTree<>();
+	private EntryTree<Object> changes = new HashEntryTree<>();
 
 	public DeltaTrackingTree(EntryTree<T> delegate) {
 		this.delegate = delegate;
@@ -29,30 +29,19 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 
 	@Override
 	public void insert(Entry<?> entry, T value) {
-		if (value != null) {
-			trackAddition(entry);
-		} else {
-			trackDeletion(entry);
-		}
+		trackChange(entry);
 		delegate.insert(entry, value);
 	}
 
 	@Nullable
 	@Override
 	public T remove(Entry<?> entry) {
-		T value = delegate.remove(entry);
-		trackDeletion(entry);
-		return value;
+		trackChange(entry);
+		return delegate.remove(entry);
 	}
 
-	public void trackAddition(Entry<?> entry) {
-		deletions.insert(entry, MappingDelta.PLACEHOLDER);
-		additions.insert(entry, MappingDelta.PLACEHOLDER);
-	}
-
-	public void trackDeletion(Entry<?> entry) {
-		additions.remove(entry);
-		deletions.insert(entry, MappingDelta.PLACEHOLDER);
+	public void trackChange(Entry<?> entry) {
+		changes.insert(entry, MappingDelta.PLACEHOLDER);
 	}
 
 	@Nullable
@@ -78,25 +67,19 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 	}
 
 	@Override
-	public Collection<EntryTreeNode<T>> getAllNodes() {
-		return delegate.getAllNodes();
-	}
-
-	@Override
-	public Collection<Entry<?>> getRootEntries() {
-		return delegate.getRootEntries();
+	public Stream<EntryTreeNode<T>> getRootNodes() {
+		return delegate.getRootNodes();
 	}
 
 	@Override
 	public DeltaTrackingTree<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		DeltaTrackingTree<T> translatedTree = new DeltaTrackingTree<>(delegate.translate(translator, resolver, mappings));
-		translatedTree.additions = additions.translate(translator, resolver, mappings);
-		translatedTree.deletions = deletions.translate(translator, resolver, mappings);
+		translatedTree.changes = changes.translate(translator, resolver, mappings);
 		return translatedTree;
 	}
 
 	@Override
-	public Collection<Entry<?>> getAllEntries() {
+	public Stream<Entry<?>> getAllEntries() {
 		return delegate.getAllEntries();
 	}
 
@@ -111,18 +94,17 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 	}
 
 	public MappingDelta<T> takeDelta() {
-		MappingDelta<T> delta = new MappingDelta<>(deltaReference, additions, deletions);
+		MappingDelta<T> delta = new MappingDelta<>(deltaReference, changes);
 		resetDelta();
 		return delta;
 	}
 
 	private void resetDelta() {
 		deltaReference = new HashEntryTree<>(delegate);
-		additions = new HashEntryTree<>();
-		deletions = new HashEntryTree<>();
+		changes = new HashEntryTree<>();
 	}
 
 	public boolean isDirty() {
-		return !additions.isEmpty() || !deletions.isEmpty();
+		return !changes.isEmpty();
 	}
 }

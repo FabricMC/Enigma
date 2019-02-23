@@ -35,11 +35,11 @@ public enum MappingFormat {
 		writer.write(mappings, delta, path, progressListener);
 	}
 
-	public EntryTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
+	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener) throws IOException, MappingParseException {
 		if (reader == null) {
 			throw new IllegalStateException(name() + " does not support reading");
 		}
-		return reader.read(path);
+		return reader.read(path, progressListener);
 	}
 
 	@Nullable

@@ -35,6 +35,9 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	@Override
 	public abstract ParentedEntry<P> withParent(P parent);
 
+	@Override
+	public abstract ParentedEntry<P> withName(String name);
+
 	protected abstract ParentedEntry<P> translate(Translator translator, @Nullable EntryMapping mapping);
 
 	@Override

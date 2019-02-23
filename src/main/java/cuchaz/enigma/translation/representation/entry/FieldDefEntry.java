@@ -55,6 +55,11 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	}
 
 	@Override
+	public FieldDefEntry withName(String name) {
+		return new FieldDefEntry(parent, name, desc, signature, access);
+	}
+
+	@Override
 	public FieldDefEntry withParent(ClassEntry owner) {
 		return new FieldDefEntry(owner, this.name, this.desc, signature, access);
 	}

@@ -53,19 +53,22 @@ public class JarIndex implements JarIndexer {
 	}
 
 	public void indexJar(ParsedJar jar, Consumer<String> progress) {
-		progress.accept("Indexing entries (1/3)");
+		progress.accept("Indexing entries (1/4)");
 		jar.visitReader(name -> new IndexClassVisitor(this, Opcodes.ASM5), ClassReader.SKIP_CODE);
 
-		progress.accept("Indexing entry references (2/3)");
+		progress.accept("Indexing entry references (2/4)");
 		jar.visitReader(name -> new IndexReferenceVisitor(this, Opcodes.ASM5), ClassReader.SKIP_FRAMES);
 
-		progress.accept("Processing index (3/3)");
-		processIndex(entryResolver);
+		progress.accept("Finding bridge methods (3/4)");
+		bridgeMethodIndex.findBridgeMethods();
+
+		progress.accept("Processing index (4/4)");
+		processIndex(this);
 	}
 
 	@Override
-	public void processIndex(EntryResolver resolver) {
-		indexers.forEach(indexer -> indexer.processIndex(entryResolver));
+	public void processIndex(JarIndex index) {
+		indexers.forEach(indexer -> indexer.processIndex(index));
 	}
 
 	@Override

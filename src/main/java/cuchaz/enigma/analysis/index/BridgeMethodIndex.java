@@ -2,7 +2,6 @@ package cuchaz.enigma.analysis.index;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
@@ -11,10 +10,7 @@ import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class BridgeMethodIndex implements JarIndexer {
 	private final EntryIndex entryIndex;
@@ -30,8 +26,7 @@ public class BridgeMethodIndex implements JarIndexer {
 		this.referenceIndex = referenceIndex;
 	}
 
-	@Override
-	public void processIndex(EntryResolver resolver) {
+	public void findBridgeMethods() {
 		// look for access and bridged methods
 		for (MethodEntry methodEntry : entryIndex.getMethods()) {
 			MethodDefEntry methodDefEntry = (MethodDefEntry) methodEntry;
@@ -42,6 +37,23 @@ public class BridgeMethodIndex implements JarIndexer {
 			}
 
 			indexSyntheticMethod(methodDefEntry, access);
+		}
+	}
+
+	@Override
+	public void processIndex(JarIndex index) {
+		Map<MethodEntry, MethodEntry> copiedAccessToBridge = new HashMap<>(accessedToBridge);
+
+		for (Map.Entry<MethodEntry, MethodEntry> entry : copiedAccessToBridge.entrySet()) {
+			MethodEntry accessedEntry = entry.getKey();
+			MethodEntry bridgeEntry = entry.getValue();
+			if (bridgeEntry.getName().equals(accessedEntry.getName())) {
+				continue;
+			}
+
+			MethodEntry renamedAccessedEntry = accessedEntry.withName(bridgeEntry.getName());
+			bridgeMethods.add(renamedAccessedEntry);
+			accessedToBridge.put(renamedAccessedEntry, accessedToBridge.get(accessedEntry));
 		}
 	}
 
@@ -128,5 +140,9 @@ public class BridgeMethodIndex implements JarIndexer {
 	@Nullable
 	public MethodEntry getBridgeFromAccessed(MethodEntry entry) {
 		return accessedToBridge.get(entry);
+	}
+
+	public Map<MethodEntry, MethodEntry> getAccessedToBridge() {
+		return Collections.unmodifiableMap(accessedToBridge);
 	}
 }

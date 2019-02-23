@@ -52,6 +52,11 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	}
 
 	@Override
+	public LocalVariableEntry withName(String name) {
+		return new LocalVariableEntry(parent, index, name, parameter);
+	}
+
+	@Override
 	public LocalVariableEntry withParent(MethodEntry parent) {
 		return new LocalVariableEntry(parent, index, name, parameter);
 	}

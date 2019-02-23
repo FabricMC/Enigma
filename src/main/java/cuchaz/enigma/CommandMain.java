@@ -74,7 +74,7 @@ public class CommandMain {
 		Deobfuscator deobfuscator = new Deobfuscator(jar);
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
-			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings);
+			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, new ConsoleProgressListener());
 			deobfuscator.setMappings(mappings);
 		}
 		return deobfuscator;
@@ -94,7 +94,7 @@ public class CommandMain {
 		System.out.println("Reading mappings...");
 
 		MappingFormat readFormat = chooseEnigmaFormat(fileMappings);
-		EntryTree<EntryMapping> mappings = readFormat.read(fileMappings);
+		EntryTree<EntryMapping> mappings = readFormat.read(fileMappings, new ConsoleProgressListener());
 		System.out.println("Saving new mappings...");
 
 		saveFormat.write(mappings, result.toPath(), new ConsoleProgressListener());

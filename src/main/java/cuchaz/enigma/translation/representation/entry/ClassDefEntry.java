@@ -86,6 +86,11 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	}
 
 	@Override
+	public ClassDefEntry withName(String name) {
+		return new ClassDefEntry(parent, name, signature, access, superClass, interfaces);
+	}
+
+	@Override
 	public ClassDefEntry withParent(ClassEntry parent) {
 		return new ClassDefEntry(parent, name, signature, access, superClass, interfaces);
 	}

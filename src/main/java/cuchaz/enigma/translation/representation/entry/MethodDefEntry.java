@@ -55,6 +55,11 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 	}
 
 	@Override
+	public MethodDefEntry withName(String name) {
+		return new MethodDefEntry(parent, name, descriptor, signature, access);
+	}
+
+	@Override
 	public MethodDefEntry withParent(ClassEntry parent) {
 		return new MethodDefEntry(new ClassEntry(parent.getFullName()), name, descriptor, signature, access);
 	}
