@@ -344,6 +344,7 @@ public class GuiController {
 			}
 
 			DropImportAstTransform.INSTANCE.run(sourceTree);
+			DropVarModifiersAstTransform.INSTANCE.run(sourceTree);
 
 			String sourceString = sourceProvider.writeSourceToString(sourceTree);
 
