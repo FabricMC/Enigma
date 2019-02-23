@@ -20,7 +20,7 @@ import java.awt.*;
 
 public class MethodTreeCellRenderer implements TreeCellRenderer {
 
-	DefaultTreeCellRenderer parent;
+	private final DefaultTreeCellRenderer parent;
 
 	public MethodTreeCellRenderer(DefaultTreeCellRenderer parent) {
 		this.parent = parent;
@@ -30,7 +30,11 @@ public class MethodTreeCellRenderer implements TreeCellRenderer {
 	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 		DefaultTreeCellRenderer ret = (DefaultTreeCellRenderer) parent.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 		if (value instanceof MethodInheritanceTreeNode && ((MethodInheritanceTreeNode) value).isImplemented()) {
-			ret.setForeground(Color.RED);
+			Font old = ret.getFont();
+			ret.setFont(old.deriveFont(Font.ITALIC));
+			ret.setForeground(Color.GREEN);
+		} else {
+			ret.setFont(ret.getFont().deriveFont(Font.PLAIN));
 		}
 		return ret;
 	}
