@@ -14,27 +14,26 @@ package cuchaz.enigma.gui;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
 
-public class MethodTreeCellRenderer implements TreeCellRenderer {
+class MethodTreeCellRenderer implements TreeCellRenderer {
 
-	private final DefaultTreeCellRenderer parent;
+	private final TreeCellRenderer parent;
 
-	public MethodTreeCellRenderer(DefaultTreeCellRenderer parent) {
+	MethodTreeCellRenderer(TreeCellRenderer parent) {
 		this.parent = parent;
 	}
 
 	@Override
 	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-		DefaultTreeCellRenderer ret = (DefaultTreeCellRenderer) parent.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+		Component ret = parent.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 		if (value instanceof MethodInheritanceTreeNode && ((MethodInheritanceTreeNode) value).isImplemented()) {
-			Font old = ret.getFont();
-			ret.setFont(old.deriveFont(Font.ITALIC));
-			ret.setForeground(Color.GREEN);
-		} else {
+			ret.setForeground(Color.BLACK);
 			ret.setFont(ret.getFont().deriveFont(Font.PLAIN));
+		} else {
+			ret.setForeground(Color.GRAY);
+			ret.setFont(ret.getFont().deriveFont(Font.ITALIC));
 		}
 		return ret;
 	}
