@@ -197,7 +197,11 @@ public class MenuBar extends JMenuBar {
 				JMenuItem search = new JMenuItem("Search");
 				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
 				menu.add(search);
-				search.addActionListener(event -> new SearchDialog(this.gui).show());
+				search.addActionListener(event -> {
+					if (this.gui.getController().getDeobfuscator() != null) {
+						new SearchDialog(this.gui).show();
+					}
+				});
 
 			}
 		}

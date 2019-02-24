@@ -73,22 +73,6 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	@Override
-	public Collection<Entry<?>> getSiblings(Entry<?> entry) {
-		List<HashTreeNode<T>> path = computePath(entry, false);
-		if (path.size() <= 1) {
-			return getSiblings(entry, root.keySet());
-		}
-		HashTreeNode<T> parent = path.get(path.size() - 2);
-		return getSiblings(entry, parent.getChildren());
-	}
-
-	private Collection<Entry<?>> getSiblings(Entry<?> entry, Collection<Entry<?>> children) {
-		Set<Entry<?>> siblings = new HashSet<>(children);
-		siblings.remove(entry);
-		return siblings;
-	}
-
-	@Override
 	@Nullable
 	public HashTreeNode<T> findNode(Entry<?> target) {
 		List<Entry<?>> parentChain = target.getAncestry();

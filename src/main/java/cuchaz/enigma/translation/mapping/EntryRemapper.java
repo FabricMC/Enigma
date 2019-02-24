@@ -28,7 +28,7 @@ public class EntryRemapper {
 
 		this.deobfuscator = new MappingTranslator(obfToDeobf, obfResolver);
 
-		this.validator = new MappingValidator(obfToDeobf, deobfuscator, obfResolver);
+		this.validator = new MappingValidator(obfToDeobf, deobfuscator, jarIndex);
 	}
 
 	public EntryRemapper(JarIndex jarIndex) {

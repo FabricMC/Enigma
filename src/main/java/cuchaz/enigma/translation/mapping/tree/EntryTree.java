@@ -14,8 +14,6 @@ import java.util.stream.Stream;
 public interface EntryTree<T> extends EntryMap<T>, Iterable<EntryTreeNode<T>>, Translatable {
 	Collection<Entry<?>> getChildren(Entry<?> entry);
 
-	Collection<Entry<?>> getSiblings(Entry<?> entry);
-
 	@Nullable
 	EntryTreeNode<T> findNode(Entry<?> entry);
 
