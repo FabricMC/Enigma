@@ -1,11 +1,12 @@
 package cuchaz.enigma.translation.mapping.serde;
 
 import com.google.common.base.Charsets;
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
-import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -22,15 +23,19 @@ public enum TinyMappingsReader implements MappingsReader {
 	INSTANCE;
 
 	@Override
-	public EntryTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
-		return read(path, Files.readAllLines(path, Charsets.UTF_8));
+	public EntryTree<EntryMapping> read(Path path, ProgressListener progress) throws IOException, MappingParseException {
+		return read(path, Files.readAllLines(path, Charsets.UTF_8), progress);
 	}
 
-	private EntryTree<EntryMapping> read(Path path, List<String> lines) throws MappingParseException {
+	private EntryTree<EntryMapping> read(Path path, List<String> lines, ProgressListener progress) throws MappingParseException {
 		EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 		lines.remove(0);
 
+		progress.init(lines.size(), "Loading mapping file");
+
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
+			progress.step(lineNumber, "");
+
 			String line = lines.get(lineNumber);
 
 			try {

@@ -5,7 +5,6 @@ import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
-import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 
 import javax.swing.*;
@@ -68,15 +67,9 @@ public class MenuBar extends JMenuBar {
 				openMenu.add(item);
 				item.addActionListener(event -> {
 					if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						try {
-							File selectedFile = this.gui.enigmaMappingsFileChooser.getSelectedFile();
-							MappingFormat format = selectedFile.isDirectory() ? MappingFormat.ENIGMA_DIRECTORY : MappingFormat.ENIGMA_FILE;
-							this.gui.getController().openMappings(format, selectedFile.toPath());
-						} catch (IOException ex) {
-							throw new Error(ex);
-						} catch (MappingParseException ex) {
-							JOptionPane.showMessageDialog(this.gui.getFrame(), ex.getMessage());
-						}
+						File selectedFile = this.gui.enigmaMappingsFileChooser.getSelectedFile();
+						MappingFormat format = selectedFile.isDirectory() ? MappingFormat.ENIGMA_DIRECTORY : MappingFormat.ENIGMA_FILE;
+						this.gui.getController().openMappings(format, selectedFile.toPath());
 					}
 				});
 				this.openEnigmaMappingsMenu = item;
@@ -87,13 +80,7 @@ public class MenuBar extends JMenuBar {
 					this.gui.tinyMappingsFileChooser.setVisible(true);
 					File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
 					if (file.exists()) {
-						try {
-							this.gui.getController().openMappings(MappingFormat.TINY_FILE, file.toPath());
-						} catch (IOException ex) {
-							throw new Error(ex);
-						} catch (MappingParseException ex) {
-							JOptionPane.showMessageDialog(this.gui.getFrame(), ex.getMessage());
-						}
+						this.gui.getController().openMappings(MappingFormat.TINY_FILE, file.toPath());
 					}
 				});
 				this.openTinyMappingsMenu = item;
@@ -210,7 +197,11 @@ public class MenuBar extends JMenuBar {
 				JMenuItem search = new JMenuItem("Search");
 				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
 				menu.add(search);
-				search.addActionListener(event -> new SearchDialog(this.gui).show());
+				search.addActionListener(event -> {
+					if (this.gui.getController().getDeobfuscator() != null) {
+						new SearchDialog(this.gui).show();
+					}
+				});
 
 			}
 		}

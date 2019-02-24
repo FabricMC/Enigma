@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress) {
-			Collection<ClassEntry> classes = mappings.getRootEntries().stream()
+			Collection<ClassEntry> classes = mappings.getRootNodes()
 					.filter(entry -> entry instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry)
 					.collect(Collectors.toList());
@@ -56,19 +57,19 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	DIRECTORY {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress) {
-			applyDeletions(delta.getBaseMappings(), delta.getDeletions(), path);
-
-			Collection<ClassEntry> classes = delta.getAdditions().getRootEntries().stream()
+			Collection<ClassEntry> changedClasses = delta.getChangedRoots()
 					.filter(entry -> entry instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry)
 					.collect(Collectors.toList());
 
-			progress.init(classes.size(), "Writing classes");
+			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings());
 
-			Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
+			progress.init(changedClasses.size(), "Writing classes");
+
 			AtomicInteger steps = new AtomicInteger();
 
-			classes.parallelStream().forEach(classEntry -> {
+			Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
+			changedClasses.parallelStream().forEach(classEntry -> {
 				progress.step(steps.getAndIncrement(), classEntry.getFullName());
 
 				try {
@@ -86,12 +87,12 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			});
 		}
 
-		private void applyDeletions(EntryTree<EntryMapping> baseMappings, EntryTree<?> deletions, Path root) {
-			Translator oldMappingTranslator = new MappingTranslator(baseMappings, VoidEntryResolver.INSTANCE);
+		private void applyDeletions(Path root, Collection<ClassEntry> changedClasses, EntryTree<EntryMapping> mappings, EntryTree<EntryMapping> oldMappings) {
+			Translator oldMappingTranslator = new MappingTranslator(oldMappings, VoidEntryResolver.INSTANCE);
 
-			Collection<ClassEntry> deletedClasses = deletions.getRootEntries().stream()
-					.filter(e -> e instanceof ClassEntry)
-					.map(e -> oldMappingTranslator.translate((ClassEntry) e))
+			Collection<ClassEntry> deletedClasses = changedClasses.stream()
+					.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)))
+					.map(oldMappingTranslator::translate)
 					.collect(Collectors.toList());
 
 			for (ClassEntry classEntry : deletedClasses) {

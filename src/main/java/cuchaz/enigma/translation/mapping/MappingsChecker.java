@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.translation.mapping;
 
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
@@ -22,6 +23,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MappingsChecker {
 	private final JarIndex index;
@@ -32,14 +34,19 @@ public class MappingsChecker {
 		this.mappings = mappings;
 	}
 
-	public Dropped dropBrokenMappings() {
+	public Dropped dropBrokenMappings(ProgressListener progress) {
 		Dropped dropped = new Dropped();
 
-		Collection<Entry<?>> obfEntries = mappings.getAllEntries();
+		Collection<Entry<?>> obfEntries = mappings.getAllEntries()
+				.filter(e -> e instanceof ClassEntry || e instanceof MethodEntry || e instanceof FieldEntry)
+				.collect(Collectors.toList());
+
+		progress.init(obfEntries.size(), "Checking for dropped mappings");
+
+		int steps = 0;
 		for (Entry<?> entry : obfEntries) {
-			if (entry instanceof ClassEntry || entry instanceof MethodEntry || entry instanceof FieldEntry) {
-				tryDropEntry(dropped, entry);
-			}
+			progress.step(steps++, entry.toString());
+			tryDropEntry(dropped, entry);
 		}
 
 		dropped.apply(mappings);

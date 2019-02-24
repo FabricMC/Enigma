@@ -31,6 +31,8 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 
 	Class<P> getParentType();
 
+	Entry<P> withName(String name);
+
 	Entry<P> withParent(P parent);
 
 	boolean canConflictWith(Entry<?> entry);

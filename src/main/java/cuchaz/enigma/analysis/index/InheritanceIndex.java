@@ -18,6 +18,7 @@ import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -58,6 +59,23 @@ public class InheritanceIndex implements JarIndexer {
 
 	public Collection<ClassEntry> getChildren(ClassEntry classEntry) {
 		return classChildren.get(classEntry);
+	}
+
+	public Collection<ClassEntry> getDescendants(ClassEntry classEntry) {
+		Collection<ClassEntry> descendants = new HashSet<>();
+
+		LinkedList<ClassEntry> descendantQueue = new LinkedList<>();
+		descendantQueue.push(classEntry);
+
+		while (!descendantQueue.isEmpty()) {
+			ClassEntry descendant = descendantQueue.pop();
+			Collection<ClassEntry> children = getChildren(descendant);
+
+			children.forEach(descendantQueue::push);
+			descendants.addAll(children);
+		}
+
+		return descendants;
 	}
 
 	public Set<ClassEntry> getAncestors(ClassEntry classEntry) {

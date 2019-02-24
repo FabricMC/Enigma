@@ -17,6 +17,7 @@ import com.google.common.collect.Multimap;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public interface Translator {
@@ -26,6 +27,12 @@ public interface Translator {
 		return translatable.stream()
 				.map(this::translate)
 				.collect(Collectors.toList());
+	}
+
+	default <T extends Translatable> Set<T> translate(Set<T> translatable) {
+		return translatable.stream()
+				.map(this::translate)
+				.collect(Collectors.toSet());
 	}
 
 	default <T extends Translatable, V> Map<T, V> translateKeys(Map<T, V> translatable) {

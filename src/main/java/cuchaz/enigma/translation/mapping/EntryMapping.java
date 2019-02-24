@@ -27,4 +27,21 @@ public class EntryMapping {
 		}
 		return accessModifier;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) return true;
+
+		if (obj instanceof EntryMapping) {
+			EntryMapping mapping = (EntryMapping) obj;
+			return mapping.targetName.equals(targetName) && mapping.accessModifier.equals(accessModifier);
+		}
+
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return targetName.hashCode() + accessModifier.hashCode() * 31;
+	}
 }

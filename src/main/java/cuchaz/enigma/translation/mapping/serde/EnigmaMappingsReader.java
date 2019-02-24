@@ -1,12 +1,13 @@
 package cuchaz.enigma.translation.mapping.serde;
 
 import com.google.common.base.Charsets;
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
-import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -24,22 +25,32 @@ import java.util.stream.Collectors;
 public enum EnigmaMappingsReader implements MappingsReader {
 	FILE {
 		@Override
-		public EntryTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
+		public EntryTree<EntryMapping> read(Path path, ProgressListener progress) throws IOException, MappingParseException {
+			progress.init(1, "Loading mapping file");
+
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 			readFile(path, mappings);
+
+			progress.step(1, "Done!");
+
 			return mappings;
 		}
 	},
 	DIRECTORY {
 		@Override
-		public EntryTree<EntryMapping> read(Path path) throws IOException, MappingParseException {
+		public EntryTree<EntryMapping> read(Path root, ProgressListener progress) throws IOException, MappingParseException {
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
-			List<Path> files = Files.walk(path)
+			List<Path> files = Files.walk(root)
 					.filter(f -> !Files.isDirectory(f))
 					.filter(f -> f.toString().endsWith(".mapping"))
 					.collect(Collectors.toList());
+
+			progress.init(files.size(), "Loading mapping files");
+			int step = 0;
+
 			for (Path file : files) {
+				progress.step(step++, root.relativize(file).toString());
 				if (Files.isHidden(file)) {
 					continue;
 				}

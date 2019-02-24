@@ -11,7 +11,6 @@
 
 package cuchaz.enigma.analysis;
 
-import com.google.common.collect.Lists;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -20,7 +19,6 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import java.util.List;
 
 public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
@@ -58,6 +56,10 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		return this.isImplemented;
 	}
 
+	public boolean shouldExpand() {
+		return this.isImplemented || !this.isLeaf();
+	}
+
 	@Override
 	public String toString() {
 		MethodEntry translatedEntry = translator.translate(entry);
@@ -71,23 +73,19 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		}
 	}
 
-	public void load(JarIndex index, boolean recurse) {
+	public void load(JarIndex index) {
 		// get all the child nodes
-		List<MethodInheritanceTreeNode> nodes = Lists.newArrayList();
 		EntryIndex entryIndex = index.getEntryIndex();
 		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
 
 		for (ClassEntry inheritorEntry : inheritanceIndex.getChildren(this.entry.getParent())) {
 			MethodEntry methodEntry = new MethodEntry(inheritorEntry, this.entry.getName(), this.entry.getDesc());
-			nodes.add(new MethodInheritanceTreeNode(translator, methodEntry, entryIndex.hasMethod(methodEntry)));
-		}
 
-		// add them to this node
-		nodes.forEach(this::add);
+			MethodInheritanceTreeNode node = new MethodInheritanceTreeNode(translator, methodEntry, entryIndex.hasMethod(methodEntry));
+			node.load(index);
 
-		if (recurse) {
-			for (MethodInheritanceTreeNode node : nodes) {
-				node.load(index, true);
+			if (node.shouldExpand()) {
+				this.add(node);
 			}
 		}
 	}

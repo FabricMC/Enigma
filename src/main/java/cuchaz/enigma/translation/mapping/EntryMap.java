@@ -3,7 +3,7 @@ package cuchaz.enigma.translation.mapping;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
+import java.util.stream.Stream;
 
 public interface EntryMap<T> {
 	void insert(Entry<?> entry, T value);
@@ -18,7 +18,7 @@ public interface EntryMap<T> {
 		return get(entry) != null;
 	}
 
-	Collection<Entry<?>> getAllEntries();
+	Stream<Entry<?>> getAllEntries();
 
 	boolean isEmpty();
 }

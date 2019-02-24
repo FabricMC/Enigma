@@ -9,6 +9,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 public interface EntryTree<T> extends EntryMap<T>, Iterable<EntryTreeNode<T>>, Translatable {
 	Collection<Entry<?>> getChildren(Entry<?> entry);
@@ -18,9 +19,7 @@ public interface EntryTree<T> extends EntryMap<T>, Iterable<EntryTreeNode<T>>, T
 	@Nullable
 	EntryTreeNode<T> findNode(Entry<?> entry);
 
-	Collection<EntryTreeNode<T>> getAllNodes();
-
-	Collection<Entry<?>> getRootEntries();
+	Stream<EntryTreeNode<T>> getRootNodes();
 
 	@Override
 	EntryTree<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings);

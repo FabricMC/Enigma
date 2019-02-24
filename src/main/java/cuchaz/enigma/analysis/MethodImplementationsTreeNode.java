@@ -71,8 +71,8 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 		EntryIndex entryIndex = index.getEntryIndex();
 		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
 
-		Collection<ClassEntry> inheritors = inheritanceIndex.getChildren(entry.getParent());
-		for (ClassEntry inheritor : inheritors) {
+		Collection<ClassEntry> descendants = inheritanceIndex.getDescendants(entry.getParent());
+		for (ClassEntry inheritor : descendants) {
 			MethodEntry methodEntry = entry.withParent(inheritor);
 			if (entryIndex.hasMethod(methodEntry)) {
 				nodes.add(new MethodImplementationsTreeNode(translator, methodEntry));

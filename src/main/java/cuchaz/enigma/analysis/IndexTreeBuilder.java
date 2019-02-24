@@ -1,13 +1,14 @@
 package cuchaz.enigma.analysis;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
+import java.util.Collection;
 import java.util.List;
 
 public class IndexTreeBuilder {
@@ -52,34 +53,20 @@ public class IndexTreeBuilder {
 		);
 
 		// expand the full tree
-		rootNode.load(index, true);
+		rootNode.load(index);
 
 		return rootNode;
 	}
 
 	public List<MethodImplementationsTreeNode> buildMethodImplementations(Translator translator, MethodEntry obfMethodEntry) {
-		EntryIndex entryIndex = index.getEntryIndex();
-
-		List<MethodEntry> ancestorMethodEntries = Lists.newArrayList();
-
-		if (entryIndex.hasMethod(obfMethodEntry)) {
-			ancestorMethodEntries.add(obfMethodEntry);
-		}
-
-		for (ClassEntry ancestorEntry : index.getInheritanceIndex().getAncestors(obfMethodEntry.getParent())) {
-			MethodEntry ancestorMethod = obfMethodEntry.withParent(ancestorEntry);
-			if (entryIndex.hasMethod(ancestorMethod)) {
-				ancestorMethodEntries.add(ancestorMethod);
-			}
-		}
+		EntryResolver resolver = index.getEntryResolver();
+		Collection<MethodEntry> resolvedEntries = resolver.resolveEntry(obfMethodEntry, ResolutionStrategy.RESOLVE_ROOT);
 
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
-		if (!ancestorMethodEntries.isEmpty()) {
-			for (MethodEntry interfaceMethodEntry : ancestorMethodEntries) {
-				MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(translator, interfaceMethodEntry);
-				node.load(index);
-				nodes.add(node);
-			}
+		for (MethodEntry resolvedEntry : resolvedEntries) {
+			MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(translator, resolvedEntry);
+			node.load(index);
+			nodes.add(node);
 		}
 
 		return nodes;

@@ -56,6 +56,11 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	}
 
 	@Override
+	public MethodEntry withName(String name) {
+		return new MethodEntry(parent, name, descriptor);
+	}
+
+	@Override
 	public MethodEntry withParent(ClassEntry parent) {
 		return new MethodEntry(new ClassEntry(parent.getFullName()), name, descriptor);
 	}

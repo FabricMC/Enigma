@@ -126,23 +126,27 @@ public class Deobfuscator {
 	}
 
 	public void setMappings(EntryTree<EntryMapping> mappings) {
+		setMappings(mappings, ProgressListener.VOID);
+	}
+
+	public void setMappings(EntryTree<EntryMapping> mappings, ProgressListener progress) {
 		if (mappings != null) {
-			Collection<Entry<?>> dropped = dropMappings(mappings);
+			Collection<Entry<?>> dropped = dropMappings(mappings, progress);
 			mapper = new EntryRemapper(jarIndex, mappings);
 
 			DeltaTrackingTree<EntryMapping> obfToDeobf = mapper.getObfToDeobf();
 			for (Entry<?> entry : dropped) {
-				obfToDeobf.trackDeletion(entry);
+				obfToDeobf.trackChange(entry);
 			}
 		} else {
 			mapper = new EntryRemapper(jarIndex);
 		}
 	}
 
-	private Collection<Entry<?>> dropMappings(EntryTree<EntryMapping> mappings) {
+	private Collection<Entry<?>> dropMappings(EntryTree<EntryMapping> mappings, ProgressListener progress) {
 		// drop mappings that don't match the jar
 		MappingsChecker checker = new MappingsChecker(jarIndex, mappings);
-		MappingsChecker.Dropped dropped = checker.dropBrokenMappings();
+		MappingsChecker.Dropped dropped = checker.dropBrokenMappings(progress);
 
 		Map<Entry<?>, String> droppedMappings = dropped.getDroppedMappings();
 		for (Map.Entry<Entry<?>, String> mapping : droppedMappings.entrySet()) {

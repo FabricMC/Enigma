@@ -32,6 +32,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.ReadableToken;
 
 import javax.annotation.Nullable;
+import javax.swing.*;
 import java.awt.event.ItemEvent;
 import java.io.File;
 import java.io.IOException;
@@ -80,16 +81,22 @@ public class GuiController {
 		this.gui.onCloseJar();
 	}
 
-	public void openMappings(MappingFormat format, Path path) throws IOException, MappingParseException {
-		EntryTree<EntryMapping> mappings = format.read(path);
-		deobfuscator.setMappings(mappings);
+	public void openMappings(MappingFormat format, Path path) {
+		ProgressDialog.runInThread(this.gui.getFrame(), progress -> {
+			try {
+				EntryTree<EntryMapping> mappings = format.read(path, progress);
+				deobfuscator.setMappings(mappings, progress);
 
-		gui.setMappingsFile(path);
-		loadedMappingFormat = format;
-		loadedMappingPath = path;
+				gui.setMappingsFile(path);
+				loadedMappingFormat = format;
+				loadedMappingPath = path;
 
-		refreshClasses();
-		refreshCurrentClass();
+				refreshClasses();
+				refreshCurrentClass();
+			} catch (MappingParseException e) {
+				JOptionPane.showMessageDialog(this.gui.getFrame(), e.getMessage());
+			}
+		});
 	}
 
 	public void saveMappings(Path path) {
@@ -344,6 +351,7 @@ public class GuiController {
 			}
 
 			DropImportAstTransform.INSTANCE.run(sourceTree);
+			DropVarModifiersAstTransform.INSTANCE.run(sourceTree);
 
 			String sourceString = sourceProvider.writeSourceToString(sourceTree);
 

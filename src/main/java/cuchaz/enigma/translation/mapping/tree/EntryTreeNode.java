@@ -33,4 +33,8 @@ public interface EntryTreeNode<T> {
 				.map(EntryTreeNode::getEntry)
 				.collect(Collectors.toList());
 	}
+
+	default boolean hasValue() {
+		return getValue() != null;
+	}
 }
