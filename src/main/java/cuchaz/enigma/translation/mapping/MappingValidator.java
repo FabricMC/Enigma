@@ -39,13 +39,17 @@ public class MappingValidator {
 			Entry<?> relatedEntry = entry.replaceAncestor(containingClass, relatedClass);
 			Entry<?> translatedEntry = deobfuscator.translate(relatedEntry);
 
-			Collection<Entry<?>> translatedSiblings = obfToDeobf.getChildren(relatedClass).stream()
-					.filter(e -> !entry.equals(e))
+			Collection<Entry<?>> translatedSiblings = obfToDeobf.getSiblings(relatedEntry).stream()
 					.map(deobfuscator::translate)
 					.collect(Collectors.toList());
 
 			if (!isUnique(translatedEntry, translatedSiblings, name)) {
-				throw new IllegalNameException(name, "Name is not unique in " + translatedEntry.getParent() + "!");
+				Entry<?> parent = translatedEntry.getParent();
+				if (parent != null) {
+					throw new IllegalNameException(name, "Name is not unique in " + parent + "!");
+				} else {
+					throw new IllegalNameException(name, "Name is not unique!");
+				}
 			}
 		}
 	}

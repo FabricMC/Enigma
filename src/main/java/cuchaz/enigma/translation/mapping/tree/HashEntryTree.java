@@ -73,6 +73,21 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	@Override
+	public Collection<Entry<?>> getSiblings(Entry<?> entry) {
+		Entry<?> parent = entry.getParent();
+		if (parent == null) {
+			return getSiblings(entry, root.keySet());
+		}
+		return getSiblings(entry, getChildren(parent));
+	}
+
+	private Collection<Entry<?>> getSiblings(Entry<?> entry, Collection<Entry<?>> generation) {
+		Set<Entry<?>> siblings = new HashSet<>(generation);
+		siblings.remove(entry);
+		return siblings;
+	}
+
+	@Override
 	@Nullable
 	public HashTreeNode<T> findNode(Entry<?> target) {
 		List<Entry<?>> parentChain = target.getAncestry();

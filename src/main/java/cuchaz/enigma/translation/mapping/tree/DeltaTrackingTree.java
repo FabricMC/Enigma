@@ -55,6 +55,11 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 		return delegate.getChildren(entry);
 	}
 
+	@Override
+	public Collection<Entry<?>> getSiblings(Entry<?> entry) {
+		return delegate.getSiblings(entry);
+	}
+
 	@Nullable
 	@Override
 	public EntryTreeNode<T> findNode(Entry<?> entry) {
