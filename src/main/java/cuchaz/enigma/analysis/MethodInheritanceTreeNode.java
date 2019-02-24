@@ -24,12 +24,12 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
 	private final Translator translator;
 	private MethodEntry entry;
-	private boolean isImplemented;
+	private boolean implemented;
 
-	public MethodInheritanceTreeNode(Translator translator, MethodEntry entry, boolean isImplemented) {
+	public MethodInheritanceTreeNode(Translator translator, MethodEntry entry, boolean implemented) {
 		this.translator = translator;
 		this.entry = entry;
-		this.isImplemented = isImplemented;
+		this.implemented = implemented;
 	}
 
 	public static MethodInheritanceTreeNode findNode(MethodInheritanceTreeNode node, MethodEntry entry) {
@@ -53,11 +53,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public boolean isImplemented() {
-		return this.isImplemented;
-	}
-
-	public boolean shouldExpand() {
-		return this.isImplemented || !this.isLeaf();
+		return this.implemented;
 	}
 
 	@Override
@@ -65,7 +61,7 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		MethodEntry translatedEntry = translator.translate(entry);
 		String className = translatedEntry.getContainingClass().getFullName();
 
-		if (!this.isImplemented) {
+		if (!this.implemented) {
 			return className;
 		} else {
 			String methodName = translatedEntry.getName();
@@ -73,20 +69,27 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		}
 	}
 
-	public void load(JarIndex index) {
+	/**
+	 * Returns true if there is sub-node worthy to display.
+	 */
+	public boolean load(JarIndex index) {
 		// get all the child nodes
 		EntryIndex entryIndex = index.getEntryIndex();
 		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
 
+		boolean ret = false;
 		for (ClassEntry inheritorEntry : inheritanceIndex.getChildren(this.entry.getParent())) {
 			MethodEntry methodEntry = new MethodEntry(inheritorEntry, this.entry.getName(), this.entry.getDesc());
 
 			MethodInheritanceTreeNode node = new MethodInheritanceTreeNode(translator, methodEntry, entryIndex.hasMethod(methodEntry));
-			node.load(index);
+			boolean childOverride = node.load(index);
 
-			if (node.shouldExpand()) {
+			if (childOverride || node.implemented) {
 				this.add(node);
+				ret = true;
 			}
 		}
+
+		return ret;
 	}
 }
