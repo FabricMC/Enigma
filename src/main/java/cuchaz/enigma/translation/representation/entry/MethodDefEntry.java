@@ -12,6 +12,7 @@
 package cuchaz.enigma.translation.representation.entry;
 
 import com.google.common.base.Preconditions;
+import com.strobel.assembler.metadata.MethodDefinition;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.AccessFlags;
@@ -34,6 +35,14 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 
 	public static MethodDefEntry parse(ClassEntry owner, int access, String name, String desc, String signature) {
 		return new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
+	}
+
+	public static MethodDefEntry parse(MethodDefinition definition) {
+		ClassEntry classEntry = ClassEntry.parse(definition.getDeclaringType());
+		MethodDescriptor descriptor = new MethodDescriptor(definition.getErasedSignature());
+		Signature signature = Signature.createSignature(definition.getSignature());
+		AccessFlags access = new AccessFlags(definition.getModifiers());
+		return new MethodDefEntry(classEntry, definition.getName(), descriptor, signature, access);
 	}
 
 	@Override
