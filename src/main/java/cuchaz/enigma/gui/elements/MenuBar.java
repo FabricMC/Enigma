@@ -167,9 +167,9 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("Export Jar...");
 				menu.add(item);
 				item.addActionListener(event -> {
-					this.gui.tinyMappingsFileChooser.setVisible(true);
-					if (this.gui.tinyMappingsFileChooser.getFile() != null) {
-						File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
+					this.gui.exportJarFileChooser.setVisible(true);
+					if (this.gui.exportJarFileChooser.getFile() != null) {
+						File file = new File(this.gui.exportJarFileChooser.getDirectory() + File.separator + this.gui.exportJarFileChooser.getFile());
 						this.gui.getController().exportJar(file);
 					}
 				});
