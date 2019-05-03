@@ -171,7 +171,7 @@ public class Gui {
 			}
 		});
 		TreeCellRenderer cellRenderer = inheritanceTree.getCellRenderer();
-		inheritanceTree.setCellRenderer(new MethodTreeCellRenderer((DefaultTreeCellRenderer) cellRenderer));
+		inheritanceTree.setCellRenderer(new MethodTreeCellRenderer(cellRenderer));
 
 		JPanel inheritancePanel = new JPanel();
 		inheritancePanel.setLayout(new BorderLayout());

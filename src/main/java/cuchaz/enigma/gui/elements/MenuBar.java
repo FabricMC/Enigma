@@ -8,10 +8,14 @@ import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.jar.JarFile;
 
 public class MenuBar extends JMenuBar {
@@ -212,6 +216,16 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("About");
 				menu.add(item);
 				item.addActionListener(event -> AboutDialog.show(this.gui.getFrame()));
+			}
+			{
+				JMenuItem item = new JMenuItem("GitHub Page");
+				menu.add(item);
+				item.addActionListener(event -> {
+					try {
+						Desktop.getDesktop().browse(new URL("https://github.com/FabricMC/Enigma").toURI());
+					} catch (URISyntaxException | IOException ignored) {
+					}
+				});
 			}
 		}
 	}
