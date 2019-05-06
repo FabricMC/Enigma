@@ -359,9 +359,9 @@ public class GuiController {
 			index.resolveReferences(deobfuscator.getMapper().getObfResolver());
 
 			return new DecompiledClassSource(targetClass, index);
-		} catch (Exception e) {
+		} catch (Throwable t) {
 			StringWriter traceWriter = new StringWriter();
-			e.printStackTrace(new PrintWriter(traceWriter));
+			t.printStackTrace(new PrintWriter(traceWriter));
 
 			return DecompiledClassSource.text(targetClass, traceWriter.toString());
 		}
