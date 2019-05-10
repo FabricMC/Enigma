@@ -21,7 +21,7 @@ apply plugin: 'maven'
 group = 'cuchaz'
 version = '0.13.1'
 
-def filteredSourceDir = file("${buildDir}/filtered")
+def generatedSourcesDir = "$buildDir/generated-src"
 
 def ENV = System.getenv()
 if (ENV.BUILD_NUMBER) {
@@ -41,23 +41,19 @@ sourceSets {
         java { srcDir 'src/test/java' }
         resources { srcDir 'test' }
     }
-    filtered {
-        java { srcDir filteredSourceDir }
-    }
 }
 
-compileJava.source = sourceSets.filtered.java
-
-task processVersion(type: Copy) {
+task generateSources(type: Copy) {
     from sourceSets.main.java
-    into filteredSourceDir
+    into generatedSourcesDir
 
     filter { String line ->
         ("$line".replaceAll('@VERSION@', version))
     }
 }
 
-compileJava.dependsOn processVersion
+compileJava.source = generatedSourcesDir
+compileJava.dependsOn generateSources
 
 repositories {
     mavenLocal()
@@ -173,10 +169,10 @@ shadowJar {
 // Create a library jar, containing only the deobfuscation code, for use at
 // runtime. This will be deployed to Maven Local with a POM, and can be uploaded
 // to a remote server manually (for now anyway).
-task('libJar', type: Jar, dependsOn: classes) {
+task libJar (type: Jar) {
     classifier = 'lib'
 
-    from("$buildDir/classes/main") {
+    from(sourceSets.main.output) {
         exclude 'cuchaz/enigma/gui/**'
         exclude 'cuchaz/enigma/convert/**'
 
@@ -186,10 +182,10 @@ task('libJar', type: Jar, dependsOn: classes) {
     }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
+task sourcesJar(type: Jar, dependsOn: generateSources) {
     classifier = 'sources'
+    from generatedSourcesDir
     from sourceSets.main.resources
-    from sourceSets.filtered.java
 }
 
 artifacts {
