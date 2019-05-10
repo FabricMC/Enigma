@@ -8,7 +8,6 @@ import cuchaz.enigma.translation.representation.entry.*;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 
 public class ReferenceIndex implements JarIndexer {
 	private Multimap<MethodEntry, MethodEntry> methodReferences = HashMultimap.create();
@@ -58,30 +57,11 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	private <E extends Entry<?>> E remap(JarIndex index, E entry) {
-		E resolvedEntry = index.getEntryResolver().resolveFirstEntry(entry, ResolutionStrategy.RESOLVE_CLOSEST);
-
-		Optional<E> remappedBridge = getRemappedBridge(index, resolvedEntry);
-		return remappedBridge.orElse(resolvedEntry);
+		return index.getEntryResolver().resolveFirstEntry(entry, ResolutionStrategy.RESOLVE_CLOSEST);
 	}
 
 	private <E extends Entry<?>, C extends Entry<?>> EntryReference<E, C> remap(JarIndex index, EntryReference<E, C> reference) {
-		EntryReference<E, C> resolvedReference = index.getEntryResolver().resolveFirstReference(reference, ResolutionStrategy.RESOLVE_CLOSEST);
-
-		getRemappedBridge(index, resolvedReference.entry).ifPresent(e -> resolvedReference.entry = e);
-		getRemappedBridge(index, resolvedReference.context).ifPresent(e -> resolvedReference.context = e);
-
-		return resolvedReference;
-	}
-
-	@SuppressWarnings("unchecked")
-	private <E extends Entry<?>> Optional<E> getRemappedBridge(JarIndex index, E entry) {
-		if (entry instanceof MethodEntry) {
-			MethodEntry bridgeEntry = index.getBridgeMethodIndex().getBridgeFromAccessed((MethodEntry) entry);
-			if (bridgeEntry != null) {
-				return Optional.of((E) entry.withName(bridgeEntry.getName()));
-			}
-		}
-		return Optional.empty();
+		return index.getEntryResolver().resolveFirstReference(reference, ResolutionStrategy.RESOLVE_CLOSEST);
 	}
 
 	public Collection<MethodEntry> getMethodsReferencedBy(MethodEntry entry) {

@@ -86,7 +86,7 @@ public class IndexEntryResolver implements EntryResolver {
 		ClassEntry ownerClass = entry.getParent();
 
 		if (entry instanceof MethodEntry) {
-			MethodEntry bridgeMethod = bridgeMethodIndex.getBridgeFromAccessed((MethodEntry) entry);
+			MethodEntry bridgeMethod = bridgeMethodIndex.getBridgeFromSpecialized((MethodEntry) entry);
 			if (bridgeMethod != null && ownerClass.equals(bridgeMethod.getParent())) {
 				Set<Entry<ClassEntry>> resolvedBridge = resolveChildEntry(bridgeMethod, strategy);
 				if (!resolvedBridge.isEmpty()) {
@@ -183,10 +183,10 @@ public class IndexEntryResolver implements EntryResolver {
 		}
 
 		// look at bridge methods!
-		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(methodEntry);
+		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(methodEntry);
 		while (bridgedMethod != null) {
 			methodEntries.addAll(resolveEquivalentMethods(bridgedMethod));
-			bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(bridgedMethod);
+			bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(bridgedMethod);
 		}
 
 		// look at interface methods too
@@ -209,10 +209,10 @@ public class IndexEntryResolver implements EntryResolver {
 		}
 
 		// look at bridge methods!
-		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(methodEntry);
+		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(methodEntry);
 		while (bridgedMethod != null) {
 			methodEntries.addAll(resolveEquivalentMethods(bridgedMethod));
-			bridgedMethod = bridgeMethodIndex.getBridgeFromAccessed(bridgedMethod);
+			bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(bridgedMethod);
 		}
 
 		// recurse

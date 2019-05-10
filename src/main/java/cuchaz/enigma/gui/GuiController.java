@@ -50,8 +50,8 @@ import java.util.stream.Collectors;
 public class GuiController {
 	private static final ExecutorService DECOMPILER_SERVICE = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("decompiler-thread").build());
 
+	private final Gui gui;
 	private Deobfuscator deobfuscator;
-	private Gui gui;
 	private DecompiledClassSource currentSource;
 	private Deque<EntryReference<Entry<?>, Entry<?>>> referenceStack;
 
@@ -60,12 +60,13 @@ public class GuiController {
 
 	public GuiController(Gui gui) {
 		this.gui = gui;
-		this.deobfuscator = null;
-		this.currentSource = null;
 		this.referenceStack = Queues.newArrayDeque();
 	}
 
 	public boolean isDirty() {
+		if (deobfuscator == null) {
+			return false;
+		}
 		return deobfuscator.getMapper().isDirty();
 	}
 
@@ -82,6 +83,7 @@ public class GuiController {
 	}
 
 	public void openMappings(MappingFormat format, Path path) {
+		if (deobfuscator == null) return;
 		ProgressDialog.runInThread(this.gui.getFrame(), progress -> {
 			try {
 				EntryTree<EntryMapping> mappings = format.read(path, progress);
@@ -104,6 +106,7 @@ public class GuiController {
 	}
 
 	public void saveMappings(MappingFormat format, Path path) {
+		if (deobfuscator == null) return;
 		EntryRemapper mapper = deobfuscator.getMapper();
 
 		MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
@@ -122,6 +125,7 @@ public class GuiController {
 	}
 
 	public void closeMappings() {
+		if (deobfuscator == null) return;
 		this.deobfuscator.setMappings(null);
 		this.gui.setMappingsFile(null);
 		refreshClasses();
@@ -129,10 +133,12 @@ public class GuiController {
 	}
 
 	public void exportSource(final File dirOut) {
+		if (deobfuscator == null) return;
 		ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.writeSources(dirOut.toPath(), progress));
 	}
 
 	public void exportJar(final File fileOut) {
+		if (deobfuscator == null) return;
 		ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.writeTransformedJar(fileOut, progress));
 	}
 
@@ -164,7 +170,7 @@ public class GuiController {
 	}
 
 	public boolean entryIsInJar(Entry<?> entry) {
-		if (entry == null) return false;
+		if (entry == null || deobfuscator == null) return false;
 		return this.deobfuscator.isRenamable(entry);
 	}
 

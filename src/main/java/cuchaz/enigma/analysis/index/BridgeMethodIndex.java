@@ -17,8 +17,8 @@ public class BridgeMethodIndex implements JarIndexer {
 	private final InheritanceIndex inheritanceIndex;
 	private final ReferenceIndex referenceIndex;
 
-	private final Set<MethodEntry> bridgeMethods = Sets.newHashSet();
-	private final Map<MethodEntry, MethodEntry> accessedToBridge = Maps.newHashMap();
+	private final Set<MethodEntry> bridgeToSpecialized = Sets.newHashSet();
+	private final Map<MethodEntry, MethodEntry> specializedToBridge = Maps.newHashMap();
 
 	public BridgeMethodIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex) {
 		this.entryIndex = entryIndex;
@@ -42,34 +42,34 @@ public class BridgeMethodIndex implements JarIndexer {
 
 	@Override
 	public void processIndex(JarIndex index) {
-		Map<MethodEntry, MethodEntry> copiedAccessToBridge = new HashMap<>(accessedToBridge);
+		Map<MethodEntry, MethodEntry> copiedAccessToBridge = new HashMap<>(specializedToBridge);
 
 		for (Map.Entry<MethodEntry, MethodEntry> entry : copiedAccessToBridge.entrySet()) {
-			MethodEntry accessedEntry = entry.getKey();
+			MethodEntry specializedEntry = entry.getKey();
 			MethodEntry bridgeEntry = entry.getValue();
-			if (bridgeEntry.getName().equals(accessedEntry.getName())) {
+			if (bridgeEntry.getName().equals(specializedEntry.getName())) {
 				continue;
 			}
 
-			MethodEntry renamedAccessedEntry = accessedEntry.withName(bridgeEntry.getName());
-			bridgeMethods.add(renamedAccessedEntry);
-			accessedToBridge.put(renamedAccessedEntry, accessedToBridge.get(accessedEntry));
+			MethodEntry renamedSpecializedEntry = specializedEntry.withName(bridgeEntry.getName());
+			bridgeToSpecialized.add(renamedSpecializedEntry);
+			specializedToBridge.put(renamedSpecializedEntry, specializedToBridge.get(specializedEntry));
 		}
 	}
 
 	private void indexSyntheticMethod(MethodDefEntry syntheticMethod, AccessFlags access) {
-		MethodEntry accessedMethod = findAccessMethod(syntheticMethod);
-		if (accessedMethod == null) {
+		MethodEntry specializedMethod = findSpecializedMethod(syntheticMethod);
+		if (specializedMethod == null) {
 			return;
 		}
 
-		if (access.isBridge() || isPotentialBridge(syntheticMethod, accessedMethod)) {
-			bridgeMethods.add(syntheticMethod);
-			accessedToBridge.put(accessedMethod, syntheticMethod);
+		if (access.isBridge() || isPotentialBridge(syntheticMethod, specializedMethod)) {
+			bridgeToSpecialized.add(syntheticMethod);
+			specializedToBridge.put(specializedMethod, syntheticMethod);
 		}
 	}
 
-	private MethodEntry findAccessMethod(MethodEntry method) {
+	private MethodEntry findSpecializedMethod(MethodEntry method) {
 		// we want to find all compiler-added methods that directly call another with no processing
 
 		// get all the methods that we call
@@ -83,7 +83,7 @@ public class BridgeMethodIndex implements JarIndexer {
 		return referencedMethods.stream().findFirst().orElse(null);
 	}
 
-	private boolean isPotentialBridge(MethodDefEntry bridgeMethod, MethodEntry accessedMethod) {
+	private boolean isPotentialBridge(MethodDefEntry bridgeMethod, MethodEntry specializedMethod) {
 		// Bridge methods only exist for inheritance purposes, if we're private, final, or static, we cannot be inherited
 		AccessFlags bridgeAccess = bridgeMethod.getAccess();
 		if (bridgeAccess.isPrivate() || bridgeAccess.isFinal() || bridgeAccess.isStatic()) {
@@ -91,35 +91,35 @@ public class BridgeMethodIndex implements JarIndexer {
 		}
 
 		MethodDescriptor bridgeDesc = bridgeMethod.getDesc();
-		MethodDescriptor accessedDesc = accessedMethod.getDesc();
+		MethodDescriptor specializedDesc = specializedMethod.getDesc();
 		List<TypeDescriptor> bridgeArguments = bridgeDesc.getArgumentDescs();
-		List<TypeDescriptor> accessedArguments = accessedDesc.getArgumentDescs();
+		List<TypeDescriptor> specializedArguments = specializedDesc.getArgumentDescs();
 
 		// A bridge method will always have the same number of arguments
-		if (bridgeArguments.size() != accessedArguments.size()) {
+		if (bridgeArguments.size() != specializedArguments.size()) {
 			return false;
 		}
 
 		// Check that all argument types are bridge-compatible
 		for (int i = 0; i < bridgeArguments.size(); i++) {
-			if (!areTypesBridgeCompatible(bridgeArguments.get(i), accessedArguments.get(i))) {
+			if (!areTypesBridgeCompatible(bridgeArguments.get(i), specializedArguments.get(i))) {
 				return false;
 			}
 		}
 
 		// Check that the return type is bridge-compatible
-		return areTypesBridgeCompatible(bridgeDesc.getReturnDesc(), accessedDesc.getReturnDesc());
+		return areTypesBridgeCompatible(bridgeDesc.getReturnDesc(), specializedDesc.getReturnDesc());
 	}
 
-	private boolean areTypesBridgeCompatible(TypeDescriptor bridgeDesc, TypeDescriptor accessedDesc) {
-		if (bridgeDesc.equals(accessedDesc)) {
+	private boolean areTypesBridgeCompatible(TypeDescriptor bridgeDesc, TypeDescriptor specializedDesc) {
+		if (bridgeDesc.equals(specializedDesc)) {
 			return true;
 		}
 
 		// Either the descs will be equal, or they are both types and different through a generic
-		if (bridgeDesc.isType() && accessedDesc.isType()) {
+		if (bridgeDesc.isType() && specializedDesc.isType()) {
 			ClassEntry bridgeType = bridgeDesc.getTypeEntry();
-			ClassEntry accessedType = accessedDesc.getTypeEntry();
+			ClassEntry accessedType = specializedDesc.getTypeEntry();
 
 			// If the given types are completely unrelated to each other, this can't be bridge compatible
 			InheritanceIndex.Relation relation = inheritanceIndex.computeClassRelation(accessedType, bridgeType);
@@ -130,19 +130,19 @@ public class BridgeMethodIndex implements JarIndexer {
 	}
 
 	public boolean isBridgeMethod(MethodEntry entry) {
-		return bridgeMethods.contains(entry);
+		return bridgeToSpecialized.contains(entry);
 	}
 
-	public boolean isAccessedByBridge(MethodEntry entry) {
-		return accessedToBridge.containsKey(entry);
+	public boolean isSpecializedMethod(MethodEntry entry) {
+		return specializedToBridge.containsKey(entry);
 	}
 
 	@Nullable
-	public MethodEntry getBridgeFromAccessed(MethodEntry entry) {
-		return accessedToBridge.get(entry);
+	public MethodEntry getBridgeFromSpecialized(MethodEntry specialized) {
+		return specializedToBridge.get(specialized);
 	}
 
-	public Map<MethodEntry, MethodEntry> getAccessedToBridge() {
-		return Collections.unmodifiableMap(accessedToBridge);
+	public Map<MethodEntry, MethodEntry> getSpecializedToBridge() {
+		return Collections.unmodifiableMap(specializedToBridge);
 	}
 }

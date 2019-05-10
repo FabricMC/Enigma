@@ -28,18 +28,6 @@ public class EntryIndex implements JarIndexer {
 		fields.put(fieldEntry, fieldEntry.getAccess());
 	}
 
-	@Override
-	public void processIndex(JarIndex index) {
-		Map<MethodEntry, MethodEntry> accessedToBridge = index.getBridgeMethodIndex().getAccessedToBridge();
-		for (Map.Entry<MethodEntry, MethodEntry> entry : accessedToBridge.entrySet()) {
-			MethodEntry accessedEntry = entry.getKey();
-			MethodEntry bridgeEntry = entry.getValue();
-
-			MethodEntry renamedAccessedEntry = accessedEntry.withName(bridgeEntry.getName());
-			methods.put(renamedAccessedEntry, methods.remove(accessedEntry));
-		}
-	}
-
 	public boolean hasClass(ClassEntry entry) {
 		return classes.containsKey(entry);
 	}
