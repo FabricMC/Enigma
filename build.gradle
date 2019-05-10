@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
     }
 }
 
@@ -88,7 +88,7 @@ configurations {
 
 dependencies {
     compile 'com.google.guava:guava:27.1-jre'
-    compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.33.7'
+    compile 'net.fabricmc:procyon-fabric-compilertools:0.5.33.+'
     compile 'com.google.code.gson:gson:2.8.5'
     compile 'org.ow2.asm:asm:7.1'
     compile 'org.ow2.asm:asm-commons:7.1'
