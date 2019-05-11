@@ -5,45 +5,45 @@ import com.google.common.collect.Queues;
 import java.util.Deque;
 
 public class History<T> {
-    private final Deque<T> previous = Queues.newArrayDeque();
-    private final Deque<T> next = Queues.newArrayDeque();
-    private T current;
+	private final Deque<T> previous = Queues.newArrayDeque();
+	private final Deque<T> next = Queues.newArrayDeque();
+	private T current;
 
-    public History(T initial) {
-        current = initial;
-    }
+	public History(T initial) {
+		current = initial;
+	}
 
-    public T getCurrent() {
-        return current;
-    }
+	public T getCurrent() {
+		return current;
+	}
 
-    public void push(T value) {
-        previous.addLast(current);
-        current = value;
-        next.clear();
-    }
+	public void push(T value) {
+		previous.addLast(current);
+		current = value;
+		next.clear();
+	}
 
-    public void replace(T value) {
-        current = value;
-    }
+	public void replace(T value) {
+		current = value;
+	}
 
-    public boolean canGoBack() {
-        return !previous.isEmpty();
-    }
+	public boolean canGoBack() {
+		return !previous.isEmpty();
+	}
 
-    public T goBack() {
-        next.addFirst(current);
-        current = previous.removeLast();
-        return current;
-    }
+	public T goBack() {
+		next.addFirst(current);
+		current = previous.removeLast();
+		return current;
+	}
 
-    public boolean canGoForward() {
-        return !next.isEmpty();
-    }
+	public boolean canGoForward() {
+		return !next.isEmpty();
+	}
 
-    public T goForward() {
-        previous.addLast(current);
-        current = next.removeFirst();
-        return current;
-    }
+	public T goForward() {
+		previous.addLast(current);
+		current = next.removeFirst();
+		return current;
+	}
 }

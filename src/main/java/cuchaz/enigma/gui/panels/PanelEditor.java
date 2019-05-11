@@ -21,17 +21,17 @@ public class PanelEditor extends JEditorPane {
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-			    switch (e.getButton()) {
+				switch (e.getButton()) {
 					case MouseEvent.BUTTON3: // Right click
 						self.setCaretPosition(self.viewToModel(e.getPoint()));
 						break;
 
 					case 4: // Back navigation
-                        gui.getController().openPreviousReference();
+						gui.getController().openPreviousReference();
 						break;
 
 					case 5: // Forward navigation
-                        gui.getController().openNextReference();
+						gui.getController().openNextReference();
 						break;
 				}
 			}
