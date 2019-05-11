@@ -266,7 +266,7 @@ public class GuiController {
 		if (this.gui.referenceHistory == null) {
 			this.gui.referenceHistory = new History<>(reference);
 		} else {
-		    if (!reference.equals(this.gui.referenceHistory.getCurrent())) {
+			if (!reference.equals(this.gui.referenceHistory.getCurrent())) {
 				this.gui.referenceHistory.push(reference);
 			}
 		}
