@@ -68,7 +68,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.openEntryMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem("Go to previous");
+			JMenuItem menu = new JMenuItem("Go back");
 			menu.addActionListener(event -> gui.getController().openPreviousReference());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0));
 			menu.setEnabled(false);
@@ -76,7 +76,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.openPreviousMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem("Go to next");
+			JMenuItem menu = new JMenuItem("Go forward");
 			menu.addActionListener(event -> gui.getController().openNextReference());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0));
 			menu.setEnabled(false);
