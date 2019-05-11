@@ -77,6 +77,8 @@ public class Gui {
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
 
+	public JTextField renameTextField;
+
 	public void setEditorTheme(Config.LookAndFeel feel) {
 		if (editor != null && (editorFeel == null || editorFeel != feel)) {
 			editor.updateUI();
@@ -588,22 +590,22 @@ public class Gui {
 	public void startRename() {
 
 		// init the text box
-		final JTextField text = new JTextField();
+		renameTextField = new JTextField();
 
 		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
-		text.setText(translatedReference.getNameableName());
+		renameTextField.setText(translatedReference.getNameableName());
 
-		text.setPreferredSize(new Dimension(360, text.getPreferredSize().height));
-		text.addKeyListener(new KeyAdapter() {
+		renameTextField.setPreferredSize(new Dimension(360, renameTextField.getPreferredSize().height));
+		renameTextField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				switch (event.getKeyCode()) {
 					case KeyEvent.VK_ENTER:
-						finishRename(text, true);
+						finishRename(true);
 						break;
 
 					case KeyEvent.VK_ESCAPE:
-						finishRename(text, false);
+						finishRename(false);
 						break;
 					default:
 						break;
@@ -614,28 +616,28 @@ public class Gui {
 		// find the label with the name and replace it with the text box
 		JPanel panel = (JPanel) infoPanel.getComponent(0);
 		panel.remove(panel.getComponentCount() - 1);
-		panel.add(text);
-		text.grabFocus();
+		panel.add(renameTextField);
+		renameTextField.grabFocus();
 
-		int offset = text.getText().lastIndexOf('/') + 1;
+		int offset = renameTextField.getText().lastIndexOf('/') + 1;
 		// If it's a class and isn't in the default package, assume that it's deobfuscated.
-		if (translatedReference.getNameableEntry() instanceof ClassEntry && text.getText().contains("/") && offset != 0)
-			text.select(offset, text.getText().length());
+		if (translatedReference.getNameableEntry() instanceof ClassEntry && renameTextField.getText().contains("/") && offset != 0)
+			renameTextField.select(offset, renameTextField.getText().length());
 		else
-			text.selectAll();
+			renameTextField.selectAll();
 
 		redraw();
 	}
 
-	private void finishRename(JTextField text, boolean saveName) {
-		String newName = text.getText();
+	private void finishRename(boolean saveName) {
+		String newName = renameTextField.getText();
 		if (saveName && newName != null && !newName.isEmpty()) {
 			try {
 				this.controller.rename(reference, newName, true);
 			} catch (IllegalNameException ex) {
-				text.setBorder(BorderFactory.createLineBorder(Color.red, 1));
-				text.setToolTipText(ex.getReason());
-				Utils.showToolTipNow(text);
+				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
+				renameTextField.setToolTipText(ex.getReason());
+				Utils.showToolTipNow(renameTextField);
 			}
 			return;
 		}
@@ -644,6 +646,8 @@ public class Gui {
 		JPanel panel = (JPanel) infoPanel.getComponent(0);
 		panel.remove(panel.getComponentCount() - 1);
 		panel.add(Utils.unboldLabel(new JLabel(reference.getNameableName(), JLabel.LEFT)));
+
+		renameTextField = null;
 
 		this.editor.grabFocus();
 

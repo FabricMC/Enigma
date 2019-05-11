@@ -28,47 +28,56 @@ public class PanelEditor extends JEditorPane {
 		this.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
-				switch (event.getKeyCode()) {
-					case KeyEvent.VK_R:
-						gui.popupMenu.renameMenu.doClick();
-						break;
+				if (event.isControlDown()) {
+					switch (event.getKeyCode()) {
+						case KeyEvent.VK_R:
+							gui.popupMenu.renameMenu.doClick();
+							break;
 
-					case KeyEvent.VK_I:
-						gui.popupMenu.showInheritanceMenu.doClick();
-						break;
+						case KeyEvent.VK_I:
+							gui.popupMenu.showInheritanceMenu.doClick();
+							break;
 
-					case KeyEvent.VK_M:
-						gui.popupMenu.showImplementationsMenu.doClick();
-						break;
+						case KeyEvent.VK_M:
+							gui.popupMenu.showImplementationsMenu.doClick();
+							break;
 
-					case KeyEvent.VK_N:
-						gui.popupMenu.openEntryMenu.doClick();
-						break;
+						case KeyEvent.VK_N:
+							gui.popupMenu.openEntryMenu.doClick();
+							break;
 
-					case KeyEvent.VK_P:
-						gui.popupMenu.openPreviousMenu.doClick();
-						break;
+						case KeyEvent.VK_P:
+							gui.popupMenu.openPreviousMenu.doClick();
+							break;
 
-					case KeyEvent.VK_C:
-						gui.popupMenu.showCallsMenu.doClick();
-						break;
+						case KeyEvent.VK_C:
+							gui.popupMenu.showCallsMenu.doClick();
+							break;
 
-					case KeyEvent.VK_O:
-						gui.popupMenu.toggleMappingMenu.doClick();
-						break;
-					case KeyEvent.VK_F5:
-						gui.getController().refreshCurrentClass();
-						break;
-					default:
-						break;
+						case KeyEvent.VK_O:
+							gui.popupMenu.toggleMappingMenu.doClick();
+							break;
+						case KeyEvent.VK_F5:
+							gui.getController().refreshCurrentClass();
+							break;
+						default:
+							break;
+					}
 				}
 
 				gui.setShouldNavigateOnClick(event.isControlDown());
 			}
 
 			@Override
+			public void keyTyped(KeyEvent event) {
+				if (!event.isControlDown() && !event.isAltDown()) {
+					gui.popupMenu.renameMenu.doClick();
+					gui.renameTextField.setText(String.valueOf(event.getKeyChar()));
+				}
+			}
+
+			@Override
 			public void keyReleased(KeyEvent event) {
-				super.keyReleased(event);
 				gui.setShouldNavigateOnClick(event.isControlDown());
 			}
 		});
