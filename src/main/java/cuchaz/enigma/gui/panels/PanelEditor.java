@@ -70,6 +70,7 @@ public class PanelEditor extends JEditorPane {
 
 			@Override
 			public void keyTyped(KeyEvent event) {
+				if (!gui.popupMenu.isEnabled()) return;
 				if (!event.isControlDown() && !event.isAltDown()) {
 					gui.popupMenu.renameMenu.doClick();
 					gui.renameTextField.setText(String.valueOf(event.getKeyChar()));
