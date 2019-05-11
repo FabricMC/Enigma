@@ -12,11 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class PanelEditor extends JEditorPane {
-	private final Gui gui;
-
 	public PanelEditor(Gui gui) {
-		this.gui = gui;
-
 		this.setEditable(false);
 		this.setSelectionColor(new Color(31, 46, 90));
 		this.setCaret(new BrowserCaret());
@@ -66,6 +62,14 @@ public class PanelEditor extends JEditorPane {
 					default:
 						break;
 				}
+
+				gui.setShouldNavigateOnClick(event.isControlDown());
+			}
+
+			@Override
+			public void keyReleased(KeyEvent event) {
+				super.keyReleased(event);
+				gui.setShouldNavigateOnClick(event.isControlDown());
 			}
 		});
 	}

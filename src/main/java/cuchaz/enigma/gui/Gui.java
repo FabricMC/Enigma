@@ -55,6 +55,8 @@ public class Gui {
 	private final MenuBar menuBar;
 	// state
 	public EntryReference<Entry<?>, Entry<?>> reference;
+	private boolean shouldNavigateOnClick;
+
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
 	public JFileChooser enigmaMappingsFileChooser;
@@ -521,19 +523,24 @@ public class Gui {
 	}
 
 	public void onCaretMove(int pos) {
-
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
 		reference = this.controller.getReference(token);
-
 		Entry<?> referenceEntry = reference != null ? reference.entry : null;
+
+		if (referenceEntry != null && shouldNavigateOnClick) {
+			shouldNavigateOnClick = false;
+			navigateTo(referenceEntry);
+			return;
+		}
+
 		boolean isClassEntry = isToken && referenceEntry instanceof ClassEntry;
 		boolean isFieldEntry = isToken && referenceEntry instanceof FieldEntry;
 		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
 		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
 		boolean isInJar = isToken && this.controller.entryIsInJar(referenceEntry);
-		boolean isRenameable = isToken && this.controller.getDeobfuscator().isRenamable(reference);
+		boolean isRenamable = isToken && this.controller.getDeobfuscator().isRenamable(reference);
 
 		if (isToken) {
 			showReference(reference);
@@ -541,14 +548,14 @@ public class Gui {
 			infoPanel.clearReference();
 		}
 
-		this.popupMenu.renameMenu.setEnabled(isRenameable);
+		this.popupMenu.renameMenu.setEnabled(isRenamable);
 		this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
 		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showCallsSpecificMenu.setEnabled(isMethodEntry);
 		this.popupMenu.openEntryMenu.setEnabled(isInJar && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
 		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
-		this.popupMenu.toggleMappingMenu.setEnabled(isRenameable);
+		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
 
 		if (isToken && this.controller.getDeobfuscator().isRemapped(referenceEntry)) {
 			this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
@@ -842,5 +849,9 @@ public class Gui {
 
 	public PanelDeobf getDeobfPanel() {
 		return deobfPanel;
+	}
+
+	public void setShouldNavigateOnClick(boolean shouldNavigateOnClick) {
+		this.shouldNavigateOnClick = shouldNavigateOnClick;
 	}
 }
