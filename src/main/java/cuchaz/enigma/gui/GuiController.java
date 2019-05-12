@@ -297,20 +297,23 @@ public class GuiController {
 	 * @param reference
 	 */
 	private void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		EntryRemapper mapper = this.deobfuscator.getMapper();
-
-		SourceIndex index = this.currentSource.getIndex();
-		Collection<Token> tokens = mapper.getObfResolver().resolveReference(reference, ResolutionStrategy.RESOLVE_CLOSEST)
-				.stream()
-				.flatMap(r -> index.getReferenceTokens(r).stream())
-				.collect(Collectors.toList());
-
+		Collection<Token> tokens = getTokensForReference(reference);
 		if (tokens.isEmpty()) {
 			// DEBUG
 			System.err.println(String.format("WARNING: no tokens found for %s in %s", reference, this.currentSource.getEntry()));
 		} else {
 			this.gui.showTokens(tokens);
 		}
+	}
+
+	public Collection<Token> getTokensForReference(EntryReference<Entry<?>, Entry<?>> reference) {
+		EntryRemapper mapper = this.deobfuscator.getMapper();
+
+		SourceIndex index = this.currentSource.getIndex();
+		return mapper.getObfResolver().resolveReference(reference, ResolutionStrategy.RESOLVE_CLOSEST)
+				.stream()
+				.flatMap(r -> index.getReferenceTokens(r).stream())
+				.collect(Collectors.toList());
 	}
 
 	public void openPreviousReference() {
