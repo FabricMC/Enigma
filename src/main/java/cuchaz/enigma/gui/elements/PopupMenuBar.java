@@ -15,6 +15,7 @@ public class PopupMenuBar extends JPopupMenu {
 	public final JMenuItem showCallsSpecificMenu;
 	public final JMenuItem openEntryMenu;
 	public final JMenuItem openPreviousMenu;
+	public final JMenuItem openNextMenu;
 	public final JMenuItem toggleMappingMenu;
 
 	public PopupMenuBar(Gui gui) {
@@ -60,19 +61,27 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem("Go to Declaration");
-			menu.addActionListener(event -> gui.navigateTo(gui.reference.entry));
+			menu.addActionListener(event -> gui.getController().navigateTo(gui.cursorReference.entry));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, 0));
 			menu.setEnabled(false);
 			this.add(menu);
 			this.openEntryMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem("Go to previous");
+			JMenuItem menu = new JMenuItem("Go back");
 			menu.addActionListener(event -> gui.getController().openPreviousReference());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0));
 			menu.setEnabled(false);
 			this.add(menu);
 			this.openPreviousMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem("Go forward");
+			menu.addActionListener(event -> gui.getController().openNextReference());
+			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0));
+			menu.setEnabled(false);
+			this.add(menu);
+			this.openNextMenu = menu;
 		}
 		{
 			JMenuItem menu = new JMenuItem("Mark as deobfuscated");

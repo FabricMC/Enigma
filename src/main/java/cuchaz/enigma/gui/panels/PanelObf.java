@@ -26,7 +26,7 @@ public class PanelObf extends JPanel {
 		};
 
 		this.obfClasses = new ClassSelector(gui, obfClassComparator, false);
-		this.obfClasses.setSelectionListener(gui::navigateTo);
+		this.obfClasses.setSelectionListener(gui.getController()::navigateTo);
 		this.obfClasses.setRenameSelectionListener(gui::onPanelRename);
 
 		this.setLayout(new BorderLayout());

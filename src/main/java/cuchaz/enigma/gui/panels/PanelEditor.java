@@ -21,8 +21,19 @@ public class PanelEditor extends JEditorPane {
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON3)
-					self.setCaretPosition(self.viewToModel(e.getPoint()));
+				switch (e.getButton()) {
+					case MouseEvent.BUTTON3: // Right click
+						self.setCaretPosition(self.viewToModel(e.getPoint()));
+						break;
+
+					case 4: // Back navigation
+						gui.getController().openPreviousReference();
+						break;
+
+					case 5: // Forward navigation
+						gui.getController().openNextReference();
+						break;
+				}
 			}
 		});
 		this.addKeyListener(new KeyAdapter() {
@@ -48,6 +59,10 @@ public class PanelEditor extends JEditorPane {
 
 						case KeyEvent.VK_P:
 							gui.popupMenu.openPreviousMenu.doClick();
+							break;
+
+						case KeyEvent.VK_E:
+							gui.popupMenu.openNextMenu.doClick();
 							break;
 
 						case KeyEvent.VK_C:

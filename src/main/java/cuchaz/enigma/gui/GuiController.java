@@ -12,7 +12,6 @@
 package cuchaz.enigma.gui;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.Deobfuscator;
@@ -20,6 +19,7 @@ import cuchaz.enigma.SourceProvider;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
+import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
@@ -40,7 +40,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,14 +52,13 @@ public class GuiController {
 	private final Gui gui;
 	private Deobfuscator deobfuscator;
 	private DecompiledClassSource currentSource;
-	private Deque<EntryReference<Entry<?>, Entry<?>>> referenceStack;
+
 
 	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
 
 	public GuiController(Gui gui) {
 		this.gui = gui;
-		this.referenceStack = Queues.newArrayDeque();
 	}
 
 	public boolean isDirty() {
@@ -246,6 +244,10 @@ public class GuiController {
 		refreshCurrentClass(reference);
 	}
 
+	/**
+	 * Navigates to the declaration with respect to navigation history
+	 * @param entry the entry whose declaration will be navigated to
+	 */
 	public void openDeclaration(Entry<?> entry) {
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
@@ -253,11 +255,29 @@ public class GuiController {
 		openReference(new EntryReference<>(entry, entry.getName()));
 	}
 
+	/**
+	 * Navigates to the reference with respect to navigation history
+	 * @param reference the reference
+	 */
 	public void openReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		if (reference == null) {
 			throw new IllegalArgumentException("Reference cannot be null!");
 		}
+		if (this.gui.referenceHistory == null) {
+			this.gui.referenceHistory = new History<>(reference);
+		} else {
+			if (!reference.equals(this.gui.referenceHistory.getCurrent())) {
+				this.gui.referenceHistory.push(reference);
+			}
+		}
+		setReference(reference);
+	}
 
+	/**
+	 * Navigates to the reference without modifying history. If the class is not currently loaded, it will be loaded.
+	 * @param reference the reference
+	 */
+	private void setReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		// get the reference target class
 		ClassEntry classEntry = reference.getLocationClassEntry();
 		if (!this.deobfuscator.isRenamable(classEntry)) {
@@ -272,6 +292,10 @@ public class GuiController {
 		}
 	}
 
+	/**
+	 * Navigates to the reference without modifying history. Assumes the class is loaded.
+	 * @param reference
+	 */
 	private void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		Collection<Token> tokens = getTokensForReference(reference);
 		if (tokens.isEmpty()) {
@@ -292,18 +316,39 @@ public class GuiController {
 				.collect(Collectors.toList());
 	}
 
-	public void savePreviousReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		this.referenceStack.push(reference);
-	}
-
 	public void openPreviousReference() {
-		if (hasPreviousLocation()) {
-			openReference(this.referenceStack.pop());
+		if (hasPreviousReference()) {
+			setReference(gui.referenceHistory.goBack());
 		}
 	}
 
-	public boolean hasPreviousLocation() {
-		return !this.referenceStack.isEmpty();
+	public boolean hasPreviousReference() {
+		return gui.referenceHistory != null && gui.referenceHistory.canGoBack();
+	}
+
+	public void openNextReference() {
+		if (hasNextReference()) {
+			setReference(gui.referenceHistory.goForward());
+		}
+	}
+
+	public boolean hasNextReference() {
+		return gui.referenceHistory != null && gui.referenceHistory.canGoForward();
+	}
+
+	public void navigateTo(Entry<?> entry) {
+		if (!entryIsInJar(entry)) {
+			// entry is not in the jar. Ignore it
+			return;
+		}
+		openDeclaration(entry);
+	}
+
+	public void navigateTo(EntryReference<Entry<?>, Entry<?>> reference) {
+		if (!entryIsInJar(reference.getLocationClassEntry())) {
+			return;
+		}
+		openReference(reference);
 	}
 
 	private void refreshClasses() {
@@ -393,7 +438,7 @@ public class GuiController {
 
 	public void modifierChange(ItemEvent event) {
 		if (event.getStateChange() == ItemEvent.SELECTED) {
-			deobfuscator.changeModifier(gui.reference.entry, (AccessModifier) event.getItem());
+			deobfuscator.changeModifier(gui.cursorReference.entry, (AccessModifier) event.getItem());
 			refreshCurrentClass();
 		}
 	}
