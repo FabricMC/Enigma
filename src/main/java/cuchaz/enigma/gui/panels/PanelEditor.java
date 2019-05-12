@@ -41,10 +41,6 @@ public class PanelEditor extends JEditorPane {
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
 					switch (event.getKeyCode()) {
-						case KeyEvent.VK_R:
-							gui.popupMenu.renameMenu.doClick();
-							break;
-
 						case KeyEvent.VK_I:
 							gui.popupMenu.showInheritanceMenu.doClick();
 							break;
@@ -85,7 +81,7 @@ public class PanelEditor extends JEditorPane {
 
 			@Override
 			public void keyTyped(KeyEvent event) {
-				if (!gui.popupMenu.isEnabled()) return;
+				if (!gui.popupMenu.renameMenu.isEnabled()) return;
 				if (!event.isControlDown() && !event.isAltDown()) {
 					gui.popupMenu.renameMenu.doClick();
 					gui.renameTextField.setText(String.valueOf(event.getKeyChar()));
