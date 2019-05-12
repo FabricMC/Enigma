@@ -1,18 +1,14 @@
 package cuchaz.enigma.api;
 
-import org.objectweb.asm.tree.ClassNode;
+import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
-import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.Optional;
 
-public abstract class EnigmaPlugin {
-    public void onClassesLoaded(Map<String, byte[]> classData, Function<String, ClassNode> classNodeGetter) {
+public interface EnigmaPlugin {
+	void indexJar(ParsedJar jar, JarIndex index);
 
-    }
-
-    @Nullable
-    public String proposeFieldName(String owner, String name, String desc) {
-        return null;
-    }
+	Optional<String> proposeName(Entry<?> obfEntry, EntryRemapper remapper);
 }

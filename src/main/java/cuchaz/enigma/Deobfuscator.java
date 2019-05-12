@@ -13,6 +13,7 @@ package cuchaz.enigma;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Streams;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -54,6 +55,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Deobfuscator {
 
@@ -73,10 +75,10 @@ public class Deobfuscator {
 		this.jarIndex = JarIndex.empty();
 		this.jarIndex.indexJar(this.parsedJar, listener);
 
-		listener.accept("Initializing plugins...");
-		for (EnigmaPlugin plugin : getPlugins()) {
-			plugin.onClassesLoaded(parsedJar.getClassDataMap(), parsedJar::getClassNode);
-		}
+		getPlugins().forEach(plugin -> {
+			listener.accept("Initializing plugin '" + plugin.getClass().getSimpleName() + "'");
+			plugin.indexJar(parsedJar, jarIndex);
+		});
 
 		this.indexTreeBuilder = new IndexTreeBuilder(jarIndex);
 
@@ -105,8 +107,8 @@ public class Deobfuscator {
 		});
 	}
 
-	public ServiceLoader<EnigmaPlugin> getPlugins() {
-		return plugins;
+	public Stream<EnigmaPlugin> getPlugins() {
+		return Streams.stream(plugins);
 	}
 
 	public ParsedJar getJar() {

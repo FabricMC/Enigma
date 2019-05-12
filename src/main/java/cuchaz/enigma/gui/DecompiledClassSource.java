@@ -4,18 +4,17 @@ import cuchaz.enigma.Deobfuscator;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
-import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableDefEntry;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class DecompiledClassSource {
 	private final ClassEntry classEntry;
@@ -55,10 +54,10 @@ public class DecompiledClassSource {
 				highlightToken(movedToken, TokenHighlightType.DEOBFUSCATED);
 				return translatedEntry.getSourceRemapName();
 			} else {
-				String proposedName = proposeName(deobfuscator, entry);
-				if (proposedName != null) {
+				Optional<String> proposedName = proposeName(deobfuscator, entry);
+				if (proposedName.isPresent()) {
 					highlightToken(movedToken, TokenHighlightType.PROPOSED);
-					return proposedName;
+					return proposedName.get();
 				}
 
 				highlightToken(movedToken, TokenHighlightType.OBFUSCATED);
@@ -73,18 +72,13 @@ public class DecompiledClassSource {
 		return null;
 	}
 
-	@Nullable
-	private String proposeName(Deobfuscator deobfuscator, Entry<?> entry) {
-		if (entry instanceof FieldEntry) {
-			for (EnigmaPlugin plugin : deobfuscator.getPlugins()) {
-				String owner = entry.getContainingClass().getFullName();
-				String proposal = plugin.proposeFieldName(owner, entry.getName(), ((FieldEntry) entry).getDesc().toString());
-				if (proposal != null) {
-					return proposal;
-				}
-			}
-		}
-		return null;
+	private Optional<String> proposeName(Deobfuscator deobfuscator, Entry<?> entry) {
+		Stream<String> proposals = deobfuscator.getPlugins()
+				.map(plugin -> plugin.proposeName(entry, deobfuscator.getMapper()))
+				.filter(Optional::isPresent)
+				.map(Optional::get);
+
+		return proposals.findFirst();
 	}
 
 	@Nullable
