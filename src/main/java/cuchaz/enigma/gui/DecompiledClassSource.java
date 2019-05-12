@@ -73,7 +73,7 @@ public class DecompiledClassSource {
 	}
 
 	private Optional<String> proposeName(Deobfuscator deobfuscator, Entry<?> entry) {
-		Stream<String> proposals = deobfuscator.getPlugins()
+		Stream<String> proposals = deobfuscator.getNameProposers()
 				.map(plugin -> plugin.proposeName(entry, deobfuscator.getMapper()))
 				.filter(Optional::isPresent)
 				.map(Optional::get);

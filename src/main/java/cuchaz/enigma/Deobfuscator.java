@@ -24,7 +24,8 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.IndexTreeBuilder;
 import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.JarIndex;
-import cuchaz.enigma.api.EnigmaPlugin;
+import cuchaz.enigma.api.EntryNameProposer;
+import cuchaz.enigma.api.JarProcessor;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
 import cuchaz.enigma.translation.Translatable;
@@ -59,7 +60,9 @@ import java.util.stream.Stream;
 
 public class Deobfuscator {
 
-	private final ServiceLoader<EnigmaPlugin> plugins = ServiceLoader.load(EnigmaPlugin.class);
+	private final ServiceLoader<JarProcessor> jarProcessors = ServiceLoader.load(JarProcessor.class);
+	private final ServiceLoader<EntryNameProposer> nameProposers = ServiceLoader.load(EntryNameProposer.class);
+
 	private final ParsedJar parsedJar;
 	private final JarIndex jarIndex;
 	private final IndexTreeBuilder indexTreeBuilder;
@@ -75,10 +78,8 @@ public class Deobfuscator {
 		this.jarIndex = JarIndex.empty();
 		this.jarIndex.indexJar(this.parsedJar, listener);
 
-		getPlugins().forEach(plugin -> {
-			listener.accept("Initializing plugin '" + plugin.getClass().getSimpleName() + "'");
-			plugin.indexJar(parsedJar, jarIndex);
-		});
+		listener.accept("Processing jar");
+		this.jarProcessors.forEach(processor -> processor.accept(parsedJar, jarIndex));
 
 		this.indexTreeBuilder = new IndexTreeBuilder(jarIndex);
 
@@ -107,8 +108,8 @@ public class Deobfuscator {
 		});
 	}
 
-	public Stream<EnigmaPlugin> getPlugins() {
-		return Streams.stream(plugins);
+	public Stream<EntryNameProposer> getNameProposers() {
+		return Streams.stream(nameProposers);
 	}
 
 	public ParsedJar getJar() {
