@@ -29,6 +29,7 @@ import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
+import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -54,7 +55,8 @@ public class Gui {
 
 	private final MenuBar menuBar;
 	// state
-	public EntryReference<Entry<?>, Entry<?>> reference;
+	public History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
+	public EntryReference<Entry<?>, Entry<?>> cursorReference;
 	private boolean shouldNavigateOnClick;
 
 	public FileDialog jarFileChooser;
@@ -162,11 +164,11 @@ public class Gui {
 					Object node = path.getLastPathComponent();
 					if (node instanceof ClassInheritanceTreeNode) {
 						ClassInheritanceTreeNode classNode = (ClassInheritanceTreeNode) node;
-						navigateTo(new ClassEntry(classNode.getObfClassName()));
+						controller.navigateTo(new ClassEntry(classNode.getObfClassName()));
 					} else if (node instanceof MethodInheritanceTreeNode) {
 						MethodInheritanceTreeNode methodNode = (MethodInheritanceTreeNode) node;
 						if (methodNode.isImplemented()) {
-							navigateTo(methodNode.getMethodEntry());
+							controller.navigateTo(methodNode.getMethodEntry());
 						}
 					}
 				}
@@ -195,10 +197,10 @@ public class Gui {
 					Object node = path.getLastPathComponent();
 					if (node instanceof ClassImplementationsTreeNode) {
 						ClassImplementationsTreeNode classNode = (ClassImplementationsTreeNode) node;
-						navigateTo(classNode.getClassEntry());
+						controller.navigateTo(classNode.getClassEntry());
 					} else if (node instanceof MethodImplementationsTreeNode) {
 						MethodImplementationsTreeNode methodNode = (MethodImplementationsTreeNode) node;
-						navigateTo(methodNode.getMethodEntry());
+						controller.navigateTo(methodNode.getMethodEntry());
 					}
 				}
 			}
@@ -225,9 +227,9 @@ public class Gui {
 					if (node instanceof ReferenceTreeNode) {
 						ReferenceTreeNode<Entry<?>, Entry<?>> referenceNode = ((ReferenceTreeNode<Entry<?>, Entry<?>>) node);
 						if (referenceNode.getReference() != null) {
-							navigateTo(referenceNode.getReference());
+							controller.navigateTo(referenceNode.getReference());
 						} else {
-							navigateTo(referenceNode.getEntry());
+							controller.navigateTo(referenceNode.getEntry());
 						}
 					}
 				}
@@ -433,13 +435,13 @@ public class Gui {
 		}
 	}
 
-	private void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
+	private void showCursorReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		if (reference == null) {
 			infoPanel.clearReference();
 			return;
 		}
 
-		this.reference = reference;
+		this.cursorReference = reference;
 
 		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
 
@@ -526,12 +528,12 @@ public class Gui {
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
-		reference = this.controller.getReference(token);
-		Entry<?> referenceEntry = reference != null ? reference.entry : null;
+		cursorReference = this.controller.getReference(token);
+		Entry<?> referenceEntry = cursorReference != null ? cursorReference.entry : null;
 
 		if (referenceEntry != null && shouldNavigateOnClick) {
 			shouldNavigateOnClick = false;
-			navigateTo(referenceEntry);
+			this.controller.navigateTo(referenceEntry);
 			return;
 		}
 
@@ -540,10 +542,10 @@ public class Gui {
 		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
 		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
 		boolean isInJar = isToken && this.controller.entryIsInJar(referenceEntry);
-		boolean isRenamable = isToken && this.controller.getDeobfuscator().isRenamable(reference);
+		boolean isRenamable = isToken && this.controller.getDeobfuscator().isRenamable(cursorReference);
 
 		if (isToken) {
-			showReference(reference);
+			showCursorReference(cursorReference);
 		} else {
 			infoPanel.clearReference();
 		}
@@ -554,7 +556,8 @@ public class Gui {
 		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showCallsSpecificMenu.setEnabled(isMethodEntry);
 		this.popupMenu.openEntryMenu.setEnabled(isInJar && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
-		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousLocation());
+		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousReference());
+		this.popupMenu.openNextMenu.setEnabled(this.controller.hasNextReference());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
 
 		if (isToken && this.controller.getDeobfuscator().isRemapped(referenceEntry)) {
@@ -564,33 +567,12 @@ public class Gui {
 		}
 	}
 
-	public void navigateTo(Entry<?> entry) {
-		if (!this.controller.entryIsInJar(entry)) {
-			// entry is not in the jar. Ignore it
-			return;
-		}
-		if (reference != null) {
-			this.controller.savePreviousReference(reference);
-		}
-		this.controller.openDeclaration(entry);
-	}
-
-	private void navigateTo(EntryReference<Entry<?>, Entry<?>> reference) {
-		if (!this.controller.entryIsInJar(reference.getLocationClassEntry())) {
-			return;
-		}
-		if (this.reference != null) {
-			this.controller.savePreviousReference(this.reference);
-		}
-		this.controller.openReference(reference);
-	}
-
 	public void startRename() {
 
 		// init the text box
 		final JTextField text = new JTextField();
 
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(cursorReference);
 		text.setText(translatedReference.getNameableName());
 
 		text.setPreferredSize(new Dimension(360, text.getPreferredSize().height));
@@ -631,7 +613,7 @@ public class Gui {
 		String newName = text.getText();
 		if (saveName && newName != null && !newName.isEmpty()) {
 			try {
-				this.controller.rename(reference, newName, true);
+				this.controller.rename(cursorReference, newName, true);
 			} catch (IllegalNameException ex) {
 				text.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				text.setToolTipText(ex.getReason());
@@ -643,7 +625,7 @@ public class Gui {
 		// abort the rename
 		JPanel panel = (JPanel) infoPanel.getComponent(0);
 		panel.remove(panel.getComponentCount() - 1);
-		panel.add(Utils.unboldLabel(new JLabel(reference.getNameableName(), JLabel.LEFT)));
+		panel.add(Utils.unboldLabel(new JLabel(cursorReference.getNameableName(), JLabel.LEFT)));
 
 		this.editor.grabFocus();
 
@@ -652,24 +634,24 @@ public class Gui {
 
 	public void showInheritance() {
 
-		if (reference == null) {
+		if (cursorReference == null) {
 			return;
 		}
 
 		inheritanceTree.setModel(null);
 
-		if (reference.entry instanceof ClassEntry) {
+		if (cursorReference.entry instanceof ClassEntry) {
 			// get the class inheritance
-			ClassInheritanceTreeNode classNode = this.controller.getClassInheritance((ClassEntry) reference.entry);
+			ClassInheritanceTreeNode classNode = this.controller.getClassInheritance((ClassEntry) cursorReference.entry);
 
 			// show the tree at the root
 			TreePath path = getPathToRoot(classNode);
 			inheritanceTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
 			inheritanceTree.expandPath(path);
 			inheritanceTree.setSelectionRow(inheritanceTree.getRowForPath(path));
-		} else if (reference.entry instanceof MethodEntry) {
+		} else if (cursorReference.entry instanceof MethodEntry) {
 			// get the method inheritance
-			MethodInheritanceTreeNode classNode = this.controller.getMethodInheritance((MethodEntry) reference.entry);
+			MethodInheritanceTreeNode classNode = this.controller.getMethodInheritance((MethodEntry) cursorReference.entry);
 
 			// show the tree at the root
 			TreePath path = getPathToRoot(classNode);
@@ -685,7 +667,7 @@ public class Gui {
 
 	public void showImplementations() {
 
-		if (reference == null) {
+		if (cursorReference == null) {
 			return;
 		}
 
@@ -694,11 +676,11 @@ public class Gui {
 		DefaultMutableTreeNode node = null;
 
 		// get the class implementations
-		if (reference.entry instanceof ClassEntry)
-			node = this.controller.getClassImplementations((ClassEntry) reference.entry);
+		if (cursorReference.entry instanceof ClassEntry)
+			node = this.controller.getClassImplementations((ClassEntry) cursorReference.entry);
 		else // get the method implementations
-			if (reference.entry instanceof MethodEntry)
-				node = this.controller.getMethodImplementations((MethodEntry) reference.entry);
+			if (cursorReference.entry instanceof MethodEntry)
+				node = this.controller.getMethodImplementations((MethodEntry) cursorReference.entry);
 
 		if (node != null) {
 			// show the tree at the root
@@ -714,18 +696,18 @@ public class Gui {
 	}
 
 	public void showCalls(boolean recurse) {
-		if (reference == null) {
+		if (cursorReference == null) {
 			return;
 		}
 
-		if (reference.entry instanceof ClassEntry) {
-			ClassReferenceTreeNode node = this.controller.getClassReferences((ClassEntry) reference.entry);
+		if (cursorReference.entry instanceof ClassEntry) {
+			ClassReferenceTreeNode node = this.controller.getClassReferences((ClassEntry) cursorReference.entry);
 			callsTree.setModel(new DefaultTreeModel(node));
-		} else if (reference.entry instanceof FieldEntry) {
-			FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) reference.entry);
+		} else if (cursorReference.entry instanceof FieldEntry) {
+			FieldReferenceTreeNode node = this.controller.getFieldReferences((FieldEntry) cursorReference.entry);
 			callsTree.setModel(new DefaultTreeModel(node));
-		} else if (reference.entry instanceof MethodEntry) {
-			MethodReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) reference.entry, recurse);
+		} else if (cursorReference.entry instanceof MethodEntry) {
+			MethodReferenceTreeNode node = this.controller.getMethodReferences((MethodEntry) cursorReference.entry, recurse);
 			callsTree.setModel(new DefaultTreeModel(node));
 		}
 
@@ -735,10 +717,10 @@ public class Gui {
 	}
 
 	public void toggleMapping() {
-		if (this.controller.getDeobfuscator().isRemapped(reference.entry)) {
-			this.controller.removeMapping(reference);
+		if (this.controller.getDeobfuscator().isRemapped(cursorReference.entry)) {
+			this.controller.removeMapping(cursorReference);
 		} else {
-			this.controller.markAsDeobfuscated(reference);
+			this.controller.markAsDeobfuscated(cursorReference);
 		}
 	}
 

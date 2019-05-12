@@ -125,7 +125,7 @@ public class SearchDialog {
 			.filter(classEntry -> classEntry.getSimpleName().equals(classList.getSelectedValue())).
 			findFirst()
 			.ifPresent(classEntry -> {
-				parent.navigateTo(classEntry);
+				parent.getController().navigateTo(classEntry);
 				parent.getDeobfPanel().deobfClasses.setSelectionClass(classEntry);
 			});
 	}
