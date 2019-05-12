@@ -1,8 +1,12 @@
 package cuchaz.enigma.gui.panels;
 
+import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.BrowserCaret;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.swing.*;
 import java.awt.*;
@@ -68,9 +72,15 @@ public class PanelEditor extends JEditorPane {
 						case KeyEvent.VK_O:
 							gui.popupMenu.toggleMappingMenu.doClick();
 							break;
+
+						case KeyEvent.VK_R:
+							gui.popupMenu.renameMenu.doClick();
+							break;
+
 						case KeyEvent.VK_F5:
 							gui.getController().refreshCurrentClass();
 							break;
+
 						default:
 							break;
 					}
@@ -82,9 +92,22 @@ public class PanelEditor extends JEditorPane {
 			@Override
 			public void keyTyped(KeyEvent event) {
 				if (!gui.popupMenu.renameMenu.isEnabled()) return;
+
 				if (!event.isControlDown() && !event.isAltDown()) {
+					Deobfuscator deobfuscator = gui.getController().getDeobfuscator();
+					EntryReference<Entry<?>, Entry<?>> reference = deobfuscator.deobfuscate(gui.cursorReference);
+					Entry<?> entry = reference.getNameableEntry();
+
+					String name = String.valueOf(event.getKeyChar());
+					if (entry instanceof ClassEntry) {
+						String packageName = ((ClassEntry) entry).getPackageName();
+						if (packageName != null) {
+							name = packageName + "/" + name;
+						}
+					}
+
 					gui.popupMenu.renameMenu.doClick();
-					gui.renameTextField.setText(String.valueOf(event.getKeyChar()));
+					gui.renameTextField.setText(name);
 				}
 			}
 
