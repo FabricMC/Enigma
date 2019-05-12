@@ -32,6 +32,8 @@ import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
@@ -535,7 +537,12 @@ public class Gui {
 
 		if (referenceEntry != null && shouldNavigateOnClick) {
 			shouldNavigateOnClick = false;
-			this.controller.navigateTo(referenceEntry);
+			Entry<?> navigationEntry = referenceEntry;
+			if (cursorReference.context == null) {
+				EntryResolver resolver = controller.getDeobfuscator().getMapper().getObfResolver();
+				navigationEntry = resolver.resolveFirstEntry(referenceEntry, ResolutionStrategy.RESOLVE_ROOT);
+			}
+			controller.navigateTo(navigationEntry);
 			return;
 		}
 
