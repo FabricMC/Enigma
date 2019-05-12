@@ -6,12 +6,30 @@ import de.sciss.syntaxpane.actions.gui.QuickFindDialog;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class EnigmaQuickFindDialog extends QuickFindDialog {
 	public EnigmaQuickFindDialog(JTextComponent target) {
 		super(target, DocumentSearchData.getFromEditor(target));
+
+		JToolBar toolBar = getToolBar();
+		JTextField textField = getTextField(toolBar);
+
+		textField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					JToolBar toolBar = getToolBar();
+					boolean next = !e.isShiftDown();
+					JButton button = next ? getNextButton(toolBar) : getPrevButton(toolBar);
+					button.doClick();
+				}
+			}
+		});
 	}
 
 	@Override
@@ -42,6 +60,16 @@ public class EnigmaQuickFindDialog extends QuickFindDialog {
 
 	private JTextField getTextField(JToolBar toolBar) {
 		return components(toolBar, JTextField.class).findFirst().orElse(null);
+	}
+
+	private JButton getNextButton(JToolBar toolBar) {
+		Stream<JButton> buttons = components(toolBar, JButton.class);
+		return buttons.skip(1).findFirst().orElse(null);
+	}
+
+	private JButton getPrevButton(JToolBar toolBar) {
+		Stream<JButton> buttons = components(toolBar, JButton.class);
+		return buttons.findFirst().orElse(null);
 	}
 
 	private static Stream<Component> components(Container container) {
