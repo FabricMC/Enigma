@@ -41,7 +41,7 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	private <K extends Entry<?>, V extends Entry<?>> Multimap<K, V> remapReferences(JarIndex index, Multimap<K, V> multimap) {
-		Multimap<K, V> resolved = HashMultimap.create();
+		Multimap<K, V> resolved = HashMultimap.create(multimap.keySet().size(), multimap.size() / multimap.keySet().size());
 		for (Map.Entry<K, V> entry : multimap.entries()) {
 			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
 		}
@@ -49,7 +49,7 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	private <E extends Entry<?>, C extends Entry<?>> Multimap<E, EntryReference<E, C>> remapReferencesTo(JarIndex index, Multimap<E, EntryReference<E, C>> multimap) {
-		Multimap<E, EntryReference<E, C>> resolved = HashMultimap.create();
+		Multimap<E, EntryReference<E, C>> resolved = HashMultimap.create(multimap.keySet().size(), multimap.size() / multimap.keySet().size());
 		for (Map.Entry<E, EntryReference<E, C>> entry : multimap.entries()) {
 			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
 		}
