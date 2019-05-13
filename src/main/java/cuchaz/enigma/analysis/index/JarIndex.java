@@ -29,18 +29,20 @@ public class JarIndex implements JarIndexer {
 	private final InheritanceIndex inheritanceIndex;
 	private final ReferenceIndex referenceIndex;
 	private final BridgeMethodIndex bridgeMethodIndex;
+	private final PackageVisibilityIndex packageVisibilityIndex;
 	private final EntryResolver entryResolver;
 
 	private final Collection<JarIndexer> indexers;
 
 	private final Multimap<String, MethodDefEntry> methodImplementations = HashMultimap.create();
 
-	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex) {
+	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex, PackageVisibilityIndex packageVisibilityIndex) {
 		this.entryIndex = entryIndex;
 		this.inheritanceIndex = inheritanceIndex;
 		this.referenceIndex = referenceIndex;
 		this.bridgeMethodIndex = bridgeMethodIndex;
-		this.indexers = Arrays.asList(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex);
+		this.packageVisibilityIndex = packageVisibilityIndex;
+		this.indexers = Arrays.asList(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 		this.entryResolver = new IndexEntryResolver(this);
 	}
 
@@ -49,7 +51,8 @@ public class JarIndex implements JarIndexer {
 		InheritanceIndex inheritanceIndex = new InheritanceIndex(entryIndex);
 		ReferenceIndex referenceIndex = new ReferenceIndex();
 		BridgeMethodIndex bridgeMethodIndex = new BridgeMethodIndex(entryIndex, inheritanceIndex, referenceIndex);
-		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex);
+		PackageVisibilityIndex packageVisibilityIndex = new PackageVisibilityIndex();
+		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 	}
 
 	public void indexJar(ParsedJar jar, Consumer<String> progress) {
@@ -140,6 +143,10 @@ public class JarIndex implements JarIndexer {
 
 	public BridgeMethodIndex getBridgeMethodIndex() {
 		return bridgeMethodIndex;
+	}
+
+	public PackageVisibilityIndex getPackageVisibilityIndex() {
+		return packageVisibilityIndex;
 	}
 
 	public EntryResolver getEntryResolver() {
