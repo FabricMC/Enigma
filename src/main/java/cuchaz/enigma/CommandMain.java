@@ -51,6 +51,7 @@ public class CommandMain {
 		} catch (IllegalArgumentException ex) {
 			System.err.println(ex.getMessage());
 			printHelp();
+			System.exit(1);
 		}
 	}
 
@@ -126,11 +127,18 @@ public class CommandMain {
 
 		JarIndex idx = deobfuscator.getJarIndex();
 
+		boolean error = false;
+
 		for (Set<ClassEntry> partition : idx.getPackageVisibilityIndex().getPartitions()) {
 			long packages = partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::getPackageName).distinct().count();
 			if (packages > 1) {
+				error = true;
 				System.err.println("ERROR: Must be in one package:\n" + partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::toString).sorted().collect(Collectors.joining("\n")));
 			}
+		}
+
+		if (error) {
+			System.exit(1);
 		}
 	}
 
