@@ -11,34 +11,45 @@
 
 package cuchaz.enigma;
 
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Set;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 public class CommandMain {
 
 	public static void main(String[] args) throws Exception {
 		try {
 			// process the command
-			String command = getArg(args, 0, "command", true);
-			if (command.equalsIgnoreCase("deobfuscate")) {
-				deobfuscate(args);
-			} else if (command.equalsIgnoreCase("decompile")) {
-				decompile(args);
-			} else if (command.equalsIgnoreCase("convertmappings")) {
-				convertMappings(args);
-			} else {
-				throw new IllegalArgumentException("Command not recognized: " + command);
+			String command = getArg(args, 0, "command", true).toLowerCase(Locale.ROOT);
+			switch (command) {
+				case "deobfuscate":
+					deobfuscate(args);
+					break;
+				case "decompile":
+					decompile(args);
+					break;
+				case "convertmappings":
+					convertMappings(args);
+					break;
+				case "checkmappings":
+					checkMappings(args);
+					break;
+				default:
+					throw new IllegalArgumentException("Command not recognized: " + command);
 			}
 		} catch (IllegalArgumentException ex) {
-			System.out.println(ex.getMessage());
+			System.err.println(ex.getMessage());
 			printHelp();
 		}
 	}
@@ -51,6 +62,7 @@ public class CommandMain {
 		System.out.println("\t\tdeobfuscate <in jar> <out jar> [<mappings file>]");
 		System.out.println("\t\tdecompile <in jar> <out folder> [<mappings file>]");
 		System.out.println("\t\tconvertmappings <enigma mappings> <converted mappings> <ENIGMA_FILE|ENIGMA_DIRECTORY|SRG_FILE>");
+		System.out.println("\t\tcheckmappings <in jar> <mappings file>");
 	}
 
 	private static void decompile(String[] args) throws Exception {
@@ -98,6 +110,28 @@ public class CommandMain {
 		System.out.println("Saving new mappings...");
 
 		saveFormat.write(mappings, result.toPath(), new ConsoleProgressListener());
+	}
+
+	private static void checkMappings(String[] args) throws Exception {
+		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
+		Path fileMappings = getReadablePath(getArg(args, 2, "enigma mapping", true));
+
+		System.out.println("Reading JAR...");
+		Deobfuscator deobfuscator = new Deobfuscator(new JarFile(fileJarIn));
+		System.out.println("Reading mappings...");
+
+		MappingFormat format = chooseEnigmaFormat(fileMappings);
+		EntryTree<EntryMapping> mappings = format.read(fileMappings, ProgressListener.VOID);
+		deobfuscator.setMappings(mappings);
+
+		JarIndex idx = deobfuscator.getJarIndex();
+
+		for (Set<ClassEntry> partition : idx.getPackageVisibilityIndex().getPartitions()) {
+			long packages = partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::getPackageName).distinct().count();
+			if (packages > 1) {
+				System.err.println("ERROR: Must be in one package:\n" + partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::toString).sorted().collect(Collectors.joining("\n")));
+			}
+		}
 	}
 
 	private static MappingFormat chooseEnigmaFormat(Path path) {
