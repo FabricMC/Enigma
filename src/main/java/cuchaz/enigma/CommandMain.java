@@ -138,7 +138,7 @@ public class CommandMain {
 		}
 
 		if (error) {
-			System.exit(1);
+			throw new Exception("Access violations detected");
 		}
 	}
 
