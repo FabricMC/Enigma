@@ -21,7 +21,7 @@ public class CommandMain {
 
 	private static final Map<String, Command> COMMANDS = new LinkedHashMap<>();
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String... args) throws Exception {
 		try {
 			// process the command
 			if (args.length < 1)
