@@ -11,7 +11,7 @@ import cuchaz.enigma.translation.representation.entry.*;
 import java.util.*;
 
 public class PackageVisibilityIndex implements JarIndexer {
-	private static boolean isPackageVisibleOnlyRef(AccessFlags entryAcc, EntryReference ref, InheritanceIndex inheritanceIndex) {
+	private static boolean requiresSamePackage(AccessFlags entryAcc, EntryReference ref, InheritanceIndex inheritanceIndex) {
 		if (entryAcc.isPublic()) return false;
 		if (entryAcc.isProtected()) {
 			Set<ClassEntry> callerAncestors = inheritanceIndex.getAncestors(ref.context.getContainingClass());
@@ -43,7 +43,7 @@ public class PackageVisibilityIndex implements JarIndexer {
 			AccessFlags entryAcc = entryIndex.getFieldAccess(entry);
 			if (!entryAcc.isPublic() && !entryAcc.isPrivate()) {
 				for (EntryReference<FieldEntry, MethodDefEntry> ref : referenceIndex.getReferencesToField(entry)) {
-					if (isPackageVisibleOnlyRef(entryAcc, ref, inheritanceIndex)) {
+					if (requiresSamePackage(entryAcc, ref, inheritanceIndex)) {
 						addConnection(ref.entry.getContainingClass(), ref.context.getContainingClass());
 					}
 				}
@@ -54,7 +54,7 @@ public class PackageVisibilityIndex implements JarIndexer {
 			AccessFlags entryAcc = entryIndex.getMethodAccess(entry);
 			if (!entryAcc.isPublic() && !entryAcc.isPrivate()) {
 				for (EntryReference<MethodEntry, MethodDefEntry> ref : referenceIndex.getReferencesToMethod(entry)) {
-					if (isPackageVisibleOnlyRef(entryAcc, ref, inheritanceIndex)) {
+					if (requiresSamePackage(entryAcc, ref, inheritanceIndex)) {
 						addConnection(ref.entry.getContainingClass(), ref.context.getContainingClass());
 					}
 				}
@@ -65,13 +65,13 @@ public class PackageVisibilityIndex implements JarIndexer {
 			AccessFlags entryAcc = entryIndex.getClassAccess(entry);
 			if (!entryAcc.isPublic() && !entryAcc.isPrivate()) {
 				for (EntryReference<ClassEntry, FieldDefEntry> ref : referenceIndex.getFieldTypeReferencesToClass(entry)) {
-					if (isPackageVisibleOnlyRef(entryAcc, ref, inheritanceIndex)) {
+					if (requiresSamePackage(entryAcc, ref, inheritanceIndex)) {
 						addConnection(ref.entry.getContainingClass(), ref.context.getContainingClass());
 					}
 				}
 
 				for (EntryReference<ClassEntry, MethodDefEntry> ref : referenceIndex.getMethodTypeReferencesToClass(entry)) {
-					if (isPackageVisibleOnlyRef(entryAcc, ref, inheritanceIndex)) {
+					if (requiresSamePackage(entryAcc, ref, inheritanceIndex)) {
 						addConnection(ref.entry.getContainingClass(), ref.context.getContainingClass());
 					}
 				}

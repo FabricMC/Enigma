@@ -11,43 +11,45 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.index.JarIndex;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.command.*;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.Locale;
-import java.util.Set;
-import java.util.jar.JarFile;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class CommandMain {
+
+	private static final Map<String, Command> COMMANDS = new LinkedHashMap<>();
 
 	public static void main(String[] args) throws Exception {
 		try {
 			// process the command
-			String command = getArg(args, 0, "command", true).toLowerCase(Locale.ROOT);
-			switch (command) {
-				case "deobfuscate":
-					deobfuscate(args);
-					break;
-				case "decompile":
-					decompile(args);
-					break;
-				case "convertmappings":
-					convertMappings(args);
-					break;
-				case "checkmappings":
-					checkMappings(args);
-					break;
-				default:
-					throw new IllegalArgumentException("Command not recognized: " + command);
+			if (args.length < 1)
+				throw new IllegalArgumentException("Requires a command");
+			String command = args[0].toLowerCase(Locale.ROOT);
+
+			Command cmd = COMMANDS.get(command);
+			if (cmd == null)
+				throw new IllegalArgumentException("Command not recognized: " + command);
+
+			if (!cmd.isValidArgument(args.length - 1)) {
+				throw new CommandHelpException(cmd);
 			}
+
+			String[] cmdArgs = new String[args.length - 1];
+			System.arraycopy(args, 1, cmdArgs, 0, args.length - 1);
+
+			try {
+				cmd.run(cmdArgs);
+			} catch (Exception ex) {
+				throw new CommandHelpException(cmd, ex);
+			}
+		} catch (CommandHelpException ex) {
+			System.err.println(ex.getMessage());
+			System.out.println(String.format("%s - %s", Constants.NAME, Constants.VERSION));
+			System.out.println("Command " + ex.command.name + " is used incorrectly! Usage:");
+			printHelp(ex.command);
+			System.exit(1);
 		} catch (IllegalArgumentException ex) {
 			System.err.println(ex.getMessage());
 			printHelp();
@@ -60,187 +62,41 @@ public class CommandMain {
 		System.out.println("Usage:");
 		System.out.println("\tjava -cp enigma.jar cuchaz.enigma.CommandMain <command>");
 		System.out.println("\twhere <command> is one of:");
-		System.out.println("\t\tdeobfuscate <in jar> <out jar> [<mappings file>]");
-		System.out.println("\t\tdecompile <in jar> <out folder> [<mappings file>]");
-		System.out.println("\t\tconvertmappings <enigma mappings> <converted mappings> <ENIGMA_FILE|ENIGMA_DIRECTORY|SRG_FILE>");
-		System.out.println("\t\tcheckmappings <in jar> <mappings file>");
-	}
 
-	private static void decompile(String[] args) throws Exception {
-		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
-		File fileJarOut = getWritableFolder(getArg(args, 2, "out folder", true));
-		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
-		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
-		deobfuscator.writeSources(fileJarOut.toPath(), new ConsoleProgressListener());
-	}
-
-	private static void deobfuscate(String[] args) throws Exception {
-		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
-		File fileJarOut = getWritableFile(getArg(args, 2, "out jar", true));
-		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
-		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
-		deobfuscator.writeTransformedJar(fileJarOut, new ConsoleProgressListener());
-	}
-
-	private static Deobfuscator getDeobfuscator(Path fileMappings, JarFile jar) throws Exception {
-		System.out.println("Reading jar...");
-		Deobfuscator deobfuscator = new Deobfuscator(jar);
-		if (fileMappings != null) {
-			System.out.println("Reading mappings...");
-			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, new ConsoleProgressListener());
-			deobfuscator.setMappings(mappings);
-		}
-		return deobfuscator;
-	}
-
-	private static void convertMappings(String[] args) throws Exception {
-		Path fileMappings = getReadablePath(getArg(args, 1, "enigma mapping", true));
-		File result = getWritableFile(getArg(args, 2, "enigma mapping", true));
-		String name = getArg(args, 3, "format desc", true);
-		MappingFormat saveFormat;
-		try {
-			saveFormat = MappingFormat.valueOf(name.toUpperCase(Locale.ROOT));
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException(name + "is not a valid mapping format!");
-		}
-
-		System.out.println("Reading mappings...");
-
-		MappingFormat readFormat = chooseEnigmaFormat(fileMappings);
-		EntryTree<EntryMapping> mappings = readFormat.read(fileMappings, new ConsoleProgressListener());
-		System.out.println("Saving new mappings...");
-
-		saveFormat.write(mappings, result.toPath(), new ConsoleProgressListener());
-	}
-
-	private static void checkMappings(String[] args) throws Exception {
-		File fileJarIn = getReadableFile(getArg(args, 1, "in jar", true));
-		Path fileMappings = getReadablePath(getArg(args, 2, "enigma mapping", true));
-
-		System.out.println("Reading JAR...");
-		Deobfuscator deobfuscator = new Deobfuscator(new JarFile(fileJarIn));
-		System.out.println("Reading mappings...");
-
-		MappingFormat format = chooseEnigmaFormat(fileMappings);
-		EntryTree<EntryMapping> mappings = format.read(fileMappings, ProgressListener.VOID);
-		deobfuscator.setMappings(mappings);
-
-		JarIndex idx = deobfuscator.getJarIndex();
-
-		boolean error = false;
-
-		for (Set<ClassEntry> partition : idx.getPackageVisibilityIndex().getPartitions()) {
-			long packages = partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::getPackageName).distinct().count();
-			if (packages > 1) {
-				error = true;
-				System.err.println("ERROR: Must be in one package:\n" + partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::toString).sorted().collect(Collectors.joining("\n")));
-			}
-		}
-
-		if (error) {
-			throw new Exception("Access violations detected");
+		for (Command command : COMMANDS.values()) {
+			printHelp(command);
 		}
 	}
 
-	private static MappingFormat chooseEnigmaFormat(Path path) {
-		if (Files.isDirectory(path)) {
-			return MappingFormat.ENIGMA_DIRECTORY;
-		} else {
-			return MappingFormat.ENIGMA_FILE;
+	private static void printHelp(Command command) {
+		System.out.println("\t\t" + command.name + " " + command.getUsage());
+	}
+
+	private static void register(Command command) {
+		Command old = COMMANDS.put(command.name, command);
+		if (old != null) {
+			System.err.println("Command " + old + " with name " + command.name + " has been substituted by " + command);
 		}
 	}
 
-	private static String getArg(String[] args, int i, String name, boolean required) {
-		if (i >= args.length) {
-			if (required) {
-				throw new IllegalArgumentException(name + " is required");
-			} else {
-				return null;
-			}
-		}
-		return args[i];
+	static {
+		register(new DeobfuscateCommand());
+		register(new DecompileCommand());
+		register(new ConvertMappingsCommand());
+		register(new CheckMappingsCommand());
 	}
 
-	private static File getWritableFile(String path) {
-		if (path == null) {
-			return null;
-		}
-		File file = new File(path).getAbsoluteFile();
-		File dir = file.getParentFile();
-		if (dir == null) {
-			throw new IllegalArgumentException("Cannot write file: " + path);
-		}
-		// quick fix to avoid stupid stuff in Gradle code
-		if (!dir.isDirectory()) {
-			dir.mkdirs();
-		}
-		return file;
-	}
+	private static final class CommandHelpException extends IllegalArgumentException {
 
-	private static File getWritableFolder(String path) {
-		if (path == null) {
-			return null;
-		}
-		File dir = new File(path).getAbsoluteFile();
-		if (!dir.exists()) {
-			throw new IllegalArgumentException("Cannot write to folder: " + dir);
-		}
-		return dir;
-	}
+		final Command command;
 
-	private static File getReadableFile(String path) {
-		if (path == null) {
-			return null;
-		}
-		File file = new File(path).getAbsoluteFile();
-		if (!file.exists()) {
-			throw new IllegalArgumentException("Cannot find file: " + file.getAbsolutePath());
-		}
-		return file;
-	}
-
-	private static Path getReadablePath(String path) {
-		if (path == null) {
-			return null;
-		}
-		Path file = Paths.get(path).toAbsolutePath();
-		if (!Files.exists(file)) {
-			throw new IllegalArgumentException("Cannot find file: " + file.toString());
-		}
-		return file;
-	}
-
-	public static class ConsoleProgressListener implements ProgressListener {
-
-		private static final int ReportTime = 5000; // 5s
-
-		private int totalWork;
-		private long startTime;
-		private long lastReportTime;
-
-		@Override
-		public void init(int totalWork, String title) {
-			this.totalWork = totalWork;
-			this.startTime = System.currentTimeMillis();
-			this.lastReportTime = this.startTime;
-			System.out.println(title);
+		CommandHelpException(Command command) {
+			this.command = command;
 		}
 
-		@Override
-		public void step(int numDone, String message) {
-			long now = System.currentTimeMillis();
-			boolean isLastUpdate = numDone == this.totalWork;
-			boolean shouldReport = isLastUpdate || now - this.lastReportTime > ReportTime;
-
-			if (shouldReport) {
-				int percent = numDone * 100 / this.totalWork;
-				System.out.println(String.format("\tProgress: %3d%%", percent));
-				this.lastReportTime = now;
-			}
-			if (isLastUpdate) {
-				double elapsedSeconds = (now - this.startTime) / 1000.0;
-				System.out.println(String.format("Finished in %.1f seconds", elapsedSeconds));
-			}
+		CommandHelpException(Command command, Throwable cause) {
+			super(cause);
+			this.command = command;
 		}
 	}
 }
