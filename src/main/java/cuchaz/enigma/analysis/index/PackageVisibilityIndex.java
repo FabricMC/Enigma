@@ -14,27 +14,10 @@ public class PackageVisibilityIndex implements JarIndexer {
 	private static boolean isPackageVisibleOnlyRef(AccessFlags entryAcc, EntryReference ref, InheritanceIndex inheritanceIndex) {
 		if (entryAcc.isPublic()) return false;
 		if (entryAcc.isProtected()) {
-			// TODO: Is this valid?
-			for (ClassEntry outerClass : getOuterClasses(ref.context.getContainingClass())) {
-				Set<ClassEntry> callerAncestors = inheritanceIndex.getAncestors(outerClass);
-				if (callerAncestors.contains(ref.entry.getContainingClass())) {
-					return false;
-				}
-			}
+			Set<ClassEntry> callerAncestors = inheritanceIndex.getAncestors(ref.context.getContainingClass());
+			return !callerAncestors.contains(ref.entry.getContainingClass());
 		}
-		return !entryAcc.isPrivate();
-	}
-
-	private static Collection<ClassEntry> getOuterClasses(ClassEntry entry) {
-		Collection<ClassEntry> outerClasses = new ArrayList<>();
-
-		ClassEntry currentEntry = entry;
-		while (currentEntry != null) {
-			outerClasses.add(currentEntry);
-			currentEntry = currentEntry.getOuterClass();
-		}
-
-		return outerClasses;
+		return !entryAcc.isPrivate(); // if isPrivate is false, it must be package-private
 	}
 
 	private final HashMultimap<ClassEntry, ClassEntry> connections = HashMultimap.create();
