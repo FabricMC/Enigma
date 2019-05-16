@@ -16,6 +16,7 @@ import com.google.common.collect.Multimap;
 import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
+import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.entry.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
@@ -127,6 +128,15 @@ public class JarIndex implements JarIndexer {
 		}
 
 		indexers.forEach(indexer -> indexer.indexFieldReference(callerEntry, referencedEntry));
+	}
+
+	@Override
+	public void indexLambda(MethodDefEntry callerEntry, Lambda lambda) {
+		if (callerEntry.getParent().isJre()) {
+			return;
+		}
+
+		indexers.forEach(indexer -> indexer.indexLambda(callerEntry, lambda));
 	}
 
 	public EntryIndex getEntryIndex() {
