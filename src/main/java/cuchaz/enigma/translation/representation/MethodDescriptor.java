@@ -118,7 +118,7 @@ public class MethodDescriptor implements Translatable {
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+	public MethodDescriptor translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		List<TypeDescriptor> translatedArguments = new ArrayList<>(argumentDescs.size());
 		for (TypeDescriptor argument : argumentDescs) {
 			translatedArguments.add(translator.translate(argument));
