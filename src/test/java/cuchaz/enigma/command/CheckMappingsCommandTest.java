@@ -7,8 +7,14 @@ import java.io.File;
 public class CheckMappingsCommandTest {
 
 	@Test(expected = IllegalStateException.class)
-	public void test() throws Exception {
+	public void testWrong() throws Exception {
 		new CheckMappingsCommand().run(new File("build/test-obf/packageAccess.jar").getAbsolutePath(), new File("src/test/resources" +
-				"/packageAccessMappings").getAbsolutePath());
+				"/packageAccess/wrongMappings").getAbsolutePath());
+	}
+
+	@Test
+	public void testRight() throws Exception {
+		new CheckMappingsCommand().run(new File("build/test-obf/packageAccess.jar").getAbsolutePath(), new File("src/test/resources" +
+				"/packageAccess/correctMappings").getAbsolutePath());
 	}
 }

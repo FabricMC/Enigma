@@ -47,7 +47,7 @@ public class CommandMain {
 		} catch (CommandHelpException ex) {
 			System.err.println(ex.getMessage());
 			System.out.println(String.format("%s - %s", Constants.NAME, Constants.VERSION));
-			System.out.println("Command " + ex.command.name + " is used incorrectly! Usage:");
+			System.out.println("Command " + ex.command.name + " has encountered an error! Usage:");
 			printHelp(ex.command);
 			System.exit(1);
 		} catch (IllegalArgumentException ex) {
