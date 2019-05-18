@@ -1,16 +1,11 @@
 package cuchaz.enigma.analysis.index;
 
 import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.Signature;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import cuchaz.enigma.translation.representation.entry.*;
+import org.objectweb.asm.*;
 
 public class IndexReferenceVisitor extends ClassVisitor {
 	private final JarIndexer indexer;
@@ -54,29 +49,37 @@ public class IndexReferenceVisitor extends ClassVisitor {
 			this.indexer.indexMethodReference(callerEntry, methodEntry);
 		}
 
+		private static ParentedEntry<?> getHandleEntry(Handle handle) {
+			switch (handle.getTag()) {
+				case Opcodes.H_GETFIELD:
+				case Opcodes.H_GETSTATIC:
+				case Opcodes.H_PUTFIELD:
+				case Opcodes.H_PUTSTATIC:
+					return FieldEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
+				case Opcodes.H_INVOKEINTERFACE:
+				case Opcodes.H_INVOKESPECIAL:
+				case Opcodes.H_INVOKESTATIC:
+				case Opcodes.H_INVOKEVIRTUAL:
+				case Opcodes.H_NEWINVOKESPECIAL:
+					return MethodEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
+			}
+			throw new RuntimeException("Invalid handle tag " + handle.getTag());
+		}
+
 		@Override
 		public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-			for (Object bsmArg : bsmArgs) {
-				if (bsmArg instanceof Handle) {
-					Handle handle = (Handle) bsmArg;
-					switch (handle.getTag()) {
-						case Opcodes.H_GETFIELD:
-						case Opcodes.H_GETSTATIC:
-						case Opcodes.H_PUTFIELD:
-						case Opcodes.H_PUTSTATIC:
-							FieldEntry fieldEntry = FieldEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
-							this.indexer.indexFieldReference(callerEntry, fieldEntry);
-							break;
-						case Opcodes.H_INVOKEINTERFACE:
-						case Opcodes.H_INVOKESPECIAL:
-						case Opcodes.H_INVOKESTATIC:
-						case Opcodes.H_INVOKEVIRTUAL:
-						case Opcodes.H_NEWINVOKESPECIAL:
-							MethodEntry methodEntry = MethodEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
-							this.indexer.indexMethodReference(callerEntry, methodEntry);
-							break;
-					}
-				}
+			if ("java/lang/invoke/LambdaMetafactory".equals(bsm.getOwner()) && "metafactory".equals(bsm.getName())) {
+				Type samMethodType = (Type) bsmArgs[0];
+				Handle implMethod = (Handle) bsmArgs[1];
+				Type instantiatedMethodType = (Type) bsmArgs[2];
+
+				this.indexer.indexLambda(callerEntry, new Lambda(
+					name,
+					new MethodDescriptor(desc),
+					new MethodDescriptor(samMethodType.getDescriptor()),
+					getHandleEntry(implMethod),
+					new MethodDescriptor(instantiatedMethodType.getDescriptor())
+				));
 			}
 		}
 	}

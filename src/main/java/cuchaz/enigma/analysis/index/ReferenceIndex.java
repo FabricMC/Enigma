@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
+import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -64,13 +65,24 @@ public class ReferenceIndex implements JarIndexer {
 			ClassEntry referencedClass = referencedEntry.getParent();
 			referencesToClasses.put(referencedClass, new EntryReference<>(referencedClass, referencedEntry.getName(), callerEntry));
 		}
-
-		indexMethodDescriptor(callerEntry, referencedEntry.getDesc());
 	}
 
 	@Override
 	public void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry) {
 		referencesToFields.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry));
+	}
+
+	@Override
+	public void indexLambda(MethodDefEntry callerEntry, Lambda lambda) {
+		if (lambda.getImplMethod() instanceof MethodEntry) {
+			indexMethodReference(callerEntry, (MethodEntry) lambda.getImplMethod());
+		} else {
+			indexFieldReference(callerEntry, (FieldEntry) lambda.getImplMethod());
+		}
+
+		indexMethodDescriptor(callerEntry, lambda.getInvokedType());
+		indexMethodDescriptor(callerEntry, lambda.getSamMethodType());
+		indexMethodDescriptor(callerEntry, lambda.getInstantiatedMethodType());
 	}
 
 	@Override
