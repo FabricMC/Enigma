@@ -87,6 +87,10 @@ public class PanelEditor extends JEditorPane {
 							gui.popupMenu.renameMenu.doClick();
 							break;
 
+						case KeyEvent.VK_D:
+							gui.popupMenu.editJavadocMenu.doClick();
+							break;
+
 						case KeyEvent.VK_F5:
 							gui.getController().refreshCurrentClass();
 							break;

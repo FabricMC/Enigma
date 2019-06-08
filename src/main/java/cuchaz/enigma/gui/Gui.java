@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.gui;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.ExceptionIgnorer;
@@ -82,6 +83,7 @@ public class Gui {
 	private JTabbedPane tabs;
 
 	public JTextField renameTextField;
+	public JTextArea javadocTextArea;
 
 	public void setEditorTheme(Config.LookAndFeel feel) {
 		if (editor != null && (editorFeel == null || editorFeel != feel)) {
@@ -560,6 +562,7 @@ public class Gui {
 		}
 
 		this.popupMenu.renameMenu.setEnabled(isRenamable);
+		this.popupMenu.editJavadocMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry || isFieldEntry);
 		this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
 		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
@@ -574,6 +577,65 @@ public class Gui {
 		} else {
 			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
 		}
+	}
+
+	public void startDocChange() {
+
+		// init the text box
+		javadocTextArea = new JTextArea(5, 20);
+		JScrollPane scrollPane = new JScrollPane(javadocTextArea);
+
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(cursorReference);
+		javadocTextArea.setText(Strings.nullToEmpty(translatedReference.entry.getJavadocs()));
+
+		javadocTextArea.setPreferredSize(new Dimension(360, 180));
+		javadocTextArea.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent event) {
+				switch (event.getKeyCode()) {
+					case KeyEvent.VK_ENTER:
+						if (event.isControlDown())
+							finishDocChange(true);
+						break;
+
+					case KeyEvent.VK_ESCAPE:
+						finishDocChange(false);
+						break;
+					default:
+						break;
+				}
+			}
+		});
+
+		// find the label with the name and replace it with the text box
+		infoPanel.removeAll();
+		infoPanel.add(scrollPane);
+		javadocTextArea.grabFocus();
+
+		redraw();
+	}
+
+	private void finishDocChange(boolean saveName) {
+		String newName = javadocTextArea.getText();
+		if (saveName) {
+			try {
+				this.controller.changeDocs(cursorReference, newName);
+			} catch (IllegalNameException ex) {
+				javadocTextArea.setBorder(BorderFactory.createLineBorder(Color.red, 1));
+				javadocTextArea.setToolTipText(ex.getReason());
+				Utils.showToolTipNow(javadocTextArea);
+			}
+			showCursorReference(cursorReference);
+			return;
+		}
+
+		// abort the jd change
+		javadocTextArea = null;
+		showCursorReference(cursorReference);
+
+		this.editor.grabFocus();
+
+		redraw();
 	}
 
 	public void startRename() {

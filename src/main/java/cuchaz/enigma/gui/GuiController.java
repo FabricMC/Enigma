@@ -230,6 +230,12 @@ public class GuiController {
 		refreshCurrentClass(reference);
 	}
 
+	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
+		this.deobfuscator.changeDoc(reference.getNameableEntry(), updatedDocs);
+
+		refreshCurrentClass(reference, true);
+	}
+
 	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference) {
 		this.deobfuscator.removeMapping(reference.getNameableEntry());
 		if (reference.entry instanceof ClassEntry)
@@ -364,20 +370,29 @@ public class GuiController {
 	}
 
 	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference) {
+		refreshCurrentClass(reference, false);
+	}
+
+	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, boolean forceDecomp) {
 		if (currentSource != null) {
 			loadClass(currentSource.getEntry(), () -> {
 				if (reference != null) {
 					showReference(reference);
 				}
-			});
+			}, forceDecomp);
 		}
 	}
 
 	private void loadClass(ClassEntry classEntry, Runnable callback) {
+		loadClass(classEntry, callback, false);
+	}
+
+	private void loadClass(ClassEntry classEntry, Runnable callback, boolean forceDecomp) {
 		ClassEntry targetClass = classEntry.getOutermostClass();
 
-		boolean requiresDecompile = currentSource == null || !currentSource.getEntry().equals(targetClass);
+		boolean requiresDecompile = forceDecomp || currentSource == null || !currentSource.getEntry().equals(targetClass);
 		if (requiresDecompile) {
+			currentSource = null; // Or the GUI may try to find a nonexistent token
 			gui.setEditorText("(decompiling...)");
 		}
 
@@ -406,6 +421,7 @@ public class GuiController {
 
 			DropImportAstTransform.INSTANCE.run(sourceTree);
 			DropVarModifiersAstTransform.INSTANCE.run(sourceTree);
+			new AddJavadocsAstTransform(deobfuscator.getMapper()).run(sourceTree);
 
 			String sourceString = sourceProvider.writeSourceToString(sourceTree);
 

@@ -63,7 +63,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		// Check for identifier
 		node.getArguments().stream().filter(expression -> expression instanceof IdentifierExpression)
 				.forEach(expression -> this.checkIdentifier((IdentifierExpression) expression, index));
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			index.addReference(node.getMemberNameToken(), fieldEntry, this.methodEntry);
 		}
 
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			index.addReference(node.getIdentifierToken(), classEntry, this.methodEntry);
 		}
 
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -114,7 +114,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			index.addDeclaration(identifier, localVariableEntry);
 		}
 
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -126,7 +126,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			index.addReference(node.getIdentifierToken(), fieldEntry, this.methodEntry);
 		} else
 			this.checkIdentifier(node, index);
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	private void checkIdentifier(IdentifierExpression node, SourceIndex index) {
@@ -157,7 +157,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, this.methodEntry);
 		}
 
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -186,7 +186,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 				}
 			}
 		}
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -211,6 +211,6 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			}
 		}
 
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 }

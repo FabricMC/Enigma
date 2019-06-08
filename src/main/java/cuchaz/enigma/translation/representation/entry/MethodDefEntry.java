@@ -26,7 +26,11 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 	private final Signature signature;
 
 	public MethodDefEntry(ClassEntry owner, String name, MethodDescriptor descriptor, Signature signature, AccessFlags access) {
-		super(owner, name, descriptor);
+		this(owner, name, descriptor, signature, access, null);
+	}
+
+	public MethodDefEntry(ClassEntry owner, String name, MethodDescriptor descriptor, Signature signature, AccessFlags access, String docs) {
+		super(owner, name, descriptor, docs);
 		Preconditions.checkNotNull(access, "Method access cannot be null");
 		Preconditions.checkNotNull(signature, "Method signature cannot be null");
 		this.access = access;
@@ -34,7 +38,7 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 	}
 
 	public static MethodDefEntry parse(ClassEntry owner, int access, String name, String desc, String signature) {
-		return new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
+		return new MethodDefEntry(owner, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access), null);
 	}
 
 	public static MethodDefEntry parse(MethodDefinition definition) {
@@ -42,7 +46,7 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 		MethodDescriptor descriptor = new MethodDescriptor(definition.getErasedSignature());
 		Signature signature = Signature.createSignature(definition.getSignature());
 		AccessFlags access = new AccessFlags(definition.getModifiers());
-		return new MethodDefEntry(classEntry, definition.getName(), descriptor, signature, access);
+		return new MethodDefEntry(classEntry, definition.getName(), descriptor, signature, access, null);
 	}
 
 	@Override
@@ -60,17 +64,18 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		AccessFlags translatedAccess = mapping != null ? mapping.getAccessModifier().transform(access) : access;
-		return new MethodDefEntry(parent, translatedName, translatedDesc, translatedSignature, translatedAccess);
+		String docs = mapping != null ? mapping.getJavadoc() : null;
+		return new MethodDefEntry(parent, translatedName, translatedDesc, translatedSignature, translatedAccess, docs);
 	}
 
 	@Override
 	public MethodDefEntry withName(String name) {
-		return new MethodDefEntry(parent, name, descriptor, signature, access);
+		return new MethodDefEntry(parent, name, descriptor, signature, access, javadocs);
 	}
 
 	@Override
 	public MethodDefEntry withParent(ClassEntry parent) {
-		return new MethodDefEntry(new ClassEntry(parent.getFullName()), name, descriptor, signature, access);
+		return new MethodDefEntry(new ClassEntry(parent.getFullName()), name, descriptor, signature, access, javadocs);
 	}
 
 	public int getArgumentIndex(ClassDefEntry ownerEntry, int localVariableIndex) {

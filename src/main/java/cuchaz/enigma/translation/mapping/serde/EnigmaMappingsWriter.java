@@ -14,7 +14,10 @@ package cuchaz.enigma.translation.mapping.serde;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -144,10 +147,24 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected void writeRoot(PrintWriter writer, EntryTree<EntryMapping> mappings, ClassEntry classEntry) {
 		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
-		writer.println(writeClass(classEntry, mappings.get(classEntry)).trim());
+		EntryMapping classEntryMapping = mappings.get(classEntry);
+		if (classEntryMapping != null) {
+			writer.print(writeDocs(new StringBuilder(), classEntryMapping, 0));
+		}
+		writer.println(writeClass(classEntry, classEntryMapping).trim());
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
 		}
+	}
+
+	private StringBuilder writeDocs(StringBuilder builder, EntryMapping mapping, int depth) {
+		String jd = mapping.getJavadoc();
+		if (jd != null) {
+			for (String line : mapping.getJavadoc().split("\\R")) {
+				builder.append(indent("JD " + line, depth)).append("\n");
+			}
+		}
+		return builder;
 	}
 
 	protected void writeEntry(PrintWriter writer, EntryTree<EntryMapping> mappings, Entry<?> entry, int depth) {
@@ -157,6 +174,11 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		EntryMapping mapping = node.getValue();
+
+		if (mapping != null) {
+			writer.print(writeDocs(new StringBuilder(), mapping, depth));
+		}
+
 		if (entry instanceof ClassEntry) {
 			String line = writeClass((ClassEntry) entry, mapping);
 			writer.println(indent(line, depth));

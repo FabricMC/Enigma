@@ -18,7 +18,7 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	protected final boolean parameter;
 
 	public LocalVariableEntry(MethodEntry parent, int index, String name, boolean parameter) {
-		super(parent, name);
+		super(parent, name, null);
 
 		Preconditions.checkNotNull(parent, "Variable owner cannot be null");
 		Preconditions.checkArgument(index >= 0, "Index must be positive");

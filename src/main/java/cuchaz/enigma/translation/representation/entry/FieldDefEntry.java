@@ -26,7 +26,11 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	private final Signature signature;
 
 	public FieldDefEntry(ClassEntry owner, String name, TypeDescriptor desc, Signature signature, AccessFlags access) {
-		super(owner, name, desc);
+		this(owner, name, desc, signature, access, null);
+	}
+
+	public FieldDefEntry(ClassEntry owner, String name, TypeDescriptor desc, Signature signature, AccessFlags access, String javadocs) {
+		super(owner, name, desc, javadocs);
 		Preconditions.checkNotNull(access, "Field access cannot be null");
 		Preconditions.checkNotNull(signature, "Field signature cannot be null");
 		this.access = access;
@@ -34,7 +38,7 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	}
 
 	public static FieldDefEntry parse(ClassEntry owner, int access, String name, String desc, String signature) {
-		return new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access));
+		return new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access), null);
 	}
 
 	public static FieldDefEntry parse(FieldDefinition definition) {
@@ -42,7 +46,7 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 		TypeDescriptor descriptor = new TypeDescriptor(definition.getErasedSignature());
 		Signature signature = Signature.createTypedSignature(definition.getSignature());
 		AccessFlags access = new AccessFlags(definition.getModifiers());
-		return new FieldDefEntry(owner, definition.getName(), descriptor, signature, access);
+		return new FieldDefEntry(owner, definition.getName(), descriptor, signature, access, null);
 	}
 
 	@Override
@@ -60,16 +64,17 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		AccessFlags translatedAccess = mapping != null ? mapping.getAccessModifier().transform(access) : access;
-		return new FieldDefEntry(parent, translatedName, translatedDesc, translatedSignature, translatedAccess);
+		String docs = mapping != null ? mapping.getJavadoc() : null;
+		return new FieldDefEntry(parent, translatedName, translatedDesc, translatedSignature, translatedAccess, docs);
 	}
 
 	@Override
 	public FieldDefEntry withName(String name) {
-		return new FieldDefEntry(parent, name, desc, signature, access);
+		return new FieldDefEntry(parent, name, desc, signature, access, javadocs);
 	}
 
 	@Override
 	public FieldDefEntry withParent(ClassEntry owner) {
-		return new FieldDefEntry(owner, this.name, this.desc, signature, access);
+		return new FieldDefEntry(owner, this.name, this.desc, signature, access, javadocs);
 	}
 }

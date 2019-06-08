@@ -386,6 +386,13 @@ public class Deobfuscator {
 		mapper.mapFromObf(obfEntry, new EntryMapping(newName));
 	}
 
+	public void changeDoc(Entry<?> obfEntry, String newDoc) {
+		if (mapper.getDeobfMapping(obfEntry) == null) {
+			markAsDeobfuscated(obfEntry); // NPE
+		}
+		mapper.mapFromObf(obfEntry, mapper.getDeobfMapping(obfEntry).withDocs(newDoc), false);
+	}
+
 	public void removeMapping(Entry<?> obfEntry) {
 		mapper.removeByObf(obfEntry);
 	}

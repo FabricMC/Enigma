@@ -24,10 +24,12 @@ import javax.annotation.Nullable;
 public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	protected final P parent;
 	protected final String name;
+	protected final @Nullable String javadocs;
 
-	protected ParentedEntry(P parent, String name) {
+	protected ParentedEntry(P parent, String name, String javadocs) {
 		this.parent = parent;
 		this.name = name;
+		this.javadocs = javadocs;
 
 		Preconditions.checkNotNull(name, "Name cannot be null");
 	}
@@ -49,6 +51,12 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	@Nullable
 	public P getParent() {
 		return parent;
+	}
+
+	@Nullable
+	@Override
+	public String getJavadocs() {
+		return javadocs;
 	}
 
 	@Override

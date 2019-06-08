@@ -28,11 +28,16 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	private final ClassEntry[] interfaces;
 
 	public ClassDefEntry(String className, Signature signature, AccessFlags access, @Nullable ClassEntry superClass, ClassEntry[] interfaces) {
-		this(getOuterClass(className), getInnerName(className), signature, access, superClass, interfaces);
+		this(getOuterClass(className), getInnerName(className), signature, access, superClass, interfaces, null);
 	}
 
 	public ClassDefEntry(ClassEntry parent, String className, Signature signature, AccessFlags access, @Nullable ClassEntry superClass, ClassEntry[] interfaces) {
-		super(parent, className);
+		this(parent, className, signature, access, superClass, interfaces, null);
+	}
+
+	public ClassDefEntry(ClassEntry parent, String className, Signature signature, AccessFlags access, @Nullable ClassEntry superClass,
+						 ClassEntry[] interfaces, String javadocs) {
+		super(parent, className, javadocs);
 		Preconditions.checkNotNull(signature, "Class signature cannot be null");
 		Preconditions.checkNotNull(access, "Class access cannot be null");
 
@@ -82,16 +87,17 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 		AccessFlags translatedAccess = mapping != null ? mapping.getAccessModifier().transform(access) : access;
 		ClassEntry translatedSuper = translator.translate(superClass);
 		ClassEntry[] translatedInterfaces = Arrays.stream(interfaces).map(translator::translate).toArray(ClassEntry[]::new);
-		return new ClassDefEntry(parent, translatedName, translatedSignature, translatedAccess, translatedSuper, translatedInterfaces);
+		String docs = mapping != null ? mapping.getJavadoc() : null;
+		return new ClassDefEntry(parent, translatedName, translatedSignature, translatedAccess, translatedSuper, translatedInterfaces, docs);
 	}
 
 	@Override
 	public ClassDefEntry withName(String name) {
-		return new ClassDefEntry(parent, name, signature, access, superClass, interfaces);
+		return new ClassDefEntry(parent, name, signature, access, superClass, interfaces, javadocs);
 	}
 
 	@Override
 	public ClassDefEntry withParent(ClassEntry parent) {
-		return new ClassDefEntry(parent, name, signature, access, superClass, interfaces);
+		return new ClassDefEntry(parent, name, signature, access, superClass, interfaces, javadocs);
 	}
 }

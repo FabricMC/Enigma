@@ -22,6 +22,8 @@ import java.util.List;
 public interface Entry<P extends Entry<?>> extends Translatable {
 	String getName();
 
+	String getJavadocs();
+
 	default String getSourceRemapName() {
 		return getName();
 	}

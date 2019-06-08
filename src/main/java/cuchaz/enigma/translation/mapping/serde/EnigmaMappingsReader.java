@@ -16,10 +16,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public enum EnigmaMappingsReader implements MappingsReader {
@@ -64,6 +61,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	protected void readFile(Path path, EntryTree<EntryMapping> mappings) throws IOException, MappingParseException {
 		List<String> lines = Files.readAllLines(path, Charsets.UTF_8);
 		Deque<Entry<?>> mappingStack = new ArrayDeque<>();
+		List<String> comments = new ArrayList<>();
 
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
 			String line = lines.get(lineNumber);
@@ -75,14 +73,21 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			}
 
 			while (indentation < mappingStack.size()) {
+				comments.clear();
 				mappingStack.pop();
 			}
 
 			try {
-				MappingPair<?, EntryMapping> pair = parseLine(mappingStack.peek(), line);
-				mappingStack.push(pair.getEntry());
-				if (pair.getMapping() != null) {
-					mappings.insert(pair.getEntry(), pair.getMapping());
+				String jd = tryReadComment(line);
+				if (jd != null) {
+					comments.add(jd);
+				} else {
+					MappingPair<?, EntryMapping> pair = parseLine(mappingStack.peek(), line, comments);
+					mappingStack.push(pair.getEntry());
+					if (pair.getMapping() != null) {
+						mappings.insert(pair.getEntry(), pair.getMapping());
+					}
+					comments.clear();
 				}
 			} catch (Throwable t) {
 				t.printStackTrace();
@@ -122,25 +127,40 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		return indent;
 	}
 
-	private MappingPair<?, EntryMapping> parseLine(@Nullable Entry<?> parent, String line) {
+	private String tryReadComment(String line) {
+		String[] tokens = line.substring(countIndentation(line)).trim().split("\\s", 2);
+
+		if (tokens[0].toLowerCase(Locale.ROOT).equals("jd")) {
+			return tokens.length > 1 ? tokens[1] : ""; // Empty string to concat
+		}
+		return null;
+	}
+
+	private String squashJavadoc(List<String> javadocs) {
+		if (javadocs.isEmpty())
+			return null;
+		return String.join("\n", javadocs);
+	}
+
+	private MappingPair<?, EntryMapping> parseLine(@Nullable Entry<?> parent, String line, List<String> javadocs) {
 		String[] tokens = line.trim().split("\\s");
 		String keyToken = tokens[0].toLowerCase(Locale.ROOT);
 
 		switch (keyToken) {
 			case "class":
-				return parseClass(parent, tokens);
+				return parseClass(parent, tokens, javadocs);
 			case "field":
-				return parseField(parent, tokens);
+				return parseField(parent, tokens, javadocs);
 			case "method":
-				return parseMethod(parent, tokens);
+				return parseMethod(parent, tokens, javadocs);
 			case "arg":
-				return parseArgument(parent, tokens);
+				return parseArgument(parent, tokens, javadocs);
 			default:
 				throw new RuntimeException("Unknown token '" + keyToken + "'");
 		}
 	}
 
-	private MappingPair<ClassEntry, EntryMapping> parseClass(@Nullable Entry<?> parent, String[] tokens) {
+	private MappingPair<ClassEntry, EntryMapping> parseClass(@Nullable Entry<?> parent, String[] tokens, List<String> javadocs) {
 		String obfuscatedName = ClassEntry.getInnerName(tokens[1]);
 		ClassEntry obfuscatedEntry;
 		if (parent instanceof ClassEntry) {
@@ -166,13 +186,13 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		}
 
 		if (mapping != null) {
-			return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping, modifier));
+			return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping, modifier, squashJavadoc(javadocs)));
 		} else {
 			return new MappingPair<>(obfuscatedEntry);
 		}
 	}
 
-	private MappingPair<FieldEntry, EntryMapping> parseField(@Nullable Entry<?> parent, String[] tokens) {
+	private MappingPair<FieldEntry, EntryMapping> parseField(@Nullable Entry<?> parent, String[] tokens, List<String> javadocs) {
 		if (!(parent instanceof ClassEntry)) {
 			throw new RuntimeException("Field must be a child of a class!");
 		}
@@ -203,13 +223,13 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 		FieldEntry obfuscatedEntry = new FieldEntry(ownerEntry, obfuscatedName, descriptor);
 		if (mapping != null) {
-			return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping, modifier));
+			return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping, modifier, squashJavadoc(javadocs)));
 		} else {
 			return new MappingPair<>(obfuscatedEntry);
 		}
 	}
 
-	private MappingPair<MethodEntry, EntryMapping> parseMethod(@Nullable Entry<?> parent, String[] tokens) {
+	private MappingPair<MethodEntry, EntryMapping> parseMethod(@Nullable Entry<?> parent, String[] tokens, List<String> javadocs) {
 		if (!(parent instanceof ClassEntry)) {
 			throw new RuntimeException("Method must be a child of a class!");
 		}
@@ -243,13 +263,13 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 		MethodEntry obfuscatedEntry = new MethodEntry(ownerEntry, obfuscatedName, descriptor);
 		if (mapping != null) {
-			return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping, modifier));
+			return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping, modifier, squashJavadoc(javadocs)));
 		} else {
 			return new MappingPair<>(obfuscatedEntry);
 		}
 	}
 
-	private MappingPair<LocalVariableEntry, EntryMapping> parseArgument(@Nullable Entry<?> parent, String[] tokens) {
+	private MappingPair<LocalVariableEntry, EntryMapping> parseArgument(@Nullable Entry<?> parent, String[] tokens, List<String> javadocs) {
 		if (!(parent instanceof MethodEntry)) {
 			throw new RuntimeException("Method arg must be a child of a method!");
 		}
