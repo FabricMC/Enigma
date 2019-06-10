@@ -1,5 +1,6 @@
 package cuchaz.enigma.analysis.index;
 
+import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.entry.*;
 
 public interface JarIndexer {
@@ -16,6 +17,9 @@ public interface JarIndexer {
 	}
 
 	default void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry) {
+	}
+
+	default void indexLambda(MethodDefEntry callerEntry, Lambda lambda) {
 	}
 
 	default void processIndex(JarIndex index) {

@@ -65,6 +65,11 @@ public class EntryIndex implements JarIndexer {
 	}
 
 	@Nullable
+	public AccessFlags getClassAccess(ClassEntry entry) {
+		return classes.get(entry);
+	}
+
+	@Nullable
 	public AccessFlags getEntryAccess(Entry<?> entry) {
 		if (entry instanceof MethodEntry) {
 			return getMethodAccess((MethodEntry) entry);

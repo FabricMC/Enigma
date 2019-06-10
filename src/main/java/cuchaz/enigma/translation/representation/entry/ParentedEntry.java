@@ -52,7 +52,7 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+	public ParentedEntry<P> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		P parent = getParent();
 		EntryMapping mapping = resolveMapping(resolver, mappings);
 		if (parent == null) {
