@@ -19,6 +19,7 @@ import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
+import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
@@ -582,40 +583,18 @@ public class Gui {
 	public void startDocChange() {
 
 		// init the text box
-		javadocTextArea = new JTextArea(5, 20);
-		JScrollPane scrollPane = new JScrollPane(javadocTextArea);
+		javadocTextArea = new JTextArea(10, 40);
 
 		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(cursorReference);
 		javadocTextArea.setText(Strings.nullToEmpty(translatedReference.entry.getJavadocs()));
 
-		javadocTextArea.setPreferredSize(new Dimension(360, 180));
-		javadocTextArea.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent event) {
-				switch (event.getKeyCode()) {
-					case KeyEvent.VK_ENTER:
-						if (event.isControlDown())
-							finishDocChange(true);
-						break;
-
-					case KeyEvent.VK_ESCAPE:
-						finishDocChange(false);
-						break;
-					default:
-						break;
-				}
-			}
-		});
-
-		// find the label with the name and replace it with the text box
-		infoPanel.removeAll();
-		infoPanel.add(scrollPane);
+		JavadocDialog.init(frame, javadocTextArea, this::finishDocChange);
 		javadocTextArea.grabFocus();
 
 		redraw();
 	}
 
-	private void finishDocChange(boolean saveName) {
+	private void finishDocChange(JFrame ui, boolean saveName) {
 		String newName = javadocTextArea.getText();
 		if (saveName) {
 			try {
@@ -624,13 +603,17 @@ public class Gui {
 				javadocTextArea.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				javadocTextArea.setToolTipText(ex.getReason());
 				Utils.showToolTipNow(javadocTextArea);
+				return;
 			}
+
+			ui.setVisible(false);
 			showCursorReference(cursorReference);
 			return;
 		}
 
 		// abort the jd change
 		javadocTextArea = null;
+		ui.setVisible(false);
 		showCursorReference(cursorReference);
 
 		this.editor.grabFocus();

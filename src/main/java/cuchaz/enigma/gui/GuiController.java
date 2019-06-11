@@ -413,7 +413,7 @@ public class GuiController {
 
 	private DecompiledClassSource decompileSource(ClassEntry targetClass, SourceProvider sourceProvider) {
 		try {
-			CompilationUnit sourceTree = sourceProvider.getSources(targetClass.getFullName());
+			CompilationUnit sourceTree = (CompilationUnit) sourceProvider.getSources(targetClass.getFullName()).clone();
 			if (sourceTree == null) {
 				gui.setEditorText("Unable to find class: " + targetClass);
 				return DecompiledClassSource.text(targetClass, "Unable to find class");
