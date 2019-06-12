@@ -9,10 +9,9 @@ import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.Utils;
 
 import java.io.BufferedWriter;
@@ -36,6 +35,64 @@ public class TinyMappingsWriter implements MappingsWriter {
 	public TinyMappingsWriter(String nameObf, String nameDeobf) {
 		this.nameObf = nameObf;
 		this.nameDeobf = nameDeobf;
+	}
+
+	public static String[] serializeEntry(Entry<?> entry, boolean removeNone, String... extraFields) {
+		return serializeEntry(entry, removeNone, false, extraFields);
+	}
+	public static String[] serializeEntry(Entry<?> entry, boolean removeNone, boolean writeParams, String... extraFields) {
+		String[] data = null;
+
+		if (entry instanceof FieldEntry) {
+			data = new String[4 + extraFields.length];
+			data[0] = "FIELD";
+			data[1] = entry.getContainingClass().getFullName();
+			data[2] = ((FieldEntry) entry).getDesc().toString();
+			data[3] = entry.getName();
+
+			if (removeNone) {
+				data[1] = Utils.NONE_PREFIX_REMOVER.map(data[1]);
+				data[2] = Utils.NONE_PREFIX_REMOVER.mapDesc(data[2]);
+			}
+		} else if (entry instanceof MethodEntry) {
+			data = new String[4 + extraFields.length];
+			data[0] = "METHOD";
+			data[1] = entry.getContainingClass().getFullName();
+			data[2] = ((MethodEntry) entry).getDesc().toString();
+			data[3] = entry.getName();
+
+			if (removeNone) {
+				data[1] = Utils.NONE_PREFIX_REMOVER.map(data[1]);
+				data[2] = Utils.NONE_PREFIX_REMOVER.mapMethodDesc(data[2]);
+			}
+		} else if (entry instanceof ClassEntry) {
+			data = new String[2 + extraFields.length];
+			data[0] = "CLASS";
+			data[1] = ((ClassEntry) entry).getFullName();
+
+			if (removeNone) {
+				data[1] = Utils.NONE_PREFIX_REMOVER.map(data[1]);
+			}
+		} else if (entry instanceof LocalVariableEntry) {
+			LocalVariableEntry param = (LocalVariableEntry) entry;
+			data = new String[5 + extraFields.length];
+			data[0] = "MTH-ARG";
+			data[1] = entry.getContainingClass().getFullName();
+			data[2] = param.getParent().getDesc().toString();
+			data[3] = param.getParent().getName();
+			data[4] = Integer.toString(param.getIndex());
+
+			if (removeNone) {
+				data[1] = Utils.NONE_PREFIX_REMOVER.map(data[1]);
+				data[2] = Utils.NONE_PREFIX_REMOVER.mapMethodDesc(data[2]);
+			}
+		}
+
+		if (data != null) {
+			System.arraycopy(extraFields, 0, data, data.length - extraFields.length, extraFields.length);
+		}
+
+		return data;
 	}
 
 	@Override
@@ -71,9 +128,9 @@ public class TinyMappingsWriter implements MappingsWriter {
 			if (entry instanceof ClassEntry) {
 				writeClass(writer, (ClassEntry) entry, translator);
 			} else if (entry instanceof FieldEntry) {
-				writeLine(writer, TinyV1Helper.serializeEntry(entry, true, mapping.getTargetName()));
+				writeLine(writer, serializeEntry(entry, true, mapping.getTargetName()));
 			} else if (entry instanceof MethodEntry) {
-				writeLine(writer, TinyV1Helper.serializeEntry(entry, true, mapping.getTargetName()));
+				writeLine(writer, serializeEntry(entry, true, mapping.getTargetName()));
 			}
 		}
 
@@ -97,8 +154,8 @@ public class TinyMappingsWriter implements MappingsWriter {
 	private void writeClass(Writer writer, ClassEntry entry, Translator translator) {
 		ClassEntry translatedEntry = translator.translate(entry);
 
-		String obfClassName = cuchaz.enigma.utils.Utils.NONE_PREFIX_REMOVER.map(entry.getFullName());
-		String deobfClassName = cuchaz.enigma.utils.Utils.NONE_PREFIX_REMOVER.map(translatedEntry.getFullName());
+		String obfClassName = Utils.NONE_PREFIX_REMOVER.map(entry.getFullName());
+		String deobfClassName = Utils.NONE_PREFIX_REMOVER.map(translatedEntry.getFullName());
 		writeLine(writer, new String[]{"CLASS", obfClassName, deobfClassName});
 	}
 
