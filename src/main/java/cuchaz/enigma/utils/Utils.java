@@ -11,7 +11,10 @@
 
 package cuchaz.enigma.utils;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
+import org.objectweb.asm.commons.Remapper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +28,19 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Utils {
+
+	public static final Remapper NONE_PREFIX_REMOVER = new Remapper() {
+		@Override
+		public String map(String name) {
+			if (name.startsWith("none/")) {
+				return name.substring(5);
+			} else {
+				return name;
+			}
+		}
+	};
+	public static final Joiner TAB_JOINER = Joiner.on('\t');
+	public static final Splitter TAB_SPLITTER = Splitter.on('\t');
 
 	public static int combineHashesOrdered(Object... objs) {
 		final int prime = 67;

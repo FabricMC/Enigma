@@ -84,6 +84,8 @@ public class CommandMain {
 		register(new DecompileCommand());
 		register(new ConvertMappingsCommand());
 		register(new CheckMappingsCommand());
+		register(new FindMappingErrorsCommand());
+		register(new TinyifyCommand());
 	}
 
 	private static final class CommandHelpException extends IllegalArgumentException {
