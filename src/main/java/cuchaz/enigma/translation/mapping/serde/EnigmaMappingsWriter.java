@@ -148,23 +148,22 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
 		EntryMapping classEntryMapping = mappings.get(classEntry);
-		if (classEntryMapping != null) {
-			writer.print(writeDocs(new StringBuilder(), classEntryMapping, 0));
-		}
 		writer.println(writeClass(classEntry, classEntryMapping).trim());
+		if (classEntryMapping != null && classEntryMapping.getJavadoc() != null) {
+			writeDocs(writer, classEntryMapping, 0);
+		}
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
 		}
 	}
 
-	private StringBuilder writeDocs(StringBuilder builder, EntryMapping mapping, int depth) {
+	private void writeDocs(PrintWriter writer, EntryMapping mapping, int depth) {
 		String jd = mapping.getJavadoc();
 		if (jd != null) {
-			for (String line : mapping.getJavadoc().split("\\R")) {
-				builder.append(indent("JD " + line, depth)).append("\n");
+			for (String line : jd.split("\\R")) {
+				writer.println(indent("JAVADOC " + MappingHelper.escape(line), depth + 1));
 			}
 		}
-		return builder;
 	}
 
 	protected void writeEntry(PrintWriter writer, EntryTree<EntryMapping> mappings, Entry<?> entry, int depth) {
@@ -174,10 +173,6 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		EntryMapping mapping = node.getValue();
-
-		if (mapping != null) {
-			writer.print(writeDocs(new StringBuilder(), mapping, depth));
-		}
 
 		if (entry instanceof ClassEntry) {
 			String line = writeClass((ClassEntry) entry, mapping);
@@ -192,6 +187,10 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			String line = writeArgument((LocalVariableEntry) entry, mapping);
 			writer.println(indent(line, depth));
 		}
+		if (mapping != null && mapping.getJavadoc() != null) {
+			writeDocs(writer, mapping, depth);
+		}
+
 
 		Collection<Entry<?>> children = groupChildren(node.getChildren());
 		for (Entry<?> child : children) {

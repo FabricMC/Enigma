@@ -388,7 +388,7 @@ public class Deobfuscator {
 
 	public void changeDoc(Entry<?> obfEntry, String newDoc) {
 		if (mapper.getDeobfMapping(obfEntry) == null) {
-			markAsDeobfuscated(obfEntry); // NPE
+			markAsDeobfuscated(obfEntry, false); // NPE
 		}
 		mapper.mapFromObf(obfEntry, mapper.getDeobfMapping(obfEntry).withDocs(newDoc), false);
 	}
@@ -398,7 +398,11 @@ public class Deobfuscator {
 	}
 
 	public void markAsDeobfuscated(Entry<?> obfEntry) {
-		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()));
+		markAsDeobfuscated(obfEntry, true);
+	}
+
+	public void markAsDeobfuscated(Entry<?> obfEntry, boolean renaming) {
+		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()), renaming);
 	}
 
 	public <T extends Translatable> T deobfuscate(T translatable) {

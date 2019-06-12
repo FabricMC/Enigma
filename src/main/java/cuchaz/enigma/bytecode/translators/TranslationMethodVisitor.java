@@ -125,7 +125,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		int argumentIndex = methodEntry.getArgumentIndex(ownerEntry, index);
 
 		if (argumentIndex >= 0) {
-			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, true, new TypeDescriptor(desc));
+			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, true, new TypeDescriptor(desc), null);
 			LocalVariableDefEntry translatedEntry = translator.translate(entry);
 			String translatedName = translatedEntry.getName();
 
@@ -159,7 +159,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 			int offset = ((methodEntry.getAccess().getFlags() & Opcodes.ACC_ABSTRACT) != 0) ? 1 : 0;
 
 			for (int argumentIndex = 0; argumentIndex < arguments.size(); argumentIndex++) {
-				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "", true);
+				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "", true, null);
 				LocalVariableEntry translatedEntry = translator.translate(entry);
 				String translatedName = translatedEntry.getName();
 				if (translatedName.equals(entry.getName())) {

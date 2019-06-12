@@ -563,7 +563,7 @@ public class Gui {
 		}
 
 		this.popupMenu.renameMenu.setEnabled(isRenamable);
-		this.popupMenu.editJavadocMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry || isFieldEntry);
+		this.popupMenu.editJavadocMenu.setEnabled(isRenamable);
 		this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
 		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);

@@ -2,19 +2,20 @@ package cuchaz.enigma.analysis;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
-import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldDefEntry;
-import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.*;
 
-import javax.annotation.Nonnull;
-import javax.lang.model.element.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public final class AddJavadocsAstTransform implements IAstTransform {
@@ -39,12 +40,57 @@ public final class AddJavadocsAstTransform implements IAstTransform {
 		}
 
 		private <T extends AstNode> void addDoc(T node, Function<T, Entry<?>> retriever) {
-			final EntryMapping mapping = remapper.getDeobfMapping(retriever.apply(node));
-			final String docs = mapping == null ? null : mapping.getJavadoc();
-			final Comment[] comments = Strings.emptyToNull(docs) == null ? null : Stream.of(docs.split("\\R")).map(st -> new Comment(st,
-					CommentType.Documentation)).toArray(Comment[]::new);
+			final Comment[] comments = getComments(node, retriever);
 			if (comments != null) {
 				node.insertChildrenBefore(node.getFirstChild(), Roles.COMMENT, comments);
+			}
+		}
+
+		private <T extends AstNode> Comment[] getComments(T node, Function<T, Entry<?>> retriever) {
+			final EntryMapping mapping = remapper.getDeobfMapping(retriever.apply(node));
+			final String docs = mapping == null ? null : Strings.emptyToNull(mapping.getJavadoc());
+			return docs == null ? null : Stream.of(docs.split("\\R")).map(st -> new Comment(st,
+					CommentType.Documentation)).toArray(Comment[]::new);
+		}
+
+		private Comment[] getParameterComments(ParameterDeclaration node, Function<ParameterDeclaration, Entry<?>> retriever) {
+			final EntryMapping mapping = remapper.getDeobfMapping(retriever.apply(node));
+			final Comment[] ret = getComments(node, retriever);
+			if (ret != null) {
+				final String paramPrefix = "@param " + mapping.getTargetName() + " ";
+				final String indent = Strings.repeat(" ", paramPrefix.length());
+				ret[0].setContent(paramPrefix + ret[0].getContent());
+				for (int i = 1; i < ret.length; i++) {
+					ret[i].setContent(indent + ret[i].getContent());
+				}
+			}
+			return ret;
+		}
+
+		private void visitMethod(AstNode node) {
+			final MethodDefEntry methodDefEntry = MethodDefEntry.parse(node.getUserData(Keys.METHOD_DEFINITION));
+			final Comment[] baseComments = getComments(node, $ -> methodDefEntry);
+			List<Comment> comments = new ArrayList<>();
+			if (baseComments != null)
+				Collections.addAll(comments, baseComments);
+
+			for (ParameterDeclaration dec : node.getChildrenByRole(Roles.PARAMETER)) {
+				ParameterDefinition def = dec.getUserData(Keys.PARAMETER_DEFINITION);
+				final Comment[] paramComments = getParameterComments(dec, $ -> new LocalVariableDefEntry(methodDefEntry, def.getSlot(), def.getName(),
+						true,
+						TypeDescriptor.parse(def.getParameterType()), null));
+				if (paramComments != null)
+					Collections.addAll(comments, paramComments);
+			}
+
+			if (!comments.isEmpty()) {
+				if (remapper.getObfResolver().resolveEntry(methodDefEntry, ResolutionStrategy.RESOLVE_ROOT).stream().noneMatch(e -> Objects.equals(e, methodDefEntry))) {
+					comments.add(0, new Comment("{@inheritDoc}", CommentType.Documentation));
+				}
+				final AstNode oldFirst = node.getFirstChild();
+				for (Comment comment : comments) {
+					node.insertChildBefore(oldFirst, comment, Roles.COMMENT);
+				}
 			}
 		}
 
@@ -58,13 +104,13 @@ public final class AddJavadocsAstTransform implements IAstTransform {
 
 		@Override
 		public Void visitMethodDeclaration(MethodDeclaration node, Void data) {
-			addDoc(node, dec -> MethodDefEntry.parse(dec.getUserData(Keys.METHOD_DEFINITION)));
+			visitMethod(node);
 			return super.visitMethodDeclaration(node, data);
 		}
 
 		@Override
 		public Void visitConstructorDeclaration(ConstructorDeclaration node, Void data) {
-			addDoc(node, dec -> MethodDefEntry.parse(dec.getUserData(Keys.METHOD_DEFINITION)));
+			visitMethod(node);
 			return super.visitConstructorDeclaration(node, data);
 		}
 

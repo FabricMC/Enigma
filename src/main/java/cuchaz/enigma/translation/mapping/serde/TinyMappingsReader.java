@@ -99,7 +99,7 @@ public enum TinyMappingsReader implements MappingsReader {
 		int variableIndex = Integer.parseInt(tokens[4]);
 
 		String mapping = tokens[5];
-		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true);
+		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true, null);
 		return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping));
 	}
 }

@@ -17,8 +17,8 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	protected final int index;
 	protected final boolean parameter;
 
-	public LocalVariableEntry(MethodEntry parent, int index, String name, boolean parameter) {
-		super(parent, name, null);
+	public LocalVariableEntry(MethodEntry parent, int index, String name, boolean parameter, String javadoc) {
+		super(parent, name, javadoc);
 
 		Preconditions.checkNotNull(parent, "Variable owner cannot be null");
 		Preconditions.checkArgument(index >= 0, "Index must be positive");
@@ -48,17 +48,18 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	@Override
 	public LocalVariableEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		return new LocalVariableEntry(parent, index, translatedName, parameter);
+		String javadoc = mapping != null ? mapping.getJavadoc() : null;
+		return new LocalVariableEntry(parent, index, translatedName, parameter, javadoc);
 	}
 
 	@Override
 	public LocalVariableEntry withName(String name) {
-		return new LocalVariableEntry(parent, index, name, parameter);
+		return new LocalVariableEntry(parent, index, name, parameter, javadocs);
 	}
 
 	@Override
 	public LocalVariableEntry withParent(MethodEntry parent) {
-		return new LocalVariableEntry(parent, index, name, parameter);
+		return new LocalVariableEntry(parent, index, name, parameter, javadocs);
 	}
 
 	@Override

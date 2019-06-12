@@ -40,10 +40,10 @@ public class EntryRemapper {
 		mapFromObf(obfuscatedEntry, deobfMapping, true);
 	}
 
-	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean checkRename) {
-		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, ResolutionStrategy.RESOLVE_ROOT);
+	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming) {
+		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, renaming ? ResolutionStrategy.RESOLVE_ROOT : ResolutionStrategy.RESOLVE_CLOSEST);
 
-		if (checkRename && deobfMapping != null) {
+		if (renaming && deobfMapping != null) {
 			for (E resolvedEntry : resolvedEntries) {
 				validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
 			}

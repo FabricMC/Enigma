@@ -107,7 +107,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			}
 
 			TypeDescriptor parameterType = TypeDescriptor.parse(def.getParameterType());
-			LocalVariableDefEntry localVariableEntry = new LocalVariableDefEntry(ownerMethod, parameterIndex, node.getName(), true, parameterType);
+			LocalVariableDefEntry localVariableEntry = new LocalVariableDefEntry(ownerMethod, parameterIndex, node.getName(), true, parameterType, null);
 			Identifier identifier = node.getNameToken();
 			// cache the argument entry and the identifier
 			identifierEntryCache.put(identifier.getName(), localVariableEntry);
@@ -177,7 +177,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 						if (variableIndex >= 0) {
 							MethodDefEntry ownerMethod = MethodDefEntry.parse(originalVariable.getDeclaringMethod());
 							TypeDescriptor variableType = TypeDescriptor.parse(originalVariable.getVariableType());
-							LocalVariableDefEntry localVariableEntry = new LocalVariableDefEntry(ownerMethod, variableIndex, initializer.getName(), false, variableType);
+							LocalVariableDefEntry localVariableEntry = new LocalVariableDefEntry(ownerMethod, variableIndex, initializer.getName(), false, variableType, null);
 							identifierEntryCache.put(identifier.getName(), localVariableEntry);
 							addDeclarationToUnmatched(identifier.getName(), index);
 							index.addDeclaration(identifier, localVariableEntry);
