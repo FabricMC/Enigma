@@ -336,6 +336,7 @@ public class Gui {
 		this.menuBar.saveMappingsMenu.setEnabled(false);
 		this.menuBar.saveMappingEnigmaFileMenu.setEnabled(true);
 		this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(true);
+		this.menuBar.saveMappingsTinyV1Menu.setEnabled(true);
 		this.menuBar.saveMappingsSrgMenu.setEnabled(true);
 		this.menuBar.closeMappingsMenu.setEnabled(true);
 		this.menuBar.exportSourceMenu.setEnabled(true);
@@ -359,6 +360,7 @@ public class Gui {
 		this.menuBar.saveMappingsMenu.setEnabled(false);
 		this.menuBar.saveMappingEnigmaFileMenu.setEnabled(false);
 		this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(false);
+		this.menuBar.saveMappingsTinyV1Menu.setEnabled(false);
 		this.menuBar.saveMappingsSrgMenu.setEnabled(false);
 		this.menuBar.closeMappingsMenu.setEnabled(false);
 		this.menuBar.exportSourceMenu.setEnabled(false);

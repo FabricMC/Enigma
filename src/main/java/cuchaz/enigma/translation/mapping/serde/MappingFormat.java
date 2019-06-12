@@ -13,7 +13,7 @@ import java.nio.file.Path;
 public enum MappingFormat {
 	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE),
 	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY),
-	TINY_FILE(new TinyMappingsWriter("obf", "deobf"), TinyMappingsReader.INSTANCE),
+	TINY_V1_FILE(new TinyMappingsWriter("obf", "deobf"), TinyMappingsReader.INSTANCE),
 	SRG_FILE(SrgMappingsWriter.INSTANCE, null);
 
 	private final MappingsWriter writer;
