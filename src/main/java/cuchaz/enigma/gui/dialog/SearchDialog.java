@@ -40,7 +40,7 @@ public class SearchDialog {
 		this.parent = parent;
 
 		deobfClasses = Lists.newArrayList();
-		this.parent.getController().getDeobfuscator().getSeparatedClasses(Lists.newArrayList(), deobfClasses);
+		this.parent.getController().addSeparatedClasses(Lists.newArrayList(), deobfClasses);
 		deobfClasses.removeIf(ClassEntry::isInnerClass);
 	}
 

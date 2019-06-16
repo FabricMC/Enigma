@@ -13,7 +13,8 @@ package cuchaz.enigma.analysis.index;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
 import cuchaz.enigma.translation.representation.Lambda;
@@ -23,7 +24,6 @@ import org.objectweb.asm.Opcodes;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.function.Consumer;
 
 public class JarIndex implements JarIndexer {
 	private final EntryIndex entryIndex;
@@ -56,23 +56,25 @@ public class JarIndex implements JarIndexer {
 		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 	}
 
-	public void indexJar(ParsedJar jar, Consumer<String> progress) {
-		progress.accept("Indexing entries (1/4)");
-		jar.visitReader(name -> new IndexClassVisitor(this, Opcodes.ASM5), ClassReader.SKIP_CODE);
+	public void indexJar(ClassCache classCache, ProgressListener progress) {
+		progress.init(4, "Indexing jar");
 
-		progress.accept("Indexing entry references (2/4)");
-		jar.visitReader(name -> new IndexReferenceVisitor(this, Opcodes.ASM5), ClassReader.SKIP_FRAMES);
+		progress.step(1, "Entries");
+		classCache.visit(() -> new IndexClassVisitor(this, Opcodes.ASM5), ClassReader.SKIP_CODE);
 
-		progress.accept("Finding bridge methods (3/4)");
+		progress.step(2, "Entry references");
+		classCache.visit(() -> new IndexReferenceVisitor(this, Opcodes.ASM5), ClassReader.SKIP_FRAMES);
+
+		progress.step(3, "Bridge methods");
 		bridgeMethodIndex.findBridgeMethods();
 
-		progress.accept("Processing index (4/4)");
+		progress.step(4, "Processing");
 		processIndex(this);
 	}
 
 	@Override
 	public void processIndex(JarIndex index) {
-		indexers.forEach(indexer -> indexer.processIndex(index));
+		indexers.parallelStream().forEach(indexer -> indexer.processIndex(index));
 	}
 
 	@Override

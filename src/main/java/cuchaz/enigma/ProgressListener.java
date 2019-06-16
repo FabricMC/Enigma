@@ -1,15 +1,17 @@
 package cuchaz.enigma;
 
 public interface ProgressListener {
-	ProgressListener VOID = new ProgressListener() {
-		@Override
-		public void init(int totalWork, String title) {
-		}
+	static ProgressListener none() {
+		return new ProgressListener() {
+			@Override
+			public void init(int totalWork, String title) {
+			}
 
-		@Override
-		public void step(int numDone, String message) {
-		}
-	};
+			@Override
+			public void step(int numDone, String message) {
+			}
+		};
+	}
 
 	void init(int totalWork, String title);
 

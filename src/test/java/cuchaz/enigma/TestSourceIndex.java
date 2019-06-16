@@ -41,17 +41,17 @@ public class TestSourceIndex {
 			mcJar = new File(mcDir, "versions/1.8.3/1.8.3.jar");
 		}
 
-		Deobfuscator deobfuscator = new Deobfuscator(new JarFile(mcJar));
+		Enigma enigma = new Enigma(new JarFile(mcJar));
 
 		// get all classes that aren't inner classes
 		Set<ClassEntry> classEntries = Sets.newHashSet();
-		for (ClassEntry obfClassEntry : deobfuscator.getJarIndex().getEntryIndex().getClasses()) {
+		for (ClassEntry obfClassEntry : enigma.getJarIndex().getEntryIndex().getClasses()) {
 			if (!obfClassEntry.isInnerClass()) {
 				classEntries.add(obfClassEntry);
 			}
 		}
 
-		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		SourceProvider sourceProvider = enigma.getObfSourceProvider();
 		for (ClassEntry obfClassEntry : classEntries) {
 			try {
 				CompilationUnit tree = sourceProvider.getSources(obfClassEntry.getName());

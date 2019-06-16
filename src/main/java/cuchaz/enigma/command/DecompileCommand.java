@@ -1,10 +1,9 @@
 package cuchaz.enigma.command;
 
-import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.EnigmaProject;
+import cuchaz.enigma.ProgressListener;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.util.jar.JarFile;
 
 public class DecompileCommand extends Command {
 
@@ -24,10 +23,17 @@ public class DecompileCommand extends Command {
 
 	@Override
 	public void run(String... args) throws Exception {
-		File fileJarIn = getReadableFile(getArg(args, 0, "in jar", true));
-		File fileJarOut = getWritableFolder(getArg(args, 1, "out folder", true));
+		Path fileJarIn = getReadableFile(getArg(args, 0, "in jar", true)).toPath();
+		Path fileJarOut = getWritableFolder(getArg(args, 1, "out folder", true)).toPath();
 		Path fileMappings = getReadablePath(getArg(args, 2, "mappings file", false));
-		Deobfuscator deobfuscator = getDeobfuscator(fileMappings, new JarFile(fileJarIn));
-		deobfuscator.writeSources(fileJarOut.toPath(), new Command.ConsoleProgressListener());
+
+		EnigmaProject project = openProject(fileJarIn, fileMappings);
+
+		ProgressListener progress = new ConsoleProgressListener();
+
+		EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
+		EnigmaProject.SourceExport source = jar.decompile(progress);
+
+		source.write(fileJarOut, progress);
 	}
 }

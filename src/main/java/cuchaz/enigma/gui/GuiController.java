@@ -14,9 +14,13 @@ package cuchaz.enigma.gui;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.CompiledSourceTypeLoader;
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.SourceProvider;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.api.service.ObfuscationTestService;
+import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.util.History;
@@ -30,114 +34,150 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.ReadableToken;
+import org.objectweb.asm.Opcodes;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.event.ItemEvent;
-import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GuiController {
-	private static final ExecutorService DECOMPILER_SERVICE = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("decompiler-thread").build());
+	private static final ExecutorService DECOMPILER_SERVICE = Executors.newSingleThreadExecutor(
+			new ThreadFactoryBuilder()
+					.setDaemon(true)
+					.setNameFormat("decompiler-thread")
+					.build()
+	);
 
 	private final Gui gui;
-	private Deobfuscator deobfuscator;
-	private DecompiledClassSource currentSource;
+	public final Enigma enigma;
 
+	public EnigmaProject project;
+	private SourceProvider sourceProvider;
+	private IndexTreeBuilder indexTreeBuilder;
 
 	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
 
+	private DecompiledClassSource currentSource;
+
 	public GuiController(Gui gui) {
 		this.gui = gui;
+		// TODO: load and set profile
+		this.enigma = Enigma.create();
 	}
 
 	public boolean isDirty() {
-		if (deobfuscator == null) {
-			return false;
-		}
-		return deobfuscator.getMapper().isDirty();
+		return project != null && project.getMapper().isDirty();
 	}
 
-	public void openJar(final JarFile jar) throws IOException {
-		this.gui.onStartOpenJar("Loading JAR...");
-		this.deobfuscator = new Deobfuscator(jar, this.gui::onStartOpenJar);
-		this.gui.onFinishOpenJar(jar.getName());
-		refreshClasses();
+	public void openJar(final Path jarPath) {
+		this.gui.onStartOpenJar();
+
+		ProgressDialog.runOffThread(gui.getFrame(), progress -> {
+			project = enigma.openJar(jarPath, progress);
+
+			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
+
+			CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(project.getClassCache());
+			typeLoader.addVisitor(visitor -> new SourceFixVisitor(Opcodes.ASM5, visitor, project.getJarIndex()));
+			sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
+
+			gui.onFinishOpenJar(jarPath.getFileName().toString());
+
+			refreshClasses();
+		});
 	}
 
 	public void closeJar() {
-		this.deobfuscator = null;
+		this.project = null;
 		this.gui.onCloseJar();
 	}
 
 	public void openMappings(MappingFormat format, Path path) {
-		if (deobfuscator == null) return;
-		ProgressDialog.runInThread(this.gui.getFrame(), progress -> {
+		if (project == null) return;
+
+		gui.setMappingsFile(path);
+
+		ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			try {
 				EntryTree<EntryMapping> mappings = format.read(path, progress);
-				deobfuscator.setMappings(mappings, progress);
+				project.setMappings(mappings);
 
-				gui.setMappingsFile(path);
 				loadedMappingFormat = format;
 				loadedMappingPath = path;
 
 				refreshClasses();
 				refreshCurrentClass();
 			} catch (MappingParseException e) {
-				JOptionPane.showMessageDialog(this.gui.getFrame(), e.getMessage());
+				JOptionPane.showMessageDialog(gui.getFrame(), e.getMessage());
 			}
 		});
 	}
 
 	public void saveMappings(Path path) {
-		saveMappings(loadedMappingFormat, path);
+		if (project == null) return;
+
+		saveMappings(path, loadedMappingFormat);
 	}
 
-	public void saveMappings(MappingFormat format, Path path) {
-		if (deobfuscator == null) return;
-		EntryRemapper mapper = deobfuscator.getMapper();
+	public void saveMappings(Path path, MappingFormat format) {
+		if (project == null) return;
 
-		MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
-		boolean saveAll = !path.equals(loadedMappingPath);
+		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
+			EntryRemapper mapper = project.getMapper();
 
-		ProgressDialog.runInThread(this.gui.getFrame(), progress -> {
+			MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
+			boolean saveAll = !path.equals(loadedMappingPath);
+
+			loadedMappingFormat = format;
+			loadedMappingPath = path;
+
 			if (saveAll) {
 				format.write(mapper.getObfToDeobf(), path, progress);
 			} else {
 				format.write(mapper.getObfToDeobf(), delta, path, progress);
 			}
 		});
-
-		loadedMappingFormat = format;
-		loadedMappingPath = path;
 	}
 
 	public void closeMappings() {
-		if (deobfuscator == null) return;
-		this.deobfuscator.setMappings(null);
+		if (project == null) return;
+
+		project.setMappings(null);
+
 		this.gui.setMappingsFile(null);
 		refreshClasses();
 		refreshCurrentClass();
 	}
 
-	public void exportSource(final File dirOut) {
-		if (deobfuscator == null) return;
-		ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.writeSources(dirOut.toPath(), progress));
+	public void exportSource(final Path path) {
+		if (project == null) return;
+
+		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
+			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
+			EnigmaProject.SourceExport source = jar.decompile(progress);
+
+			source.write(path, progress);
+		});
 	}
 
-	public void exportJar(final File fileOut) {
-		if (deobfuscator == null) return;
-		ProgressDialog.runInThread(this.gui.getFrame(), progress -> this.deobfuscator.writeTransformedJar(fileOut, progress));
+	public void exportJar(final Path path) {
+		if (project == null) return;
+
+		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
+			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
+			jar.write(path, progress);
+		});
 	}
 
 	public Token getToken(int pos) {
@@ -167,85 +207,9 @@ public class GuiController {
 		);
 	}
 
-	public boolean entryIsInJar(Entry<?> entry) {
-		if (entry == null || deobfuscator == null) return false;
-		return this.deobfuscator.isRenamable(entry);
-	}
-
-	public ClassInheritanceTreeNode getClassInheritance(ClassEntry entry) {
-		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
-		ClassInheritanceTreeNode rootNode = this.deobfuscator.getIndexTreeBuilder().buildClassInheritance(translator, entry);
-		return ClassInheritanceTreeNode.findNode(rootNode, entry);
-	}
-
-	public ClassImplementationsTreeNode getClassImplementations(ClassEntry entry) {
-		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
-		return this.deobfuscator.getIndexTreeBuilder().buildClassImplementations(translator, entry);
-	}
-
-	public MethodInheritanceTreeNode getMethodInheritance(MethodEntry entry) {
-		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
-		MethodInheritanceTreeNode rootNode = this.deobfuscator.getIndexTreeBuilder().buildMethodInheritance(translator, entry);
-		return MethodInheritanceTreeNode.findNode(rootNode, entry);
-	}
-
-	public MethodImplementationsTreeNode getMethodImplementations(MethodEntry entry) {
-		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
-		List<MethodImplementationsTreeNode> rootNodes = this.deobfuscator.getIndexTreeBuilder().buildMethodImplementations(translator, entry);
-		if (rootNodes.isEmpty()) {
-			return null;
-		}
-		if (rootNodes.size() > 1) {
-			System.err.println("WARNING: Method " + entry + " implements multiple interfaces. Only showing first one.");
-		}
-		return MethodImplementationsTreeNode.findNode(rootNodes.get(0), entry);
-	}
-
-	public ClassReferenceTreeNode getClassReferences(ClassEntry entry) {
-		Translator deobfuscator = this.deobfuscator.getMapper().getDeobfuscator();
-		ClassReferenceTreeNode rootNode = new ClassReferenceTreeNode(deobfuscator, entry);
-		rootNode.load(this.deobfuscator.getJarIndex(), true);
-		return rootNode;
-	}
-
-	public FieldReferenceTreeNode getFieldReferences(FieldEntry entry) {
-		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
-		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(translator, entry);
-		rootNode.load(this.deobfuscator.getJarIndex(), true);
-		return rootNode;
-	}
-
-	public MethodReferenceTreeNode getMethodReferences(MethodEntry entry, boolean recursive) {
-		Translator translator = this.deobfuscator.getMapper().getDeobfuscator();
-		MethodReferenceTreeNode rootNode = new MethodReferenceTreeNode(translator, entry);
-		rootNode.load(this.deobfuscator.getJarIndex(), true, recursive);
-		return rootNode;
-	}
-
-	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree) {
-		this.deobfuscator.rename(reference.getNameableEntry(), newName);
-
-		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
-			this.gui.moveClassTree(reference, newName);
-		refreshCurrentClass(reference);
-	}
-
-	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference) {
-		this.deobfuscator.removeMapping(reference.getNameableEntry());
-		if (reference.entry instanceof ClassEntry)
-			this.gui.moveClassTree(reference, false, true);
-		refreshCurrentClass(reference);
-	}
-
-	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference) {
-		this.deobfuscator.markAsDeobfuscated(reference.getNameableEntry());
-		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
-			this.gui.moveClassTree(reference, true, false);
-		refreshCurrentClass(reference);
-	}
-
 	/**
 	 * Navigates to the declaration with respect to navigation history
+	 *
 	 * @param entry the entry whose declaration will be navigated to
 	 */
 	public void openDeclaration(Entry<?> entry) {
@@ -257,6 +221,7 @@ public class GuiController {
 
 	/**
 	 * Navigates to the reference with respect to navigation history
+	 *
 	 * @param reference the reference
 	 */
 	public void openReference(EntryReference<Entry<?>, Entry<?>> reference) {
@@ -275,12 +240,13 @@ public class GuiController {
 
 	/**
 	 * Navigates to the reference without modifying history. If the class is not currently loaded, it will be loaded.
+	 *
 	 * @param reference the reference
 	 */
 	private void setReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		// get the reference target class
 		ClassEntry classEntry = reference.getLocationClassEntry();
-		if (!this.deobfuscator.isRenamable(classEntry)) {
+		if (!project.isRenamable(classEntry)) {
 			throw new IllegalArgumentException("Obfuscated class " + classEntry + " was not found in the jar!");
 		}
 
@@ -294,6 +260,7 @@ public class GuiController {
 
 	/**
 	 * Navigates to the reference without modifying history. Assumes the class is loaded.
+	 *
 	 * @param reference
 	 */
 	private void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
@@ -307,7 +274,7 @@ public class GuiController {
 	}
 
 	public Collection<Token> getTokensForReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		EntryRemapper mapper = this.deobfuscator.getMapper();
+		EntryRemapper mapper = this.project.getMapper();
 
 		SourceIndex index = this.currentSource.getIndex();
 		return mapper.getObfResolver().resolveReference(reference, ResolutionStrategy.RESOLVE_CLOSEST)
@@ -337,7 +304,7 @@ public class GuiController {
 	}
 
 	public void navigateTo(Entry<?> entry) {
-		if (!entryIsInJar(entry)) {
+		if (!project.isRenamable(entry)) {
 			// entry is not in the jar. Ignore it
 			return;
 		}
@@ -345,7 +312,7 @@ public class GuiController {
 	}
 
 	public void navigateTo(EntryReference<Entry<?>, Entry<?>> reference) {
-		if (!entryIsInJar(reference.getLocationClassEntry())) {
+		if (!project.isRenamable(reference.getLocationClassEntry())) {
 			return;
 		}
 		openReference(reference);
@@ -354,9 +321,36 @@ public class GuiController {
 	private void refreshClasses() {
 		List<ClassEntry> obfClasses = Lists.newArrayList();
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
-		this.deobfuscator.getSeparatedClasses(obfClasses, deobfClasses);
+		this.addSeparatedClasses(obfClasses, deobfClasses);
 		this.gui.setObfClasses(obfClasses);
 		this.gui.setDeobfClasses(deobfClasses);
+	}
+
+	public void addSeparatedClasses(List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses) {
+		EntryRemapper mapper = project.getMapper();
+
+		Collection<ClassEntry> classes = project.getJarIndex().getEntryIndex().getClasses();
+		Stream<ClassEntry> visibleClasses = classes.stream()
+				.filter(entry -> !entry.isInnerClass());
+
+		visibleClasses.forEach(entry -> {
+			ClassEntry deobfEntry = mapper.deobfuscate(entry);
+
+			Optional<ObfuscationTestService> obfService = enigma.getServices().get(ObfuscationTestService.TYPE);
+			boolean obfuscated = deobfEntry.equals(entry);
+
+			if (obfuscated && obfService.isPresent()) {
+				if (obfService.get().testDeobfuscated(entry)) {
+					obfuscated = false;
+				}
+			}
+
+			if (obfuscated) {
+				obfClasses.add(entry);
+			} else {
+				deobfClasses.add(entry);
+			}
+		});
 	}
 
 	public void refreshCurrentClass() {
@@ -384,10 +378,10 @@ public class GuiController {
 		DECOMPILER_SERVICE.submit(() -> {
 			try {
 				if (requiresDecompile) {
-					currentSource = decompileSource(targetClass, deobfuscator.getObfSourceProvider());
+					currentSource = decompileSource(targetClass);
 				}
 
-				remapSource(deobfuscator.getMapper().getDeobfuscator());
+				remapSource(project.getMapper().getDeobfuscator());
 				callback.run();
 			} catch (Throwable t) {
 				System.err.println("An exception was thrown while decompiling class " + classEntry.getFullName());
@@ -396,7 +390,7 @@ public class GuiController {
 		});
 	}
 
-	private DecompiledClassSource decompileSource(ClassEntry targetClass, SourceProvider sourceProvider) {
+	private DecompiledClassSource decompileSource(ClassEntry targetClass) {
 		try {
 			CompilationUnit sourceTree = sourceProvider.getSources(targetClass.getFullName());
 			if (sourceTree == null) {
@@ -410,7 +404,7 @@ public class GuiController {
 			String sourceString = sourceProvider.writeSourceToString(sourceTree);
 
 			SourceIndex index = SourceIndex.buildIndex(sourceString, sourceTree, true);
-			index.resolveReferences(deobfuscator.getMapper().getObfResolver());
+			index.resolveReferences(project.getMapper().getObfResolver());
 
 			return new DecompiledClassSource(targetClass, index);
 		} catch (Throwable t) {
@@ -426,20 +420,105 @@ public class GuiController {
 			return;
 		}
 
-		currentSource.remapSource(deobfuscator, translator);
+		currentSource.remapSource(project, translator);
 
 		gui.setEditorTheme(Config.getInstance().lookAndFeel);
 		gui.setSource(currentSource);
 	}
 
-	public Deobfuscator getDeobfuscator() {
-		return deobfuscator;
-	}
-
 	public void modifierChange(ItemEvent event) {
 		if (event.getStateChange() == ItemEvent.SELECTED) {
-			deobfuscator.changeModifier(gui.cursorReference.entry, (AccessModifier) event.getItem());
+			EntryRemapper mapper = project.getMapper();
+			Entry<?> entry = gui.cursorReference.entry;
+			AccessModifier modifier = (AccessModifier) event.getItem();
+
+			EntryMapping mapping = mapper.getDeobfMapping(entry);
+			if (mapping != null) {
+				mapper.mapFromObf(entry, new EntryMapping(mapping.getTargetName(), modifier));
+			} else {
+				mapper.mapFromObf(entry, new EntryMapping(entry.getName(), modifier));
+			}
+
 			refreshCurrentClass();
 		}
+	}
+
+	public ClassInheritanceTreeNode getClassInheritance(ClassEntry entry) {
+		Translator translator = project.getMapper().getDeobfuscator();
+		ClassInheritanceTreeNode rootNode = indexTreeBuilder.buildClassInheritance(translator, entry);
+		return ClassInheritanceTreeNode.findNode(rootNode, entry);
+	}
+
+	public ClassImplementationsTreeNode getClassImplementations(ClassEntry entry) {
+		Translator translator = project.getMapper().getDeobfuscator();
+		return this.indexTreeBuilder.buildClassImplementations(translator, entry);
+	}
+
+	public MethodInheritanceTreeNode getMethodInheritance(MethodEntry entry) {
+		Translator translator = project.getMapper().getDeobfuscator();
+		MethodInheritanceTreeNode rootNode = indexTreeBuilder.buildMethodInheritance(translator, entry);
+		return MethodInheritanceTreeNode.findNode(rootNode, entry);
+	}
+
+	public MethodImplementationsTreeNode getMethodImplementations(MethodEntry entry) {
+		Translator translator = project.getMapper().getDeobfuscator();
+		List<MethodImplementationsTreeNode> rootNodes = indexTreeBuilder.buildMethodImplementations(translator, entry);
+		if (rootNodes.isEmpty()) {
+			return null;
+		}
+		if (rootNodes.size() > 1) {
+			System.err.println("WARNING: Method " + entry + " implements multiple interfaces. Only showing first one.");
+		}
+		return MethodImplementationsTreeNode.findNode(rootNodes.get(0), entry);
+	}
+
+	public ClassReferenceTreeNode getClassReferences(ClassEntry entry) {
+		Translator deobfuscator = project.getMapper().getDeobfuscator();
+		ClassReferenceTreeNode rootNode = new ClassReferenceTreeNode(deobfuscator, entry);
+		rootNode.load(project.getJarIndex(), true);
+		return rootNode;
+	}
+
+	public FieldReferenceTreeNode getFieldReferences(FieldEntry entry) {
+		Translator translator = project.getMapper().getDeobfuscator();
+		FieldReferenceTreeNode rootNode = new FieldReferenceTreeNode(translator, entry);
+		rootNode.load(project.getJarIndex(), true);
+		return rootNode;
+	}
+
+	public MethodReferenceTreeNode getMethodReferences(MethodEntry entry, boolean recursive) {
+		Translator translator = project.getMapper().getDeobfuscator();
+		MethodReferenceTreeNode rootNode = new MethodReferenceTreeNode(translator, entry);
+		rootNode.load(project.getJarIndex(), true, recursive);
+		return rootNode;
+	}
+
+	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree) {
+		Entry<?> entry = reference.getNameableEntry();
+		project.getMapper().mapFromObf(entry, new EntryMapping(newName));
+
+		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
+			this.gui.moveClassTree(reference, newName);
+
+		refreshCurrentClass(reference);
+	}
+
+	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference) {
+		project.getMapper().removeByObf(reference.getNameableEntry());
+
+		if (reference.entry instanceof ClassEntry)
+			this.gui.moveClassTree(reference, false, true);
+		refreshCurrentClass(reference);
+	}
+
+	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference) {
+		EntryRemapper mapper = project.getMapper();
+		Entry<?> entry = reference.getNameableEntry();
+		mapper.mapFromObf(entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
+
+		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
+			this.gui.moveClassTree(reference, true, false);
+
+		refreshCurrentClass(reference);
 	}
 }

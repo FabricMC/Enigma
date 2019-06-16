@@ -11,8 +11,8 @@
 
 package cuchaz.enigma;
 
+import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -26,8 +26,8 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 import org.objectweb.asm.Opcodes;
 
+import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.jar.JarFile;
 
 import static cuchaz.enigma.TestEntryFactory.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -46,8 +46,8 @@ public class TestJarIndexInheritanceTree {
 
 	public TestJarIndexInheritanceTree()
 			throws Exception {
-		index = JarIndex.empty();
-		index.indexJar(new ParsedJar(new JarFile("build/test-obf/inheritanceTree.jar")), s -> {});
+		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/inheritanceTree.jar"));
+		index = classCache.index(ProgressListener.none());
 	}
 
 	@Test

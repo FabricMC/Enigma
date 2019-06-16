@@ -33,7 +33,7 @@ public class SourceProvider {
 	}
 
 	public SourceProvider(DecompilerSettings settings, ITypeLoader typeLoader) {
-		this(settings, typeLoader, new Deobfuscator.NoRetryMetadataSystem(typeLoader));
+		this(settings, typeLoader, new NoRetryMetadataSystem(typeLoader));
 	}
 
 	public static DecompilerSettings createSettings() {

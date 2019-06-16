@@ -12,7 +12,6 @@
 package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.analysis.ParsedJar;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;

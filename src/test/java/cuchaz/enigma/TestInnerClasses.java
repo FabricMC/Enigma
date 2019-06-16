@@ -11,11 +11,12 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.jar.JarFile;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
@@ -33,14 +34,14 @@ public class TestInnerClasses {
 	private static final ClassEntry ClassTreeLevel2 = newClass("f$a$a");
 	private static final ClassEntry ClassTreeLevel3 = newClass("f$a$a$a");
 	private JarIndex index;
-	private Deobfuscator deobfuscator;
+	private Enigma enigma;
 
 	public TestInnerClasses()
 		throws Exception {
-		index = JarIndex.empty();
-		ParsedJar jar = new ParsedJar(new JarFile("build/test-obf/innerClasses.jar"));
-		index.indexJar(jar, s -> {});
-		deobfuscator = new Deobfuscator(jar);
+		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/innerClasses.jar"));
+		index = classCache.index(ProgressListener.none());
+
+		enigma = new Enigma(jar);
 	}
 
 	@Test
@@ -79,6 +80,6 @@ public class TestInnerClasses {
 	}
 
 	private void decompile(ClassEntry classEntry) {
-		deobfuscator.getObfSourceProvider().getSources(classEntry.getName());
+		enigma.getObfSourceProvider().getSources(classEntry.getName());
 	}
 }

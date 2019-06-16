@@ -23,9 +23,9 @@ import static org.junit.Assert.assertEquals;
 
 public class TestDeobfuscator {
 
-	private Deobfuscator getDeobfuscator()
+	private Enigma getDeobfuscator()
 		throws IOException {
-		return new Deobfuscator(new JarFile("build/test-obf/loneClass.jar"));
+		return new Enigma(new JarFile("build/test-obf/loneClass.jar"));
 	}
 
 	@Test
@@ -37,10 +37,10 @@ public class TestDeobfuscator {
 	@Test
 	public void getClasses()
 		throws Exception {
-		Deobfuscator deobfuscator = getDeobfuscator();
+		Enigma enigma = getDeobfuscator();
 		List<ClassEntry> obfClasses = Lists.newArrayList();
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
-		deobfuscator.getSeparatedClasses(obfClasses, deobfClasses);
+		enigma.getSeparatedClasses(obfClasses, deobfClasses);
 		assertEquals(1, obfClasses.size());
 		assertEquals("a", obfClasses.get(0).getName());
 		assertEquals(1, deobfClasses.size());
@@ -50,8 +50,8 @@ public class TestDeobfuscator {
 	@Test
 	public void decompileClass()
 		throws Exception {
-		Deobfuscator deobfuscator = getDeobfuscator();
-		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		Enigma enigma = getDeobfuscator();
+		SourceProvider sourceProvider = enigma.getObfSourceProvider();
 		sourceProvider.writeSourceToString(sourceProvider.getSources("a"));
 	}
 }

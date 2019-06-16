@@ -25,16 +25,16 @@ import java.util.jar.JarFile;
 
 public class TokenChecker {
 
-	private Deobfuscator deobfuscator;
+	private Enigma enigma;
 
 	protected TokenChecker(JarFile jarFile)
 		throws IOException {
-		deobfuscator = new Deobfuscator(jarFile);
+		enigma = new Enigma(jarFile);
 	}
 
 	protected String getDeclarationToken(Entry<?> entry) {
 		// decompile the class
-		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		SourceProvider sourceProvider = enigma.getObfSourceProvider();
 		CompilationUnit tree = sourceProvider.getSources(entry.getContainingClass().getFullName());
 		// DEBUG
 		// tree.acceptVisitor( new TreeDumpVisitor( new File( "tree." + entry.getClassName().replace( '/', '.' ) + ".txt" ) ), null );
@@ -52,7 +52,7 @@ public class TokenChecker {
 	@SuppressWarnings("unchecked")
 	protected Collection<String> getReferenceTokens(EntryReference<? extends Entry<?>, ? extends Entry<?>> reference) {
 		// decompile the class
-		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+		SourceProvider sourceProvider = enigma.getObfSourceProvider();
 		CompilationUnit tree = sourceProvider.getSources(reference.context.getContainingClass().getFullName());
 		String source = sourceProvider.writeSourceToString(tree);
 		SourceIndex index = SourceIndex.buildIndex(source, tree, true);

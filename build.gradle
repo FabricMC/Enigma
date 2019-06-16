@@ -19,7 +19,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.13.1'
+version = '0.13.2'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
@@ -197,7 +197,30 @@ artifacts {
 // And finally, make the build generate / install the jars.
 build.dependsOn install
 
-apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/maven.gradle'
+//apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/maven.gradle'
+
+configurations {
+    deployerJars
+}
+
+dependencies {
+    deployerJars "org.apache.maven.wagon:wagon-ssh:2.10"
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: 'file://localhost/Users/gegy1/.m2/repository')
+            pom {
+                artifactId = project.archivesBaseName
+                project {
+                    name = project.name
+                    packaging = 'jar'
+                }
+            }
+        }
+    }
+}
 
 uploadArchives.repositories.mavenDeployer.pom.withXml {
 	asNode().dependencies.'*'.findAll() { it.artifactId.text() == 'darcula' }

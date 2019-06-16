@@ -155,7 +155,7 @@ public class ClassSelector extends JTree {
 			return;
 		}
 
-		Translator translator = controller.getDeobfuscator().getMapper().getDeobfuscator();
+		Translator translator = controller.project.getMapper().getDeobfuscator();
 
 		// build the package names
 		Map<String, ClassSelectorPackageNode> packages = Maps.newHashMap();
@@ -478,7 +478,7 @@ public class ClassSelector extends JTree {
 	}
 
 	public void insertNode(ClassEntry obfEntry) {
-		ClassEntry deobfEntry = controller.getDeobfuscator().deobfuscate(obfEntry);
+		ClassEntry deobfEntry = controller.project.getMapper().deobfuscate(obfEntry);
 		ClassSelectorPackageNode packageNode = getOrCreatePackage(deobfEntry);
 
 		DefaultTreeModel model = (DefaultTreeModel) getModel();

@@ -57,7 +57,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 	}
 
-	public static void runInThread(final JFrame parent, final ProgressRunnable runnable) {
+	public static void runOffThread(final JFrame parent, final ProgressRunnable runnable) {
 		new Thread(() ->
 		{
 			try (ProgressDialog progress = new ProgressDialog(parent)) {
@@ -68,6 +68,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 		}).start();
 	}
 
+	@Override
 	public void close() {
 		this.frame.dispose();
 	}
