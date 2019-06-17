@@ -23,10 +23,12 @@ public class MenuBar extends JMenuBar {
 	public final JMenuItem closeJarMenu;
 	public final JMenuItem openEnigmaMappingsMenu;
 	public final JMenuItem openTinyMappingsMenu;
+	public final JMenuItem openTinyV2MappingsMenu;
 	public final JMenuItem saveMappingsMenu;
 	public final JMenuItem saveMappingEnigmaFileMenu;
 	public final JMenuItem saveMappingEnigmaDirectoryMenu;
 	public final JMenuItem saveMappingsSrgMenu;
+	public final JMenuItem saveMappingsTinyV2Menu;
 	public final JMenuItem closeMappingsMenu;
 	public final JMenuItem exportSourceMenu;
 	public final JMenuItem exportJarMenu;
@@ -88,6 +90,17 @@ public class MenuBar extends JMenuBar {
 					}
 				});
 				this.openTinyMappingsMenu = item;
+
+				item = new JMenuItem("Tiny V2");
+				openMenu.add(item);
+				item.addActionListener(event -> {
+					this.gui.tinyMappingsFileChooser.setVisible(true);
+					File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
+					if (file.exists()) {
+						this.gui.getController().openMappings(MappingFormat.TINY_V2_FILE, file.toPath());
+					}
+				});
+				this.openTinyV2MappingsMenu = item;
 			}
 			{
 				JMenuItem item = new JMenuItem("Save Mappings");
@@ -115,6 +128,11 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem("SRG (single file)");
 				configureSaveMenuItem(saveMenu, item, MappingFormat.SRG_FILE);
 				this.saveMappingsSrgMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem("Tiny V2 (single file)");
+				configureSaveMenuItem(saveMenu, item, MappingFormat.TINY_V2_FILE);
+				this.saveMappingsTinyV2Menu = item;
 			}
 			{
 				JMenuItem item = new JMenuItem("Close Mappings");
