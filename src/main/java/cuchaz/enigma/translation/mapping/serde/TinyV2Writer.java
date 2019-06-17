@@ -37,7 +37,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		List<EntryTreeNode<EntryMapping>> classes =	StreamSupport.stream(mappings.spliterator(), false).filter(node -> node.getEntry() instanceof ClassEntry).collect(Collectors.toList());
 
 		try (PrintWriter writer = new LFPrintWriter(Files.newBufferedWriter(path))) {
-			writer.print("tiny\t2\t" + MINOR_VERSION + "\t" + obfHeader + "\t" + deobfHeader);
+			writer.println("tiny\t2\t" + MINOR_VERSION + "\t" + obfHeader + "\t" + deobfHeader);
 
 			// no escape names
 
@@ -65,17 +65,16 @@ public final class TinyV2Writer implements MappingsWriter {
 			classEntry = classEntry.getOuterClass();
 		} while (classEntry != null);
 		writer.print("\t");
-		writer.print(String.join("$", parts));
-		writer.println();
+		writer.println(String.join("$", parts));
 
 		writeComment(writer, node.getValue(), 1);
 
 		for (EntryTreeNode<EntryMapping> child : node.getChildNodes()) {
 			Entry entry = child.getEntry();
-			if (entry instanceof MethodEntry) {
-				writeMethod(writer, child);
-			} else if (entry instanceof FieldEntry) {
+			if (entry instanceof FieldEntry) {
 				writeField(writer, child);
+			} else if (entry instanceof MethodEntry) {
+				writeMethod(writer, child);
 			}
 		}
 	}
@@ -89,9 +88,9 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
 		if (mapping == null) {
-			writer.print(node.getEntry().getName());
+			writer.println(node.getEntry().getName());
 		} else {
-			writer.print(mapping.getTargetName());
+			writer.println(mapping.getTargetName());
 
 			writeComment(writer, mapping, 2);
 		}
@@ -116,9 +115,9 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
 		if (mapping == null) {
-			writer.print(node.getEntry().getName());
+			writer.println(node.getEntry().getName());
 		} else {
-			writer.print(mapping.getTargetName());
+			writer.println(mapping.getTargetName());
 
 			writeComment(writer, mapping, 2);
 		}
@@ -128,7 +127,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		if (node.getValue() == null)
 			return; // Shortcut
 
-		writer.print(indent(1));
+		writer.print(indent(2));
 		writer.print("p\t");
 		writer.print(((LocalVariableEntry) node.getEntry()).getIndex());
 		writer.print("\t");
@@ -136,9 +135,9 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
 		if (mapping == null) {
-			writer.print(node.getEntry().getName());
+			writer.println(node.getEntry().getName());
 		} else {
-			writer.print(mapping.getTargetName());
+			writer.println(mapping.getTargetName());
 
 			writeComment(writer, mapping, 3);
 		}

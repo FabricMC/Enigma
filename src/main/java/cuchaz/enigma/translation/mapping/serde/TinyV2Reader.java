@@ -3,6 +3,7 @@ package cuchaz.enigma.translation.mapping.serde;
 import com.google.common.base.Charsets;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
+import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -109,11 +110,11 @@ final class TinyV2Reader implements MappingsReader {
 							switch (parts[0]) {
 								case "m": // method
 									state.set(IN_METHOD);
-									holds[IN_METHOD] = parseMethod(parts);
+									holds[IN_METHOD] = parseMethod(holds[IN_CLASS], parts);
 									break;
 								case "f": // field
 									state.set(IN_FIELD);
-									holds[IN_FIELD] = parseField(parts);
+									holds[IN_FIELD] = parseField(holds[IN_CLASS], parts);
 									break;
 								case "c": // class javadoc
 									addJavadoc(holds[IN_CLASS], parts);
@@ -130,7 +131,7 @@ final class TinyV2Reader implements MappingsReader {
 							switch (parts[0]) {
 								case "p": // parameter
 									state.set(IN_PARAMETER);
-									holds[IN_PARAMETER] = parseArgument(parts);
+									holds[IN_PARAMETER] = parseArgument(holds[IN_METHOD], parts);
 									break;
 								case "v": // local variable
 									// Can't do anything yet
@@ -173,7 +174,7 @@ final class TinyV2Reader implements MappingsReader {
 
 			} catch (Throwable t) {
 				t.printStackTrace();
-				throw new MappingParseException(path::toString, lineNumber, t.toString());
+				throw new MappingParseException(path::toString, lineNumber + 1, t.toString());
 			}
 		}
 
@@ -206,31 +207,29 @@ final class TinyV2Reader implements MappingsReader {
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
-	private MappingPair<FieldEntry, RawEntryMapping> parseField(String[] tokens) {
-		ClassEntry ownerClass = new ClassEntry(tokens[1]);
-		TypeDescriptor descriptor = new TypeDescriptor(tokens[2]);
+	private MappingPair<FieldEntry, RawEntryMapping> parseField(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens) {
+		ClassEntry ownerClass = (ClassEntry) parent.getEntry();
+		TypeDescriptor descriptor = new TypeDescriptor(tokens[1]);
 
-		FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, tokens[3], descriptor);
-		String mapping = tokens[4];
+		FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, tokens[2], descriptor);
+		String mapping = tokens[3];
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
-	private MappingPair<MethodEntry, RawEntryMapping> parseMethod(String[] tokens) {
-		ClassEntry ownerClass = new ClassEntry(tokens[1]);
-		MethodDescriptor descriptor = new MethodDescriptor(tokens[2]);
+	private MappingPair<MethodEntry, RawEntryMapping> parseMethod(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens) {
+		ClassEntry ownerClass = (ClassEntry) parent.getEntry();
+		MethodDescriptor descriptor = new MethodDescriptor(tokens[1]);
 
-		MethodEntry obfuscatedEntry = new MethodEntry(ownerClass, tokens[3], descriptor);
-		String mapping = tokens[4];
+		MethodEntry obfuscatedEntry = new MethodEntry(ownerClass, tokens[2], descriptor);
+		String mapping = tokens[3];
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
-	private MappingPair<LocalVariableEntry, RawEntryMapping> parseArgument(String[] tokens) {
-		ClassEntry ownerClass = new ClassEntry(tokens[1]);
-		MethodDescriptor ownerDescriptor = new MethodDescriptor(tokens[2]);
-		MethodEntry ownerMethod = new MethodEntry(ownerClass, tokens[3], ownerDescriptor);
-		int variableIndex = Integer.parseInt(tokens[4]);
+	private MappingPair<LocalVariableEntry, RawEntryMapping> parseArgument(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens) {
+		MethodEntry ownerMethod = (MethodEntry) parent.getEntry();
+		int variableIndex = Integer.parseInt(tokens[1]);
 
-		String mapping = tokens[5];
+		String mapping = tokens[2];
 		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true, null);
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
