@@ -102,39 +102,18 @@ public class MenuBar extends JMenuBar {
 			menu.add(saveMenu);
 			{
 				JMenuItem item = new JMenuItem("Enigma (single file)");
-				saveMenu.add(item);
-				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(MappingFormat.ENIGMA_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-						this.saveMappingsMenu.setEnabled(true);
-					}
-				});
+				configureSaveMenuItem(saveMenu, item, MappingFormat.ENIGMA_FILE);
 				this.saveMappingEnigmaFileMenu = item;
 			}
 			{
 				JMenuItem item = new JMenuItem("Enigma (directory)");
-				saveMenu.add(item);
-				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(MappingFormat.ENIGMA_DIRECTORY, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-						this.saveMappingsMenu.setEnabled(true);
-					}
-				});
+				configureSaveMenuItem(saveMenu, item, MappingFormat.ENIGMA_DIRECTORY);
 				item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
 				this.saveMappingEnigmaDirectoryMenu = item;
 			}
 			{
 				JMenuItem item = new JMenuItem("SRG (single file)");
-				saveMenu.add(item);
-				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(MappingFormat.SRG_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-						this.saveMappingsMenu.setEnabled(true);
-					}
-				});
+				configureSaveMenuItem(saveMenu, item, MappingFormat.SRG_FILE);
 				this.saveMappingsSrgMenu = item;
 			}
 			{
@@ -228,5 +207,16 @@ public class MenuBar extends JMenuBar {
 				});
 			}
 		}
+	}
+
+	private void configureSaveMenuItem(JMenu menu, JMenuItem item, MappingFormat saveFormat) {
+		menu.add(item);
+		item.addActionListener(event -> {
+			// TODO: Use a specific file chooser for it
+			if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+				this.gui.getController().saveMappings(saveFormat, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+				this.saveMappingsMenu.setEnabled(true);
+			}
+		});
 	}
 }
