@@ -148,7 +148,7 @@ final class TinyV2Reader implements MappingsReader {
 						if (state.get(IN_FIELD)) {
 							switch (parts[0]) {
 								case "c": // field javadoc
-									addJavadoc(holds[IN_METHOD], parts);
+									addJavadoc(holds[IN_FIELD], parts);
 									break;
 								default:
 									unsupportKey(parts);
@@ -196,14 +196,16 @@ final class TinyV2Reader implements MappingsReader {
 	private void addJavadoc(MappingPair<? extends Entry, RawEntryMapping> pair, String javadoc) {
 		RawEntryMapping mapping = pair.getMapping();
 		if (mapping == null) {
-			throw new IllegalArgumentException("Javadoc requires a mapping!");
+			throw new IllegalArgumentException("Javadoc requires a mapping in enigma!");
 		}
 		mapping.addJavadocLine(javadoc);
 	}
 
 	private MappingPair<ClassEntry, RawEntryMapping> parseClass(String[] tokens) {
 		ClassEntry obfuscatedEntry = new ClassEntry(tokens[1]);
-		String mapping = tokens[2];
+		if (tokens.length <= 2)
+			return new MappingPair<>(obfuscatedEntry);
+		String mapping = tokens[2].substring(tokens[2].lastIndexOf('$') + 1);
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
@@ -212,6 +214,8 @@ final class TinyV2Reader implements MappingsReader {
 		TypeDescriptor descriptor = new TypeDescriptor(tokens[1]);
 
 		FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, tokens[2], descriptor);
+		if (tokens.length <= 3)
+			return new MappingPair<>(obfuscatedEntry);
 		String mapping = tokens[3];
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
@@ -221,6 +225,8 @@ final class TinyV2Reader implements MappingsReader {
 		MethodDescriptor descriptor = new MethodDescriptor(tokens[1]);
 
 		MethodEntry obfuscatedEntry = new MethodEntry(ownerClass, tokens[2], descriptor);
+		if (tokens.length <= 3)
+			return new MappingPair<>(obfuscatedEntry);
 		String mapping = tokens[3];
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
@@ -229,8 +235,12 @@ final class TinyV2Reader implements MappingsReader {
 		MethodEntry ownerMethod = (MethodEntry) parent.getEntry();
 		int variableIndex = Integer.parseInt(tokens[1]);
 
-		String mapping = tokens[2];
+		// tokens[2] is the useless obf name
+
 		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true, null);
+		if (tokens.length <= 3)
+			return new MappingPair<>(obfuscatedEntry);
+		String mapping = tokens[3];
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 }

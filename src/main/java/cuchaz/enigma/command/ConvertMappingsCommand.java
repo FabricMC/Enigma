@@ -6,7 +6,9 @@ import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class ConvertMappingsCommand extends Command {
 
@@ -16,7 +18,12 @@ public class ConvertMappingsCommand extends Command {
 
 	@Override
 	public String getUsage() {
-		return "<enigma mappings> <converted mappings> <ENIGMA_FILE|ENIGMA_DIRECTORY|SRG_FILE>";
+		return "<enigma mappings> <converted mappings> <" +
+				Arrays.stream(MappingFormat.values())
+						.filter(format -> format.getWriter() != null)
+						.map(Enum::name)
+						.collect(Collectors.joining("|")) +
+				">";
 	}
 
 	@Override
