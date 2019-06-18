@@ -205,7 +205,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 	protected String writeClass(ClassEntry entry, EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder("CLASS ");
-		builder.append(entry.getFullName()).append(' ');
+		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
 		return builder.toString();
