@@ -32,8 +32,6 @@ public class DeobfuscateCommand extends Command {
 		ProgressListener progress = new ConsoleProgressListener();
 
 		EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-		EnigmaProject.SourceExport source = jar.decompile(progress);
-
-		source.write(fileJarOut, progress);
+		jar.write(fileJarOut, progress);
 	}
 }

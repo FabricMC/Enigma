@@ -17,7 +17,6 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
 import java.nio.file.Paths;
-import java.util.jar.JarFile;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,14 +33,14 @@ public class TestInnerClasses {
 	private static final ClassEntry ClassTreeLevel2 = newClass("f$a$a");
 	private static final ClassEntry ClassTreeLevel3 = newClass("f$a$a$a");
 	private JarIndex index;
-	private Enigma enigma;
+	private SourceProvider sourceProvider;
 
-	public TestInnerClasses()
-		throws Exception {
+	public TestInnerClasses() throws Exception {
 		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/innerClasses.jar"));
 		index = classCache.index(ProgressListener.none());
 
-		enigma = new Enigma(jar);
+		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(classCache);
+		sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
 	}
 
 	@Test
@@ -80,6 +79,6 @@ public class TestInnerClasses {
 	}
 
 	private void decompile(ClassEntry classEntry) {
-		enigma.getObfSourceProvider().getSources(classEntry.getName());
+		sourceProvider.getSources(classEntry.getName());
 	}
 }

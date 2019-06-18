@@ -529,16 +529,15 @@ public class Gui {
 		return combo;
 	}
 
-	public void onCaretMove(int pos) {
+	public void onCaretMove(int pos, boolean fromClick) {
 		EntryRemapper mapper = controller.project.getMapper();
-
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
 		cursorReference = this.controller.getReference(token);
 		Entry<?> referenceEntry = cursorReference != null ? cursorReference.entry : null;
 
-		if (referenceEntry != null && shouldNavigateOnClick) {
+		if (referenceEntry != null && shouldNavigateOnClick && fromClick) {
 			shouldNavigateOnClick = false;
 			Entry<?> navigationEntry = referenceEntry;
 			if (cursorReference.context == null) {
@@ -773,8 +772,9 @@ public class Gui {
 				if (response == JOptionPane.YES_OPTION) {
 					this.saveMapping();
 					this.frame.dispose();
-				} else if (response == JOptionPane.NO_OPTION)
+				} else if (response == JOptionPane.NO_OPTION) {
 					this.frame.dispose();
+				}
 
 				return null;
 			}, "Save and exit", "Discard changes", "Cancel");

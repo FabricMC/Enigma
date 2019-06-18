@@ -83,8 +83,8 @@ configurations {
 }
 
 dependencies {
-    compile 'com.google.guava:guava:27.1-jre'
-    compile 'net.fabricmc:procyon-fabric-compilertools:0.5.33.+'
+    compile 'com.google.guava:guava:28.0-jre'
+    compile 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
     compile 'com.google.code.gson:gson:2.8.5'
     compile 'org.ow2.asm:asm:7.1'
     compile 'org.ow2.asm:asm-commons:7.1'

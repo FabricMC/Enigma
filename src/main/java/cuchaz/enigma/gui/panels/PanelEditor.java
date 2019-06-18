@@ -16,13 +16,20 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class PanelEditor extends JEditorPane {
+	private boolean mouseIsPressed = false;
+
 	public PanelEditor(Gui gui) {
 		this.setEditable(false);
 		this.setSelectionColor(new Color(31, 46, 90));
 		this.setCaret(new BrowserCaret());
-		this.addCaretListener(event -> gui.onCaretMove(event.getDot()));
+		this.addCaretListener(event -> gui.onCaretMove(event.getDot(), mouseIsPressed));
 		final PanelEditor self = this;
 		this.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent mouseEvent) {
+				mouseIsPressed = true;
+			}
+
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				switch (e.getButton()) {
@@ -38,12 +45,15 @@ public class PanelEditor extends JEditorPane {
 						gui.getController().openNextReference();
 						break;
 				}
+				mouseIsPressed = false;
 			}
 		});
 		this.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
+					gui.setShouldNavigateOnClick(false);
+
 					switch (event.getKeyCode()) {
 						case KeyEvent.VK_I:
 							gui.popupMenu.showInheritanceMenu.doClick();
@@ -81,12 +91,15 @@ public class PanelEditor extends JEditorPane {
 							gui.getController().refreshCurrentClass();
 							break;
 
+						case KeyEvent.VK_F:
+							// prevent navigating on click when quick find activated
+							break;
+
 						default:
+							gui.setShouldNavigateOnClick(true); // CTRL
 							break;
 					}
 				}
-
-				gui.setShouldNavigateOnClick(event.isControlDown());
 			}
 
 			@Override

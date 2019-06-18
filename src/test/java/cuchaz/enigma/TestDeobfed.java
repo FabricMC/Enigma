@@ -66,11 +66,12 @@ public class TestDeobfed {
 	}
 
 	@Test
-	public void decompile()
-		throws Exception {
+	public void decompile() {
 		EnigmaProject project = new EnigmaProject(enigma, classCache, index);
 
-		SourceProvider sourceProvider = project.getObfSourceProvider();
+		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(project.getClassCache());
+		SourceProvider sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
+
 		sourceProvider.getSources("a");
 		sourceProvider.getSources("b");
 		sourceProvider.getSources("c");

@@ -23,9 +23,9 @@ import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
-import java.util.jar.JarFile;
 
 import static cuchaz.enigma.TestEntryFactory.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,10 +35,9 @@ public class TestJarIndexLoneClass {
 
 	private JarIndex index;
 
-	public TestJarIndexLoneClass()
-			throws Exception {
-		index = JarIndex.empty();
-		index.indexJar(new ParsedJar(new JarFile("build/test-obf/loneClass.jar")), s -> {});
+	public TestJarIndexLoneClass() throws Exception {
+		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/loneClass.jar"));
+		index = classCache.index(ProgressListener.none());
 	}
 
 	@Test

@@ -36,7 +36,12 @@ public class EnigmaQuickFindDialog extends QuickFindDialog {
 	public void showFor(JTextComponent target) {
 		String selectedText = target.getSelectedText();
 
-		super.showFor(target);
+		try {
+			super.showFor(target);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
 
 		Container view = target.getParent();
 		Point loc = new Point(0, view.getHeight() - getSize().height);

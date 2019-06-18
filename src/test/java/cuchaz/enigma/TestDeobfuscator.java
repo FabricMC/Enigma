@@ -11,47 +11,31 @@
 
 package cuchaz.enigma;
 
-import com.google.common.collect.Lists;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.jar.JarFile;
-
-import static org.junit.Assert.assertEquals;
+import java.nio.file.Paths;
 
 public class TestDeobfuscator {
 
-	private Enigma getDeobfuscator()
-		throws IOException {
-		return new Enigma(new JarFile("build/test-obf/loneClass.jar"));
+	private EnigmaProject openProject() throws IOException {
+		Enigma enigma = Enigma.create();
+		return enigma.openJar(Paths.get("build/test-obf/loneClass.jar"), ProgressListener.none());
 	}
 
 	@Test
 	public void loadJar()
 		throws Exception {
-		getDeobfuscator();
+		openProject();
 	}
 
 	@Test
-	public void getClasses()
-		throws Exception {
-		Enigma enigma = getDeobfuscator();
-		List<ClassEntry> obfClasses = Lists.newArrayList();
-		List<ClassEntry> deobfClasses = Lists.newArrayList();
-		enigma.getSeparatedClasses(obfClasses, deobfClasses);
-		assertEquals(1, obfClasses.size());
-		assertEquals("a", obfClasses.get(0).getName());
-		assertEquals(1, deobfClasses.size());
-		assertEquals("cuchaz/enigma/inputs/Keep", deobfClasses.get(0).getName());
-	}
+	public void decompileClass() throws Exception {
+		EnigmaProject project = openProject();
 
-	@Test
-	public void decompileClass()
-		throws Exception {
-		Enigma enigma = getDeobfuscator();
-		SourceProvider sourceProvider = enigma.getObfSourceProvider();
+		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(project.getClassCache());
+		SourceProvider sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
+
 		sourceProvider.writeSourceToString(sourceProvider.getSources("a"));
 	}
 }
