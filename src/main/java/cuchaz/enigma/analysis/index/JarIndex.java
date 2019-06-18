@@ -59,16 +59,16 @@ public class JarIndex implements JarIndexer {
 	public void indexJar(ClassCache classCache, ProgressListener progress) {
 		progress.init(4, "Indexing jar");
 
-		progress.step(1, "Entries");
+		progress.step(1, "Entries...");
 		classCache.visit(() -> new IndexClassVisitor(this, Opcodes.ASM5), ClassReader.SKIP_CODE);
 
-		progress.step(2, "Entry references");
+		progress.step(2, "Entry references...");
 		classCache.visit(() -> new IndexReferenceVisitor(this, Opcodes.ASM5), ClassReader.SKIP_FRAMES);
 
-		progress.step(3, "Bridge methods");
+		progress.step(3, "Bridge methods...");
 		bridgeMethodIndex.findBridgeMethods();
 
-		progress.step(4, "Processing");
+		progress.step(4, "Processing...");
 		processIndex(this);
 	}
 

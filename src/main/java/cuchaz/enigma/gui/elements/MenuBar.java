@@ -29,6 +29,7 @@ public class MenuBar extends JMenuBar {
 	public final JMenuItem saveMappingEnigmaDirectoryMenu;
 	public final JMenuItem saveMappingsSrgMenu;
 	public final JMenuItem closeMappingsMenu;
+	public final JMenuItem dropMappingsMenu;
 	public final JMenuItem exportSourceMenu;
 	public final JMenuItem exportJarMenu;
 	private final Gui gui;
@@ -148,6 +149,12 @@ public class MenuBar extends JMenuBar {
 
 				});
 				this.closeMappingsMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem("Drop Invalid Mappings");
+				menu.add(item);
+				item.addActionListener(event -> this.gui.getController().dropMappings());
+				this.dropMappingsMenu = item;
 			}
 			menu.addSeparator();
 			{

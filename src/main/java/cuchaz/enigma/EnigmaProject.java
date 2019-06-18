@@ -37,7 +37,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
-// TODO: Naming?
 public class EnigmaProject {
 	private final Enigma enigma;
 

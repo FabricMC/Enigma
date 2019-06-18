@@ -160,6 +160,12 @@ public class GuiController {
 		refreshCurrentClass();
 	}
 
+	public void dropMappings() {
+		if (project == null) return;
+
+		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> project.dropMappings(progress));
+	}
+
 	public void exportSource(final Path path) {
 		if (project == null) return;
 
