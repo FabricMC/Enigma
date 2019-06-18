@@ -85,7 +85,6 @@ public final class ClassCache implements AutoCloseable, CompiledSource {
 
 	private ClassReader getReader(String name) throws IOException {
 		Path path = fileSystem.getPath(name + ".class");
-
 		byte[] bytes = Files.readAllBytes(path);
 		return new ClassReader(bytes);
 	}

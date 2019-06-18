@@ -74,7 +74,7 @@ public class JarIndex implements JarIndexer {
 
 	@Override
 	public void processIndex(JarIndex index) {
-		indexers.parallelStream().forEach(indexer -> indexer.processIndex(index));
+		indexers.forEach(indexer -> indexer.processIndex(index));
 	}
 
 	@Override
