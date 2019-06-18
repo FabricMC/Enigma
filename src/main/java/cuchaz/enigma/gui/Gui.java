@@ -13,6 +13,7 @@ package cuchaz.enigma.gui;
 
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.config.Config;
@@ -93,7 +94,7 @@ public class Gui {
 		}
 	}
 
-	public Gui() {
+	public Gui(EnigmaProfile profile) {
 		Config.getInstance().lookAndFeel.setGlobalLAF();
 
 		// init frame
@@ -112,7 +113,7 @@ public class Gui {
 			});
 		}
 
-		this.controller = new GuiController(this);
+		this.controller = new GuiController(this, profile);
 
 		// init file choosers
 		this.jarFileChooser = new FileDialog(getFrame(), "Open Jar", FileDialog.LOAD);

@@ -16,6 +16,7 @@ import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import joptsimple.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +49,15 @@ public class Main {
 				return;
 			}
 
-			Gui gui = new Gui();
+			EnigmaProfile parsedProfile = EnigmaProfile.EMPTY;
+			if (options.has(profile)) {
+				Path profilePath = options.valueOf(profile);
+				try (BufferedReader reader = Files.newBufferedReader(profilePath)) {
+					parsedProfile = EnigmaProfile.parse(reader);
+				}
+			}
+
+			Gui gui = new Gui(parsedProfile);
 			GuiController controller = gui.getController();
 
 			if (options.has(jar)) {

@@ -14,10 +14,7 @@ package cuchaz.enigma.gui;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import cuchaz.enigma.CompiledSourceTypeLoader;
-import cuchaz.enigma.Enigma;
-import cuchaz.enigma.EnigmaProject;
-import cuchaz.enigma.SourceProvider;
+import cuchaz.enigma.*;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
@@ -70,10 +67,11 @@ public class GuiController {
 
 	private DecompiledClassSource currentSource;
 
-	public GuiController(Gui gui) {
+	public GuiController(Gui gui, EnigmaProfile profile) {
 		this.gui = gui;
-		// TODO: load and set profile
-		this.enigma = Enigma.create();
+		this.enigma = Enigma.builder()
+				.setProfile(profile)
+				.build();
 	}
 
 	public boolean isDirty() {

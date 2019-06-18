@@ -20,6 +20,7 @@ import cuchaz.enigma.api.EnigmaPluginContext;
 import cuchaz.enigma.api.service.EnigmaService;
 import cuchaz.enigma.api.service.EnigmaServiceFactory;
 import cuchaz.enigma.api.service.EnigmaServiceType;
+import cuchaz.enigma.api.service.JarIndexerService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -45,6 +46,10 @@ public class Enigma {
 	public EnigmaProject openJar(Path path, ProgressListener progress) throws IOException {
 		ClassCache classCache = ClassCache.of(path);
 		JarIndex jarIndex = classCache.index(progress);
+
+		services.get(JarIndexerService.TYPE).ifPresent(indexer -> {
+			indexer.acceptJar(classCache, jarIndex);
+		});
 
 		return new EnigmaProject(this, classCache, jarIndex);
 	}
