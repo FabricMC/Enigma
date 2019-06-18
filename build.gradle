@@ -197,30 +197,7 @@ artifacts {
 // And finally, make the build generate / install the jars.
 build.dependsOn install
 
-//apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/maven.gradle'
-
-configurations {
-    deployerJars
-}
-
-dependencies {
-    deployerJars "org.apache.maven.wagon:wagon-ssh:2.10"
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: 'file://localhost/Users/gegy1/.m2/repository')
-            pom {
-                artifactId = project.archivesBaseName
-                project {
-                    name = project.name
-                    packaging = 'jar'
-                }
-            }
-        }
-    }
-}
+apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/maven.gradle'
 
 uploadArchives.repositories.mavenDeployer.pom.withXml {
 	asNode().dependencies.'*'.findAll() { it.artifactId.text() == 'darcula' }
