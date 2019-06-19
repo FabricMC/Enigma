@@ -1,6 +1,6 @@
 package cuchaz.enigma.gui.panels;
 
-import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.BrowserCaret;
@@ -107,8 +107,8 @@ public class PanelEditor extends JEditorPane {
 				if (!gui.popupMenu.renameMenu.isEnabled()) return;
 
 				if (!event.isControlDown() && !event.isAltDown()) {
-					Deobfuscator deobfuscator = gui.getController().getDeobfuscator();
-					EntryReference<Entry<?>, Entry<?>> reference = deobfuscator.deobfuscate(gui.cursorReference);
+					EnigmaProject project = gui.getController().project;
+					EntryReference<Entry<?>, Entry<?>> reference = project.getMapper().deobfuscate(gui.cursorReference);
 					Entry<?> entry = reference.getNameableEntry();
 
 					String name = String.valueOf(event.getKeyChar());

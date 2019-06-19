@@ -23,7 +23,7 @@ public class TestTranslator {
 	public static void beforeClass()
 		throws Exception {
 		//TODO FIx
-		//deobfuscator = new Deobfuscator(new JarFile("build/test-obf/translation.jar"));
+		//deobfuscator = new Enigma(new JarFile("build/test-obf/translation.jar"));
 		//try (InputStream in = TestTranslator.class.getResourceAsStream("/cuchaz/enigma/resources/translation.mappings")) {
 		//	mappings = new MappingsJsonReader().read(new InputStreamReader(in));
 		//	deobfuscator.setMappings(mappings);

@@ -21,7 +21,7 @@ public class EntryRemapper {
 
 	private final MappingValidator validator;
 
-	public EntryRemapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf) {
+	private EntryRemapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf) {
 		this.obfToDeobf = new DeltaTrackingTree<>(obfToDeobf);
 
 		this.obfResolver = jarIndex.getEntryResolver();
@@ -31,8 +31,12 @@ public class EntryRemapper {
 		this.validator = new MappingValidator(obfToDeobf, deobfuscator, jarIndex);
 	}
 
-	public EntryRemapper(JarIndex jarIndex) {
-		this(jarIndex, new HashEntryTree<>());
+	public static EntryRemapper mapped(JarIndex index, EntryTree<EntryMapping> obfToDeobf) {
+		return new EntryRemapper(index, obfToDeobf);
+	}
+
+	public static EntryRemapper empty(JarIndex index) {
+		return new EntryRemapper(index, new HashEntryTree<>());
 	}
 
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {

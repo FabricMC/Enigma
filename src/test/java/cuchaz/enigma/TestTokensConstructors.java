@@ -14,7 +14,7 @@ package cuchaz.enigma;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
-import java.util.jar.JarFile;
+import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByMethod;
 import static cuchaz.enigma.TestEntryFactory.newMethod;
@@ -25,7 +25,7 @@ public class TestTokensConstructors extends TokenChecker {
 
 	public TestTokensConstructors()
 			throws Exception {
-		super(new JarFile("build/test-obf/constructors.jar"));
+		super(Paths.get("build/test-obf/constructors.jar"));
 	}
 
 	@Test

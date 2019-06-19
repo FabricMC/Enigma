@@ -13,10 +13,11 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.jar.JarFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class MenuBar extends JMenuBar {
 
@@ -28,6 +29,7 @@ public class MenuBar extends JMenuBar {
 	public final JMenuItem saveMappingEnigmaDirectoryMenu;
 	public final JMenuItem saveMappingsSrgMenu;
 	public final JMenuItem closeMappingsMenu;
+	public final JMenuItem dropMappingsMenu;
 	public final JMenuItem exportSourceMenu;
 	public final JMenuItem exportJarMenu;
 	private final Gui gui;
@@ -43,17 +45,9 @@ public class MenuBar extends JMenuBar {
 				menu.add(item);
 				item.addActionListener(event -> {
 					this.gui.jarFileChooser.setVisible(true);
-					File file = new File(this.gui.jarFileChooser.getDirectory() + File.separator + this.gui.jarFileChooser.getFile());
-					if (file.exists()) {
-						// load the jar in a separate thread
-						new Thread(() ->
-						{
-							try {
-								gui.getController().openJar(new JarFile(file));
-							} catch (IOException ex) {
-								throw new Error(ex);
-							}
-						}).start();
+					Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(this.gui.jarFileChooser.getFile());
+					if (Files.exists(path)) {
+						gui.getController().openJar(path);
 					}
 				});
 			}
@@ -106,7 +100,7 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(MappingFormat.ENIGMA_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), MappingFormat.ENIGMA_FILE);
 						this.saveMappingsMenu.setEnabled(true);
 					}
 				});
@@ -118,7 +112,7 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(MappingFormat.ENIGMA_DIRECTORY, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), MappingFormat.ENIGMA_DIRECTORY);
 						this.saveMappingsMenu.setEnabled(true);
 					}
 				});
@@ -131,7 +125,7 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
 					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(MappingFormat.SRG_FILE, this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), MappingFormat.SRG_FILE);
 						this.saveMappingsMenu.setEnabled(true);
 					}
 				});
@@ -156,13 +150,19 @@ public class MenuBar extends JMenuBar {
 				});
 				this.closeMappingsMenu = item;
 			}
+			{
+				JMenuItem item = new JMenuItem("Drop Invalid Mappings");
+				menu.add(item);
+				item.addActionListener(event -> this.gui.getController().dropMappings());
+				this.dropMappingsMenu = item;
+			}
 			menu.addSeparator();
 			{
 				JMenuItem item = new JMenuItem("Export Source...");
 				menu.add(item);
 				item.addActionListener(event -> {
 					if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile());
+						this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile().toPath());
 					}
 				});
 				this.exportSourceMenu = item;
@@ -173,8 +173,8 @@ public class MenuBar extends JMenuBar {
 				item.addActionListener(event -> {
 					this.gui.exportJarFileChooser.setVisible(true);
 					if (this.gui.exportJarFileChooser.getFile() != null) {
-						File file = new File(this.gui.exportJarFileChooser.getDirectory() + File.separator + this.gui.exportJarFileChooser.getFile());
-						this.gui.getController().exportJar(file);
+						Path path = Paths.get(this.gui.exportJarFileChooser.getDirectory(), this.gui.exportJarFileChooser.getFile());
+						this.gui.getController().exportJar(path);
 					}
 				});
 				this.exportJarMenu = item;
@@ -202,7 +202,7 @@ public class MenuBar extends JMenuBar {
 				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
 				menu.add(search);
 				search.addActionListener(event -> {
-					if (this.gui.getController().getDeobfuscator() != null) {
+					if (this.gui.getController().project != null) {
 						new SearchDialog(this.gui).show();
 					}
 				});

@@ -11,13 +11,13 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.analysis.index.PackageVisibilityIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
-import java.util.jar.JarFile;
+import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,10 +35,8 @@ public class PackageVisibilityIndexTest {
 	private final JarIndex jarIndex;
 
 	public PackageVisibilityIndexTest() throws Exception {
-		jarIndex = JarIndex.empty();
-		ParsedJar jar = new ParsedJar(new JarFile("build/test-obf/packageAccess.jar"));
-		jarIndex.indexJar(jar, s -> {
-		});
+		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/packageAccess.jar"));
+		jarIndex = classCache.index(ProgressListener.none());
 	}
 
 	@Test

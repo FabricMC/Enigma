@@ -11,12 +11,12 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.jar.JarFile;
+import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,15 +24,16 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class TestDeobfed {
 
-	private static ParsedJar jar;
+	private static Enigma enigma;
+	private static ClassCache classCache;
 	private static JarIndex index;
 
 	@BeforeClass
-	public static void beforeClass()
-		throws Exception {
-		jar = new ParsedJar(new JarFile("build/test-deobf/translation.jar"));
-		index = JarIndex.empty();
-		index.indexJar(jar, s -> {});
+	public static void beforeClass() throws Exception {
+		enigma = Enigma.create();
+
+		classCache = ClassCache.of(Paths.get("build/test-deobf/translation.jar"));
+		index = classCache.index(ProgressListener.none());
 	}
 
 	@Test
@@ -65,10 +66,12 @@ public class TestDeobfed {
 	}
 
 	@Test
-	public void decompile()
-		throws Exception {
-		Deobfuscator deobfuscator = new Deobfuscator(jar);
-		SourceProvider sourceProvider = deobfuscator.getObfSourceProvider();
+	public void decompile() {
+		EnigmaProject project = new EnigmaProject(enigma, classCache, index);
+
+		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(project.getClassCache());
+		SourceProvider sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
+
 		sourceProvider.getSources("a");
 		sourceProvider.getSources("b");
 		sourceProvider.getSources("c");

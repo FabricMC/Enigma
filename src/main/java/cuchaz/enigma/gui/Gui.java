@@ -13,6 +13,7 @@ package cuchaz.enigma.gui;
 
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.config.Config;
@@ -31,9 +32,7 @@ import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.throwables.IllegalNameException;
-import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.ResolutionStrategy;
+import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
@@ -95,7 +94,7 @@ public class Gui {
 		}
 	}
 
-	public Gui() {
+	public Gui(EnigmaProfile profile) {
 		Config.getInstance().lookAndFeel.setGlobalLAF();
 
 		// init frame
@@ -114,7 +113,7 @@ public class Gui {
 			});
 		}
 
-		this.controller = new GuiController(this);
+		this.controller = new GuiController(this, profile);
 
 		// init file choosers
 		this.jarFileChooser = new FileDialog(getFrame(), "Open Jar", FileDialog.LOAD);
@@ -312,13 +311,8 @@ public class Gui {
 		return this.controller;
 	}
 
-	public void onStartOpenJar(String message) {
+	public void onStartOpenJar() {
 		this.classesPanel.removeAll();
-		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout());
-		panel.add(new JLabel(message));
-		this.classesPanel.add(panel);
-
 		redraw();
 	}
 
@@ -447,7 +441,7 @@ public class Gui {
 
 		this.cursorReference = reference;
 
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(reference);
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(reference);
 
 		infoPanel.removeAll();
 		if (translatedReference.entry instanceof ClassEntry) {
@@ -509,7 +503,7 @@ public class Gui {
 	}
 
 	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry entry) {
-		if (!getController().entryIsInJar(entry))
+		if (!getController().project.isRenamable(entry))
 			return null;
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
@@ -519,8 +513,16 @@ public class Gui {
 		JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
 		((JLabel) combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
 		combo.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
-		combo.setSelectedIndex(getController().getDeobfuscator().getModifier(entry).ordinal());
-		combo.addItemListener(getController()::modifierChange);
+
+		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry);
+		if (mapping != null) {
+			combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
+		} else {
+			combo.setSelectedIndex(AccessModifier.UNCHANGED.ordinal());
+		}
+
+		combo.addItemListener(controller::modifierChange);
+
 		panel.add(combo);
 
 		container.add(panel);
@@ -529,6 +531,7 @@ public class Gui {
 	}
 
 	public void onCaretMove(int pos, boolean fromClick) {
+		EntryRemapper mapper = controller.project.getMapper();
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;
 
@@ -539,7 +542,7 @@ public class Gui {
 			shouldNavigateOnClick = false;
 			Entry<?> navigationEntry = referenceEntry;
 			if (cursorReference.context == null) {
-				EntryResolver resolver = controller.getDeobfuscator().getMapper().getObfResolver();
+				EntryResolver resolver = mapper.getObfResolver();
 				navigationEntry = resolver.resolveFirstEntry(referenceEntry, ResolutionStrategy.RESOLVE_ROOT);
 			}
 			controller.navigateTo(navigationEntry);
@@ -550,8 +553,7 @@ public class Gui {
 		boolean isFieldEntry = isToken && referenceEntry instanceof FieldEntry;
 		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
 		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
-		boolean isInJar = isToken && this.controller.entryIsInJar(referenceEntry);
-		boolean isRenamable = isToken && this.controller.getDeobfuscator().isRenamable(cursorReference);
+		boolean isRenamable = isToken && this.controller.project.isRenamable(cursorReference);
 
 		if (isToken) {
 			showCursorReference(cursorReference);
@@ -564,12 +566,12 @@ public class Gui {
 		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
 		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showCallsSpecificMenu.setEnabled(isMethodEntry);
-		this.popupMenu.openEntryMenu.setEnabled(isInJar && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
+		this.popupMenu.openEntryMenu.setEnabled(isRenamable && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
 		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousReference());
 		this.popupMenu.openNextMenu.setEnabled(this.controller.hasNextReference());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
 
-		if (isToken && this.controller.getDeobfuscator().isRemapped(referenceEntry)) {
+		if (isToken && !Objects.equals(referenceEntry, mapper.deobfuscate(referenceEntry))) {
 			this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
 		} else {
 			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
@@ -581,7 +583,7 @@ public class Gui {
 		// init the text box
 		renameTextField = new JTextField();
 
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.getDeobfuscator().deobfuscate(cursorReference);
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
 		renameTextField.setText(translatedReference.getNameableName());
 
 		renameTextField.setPreferredSize(new Dimension(360, renameTextField.getPreferredSize().height));
@@ -728,7 +730,10 @@ public class Gui {
 	}
 
 	public void toggleMapping() {
-		if (this.controller.getDeobfuscator().isRemapped(cursorReference.entry)) {
+		Entry<?> obfEntry = cursorReference.entry;
+		Entry<?> deobfEntry = controller.project.getMapper().deobfuscate(obfEntry);
+
+		if (!Objects.equals(obfEntry, deobfEntry)) {
 			this.controller.removeMapping(cursorReference);
 		} else {
 			this.controller.markAsDeobfuscated(cursorReference);

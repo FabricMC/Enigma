@@ -1,6 +1,7 @@
 package cuchaz.enigma.command;
 
-import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -8,10 +9,8 @@ import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public class CheckMappingsCommand extends Command {
@@ -32,26 +31,39 @@ public class CheckMappingsCommand extends Command {
 
 	@Override
 	public void run(String... args) throws Exception {
-		File fileJarIn = getReadableFile(getArg(args, 0, "in jar", true));
+		Path fileJarIn = getReadableFile(getArg(args, 0, "in jar", true)).toPath();
 		Path fileMappings = getReadablePath(getArg(args, 1, "mappings file", true));
 
+		Enigma enigma = Enigma.create();
+
 		System.out.println("Reading JAR...");
-		Deobfuscator deobfuscator = new Deobfuscator(new JarFile(fileJarIn));
+
+		EnigmaProject project = enigma.openJar(fileJarIn, ProgressListener.none());
+
 		System.out.println("Reading mappings...");
 
 		MappingFormat format = chooseEnigmaFormat(fileMappings);
-		EntryTree<EntryMapping> mappings = format.read(fileMappings, ProgressListener.VOID);
-		deobfuscator.setMappings(mappings);
+		EntryTree<EntryMapping> mappings = format.read(fileMappings, ProgressListener.none());
+		project.setMappings(mappings);
 
-		JarIndex idx = deobfuscator.getJarIndex();
+		JarIndex idx = project.getJarIndex();
 
 		boolean error = false;
 
 		for (Set<ClassEntry> partition : idx.getPackageVisibilityIndex().getPartitions()) {
-			long packages = partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::getPackageName).distinct().count();
+			long packages = partition.stream()
+					.map(project.getMapper()::deobfuscate)
+					.map(ClassEntry::getPackageName)
+					.distinct()
+					.count();
 			if (packages > 1) {
 				error = true;
-				System.err.println("ERROR: Must be in one package:\n" + partition.stream().map(deobfuscator.getMapper()::deobfuscate).map(ClassEntry::toString).sorted().collect(Collectors.joining("\n")));
+				System.err.println("ERROR: Must be in one package:\n" + partition.stream()
+						.map(project.getMapper()::deobfuscate)
+						.map(ClassEntry::toString)
+						.sorted()
+						.collect(Collectors.joining("\n"))
+				);
 			}
 		}
 

@@ -1,6 +1,7 @@
 package cuchaz.enigma.command;
 
-import cuchaz.enigma.Deobfuscator;
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -10,7 +11,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.jar.JarFile;
 
 public abstract class Command {
 	public final String name;
@@ -25,15 +25,21 @@ public abstract class Command {
 
 	public abstract void run(String... args) throws Exception;
 
-	protected static Deobfuscator getDeobfuscator(Path fileMappings, JarFile jar) throws Exception {
+	protected static EnigmaProject openProject(Path fileJarIn, Path fileMappings) throws Exception {
+		ProgressListener progress = new ConsoleProgressListener();
+
+		Enigma enigma = Enigma.create();
+
 		System.out.println("Reading jar...");
-		Deobfuscator deobfuscator = new Deobfuscator(jar);
+		EnigmaProject project = enigma.openJar(fileJarIn, progress);
+
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
-			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, new ConsoleProgressListener());
-			deobfuscator.setMappings(mappings);
+			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, progress);
+			project.setMappings(mappings);
 		}
-		return deobfuscator;
+
+		return project;
 	}
 
 	protected static MappingFormat chooseEnigmaFormat(Path path) {

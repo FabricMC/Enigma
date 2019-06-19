@@ -11,12 +11,12 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ParsedJar;
+import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
-import java.util.jar.JarFile;
+import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,14 +33,14 @@ public class TestInnerClasses {
 	private static final ClassEntry ClassTreeLevel2 = newClass("f$a$a");
 	private static final ClassEntry ClassTreeLevel3 = newClass("f$a$a$a");
 	private JarIndex index;
-	private Deobfuscator deobfuscator;
+	private SourceProvider sourceProvider;
 
-	public TestInnerClasses()
-		throws Exception {
-		index = JarIndex.empty();
-		ParsedJar jar = new ParsedJar(new JarFile("build/test-obf/innerClasses.jar"));
-		index.indexJar(jar, s -> {});
-		deobfuscator = new Deobfuscator(jar);
+	public TestInnerClasses() throws Exception {
+		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/innerClasses.jar"));
+		index = classCache.index(ProgressListener.none());
+
+		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(classCache);
+		sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
 	}
 
 	@Test
@@ -79,6 +79,6 @@ public class TestInnerClasses {
 	}
 
 	private void decompile(ClassEntry classEntry) {
-		deobfuscator.getObfSourceProvider().getSources(classEntry.getName());
+		sourceProvider.getSources(classEntry.getName());
 	}
 }
