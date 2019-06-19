@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -78,10 +79,10 @@ public class GuiController {
 		return project != null && project.getMapper().isDirty();
 	}
 
-	public void openJar(final Path jarPath) {
+	public CompletableFuture<Void> openJar(final Path jarPath) {
 		this.gui.onStartOpenJar();
 
-		ProgressDialog.runOffThread(gui.getFrame(), progress -> {
+		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			project = enigma.openJar(jarPath, progress);
 
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
@@ -101,12 +102,12 @@ public class GuiController {
 		this.gui.onCloseJar();
 	}
 
-	public void openMappings(MappingFormat format, Path path) {
-		if (project == null) return;
+	public CompletableFuture<Void> openMappings(MappingFormat format, Path path) {
+		if (project == null) return CompletableFuture.completedFuture(null);
 
 		gui.setMappingsFile(path);
 
-		ProgressDialog.runOffThread(gui.getFrame(), progress -> {
+		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			try {
 				EntryTree<EntryMapping> mappings = format.read(path, progress);
 				project.setMappings(mappings);
@@ -122,16 +123,14 @@ public class GuiController {
 		});
 	}
 
-	public void saveMappings(Path path) {
-		if (project == null) return;
-
-		saveMappings(path, loadedMappingFormat);
+	public CompletableFuture<Void> saveMappings(Path path) {
+		return saveMappings(path, loadedMappingFormat);
 	}
 
-	public void saveMappings(Path path, MappingFormat format) {
-		if (project == null) return;
+	public CompletableFuture<Void> saveMappings(Path path, MappingFormat format) {
+		if (project == null) return CompletableFuture.completedFuture(null);
 
-		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
+		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EntryRemapper mapper = project.getMapper();
 
 			MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
@@ -158,16 +157,16 @@ public class GuiController {
 		refreshCurrentClass();
 	}
 
-	public void dropMappings() {
-		if (project == null) return;
+	public CompletableFuture<Void> dropMappings() {
+		if (project == null) return CompletableFuture.completedFuture(null);
 
-		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> project.dropMappings(progress));
+		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> project.dropMappings(progress));
 	}
 
-	public void exportSource(final Path path) {
-		if (project == null) return;
+	public CompletableFuture<Void> exportSource(final Path path) {
+		if (project == null) return CompletableFuture.completedFuture(null);
 
-		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
+		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
 			EnigmaProject.SourceExport source = jar.decompile(progress);
 
@@ -175,10 +174,10 @@ public class GuiController {
 		});
 	}
 
-	public void exportJar(final Path path) {
-		if (project == null) return;
+	public CompletableFuture<Void> exportJar(final Path path) {
+		if (project == null) return CompletableFuture.completedFuture(null);
 
-		ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
+		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
 			jar.write(path, progress);
 		});

@@ -62,16 +62,17 @@ public class Main {
 
 			if (options.has(jar)) {
 				Path jarPath = options.valueOf(jar);
-				controller.openJar(jarPath);
-			}
-
-			if (options.has(mappings)) {
-				Path mappingsPath = options.valueOf(mappings);
-				if (Files.isDirectory(mappingsPath)) {
-					controller.openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsPath);
-				} else {
-					controller.openMappings(MappingFormat.ENIGMA_FILE, mappingsPath);
-				}
+				controller.openJar(jarPath)
+						.whenComplete((v, t) -> {
+							if (options.has(mappings)) {
+								Path mappingsPath = options.valueOf(mappings);
+								if (Files.isDirectory(mappingsPath)) {
+									controller.openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsPath);
+								} else {
+									controller.openMappings(MappingFormat.ENIGMA_FILE, mappingsPath);
+								}
+							}
+						});
 			}
 		} catch (OptionException e) {
 			System.out.println("Invalid arguments: " + e.getMessage());

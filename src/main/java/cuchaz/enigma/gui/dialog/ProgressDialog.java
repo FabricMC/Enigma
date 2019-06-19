@@ -17,6 +17,7 @@ import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.CompletableFuture;
 
 public class ProgressDialog implements ProgressListener, AutoCloseable {
 
@@ -57,15 +58,19 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 	}
 
-	public static void runOffThread(final JFrame parent, final ProgressRunnable runnable) {
+	public static CompletableFuture<Void> runOffThread(final JFrame parent, final ProgressRunnable runnable) {
+		CompletableFuture<Void> future = new CompletableFuture<>();
 		new Thread(() ->
 		{
 			try (ProgressDialog progress = new ProgressDialog(parent)) {
 				runnable.run(progress);
+				future.complete(null);
 			} catch (Exception ex) {
+				future.completeExceptionally(ex);
 				throw new Error(ex);
 			}
 		}).start();
+		return future;
 	}
 
 	@Override
