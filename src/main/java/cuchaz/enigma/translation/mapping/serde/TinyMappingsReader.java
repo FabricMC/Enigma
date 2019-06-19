@@ -38,6 +38,10 @@ public enum TinyMappingsReader implements MappingsReader {
 
 			String line = lines.get(lineNumber);
 
+			if (line.trim().startsWith("#")) {
+				continue;
+			}
+
 			try {
 				MappingPair<?, EntryMapping> mapping = parseLine(line);
 				mappings.insert(mapping.getEntry(), mapping.getMapping());
