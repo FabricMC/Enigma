@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ConvertMappingsCommand extends Command {
-    public ConvertMappingsCommand() {
-        super("convert-mappings");
+public class InvertMappingsCommand extends Command {
+    public InvertMappingsCommand() {
+        super("invert-mappings");
     }
 
     @Override
@@ -26,10 +26,11 @@ public class ConvertMappingsCommand extends Command {
 
     @Override
     public void run(String... args) throws IOException, MappingParseException {
-        EntryTree<EntryMapping> mappings = MappingCommandsUtil.read(args[0], Paths.get(args[1]));
+        EntryTree<EntryMapping> source = MappingCommandsUtil.read(args[0], Paths.get(args[1]));
+        EntryTree<EntryMapping> result = MappingCommandsUtil.invert(source);
 
         Path output = Paths.get(args[3]);
         Utils.delete(output);
-        MappingCommandsUtil.write(mappings, args[2], output);
+        MappingCommandsUtil.write(result, args[2], output);
     }
 }
