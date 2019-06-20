@@ -3,10 +3,7 @@ package cuchaz.enigma.command;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.serde.EnigmaMappingsReader;
-import cuchaz.enigma.translation.mapping.serde.EnigmaMappingsWriter;
-import cuchaz.enigma.translation.mapping.serde.TinyMappingsReader;
-import cuchaz.enigma.translation.mapping.serde.TinyMappingsWriter;
+import cuchaz.enigma.translation.mapping.serde.*;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
@@ -14,6 +11,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -109,6 +107,15 @@ public final class MappingCommandsUtil {
             return TinyMappingsReader.INSTANCE.read(path, ProgressListener.none());
         }
 
+        MappingFormat format = null;
+        try {
+            format = MappingFormat.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException ignored) {}
+
+        if (format != null) {
+            return format.getReader().read(path, ProgressListener.none());
+        }
+
         throw new IllegalArgumentException("no reader for " + type);
     }
 
@@ -126,6 +133,16 @@ public final class MappingCommandsUtil {
             }
 
             new TinyMappingsWriter(split[1], split[2]).write(mappings, path, ProgressListener.none());
+            return;
+        }
+
+        MappingFormat format = null;
+        try {
+            format = MappingFormat.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException ignored) {}
+
+        if (format != null) {
+            format.getWriter().write(mappings, path, ProgressListener.none());
             return;
         }
 
