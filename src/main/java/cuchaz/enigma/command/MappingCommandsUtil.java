@@ -23,14 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 public final class MappingCommandsUtil {
-    public static void main(String[] args) throws Exception {
-        new InvertMappingsCommand().run(
-                "enigma",
-                "D:\\IdeaProjects\\yarn\\mappings",
-                "enigma",
-                "D:\\IdeaProjects\\Enigma\\converted");
-    }
-
     private MappingCommandsUtil() {}
 
     public static EntryTree<EntryMapping> invert(EntryTree<EntryMapping> mappings) {
