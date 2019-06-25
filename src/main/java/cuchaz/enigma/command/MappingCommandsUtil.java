@@ -2,7 +2,10 @@ package cuchaz.enigma.command;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
+import cuchaz.enigma.translation.MappingTranslator;
+import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.serde.*;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
@@ -11,33 +14,39 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public final class MappingCommandsUtil {
+    public static void main(String[] args) throws Exception {
+        new InvertMappingsCommand().run(
+                "enigma",
+                "D:\\IdeaProjects\\yarn\\mappings",
+                "enigma",
+                "D:\\IdeaProjects\\Enigma\\converted");
+    }
+
     private MappingCommandsUtil() {}
 
-    @SuppressWarnings("unchecked")
     public static EntryTree<EntryMapping> invert(EntryTree<EntryMapping> mappings) {
+        Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
         EntryTree<EntryMapping> result = new HashEntryTree<>();
 
-        Map<Entry<?>, Entry<?>> rightEntries = new HashMap<>();
         for (EntryTreeNode<EntryMapping> node : mappings) {
             Entry<?> leftEntry = node.getEntry();
             EntryMapping leftMapping = node.getValue();
 
             if (!(leftEntry instanceof ClassEntry || leftEntry instanceof MethodEntry || leftEntry instanceof FieldEntry)) {
-                result.insert(((Entry<Entry<?>>) leftEntry).withParent(rightEntries.get(leftEntry.getParent())), leftMapping);
+                result.insert(translator.translate(leftEntry), leftMapping);
                 continue;
             }
 
-            Entry<?> rightEntry = ((Entry<Entry<?>>) leftEntry)
-                    .withParent(rightEntries.get(leftEntry.getParent()))
-                    .withName(getInnerName(leftMapping == null ? leftEntry.getName() : leftMapping.getTargetName()));
-            rightEntries.put(leftEntry, rightEntry);
+            Entry<?> rightEntry = translator.translate(leftEntry);
 
             result.insert(rightEntry, leftMapping == null ? null : new EntryMapping(leftEntry.getName())); // TODO: leftMapping.withName once javadoc PR is merged
         }
@@ -47,8 +56,8 @@ public final class MappingCommandsUtil {
 
     @SuppressWarnings("unchecked")
     public static EntryTree<EntryMapping> compose(EntryTree<EntryMapping> left, EntryTree<EntryMapping> right, boolean keepLeftOnly, boolean keepRightOnly) {
+        Translator leftTranslator = new MappingTranslator(left, VoidEntryResolver.INSTANCE);
         EntryTree<EntryMapping> result = new HashEntryTree<>();
-        Map<Entry<?>, Entry<?>> leftToRight = new HashMap<>();
         Map<Entry<?>, Entry<?>> rightToLeft = new HashMap<>();
         Set<Entry<?>> addedMappings = new HashSet<>();
 
@@ -56,10 +65,7 @@ public final class MappingCommandsUtil {
             Entry<?> leftEntry = node.getEntry();
             EntryMapping leftMapping = node.getValue();
 
-            Entry<?> rightEntry = ((Entry<Entry<?>>) leftEntry)
-                    .withParent(leftToRight.get(leftEntry.getParent()))
-                    .withName(getInnerName(leftMapping == null ? leftEntry.getName() : leftMapping.getTargetName()));
-            leftToRight.put(leftEntry, rightEntry);
+            Entry<?> rightEntry = leftTranslator.translate(leftEntry);
             rightToLeft.put(rightEntry, leftEntry);
 
             EntryMapping rightMapping = right.get(rightEntry);
@@ -91,11 +97,6 @@ public final class MappingCommandsUtil {
             }
         }
         return result;
-    }
-
-    private static String getInnerName(String name) {
-        int lastDollarSignIndex = name.indexOf('$');
-        return lastDollarSignIndex < 0 ? name : name.substring(lastDollarSignIndex + 1);
     }
 
     public static EntryTree<EntryMapping> read(String type, Path path) throws MappingParseException, IOException {
