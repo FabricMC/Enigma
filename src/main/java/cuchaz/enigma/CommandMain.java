@@ -83,6 +83,8 @@ public class CommandMain {
 		register(new DeobfuscateCommand());
 		register(new DecompileCommand());
 		register(new ConvertMappingsCommand());
+		register(new ComposeMappingsCommand());
+		register(new InvertMappingsCommand());
 		register(new CheckMappingsCommand());
 	}
 
