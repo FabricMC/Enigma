@@ -15,13 +15,14 @@ import java.util.Optional;
 public final class EnigmaProfile {
 	public static final EnigmaProfile EMPTY = new EnigmaProfile(ImmutableMap.of());
 
+	private static final MappingSaveParameters DEFAULT_MAPPING_SAVE_PARAMETERS = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
 	private static final Gson GSON = new Gson();
 
 	@SerializedName("services")
 	private final Map<String, Service> serviceProfiles;
 
 	@SerializedName("mapping_save_parameters")
-	private final MappingSaveParameters mappingSaveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
+	private final MappingSaveParameters mappingSaveParameters = null;
 
 	private EnigmaProfile(Map<String, Service> serviceProfiles) {
 		this.serviceProfiles = serviceProfiles;
@@ -37,7 +38,8 @@ public final class EnigmaProfile {
 	}
 
 	public MappingSaveParameters getMappingSaveParameters() {
-		return mappingSaveParameters;
+		//noinspection ConstantConditions
+		return mappingSaveParameters != null ? EnigmaProfile.DEFAULT_MAPPING_SAVE_PARAMETERS : mappingSaveParameters;
 	}
 
 	public static class Service {
