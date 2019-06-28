@@ -75,6 +75,10 @@ public enum TinyMappingsReader implements MappingsReader {
 	private MappingPair<ClassEntry, EntryMapping> parseClass(String[] tokens) {
 		ClassEntry obfuscatedEntry = new ClassEntry(tokens[1]);
 		String mapping = tokens[2];
+		if (mapping.indexOf('$') > 0) {
+			// inner classes should map to only the final part
+			mapping = mapping.substring(mapping.lastIndexOf('$') + 1);
+		}
 		return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping));
 	}
 
