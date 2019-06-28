@@ -45,7 +45,7 @@ public final class EnigmaProfile {
 		}
 
 		public Optional<String> getArgument(String key) {
-			return Optional.ofNullable(args.get(key));
+			return args != null ? Optional.ofNullable(args.get(key)) : Optional.empty();
 		}
 	}
 }
