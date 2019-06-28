@@ -5,6 +5,7 @@ import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -43,7 +44,9 @@ public class CheckMappingsCommand extends Command {
 		System.out.println("Reading mappings...");
 
 		MappingFormat format = chooseEnigmaFormat(fileMappings);
-		EntryTree<EntryMapping> mappings = format.read(fileMappings, ProgressListener.none());
+		MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
+
+		EntryTree<EntryMapping> mappings = format.read(fileMappings, ProgressListener.none(), saveParameters);
 		project.setMappings(mappings);
 
 		JarIndex idx = project.getJarIndex();

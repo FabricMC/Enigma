@@ -31,11 +31,12 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
-		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress) {
+		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> classes = mappings.getRootNodes()
 					.filter(entry -> entry instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry)
@@ -56,13 +57,13 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	},
 	DIRECTORY {
 		@Override
-		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress) {
+		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> changedClasses = delta.getChangedRoots()
 					.filter(entry -> entry instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry)
 					.collect(Collectors.toList());
 
-			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings());
+			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
 
 			progress.init(changedClasses.size(), "Writing classes");
 
@@ -73,7 +74,12 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 				progress.step(steps.getAndIncrement(), classEntry.getFullName());
 
 				try {
-					Path classPath = resolve(path, translator.translate(classEntry));
+					ClassEntry fileEntry = classEntry;
+					if (saveParameters.getFileNameFormat() == MappingFileNameFormat.BY_DEOBF) {
+						fileEntry = translator.translate(fileEntry);
+					}
+
+					Path classPath = resolve(path, fileEntry);
 					Files.createDirectories(classPath.getParent());
 					Files.deleteIfExists(classPath);
 
@@ -87,13 +93,17 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			});
 		}
 
-		private void applyDeletions(Path root, Collection<ClassEntry> changedClasses, EntryTree<EntryMapping> mappings, EntryTree<EntryMapping> oldMappings) {
+		private void applyDeletions(Path root, Collection<ClassEntry> changedClasses, EntryTree<EntryMapping> mappings, EntryTree<EntryMapping> oldMappings, MappingFileNameFormat fileNameFormat) {
 			Translator oldMappingTranslator = new MappingTranslator(oldMappings, VoidEntryResolver.INSTANCE);
 
-			Collection<ClassEntry> deletedClasses = changedClasses.stream()
-					.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)))
-					.map(oldMappingTranslator::translate)
-					.collect(Collectors.toList());
+			Stream<ClassEntry> deletedClassStream = changedClasses.stream()
+					.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)));
+
+			if (fileNameFormat == MappingFileNameFormat.BY_DEOBF) {
+				deletedClassStream = deletedClassStream.map(oldMappingTranslator::translate);
+			}
+
+			Collection<ClassEntry> deletedClasses = deletedClassStream.collect(Collectors.toList());
 
 			for (ClassEntry classEntry : deletedClasses) {
 				try {

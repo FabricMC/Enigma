@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import cuchaz.enigma.api.service.EnigmaServiceType;
+import cuchaz.enigma.translation.mapping.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 
 import javax.annotation.Nullable;
 import java.io.Reader;
@@ -18,6 +20,9 @@ public final class EnigmaProfile {
 	@SerializedName("services")
 	private final Map<String, Service> serviceProfiles;
 
+	@SerializedName("mapping_save_parameters")
+	private final MappingSaveParameters mappingSaveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
+
 	private EnigmaProfile(Map<String, Service> serviceProfiles) {
 		this.serviceProfiles = serviceProfiles;
 	}
@@ -29,6 +34,10 @@ public final class EnigmaProfile {
 	@Nullable
 	public Service getServiceProfile(EnigmaServiceType<?> serviceType) {
 		return serviceProfiles.get(serviceType.key);
+	}
+
+	public MappingSaveParameters getMappingSaveParameters() {
+		return mappingSaveParameters;
 	}
 
 	public static class Service {

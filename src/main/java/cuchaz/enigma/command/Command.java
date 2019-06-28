@@ -4,6 +4,7 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
@@ -35,7 +36,10 @@ public abstract class Command {
 
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
-			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, progress);
+
+			MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
+			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, progress, saveParameters);
+
 			project.setMappings(mappings);
 		}
 

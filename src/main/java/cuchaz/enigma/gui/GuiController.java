@@ -109,7 +109,9 @@ public class GuiController {
 
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			try {
-				EntryTree<EntryMapping> mappings = format.read(path, progress);
+				MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
+
+				EntryTree<EntryMapping> mappings = format.read(path, progress, saveParameters);
 				project.setMappings(mappings);
 
 				loadedMappingFormat = format;
@@ -132,6 +134,7 @@ public class GuiController {
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EntryRemapper mapper = project.getMapper();
+			MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
 
 			MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
 			boolean saveAll = !path.equals(loadedMappingPath);
@@ -140,9 +143,9 @@ public class GuiController {
 			loadedMappingPath = path;
 
 			if (saveAll) {
-				format.write(mapper.getObfToDeobf(), path, progress);
+				format.write(mapper.getObfToDeobf(), path, progress, saveParameters);
 			} else {
-				format.write(mapper.getObfToDeobf(), delta, path, progress);
+				format.write(mapper.getObfToDeobf(), delta, path, progress, saveParameters);
 			}
 		});
 	}

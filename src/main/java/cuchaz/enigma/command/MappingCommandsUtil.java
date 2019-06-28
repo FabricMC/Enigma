@@ -5,6 +5,7 @@ import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.serde.*;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -91,13 +92,13 @@ public final class MappingCommandsUtil {
         return result;
     }
 
-    public static EntryTree<EntryMapping> read(String type, Path path) throws MappingParseException, IOException {
+    public static EntryTree<EntryMapping> read(String type, Path path, MappingSaveParameters saveParameters) throws MappingParseException, IOException {
         if (type.equals("enigma")) {
-            return EnigmaMappingsReader.DIRECTORY.read(path, ProgressListener.none());
+            return EnigmaMappingsReader.DIRECTORY.read(path, ProgressListener.none(), saveParameters);
         }
 
         if (type.equals("tiny")) {
-            return TinyMappingsReader.INSTANCE.read(path, ProgressListener.none());
+            return TinyMappingsReader.INSTANCE.read(path, ProgressListener.none(), saveParameters);
         }
 
         MappingFormat format = null;
@@ -106,15 +107,15 @@ public final class MappingCommandsUtil {
         } catch (IllegalArgumentException ignored) {}
 
         if (format != null) {
-            return format.getReader().read(path, ProgressListener.none());
+            return format.getReader().read(path, ProgressListener.none(), saveParameters);
         }
 
         throw new IllegalArgumentException("no reader for " + type);
     }
 
-    public static void write(EntryTree<EntryMapping> mappings, String type, Path path) {
+    public static void write(EntryTree<EntryMapping> mappings, String type, Path path, MappingSaveParameters saveParameters) {
         if (type.equals("enigma")) {
-            EnigmaMappingsWriter.DIRECTORY.write(mappings, path, ProgressListener.none());
+            EnigmaMappingsWriter.DIRECTORY.write(mappings, path, ProgressListener.none(), saveParameters);
             return;
         }
 
@@ -125,7 +126,7 @@ public final class MappingCommandsUtil {
                 throw new IllegalArgumentException("specify column names as 'tiny:from_column:to_column'");
             }
 
-            new TinyMappingsWriter(split[1], split[2]).write(mappings, path, ProgressListener.none());
+            new TinyMappingsWriter(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
             return;
         }
 
@@ -135,7 +136,7 @@ public final class MappingCommandsUtil {
         } catch (IllegalArgumentException ignored) {}
 
         if (format != null) {
-            format.getWriter().write(mappings, path, ProgressListener.none());
+            format.getWriter().write(mappings, path, ProgressListener.none(), saveParameters);
             return;
         }
 

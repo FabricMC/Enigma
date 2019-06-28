@@ -6,6 +6,7 @@ import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 public enum EnigmaMappingsReader implements MappingsReader {
 	FILE {
 		@Override
-		public EntryTree<EntryMapping> read(Path path, ProgressListener progress) throws IOException, MappingParseException {
+		public EntryTree<EntryMapping> read(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 			progress.init(1, "Loading mapping file");
 
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
@@ -38,7 +39,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	},
 	DIRECTORY {
 		@Override
-		public EntryTree<EntryMapping> read(Path root, ProgressListener progress) throws IOException, MappingParseException {
+		public EntryTree<EntryMapping> read(Path root, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
 			List<Path> files = Files.walk(root)

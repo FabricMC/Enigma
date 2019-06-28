@@ -2,6 +2,8 @@ package cuchaz.enigma.command;
 
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.utils.Utils;
 
@@ -26,12 +28,14 @@ public class ComposeMappingsCommand extends Command {
 
     @Override
     public void run(String... args) throws IOException, MappingParseException {
-        EntryTree<EntryMapping> left = MappingCommandsUtil.read(args[0], Paths.get(args[1]));
-        EntryTree<EntryMapping> right = MappingCommandsUtil.read(args[2], Paths.get(args[3]));
+        MappingSaveParameters saveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
+
+        EntryTree<EntryMapping> left = MappingCommandsUtil.read(args[0], Paths.get(args[1]), saveParameters);
+        EntryTree<EntryMapping> right = MappingCommandsUtil.read(args[2], Paths.get(args[3]), saveParameters);
         EntryTree<EntryMapping> result = MappingCommandsUtil.compose(left, right, args[6].equals("left") || args[6].equals("both"), args[6].equals("right") || args[6].equals("both"));
 
         Path output = Paths.get(args[5]);
         Utils.delete(output);
-        MappingCommandsUtil.write(result, args[4], output);
+        MappingCommandsUtil.write(result, args[4], output, saveParameters);
     }
 }

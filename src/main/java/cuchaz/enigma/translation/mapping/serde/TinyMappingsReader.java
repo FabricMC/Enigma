@@ -5,6 +5,7 @@ import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
@@ -23,7 +24,7 @@ public enum TinyMappingsReader implements MappingsReader {
 	INSTANCE;
 
 	@Override
-	public EntryTree<EntryMapping> read(Path path, ProgressListener progress) throws IOException, MappingParseException {
+	public EntryTree<EntryMapping> read(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 		return read(path, Files.readAllLines(path, Charsets.UTF_8), progress);
 	}
 

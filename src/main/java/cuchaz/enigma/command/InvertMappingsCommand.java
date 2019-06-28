@@ -2,6 +2,8 @@ package cuchaz.enigma.command;
 
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.utils.Utils;
 
@@ -26,11 +28,13 @@ public class InvertMappingsCommand extends Command {
 
     @Override
     public void run(String... args) throws IOException, MappingParseException {
-        EntryTree<EntryMapping> source = MappingCommandsUtil.read(args[0], Paths.get(args[1]));
+        MappingSaveParameters saveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
+
+        EntryTree<EntryMapping> source = MappingCommandsUtil.read(args[0], Paths.get(args[1]), saveParameters);
         EntryTree<EntryMapping> result = MappingCommandsUtil.invert(source);
 
         Path output = Paths.get(args[3]);
         Utils.delete(output);
-        MappingCommandsUtil.write(result, args[2], output);
+        MappingCommandsUtil.write(result, args[2], output, saveParameters);
     }
 }

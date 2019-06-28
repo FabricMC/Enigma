@@ -4,6 +4,7 @@ import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 import javax.annotation.Nullable;
@@ -24,22 +25,22 @@ public enum MappingFormat {
 		this.reader = reader;
 	}
 
-	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener)  {
-		write(mappings, MappingDelta.added(mappings), path, progressListener);
+	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters)  {
+		write(mappings, MappingDelta.added(mappings), path, progressListener, saveParameters);
 	}
 
-	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener)  {
+	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters)  {
 		if (writer == null) {
 			throw new IllegalStateException(name() + " does not support writing");
 		}
-		writer.write(mappings, delta, path, progressListener);
+		writer.write(mappings, delta, path, progressListener, saveParameters);
 	}
 
-	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener) throws IOException, MappingParseException {
+	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 		if (reader == null) {
 			throw new IllegalStateException(name() + " does not support reading");
 		}
-		return reader.read(path, progressListener);
+		return reader.read(path, progressListener, saveParameters);
 	}
 
 	@Nullable
