@@ -39,7 +39,7 @@ public final class EnigmaProfile {
 
 	public MappingSaveParameters getMappingSaveParameters() {
 		//noinspection ConstantConditions
-		return mappingSaveParameters != null ? EnigmaProfile.DEFAULT_MAPPING_SAVE_PARAMETERS : mappingSaveParameters;
+		return mappingSaveParameters == null ? EnigmaProfile.DEFAULT_MAPPING_SAVE_PARAMETERS : mappingSaveParameters;
 	}
 
 	public static class Service {
