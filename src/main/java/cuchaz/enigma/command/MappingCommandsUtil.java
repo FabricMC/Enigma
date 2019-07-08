@@ -66,12 +66,13 @@ public final class MappingCommandsUtil {
         }
 
         if (keepRightOnly) {
+            Translator leftInverseTranslator = new MappingTranslator(invert(left), VoidEntryResolver.INSTANCE);
             for (EntryTreeNode<EntryMapping> node : right) {
                 Entry<?> rightEntry = node.getEntry();
                 EntryMapping rightMapping = node.getValue();
 
                 if (!addedMappings.contains(rightEntry)) {
-                    result.insert(leftTranslator.translate(rightEntry), rightMapping);
+                    result.insert(leftInverseTranslator.translate(rightEntry), rightMapping);
                 }
             }
         }
