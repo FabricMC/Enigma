@@ -18,9 +18,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public final class MappingCommandsUtil {
@@ -47,11 +45,9 @@ public final class MappingCommandsUtil {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     public static EntryTree<EntryMapping> compose(EntryTree<EntryMapping> left, EntryTree<EntryMapping> right, boolean keepLeftOnly, boolean keepRightOnly) {
         Translator leftTranslator = new MappingTranslator(left, VoidEntryResolver.INSTANCE);
         EntryTree<EntryMapping> result = new HashEntryTree<>();
-        Map<Entry<?>, Entry<?>> rightToLeft = new HashMap<>();
         Set<Entry<?>> addedMappings = new HashSet<>();
 
         for (EntryTreeNode<EntryMapping> node : left) {
@@ -59,7 +55,6 @@ public final class MappingCommandsUtil {
             EntryMapping leftMapping = node.getValue();
 
             Entry<?> rightEntry = leftTranslator.translate(leftEntry);
-            rightToLeft.put(rightEntry, leftEntry);
 
             EntryMapping rightMapping = right.get(rightEntry);
             if (rightMapping != null) {
@@ -75,18 +70,9 @@ public final class MappingCommandsUtil {
                 Entry<?> rightEntry = node.getEntry();
                 EntryMapping rightMapping = node.getValue();
 
-                if (addedMappings.contains(rightEntry)) {
-                    continue;
+                if (!addedMappings.contains(rightEntry)) {
+                    result.insert(leftTranslator.translate(rightEntry), rightMapping);
                 }
-
-                Entry<?> parent = rightEntry.getParent();
-                Entry<?> correctEntry = rightEntry;
-                if (rightToLeft.containsKey(parent)) {
-                    correctEntry = ((Entry<Entry<?>>) rightEntry).withParent(rightToLeft.get(parent));
-                }
-
-                result.insert(correctEntry, rightMapping);
-                rightToLeft.put(rightEntry, correctEntry);
             }
         }
         return result;
