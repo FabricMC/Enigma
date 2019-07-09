@@ -199,7 +199,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			mapping = tokens[2];
 			modifier = parseModifier(tokens[4]);
 		} else {
-			throw new RuntimeException("Invalid method declaration");
+			throw new RuntimeException("Invalid field declaration");
 		}
 
 		FieldEntry obfuscatedEntry = new FieldEntry(ownerEntry, obfuscatedName, descriptor);
