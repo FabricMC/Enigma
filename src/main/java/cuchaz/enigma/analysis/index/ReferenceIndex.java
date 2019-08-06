@@ -3,6 +3,7 @@ package cuchaz.enigma.analysis.index;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.ReferenceTargetType;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
@@ -57,27 +58,27 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	@Override
-	public void indexMethodReference(MethodDefEntry callerEntry, MethodEntry referencedEntry) {
-		referencesToMethods.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry));
+	public void indexMethodReference(MethodDefEntry callerEntry, MethodEntry referencedEntry, ReferenceTargetType targetType) {
+		referencesToMethods.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
 		methodReferences.put(callerEntry, referencedEntry);
 
 		if (referencedEntry.isConstructor()) {
 			ClassEntry referencedClass = referencedEntry.getParent();
-			referencesToClasses.put(referencedClass, new EntryReference<>(referencedClass, referencedEntry.getName(), callerEntry));
+			referencesToClasses.put(referencedClass, new EntryReference<>(referencedClass, referencedEntry.getName(), callerEntry, targetType));
 		}
 	}
 
 	@Override
-	public void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry) {
-		referencesToFields.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry));
+	public void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry, ReferenceTargetType targetType) {
+		referencesToFields.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
 	}
 
 	@Override
-	public void indexLambda(MethodDefEntry callerEntry, Lambda lambda) {
+	public void indexLambda(MethodDefEntry callerEntry, Lambda lambda, ReferenceTargetType targetType) {
 		if (lambda.getImplMethod() instanceof MethodEntry) {
-			indexMethodReference(callerEntry, (MethodEntry) lambda.getImplMethod());
+			indexMethodReference(callerEntry, (MethodEntry) lambda.getImplMethod(), targetType);
 		} else {
-			indexFieldReference(callerEntry, (FieldEntry) lambda.getImplMethod());
+			indexFieldReference(callerEntry, (FieldEntry) lambda.getImplMethod(), targetType);
 		}
 
 		indexMethodDescriptor(callerEntry, lambda.getInvokedType());

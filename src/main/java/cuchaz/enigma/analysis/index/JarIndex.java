@@ -15,6 +15,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.ClassCache;
+import cuchaz.enigma.analysis.ReferenceTargetType;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
 import cuchaz.enigma.translation.representation.Lambda;
@@ -63,7 +64,7 @@ public class JarIndex implements JarIndexer {
 		classCache.visit(() -> new IndexClassVisitor(this, Opcodes.ASM5), ClassReader.SKIP_CODE);
 
 		progress.step(2, "Entry references...");
-		classCache.visit(() -> new IndexReferenceVisitor(this, Opcodes.ASM5), ClassReader.SKIP_FRAMES);
+		classCache.visit(() -> new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Opcodes.ASM5), 0);
 
 		progress.step(3, "Bridge methods...");
 		bridgeMethodIndex.findBridgeMethods();
@@ -115,30 +116,30 @@ public class JarIndex implements JarIndexer {
 	}
 
 	@Override
-	public void indexMethodReference(MethodDefEntry callerEntry, MethodEntry referencedEntry) {
+	public void indexMethodReference(MethodDefEntry callerEntry, MethodEntry referencedEntry, ReferenceTargetType targetType) {
 		if (callerEntry.getParent().isJre()) {
 			return;
 		}
 
-		indexers.forEach(indexer -> indexer.indexMethodReference(callerEntry, referencedEntry));
+		indexers.forEach(indexer -> indexer.indexMethodReference(callerEntry, referencedEntry, targetType));
 	}
 
 	@Override
-	public void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry) {
+	public void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry, ReferenceTargetType targetType) {
 		if (callerEntry.getParent().isJre()) {
 			return;
 		}
 
-		indexers.forEach(indexer -> indexer.indexFieldReference(callerEntry, referencedEntry));
+		indexers.forEach(indexer -> indexer.indexFieldReference(callerEntry, referencedEntry, targetType));
 	}
 
 	@Override
-	public void indexLambda(MethodDefEntry callerEntry, Lambda lambda) {
+	public void indexLambda(MethodDefEntry callerEntry, Lambda lambda, ReferenceTargetType targetType) {
 		if (callerEntry.getParent().isJre()) {
 			return;
 		}
 
-		indexers.forEach(indexer -> indexer.indexLambda(callerEntry, lambda));
+		indexers.forEach(indexer -> indexer.indexLambda(callerEntry, lambda, targetType));
 	}
 
 	public EntryIndex getEntryIndex() {
