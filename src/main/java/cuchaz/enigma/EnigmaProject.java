@@ -8,12 +8,11 @@ import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.mapping.MappingsChecker;
+import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -26,16 +25,19 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EnigmaProject {
 	private final Enigma enigma;
@@ -141,7 +143,12 @@ public class EnigmaProject {
 
 	public JarExport exportRemappedJar(ProgressListener progress) {
 		Collection<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses();
-		Translator deobfuscator = mapper.getDeobfuscator();
+
+		Translator deobfuscator = getEnigma()
+				.getServices()
+				.get(NameProposalService.TYPE)
+				.map(nameProposalService -> (Translator) new ProposingTranslator(mapper, nameProposalService))
+				.orElse(mapper.getDeobfuscator());
 
 		AtomicInteger count = new AtomicInteger();
 		progress.init(classEntries.size(), "Deobfuscating classes...");
@@ -233,11 +240,14 @@ public class EnigmaProject {
 		}
 
 		private String decompileClass(ClassNode translatedNode, SourceProvider sourceProvider) {
-			CompilationUnit sourceTree = sourceProvider.getSources(translatedNode.name);
-
 			StringWriter writer = new StringWriter();
-			sourceProvider.writeSource(writer, sourceTree);
-
+			try {
+				CompilationUnit sourceTree = sourceProvider.getSources(translatedNode.name);
+				sourceProvider.writeSource(writer, sourceTree);
+			} catch (Throwable t) {
+				t.printStackTrace();
+				t.printStackTrace(new PrintWriter(writer));
+			}
 			return writer.toString();
 		}
 	}
