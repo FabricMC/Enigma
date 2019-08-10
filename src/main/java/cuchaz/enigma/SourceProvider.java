@@ -7,6 +7,8 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
+import com.strobel.decompiler.languages.java.BraceStyle;
+import com.strobel.decompiler.languages.java.JavaFormattingOptions;
 import com.strobel.decompiler.languages.java.JavaOutputVisitor;
 import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
@@ -43,6 +45,11 @@ public class SourceProvider {
 		settings.setForceExplicitTypeArguments(Utils.getSystemPropertyAsBoolean("enigma.forceExplicitTypeArguments", true));
 		settings.setShowDebugLineNumbers(Utils.getSystemPropertyAsBoolean("enigma.showDebugLineNumbers", false));
 		settings.setShowSyntheticMembers(Utils.getSystemPropertyAsBoolean("enigma.showSyntheticMembers", false));
+
+		JavaFormattingOptions formattingOptions = settings.getJavaFormattingOptions();
+		formattingOptions.ClassBraceStyle = BraceStyle.EndOfLine;
+		formattingOptions.InterfaceBraceStyle = BraceStyle.EndOfLine;
+		formattingOptions.EnumBraceStyle = BraceStyle.EndOfLine;
 
 		return settings;
 	}
