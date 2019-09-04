@@ -91,7 +91,11 @@ public final class MappingCommandsUtil {
         MappingFormat format = null;
         try {
             format = MappingFormat.valueOf(type.toUpperCase());
-        } catch (IllegalArgumentException ignored) {}
+        } catch (IllegalArgumentException ignored) {
+            if (type.equals("tinyv2")) {
+                format = MappingFormat.TINY_V2;
+            }
+        }
 
         if (format != null) {
             return format.getReader().read(path, ProgressListener.none(), saveParameters);
@@ -106,7 +110,18 @@ public final class MappingCommandsUtil {
             return;
         }
 
-        if (type.startsWith("tiny")) {
+        if (type.startsWith("tinyv2:") || type.startsWith("tiny_v2:")) {
+            String[] split = type.split(":");
+
+            if (split.length != 3) {
+                throw new IllegalArgumentException("specify column names as 'tinyv2:from_namespace:to_namespace'");
+            }
+
+            new TinyV2Writer(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
+            return;
+        }
+
+        if (type.startsWith("tiny:")) {
             String[] split = type.split(":");
 
             if (split.length != 3) {
