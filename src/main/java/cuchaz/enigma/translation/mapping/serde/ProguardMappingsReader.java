@@ -1,6 +1,5 @@
 package cuchaz.enigma.translation.mapping.serde;
 
-import com.google.common.base.Charsets;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.command.MappingCommandsUtil;
 import cuchaz.enigma.throwables.MappingParseException;
@@ -15,6 +14,7 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
@@ -31,14 +31,13 @@ public class ProguardMappingsReader implements MappingsReader {
 
     public ProguardMappingsReader() {}
 
-
     @Override
     public EntryTree<EntryMapping> read(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws MappingParseException, IOException {
         EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
         int lineNumber = 0;
         ClassEntry currentClass = null;
-        for (String line : Files.readAllLines(path, Charsets.UTF_8)) {
+        for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
             lineNumber++;
 
             if (line.startsWith("#") || line.isEmpty()) {
