@@ -6,6 +6,7 @@ import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,16 +19,15 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MenuBar extends JMenuBar {
 
 	public final JMenuItem closeJarMenu;
-	public final JMenuItem openEnigmaMappingsMenu;
-	public final JMenuItem openTinyMappingsMenu;
+	public final List<JMenuItem> openMappingsMenus;
 	public final JMenuItem saveMappingsMenu;
-	public final JMenuItem saveMappingEnigmaFileMenu;
-	public final JMenuItem saveMappingEnigmaDirectoryMenu;
-	public final JMenuItem saveMappingsSrgMenu;
+	public final List<JMenuItem> saveMappingsMenus;
 	public final JMenuItem closeMappingsMenu;
 	public final JMenuItem dropMappingsMenu;
 	public final JMenuItem exportSourceMenu;
@@ -61,27 +61,20 @@ public class MenuBar extends JMenuBar {
 			JMenu openMenu = new JMenu("Open Mappings...");
 			menu.add(openMenu);
 			{
-				JMenuItem item = new JMenuItem("Enigma");
-				openMenu.add(item);
-				item.addActionListener(event -> {
-					if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						File selectedFile = this.gui.enigmaMappingsFileChooser.getSelectedFile();
-						MappingFormat format = selectedFile.isDirectory() ? MappingFormat.ENIGMA_DIRECTORY : MappingFormat.ENIGMA_FILE;
-						this.gui.getController().openMappings(format, selectedFile.toPath());
+				openMappingsMenus = new ArrayList<>();
+				for(MappingFormat format : MappingFormat.values()){
+					if(format.getReader() != null){
+						JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(format.name()));
+						openMenu.add(item);
+						item.addActionListener(event -> {
+							if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+								File selectedFile = this.gui.enigmaMappingsFileChooser.getSelectedFile();
+								this.gui.getController().openMappings(format, selectedFile.toPath());
+							}
+						});
+						openMappingsMenus.add(item);
 					}
-				});
-				this.openEnigmaMappingsMenu = item;
-
-				item = new JMenuItem("Tiny");
-				openMenu.add(item);
-				item.addActionListener(event -> {
-					this.gui.tinyMappingsFileChooser.setVisible(true);
-					File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
-					if (file.exists()) {
-						this.gui.getController().openMappings(MappingFormat.TINY_FILE, file.toPath());
-					}
-				});
-				this.openTinyMappingsMenu = item;
+				}
 			}
 			{
 				JMenuItem item = new JMenuItem("Save Mappings");
@@ -95,41 +88,21 @@ public class MenuBar extends JMenuBar {
 			JMenu saveMenu = new JMenu("Save Mappings As...");
 			menu.add(saveMenu);
 			{
-				JMenuItem item = new JMenuItem("Enigma (single file)");
-				saveMenu.add(item);
-				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), MappingFormat.ENIGMA_FILE);
-						this.saveMappingsMenu.setEnabled(true);
+				saveMappingsMenus = new ArrayList<>();
+				for(MappingFormat format : MappingFormat.values()){
+					if(format.getWriter() != null){
+						JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(format.name()));
+						saveMenu.add(item);
+						item.addActionListener(event -> {
+							// TODO: Use a specific file chooser for it
+							if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+								this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
+								this.saveMappingsMenu.setEnabled(true);
+							}
+						});
+						saveMappingsMenus.add(item);
 					}
-				});
-				this.saveMappingEnigmaFileMenu = item;
-			}
-			{
-				JMenuItem item = new JMenuItem("Enigma (directory)");
-				saveMenu.add(item);
-				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), MappingFormat.ENIGMA_DIRECTORY);
-						this.saveMappingsMenu.setEnabled(true);
-					}
-				});
-				item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-				this.saveMappingEnigmaDirectoryMenu = item;
-			}
-			{
-				JMenuItem item = new JMenuItem("SRG (single file)");
-				saveMenu.add(item);
-				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), MappingFormat.SRG_FILE);
-						this.saveMappingsMenu.setEnabled(true);
-					}
-				});
-				this.saveMappingsSrgMenu = item;
+				}
 			}
 			{
 				JMenuItem item = new JMenuItem("Close Mappings");

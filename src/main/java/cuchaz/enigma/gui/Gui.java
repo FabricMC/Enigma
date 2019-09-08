@@ -46,6 +46,7 @@ import java.awt.event.*;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Gui {
@@ -325,12 +326,9 @@ public class Gui {
 
 		// update menu
 		this.menuBar.closeJarMenu.setEnabled(true);
-		this.menuBar.openTinyMappingsMenu.setEnabled(true);
-		this.menuBar.openEnigmaMappingsMenu.setEnabled(true);
+		this.menuBar.openMappingsMenus.forEach(item -> item.setEnabled(true));
 		this.menuBar.saveMappingsMenu.setEnabled(false);
-		this.menuBar.saveMappingEnigmaFileMenu.setEnabled(true);
-		this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(true);
-		this.menuBar.saveMappingsSrgMenu.setEnabled(true);
+		this.menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(true));
 		this.menuBar.closeMappingsMenu.setEnabled(true);
 		this.menuBar.exportSourceMenu.setEnabled(true);
 		this.menuBar.exportJarMenu.setEnabled(true);
@@ -348,12 +346,9 @@ public class Gui {
 
 		// update menu
 		this.menuBar.closeJarMenu.setEnabled(false);
-		this.menuBar.openTinyMappingsMenu.setEnabled(false);
-		this.menuBar.openEnigmaMappingsMenu.setEnabled(false);
+		this.menuBar.openMappingsMenus.forEach(item -> item.setEnabled(false));
 		this.menuBar.saveMappingsMenu.setEnabled(false);
-		this.menuBar.saveMappingEnigmaFileMenu.setEnabled(false);
-		this.menuBar.saveMappingEnigmaDirectoryMenu.setEnabled(false);
-		this.menuBar.saveMappingsSrgMenu.setEnabled(false);
+		this.menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(false));
 		this.menuBar.closeMappingsMenu.setEnabled(false);
 		this.menuBar.exportSourceMenu.setEnabled(false);
 		this.menuBar.exportJarMenu.setEnabled(false);

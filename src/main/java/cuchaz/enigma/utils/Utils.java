@@ -25,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -104,5 +106,13 @@ public class Utils {
 				Files.delete(p);
 			}
 		}
+	}
+
+	public static String caplisiseCamelCase(String input){
+		StringJoiner stringJoiner = new StringJoiner(" ");
+		for(String word : input.toLowerCase(Locale.ROOT).split("_")){
+			stringJoiner.add(word.substring(0, 1).toUpperCase() + word.substring(1));
+		}
+		return stringJoiner.toString();
 	}
 }
