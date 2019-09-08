@@ -111,7 +111,7 @@ public class Utils {
 	public static String caplisiseCamelCase(String input){
 		StringJoiner stringJoiner = new StringJoiner(" ");
 		for(String word : input.toLowerCase(Locale.ROOT).split("_")){
-			stringJoiner.add(word.substring(0, 1).toUpperCase() + word.substring(1));
+			stringJoiner.add(word.substring(0, 1).toUpperCase(Locale.ROOT) + word.substring(1));
 		}
 		return stringJoiner.toString();
 	}

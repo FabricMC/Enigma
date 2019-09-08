@@ -14,7 +14,7 @@ import java.nio.file.Path;
 public enum MappingFormat {
 	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE),
 	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY),
-	TINY_FILE(null, TinyMappingsReader.INSTANCE),
+	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE),
 	SRG_FILE(SrgMappingsWriter.INSTANCE, null);
 
 	private final MappingsWriter writer;

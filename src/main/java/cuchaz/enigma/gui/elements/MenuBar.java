@@ -62,8 +62,8 @@ public class MenuBar extends JMenuBar {
 			menu.add(openMenu);
 			{
 				openMappingsMenus = new ArrayList<>();
-				for(MappingFormat format : MappingFormat.values()){
-					if(format.getReader() != null){
+				for (MappingFormat format : MappingFormat.values()) {
+					if (format.getReader() != null) {
 						JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(format.name()));
 						openMenu.add(item);
 						item.addActionListener(event -> {
@@ -89,8 +89,8 @@ public class MenuBar extends JMenuBar {
 			menu.add(saveMenu);
 			{
 				saveMappingsMenus = new ArrayList<>();
-				for(MappingFormat format : MappingFormat.values()){
-					if(format.getWriter() != null){
+				for (MappingFormat format : MappingFormat.values()) {
+					if (format.getWriter() != null) {
 						JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(format.name()));
 						saveMenu.add(item);
 						item.addActionListener(event -> {
