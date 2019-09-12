@@ -15,7 +15,8 @@ public enum MappingFormat {
 	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE),
 	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY),
 	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE),
-	SRG_FILE(SrgMappingsWriter.INSTANCE, null);
+	SRG_FILE(SrgMappingsWriter.INSTANCE, null),
+	PROGUARD(null, ProguardMappingsReader.INSTANCE);
 
 	private final MappingsWriter writer;
 	private final MappingsReader reader;

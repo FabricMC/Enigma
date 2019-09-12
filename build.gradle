@@ -19,7 +19,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.14.1'
+version = '0.14.2'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
