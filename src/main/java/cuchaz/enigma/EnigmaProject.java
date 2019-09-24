@@ -144,11 +144,8 @@ public class EnigmaProject {
 	public JarExport exportRemappedJar(ProgressListener progress) {
 		Collection<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses();
 
-		Translator deobfuscator = getEnigma()
-				.getServices()
-				.get(NameProposalService.TYPE)
-				.map(nameProposalService -> (Translator) new ProposingTranslator(mapper, nameProposalService))
-				.orElse(mapper.getDeobfuscator());
+		NameProposalService[] nameProposalServices = getEnigma().getServices().get(NameProposalService.TYPE).toArray(new NameProposalService[0]);
+		Translator deobfuscator = nameProposalServices.length == 0 ? mapper.getDeobfuscator() : new ProposingTranslator(mapper, nameProposalServices);
 
 		AtomicInteger count = new AtomicInteger();
 		progress.init(classEntries.size(), "Deobfuscating classes...");

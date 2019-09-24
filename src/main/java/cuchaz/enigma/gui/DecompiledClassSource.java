@@ -80,19 +80,15 @@ public class DecompiledClassSource {
 	private Optional<String> proposeName(EnigmaProject project, Entry<?> entry) {
 		EnigmaServices services = project.getEnigma().getServices();
 
-		return services.get(NameProposalService.TYPE).flatMap(nameProposalService -> {
-			EntryResolver resolver = project.getMapper().getObfResolver();
-
-			Collection<Entry<?>> resolved = resolver.resolveEntry(entry, ResolutionStrategy.RESOLVE_ROOT);
+		return services.get(NameProposalService.TYPE).stream().flatMap(nameProposalService -> {
 			EntryRemapper mapper = project.getMapper();
+			Collection<Entry<?>> resolved = mapper.getObfResolver().resolveEntry(entry, ResolutionStrategy.RESOLVE_ROOT);
 
-			Stream<String> proposals = resolved.stream()
+			return resolved.stream()
 					.map(e -> nameProposalService.proposeName(e, mapper))
 					.filter(Optional::isPresent)
 					.map(Optional::get);
-
-			return proposals.findFirst();
-		});
+		}).findFirst();
 	}
 
 	@Nullable

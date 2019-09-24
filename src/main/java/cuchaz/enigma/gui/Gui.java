@@ -526,6 +526,8 @@ public class Gui {
 	}
 
 	public void onCaretMove(int pos, boolean fromClick) {
+		if (controller.project == null)
+			return;
 		EntryRemapper mapper = controller.project.getMapper();
 		Token token = this.controller.getToken(pos);
 		boolean isToken = token != null;

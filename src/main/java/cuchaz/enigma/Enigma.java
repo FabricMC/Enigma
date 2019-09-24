@@ -12,7 +12,10 @@
 package cuchaz.enigma;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
@@ -24,6 +27,10 @@ import cuchaz.enigma.api.service.JarIndexerService;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 public class Enigma {
@@ -47,9 +54,7 @@ public class Enigma {
 		ClassCache classCache = ClassCache.of(path);
 		JarIndex jarIndex = classCache.index(progress);
 
-		services.get(JarIndexerService.TYPE).ifPresent(indexer -> {
-			indexer.acceptJar(classCache, jarIndex);
-		});
+		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(classCache, jarIndex));
 
 		return new EnigmaProject(this, classCache, jarIndex);
 	}
@@ -95,7 +100,7 @@ public class Enigma {
 	private static class PluginContext implements EnigmaPluginContext {
 		private final EnigmaProfile profile;
 
-		private final ImmutableMap.Builder<EnigmaServiceType<?>, EnigmaService> services = ImmutableMap.builder();
+		private final ImmutableListMultimap.Builder<EnigmaServiceType<?>, EnigmaService> services = ImmutableListMultimap.builder();
 
 		PluginContext(EnigmaProfile profile) {
 			this.profile = profile;
@@ -103,13 +108,15 @@ public class Enigma {
 
 		@Override
 		public <T extends EnigmaService> void registerService(String id, EnigmaServiceType<T> serviceType, EnigmaServiceFactory<T> factory) {
-			EnigmaProfile.Service serviceProfile = profile.getServiceProfile(serviceType);
+			List<EnigmaProfile.Service> serviceProfiles = profile.getServiceProfiles(serviceType);
 
-			// if this service type is not configured, or it is configured to use a different service id, skip
-			if (serviceProfile == null || !serviceProfile.matches(id)) return;
-
-			T service = factory.create(serviceProfile::getArgument);
-			services.put(serviceType, service);
+			for (EnigmaProfile.Service serviceProfile : serviceProfiles) {
+				if (serviceProfile.matches(id)) {
+					T service = factory.create(serviceProfile::getArgument);
+					services.put(serviceType, service);
+					break;
+				}
+			}
 		}
 
 		EnigmaServices buildServices() {
