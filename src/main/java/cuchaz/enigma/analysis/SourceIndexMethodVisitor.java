@@ -200,14 +200,10 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 
 			// get the node for the token
 			AstNode methodNameToken = node.getMethodNameToken();
-			AstNode targetToken = node.getTarget();
+			// target tokens are visted in other expressions
 
 			if (methodNameToken != null) {
 				index.addReference(methodNameToken, methodEntry, this.methodEntry);
-			}
-
-			if (targetToken != null && !(targetToken instanceof ThisReferenceExpression)) {
-				index.addReference(targetToken, methodEntry.getParent(), this.methodEntry);
 			}
 		}
 
