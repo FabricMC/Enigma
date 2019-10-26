@@ -7,8 +7,11 @@ import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LocalVariableFixVisitor extends ClassVisitor {
 	private ClassDefEntry ownerEntry;
@@ -31,50 +34,91 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 
 	private class Method extends MethodVisitor {
 		private final MethodDefEntry methodEntry;
-		private boolean hasLvt;
+		private final Map<Integer, String> parameterNames = new HashMap<>();
+		private final Map<Integer, Integer> parameterIndices = new HashMap<>();
+		private boolean hasParameterTable;
+		private int parameterIndex = 0;
 
 		Method(int api, MethodDefEntry methodEntry, MethodVisitor visitor) {
 			super(api, visitor);
 			this.methodEntry = methodEntry;
+
+			int lvtIndex = methodEntry.getAccess().isStatic() ? 0 : 1;
+			List<TypeDescriptor> parameters = methodEntry.getDesc().getArgumentDescs();
+			for (int parameterIndex = 0; parameterIndex < parameters.size(); parameterIndex++) {
+				TypeDescriptor param = parameters.get(parameterIndex);
+				parameterIndices.put(lvtIndex, parameterIndex);
+				lvtIndex += param.getSize();
+			}
+		}
+
+		@Override
+		public void visitParameter(String name, int access) {
+			hasParameterTable = true;
+			super.visitParameter(fixParameterName(parameterIndex, name), fixParameterAccess(parameterIndex, access));
+			parameterIndex++;
 		}
 
 		@Override
 		public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-			hasLvt = true;
-
-			String translatedName = name;
-
-			if (isInvalidName(name)) {
-				int argumentIndex = methodEntry.getArgumentIndex(ownerEntry, index);
-
-				if (argumentIndex >= 0) {
-					List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
-					boolean argument = argumentIndex < arguments.size();
-					if (argument) {
-						translatedName = "arg" + (argumentIndex + 1);
-					} else {
-						translatedName = "var" + (argumentIndex + 1);
-					}
-				}
+			if (index == 0 && !methodEntry.getAccess().isStatic()) {
+				name = "this";
+			} else if (parameterIndices.containsKey(index)) {
+				name = fixParameterName(parameterIndices.get(index), name);
+			} else if (isInvalidName(name)){
+				name = "var" + index;
 			}
 
-			super.visitLocalVariable(translatedName, desc, signature, start, end, index);
+			super.visitLocalVariable(name, desc, signature, start, end, index);
 		}
 
 		private boolean isInvalidName(String name) {
-			return !CharMatcher.ascii().matchesAllOf(name);
+			return name == null || name.isEmpty() || !CharMatcher.ascii().matchesAllOf(name);
 		}
 
 		@Override
 		public void visitEnd() {
-			if (!hasLvt) {
+			if (!hasParameterTable) {
 				List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
 				for (int argumentIndex = 0; argumentIndex < arguments.size(); argumentIndex++) {
-					super.visitParameter("arg" + (argumentIndex + 1), 0);
+					super.visitParameter(fixParameterName(argumentIndex, null), fixParameterAccess(argumentIndex, 0));
 				}
 			}
 
 			super.visitEnd();
+		}
+
+		private String fixParameterName(int index, String name) {
+			if (parameterNames.get(index) != null) {
+				return parameterNames.get(index); // to make sure that LVT names are consistent with parameter table names
+			}
+
+			if (isInvalidName(name)) {
+				name = "par" + index;
+			}
+
+			if (index == 0 && ownerEntry.getAccess().isEnum() && methodEntry.getName().equals("<init>")) {
+				name = "name";
+			}
+
+			if (index == 1 && ownerEntry.getAccess().isEnum() && methodEntry.getName().equals("<init>")) {
+				name = "ordinal";
+			}
+
+			parameterNames.put(index, name);
+			return name;
+		}
+
+		private int fixParameterAccess(int index, int access) {
+			if (index == 0 && ownerEntry.getAccess().isEnum() && methodEntry.getName().equals("<init>")) {
+				access |= Opcodes.ACC_SYNTHETIC;
+			}
+
+			if (index == 1 && ownerEntry.getAccess().isEnum() && methodEntry.getName().equals("<init>")) {
+				access |= Opcodes.ACC_SYNTHETIC;
+			}
+
+			return access;
 		}
 	}
 }

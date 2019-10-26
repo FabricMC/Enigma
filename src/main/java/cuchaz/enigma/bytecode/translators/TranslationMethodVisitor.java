@@ -1,6 +1,5 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.Signature;
@@ -8,21 +7,27 @@ import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
 import org.objectweb.asm.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class TranslationMethodVisitor extends MethodVisitor {
-	private final ClassDefEntry ownerEntry;
 	private final MethodDefEntry methodEntry;
 	private final Translator translator;
 
-	private boolean hasParameterMeta;
+	private int parameterIndex = 0;
+	private int parameterLvtIndex;
 
 	public TranslationMethodVisitor(Translator translator, ClassDefEntry ownerEntry, MethodDefEntry methodEntry, int api, MethodVisitor mv) {
 		super(api, mv);
 		this.translator = translator;
-		this.ownerEntry = ownerEntry;
 		this.methodEntry = methodEntry;
+
+		parameterLvtIndex = methodEntry.getAccess().isStatic() ? 0 : 1;
+	}
+
+	@Override
+	public void visitParameter(String name, int access) {
+		name = translateVariableName(parameterLvtIndex, name);
+		parameterLvtIndex += methodEntry.getDesc().getArgumentDescs().get(parameterIndex++).getSize();
+
+		super.visitParameter(name, access);
 	}
 
 	@Override
@@ -119,58 +124,21 @@ public class TranslationMethodVisitor extends MethodVisitor {
 
 	@Override
 	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-		hasParameterMeta = true;
+		signature = translator.translate(Signature.createTypedSignature(signature)).toString();
+		name = translateVariableName(index, name);
 
-		String translatedSignature = translator.translate(Signature.createTypedSignature(signature)).toString();
-		int argumentIndex = methodEntry.getArgumentIndex(ownerEntry, index);
-
-		if (argumentIndex >= 0) {
-			LocalVariableDefEntry entry = new LocalVariableDefEntry(methodEntry, index, name, true, new TypeDescriptor(desc));
-			LocalVariableDefEntry translatedEntry = translator.translate(entry);
-			String translatedName = translatedEntry.getName();
-
-			if (translatedName.equals(entry.getName())) {
-				List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
-				List<TypeDescriptor> translatedArguments = arguments.stream()
-						.map(translator::translate)
-						.collect(Collectors.toList());
-
-				boolean argument = argumentIndex < arguments.size();
-				if (argument) {
-					translatedName = LocalNameGenerator.generateArgumentName(argumentIndex, translatedEntry.getDesc(), translatedArguments);
-				} else {
-					translatedName = LocalNameGenerator.generateLocalVariableName(argumentIndex, translatedEntry.getDesc());
-				}
-			}
-
-			super.visitLocalVariable(translatedName, translatedEntry.getDesc().toString(), translatedSignature, start, end, index);
-		} else {
-			// Handle "this" variable
-			TypeDescriptor translatedDesc = translator.translate(new TypeDescriptor(desc));
-			super.visitLocalVariable(name, translatedDesc.toString(), translatedSignature, start, end, index);
-		}
+		super.visitLocalVariable(name, desc, signature, start, end, index);
 	}
 
-	@Override
-	public void visitEnd() {
-		// If we didn't receive any parameter metadata, generate it
-		if (!hasParameterMeta) {
-			List<TypeDescriptor> arguments = translator.translate(methodEntry.getDesc()).getArgumentDescs();
-			int offset = ((methodEntry.getAccess().getFlags() & Opcodes.ACC_ABSTRACT) != 0) ? 1 : 0;
+	private String translateVariableName(int index, String name) {
+		LocalVariableEntry entry = new LocalVariableEntry(methodEntry, index, "", true);
+		LocalVariableEntry translatedEntry = translator.translate(entry);
+		String translatedName = translatedEntry.getName();
 
-			for (int argumentIndex = 0; argumentIndex < arguments.size(); argumentIndex++) {
-				LocalVariableEntry entry = new LocalVariableEntry(methodEntry, offset, "", true);
-				LocalVariableEntry translatedEntry = translator.translate(entry);
-				String translatedName = translatedEntry.getName();
-				if (translatedName.equals(entry.getName())) {
-					super.visitParameter(LocalNameGenerator.generateArgumentName(argumentIndex, arguments.get(argumentIndex), arguments), 0);
-				} else {
-					super.visitParameter(translatedName, 0);
-				}
-
-				offset += arguments.get(argumentIndex).getSize();
-			}
+		if (!translatedName.isEmpty()) {
+			return translatedName;
 		}
-		super.visitEnd();
+
+		return name;
 	}
 }
