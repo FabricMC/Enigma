@@ -126,6 +126,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
 		signature = translator.translate(Signature.createTypedSignature(signature)).toString();
 		name = translateVariableName(index, name);
+		desc = translator.translate(new TypeDescriptor(desc)).toString();
 
 		super.visitLocalVariable(name, desc, signature, start, end, index);
 	}
