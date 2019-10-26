@@ -16,6 +16,7 @@ import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.NameValidator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -62,6 +63,11 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	@Override
 	public ClassEntry translate(Translator translator, @Nullable EntryMapping mapping) {
+		if (name.charAt(0) == '[') {
+			String translatedName = translator.translate(new TypeDescriptor(name)).toString();
+			return new ClassEntry(parent, translatedName);
+		}
+
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		return new ClassEntry(parent, translatedName);
 	}
