@@ -12,20 +12,20 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	private final Translator translator;
 
 	private int parameterIndex = 0;
-	private int parameterLvtIndex;
+	private int parameterLvIndex;
 
 	public TranslationMethodVisitor(Translator translator, ClassDefEntry ownerEntry, MethodDefEntry methodEntry, int api, MethodVisitor mv) {
 		super(api, mv);
 		this.translator = translator;
 		this.methodEntry = methodEntry;
 
-		parameterLvtIndex = methodEntry.getAccess().isStatic() ? 0 : 1;
+		parameterLvIndex = methodEntry.getAccess().isStatic() ? 0 : 1;
 	}
 
 	@Override
 	public void visitParameter(String name, int access) {
-		name = translateVariableName(parameterLvtIndex, name);
-		parameterLvtIndex += methodEntry.getDesc().getArgumentDescs().get(parameterIndex++).getSize();
+		name = translateVariableName(parameterLvIndex, name);
+		parameterLvIndex += methodEntry.getDesc().getArgumentDescs().get(parameterIndex++).getSize();
 
 		super.visitParameter(name, access);
 	}

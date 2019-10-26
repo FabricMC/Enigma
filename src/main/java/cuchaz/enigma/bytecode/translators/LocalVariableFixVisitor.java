@@ -43,12 +43,12 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 			super(api, visitor);
 			this.methodEntry = methodEntry;
 
-			int lvtIndex = methodEntry.getAccess().isStatic() ? 0 : 1;
+			int lvIndex = methodEntry.getAccess().isStatic() ? 0 : 1;
 			List<TypeDescriptor> parameters = methodEntry.getDesc().getArgumentDescs();
 			for (int parameterIndex = 0; parameterIndex < parameters.size(); parameterIndex++) {
 				TypeDescriptor param = parameters.get(parameterIndex);
-				parameterIndices.put(lvtIndex, parameterIndex);
-				lvtIndex += param.getSize();
+				parameterIndices.put(lvIndex, parameterIndex);
+				lvIndex += param.getSize();
 			}
 		}
 
