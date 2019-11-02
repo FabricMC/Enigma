@@ -1,6 +1,7 @@
 package cuchaz.enigma.bytecode.translators;
 
 import com.google.common.base.CharMatcher;
+import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
@@ -65,8 +66,8 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 				name = "this";
 			} else if (parameterIndices.containsKey(index)) {
 				name = fixParameterName(parameterIndices.get(index), name);
-			} else if (isInvalidName(name)){
-				name = "var" + index;
+			} else if (isInvalidName(name)) {
+				name = LocalNameGenerator.generateLocalVariableName(index, new TypeDescriptor(desc));
 			}
 
 			super.visitLocalVariable(name, desc, signature, start, end, index);
@@ -94,7 +95,8 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 			}
 
 			if (isInvalidName(name)) {
-				name = "par" + index;
+				List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
+				name = LocalNameGenerator.generateArgumentName(index, arguments.get(index), arguments);
 			}
 
 			if (index == 0 && ownerEntry.getAccess().isEnum() && methodEntry.getName().equals("<init>")) {
