@@ -29,6 +29,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	private static final List<String> CONSTRUCTOR_NON_NAMES = Arrays.asList("this", "super", "static");
 	public E entry;
 	public C context;
+	public ReferenceTargetType targetType;
 
 	private boolean sourceName;
 
@@ -37,12 +38,17 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	public EntryReference(E entry, String sourceName, C context) {
+		this(entry, sourceName, context, ReferenceTargetType.none());
+	}
+
+	public EntryReference(E entry, String sourceName, C context, ReferenceTargetType targetType) {
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
 
 		this.entry = entry;
 		this.context = context;
+		this.targetType = targetType;
 
 		this.sourceName = sourceName != null && !sourceName.isEmpty();
 		if (entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor() && CONSTRUCTOR_NON_NAMES.contains(sourceName)) {
@@ -54,6 +60,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 		this.entry = entry;
 		this.context = context;
 		this.sourceName = other.sourceName;
+		this.targetType = other.targetType;
 	}
 
 	public ClassEntry getLocationClassEntry() {
@@ -112,10 +119,17 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		buf.append(entry);
+
 		if (context != null) {
 			buf.append(" called from ");
 			buf.append(context);
 		}
+
+		if (targetType != null && targetType.getKind() != ReferenceTargetType.Kind.NONE) {
+			buf.append(" on target of type ");
+			buf.append(targetType);
+		}
+
 		return buf.toString();
 	}
 

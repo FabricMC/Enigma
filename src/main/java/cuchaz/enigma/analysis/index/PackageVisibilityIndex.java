@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.ReferenceTargetType;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.*;
 
@@ -12,12 +13,29 @@ import java.util.*;
 
 public class PackageVisibilityIndex implements JarIndexer {
 	private static boolean requiresSamePackage(AccessFlags entryAcc, EntryReference ref, InheritanceIndex inheritanceIndex) {
-		if (entryAcc.isPublic()) return false;
-		if (entryAcc.isProtected()) {
-			Set<ClassEntry> callerAncestors = inheritanceIndex.getAncestors(ref.context.getContainingClass());
-			return !callerAncestors.contains(ref.entry.getContainingClass());
+		if (entryAcc.isPublic()) {
+			return false;
 		}
-		return !entryAcc.isPrivate(); // if isPrivate is false, it must be package-private
+
+		if (entryAcc.isProtected()) {
+			ClassEntry contextClass = ref.context.getContainingClass();
+			ClassEntry referencedClass = ref.entry.getContainingClass();
+
+			if (!inheritanceIndex.getAncestors(contextClass).contains(referencedClass)) {
+				return true; // access to protected member not in superclass
+			}
+
+			if (ref.targetType.getKind() == ReferenceTargetType.Kind.NONE) {
+				return false; // access to superclass or static superclass member
+			}
+
+			// access to instance member only valid if target's class assignable to context class
+			return !(ref.targetType.getKind() == ReferenceTargetType.Kind.UNINITIALIZED ||
+					((ReferenceTargetType.ClassType) ref.targetType).getEntry().equals(contextClass) ||
+					inheritanceIndex.getAncestors(((ReferenceTargetType.ClassType) ref.targetType).getEntry()).contains(contextClass));
+		}
+
+		return true;
 	}
 
 	private final HashMultimap<ClassEntry, ClassEntry> connections = HashMultimap.create();
@@ -25,8 +43,10 @@ public class PackageVisibilityIndex implements JarIndexer {
 	private final Map<ClassEntry, Set<ClassEntry>> classPartitions = Maps.newHashMap();
 
 	private void addConnection(ClassEntry classA, ClassEntry classB) {
-		connections.put(classA, classB);
-		connections.put(classB, classA);
+		if (classA != classB) {
+			connections.put(classA, classB);
+			connections.put(classB, classA);
+		}
 	}
 
 	private void buildPartition(Set<ClassEntry> unassignedClasses, Set<ClassEntry> partition, ClassEntry member) {

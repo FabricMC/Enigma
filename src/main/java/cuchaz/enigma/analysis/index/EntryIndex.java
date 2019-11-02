@@ -12,9 +12,11 @@ public class EntryIndex implements JarIndexer {
 	private Map<ClassEntry, AccessFlags> classes = new HashMap<>();
 	private Map<FieldEntry, AccessFlags> fields = new HashMap<>();
 	private Map<MethodEntry, AccessFlags> methods = new HashMap<>();
+	private Map<ClassEntry, ClassDefEntry> definitions = new HashMap<>();
 
 	@Override
 	public void indexClass(ClassDefEntry classEntry) {
+		definitions.put(classEntry, classEntry);
 		classes.put(classEntry, classEntry.getAccess());
 	}
 
@@ -80,6 +82,10 @@ public class EntryIndex implements JarIndexer {
 		}
 
 		return null;
+	}
+
+	public ClassDefEntry getDefinition(ClassEntry entry) {
+		return definitions.get(entry);
 	}
 
 	public Collection<ClassEntry> getClasses() {
