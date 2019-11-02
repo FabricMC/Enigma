@@ -31,18 +31,6 @@ if (ENV.BUILD_NUMBER) {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-// Custom source layout
-sourceSets {
-    main {
-        java { srcDir 'src/main/java' }
-        resources { srcDir 'conf' }
-    }
-    test {
-        java { srcDir 'src/test/java' }
-        resources { srcDir 'test' }
-    }
-}
-
 task generateSources(type: Copy) {
     from sourceSets.main.java
     into generatedSourcesDir
@@ -121,7 +109,7 @@ file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
             main 'proguard.ProGuard'
             classpath configurations.proGuard
 
-            args '@proguard-test.conf', '-injars', file('build/test-inputs/' +
+            args '@src/test/resources/proguard-test.conf', '-injars', file('build/test-inputs/' +
                     "${theFile.name}.jar"), '-outjars', file('build/test-obf/' +
                     "${theFile.name}.jar")
         }
@@ -161,11 +149,8 @@ jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.Main'
 // Make the "fat" application jar. This is useful to just throw in a classpath
 // for tests, though it includes some slightly useless stuff.
 shadowJar {
-    append 'license.LGPL3.txt'
-    append 'license.APL2.txt'
-    append 'readme.txt'
-
-    exclude 'META-INF/maven/**'
+    append 'LICENSE'
+    append 'README.md'
 }
 
 // Create a library jar, containing only the deobfuscation code, for use at
