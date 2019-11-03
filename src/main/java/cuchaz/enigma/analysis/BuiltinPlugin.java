@@ -38,8 +38,6 @@ import java.util.function.UnaryOperator;
 
 public final class BuiltinPlugin implements EnigmaPlugin {
 
-	private UnaryOperator<MethodEntry> specializedToBridge;
-
 	public BuiltinPlugin() {
 	}
 
@@ -54,21 +52,6 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 
 		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, ctx1 -> (classCache, jarIndex) -> classCache.visit(() -> visitor, ClassReader.SKIP_FRAMES));
 		ctx.registerService("enigma:enum_name_proposer", NameProposalService.TYPE, ctx1 -> (obfEntry, remapper) -> Optional.ofNullable(names.get(obfEntry)));
-	}
-
-	// TODO make this actually work; currently the resolver does not resolve specific methods that implement bridge methods
-	private void registerBridgeNamingService(EnigmaPluginContext ctx) {
-		ctx.registerService("enigma:specialized_bridge_method_indexer", JarIndexerService.TYPE, ctx1 -> (classCache, jarIndex) -> {BuiltinPlugin.this.specializedToBridge = jarIndex.getBridgeMethodIndex()::getBridgeFromSpecialized;
-			jarIndex.getBridgeMethodIndex().getSpecializedToBridge().entrySet().forEach(System.out::println);});
-		ctx.registerService("enigma:specialized_method_name_proposer", NameProposalService.TYPE, ctx1 -> (obfEntry, remapper) -> {
-			System.out.println(obfEntry);
-			if (!(obfEntry instanceof MethodEntry))
-				return Optional.empty();
-			MethodEntry bridge = BuiltinPlugin.this.specializedToBridge.apply((MethodEntry) obfEntry);
-			if (bridge == null)
-				return Optional.empty();
-			return Optional.of(remapper.deobfuscate(remapper.getObfResolver().resolveFirstEntry((MethodEntry) obfEntry, ResolutionStrategy.RESOLVE_ROOT)).getName()); // People never name bridge methods!
-		});
 	}
 
 	private static final class EnumFieldNameFindingVisitor extends ClassVisitor {
