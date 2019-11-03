@@ -20,6 +20,8 @@ import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
+import cuchaz.enigma.gui.stats.StatsGenerator;
+import cuchaz.enigma.gui.stats.StatsType;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
@@ -31,14 +33,16 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.ReadableToken;
+import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.Opcodes;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ItemEvent;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -526,5 +530,27 @@ public class GuiController {
 			this.gui.moveClassTree(reference, true, false);
 
 		refreshCurrentClass(reference);
+	}
+
+	public void openStats(StatsType type) {
+		ProgressDialog.runOffThread(gui.getFrame(), progress -> {
+			String data = new StatsGenerator(project).generate(type, progress);
+
+			try {
+				File statsFile = File.createTempFile("stats", ".html");
+
+				try (FileWriter w = new FileWriter(statsFile)) {
+					w.write(
+							Utils.readResourceToString("/stats.html")
+								 .replace("/*type*/", Utils.caplisiseCamelCase(type.name()))
+								 .replace("/*data*/", data)
+					);
+				}
+
+				Desktop.getDesktop().open(statsFile);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		});
 	}
 }

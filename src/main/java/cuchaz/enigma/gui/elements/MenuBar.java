@@ -5,6 +5,7 @@ import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
+import cuchaz.enigma.gui.stats.StatsType;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.Utils;
 
@@ -151,6 +152,18 @@ public class MenuBar extends JMenuBar {
 					}
 				});
 				this.exportJarMenu = item;
+			}
+			menu.addSeparator();
+			{
+				JMenu stats = new JMenu("Mapping Stats...");
+
+				for (StatsType statType : StatsType.values()) {
+					JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(statType.name()));
+					item.addActionListener(event -> this.gui.getController().openStats(statType));
+					stats.add(item);
+				}
+
+				menu.add(stats);
 			}
 			menu.addSeparator();
 			{
