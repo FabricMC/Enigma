@@ -112,7 +112,7 @@ public class PanelEditor extends JEditorPane {
 					Entry<?> entry = reference.getNameableEntry();
 
 					String name = String.valueOf(event.getKeyChar());
-					if (entry instanceof ClassEntry) {
+					if (entry instanceof ClassEntry && ((ClassEntry) entry).getParent() == null) {
 						String packageName = ((ClassEntry) entry).getPackageName();
 						if (packageName != null) {
 							name = packageName + "/" + name;
