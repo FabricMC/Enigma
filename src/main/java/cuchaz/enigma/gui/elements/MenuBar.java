@@ -5,7 +5,7 @@ import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
-import cuchaz.enigma.gui.stats.StatsType;
+import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.Utils;
 
@@ -20,8 +20,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MenuBar extends JMenuBar {
 
@@ -155,13 +156,40 @@ public class MenuBar extends JMenuBar {
 			}
 			menu.addSeparator();
 			{
-				JMenu stats = new JMenu("Mapping Stats...");
+				JMenuItem stats = new JMenuItem("Mapping Stats...");
 
-				for (StatsType statType : StatsType.values()) {
-					JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(statType.name()));
-					item.addActionListener(event -> this.gui.getController().openStats(statType));
-					stats.add(item);
-				}
+				stats.addActionListener(event -> {
+                    JFrame frame = new JFrame("Choose Included Members");
+					Container pane = frame.getContentPane();
+					pane.setLayout(new FlowLayout());
+
+					Map<StatsMember, JCheckBox> checkboxes = Arrays
+							.stream(StatsMember.values())
+							.collect(Collectors.toMap(m -> m, m -> {
+								JCheckBox checkbox = new JCheckBox(Utils.caplisiseCamelCase(m.name()));
+								pane.add(checkbox);
+								return checkbox;
+							}));
+
+					JButton button = new JButton("Generate Stats");
+
+					button.addActionListener(e -> {
+						Set<StatsMember> includedMembers = checkboxes
+								.entrySet()
+								.stream()
+								.filter(entry -> entry.getValue().isSelected())
+								.map(Map.Entry::getKey)
+								.collect(Collectors.toSet());
+
+						frame.setVisible(false);
+						frame.dispose();
+						gui.getController().openStats(includedMembers);
+					});
+
+					pane.add(button);
+                    frame.pack();
+                    frame.setVisible(true);
+                });
 
 				menu.add(stats);
 			}
