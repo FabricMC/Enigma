@@ -4,5 +4,5 @@ public enum StatsMember {
     METHODS,
     FIELDS,
     PARAMETERS,
-    INNER_CLASSES
+    CLASSES
 }

@@ -41,7 +41,7 @@ public class StatsGenerator {
             totalWork += entryIndex.getFields().size();
         }
 
-        if (includedMembers.contains(StatsMember.INNER_CLASSES)) {
+        if (includedMembers.contains(StatsMember.CLASSES)) {
             totalWork += entryIndex.getClasses().size();
         }
 
@@ -82,12 +82,10 @@ public class StatsGenerator {
             }
         }
 
-        if (includedMembers.contains(StatsMember.INNER_CLASSES)) {
+        if (includedMembers.contains(StatsMember.CLASSES)) {
             for (ClassEntry clazz : entryIndex.getClasses()) {
                 progress.step(numDone++, "Classes");
-                if (clazz.isInnerClass()) {
-                    update(counts, clazz);
-                }
+                update(counts, clazz);
             }
         }
 
@@ -177,8 +175,7 @@ public class StatsGenerator {
         public void collapse(Node<T> node) {
             while (node.children.size() == 1) {
                 Node<T> child = node.children.get(0);
-                //noinspection StringConcatenationInLoop
-                node.name = node.name + "." + child.name;
+                node.name = node.name.isEmpty() ? child.name : node.name + "." + child.name;
                 node.children = child.children;
                 node.value = child.value;
             }
