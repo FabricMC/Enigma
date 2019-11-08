@@ -37,7 +37,7 @@ public final class ClassCache implements AutoCloseable, CompiledSource {
 	}
 
 	public static ClassCache of(Path jarPath) throws IOException {
-		FileSystem fileSystem = FileSystems.newFileSystem(jarPath, null);
+		FileSystem fileSystem = FileSystems.newFileSystem(jarPath, (ClassLoader) null);
 		ImmutableSet<String> classNames = collectClassNames(fileSystem);
 
 		return new ClassCache(fileSystem, classNames);
