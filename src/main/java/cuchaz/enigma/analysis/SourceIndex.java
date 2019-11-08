@@ -16,7 +16,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.strobel.decompiler.languages.Region;
-import com.strobel.decompiler.languages.java.ast.*;
+import com.strobel.decompiler.languages.java.ast.AstNode;
+import com.strobel.decompiler.languages.java.ast.CompilationUnit;
+import com.strobel.decompiler.languages.java.ast.ConstructorDeclaration;
+import com.strobel.decompiler.languages.java.ast.Identifier;
+import com.strobel.decompiler.languages.java.ast.TypeDeclaration;
 import cuchaz.enigma.gui.SourceRemapper;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
@@ -133,12 +137,12 @@ public class SourceIndex {
 		// DEBUG
 		// System.out.println( String.format( "%s \"%s\" region: %s", node.getNodeType(), name, region ) );
 
-		// if the token has a $ in it, something's wrong. Ignore this token
-		if (name.lastIndexOf('$') >= 0 && this.ignoreBadTokens) {
-			// DEBUG
-			System.err.println(String.format("WARNING: %s \"%s\" is probably a bad token. It was ignored", node.getNodeType(), name));
-			return null;
-		}
+		// Tokens can have $ in name, even for top-level classes
+		//if (name.lastIndexOf('$') >= 0 && this.ignoreBadTokens) {
+		//	// DEBUG
+		//	System.err.println(String.format("WARNING: %s \"%s\" is probably a bad token. It was ignored", node.getNodeType(), name));
+		//	return null;
+		//}
 
 		return token;
 	}

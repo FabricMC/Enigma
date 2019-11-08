@@ -18,15 +18,15 @@ public class StatsGenerator {
     private final EntryIndex entryIndex;
     private final EntryRemapper mapper;
     private final EntryResolver entryResolver;
-    private final ObfuscationTestService obfuscationTestService;
-    private final NameProposalService nameProposalService;
+    private final List<ObfuscationTestService> obfuscationTestServices;
+    private final List<NameProposalService> nameProposalServices;
 
     public StatsGenerator(EnigmaProject project) {
         entryIndex = project.getJarIndex().getEntryIndex();
         mapper = project.getMapper();
         entryResolver = project.getJarIndex().getEntryResolver();
-        obfuscationTestService = project.getEnigma().getServices().get(ObfuscationTestService.TYPE).orElse(null);
-        nameProposalService = project.getEnigma().getServices().get(NameProposalService.TYPE).orElse(null);
+        obfuscationTestServices = project.getEnigma().getServices().get(ObfuscationTestService.TYPE);
+        nameProposalServices = project.getEnigma().getServices().get(NameProposalService.TYPE);
     }
 
     public String generate(ProgressListener progress, Set<StatsMember> includedMembers) {
@@ -112,12 +112,20 @@ public class StatsGenerator {
     private boolean isObfuscated(Entry<?> entry) {
         String name = entry.getName();
 
-        if (obfuscationTestService != null && obfuscationTestService.testDeobfuscated(entry)) {
-            return false;
+        if (!obfuscationTestServices.isEmpty()) {
+            for (ObfuscationTestService service : obfuscationTestServices) {
+                if (service.testDeobfuscated(entry)) {
+                    return false;
+                }
+            }
         }
 
-        if (nameProposalService != null && nameProposalService.proposeName(entry, mapper).isPresent()) {
-            return false;
+        if (!nameProposalServices.isEmpty()) {
+            for (NameProposalService service : nameProposalServices) {
+                if (service.proposeName(entry, mapper).isPresent()) {
+                    return false;
+                }
+            }
         }
 
         String mappedName = mapper.deobfuscate(entry).getName();
