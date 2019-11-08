@@ -1,0 +1,20 @@
+{
+  "services": {
+    "jar_indexer": [
+      {
+        "id": "enigma:enum_initializer_indexer"
+      },
+      {
+        "id": "enigma:specialized_bridge_method_indexer"
+      }
+    ],
+    "name_proposal": [
+      {
+        "id": "enigma:enum_name_proposer"
+      },
+      {
+        "id": "enigma:specialized_method_name_proposer"
+      }
+    ]
+  }
+}

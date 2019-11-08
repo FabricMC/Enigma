@@ -2,29 +2,42 @@ package cuchaz.enigma;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import cuchaz.enigma.api.service.EnigmaServiceType;
 import cuchaz.enigma.translation.mapping.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 
-import javax.annotation.Nullable;
 import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public final class EnigmaProfile {
-	public static final EnigmaProfile EMPTY = new EnigmaProfile(ImmutableMap.of());
+	public static final EnigmaProfile EMPTY = new EnigmaProfile(new ServiceContainer(ImmutableMap.of()));
 
 	private static final MappingSaveParameters DEFAULT_MAPPING_SAVE_PARAMETERS = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
-	private static final Gson GSON = new Gson();
+	private static final Gson GSON = new GsonBuilder()
+			.registerTypeAdapter(ServiceContainer.class, (JsonDeserializer<ServiceContainer>) EnigmaProfile::loadServiceContainer)
+			.create();
+	private static final Type SERVICE_LIST_TYPE = new TypeToken<List<Service>>() {
+	}.getType();
 
 	@SerializedName("services")
-	private final Map<String, Service> serviceProfiles;
+	private final ServiceContainer serviceProfiles;
 
 	@SerializedName("mapping_save_parameters")
 	private final MappingSaveParameters mappingSaveParameters = null;
 
-	private EnigmaProfile(Map<String, Service> serviceProfiles) {
+	private EnigmaProfile(ServiceContainer serviceProfiles) {
 		this.serviceProfiles = serviceProfiles;
 	}
 
@@ -32,8 +45,30 @@ public final class EnigmaProfile {
 		return GSON.fromJson(reader, EnigmaProfile.class);
 	}
 
-	@Nullable
-	public Service getServiceProfile(EnigmaServiceType<?> serviceType) {
+	private static ServiceContainer loadServiceContainer(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+		if (!json.isJsonObject()) {
+			throw new JsonParseException("services must be an Object!");
+		}
+
+		JsonObject object = json.getAsJsonObject();
+
+		ImmutableMap.Builder<String, List<Service>> builder = ImmutableMap.builder();
+
+		for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
+			JsonElement value = entry.getValue();
+			if (value.isJsonObject()) {
+				builder.put(entry.getKey(), Collections.singletonList(GSON.fromJson(value, Service.class)));
+			} else if (value.isJsonArray()) {
+				builder.put(entry.getKey(), GSON.fromJson(value, SERVICE_LIST_TYPE));
+			} else {
+				throw new JsonParseException(String.format("Don't know how to convert %s to a list of service!", value));
+			}
+		}
+
+		return new ServiceContainer(builder.build());
+	}
+
+	public List<Service> getServiceProfiles(EnigmaServiceType<?> serviceType) {
 		return serviceProfiles.get(serviceType.key);
 	}
 
@@ -57,6 +92,18 @@ public final class EnigmaProfile {
 
 		public Optional<String> getArgument(String key) {
 			return args != null ? Optional.ofNullable(args.get(key)) : Optional.empty();
+		}
+	}
+
+	static final class ServiceContainer {
+		private final Map<String, List<Service>> services;
+
+		ServiceContainer(Map<String, List<Service>> services) {
+			this.services = services;
+		}
+
+		List<Service> get(String key) {
+			return services.getOrDefault(key, Collections.emptyList());
 		}
 	}
 }

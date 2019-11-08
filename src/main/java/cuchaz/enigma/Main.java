@@ -18,6 +18,8 @@ import joptsimple.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,11 +51,18 @@ public class Main {
 				return;
 			}
 
-			EnigmaProfile parsedProfile = EnigmaProfile.EMPTY;
+			EnigmaProfile parsedProfile;
 			if (options.has(profile)) {
 				Path profilePath = options.valueOf(profile);
 				try (BufferedReader reader = Files.newBufferedReader(profilePath)) {
 					parsedProfile = EnigmaProfile.parse(reader);
+				}
+			} else {
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(Main.class.getResourceAsStream("/profile.json"), StandardCharsets.UTF_8))){
+					parsedProfile = EnigmaProfile.parse(reader);
+				} catch (IOException ex) {
+					System.out.println("Failed to load default profile, will use empty profile: " + ex.getMessage());
+					parsedProfile = EnigmaProfile.EMPTY;
 				}
 			}
 
