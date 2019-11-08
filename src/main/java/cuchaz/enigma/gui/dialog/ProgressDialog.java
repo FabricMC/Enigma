@@ -89,7 +89,12 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 	@Override
 	public void step(int numDone, String message) {
 		this.labelText.setText(message);
-		this.progress.setValue(numDone);
+		if (numDone != -1) {
+			this.progress.setValue(numDone);
+			this.progress.setIndeterminate(false);
+		} else {
+			this.progress.setIndeterminate(true);
+		}
 
 		// update the frame
 		this.frame.validate();
