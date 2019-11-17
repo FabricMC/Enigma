@@ -1,7 +1,6 @@
 package cuchaz.enigma.analysis.index;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
@@ -17,7 +16,7 @@ public class BridgeMethodIndex implements JarIndexer {
 	private final InheritanceIndex inheritanceIndex;
 	private final ReferenceIndex referenceIndex;
 
-	private final Set<MethodEntry> bridgeToSpecialized = Sets.newHashSet();
+	private final Map<MethodEntry, MethodEntry> bridgeToSpecialized = Maps.newHashMap();
 	private final Map<MethodEntry, MethodEntry> specializedToBridge = Maps.newHashMap();
 
 	public BridgeMethodIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex) {
@@ -52,7 +51,6 @@ public class BridgeMethodIndex implements JarIndexer {
 			}
 
 			MethodEntry renamedSpecializedEntry = specializedEntry.withName(bridgeEntry.getName());
-			bridgeToSpecialized.add(renamedSpecializedEntry);
 			specializedToBridge.put(renamedSpecializedEntry, specializedToBridge.get(specializedEntry));
 		}
 	}
@@ -64,7 +62,7 @@ public class BridgeMethodIndex implements JarIndexer {
 		}
 
 		if (access.isBridge() || isPotentialBridge(syntheticMethod, specializedMethod)) {
-			bridgeToSpecialized.add(syntheticMethod);
+			bridgeToSpecialized.put(syntheticMethod, specializedMethod);
 			specializedToBridge.put(specializedMethod, syntheticMethod);
 		}
 	}
@@ -130,7 +128,7 @@ public class BridgeMethodIndex implements JarIndexer {
 	}
 
 	public boolean isBridgeMethod(MethodEntry entry) {
-		return bridgeToSpecialized.contains(entry);
+		return bridgeToSpecialized.containsKey(entry);
 	}
 
 	public boolean isSpecializedMethod(MethodEntry entry) {
@@ -142,7 +140,17 @@ public class BridgeMethodIndex implements JarIndexer {
 		return specializedToBridge.get(specialized);
 	}
 
+	public MethodEntry getSpecializedFromBridge(MethodEntry bridge) {
+		return bridgeToSpecialized.get(bridge);
+	}
+
+	/** Includes "renamed specialized -> bridge" entries. */
 	public Map<MethodEntry, MethodEntry> getSpecializedToBridge() {
 		return Collections.unmodifiableMap(specializedToBridge);
+	}
+
+	/** Only "bridge -> original name" entries. **/
+	public Map<MethodEntry, MethodEntry> getBridgeToSpecialized() {
+		return Collections.unmodifiableMap(bridgeToSpecialized);
 	}
 }
