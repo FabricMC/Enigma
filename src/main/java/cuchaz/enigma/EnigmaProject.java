@@ -158,7 +158,7 @@ public class EnigmaProject {
 					ClassNode node = classCache.getClassNode(entry.getFullName());
 					if (node != null) {
 						ClassNode translatedNode = new ClassNode();
-						node.accept(new TranslationClassVisitor(deobfuscator, Opcodes.ASM5, translatedNode));
+						node.accept(new TranslationClassVisitor(deobfuscator, Opcodes.ASM5, new SourceFixVisitor(Opcodes.ASM5, translatedNode, jarIndex)));
 						return translatedNode;
 					}
 
@@ -209,7 +209,6 @@ public class EnigmaProject {
 
 			//create a common instance outside the loop as mappings shouldn't be changing while this is happening
 			CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(this.compiled::get);
-			typeLoader.addVisitor(visitor -> new SourceFixVisitor(Opcodes.ASM5, visitor, jarIndex));
 
 			//synchronized to make sure the parallelStream doesn't CME with the cache
 			ITypeLoader synchronizedTypeLoader = new SynchronizedTypeLoader(typeLoader);
