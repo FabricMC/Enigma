@@ -14,7 +14,12 @@ package cuchaz.enigma.translation.mapping.serde;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
+import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -154,9 +159,22 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected void writeRoot(PrintWriter writer, EntryTree<EntryMapping> mappings, ClassEntry classEntry) {
 		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
-		writer.println(writeClass(classEntry, mappings.get(classEntry)).trim());
+		EntryMapping classEntryMapping = mappings.get(classEntry);
+		writer.println(writeClass(classEntry, classEntryMapping).trim());
+		if (classEntryMapping != null && classEntryMapping.getJavadoc() != null) {
+			writeDocs(writer, classEntryMapping, 0);
+		}
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
+		}
+	}
+
+	private void writeDocs(PrintWriter writer, EntryMapping mapping, int depth) {
+		String jd = mapping.getJavadoc();
+		if (jd != null) {
+			for (String line : jd.split("\\R")) {
+				writer.println(indent("JAVADOC " + MappingHelper.escape(line), depth + 1));
+			}
 		}
 	}
 
@@ -167,6 +185,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		EntryMapping mapping = node.getValue();
+
 		if (entry instanceof ClassEntry) {
 			String line = writeClass((ClassEntry) entry, mapping);
 			writer.println(indent(line, depth));
@@ -180,6 +199,10 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			String line = writeArgument((LocalVariableEntry) entry, mapping);
 			writer.println(indent(line, depth));
 		}
+		if (mapping != null && mapping.getJavadoc() != null) {
+			writeDocs(writer, mapping, depth);
+		}
+
 
 		Collection<Entry<?>> children = groupChildren(node.getChildren());
 		for (Entry<?> child : children) {

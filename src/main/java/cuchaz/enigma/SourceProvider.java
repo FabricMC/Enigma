@@ -19,14 +19,19 @@ import oml.ast.transformers.*;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class SourceProvider {
 	private final DecompilerSettings settings;
 
 	private final ITypeLoader typeLoader;
 	private final MetadataSystem metadataSystem;
+
+	private String lastLookUpName;
+	private WeakReference<CompilationUnit> lastDecompiled;
 
 	public SourceProvider(DecompilerSettings settings, ITypeLoader typeLoader, MetadataSystem metadataSystem) {
 		this.settings = settings;
@@ -55,6 +60,13 @@ public class SourceProvider {
 	}
 
 	public CompilationUnit getSources(String name) {
+		// Optimization for javadoc-caused decompilations
+		if (Objects.equals(lastLookUpName, name)) {
+			CompilationUnit last = lastDecompiled.get();
+			if (last != null)
+				return last;
+		}
+
 		TypeReference type = metadataSystem.lookupType(name);
 		if (type == null) {
 			throw new Error(String.format("Unable to find desc: %s", name));
@@ -74,7 +86,10 @@ public class SourceProvider {
 		builder.runTransformations(null);
 		runCustomTransforms(builder, context);
 
-		return builder.getCompilationUnit();
+		CompilationUnit ret = builder.getCompilationUnit();
+		lastLookUpName = name;
+		lastDecompiled = new WeakReference<>(ret);
+		return ret;
 	}
 
 	public void writeSource(Writer writer, CompilationUnit sourceTree) {

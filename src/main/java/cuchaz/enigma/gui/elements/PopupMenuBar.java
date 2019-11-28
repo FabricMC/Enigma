@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 public class PopupMenuBar extends JPopupMenu {
 
 	public final JMenuItem renameMenu;
+	public final JMenuItem editJavadocMenu;
 	public final JMenuItem showInheritanceMenu;
 	public final JMenuItem showImplementationsMenu;
 	public final JMenuItem showCallsMenu;
@@ -26,6 +27,14 @@ public class PopupMenuBar extends JPopupMenu {
 			menu.setEnabled(false);
 			this.add(menu);
 			this.renameMenu = menu;
+		}
+		{
+			JMenuItem menu = new JMenuItem("Edit Javadoc");
+			menu.addActionListener(event -> gui.startDocChange());
+			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
+			menu.setEnabled(false);
+			this.add(menu);
+			this.editJavadocMenu = menu;
 		}
 		{
 			JMenuItem menu = new JMenuItem("Show Inheritance");

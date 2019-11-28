@@ -40,7 +40,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 			return node.acceptVisitor(new SourceIndexClassVisitor(classEntry), index);
 		}
 
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 			index.addReference(node.getIdentifierToken(), classEntry, this.classEntry);
 		}
 
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 		assert (node.getVariables().size() == 1);
 		VariableInitializer variable = node.getVariables().firstOrNullObject();
 		index.addDeclaration(variable.getNameToken(), fieldEntry);
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 
 	@Override
@@ -91,6 +91,6 @@ public class SourceIndexClassVisitor extends SourceIndexVisitor {
 		FieldDefinition def = node.getUserData(Keys.FIELD_DEFINITION);
 		FieldDefEntry fieldEntry = FieldDefEntry.parse(def);
 		index.addDeclaration(node.getNameToken(), fieldEntry);
-		return recurse(node, index);
+		return visitChildren(node, index);
 	}
 }

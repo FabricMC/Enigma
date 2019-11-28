@@ -23,7 +23,11 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	protected final TypeDescriptor desc;
 
 	public FieldEntry(ClassEntry parent, String name, TypeDescriptor desc) {
-		super(parent, name);
+		this(parent, name, desc, null);
+	}
+
+	public FieldEntry(ClassEntry parent, String name, TypeDescriptor desc, String javadocs) {
+		super(parent, name, javadocs);
 
 		Preconditions.checkNotNull(parent, "Owner cannot be null");
 		Preconditions.checkNotNull(desc, "Field descriptor cannot be null");
@@ -32,7 +36,7 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	public static FieldEntry parse(String owner, String name, String desc) {
-		return new FieldEntry(new ClassEntry(owner), name, new TypeDescriptor(desc));
+		return new FieldEntry(new ClassEntry(owner), name, new TypeDescriptor(desc), null);
 	}
 
 	@Override
@@ -46,18 +50,19 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	@Override
 	public FieldEntry withName(String name) {
-		return new FieldEntry(parent, name, desc);
+		return new FieldEntry(parent, name, desc, null);
 	}
 
 	@Override
 	public FieldEntry withParent(ClassEntry parent) {
-		return new FieldEntry(parent, this.name, this.desc);
+		return new FieldEntry(parent, this.name, this.desc, null);
 	}
 
 	@Override
 	protected FieldEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		return new FieldEntry(parent, translatedName, translator.translate(desc));
+		String docs = mapping != null ? mapping.getJavadoc() : null;
+		return new FieldEntry(parent, translatedName, translator.translate(desc), docs);
 	}
 
 	@Override

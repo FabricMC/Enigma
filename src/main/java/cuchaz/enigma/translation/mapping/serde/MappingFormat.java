@@ -19,6 +19,7 @@ public enum MappingFormat {
 	SRG_FILE(SrgMappingsWriter.INSTANCE, null),
 	PROGUARD(null, ProguardMappingsReader.INSTANCE);
 
+
 	private final MappingsWriter writer;
 	private final MappingsReader reader;
 

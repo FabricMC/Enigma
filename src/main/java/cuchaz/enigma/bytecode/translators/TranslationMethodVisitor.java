@@ -132,7 +132,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	}
 
 	private String translateVariableName(int index, String name) {
-		LocalVariableEntry entry = new LocalVariableEntry(methodEntry, index, "", true);
+		LocalVariableEntry entry = new LocalVariableEntry(methodEntry, index, "", true,null);
 		LocalVariableEntry translatedEntry = translator.translate(entry);
 		String translatedName = translatedEntry.getName();
 

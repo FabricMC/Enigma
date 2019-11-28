@@ -11,6 +11,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 public class EntryRemapper {
@@ -40,9 +41,13 @@ public class EntryRemapper {
 	}
 
 	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, ResolutionStrategy.RESOLVE_ROOT);
+		mapFromObf(obfuscatedEntry, deobfMapping, true);
+	}
 
-		if (deobfMapping != null) {
+	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming) {
+		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, renaming ? ResolutionStrategy.RESOLVE_ROOT : ResolutionStrategy.RESOLVE_CLOSEST);
+
+		if (renaming && deobfMapping != null) {
 			for (E resolvedEntry : resolvedEntries) {
 				validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
 			}
