@@ -221,11 +221,6 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	private Collection<Entry<?>> groupChildren(Collection<Entry<?>> children) {
 		Collection<Entry<?>> result = new ArrayList<>(children.size());
 
-		children.stream().filter(e -> e instanceof ClassEntry)
-						.map(e -> (ClassEntry) e)
-						.sorted()
-						.forEach(result::add);
-
 		children.stream().filter(e -> e instanceof FieldEntry)
 						.map(e -> (FieldEntry) e)
 						.sorted()
@@ -238,6 +233,11 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 		children.stream().filter(e -> e instanceof LocalVariableEntry)
 						.map(e -> (LocalVariableEntry) e)
+						.sorted()
+						.forEach(result::add);
+
+		children.stream().filter(e -> e instanceof ClassEntry)
+						.map(e -> (ClassEntry) e)
 						.sorted()
 						.forEach(result::add);
 
