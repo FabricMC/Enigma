@@ -87,6 +87,7 @@ public class CommandMain {
 		register(new InvertMappingsCommand());
 		register(new CheckMappingsCommand());
 		register(new MapSpecializedMethodsCommand());
+		register(new RefreshEnigmaMappingsCommand());
 	}
 
 	private static final class CommandHelpException extends IllegalArgumentException {
