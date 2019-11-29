@@ -11,6 +11,20 @@
 
 package cuchaz.enigma.translation.mapping.serde;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
@@ -22,30 +36,22 @@ import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.LFPrintWriter;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import javafx.util.Pair;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> classes = mappings.getRootNodes()
-					.filter(entry -> entry instanceof ClassEntry)
-					.map(entry -> (ClassEntry) entry)
-					.collect(Collectors.toList());
+							.filter(entry -> entry instanceof ClassEntry)
+							.map(entry -> (ClassEntry) entry)
+							.collect(Collectors.toList());
 
 			progress.init(classes.size(), "Writing classes");
 
@@ -64,9 +70,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> changedClasses = delta.getChangedRoots()
-					.filter(entry -> entry instanceof ClassEntry)
-					.map(entry -> (ClassEntry) entry)
-					.collect(Collectors.toList());
+							.filter(entry -> entry instanceof ClassEntry)
+							.map(entry -> (ClassEntry) entry)
+							.collect(Collectors.toList());
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
 
@@ -102,7 +108,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			Translator oldMappingTranslator = new MappingTranslator(oldMappings, VoidEntryResolver.INSTANCE);
 
 			Stream<ClassEntry> deletedClassStream = changedClasses.stream()
-					.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)));
+							.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)));
 
 			if (fileNameFormat == MappingFileNameFormat.BY_DEOBF) {
 				deletedClassStream = deletedClassStream.map(oldMappingTranslator::translate);
@@ -176,7 +182,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		String jd = mapping.getJavadoc();
 		if (jd != null) {
 			for (String line : jd.split("\\R")) {
-				writer.println(indent(EnigmaFormat.COMMENT + " " + MappingHelper.escape(line), depth + 1));
+				writer.println(indent(EnigmaFormat.COMMENT.toUpperCase() + " " + MappingHelper.escape(line), depth + 1));
 			}
 		}
 	}
@@ -216,24 +222,24 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		Collection<Entry<?>> result = new ArrayList<>(children.size());
 
 		children.stream().filter(e -> e instanceof ClassEntry)
-				.map(e -> (ClassEntry) e)
-				.sorted()
-				.forEach(result::add);
+						.map(e -> (ClassEntry) e)
+						.sorted()
+						.forEach(result::add);
 
 		children.stream().filter(e -> e instanceof FieldEntry)
-				.map(e -> (FieldEntry) e)
-				.sorted()
-				.forEach(result::add);
+						.map(e -> (FieldEntry) e)
+						.sorted()
+						.forEach(result::add);
 
 		children.stream().filter(e -> e instanceof MethodEntry)
-				.map(e -> (MethodEntry) e)
-				.sorted()
-				.forEach(result::add);
+						.map(e -> (MethodEntry) e)
+						.sorted()
+						.forEach(result::add);
 
 		children.stream().filter(e -> e instanceof LocalVariableEntry)
-				.map(e -> (LocalVariableEntry) e)
-				.sorted()
-				.forEach(result::add);
+						.map(e -> (LocalVariableEntry) e)
+						.sorted()
+						.forEach(result::add);
 
 		return result;
 	}
