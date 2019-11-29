@@ -160,10 +160,10 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
 		EntryMapping classEntryMapping = mappings.get(classEntry);
-		writer.println(writeClass(classEntry, classEntryMapping).trim());
 		if (classEntryMapping != null && classEntryMapping.getJavadoc() != null) {
 			writeDocs(writer, classEntryMapping, 0);
 		}
+		writer.println(writeClass(classEntry, classEntryMapping).trim());
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
 		}
@@ -173,7 +173,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		String jd = mapping.getJavadoc();
 		if (jd != null) {
 			for (String line : jd.split("\\R")) {
-				writer.println(indent("JAVADOC " + MappingHelper.escape(line), depth + 1));
+				writer.println(indent(EnigmaFormat.COMMENT + " " + MappingHelper.escape(line), depth + 1));
 			}
 		}
 	}
@@ -185,6 +185,10 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		EntryMapping mapping = node.getValue();
+
+		if (mapping != null && mapping.getJavadoc() != null) {
+			writeDocs(writer, mapping, depth);
+		}
 
 		if (entry instanceof ClassEntry) {
 			String line = writeClass((ClassEntry) entry, mapping);
@@ -199,10 +203,6 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			String line = writeArgument((LocalVariableEntry) entry, mapping);
 			writer.println(indent(line, depth));
 		}
-		if (mapping != null && mapping.getJavadoc() != null) {
-			writeDocs(writer, mapping, depth);
-		}
-
 
 		Collection<Entry<?>> children = groupChildren(node.getChildren());
 		for (Entry<?> child : children) {

@@ -149,7 +149,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 				return parseMethod(parentEntry, tokens);
 			case "arg":
 				return parseArgument(parentEntry, tokens);
-			case "javadoc":
+			case EnigmaFormat.COMMENT:
 				readJavadoc(parent, tokens);
 				return null;
 			default:
