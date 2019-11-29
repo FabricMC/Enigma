@@ -137,17 +137,17 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 	private MappingPair<?, RawEntryMapping> parseLine(@Nullable MappingPair<?, RawEntryMapping> parent, String line) {
 		String[] tokens = line.trim().split("\\s");
-		String keyToken = tokens[0].toLowerCase(Locale.ROOT);
+		String keyToken = tokens[0].toUpperCase(Locale.ROOT);
 		Entry<?> parentEntry = parent == null ? null : parent.getEntry();
 
 		switch (keyToken) {
-			case "class":
+			case EnigmaFormat.CLASS:
 				return parseClass(parentEntry, tokens);
-			case "field":
+			case EnigmaFormat.FIELD:
 				return parseField(parentEntry, tokens);
-			case "method":
+			case EnigmaFormat.METHOD:
 				return parseMethod(parentEntry, tokens);
-			case "arg":
+			case EnigmaFormat.PARAMETER:
 				return parseArgument(parentEntry, tokens);
 			case EnigmaFormat.COMMENT:
 				readJavadoc(parent, tokens);

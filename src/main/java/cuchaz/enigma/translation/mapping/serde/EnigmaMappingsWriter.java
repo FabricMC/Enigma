@@ -49,9 +49,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> classes = mappings.getRootNodes()
-							.filter(entry -> entry instanceof ClassEntry)
-							.map(entry -> (ClassEntry) entry)
-							.collect(Collectors.toList());
+					.filter(entry -> entry instanceof ClassEntry)
+					.map(entry -> (ClassEntry) entry)
+					.collect(Collectors.toList());
 
 			progress.init(classes.size(), "Writing classes");
 
@@ -70,9 +70,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> changedClasses = delta.getChangedRoots()
-							.filter(entry -> entry instanceof ClassEntry)
-							.map(entry -> (ClassEntry) entry)
-							.collect(Collectors.toList());
+					.filter(entry -> entry instanceof ClassEntry)
+					.map(entry -> (ClassEntry) entry)
+					.collect(Collectors.toList());
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
 
@@ -108,7 +108,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			Translator oldMappingTranslator = new MappingTranslator(oldMappings, VoidEntryResolver.INSTANCE);
 
 			Stream<ClassEntry> deletedClassStream = changedClasses.stream()
-							.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)));
+					.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)));
 
 			if (fileNameFormat == MappingFileNameFormat.BY_DEOBF) {
 				deletedClassStream = deletedClassStream.map(oldMappingTranslator::translate);
@@ -222,19 +222,19 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		Collection<Entry<?>> result = new ArrayList<>(children.size());
 
 		children.stream().filter(e -> e instanceof FieldEntry)
-						.map(e -> (FieldEntry) e)
-						.sorted()
-						.forEach(result::add);
+				.map(e -> (FieldEntry) e)
+				.sorted()
+				.forEach(result::add);
 
 		children.stream().filter(e -> e instanceof MethodEntry)
-						.map(e -> (MethodEntry) e)
-						.sorted()
-						.forEach(result::add);
+				.map(e -> (MethodEntry) e)
+				.sorted()
+				.forEach(result::add);
 
 		children.stream().filter(e -> e instanceof LocalVariableEntry)
-						.map(e -> (LocalVariableEntry) e)
-						.sorted()
-						.forEach(result::add);
+				.map(e -> (LocalVariableEntry) e)
+				.sorted()
+				.forEach(result::add);
 
 		children.stream().filter(e -> e instanceof ClassEntry)
 						.map(e -> (ClassEntry) e)
@@ -245,7 +245,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeClass(ClassEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("CLASS ");
+		StringBuilder builder = new StringBuilder(EnigmaFormat.CLASS +" ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
@@ -253,7 +253,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeMethod(MethodEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("METHOD ");
+		StringBuilder builder = new StringBuilder(EnigmaFormat.METHOD + " ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
@@ -263,7 +263,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeField(FieldEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("FIELD ");
+		StringBuilder builder = new StringBuilder(EnigmaFormat.FIELD + " ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
@@ -273,7 +273,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeArgument(LocalVariableEntry entry, EntryMapping mapping) {
-		return "ARG " + entry.getIndex() + ' ' + mapping.getTargetName();
+		return EnigmaFormat.PARAMETER + " " + entry.getIndex() + ' ' + mapping.getTargetName();
 	}
 
 	private void writeMapping(StringBuilder builder, EntryMapping mapping) {
