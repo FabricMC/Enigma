@@ -182,7 +182,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		String jd = mapping.getJavadoc();
 		if (jd != null) {
 			for (String line : jd.split("\\R")) {
-				writer.println(indent(EnigmaFormat.COMMENT.toUpperCase() + " " + MappingHelper.escape(line), depth + 1));
+				writer.println(indent(EnigmaFormat.COMMENT + " " + MappingHelper.escape(line), depth + 1));
 			}
 		}
 	}
