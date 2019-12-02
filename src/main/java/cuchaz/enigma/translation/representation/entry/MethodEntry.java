@@ -24,7 +24,11 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	protected final MethodDescriptor descriptor;
 
 	public MethodEntry(ClassEntry parent, String name, MethodDescriptor descriptor) {
-		super(parent, name);
+		this(parent, name, descriptor, null);
+	}
+
+	public MethodEntry(ClassEntry parent, String name, MethodDescriptor descriptor, String javadocs) {
+		super(parent, name, javadocs);
 
 		Preconditions.checkNotNull(parent, "Parent cannot be null");
 		Preconditions.checkNotNull(descriptor, "Method descriptor cannot be null");
@@ -33,7 +37,7 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	}
 
 	public static MethodEntry parse(String owner, String name, String desc) {
-		return new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc));
+		return new MethodEntry(new ClassEntry(owner), name, new MethodDescriptor(desc), null);
 	}
 
 	@Override
@@ -52,17 +56,18 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	@Override
 	public MethodEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		return new MethodEntry(parent, translatedName, translator.translate(descriptor));
+		String docs = mapping != null ? mapping.getJavadoc() : null;
+		return new MethodEntry(parent, translatedName, translator.translate(descriptor), docs);
 	}
 
 	@Override
 	public MethodEntry withName(String name) {
-		return new MethodEntry(parent, name, descriptor);
+		return new MethodEntry(parent, name, descriptor, javadocs);
 	}
 
 	@Override
 	public MethodEntry withParent(ClassEntry parent) {
-		return new MethodEntry(new ClassEntry(parent.getFullName()), name, descriptor);
+		return new MethodEntry(new ClassEntry(parent.getFullName()), name, descriptor, javadocs);
 	}
 
 	@Override

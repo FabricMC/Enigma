@@ -200,14 +200,6 @@ final class TinyV2Reader implements MappingsReader {
 		addJavadoc(pair, parts[1]);
 	}
 
-	private void addJavadoc(MappingPair<? extends Entry, RawEntryMapping> pair, String javadoc) {
-		RawEntryMapping mapping = pair.getMapping();
-		if (mapping == null) {
-			throw new IllegalArgumentException("Javadoc requires a mapping in enigma!");
-		}
-//		mapping.addJavadocLine(javadoc); todo javadocs
-	}
-
 	private MappingPair<ClassEntry, RawEntryMapping> parseClass(String[] tokens, boolean escapeNames) {
 		ClassEntry obfuscatedEntry = new ClassEntry(unescapeOpt(tokens[1], escapeNames));
 		if (tokens.length <= 2)
@@ -239,13 +231,25 @@ final class TinyV2Reader implements MappingsReader {
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
+
+
+	private void addJavadoc(MappingPair<? extends Entry, RawEntryMapping> pair, String javadoc) {
+		RawEntryMapping mapping = pair.getMapping();
+		if (mapping == null) {
+			throw new IllegalArgumentException("Javadoc requires a mapping in enigma!");
+		}
+		mapping.addJavadocLine(javadoc);
+	}
+
+
+
 	private MappingPair<LocalVariableEntry, RawEntryMapping> parseArgument(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens, boolean escapeNames) {
 		MethodEntry ownerMethod = (MethodEntry) parent.getEntry();
 		int variableIndex = Integer.parseInt(tokens[1]);
 
 		// tokens[2] is the useless obf name
 
-		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true);
+		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true, null);
 		if (tokens.length <= 3)
 			return new MappingPair<>(obfuscatedEntry);
 		String mapping = unescapeOpt(tokens[3], escapeNames);

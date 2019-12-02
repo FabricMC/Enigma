@@ -15,8 +15,8 @@ import javax.annotation.Nullable;
 public class LocalVariableDefEntry extends LocalVariableEntry {
 	protected final TypeDescriptor desc;
 
-	public LocalVariableDefEntry(MethodEntry ownerEntry, int index, String name, boolean parameter, TypeDescriptor desc) {
-		super(ownerEntry, index, name, parameter);
+	public LocalVariableDefEntry(MethodEntry ownerEntry, int index, String name, boolean parameter, TypeDescriptor desc, String javadoc) {
+		super(ownerEntry, index, name, parameter, javadoc);
 		Preconditions.checkNotNull(desc, "Variable desc cannot be null");
 
 		this.desc = desc;
@@ -30,17 +30,18 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 	public LocalVariableDefEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		TypeDescriptor translatedDesc = translator.translate(desc);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		return new LocalVariableDefEntry(parent, index, translatedName, parameter, translatedDesc);
+		String javadoc = mapping != null ? mapping.getJavadoc() : javadocs;
+		return new LocalVariableDefEntry(parent, index, translatedName, parameter, translatedDesc, javadoc);
 	}
 
 	@Override
 	public LocalVariableDefEntry withName(String name) {
-		return new LocalVariableDefEntry(parent, index, name, parameter, desc);
+		return new LocalVariableDefEntry(parent, index, name, parameter, desc, javadocs);
 	}
 
 	@Override
 	public LocalVariableDefEntry withParent(MethodEntry entry) {
-		return new LocalVariableDefEntry(entry, index, name, parameter, desc);
+		return new LocalVariableDefEntry(entry, index, name, parameter, desc, javadocs);
 	}
 
 	@Override

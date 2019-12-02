@@ -11,15 +11,6 @@
 
 package cuchaz.enigma.translation.mapping.serde;
 
-import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.translation.MappingTranslator;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
-import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
-import cuchaz.enigma.translation.representation.entry.*;
-import cuchaz.enigma.utils.LFPrintWriter;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.DirectoryStream;
@@ -32,6 +23,24 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.translation.MappingTranslator;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.MappingSaveParameters;
+import cuchaz.enigma.translation.mapping.VoidEntryResolver;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.LFPrintWriter;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
@@ -154,9 +163,25 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected void writeRoot(PrintWriter writer, EntryTree<EntryMapping> mappings, ClassEntry classEntry) {
 		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
 
-		writer.println(writeClass(classEntry, mappings.get(classEntry)).trim());
+		EntryMapping classEntryMapping = mappings.get(classEntry);
+
+		writer.println(writeClass(classEntry, classEntryMapping).trim());
+		if (classEntryMapping != null && classEntryMapping.getJavadoc() != null) {
+			writeDocs(writer, classEntryMapping, 0);
+		}
+
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, 1);
+		}
+
+	}
+
+	private void writeDocs(PrintWriter writer, EntryMapping mapping, int depth) {
+		String jd = mapping.getJavadoc();
+		if (jd != null) {
+			for (String line : jd.split("\\R")) {
+				writer.println(indent(EnigmaFormat.COMMENT + " " + MappingHelper.escape(line), depth + 1));
+			}
 		}
 	}
 
@@ -167,6 +192,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		EntryMapping mapping = node.getValue();
+
 		if (entry instanceof ClassEntry) {
 			String line = writeClass((ClassEntry) entry, mapping);
 			writer.println(indent(line, depth));
@@ -180,6 +206,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			String line = writeArgument((LocalVariableEntry) entry, mapping);
 			writer.println(indent(line, depth));
 		}
+		if (mapping != null && mapping.getJavadoc() != null) {
+			writeDocs(writer, mapping, depth);
+		}
 
 		Collection<Entry<?>> children = groupChildren(node.getChildren());
 		for (Entry<?> child : children) {
@@ -189,11 +218,6 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 	private Collection<Entry<?>> groupChildren(Collection<Entry<?>> children) {
 		Collection<Entry<?>> result = new ArrayList<>(children.size());
-
-		children.stream().filter(e -> e instanceof ClassEntry)
-				.map(e -> (ClassEntry) e)
-				.sorted()
-				.forEach(result::add);
 
 		children.stream().filter(e -> e instanceof FieldEntry)
 				.map(e -> (FieldEntry) e)
@@ -210,11 +234,16 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 				.sorted()
 				.forEach(result::add);
 
+		children.stream().filter(e -> e instanceof ClassEntry)
+						.map(e -> (ClassEntry) e)
+						.sorted()
+						.forEach(result::add);
+
 		return result;
 	}
 
 	protected String writeClass(ClassEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("CLASS ");
+		StringBuilder builder = new StringBuilder(EnigmaFormat.CLASS +" ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
@@ -222,7 +251,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeMethod(MethodEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("METHOD ");
+		StringBuilder builder = new StringBuilder(EnigmaFormat.METHOD + " ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
@@ -232,7 +261,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeField(FieldEntry entry, EntryMapping mapping) {
-		StringBuilder builder = new StringBuilder("FIELD ");
+		StringBuilder builder = new StringBuilder(EnigmaFormat.FIELD + " ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
 
@@ -242,7 +271,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeArgument(LocalVariableEntry entry, EntryMapping mapping) {
-		return "ARG " + entry.getIndex() + ' ' + mapping.getTargetName();
+		return EnigmaFormat.PARAMETER + " " + entry.getIndex() + ' ' + mapping.getTargetName();
 	}
 
 	private void writeMapping(StringBuilder builder, EntryMapping mapping) {

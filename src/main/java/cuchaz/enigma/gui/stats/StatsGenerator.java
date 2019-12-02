@@ -67,7 +67,7 @@ public class StatsGenerator {
                     if (includedMembers.contains(StatsMember.PARAMETERS)) {
                         int index = ((MethodDefEntry) method).getAccess().isStatic() ? 0 : 1;
                         for (TypeDescriptor argument : method.getDesc().getArgumentDescs()) {
-                            update(counts, new LocalVariableEntry(method, index, "", true));
+                            update(counts, new LocalVariableEntry(method, index, "", true,null));
                             index += argument.getSize();
                         }
                     }

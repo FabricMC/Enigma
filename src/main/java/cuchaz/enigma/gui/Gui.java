@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.gui;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.EnigmaProfile;
@@ -19,6 +20,7 @@ import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
+import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
@@ -82,6 +84,7 @@ public class Gui {
 	private JTabbedPane tabs;
 
 	public JTextField renameTextField;
+	public JTextArea javadocTextArea;
 
 	public void setEditorTheme(Config.LookAndFeel feel) {
 		if (editor != null && (editorFeel == null || editorFeel != feel)) {
@@ -559,6 +562,7 @@ public class Gui {
 		}
 
 		this.popupMenu.renameMenu.setEnabled(isRenamable);
+		this.popupMenu.editJavadocMenu.setEnabled(isRenamable);
 		this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
 		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
@@ -573,6 +577,47 @@ public class Gui {
 		} else {
 			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
 		}
+	}
+
+	public void startDocChange() {
+
+		// init the text box
+		javadocTextArea = new JTextArea(10, 40);
+
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
+		javadocTextArea.setText(Strings.nullToEmpty(translatedReference.entry.getJavadocs()));
+
+		JavadocDialog.init(frame, javadocTextArea, this::finishDocChange);
+		javadocTextArea.grabFocus();
+
+		redraw();
+	}
+
+	private void finishDocChange(JFrame ui, boolean saveName) {
+		String newName = javadocTextArea.getText();
+		if (saveName) {
+			try {
+				this.controller.changeDocs(cursorReference, newName);
+			} catch (IllegalNameException ex) {
+				javadocTextArea.setBorder(BorderFactory.createLineBorder(Color.red, 1));
+				javadocTextArea.setToolTipText(ex.getReason());
+				Utils.showToolTipNow(javadocTextArea);
+				return;
+			}
+
+			ui.setVisible(false);
+			showCursorReference(cursorReference);
+			return;
+		}
+
+		// abort the jd change
+		javadocTextArea = null;
+		ui.setVisible(false);
+		showCursorReference(cursorReference);
+
+		this.editor.grabFocus();
+
+		redraw();
 	}
 
 	public void startRename() {

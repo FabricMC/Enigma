@@ -368,20 +368,29 @@ public class GuiController {
 	}
 
 	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference) {
+		refreshCurrentClass(reference, false);
+	}
+
+	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, boolean forceDecomp) {
 		if (currentSource != null) {
 			loadClass(currentSource.getEntry(), () -> {
 				if (reference != null) {
 					showReference(reference);
 				}
-			});
+			}, forceDecomp);
 		}
 	}
 
 	private void loadClass(ClassEntry classEntry, Runnable callback) {
+		loadClass(classEntry, callback, false);
+	}
+
+	private void loadClass(ClassEntry classEntry, Runnable callback, boolean forceDecomp) {
 		ClassEntry targetClass = classEntry.getOutermostClass();
 
-		boolean requiresDecompile = currentSource == null || !currentSource.getEntry().equals(targetClass);
+		boolean requiresDecompile = forceDecomp || currentSource == null || !currentSource.getEntry().equals(targetClass);
 		if (requiresDecompile) {
+			currentSource = null; // Or the GUI may try to find a nonexistent token
 			gui.setEditorText("(decompiling...)");
 		}
 
@@ -402,7 +411,7 @@ public class GuiController {
 
 	private DecompiledClassSource decompileSource(ClassEntry targetClass) {
 		try {
-			CompilationUnit sourceTree = sourceProvider.getSources(targetClass.getFullName());
+			CompilationUnit sourceTree = (CompilationUnit) sourceProvider.getSources(targetClass.getFullName()).clone();
 			if (sourceTree == null) {
 				gui.setEditorText("Unable to find class: " + targetClass);
 				return DecompiledClassSource.text(targetClass, "Unable to find class");
@@ -410,6 +419,7 @@ public class GuiController {
 
 			DropImportAstTransform.INSTANCE.run(sourceTree);
 			DropVarModifiersAstTransform.INSTANCE.run(sourceTree);
+			new AddJavadocsAstTransform(project.getMapper()).run(sourceTree);
 
 			String sourceString = sourceProvider.writeSourceToString(sourceTree);
 
@@ -519,6 +529,25 @@ public class GuiController {
 		if (reference.entry instanceof ClassEntry)
 			this.gui.moveClassTree(reference, false, true);
 		refreshCurrentClass(reference);
+	}
+
+	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
+		changeDoc(reference.getNameableEntry(), updatedDocs);
+
+		refreshCurrentClass(reference, true);
+	}
+
+	public void changeDoc(Entry<?> obfEntry, String newDoc) {
+		EntryRemapper mapper = project.getMapper();
+		if (mapper.getDeobfMapping(obfEntry) == null) {
+			markAsDeobfuscated(obfEntry,false); // NPE
+		}
+		mapper.mapFromObf(obfEntry, mapper.getDeobfMapping(obfEntry).withDocs(newDoc), false);
+	}
+
+	public void markAsDeobfuscated(Entry<?> obfEntry, boolean renaming) {
+		EntryRemapper mapper = project.getMapper();
+		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()), renaming);
 	}
 
 	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference) {
