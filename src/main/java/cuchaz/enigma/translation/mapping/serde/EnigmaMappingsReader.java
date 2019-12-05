@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
@@ -160,7 +161,8 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	private void readJavadoc(MappingPair<?, RawEntryMapping> parent, String[] tokens) {
 		if (parent == null)
 			throw new IllegalStateException("Javadoc has no parent!");
-		String jdLine = tokens.length > 1 ? tokens[1] : ""; // Empty string to concat
+		// Empty string to concat
+		String jdLine = tokens.length > 1 ? String.join(" ", Arrays.copyOfRange(tokens,1,tokens.length))  : "";
 		if (parent.getMapping() == null)
 			throw new IllegalStateException("Javadoc requires a mapping!");
 		parent.getMapping().addJavadocLine(MappingHelper.unescape(jdLine));
