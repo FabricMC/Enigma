@@ -44,9 +44,9 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
 			List<Path> files = Files.walk(root)
-							.filter(f -> !Files.isDirectory(f))
-							.filter(f -> f.toString().endsWith(".mapping"))
-							.collect(Collectors.toList());
+					.filter(f -> !Files.isDirectory(f))
+					.filter(f -> f.toString().endsWith(".mapping"))
+					.collect(Collectors.toList());
 
 			progress.init(files.size(), "Loading mapping files");
 			int step = 0;
