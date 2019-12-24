@@ -32,7 +32,7 @@ public final class TestTinyV2InnerClasses {
 		mappings = Paths.get(TestTinyV2InnerClasses.class.getResource("/tinyV2InnerClasses/").toURI());
 	}
 
-//	@Test
+	@Test
 	public void testMappings() throws Exception {
 		EnigmaProject project = Enigma.create().openJar(jar, ProgressListener.none());
 		project.setMappings(EnigmaMappingsReader.DIRECTORY.read(mappings, ProgressListener.none(), project.getEnigma().getProfile().getMappingSaveParameters()));

@@ -47,8 +47,8 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> classes = mappings.getRootNodes()
-					.filter(entry -> entry instanceof ClassEntry)
-					.map(entry -> (ClassEntry) entry)
+					.filter(entry -> entry.getEntry() instanceof ClassEntry)
+					.map(entry -> (ClassEntry) entry.getEntry())
 					.collect(Collectors.toList());
 
 			progress.init(classes.size(), "Writing classes");
@@ -275,7 +275,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	private void writeMapping(StringBuilder builder, EntryMapping mapping) {
-		if (mapping != null) {
+		if (mapping != null && mapping.getTargetName() != null) {
 			builder.append(mapping.getTargetName()).append(' ');
 			if (mapping.getAccessModifier() != AccessModifier.UNCHANGED) {
 				builder.append(mapping.getAccessModifier().getFormattedName()).append(' ');

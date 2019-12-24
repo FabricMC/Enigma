@@ -61,7 +61,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		Deque<String> parts = new LinkedList<>();
 		do {
 			EntryMapping mapping = tree.get(classEntry);
-			if (mapping != null) {
+			if (mapping != null && mapping.getTargetName() != null) {
 				parts.addFirst(mapping.getTargetName());
 			} else {
 				parts.addFirst(classEntry.getName());
@@ -97,7 +97,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print(node.getEntry().getName());
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
-		if (mapping == null) {
+		if (mapping == null || mapping.getTargetName() == null) {
 			writer.println(node.getEntry().getName()); // todo fix v2 name inference
 		} else {
 			writer.println(mapping.getTargetName());
@@ -125,7 +125,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print(node.getEntry().getName());
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
-		if (mapping == null) {
+		if (mapping == null || mapping.getTargetName() == null) {
 			writer.println(node.getEntry().getName()); // todo fix v2 name inference
 		} else {
 			writer.println(mapping.getTargetName());

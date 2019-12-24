@@ -4,29 +4,29 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class EntryMapping {
-	private final String targetName;
+	private final @Nullable String targetName;
 	private final AccessModifier accessModifier;
 	private final @Nullable String javadoc;
 
-	public EntryMapping(@Nonnull String targetName) {
+	public EntryMapping(@Nullable String targetName) {
 		this(targetName, AccessModifier.UNCHANGED);
 	}
 
-	public EntryMapping(@Nonnull String targetName, @Nullable String javadoc) {
+	public EntryMapping(@Nullable String targetName, @Nullable String javadoc) {
 		this(targetName, AccessModifier.UNCHANGED, javadoc);
 	}
 
-	public EntryMapping(@Nonnull String targetName, AccessModifier accessModifier) {
+	public EntryMapping(@Nullable String targetName, AccessModifier accessModifier) {
 		this(targetName, accessModifier, null);
 	}
 
-	public EntryMapping(@Nonnull String targetName, AccessModifier accessModifier, @Nullable String javadoc) {
+	public EntryMapping(@Nullable String targetName, AccessModifier accessModifier, @Nullable String javadoc) {
 		this.targetName = targetName;
 		this.accessModifier = accessModifier;
 		this.javadoc = javadoc;
 	}
 
-	@Nonnull
+	@Nullable
 	public String getTargetName() {
 		return targetName;
 	}

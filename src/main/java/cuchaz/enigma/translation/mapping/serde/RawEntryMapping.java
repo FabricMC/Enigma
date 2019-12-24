@@ -6,16 +6,18 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 final class RawEntryMapping {
-	private final String targetName;
+	private final @Nullable String targetName;
 	private final AccessModifier access;
 	private List<String> javadocs = new ArrayList<>();
 
-	RawEntryMapping(String targetName) {
+	RawEntryMapping(@Nullable String targetName) {
 		this(targetName, null);
 	}
 
-	RawEntryMapping(String targetName, AccessModifier access) {
+	RawEntryMapping(@Nullable String targetName, AccessModifier access) {
 		this.access = access;
 		this.targetName = targetName;
 	}

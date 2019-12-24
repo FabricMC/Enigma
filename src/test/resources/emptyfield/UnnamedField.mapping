@@ -1,0 +1,4 @@
+CLASS UnnamedField foo
+	FIELD field_1234 Lnet/minecraft/class_1158;
+		COMMENT comment on unnamed field
+		
