@@ -3,5 +3,7 @@ CLASS UnnamedField foo
 		COMMENT comment on unnamed field
 	METHOD method_2345 (I)V
 		COMMENT comment on unnamed method
+		ARG 1
+			COMMENT comment on unnamed parameter
 	CLASS class_3456
 		COMMENT comment on unnamed class

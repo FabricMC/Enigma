@@ -101,9 +101,9 @@ public final class TinyV2Writer implements MappingsWriter {
 			writer.println(node.getEntry().getName()); // todo fix v2 name inference
 		} else {
 			writer.println(mapping.getTargetName());
-
-			writeComment(writer, mapping, 2);
 		}
+
+		writeComment(writer, mapping, 2);
 
 		for (EntryTreeNode<EntryMapping> child : node.getChildNodes()) {
 			Entry entry = child.getEntry();
@@ -129,9 +129,9 @@ public final class TinyV2Writer implements MappingsWriter {
 			writer.println(node.getEntry().getName()); // todo fix v2 name inference
 		} else {
 			writer.println(mapping.getTargetName());
-
-			writeComment(writer, mapping, 2);
 		}
+
+		writeComment(writer, mapping, 2);
 	}
 
 	private void writeParameter(PrintWriter writer, EntryTreeNode<EntryMapping> node) {
@@ -145,13 +145,13 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print(node.getEntry().getName());
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
-		if (mapping == null) {
+		if (mapping == null || mapping.getTargetName() == null) {
 			writer.println(); // todo ???
 		} else {
 			writer.println(mapping.getTargetName());
-
-			writeComment(writer, mapping, 3);
 		}
+
+		writeComment(writer, mapping, 3);
 	}
 
 	private void writeComment(PrintWriter writer, EntryMapping mapping, int indent) {
