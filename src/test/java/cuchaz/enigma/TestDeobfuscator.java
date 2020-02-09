@@ -11,13 +11,15 @@
 
 package cuchaz.enigma;
 
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.Decompilers;
+import cuchaz.enigma.source.SourceSettings;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 
 public class TestDeobfuscator {
-
 	private EnigmaProject openProject() throws IOException {
 		Enigma enigma = Enigma.create();
 		return enigma.openJar(Paths.get("build/test-obf/loneClass.jar"), ProgressListener.none());
@@ -32,10 +34,8 @@ public class TestDeobfuscator {
 	@Test
 	public void decompileClass() throws Exception {
 		EnigmaProject project = openProject();
+		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassCache(), new SourceSettings(false, false));
 
-		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(project.getClassCache());
-		SourceProvider sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
-
-		sourceProvider.writeSourceToString(sourceProvider.getSources("a"));
+		decompiler.getSource("a").asString();
 	}
 }

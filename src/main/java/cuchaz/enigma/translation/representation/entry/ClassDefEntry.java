@@ -12,7 +12,6 @@
 package cuchaz.enigma.translation.representation.entry;
 
 import com.google.common.base.Preconditions;
-import com.strobel.assembler.metadata.TypeDefinition;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.AccessFlags;
@@ -51,15 +50,6 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 		ClassEntry superClass = superName != null ? new ClassEntry(superName) : null;
 		ClassEntry[] interfaceClasses = Arrays.stream(interfaces).map(ClassEntry::new).toArray(ClassEntry[]::new);
 		return new ClassDefEntry(name, Signature.createSignature(signature), new AccessFlags(access), superClass, interfaceClasses);
-	}
-
-	public static ClassDefEntry parse(TypeDefinition def) {
-		String name = def.getInternalName();
-		Signature signature = Signature.createSignature(def.getSignature());
-		AccessFlags access = new AccessFlags(def.getModifiers());
-		ClassEntry superClass = def.getBaseType() != null ? ClassEntry.parse(def.getBaseType()) : null;
-		ClassEntry[] interfaces = def.getExplicitInterfaces().stream().map(ClassEntry::parse).toArray(ClassEntry[]::new);
-		return new ClassDefEntry(name, signature, access, superClass, interfaces);
 	}
 
 	public Signature getSignature() {

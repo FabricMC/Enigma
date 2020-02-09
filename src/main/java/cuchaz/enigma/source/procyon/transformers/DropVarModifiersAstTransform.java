@@ -1,4 +1,4 @@
-package cuchaz.enigma.analysis;
+package cuchaz.enigma.source.procyon.transformers;
 
 import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;

@@ -13,8 +13,9 @@ package cuchaz.enigma.gui;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
-import cuchaz.enigma.*;
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.EnigmaProfile;
+import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
@@ -23,6 +24,7 @@ import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
+import cuchaz.enigma.source.*;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
@@ -32,20 +34,19 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.ReadableToken;
 import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JOptionPane;
+import java.awt.Desktop;
 import java.awt.event.ItemEvent;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -65,19 +66,23 @@ public class GuiController {
 	public final Enigma enigma;
 
 	public EnigmaProject project;
-	private SourceProvider sourceProvider;
+	private DecompilerService decompilerService;
+	private Decompiler decompiler;
 	private IndexTreeBuilder indexTreeBuilder;
 
 	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
 
 	private DecompiledClassSource currentSource;
+	private Source uncommentedSource;
 
 	public GuiController(Gui gui, EnigmaProfile profile) {
 		this.gui = gui;
 		this.enigma = Enigma.builder()
 				.setProfile(profile)
 				.build();
+
+		decompilerService = Decompilers.PROCYON;
 	}
 
 	public boolean isDirty() {
@@ -89,17 +94,25 @@ public class GuiController {
 
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			project = enigma.openJar(jarPath, progress);
-
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
-
-			CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(project.getClassCache());
-			typeLoader.addVisitor(visitor -> new SourceFixVisitor(Opcodes.ASM5, visitor, project.getJarIndex()));
-			sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
-
+			decompiler = createDecompiler();
 			gui.onFinishOpenJar(jarPath.getFileName().toString());
-
 			refreshClasses();
 		});
+	}
+
+	private Decompiler createDecompiler() {
+		return decompilerService.create(name -> {
+			ClassNode node = project.getClassCache().getClassNode(name);
+
+			if (node == null) {
+				return null;
+			}
+
+			ClassNode fixedNode = new ClassNode();
+			node.accept(new SourceFixVisitor(Opcodes.ASM7, fixedNode, project.getJarIndex()));
+			return fixedNode;
+		}, new SourceSettings(true, true));
 	}
 
 	public void closeJar() {
@@ -210,6 +223,7 @@ public class GuiController {
 		if (this.currentSource == null) {
 			return null;
 		}
+
 		SourceIndex index = this.currentSource.getIndex();
 		return new ReadableToken(
 				index.getLineNumber(token.start),
@@ -372,13 +386,13 @@ public class GuiController {
 		refreshCurrentClass(reference, false);
 	}
 
-	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, boolean forceDecomp) {
+	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, boolean refreshJavadocs) {
 		if (currentSource != null) {
 			loadClass(currentSource.getEntry(), () -> {
 				if (reference != null) {
 					showReference(reference);
 				}
-			}, forceDecomp);
+			}, refreshJavadocs);
 		}
 	}
 
@@ -386,19 +400,19 @@ public class GuiController {
 		loadClass(classEntry, callback, false);
 	}
 
-	private void loadClass(ClassEntry classEntry, Runnable callback, boolean forceDecomp) {
+	private void loadClass(ClassEntry classEntry, Runnable callback, boolean refreshJavadocs) {
 		ClassEntry targetClass = classEntry.getOutermostClass();
 
-		boolean requiresDecompile = forceDecomp || currentSource == null || !currentSource.getEntry().equals(targetClass);
+		boolean requiresDecompile = currentSource == null || !currentSource.getEntry().equals(targetClass);
 		if (requiresDecompile) {
 			currentSource = null; // Or the GUI may try to find a nonexistent token
-			gui.setEditorText(I18n.translate("info_panel.editor.class.decompiling"));
+			gui.setEditorText("(decompiling...)");
 		}
 
 		DECOMPILER_SERVICE.submit(() -> {
 			try {
-				if (requiresDecompile) {
-					currentSource = decompileSource(targetClass);
+				if (requiresDecompile || refreshJavadocs) {
+					currentSource = decompileSource(targetClass, refreshJavadocs);
 				}
 
 				remapSource(project.getMapper().getDeobfuscator());
@@ -410,21 +424,20 @@ public class GuiController {
 		});
 	}
 
-	private DecompiledClassSource decompileSource(ClassEntry targetClass) {
+	private DecompiledClassSource decompileSource(ClassEntry targetClass, boolean onlyRefreshJavadocs) {
 		try {
-			CompilationUnit sourceTree = (CompilationUnit) sourceProvider.getSources(targetClass.getFullName()).clone();
-			if (sourceTree == null) {
-				gui.setEditorText(I18n.translate("info_panel.editor.class.not_found") + " " + targetClass);
+			if (!onlyRefreshJavadocs || currentSource == null || !currentSource.getEntry().equals(targetClass)) {
+				uncommentedSource = decompiler.getSource(targetClass.getFullName());
+			}
+
+			Source source = uncommentedSource.addJavadocs(project.getMapper());
+
+			if (source == null) {
+				gui.setEditorText("Unable to find class: " + targetClass);
 				return DecompiledClassSource.text(targetClass, "Unable to find class");
 			}
 
-			DropImportAstTransform.INSTANCE.run(sourceTree);
-			DropVarModifiersAstTransform.INSTANCE.run(sourceTree);
-			new AddJavadocsAstTransform(project.getMapper()).run(sourceTree);
-
-			String sourceString = sourceProvider.writeSourceToString(sourceTree);
-
-			SourceIndex index = SourceIndex.buildIndex(sourceString, sourceTree, true);
+			SourceIndex index = source.index();
 			index.resolveReferences(project.getMapper().getObfResolver());
 
 			return new DecompiledClassSource(targetClass, index);
@@ -581,5 +594,10 @@ public class GuiController {
 				throw new Error(e);
 			}
 		});
+	}
+
+	public void setDecompiler(DecompilerService service) {
+		decompilerService = service;
+		decompiler = createDecompiler();
 	}
 }

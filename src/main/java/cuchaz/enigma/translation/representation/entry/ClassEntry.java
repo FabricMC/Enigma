@@ -11,7 +11,6 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import com.strobel.assembler.metadata.TypeReference;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -45,10 +44,6 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		if (parent == null && className.indexOf('.') >= 0) {
 			throw new IllegalArgumentException("Class name must be in JVM format. ie, path/to/package/class$inner : " + className);
 		}
-	}
-
-	public static ClassEntry parse(TypeReference typeReference) {
-		return new ClassEntry(typeReference.getInternalName());
 	}
 
 	@Override

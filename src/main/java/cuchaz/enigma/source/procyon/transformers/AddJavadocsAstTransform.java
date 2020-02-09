@@ -1,15 +1,14 @@
-package cuchaz.enigma.analysis;
+package cuchaz.enigma.source.procyon.transformers;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.languages.java.ast.*;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
+import cuchaz.enigma.source.procyon.EntryParser;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import java.util.ArrayList;
@@ -68,7 +67,7 @@ public final class AddJavadocsAstTransform implements IAstTransform {
 		}
 
 		private void visitMethod(AstNode node) {
-			final MethodDefEntry methodDefEntry = MethodDefEntry.parse(node.getUserData(Keys.METHOD_DEFINITION));
+			final MethodDefEntry methodDefEntry = EntryParser.parse(node.getUserData(Keys.METHOD_DEFINITION));
 			final Comment[] baseComments = getComments(node, $ -> methodDefEntry);
 			List<Comment> comments = new ArrayList<>();
 			if (baseComments != null)
@@ -78,7 +77,7 @@ public final class AddJavadocsAstTransform implements IAstTransform {
 				ParameterDefinition def = dec.getUserData(Keys.PARAMETER_DEFINITION);
 				final Comment[] paramComments = getParameterComments(dec, $ -> new LocalVariableDefEntry(methodDefEntry, def.getSlot(), def.getName(),
 						true,
-						TypeDescriptor.parse(def.getParameterType()), null));
+						EntryParser.parseTypeDescriptor(def.getParameterType()), null));
 				if (paramComments != null)
 					Collections.addAll(comments, paramComments);
 			}
@@ -116,19 +115,19 @@ public final class AddJavadocsAstTransform implements IAstTransform {
 
 		@Override
 		public Void visitFieldDeclaration(FieldDeclaration node, Void data) {
-			addDoc(node, dec -> FieldDefEntry.parse(dec.getUserData(Keys.FIELD_DEFINITION)));
+			addDoc(node, dec -> EntryParser.parse(dec.getUserData(Keys.FIELD_DEFINITION)));
 			return super.visitFieldDeclaration(node, data);
 		}
 
 		@Override
 		public Void visitTypeDeclaration(TypeDeclaration node, Void data) {
-			addDoc(node, dec -> ClassDefEntry.parse(dec.getUserData(Keys.TYPE_DEFINITION)));
+			addDoc(node, dec -> EntryParser.parse(dec.getUserData(Keys.TYPE_DEFINITION)));
 			return super.visitTypeDeclaration(node, data);
 		}
 
 		@Override
 		public Void visitEnumValueDeclaration(EnumValueDeclaration node, Void data) {
-			addDoc(node, dec -> FieldDefEntry.parse(dec.getUserData(Keys.FIELD_DEFINITION)));
+			addDoc(node, dec -> EntryParser.parse(dec.getUserData(Keys.FIELD_DEFINITION)));
 			return super.visitEnumValueDeclaration(node, data);
 		}
 	}

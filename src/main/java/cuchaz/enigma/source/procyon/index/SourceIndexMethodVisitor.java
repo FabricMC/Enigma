@@ -9,7 +9,7 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.analysis;
+package cuchaz.enigma.source.procyon.index;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -17,6 +17,8 @@ import com.strobel.assembler.metadata.*;
 import com.strobel.decompiler.ast.Variable;
 import com.strobel.decompiler.languages.TextLocation;
 import com.strobel.decompiler.languages.java.ast.*;
+import cuchaz.enigma.source.SourceIndex;
+import cuchaz.enigma.source.procyon.EntryParser;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -56,7 +58,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 				tokenNode = node.getTarget();
 			}
 			if (tokenNode != null) {
-				index.addReference(tokenNode, methodEntry, this.methodEntry);
+				index.addReference(TokenFactory.createToken(index, tokenNode), methodEntry, this.methodEntry);
 			}
 		}
 
@@ -78,7 +80,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
 			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new TypeDescriptor(erasedSignature));
-			index.addReference(node.getMemberNameToken(), fieldEntry, this.methodEntry);
+			index.addReference(TokenFactory.createToken(index, node.getMemberNameToken()), fieldEntry, this.methodEntry);
 		}
 
 		return visitChildren(node, index);
@@ -89,7 +91,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		TypeReference ref = node.getUserData(Keys.TYPE_REFERENCE);
 		if (node.getIdentifierToken().getStartLocation() != TextLocation.EMPTY) {
 			ClassEntry classEntry = new ClassEntry(ref.getInternalName());
-			index.addReference(node.getIdentifierToken(), classEntry, this.methodEntry);
+			index.addReference(TokenFactory.createToken(index, node.getIdentifierToken()), classEntry, this.methodEntry);
 		}
 
 		return visitChildren(node, index);
@@ -103,15 +105,15 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		if (parameterIndex >= 0) {
 			MethodDefEntry ownerMethod = methodEntry;
 			if (def.getMethod() instanceof MethodDefinition) {
-				ownerMethod = MethodDefEntry.parse((MethodDefinition) def.getMethod());
+				ownerMethod = EntryParser.parse((MethodDefinition) def.getMethod());
 			}
 
-			TypeDescriptor parameterType = TypeDescriptor.parse(def.getParameterType());
+			TypeDescriptor parameterType = EntryParser.parseTypeDescriptor(def.getParameterType());
 			LocalVariableDefEntry localVariableEntry = new LocalVariableDefEntry(ownerMethod, parameterIndex, node.getName(), true, parameterType, null);
 			Identifier identifier = node.getNameToken();
 			// cache the argument entry and the identifier
 			identifierEntryCache.put(identifier.getName(), localVariableEntry);
-			index.addDeclaration(identifier, localVariableEntry);
+			index.addDeclaration(TokenFactory.createToken(index, identifier), localVariableEntry);
 		}
 
 		return visitChildren(node, index);
@@ -123,7 +125,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		if (ref != null) {
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
 			FieldEntry fieldEntry = new FieldEntry(classEntry, ref.getName(), new TypeDescriptor(ref.getErasedSignature()));
-			index.addReference(node.getIdentifierToken(), fieldEntry, this.methodEntry);
+			index.addReference(TokenFactory.createToken(index, node.getIdentifierToken()), fieldEntry, this.methodEntry);
 		} else
 			this.checkIdentifier(node, index);
 		return visitChildren(node, index);
@@ -131,7 +133,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 
 	private void checkIdentifier(IdentifierExpression node, SourceIndex index) {
 		if (identifierEntryCache.containsKey(node.getIdentifier())) // If it's in the argument cache, create a token!
-			index.addDeclaration(node.getIdentifierToken(), identifierEntryCache.get(node.getIdentifier()));
+			index.addDeclaration(TokenFactory.createToken(index, node.getIdentifierToken()), identifierEntryCache.get(node.getIdentifier()));
 		else
 			unmatchedIdentifier.put(node.getIdentifier(), node.getIdentifierToken()); // Not matched actually, put it!
 	}
@@ -143,7 +145,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 		if (entry == null)
 			return;
 		for (Identifier identifier : unmatchedIdentifier.get(key))
-			index.addDeclaration(identifier, entry);
+			index.addDeclaration(TokenFactory.createToken(index, identifier), entry);
 		unmatchedIdentifier.removeAll(key);
 	}
 
@@ -154,7 +156,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			SimpleType simpleTypeNode = (SimpleType) node.getType();
 			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
 			MethodEntry constructorEntry = new MethodEntry(classEntry, "<init>", new MethodDescriptor(ref.getErasedSignature()));
-			index.addReference(simpleTypeNode.getIdentifierToken(), constructorEntry, this.methodEntry);
+			index.addReference(TokenFactory.createToken(index, simpleTypeNode.getIdentifierToken()), constructorEntry, this.methodEntry);
 		}
 
 		return visitChildren(node, index);
@@ -175,12 +177,12 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 					if (originalVariable != null) {
 						int variableIndex = originalVariable.getSlot();
 						if (variableIndex >= 0) {
-							MethodDefEntry ownerMethod = MethodDefEntry.parse(originalVariable.getDeclaringMethod());
-							TypeDescriptor variableType = TypeDescriptor.parse(originalVariable.getVariableType());
+							MethodDefEntry ownerMethod = EntryParser.parse(originalVariable.getDeclaringMethod());
+							TypeDescriptor variableType = EntryParser.parseTypeDescriptor(originalVariable.getVariableType());
 							LocalVariableDefEntry localVariableEntry = new LocalVariableDefEntry(ownerMethod, variableIndex, initializer.getName(), false, variableType, null);
 							identifierEntryCache.put(identifier.getName(), localVariableEntry);
 							addDeclarationToUnmatched(identifier.getName(), index);
-							index.addDeclaration(identifier, localVariableEntry);
+							index.addDeclaration(TokenFactory.createToken(index, identifier), localVariableEntry);
 						}
 					}
 				}
@@ -203,11 +205,11 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			AstNode targetToken = node.getTarget();
 
 			if (methodNameToken != null) {
-				index.addReference(methodNameToken, methodEntry, this.methodEntry);
+				index.addReference(TokenFactory.createToken(index, methodNameToken), methodEntry, this.methodEntry);
 			}
 
 			if (targetToken != null && !(targetToken instanceof ThisReferenceExpression)) {
-				index.addReference(targetToken, methodEntry.getParent(), this.methodEntry);
+				index.addReference(TokenFactory.createToken(index, targetToken), methodEntry.getParent(), this.methodEntry);
 			}
 		}
 

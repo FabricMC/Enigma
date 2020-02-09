@@ -13,7 +13,6 @@ package cuchaz.enigma.translation.representation;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.strobel.assembler.metadata.TypeReference;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -110,10 +109,6 @@ public class TypeDescriptor implements Translatable {
 
 	public static TypeDescriptor of(String name) {
 		return new TypeDescriptor("L" + name + ";");
-	}
-
-	public static TypeDescriptor parse(TypeReference type) {
-		return new TypeDescriptor(type.getErasedSignature());
 	}
 
 	@Override

@@ -1,16 +1,17 @@
 package cuchaz.enigma.analysis;
 
-import com.strobel.core.Pair;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.api.EnigmaPluginContext;
 import cuchaz.enigma.api.service.JarIndexerService;
 import cuchaz.enigma.api.service.NameProposalService;
-import cuchaz.enigma.translation.mapping.ResolutionStrategy;
+import cuchaz.enigma.source.DecompilerService;
+import cuchaz.enigma.source.Decompilers;
+import cuchaz.enigma.source.procyon.ProcyonDecompiler;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.Pair;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -34,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.UnaryOperator;
 
 public final class BuiltinPlugin implements EnigmaPlugin {
 
@@ -44,6 +44,7 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 	@Override
 	public void init(EnigmaPluginContext ctx) {
 		registerEnumNamingService(ctx);
+		registerDecompilerServices(ctx);
 	}
 
 	private void registerEnumNamingService(EnigmaPluginContext ctx) {
@@ -52,6 +53,10 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 
 		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, ctx1 -> (classCache, jarIndex) -> classCache.visit(() -> visitor, ClassReader.SKIP_FRAMES));
 		ctx.registerService("enigma:enum_name_proposer", NameProposalService.TYPE, ctx1 -> (obfEntry, remapper) -> Optional.ofNullable(names.get(obfEntry)));
+	}
+
+	private void registerDecompilerServices(EnigmaPluginContext ctx) {
+		ctx.registerService("enigma:procyon", DecompilerService.TYPE, ctx1 -> Decompilers.PROCYON);
 	}
 
 	private static final class EnumFieldNameFindingVisitor extends ClassVisitor {
