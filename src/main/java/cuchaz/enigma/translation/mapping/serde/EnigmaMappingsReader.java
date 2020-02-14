@@ -118,6 +118,11 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	}
 
 	private String stripComment(String line) {
+		//Dont support comments on javadoc lines
+		if (line.trim().startsWith(EnigmaFormat.COMMENT)) {
+			return line;
+		}
+
 		int commentPos = line.indexOf('#');
 		if (commentPos >= 0) {
 			return line.substring(0, commentPos);
