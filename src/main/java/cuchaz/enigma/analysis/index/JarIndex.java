@@ -20,6 +20,8 @@ import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
 import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.utils.LangUtils;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 
@@ -58,18 +60,18 @@ public class JarIndex implements JarIndexer {
 	}
 
 	public void indexJar(ClassCache classCache, ProgressListener progress) {
-		progress.init(4, "Indexing jar");
+		progress.init(4, LangUtils.translate("progress.jar"));
 
-		progress.step(1, "Entries...");
+		progress.step(1, LangUtils.translate("progress.jar.step.1"));
 		classCache.visit(() -> new IndexClassVisitor(this, Opcodes.ASM5), ClassReader.SKIP_CODE);
 
-		progress.step(2, "Entry references...");
+		progress.step(2, LangUtils.translate("progress.jar.step.2"));
 		classCache.visit(() -> new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Opcodes.ASM5), 0);
 
-		progress.step(3, "Bridge methods...");
+		progress.step(3, LangUtils.translate("progress.jar.step.3"));
 		bridgeMethodIndex.findBridgeMethods();
 
-		progress.step(4, "Processing...");
+		progress.step(4, LangUtils.translate("progress.jar.step.4"));
 		processIndex(this);
 	}
 

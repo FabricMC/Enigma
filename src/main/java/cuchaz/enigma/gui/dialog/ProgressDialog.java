@@ -13,6 +13,7 @@ package cuchaz.enigma.gui.dialog;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.utils.LangUtils;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -29,7 +30,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 	public ProgressDialog(JFrame parent) {
 
 		// init frame
-		this.frame = new JFrame(Constants.NAME + " - Operation in progress");
+		this.frame = new JFrame(Constants.NAME + " - " + LangUtils.translate("progress.operation"));
 		final Container pane = this.frame.getContentPane();
 		FlowLayout layout = new FlowLayout();
 		layout.setAlignment(FlowLayout.LEFT);

@@ -12,6 +12,7 @@
 package cuchaz.enigma.gui.dialog;
 
 import cuchaz.enigma.Constants;
+import cuchaz.enigma.utils.LangUtils;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -28,11 +29,11 @@ public class CrashDialog {
 
 	private CrashDialog(JFrame parent) {
 		// init frame
-		frame = new JFrame(Constants.NAME + " - Crash Report");
+		frame = new JFrame(Constants.NAME + " - " + LangUtils.translate("crash.title"));
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new BorderLayout());
 
-		JLabel label = new JLabel(Constants.NAME + " has crashed! =(");
+		JLabel label = new JLabel(Constants.NAME + " " + LangUtils.translate("crash.summary") + " =(");
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		pane.add(label, BorderLayout.NORTH);
 
@@ -46,14 +47,14 @@ public class CrashDialog {
 		FlowLayout buttonsLayout = new FlowLayout();
 		buttonsLayout.setAlignment(FlowLayout.RIGHT);
 		buttonsPanel.setLayout(buttonsLayout);
-		buttonsPanel.add(Utils.unboldLabel(new JLabel("If you choose exit, you will lose any unsaved work.")));
-		JButton ignoreButton = new JButton("Ignore");
+		buttonsPanel.add(Utils.unboldLabel(new JLabel(LangUtils.translate("crash.exit.warning"))));
+		JButton ignoreButton = new JButton(LangUtils.translate("crash.ignore"));
 		ignoreButton.addActionListener(event -> {
 			// close (hide) the dialog
 			frame.setVisible(false);
 		});
 		buttonsPanel.add(ignoreButton);
-		JButton exitButton = new JButton("Exit");
+		JButton exitButton = new JButton(LangUtils.translate("crash.exit"));
 		exitButton.addActionListener(event -> {
 			// exit enigma
 			System.exit(1);

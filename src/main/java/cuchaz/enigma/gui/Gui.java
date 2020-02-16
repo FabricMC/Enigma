@@ -36,6 +36,7 @@ import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.utils.LangUtils;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
@@ -120,12 +121,12 @@ public class Gui {
 		this.controller = new GuiController(this, profile);
 
 		// init file choosers
-		this.jarFileChooser = new FileDialog(getFrame(), "Open Jar", FileDialog.LOAD);
+		this.jarFileChooser = new FileDialog(getFrame(), LangUtils.translate("menubar.file.jar.open"), FileDialog.LOAD);
 
 		this.tinyMappingsFileChooser = new FileDialog(getFrame(), "Open tiny Mappings", FileDialog.LOAD);
 		this.enigmaMappingsFileChooser = new FileChooserAny();
 		this.exportSourceFileChooser = new FileChooserFolder();
-		this.exportJarFileChooser = new FileDialog(getFrame(), "Export jar", FileDialog.SAVE);
+		this.exportJarFileChooser = new FileDialog(getFrame(), LangUtils.translate("menubar.file.export.jar"), FileDialog.SAVE);
 
 		this.obfPanel = new PanelObf(this);
 		this.deobfPanel = new PanelDeobf(this);
@@ -275,9 +276,9 @@ public class Gui {
 		centerPanel.add(sourceScroller, BorderLayout.CENTER);
 		tabs = new JTabbedPane();
 		tabs.setPreferredSize(new Dimension(250, 0));
-		tabs.addTab("Inheritance", inheritancePanel);
-		tabs.addTab("Implementations", implementationsPanel);
-		tabs.addTab("Call Graph", callPanel);
+		tabs.addTab(LangUtils.translate("panel.tree.inheritance"), inheritancePanel);
+		tabs.addTab(LangUtils.translate("panel.tree.implementations"), implementationsPanel);
+		tabs.addTab(LangUtils.translate("panel.tree.calls"), callPanel);
 		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabs);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
@@ -458,33 +459,33 @@ public class Gui {
 	}
 
 	private void showLocalVariableEntry(LocalVariableEntry entry) {
-		addNameValue(infoPanel, "Variable", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getContainingClass().getFullName());
-		addNameValue(infoPanel, "Method", entry.getParent().getName());
-		addNameValue(infoPanel, "Index", Integer.toString(entry.getIndex()));
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.variable"), entry.getName());
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.class"), entry.getContainingClass().getFullName());
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.method"), entry.getParent().getName());
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.index"), Integer.toString(entry.getIndex()));
 	}
 
 	private void showClassEntry(ClassEntry entry) {
-		addNameValue(infoPanel, "Class", entry.getFullName());
-		addModifierComboBox(infoPanel, "Modifier", entry);
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.class"), entry.getFullName());
+		addModifierComboBox(infoPanel, LangUtils.translate("panel.identifier.modifier"), entry);
 	}
 
 	private void showFieldEntry(FieldEntry entry) {
-		addNameValue(infoPanel, "Field", entry.getName());
-		addNameValue(infoPanel, "Class", entry.getParent().getFullName());
-		addNameValue(infoPanel, "TypeDescriptor", entry.getDesc().toString());
-		addModifierComboBox(infoPanel, "Modifier", entry);
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.field"), entry.getName());
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.class"), entry.getParent().getFullName());
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.type_descriptor"), entry.getDesc().toString());
+		addModifierComboBox(infoPanel, LangUtils.translate("panel.identifier.modifier"), entry);
 	}
 
 	private void showMethodEntry(MethodEntry entry) {
 		if (entry.isConstructor()) {
-			addNameValue(infoPanel, "Constructor", entry.getParent().getFullName());
+			addNameValue(infoPanel, LangUtils.translate("panel.identifier.constructor"), entry.getParent().getFullName());
 		} else {
-			addNameValue(infoPanel, "Method", entry.getName());
-			addNameValue(infoPanel, "Class", entry.getParent().getFullName());
+			addNameValue(infoPanel, LangUtils.translate("panel.identifier.method"), entry.getName());
+			addNameValue(infoPanel, LangUtils.translate("panel.identifier.class"), entry.getParent().getFullName());
 		}
-		addNameValue(infoPanel, "MethodDescriptor", entry.getDesc().toString());
-		addModifierComboBox(infoPanel, "Modifier", entry);
+		addNameValue(infoPanel, LangUtils.translate("panel.identifier.method_descriptor"), entry.getDesc().toString());
+		addModifierComboBox(infoPanel, LangUtils.translate("panel.identifier.modifier"), entry);
 	}
 
 	private void addNameValue(JPanel container, String name, String value) {
@@ -573,9 +574,9 @@ public class Gui {
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
 
 		if (isToken && !Objects.equals(referenceEntry, mapper.deobfuscate(referenceEntry))) {
-			this.popupMenu.toggleMappingMenu.setText("Reset to obfuscated");
+			this.popupMenu.toggleMappingMenu.setText(LangUtils.translate("popup_menu.reset_obfuscated"));
 		} else {
-			this.popupMenu.toggleMappingMenu.setText("Mark as deobfuscated");
+			this.popupMenu.toggleMappingMenu.setText(LangUtils.translate("popup_menu.mark_deobfuscated"));
 		}
 	}
 
@@ -794,7 +795,7 @@ public class Gui {
 	}
 
 	public void showDiscardDiag(Function<Integer, Void> callback, String... options) {
-		int response = JOptionPane.showOptionDialog(this.frame, "Your mappings have not been saved yet. Do you want to save?", "Save your changes?", JOptionPane.YES_NO_CANCEL_OPTION,
+		int response = JOptionPane.showOptionDialog(this.frame, LangUtils.translate("prompt.close.summary"), LangUtils.translate("prompt.close.title"), JOptionPane.YES_NO_CANCEL_OPTION,
 				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
 		callback.apply(response);
 	}
@@ -820,7 +821,7 @@ public class Gui {
 				}
 
 				return null;
-			}, "Save and exit", "Discard changes", "Cancel");
+			}, LangUtils.translate("prompt.close.save"), LangUtils.translate("prompt.close.discard"), LangUtils.translate("prompt.close.cancel"));
 		}
 	}
 
