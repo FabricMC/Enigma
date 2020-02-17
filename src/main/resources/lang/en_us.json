@@ -34,7 +34,7 @@
 	"menu.view.themes.none": "None (JVM Default)",
 	"menu.view.languages": "Languages",
 	"menu.view.languages.title": "Change language",
-	"menu.view.languages.summary": "In order to apply the new language, you need to restart %s.",
+	"menu.view.languages.summary": "The new language will be applied after a restart.",
 	"menu.view.languages.ok": "Ok",
 	"menu.view.search": "Search",
 	"menu.help": "Help",

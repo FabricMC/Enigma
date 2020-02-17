@@ -1,6 +1,5 @@
 package cuchaz.enigma.gui.elements;
 
-import cuchaz.enigma.Constants;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
@@ -224,7 +223,7 @@ public class MenuBar extends JMenuBar {
 						Container pane = frame.getContentPane();
 						pane.setLayout(new FlowLayout());
 						
-						JLabel text = new JLabel((String.format(LangUtils.translate("menu.view.languages.summary"), Constants.NAME)));
+						JLabel text = new JLabel((LangUtils.translate("menu.view.languages.summary")));
 						text.setHorizontalAlignment(JLabel.CENTER);
 						pane.add(text);
 						
@@ -234,7 +233,7 @@ public class MenuBar extends JMenuBar {
 						pane.add(okButton);
 						okButton.addActionListener(arg0 -> frame.dispose());
 						
-						frame.setSize(400, 110);
+						frame.setSize(320, 110);
 						frame.setResizable(false);
 	                    frame.setLocationRelativeTo(this.gui.getFrame());
 	                    frame.setVisible(true);
