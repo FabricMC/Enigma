@@ -24,6 +24,7 @@ public class LangUtils {
 	
 	static {
 		putInCache(Config.getInstance().language);
+		putInCache(DEFAULT_LANGUAGE);
 	}
 	
 	@SuppressWarnings("unchecked")

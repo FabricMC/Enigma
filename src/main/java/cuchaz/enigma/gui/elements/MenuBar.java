@@ -1,5 +1,6 @@
 package cuchaz.enigma.gui.elements;
 
+import cuchaz.enigma.Constants;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
@@ -218,6 +219,27 @@ public class MenuBar extends JMenuBar {
 					JMenuItem language = new JMenuItem(LangUtils.getLanguageName(lang));
 					languages.add(language);
 					language.addActionListener(event -> LangUtils.setLanguage(lang));
+					language.addActionListener(event -> {
+						JFrame frame = new JFrame(LangUtils.translate("menu.view.languages.title"));
+						Container pane = frame.getContentPane();
+						pane.setLayout(new FlowLayout());
+						
+						JLabel text = new JLabel((String.format(LangUtils.translate("menu.view.languages.summary"), Constants.NAME)));
+						text.setHorizontalAlignment(JLabel.CENTER);
+						pane.add(text);
+						
+						JButton okButton = new JButton(LangUtils.translate("menu.view.languages.ok"));
+						okButton.setAlignmentX(JButton.CENTER_ALIGNMENT);
+						okButton.setHorizontalAlignment(JButton.CENTER);
+						pane.add(okButton);
+						okButton.addActionListener(arg0 -> frame.dispose());
+						
+						frame.setSize(400, 110);
+						frame.setResizable(false);
+	                    frame.setLocationRelativeTo(this.gui.getFrame());
+	                    frame.setVisible(true);
+	                    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+					});
 				}
 
 				JMenuItem search = new JMenuItem(LangUtils.translate("menu.view.search"));
