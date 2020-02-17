@@ -1,14 +1,15 @@
 package cuchaz.enigma.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 
@@ -17,39 +18,46 @@ import cuchaz.enigma.config.Config;
 public class LangUtils {
 	public static final String DEFAULT_LANGUAGE = "en_us";
 	private static final Gson GSON = new Gson();
+	private static Map<String, String> translations = Maps.newHashMap();
+	private static Map<String, String> defaultTranslations = Maps.newHashMap();
+	private static Map<String, String> languageNames = Maps.newHashMap();
 	
-	public static String translate(String key) {
-		return translate(key, Config.getInstance().language);
+	static {
+		putInCache(Config.getInstance().language);
 	}
 	
-	public static String translate(String key, String language) {
-		Path path = Paths.get("src/main/resources/lang/" + language + ".json");
-		Path defaultPath = Paths.get("src/main/resources/lang/" + DEFAULT_LANGUAGE + ".json");
-		Reader reader;
-		String value;
-		try {
-			reader = Files.newBufferedReader(path);
-			value = getValue(key, reader);
-			if (key.equals(value)) {
-				reader = Files.newBufferedReader(defaultPath);
-				value = getValue(key, reader);
+	@SuppressWarnings("unchecked")
+	public static void putInCache(String language) {
+		try (InputStream inputStream = LangUtils.class.getResourceAsStream("/lang/" + language + ".json")) {
+			if (inputStream == null) {
+				return;
 			}
-			reader.close();
-			return value;
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+				if (language.equals(DEFAULT_LANGUAGE)) {
+					defaultTranslations = GSON.fromJson(reader, Map.class);
+				} else {
+					translations = GSON.fromJson(reader, Map.class);
+				}
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static String translate(String key) {
+		String value = translations.get(key);
+		if (value != null) {
+			return value;
+		}
+		value = defaultTranslations.get(key);
+		if (value != null) {
+			return value;
+		}
 		return key;
 	}
 	
-	private static String getValue(String key, Reader reader) {
-		Map<?, ?> map = GSON.fromJson(reader, Map.class);
-		for (Map.Entry<?, ?> entry : map.entrySet()) {
-			if (key.equals(entry.getKey())) {
-				return entry.getValue().toString();
-			}
-		}
-		return key;
+	public static String getLanguageName(String language) {
+		return languageNames.get(language);
 	}
 	
 	public static void setLanguage(String language) {
@@ -66,7 +74,16 @@ public class LangUtils {
 		File dir = new File(Resources.getResource("lang").getFile());
 		for (File file : dir.listFiles()) {
 			if (file.getName().endsWith(".json")) {
-				list.add(file.getName().replace(".json", ""));
+				String fileName = file.getName().replace(".json", "");
+				list.add(fileName);
+				try (InputStream inputStream = LangUtils.class.getResourceAsStream("/lang/" + file.getName())) {
+					try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+						Map<?, ?> map = GSON.fromJson(reader, Map.class);
+						languageNames.put(fileName, map.get("language").toString());
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return list;

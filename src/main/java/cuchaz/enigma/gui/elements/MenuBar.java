@@ -215,7 +215,7 @@ public class MenuBar extends JMenuBar {
 				JMenu languages = new JMenu(LangUtils.translate("menu.view.languages"));
 				menu.add(languages);
 				for (String lang : LangUtils.getAvailableLanguages()) {
-					JMenuItem language = new JMenuItem(LangUtils.translate("language", lang));
+					JMenuItem language = new JMenuItem(LangUtils.getLanguageName(lang));
 					languages.add(language);
 					language.addActionListener(event -> LangUtils.setLanguage(lang));
 				}
