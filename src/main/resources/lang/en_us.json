@@ -75,6 +75,10 @@
 	"progress.jar.indexing.references": "Entry references...",
 	"progress.jar.indexing.methods": "Bridge methods...",
 	"progress.jar.indexing.process": "Processing...",
+	"progress.jar.writing": "Writing jar...",
+	"progress.sources.writing": "Writing sources...",
+	"progress.classes.deobfuscating": "Deobfuscating classes...",
+	"progress.classes.decompiling": "Decompiling classes...",
 	"progress.stats": "Generating stats",
 	"progress.stats.data": "Generating data",
 

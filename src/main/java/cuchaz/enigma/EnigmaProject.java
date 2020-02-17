@@ -19,6 +19,8 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.LangUtils;
+
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -32,12 +34,10 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class EnigmaProject {
 	private final Enigma enigma;
@@ -148,7 +148,7 @@ public class EnigmaProject {
 		Translator deobfuscator = nameProposalServices.length == 0 ? mapper.getDeobfuscator() : new ProposingTranslator(mapper, nameProposalServices);
 
 		AtomicInteger count = new AtomicInteger();
-		progress.init(classEntries.size(), "Deobfuscating classes...");
+		progress.init(classEntries.size(), LangUtils.translate("progress.classes.deobfuscating"));
 
 		Map<String, ClassNode> compiled = classEntries.parallelStream()
 				.map(entry -> {
@@ -180,7 +180,7 @@ public class EnigmaProject {
 		}
 
 		public void write(Path path, ProgressListener progress) throws IOException {
-			progress.init(this.compiled.size(), "Writing jar...");
+			progress.init(this.compiled.size(), LangUtils.translate("progress.jar.writing"));
 
 			try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(path))) {
 				AtomicInteger count = new AtomicInteger();
@@ -205,7 +205,7 @@ public class EnigmaProject {
 					.filter(classNode -> classNode.name.indexOf('$') == -1)
 					.collect(Collectors.toList());
 
-			progress.init(classes.size(), "Decompiling classes...");
+			progress.init(classes.size(), LangUtils.translate("progress.classes.decompiling"));
 
 			//create a common instance outside the loop as mappings shouldn't be changing while this is happening
 			CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(this.compiled::get);
@@ -256,7 +256,7 @@ public class EnigmaProject {
 		}
 
 		public void write(Path path, ProgressListener progress) throws IOException {
-			progress.init(decompiled.size(), "Writing sources...");
+			progress.init(decompiled.size(), LangUtils.translate("progress.sources.writing"));
 
 			int count = 0;
 			for (ClassSource source : decompiled) {
