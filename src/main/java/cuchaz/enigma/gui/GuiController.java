@@ -392,7 +392,7 @@ public class GuiController {
 		boolean requiresDecompile = forceDecomp || currentSource == null || !currentSource.getEntry().equals(targetClass);
 		if (requiresDecompile) {
 			currentSource = null; // Or the GUI may try to find a nonexistent token
-			gui.setEditorText(LangUtils.translate("panel.editor.class.decompiling"));
+			gui.setEditorText(LangUtils.translate("info_panel.editor.class.decompiling"));
 		}
 
 		DECOMPILER_SERVICE.submit(() -> {
@@ -414,7 +414,7 @@ public class GuiController {
 		try {
 			CompilationUnit sourceTree = (CompilationUnit) sourceProvider.getSources(targetClass.getFullName()).clone();
 			if (sourceTree == null) {
-				gui.setEditorText(LangUtils.translate("panel.editor.class.not_found") + " " + targetClass);
+				gui.setEditorText(LangUtils.translate("info_panel.editor.class.not_found") + " " + targetClass);
 				return DecompiledClassSource.text(targetClass, "Unable to find class");
 			}
 

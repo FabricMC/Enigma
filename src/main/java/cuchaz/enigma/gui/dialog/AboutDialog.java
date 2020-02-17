@@ -23,7 +23,7 @@ public class AboutDialog {
 
 	public static void show(JFrame parent) {
 		// init frame
-		final JFrame frame = new JFrame(Constants.NAME + " - " + LangUtils.translate("menubar.help.about"));
+		final JFrame frame = new JFrame(Constants.NAME + " - " + LangUtils.translate("menu.help.about"));
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new FlowLayout());
 
@@ -53,7 +53,7 @@ public class AboutDialog {
 		pane.add(linkPanel);
 
 		// show ok button
-		JButton okButton = new JButton(LangUtils.translate("menubar.help.about.ok"));
+		JButton okButton = new JButton(LangUtils.translate("menu.help.about.ok"));
 		pane.add(okButton);
 		okButton.addActionListener(arg0 -> frame.dispose());
 

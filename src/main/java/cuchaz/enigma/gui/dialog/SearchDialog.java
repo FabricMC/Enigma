@@ -46,7 +46,7 @@ public class SearchDialog {
 	}
 
 	public void show() {
-		frame = new JFrame(LangUtils.translate("menubar.view.search"));
+		frame = new JFrame(LangUtils.translate("menu.view.search"));
 		frame.setVisible(false);
 		JPanel pane = new JPanel();
 		pane.setBorder(new EmptyBorder(5, 10, 5, 10));

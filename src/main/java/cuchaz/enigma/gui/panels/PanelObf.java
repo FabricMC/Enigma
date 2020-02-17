@@ -31,7 +31,7 @@ public class PanelObf extends JPanel {
 		this.obfClasses.setRenameSelectionListener(gui::onPanelRename);
 
 		this.setLayout(new BorderLayout());
-		this.add(new JLabel(LangUtils.translate("panel.classes.obfuscated")), BorderLayout.NORTH);
+		this.add(new JLabel(LangUtils.translate("info_panel.classes.obfuscated")), BorderLayout.NORTH);
 		this.add(new JScrollPane(this.obfClasses), BorderLayout.CENTER);
 	}
 }

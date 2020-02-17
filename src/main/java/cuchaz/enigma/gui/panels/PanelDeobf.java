@@ -20,7 +20,7 @@ public class PanelDeobf extends JPanel {
 		this.deobfClasses.setRenameSelectionListener(gui::onPanelRename);
 
 		this.setLayout(new BorderLayout());
-		this.add(new JLabel(LangUtils.translate("panel.classes.deobfuscated")), BorderLayout.NORTH);
+		this.add(new JLabel(LangUtils.translate("info_panel.classes.deobfuscated")), BorderLayout.NORTH);
 		this.add(new JScrollPane(this.deobfClasses), BorderLayout.CENTER);
 	}
 }
