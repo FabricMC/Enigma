@@ -23,6 +23,7 @@
 	"menu.file.export.source": "Export Source...",
 	"menu.file.export.jar": "Export Jar...",
 	"menu.file.stats": "Mapping Stats...",
+	"menu.file.stats.title": "Choose Included Members",
 	"menu.file.stats.generate": "Generate Stats",
 	"menu.file.exit": "Exit",
 	"menu.view": "View",
@@ -94,7 +95,7 @@
 	"prompt.close.cancel": "Cancel",
 
 	"crash.title": "Crash Report",
-	"crash.summary": "has crashed!",
+	"crash.summary": "%s has crashed! =(",
 	"crash.ignore": "Ignore",
 	"crash.exit": "Exit",
 	"crash.exit.warning": "If you choose exit, you will lose any unsaved work."

@@ -159,7 +159,7 @@ public class MenuBar extends JMenuBar {
 				JMenuItem stats = new JMenuItem(LangUtils.translate("menu.file.stats"));
 
 				stats.addActionListener(event -> {
-                    JFrame frame = new JFrame("Choose Included Members");
+                    JFrame frame = new JFrame(LangUtils.translate("menu.file.stats.title"));
 					Container pane = frame.getContentPane();
 					pane.setLayout(new FlowLayout());
 

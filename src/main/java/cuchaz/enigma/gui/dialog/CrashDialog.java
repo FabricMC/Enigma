@@ -33,7 +33,7 @@ public class CrashDialog {
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new BorderLayout());
 
-		JLabel label = new JLabel(Constants.NAME + " " + LangUtils.translate("crash.summary") + " =(");
+		JLabel label = new JLabel(String.format(LangUtils.translate("crash.summary"), new Object[] {Constants.NAME}));
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		pane.add(label, BorderLayout.NORTH);
 
