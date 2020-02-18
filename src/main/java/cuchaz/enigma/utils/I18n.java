@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -37,7 +38,7 @@ public class I18n {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return null;
+		return Collections.emptyMap();
 	}
 	
 	public static String translate(String key) {

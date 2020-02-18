@@ -235,9 +235,9 @@ public class MenuBar extends JMenuBar {
 						
 						frame.setSize(350, 110);
 						frame.setResizable(false);
-	                    frame.setLocationRelativeTo(this.gui.getFrame());
-	                    frame.setVisible(true);
-	                    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+						frame.setLocationRelativeTo(this.gui.getFrame());
+						frame.setVisible(true);
+						frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 					});
 				}
 
