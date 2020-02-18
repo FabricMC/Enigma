@@ -36,7 +36,7 @@ import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
@@ -121,12 +121,12 @@ public class Gui {
 		this.controller = new GuiController(this, profile);
 
 		// init file choosers
-		this.jarFileChooser = new FileDialog(getFrame(), LangUtils.translate("menu.file.jar.open"), FileDialog.LOAD);
+		this.jarFileChooser = new FileDialog(getFrame(), I18n.translate("menu.file.jar.open"), FileDialog.LOAD);
 
 		this.tinyMappingsFileChooser = new FileDialog(getFrame(), "Open tiny Mappings", FileDialog.LOAD);
 		this.enigmaMappingsFileChooser = new FileChooserAny();
 		this.exportSourceFileChooser = new FileChooserFolder();
-		this.exportJarFileChooser = new FileDialog(getFrame(), LangUtils.translate("menu.file.export.jar"), FileDialog.SAVE);
+		this.exportJarFileChooser = new FileDialog(getFrame(), I18n.translate("menu.file.export.jar"), FileDialog.SAVE);
 
 		this.obfPanel = new PanelObf(this);
 		this.deobfPanel = new PanelDeobf(this);
@@ -276,9 +276,9 @@ public class Gui {
 		centerPanel.add(sourceScroller, BorderLayout.CENTER);
 		tabs = new JTabbedPane();
 		tabs.setPreferredSize(new Dimension(250, 0));
-		tabs.addTab(LangUtils.translate("info_panel.tree.inheritance"), inheritancePanel);
-		tabs.addTab(LangUtils.translate("info_panel.tree.implementations"), implementationsPanel);
-		tabs.addTab(LangUtils.translate("info_panel.tree.calls"), callPanel);
+		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritancePanel);
+		tabs.addTab(I18n.translate("info_panel.tree.implementations"), implementationsPanel);
+		tabs.addTab(I18n.translate("info_panel.tree.calls"), callPanel);
 		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabs);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
@@ -459,33 +459,33 @@ public class Gui {
 	}
 
 	private void showLocalVariableEntry(LocalVariableEntry entry) {
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.variable"), entry.getName());
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.class"), entry.getContainingClass().getFullName());
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.method"), entry.getParent().getName());
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.index"), Integer.toString(entry.getIndex()));
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.variable"), entry.getName());
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getContainingClass().getFullName());
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getParent().getName());
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.index"), Integer.toString(entry.getIndex()));
 	}
 
 	private void showClassEntry(ClassEntry entry) {
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.class"), entry.getFullName());
-		addModifierComboBox(infoPanel, LangUtils.translate("info_panel.identifier.modifier"), entry);
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getFullName());
+		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
 	}
 
 	private void showFieldEntry(FieldEntry entry) {
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.field"), entry.getName());
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.class"), entry.getParent().getFullName());
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.type_descriptor"), entry.getDesc().toString());
-		addModifierComboBox(infoPanel, LangUtils.translate("info_panel.identifier.modifier"), entry);
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.field"), entry.getName());
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.type_descriptor"), entry.getDesc().toString());
+		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
 	}
 
 	private void showMethodEntry(MethodEntry entry) {
 		if (entry.isConstructor()) {
-			addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.constructor"), entry.getParent().getFullName());
+			addNameValue(infoPanel, I18n.translate("info_panel.identifier.constructor"), entry.getParent().getFullName());
 		} else {
-			addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.method"), entry.getName());
-			addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.class"), entry.getParent().getFullName());
+			addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getName());
+			addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
 		}
-		addNameValue(infoPanel, LangUtils.translate("info_panel.identifier.method_descriptor"), entry.getDesc().toString());
-		addModifierComboBox(infoPanel, LangUtils.translate("info_panel.identifier.modifier"), entry);
+		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method_descriptor"), entry.getDesc().toString());
+		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
 	}
 
 	private void addNameValue(JPanel container, String name, String value) {
@@ -574,9 +574,9 @@ public class Gui {
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
 
 		if (isToken && !Objects.equals(referenceEntry, mapper.deobfuscate(referenceEntry))) {
-			this.popupMenu.toggleMappingMenu.setText(LangUtils.translate("popup_menu.reset_obfuscated"));
+			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.reset_obfuscated"));
 		} else {
-			this.popupMenu.toggleMappingMenu.setText(LangUtils.translate("popup_menu.mark_deobfuscated"));
+			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.mark_deobfuscated"));
 		}
 	}
 
@@ -795,7 +795,7 @@ public class Gui {
 	}
 
 	public void showDiscardDiag(Function<Integer, Void> callback, String... options) {
-		int response = JOptionPane.showOptionDialog(this.frame, LangUtils.translate("prompt.close.summary"), LangUtils.translate("prompt.close.title"), JOptionPane.YES_NO_CANCEL_OPTION,
+		int response = JOptionPane.showOptionDialog(this.frame, I18n.translate("prompt.close.summary"), I18n.translate("prompt.close.title"), JOptionPane.YES_NO_CANCEL_OPTION,
 				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
 		callback.apply(response);
 	}
@@ -821,7 +821,7 @@ public class Gui {
 				}
 
 				return null;
-			}, LangUtils.translate("prompt.close.save"), LangUtils.translate("prompt.close.discard"), LangUtils.translate("prompt.close.cancel"));
+			}, I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
 		}
 	}
 

@@ -12,7 +12,7 @@
 package cuchaz.enigma.gui.dialog;
 
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -29,11 +29,11 @@ public class CrashDialog {
 
 	private CrashDialog(JFrame parent) {
 		// init frame
-		frame = new JFrame(String.format(LangUtils.translate("crash.title"), Constants.NAME));
+		frame = new JFrame(String.format(I18n.translate("crash.title"), Constants.NAME));
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new BorderLayout());
 
-		JLabel label = new JLabel(String.format(LangUtils.translate("crash.summary"), Constants.NAME));
+		JLabel label = new JLabel(String.format(I18n.translate("crash.summary"), Constants.NAME));
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		pane.add(label, BorderLayout.NORTH);
 
@@ -47,14 +47,14 @@ public class CrashDialog {
 		FlowLayout buttonsLayout = new FlowLayout();
 		buttonsLayout.setAlignment(FlowLayout.RIGHT);
 		buttonsPanel.setLayout(buttonsLayout);
-		buttonsPanel.add(Utils.unboldLabel(new JLabel(LangUtils.translate("crash.exit.warning"))));
-		JButton ignoreButton = new JButton(LangUtils.translate("crash.ignore"));
+		buttonsPanel.add(Utils.unboldLabel(new JLabel(I18n.translate("crash.exit.warning"))));
+		JButton ignoreButton = new JButton(I18n.translate("crash.ignore"));
 		ignoreButton.addActionListener(event -> {
 			// close (hide) the dialog
 			frame.setVisible(false);
 		});
 		buttonsPanel.add(ignoreButton);
-		JButton exitButton = new JButton(LangUtils.translate("crash.exit"));
+		JButton exitButton = new JButton(I18n.translate("crash.exit"));
 		exitButton.addActionListener(event -> {
 			// exit enigma
 			System.exit(1);

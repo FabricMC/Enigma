@@ -1,7 +1,7 @@
 package cuchaz.enigma.gui.elements;
 
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 
 import javax.swing.*;
 import java.awt.event.InputEvent;
@@ -22,7 +22,7 @@ public class PopupMenuBar extends JPopupMenu {
 
 	public PopupMenuBar(Gui gui) {
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.rename"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.rename"));
 			menu.addActionListener(event -> gui.startRename());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0));
 			menu.setEnabled(false);
@@ -30,7 +30,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.renameMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.javadoc"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.javadoc"));
 			menu.addActionListener(event -> gui.startDocChange());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
 			menu.setEnabled(false);
@@ -38,7 +38,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.editJavadocMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.inheritance"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.inheritance"));
 			menu.addActionListener(event -> gui.showInheritance());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, 0));
 			menu.setEnabled(false);
@@ -46,7 +46,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.showInheritanceMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.implementations"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.implementations"));
 			menu.addActionListener(event -> gui.showImplementations());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, 0));
 			menu.setEnabled(false);
@@ -54,7 +54,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.showImplementationsMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.calls"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.calls"));
 			menu.addActionListener(event -> gui.showCalls(true));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
 			menu.setEnabled(false);
@@ -62,7 +62,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.showCallsMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.calls.specific"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.calls.specific"));
 			menu.addActionListener(event -> gui.showCalls(false));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_DOWN_MASK));
 			menu.setEnabled(false);
@@ -70,7 +70,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.showCallsSpecificMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.declaration"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.declaration"));
 			menu.addActionListener(event -> gui.getController().navigateTo(gui.cursorReference.entry));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, 0));
 			menu.setEnabled(false);
@@ -78,7 +78,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.openEntryMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.back"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.back"));
 			menu.addActionListener(event -> gui.getController().openPreviousReference());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0));
 			menu.setEnabled(false);
@@ -86,7 +86,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.openPreviousMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.forward"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.forward"));
 			menu.addActionListener(event -> gui.getController().openNextReference());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0));
 			menu.setEnabled(false);
@@ -94,7 +94,7 @@ public class PopupMenuBar extends JPopupMenu {
 			this.openNextMenu = menu;
 		}
 		{
-			JMenuItem menu = new JMenuItem(LangUtils.translate("popup_menu.mark_deobfuscated"));
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.mark_deobfuscated"));
 			menu.addActionListener(event -> gui.toggleMapping());
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, 0));
 			menu.setEnabled(false);

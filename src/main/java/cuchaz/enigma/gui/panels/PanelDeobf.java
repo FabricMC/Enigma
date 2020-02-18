@@ -2,7 +2,7 @@ package cuchaz.enigma.gui.panels;
 
 import cuchaz.enigma.gui.ClassSelector;
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +20,7 @@ public class PanelDeobf extends JPanel {
 		this.deobfClasses.setRenameSelectionListener(gui::onPanelRename);
 
 		this.setLayout(new BorderLayout());
-		this.add(new JLabel(LangUtils.translate("info_panel.classes.deobfuscated")), BorderLayout.NORTH);
+		this.add(new JLabel(I18n.translate("info_panel.classes.deobfuscated")), BorderLayout.NORTH);
 		this.add(new JScrollPane(this.deobfClasses), BorderLayout.CENTER);
 	}
 }

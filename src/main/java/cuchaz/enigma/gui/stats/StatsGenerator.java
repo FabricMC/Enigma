@@ -11,7 +11,7 @@ import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 
 import java.util.*;
 
@@ -46,14 +46,14 @@ public class StatsGenerator {
             totalWork += entryIndex.getClasses().size();
         }
 
-        progress.init(totalWork, LangUtils.translate("progress.stats"));
+        progress.init(totalWork, I18n.translate("progress.stats"));
 
         Map<String, Integer> counts = new HashMap<>();
 
         int numDone = 0;
         if (includedMembers.contains(StatsMember.METHODS) || includedMembers.contains(StatsMember.PARAMETERS)) {
             for (MethodEntry method : entryIndex.getMethods()) {
-                progress.step(numDone++, LangUtils.translate("type.methods"));
+                progress.step(numDone++, I18n.translate("type.methods"));
                 MethodEntry root = entryResolver
                         .resolveEntry(method, ResolutionStrategy.RESOLVE_ROOT)
                         .stream()
@@ -78,19 +78,19 @@ public class StatsGenerator {
 
         if (includedMembers.contains(StatsMember.FIELDS)) {
             for (FieldEntry field : entryIndex.getFields()) {
-                progress.step(numDone++, LangUtils.translate("type.fields"));
+                progress.step(numDone++, I18n.translate("type.fields"));
                 update(counts, field);
             }
         }
 
         if (includedMembers.contains(StatsMember.CLASSES)) {
             for (ClassEntry clazz : entryIndex.getClasses()) {
-                progress.step(numDone++, LangUtils.translate("type.classes"));
+                progress.step(numDone++, I18n.translate("type.classes"));
                 update(counts, clazz);
             }
         }
 
-        progress.step(-1, LangUtils.translate("progress.stats.data"));
+        progress.step(-1, I18n.translate("progress.stats.data"));
 
         Tree<Integer> tree = new Tree<>();
 

@@ -11,7 +11,7 @@
 
 package cuchaz.enigma.gui.dialog;
 
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -27,7 +27,7 @@ public class JavadocDialog {
 
 	private JavadocDialog(JFrame parent, JTextArea text, Callback callback) {
 		// init frame
-		frame = new JFrame(LangUtils.translate("javadocs.edit"));
+		frame = new JFrame(I18n.translate("javadocs.edit"));
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new BorderLayout());
 
@@ -56,14 +56,14 @@ public class JavadocDialog {
 		FlowLayout buttonsLayout = new FlowLayout();
 		buttonsLayout.setAlignment(FlowLayout.RIGHT);
 		buttonsPanel.setLayout(buttonsLayout);
-		buttonsPanel.add(Utils.unboldLabel(new JLabel(LangUtils.translate("javadocs.instruction"))));
-		JButton cancelButton = new JButton(LangUtils.translate("javadocs.cancel"));
+		buttonsPanel.add(Utils.unboldLabel(new JLabel(I18n.translate("javadocs.instruction"))));
+		JButton cancelButton = new JButton(I18n.translate("javadocs.cancel"));
 		cancelButton.addActionListener(event -> {
 			// close (hide) the dialog
 			callback.closeUi(frame, false);
 		});
 		buttonsPanel.add(cancelButton);
-		JButton saveButton = new JButton(LangUtils.translate("javadocs.save"));
+		JButton saveButton = new JButton(I18n.translate("javadocs.save"));
 		saveButton.addActionListener(event -> {
 			// exit enigma
 			callback.closeUi(frame, true);

@@ -3,7 +3,7 @@ package cuchaz.enigma.gui.panels;
 import cuchaz.enigma.gui.ClassSelector;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,7 +31,7 @@ public class PanelObf extends JPanel {
 		this.obfClasses.setRenameSelectionListener(gui::onPanelRename);
 
 		this.setLayout(new BorderLayout());
-		this.add(new JLabel(LangUtils.translate("info_panel.classes.obfuscated")), BorderLayout.NORTH);
+		this.add(new JLabel(I18n.translate("info_panel.classes.obfuscated")), BorderLayout.NORTH);
 		this.add(new JScrollPane(this.obfClasses), BorderLayout.CENTER);
 	}
 }

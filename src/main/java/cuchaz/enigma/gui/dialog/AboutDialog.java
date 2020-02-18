@@ -12,7 +12,7 @@
 package cuchaz.enigma.gui.dialog;
 
 import cuchaz.enigma.Constants;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -23,7 +23,7 @@ public class AboutDialog {
 
 	public static void show(JFrame parent) {
 		// init frame
-		final JFrame frame = new JFrame(String.format(LangUtils.translate("menu.help.about.title"), Constants.NAME));
+		final JFrame frame = new JFrame(String.format(I18n.translate("menu.help.about.title"), Constants.NAME));
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new FlowLayout());
 
@@ -53,7 +53,7 @@ public class AboutDialog {
 		pane.add(linkPanel);
 
 		// show ok button
-		JButton okButton = new JButton(LangUtils.translate("menu.help.about.ok"));
+		JButton okButton = new JButton(I18n.translate("menu.help.about.ok"));
 		pane.add(okButton);
 		okButton.addActionListener(arg0 -> frame.dispose());
 

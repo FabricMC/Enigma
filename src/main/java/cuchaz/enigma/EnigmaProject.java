@@ -19,7 +19,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import cuchaz.enigma.utils.LangUtils;
+import cuchaz.enigma.utils.I18n;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -148,7 +148,7 @@ public class EnigmaProject {
 		Translator deobfuscator = nameProposalServices.length == 0 ? mapper.getDeobfuscator() : new ProposingTranslator(mapper, nameProposalServices);
 
 		AtomicInteger count = new AtomicInteger();
-		progress.init(classEntries.size(), LangUtils.translate("progress.classes.deobfuscating"));
+		progress.init(classEntries.size(), I18n.translate("progress.classes.deobfuscating"));
 
 		Map<String, ClassNode> compiled = classEntries.parallelStream()
 				.map(entry -> {
@@ -180,7 +180,7 @@ public class EnigmaProject {
 		}
 
 		public void write(Path path, ProgressListener progress) throws IOException {
-			progress.init(this.compiled.size(), LangUtils.translate("progress.jar.writing"));
+			progress.init(this.compiled.size(), I18n.translate("progress.jar.writing"));
 
 			try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(path))) {
 				AtomicInteger count = new AtomicInteger();
@@ -205,7 +205,7 @@ public class EnigmaProject {
 					.filter(classNode -> classNode.name.indexOf('$') == -1)
 					.collect(Collectors.toList());
 
-			progress.init(classes.size(), LangUtils.translate("progress.classes.decompiling"));
+			progress.init(classes.size(), I18n.translate("progress.classes.decompiling"));
 
 			//create a common instance outside the loop as mappings shouldn't be changing while this is happening
 			CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(this.compiled::get);
@@ -256,7 +256,7 @@ public class EnigmaProject {
 		}
 
 		public void write(Path path, ProgressListener progress) throws IOException {
-			progress.init(decompiled.size(), LangUtils.translate("progress.sources.writing"));
+			progress.init(decompiled.size(), I18n.translate("progress.sources.writing"));
 
 			int count = 0;
 			for (ClassSource source : decompiled) {
