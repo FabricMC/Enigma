@@ -233,7 +233,7 @@ public class MenuBar extends JMenuBar {
 						pane.add(okButton);
 						okButton.addActionListener(arg0 -> frame.dispose());
 						
-						frame.setSize(320, 110);
+						frame.setSize(350, 110);
 						frame.setResizable(false);
 	                    frame.setLocationRelativeTo(this.gui.getFrame());
 	                    frame.setVisible(true);

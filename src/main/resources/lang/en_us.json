@@ -34,11 +34,12 @@
 	"menu.view.themes.none": "None (JVM Default)",
 	"menu.view.languages": "Languages",
 	"menu.view.languages.title": "Change language",
-	"menu.view.languages.summary": "The new language will be applied after a restart.",
+	"menu.view.languages.summary": "The new language will be applied after the next restart.",
 	"menu.view.languages.ok": "Ok",
 	"menu.view.search": "Search",
 	"menu.help": "Help",
 	"menu.help.about": "About",
+	"menu.help.about.title": "%s - About",
 	"menu.help.about.ok": "Ok",
 	"menu.help.github": "Github Page",
 
@@ -73,7 +74,7 @@
 	"info_panel.tree.implementations": "Implementations",
 	"info_panel.tree.calls": "Call Graph",
 
-	"progress.operation": "Operation in progress",
+	"progress.operation": "%s - Operation in progress",
 	"progress.jar.indexing": "Indexing jar",
 	"progress.jar.indexing.entries": "Entries...",
 	"progress.jar.indexing.references": "Entry references...",
@@ -97,7 +98,7 @@
 	"prompt.close.discard": "Discard changes",
 	"prompt.close.cancel": "Cancel",
 
-	"crash.title": "Crash Report",
+	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",
 	"crash.ignore": "Ignore",
 	"crash.exit": "Exit",

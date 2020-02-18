@@ -23,7 +23,7 @@ public class AboutDialog {
 
 	public static void show(JFrame parent) {
 		// init frame
-		final JFrame frame = new JFrame(Constants.NAME + " - " + LangUtils.translate("menu.help.about"));
+		final JFrame frame = new JFrame(String.format(LangUtils.translate("menu.help.about.title"), Constants.NAME));
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new FlowLayout());
 

@@ -29,7 +29,7 @@ public class CrashDialog {
 
 	private CrashDialog(JFrame parent) {
 		// init frame
-		frame = new JFrame(Constants.NAME + " - " + LangUtils.translate("crash.title"));
+		frame = new JFrame(String.format(LangUtils.translate("crash.title"), Constants.NAME));
 		final Container pane = frame.getContentPane();
 		pane.setLayout(new BorderLayout());
 

@@ -30,7 +30,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 	public ProgressDialog(JFrame parent) {
 
 		// init frame
-		this.frame = new JFrame(Constants.NAME + " - " + LangUtils.translate("progress.operation"));
+		this.frame = new JFrame(String.format(LangUtils.translate("progress.operation"), Constants.NAME));
 		final Container pane = this.frame.getContentPane();
 		FlowLayout layout = new FlowLayout();
 		layout.setAlignment(FlowLayout.LEFT);
