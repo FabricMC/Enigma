@@ -40,6 +40,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.LFPrintWriter;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
@@ -51,7 +52,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 					.map(entry -> (ClassEntry) entry)
 					.collect(Collectors.toList());
 
-			progress.init(classes.size(), "Writing classes");
+			progress.init(classes.size(), I18n.translate("progress.mappings.enigma_file.writing"));
 
 			int steps = 0;
 			try (PrintWriter writer = new LFPrintWriter(Files.newBufferedWriter(path))) {
@@ -74,7 +75,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
 
-			progress.init(changedClasses.size(), "Writing classes");
+			progress.init(changedClasses.size(), I18n.translate("progress.mappings.enigma_directory.writing"));
 
 			AtomicInteger steps = new AtomicInteger();
 

@@ -14,6 +14,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,7 +33,7 @@ public enum TinyMappingsReader implements MappingsReader {
 		EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 		lines.remove(0);
 
-		progress.init(lines.size(), "Loading mapping file");
+		progress.init(lines.size(), I18n.translate("progress.mappings.tiny_file.loading"));
 
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
 			progress.step(lineNumber, "");
