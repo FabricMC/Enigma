@@ -1,7 +1,6 @@
 package cuchaz.enigma.utils;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -78,10 +77,10 @@ public class I18n {
 			Stream<ResourceInfo> dirStream = resources.stream();
 			dirStream.forEach(context -> {
 				String file = context.getResourceName();
-				if (file.endsWith(".json") && file.startsWith("lang/")) {
+				if (file.startsWith("lang/") && file.endsWith(".json")) {
 					String fileName = file.substring(5, file.length() - 5);
 					list.add(fileName);
-					loadLanguagesNames(fileName);
+					loadLanguageName(fileName);
 				}
 			});
 		} catch (IOException e) {
@@ -90,7 +89,7 @@ public class I18n {
 		return list;
 	}
 	
-	private static void loadLanguagesNames(String fileName) {
+	private static void loadLanguageName(String fileName) {
 		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream("lang/" + fileName + ".json")) {
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
 				Map<?, ?> map = GSON.fromJson(reader, Map.class);
