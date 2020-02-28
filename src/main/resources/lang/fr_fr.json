@@ -34,7 +34,7 @@
 	"menu.view.themes.none": "Aucun (JVM par défaut)",
 	"menu.view.languages": "Langues",
 	"menu.view.languages.title": "Modifier la langue",
-	"menu.view.languages.summary": "Le nouveau langage sera appliqué lors du prochain redémarrage.",
+	"menu.view.languages.summary": "La nouvelle langue sera appliquée lors du prochain redémarrage.",
 	"menu.view.languages.ok": "Ok",
 	"menu.view.search": "Rechercher",
 	"menu.help": "Aide",
