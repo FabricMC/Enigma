@@ -18,6 +18,7 @@ import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.util.Collection;
@@ -38,7 +39,7 @@ public class MappingsChecker {
 		Dropped dropped = new Dropped();
 
 		Collection<Entry<?>> obfEntries = mappings.getAllEntries()
-				.filter(e -> e instanceof ClassEntry || e instanceof MethodEntry || e instanceof FieldEntry)
+				.filter(e -> e instanceof ClassEntry || e instanceof MethodEntry || e instanceof FieldEntry || e instanceof LocalVariableEntry)
 				.collect(Collectors.toList());
 
 		progress.init(obfEntries.size(), "Checking for dropped mappings");
