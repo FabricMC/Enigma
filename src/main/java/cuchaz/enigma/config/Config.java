@@ -4,6 +4,8 @@ import com.bulenkov.darcula.DarculaLaf;
 import com.google.common.io.Files;
 import com.google.gson.*;
 
+import cuchaz.enigma.utils.I18n;
+
 import javax.swing.*;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.awt.*;
@@ -165,6 +167,8 @@ public class Config {
 	public Integer lineNumbersBackground;
 	public Integer lineNumbersSelected;
 	public Integer lineNumbersForeground;
+	
+	public String language = I18n.DEFAULT_LANGUAGE;
 
 	public LookAndFeel lookAndFeel = LookAndFeel.DEFAULT;
 
@@ -213,6 +217,7 @@ public class Config {
 	public void reset() throws IOException {
 		this.lookAndFeel = LookAndFeel.DEFAULT;
 		this.lookAndFeel.apply(this);
+		this.language = I18n.DEFAULT_LANGUAGE;
 		this.saveConfig();
 	}
 

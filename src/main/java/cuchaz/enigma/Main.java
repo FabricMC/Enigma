@@ -14,6 +14,7 @@ package cuchaz.enigma;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+
 import joptsimple.*;
 
 import java.io.BufferedReader;

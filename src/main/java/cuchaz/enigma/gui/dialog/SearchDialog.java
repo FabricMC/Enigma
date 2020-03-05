@@ -14,6 +14,7 @@ package cuchaz.enigma.gui.dialog;
 import com.google.common.collect.Lists;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.utils.I18n;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 
@@ -45,7 +46,7 @@ public class SearchDialog {
 	}
 
 	public void show() {
-		frame = new JFrame("Search");
+		frame = new JFrame(I18n.translate("menu.view.search"));
 		frame.setVisible(false);
 		JPanel pane = new JPanel();
 		pane.setBorder(new EmptyBorder(5, 10, 5, 10));

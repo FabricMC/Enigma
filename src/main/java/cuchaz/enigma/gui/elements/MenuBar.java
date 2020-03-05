@@ -7,7 +7,7 @@ import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.utils.Utils;
+import cuchaz.enigma.utils.I18n;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,10 +40,10 @@ public class MenuBar extends JMenuBar {
 		this.gui = gui;
 
 		{
-			JMenu menu = new JMenu("File");
+			JMenu menu = new JMenu(I18n.translate("menu.file"));
 			this.add(menu);
 			{
-				JMenuItem item = new JMenuItem("Open Jar...");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.jar.open"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					this.gui.jarFileChooser.setVisible(true);
@@ -54,19 +54,19 @@ public class MenuBar extends JMenuBar {
 				});
 			}
 			{
-				JMenuItem item = new JMenuItem("Close Jar");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.jar.close"));
 				menu.add(item);
 				item.addActionListener(event -> this.gui.getController().closeJar());
 				this.closeJarMenu = item;
 			}
 			menu.addSeparator();
-			JMenu openMenu = new JMenu("Open Mappings...");
+			JMenu openMenu = new JMenu(I18n.translate("menu.file.mappings.open"));
 			menu.add(openMenu);
 			{
 				openMappingsMenus = new ArrayList<>();
 				for (MappingFormat format : MappingFormat.values()) {
 					if (format.getReader() != null) {
-						JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(format.name()));
+						JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 						openMenu.add(item);
 						item.addActionListener(event -> {
 							if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
@@ -79,7 +79,7 @@ public class MenuBar extends JMenuBar {
 				}
 			}
 			{
-				JMenuItem item = new JMenuItem("Save Mappings");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.mappings.save"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
@@ -87,13 +87,13 @@ public class MenuBar extends JMenuBar {
 				item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 				this.saveMappingsMenu = item;
 			}
-			JMenu saveMenu = new JMenu("Save Mappings As...");
+			JMenu saveMenu = new JMenu(I18n.translate("menu.file.mappings.save_as"));
 			menu.add(saveMenu);
 			{
 				saveMappingsMenus = new ArrayList<>();
 				for (MappingFormat format : MappingFormat.values()) {
 					if (format.getWriter() != null) {
-						JMenuItem item = new JMenuItem(Utils.caplisiseCamelCase(format.name()));
+						JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 						saveMenu.add(item);
 						item.addActionListener(event -> {
 							// TODO: Use a specific file chooser for it
@@ -107,7 +107,7 @@ public class MenuBar extends JMenuBar {
 				}
 			}
 			{
-				JMenuItem item = new JMenuItem("Close Mappings");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.mappings.close"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					if (this.gui.getController().isDirty()) {
@@ -118,7 +118,7 @@ public class MenuBar extends JMenuBar {
 							} else if (response == JOptionPane.NO_OPTION)
 								this.gui.getController().closeMappings();
 							return null;
-						}), "Save and close", "Discard changes", "Cancel");
+						}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
 					} else
 						this.gui.getController().closeMappings();
 
@@ -126,14 +126,14 @@ public class MenuBar extends JMenuBar {
 				this.closeMappingsMenu = item;
 			}
 			{
-				JMenuItem item = new JMenuItem("Drop Invalid Mappings");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.mappings.drop"));
 				menu.add(item);
 				item.addActionListener(event -> this.gui.getController().dropMappings());
 				this.dropMappingsMenu = item;
 			}
 			menu.addSeparator();
 			{
-				JMenuItem item = new JMenuItem("Export Source...");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.export.source"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
@@ -143,7 +143,7 @@ public class MenuBar extends JMenuBar {
 				this.exportSourceMenu = item;
 			}
 			{
-				JMenuItem item = new JMenuItem("Export Jar...");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.export.jar"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					this.gui.exportJarFileChooser.setVisible(true);
@@ -156,22 +156,22 @@ public class MenuBar extends JMenuBar {
 			}
 			menu.addSeparator();
 			{
-				JMenuItem stats = new JMenuItem("Mapping Stats...");
+				JMenuItem stats = new JMenuItem(I18n.translate("menu.file.stats"));
 
 				stats.addActionListener(event -> {
-                    JFrame frame = new JFrame("Choose Included Members");
+                    JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
 					Container pane = frame.getContentPane();
 					pane.setLayout(new FlowLayout());
 
 					Map<StatsMember, JCheckBox> checkboxes = Arrays
 							.stream(StatsMember.values())
 							.collect(Collectors.toMap(m -> m, m -> {
-								JCheckBox checkbox = new JCheckBox(Utils.caplisiseCamelCase(m.name()));
+								JCheckBox checkbox = new JCheckBox(I18n.translate("type." + m.name().toLowerCase(Locale.ROOT)));
 								pane.add(checkbox);
 								return checkbox;
 							}));
 
-					JButton button = new JButton("Generate Stats");
+					JButton button = new JButton(I18n.translate("menu.file.stats.generate"));
 
 					button.addActionListener(e -> {
 						Set<StatsMember> includedMembers = checkboxes
@@ -195,24 +195,53 @@ public class MenuBar extends JMenuBar {
 			}
 			menu.addSeparator();
 			{
-				JMenuItem item = new JMenuItem("Exit");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.file.exit"));
 				menu.add(item);
 				item.addActionListener(event -> this.gui.close());
 			}
 		}
 		{
-			JMenu menu = new JMenu("View");
+			JMenu menu = new JMenu(I18n.translate("menu.view"));
 			this.add(menu);
 			{
-				JMenu themes = new JMenu("Themes");
+				JMenu themes = new JMenu(I18n.translate("menu.view.themes"));
 				menu.add(themes);
 				for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
-					JMenuItem theme = new JMenuItem(lookAndFeel.getName());
+					JMenuItem theme = new JMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
 					themes.add(theme);
 					theme.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));
 				}
+				
+				JMenu languages = new JMenu(I18n.translate("menu.view.languages"));
+				menu.add(languages);
+				for (String lang : I18n.getAvailableLanguages()) {
+					JMenuItem language = new JMenuItem(I18n.getLanguageName(lang));
+					languages.add(language);
+					language.addActionListener(event -> I18n.setLanguage(lang));
+					language.addActionListener(event -> {
+						JFrame frame = new JFrame(I18n.translate("menu.view.languages.title"));
+						Container pane = frame.getContentPane();
+						pane.setLayout(new FlowLayout());
+						
+						JLabel text = new JLabel((I18n.translate("menu.view.languages.summary")));
+						text.setHorizontalAlignment(JLabel.CENTER);
+						pane.add(text);
+						
+						JButton okButton = new JButton(I18n.translate("menu.view.languages.ok"));
+						okButton.setAlignmentX(JButton.CENTER_ALIGNMENT);
+						okButton.setHorizontalAlignment(JButton.CENTER);
+						pane.add(okButton);
+						okButton.addActionListener(arg0 -> frame.dispose());
+						
+						frame.setSize(350, 110);
+						frame.setResizable(false);
+						frame.setLocationRelativeTo(this.gui.getFrame());
+						frame.setVisible(true);
+						frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+					});
+				}
 
-				JMenuItem search = new JMenuItem("Search");
+				JMenuItem search = new JMenuItem(I18n.translate("menu.view.search"));
 				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
 				menu.add(search);
 				search.addActionListener(event -> {
@@ -224,15 +253,15 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 		{
-			JMenu menu = new JMenu("Help");
+			JMenu menu = new JMenu(I18n.translate("menu.help"));
 			this.add(menu);
 			{
-				JMenuItem item = new JMenuItem("About");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.help.about"));
 				menu.add(item);
 				item.addActionListener(event -> AboutDialog.show(this.gui.getFrame()));
 			}
 			{
-				JMenuItem item = new JMenuItem("GitHub Page");
+				JMenuItem item = new JMenuItem(I18n.translate("menu.help.github"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					try {

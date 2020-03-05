@@ -14,6 +14,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.LFPrintWriter;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		Collection<Entry<?>> rootEntries = Lists.newArrayList(mappings).stream()
 				.map(EntryTreeNode::getEntry)
 				.collect(Collectors.toList());
-		progress.init(rootEntries.size(), "Generating mappings");
+		progress.init(rootEntries.size(), I18n.translate("progress.mappings.srg_file.generating"));
 
 		int steps = 0;
 		for (Entry<?> entry : sorted(rootEntries)) {
@@ -53,13 +54,13 @@ public enum SrgMappingsWriter implements MappingsWriter {
 			writeEntry(classLines, fieldLines, methodLines, mappings, entry);
 		}
 
-		progress.init(3, "Writing mappings");
+		progress.init(3, I18n.translate("progress.mappings.srg_file.writing"));
 		try (PrintWriter writer = new LFPrintWriter(Files.newBufferedWriter(path))) {
-			progress.step(0, "Classes");
+			progress.step(0, I18n.translate("type.classes"));
 			classLines.forEach(writer::println);
-			progress.step(1, "Fields");
+			progress.step(1, I18n.translate("type.fields"));
 			fieldLines.forEach(writer::println);
-			progress.step(2, "Methods");
+			progress.step(2, I18n.translate("type.methods"));
 			methodLines.forEach(writer::println);
 		} catch (IOException e) {
 			e.printStackTrace();

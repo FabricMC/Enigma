@@ -14,6 +14,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +46,7 @@ final class TinyV2Reader implements MappingsReader {
 	private EntryTree<EntryMapping> read(Path path, List<String> lines, ProgressListener progress) throws MappingParseException {
 		EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
-		progress.init(lines.size(), "Loading mapping file");
+		progress.init(lines.size(), I18n.translate("progress.mappings.tiny_v2.loading"));
 
 		BitSet state = new BitSet(STATE_SIZE);
 		@SuppressWarnings({"unchecked", "rawtypes"})
