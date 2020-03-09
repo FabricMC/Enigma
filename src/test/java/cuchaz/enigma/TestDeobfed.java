@@ -13,6 +13,9 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.Decompilers;
+import cuchaz.enigma.source.SourceSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -68,31 +71,29 @@ public class TestDeobfed {
 	@Test
 	public void decompile() {
 		EnigmaProject project = new EnigmaProject(enigma, classCache, index);
+		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassCache(), new SourceSettings(false, false));
 
-		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(project.getClassCache());
-		SourceProvider sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
-
-		sourceProvider.getSources("a");
-		sourceProvider.getSources("b");
-		sourceProvider.getSources("c");
-		sourceProvider.getSources("d");
-		sourceProvider.getSources("d$1");
-		sourceProvider.getSources("e");
-		sourceProvider.getSources("f");
-		sourceProvider.getSources("g");
-		sourceProvider.getSources("g$a");
-		sourceProvider.getSources("g$a$a");
-		sourceProvider.getSources("g$b");
-		sourceProvider.getSources("g$b$a");
-		sourceProvider.getSources("h");
-		sourceProvider.getSources("h$a");
-		sourceProvider.getSources("h$a$a");
-		sourceProvider.getSources("h$b");
-		sourceProvider.getSources("h$b$a");
-		sourceProvider.getSources("h$b$a$a");
-		sourceProvider.getSources("h$b$a$b");
-		sourceProvider.getSources("i");
-		sourceProvider.getSources("i$a");
-		sourceProvider.getSources("i$b");
+		decompiler.getSource("a");
+		decompiler.getSource("b");
+		decompiler.getSource("c");
+		decompiler.getSource("d");
+		decompiler.getSource("d$1");
+		decompiler.getSource("e");
+		decompiler.getSource("f");
+		decompiler.getSource("g");
+		decompiler.getSource("g$a");
+		decompiler.getSource("g$a$a");
+		decompiler.getSource("g$b");
+		decompiler.getSource("g$b$a");
+		decompiler.getSource("h");
+		decompiler.getSource("h$a");
+		decompiler.getSource("h$a$a");
+		decompiler.getSource("h$b");
+		decompiler.getSource("h$b$a");
+		decompiler.getSource("h$b$a$a");
+		decompiler.getSource("h$b$a$b");
+		decompiler.getSource("i");
+		decompiler.getSource("i$a");
+		decompiler.getSource("i$b");
 	}
 }

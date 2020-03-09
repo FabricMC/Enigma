@@ -12,10 +12,10 @@
 package cuchaz.enigma;
 
 import com.google.common.collect.Lists;
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.analysis.SourceIndex;
+import cuchaz.enigma.source.SourceIndex;
+import cuchaz.enigma.source.*;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
@@ -25,43 +25,40 @@ import java.util.Collection;
 import java.util.List;
 
 public class TokenChecker {
-
-	private SourceProvider sourceProvider;
+	private final Decompiler decompiler;
 
 	protected TokenChecker(Path path) throws IOException {
 		ClassCache classCache = ClassCache.of(path);
-
-		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(classCache);
-		sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
+		decompiler = Decompilers.PROCYON.create(classCache, new SourceSettings(false, false));
 	}
 
 	protected String getDeclarationToken(Entry<?> entry) {
 		// decompile the class
-		CompilationUnit tree = sourceProvider.getSources(entry.getContainingClass().getFullName());
+		Source source = decompiler.getSource(entry.getContainingClass().getFullName());
 		// DEBUG
 		// tree.acceptVisitor( new TreeDumpVisitor( new File( "tree." + entry.getClassName().replace( '/', '.' ) + ".txt" ) ), null );
-		String source = sourceProvider.writeSourceToString(tree);
-		SourceIndex index = SourceIndex.buildIndex(source, tree, true);
+		String string = source.asString();
+		SourceIndex index = source.index();
 
 		// get the token value
 		Token token = index.getDeclarationToken(entry);
 		if (token == null) {
 			return null;
 		}
-		return source.substring(token.start, token.end);
+		return string.substring(token.start, token.end);
 	}
 
 	@SuppressWarnings("unchecked")
 	protected Collection<String> getReferenceTokens(EntryReference<? extends Entry<?>, ? extends Entry<?>> reference) {
 		// decompile the class
-		CompilationUnit tree = sourceProvider.getSources(reference.context.getContainingClass().getFullName());
-		String source = sourceProvider.writeSourceToString(tree);
-		SourceIndex index = SourceIndex.buildIndex(source, tree, true);
+		Source source = decompiler.getSource(reference.context.getContainingClass().getFullName());
+		String string = source.asString();
+		SourceIndex index = source.index();
 
 		// get the token values
 		List<String> values = Lists.newArrayList();
 		for (Token token : index.getReferenceTokens((EntryReference<Entry<?>, Entry<?>>) reference)) {
-			values.add(source.substring(token.start, token.end));
+			values.add(string.substring(token.start, token.end));
 		}
 		return values;
 	}

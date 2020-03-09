@@ -1,16 +1,13 @@
 package cuchaz.enigma;
 
 import com.google.common.base.Functions;
-import com.strobel.assembler.metadata.ITypeLoader;
-import com.strobel.assembler.metadata.MetadataSystem;
-import com.strobel.decompiler.DecompilerSettings;
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
+import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
@@ -25,10 +22,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -200,7 +194,7 @@ public class EnigmaProject {
 			}
 		}
 
-		public SourceExport decompile(ProgressListener progress) {
+		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService) {
 			Collection<ClassNode> classes = this.compiled.values().stream()
 					.filter(classNode -> classNode.name.indexOf('$') == -1)
 					.collect(Collectors.toList());
@@ -208,18 +202,7 @@ public class EnigmaProject {
 			progress.init(classes.size(), I18n.translate("progress.classes.decompiling"));
 
 			//create a common instance outside the loop as mappings shouldn't be changing while this is happening
-			CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(this.compiled::get);
-
-			//synchronized to make sure the parallelStream doesn't CME with the cache
-			ITypeLoader synchronizedTypeLoader = new SynchronizedTypeLoader(typeLoader);
-
-			MetadataSystem metadataSystem = new NoRetryMetadataSystem(synchronizedTypeLoader);
-
-			//ensures methods are loaded on classload and prevents race conditions
-			metadataSystem.setEagerMethodLoadingEnabled(true);
-
-			DecompilerSettings settings = SourceProvider.createSettings();
-			SourceProvider sourceProvider = new SourceProvider(settings, synchronizedTypeLoader, metadataSystem);
+			Decompiler decompiler = decompilerService.create(compiled::get, new SourceSettings(false, false));
 
 			AtomicInteger count = new AtomicInteger();
 
@@ -227,7 +210,7 @@ public class EnigmaProject {
 					.map(translatedNode -> {
 						progress.step(count.getAndIncrement(), translatedNode.name);
 
-						String source = decompileClass(translatedNode, sourceProvider);
+						String source = decompileClass(translatedNode, decompiler);
 						return new ClassSource(translatedNode.name, source);
 					})
 					.collect(Collectors.toList());
@@ -235,16 +218,8 @@ public class EnigmaProject {
 			return new SourceExport(decompiled);
 		}
 
-		private String decompileClass(ClassNode translatedNode, SourceProvider sourceProvider) {
-			StringWriter writer = new StringWriter();
-			try {
-				CompilationUnit sourceTree = sourceProvider.getSources(translatedNode.name);
-				sourceProvider.writeSource(writer, sourceTree);
-			} catch (Throwable t) {
-				t.printStackTrace();
-				t.printStackTrace(new PrintWriter(writer));
-			}
-			return writer.toString();
+		private String decompileClass(ClassNode translatedNode, Decompiler decompiler) {
+			return decompiler.getSource(translatedNode.name).asString();
 		}
 	}
 

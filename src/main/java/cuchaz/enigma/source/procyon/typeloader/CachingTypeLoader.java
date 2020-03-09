@@ -1,4 +1,4 @@
-package cuchaz.enigma;
+package cuchaz.enigma.source.procyon.typeloader;
 
 import com.google.common.collect.Maps;
 import com.strobel.assembler.metadata.Buffer;

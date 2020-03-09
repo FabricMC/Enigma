@@ -13,6 +13,9 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.Decompilers;
+import cuchaz.enigma.source.SourceSettings;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
@@ -32,15 +35,13 @@ public class TestInnerClasses {
 	private static final ClassEntry ClassTreeLevel1 = newClass("f$a");
 	private static final ClassEntry ClassTreeLevel2 = newClass("f$a$a");
 	private static final ClassEntry ClassTreeLevel3 = newClass("f$a$a$a");
-	private JarIndex index;
-	private SourceProvider sourceProvider;
+	private final JarIndex index;
+	private final Decompiler decompiler;
 
 	public TestInnerClasses() throws Exception {
 		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/innerClasses.jar"));
 		index = classCache.index(ProgressListener.none());
-
-		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(classCache);
-		sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
+		decompiler = Decompilers.PROCYON.create(classCache, new SourceSettings(false, false));
 	}
 
 	@Test
@@ -79,6 +80,6 @@ public class TestInnerClasses {
 	}
 
 	private void decompile(ClassEntry classEntry) {
-		sourceProvider.getSources(classEntry.getName());
+		decompiler.getSource(classEntry.getName());
 	}
 }

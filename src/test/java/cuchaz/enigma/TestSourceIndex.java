@@ -12,9 +12,8 @@
 package cuchaz.enigma;
 
 import com.google.common.collect.Sets;
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import cuchaz.enigma.analysis.ClassCache;
-import cuchaz.enigma.analysis.SourceIndex;
+import cuchaz.enigma.source.*;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
@@ -53,8 +52,7 @@ public class TestSourceIndex {
 		ClassCache classCache = project.getClassCache();
 		JarIndex index = project.getJarIndex();
 
-		CompiledSourceTypeLoader typeLoader = new CompiledSourceTypeLoader(classCache);
-		SourceProvider sourceProvider = new SourceProvider(SourceProvider.createSettings(), typeLoader);
+		Decompiler decompiler = Decompilers.PROCYON.create(classCache, new SourceSettings(false, false));
 
 		// get all classes that aren't inner classes
 		Set<ClassEntry> classEntries = Sets.newHashSet();
@@ -66,10 +64,8 @@ public class TestSourceIndex {
 
 		for (ClassEntry obfClassEntry : classEntries) {
 			try {
-				CompilationUnit tree = sourceProvider.getSources(obfClassEntry.getName());
-				String source = sourceProvider.writeSourceToString(tree);
-
-				SourceIndex.buildIndex(source, tree, true);
+				Source source = decompiler.getSource(obfClassEntry.getName());
+				source.index();
 			} catch (Throwable t) {
 				throw new Error("Unable to index " + obfClassEntry, t);
 			}

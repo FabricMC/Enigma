@@ -15,7 +15,7 @@
  * You must not remove this notice, or any other, from this software.
  */
 
-package oml.ast.transformers;
+package cuchaz.enigma.source.procyon.transformers;
 
 import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.FieldDefinition;

@@ -3,14 +3,14 @@ package cuchaz.enigma.gui;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.EnigmaServices;
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.analysis.SourceIndex;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -19,7 +19,6 @@ import cuchaz.enigma.translation.representation.entry.LocalVariableDefEntry;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class DecompiledClassSource {
 	private final ClassEntry classEntry;

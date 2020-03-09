@@ -3,7 +3,7 @@ package cuchaz.enigma.analysis;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
-import cuchaz.enigma.CompiledSource;
+import cuchaz.enigma.ClassProvider;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.bytecode.translators.LocalVariableFixVisitor;
@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-public final class ClassCache implements AutoCloseable, CompiledSource {
+public final class ClassCache implements AutoCloseable, ClassProvider {
 	private final FileSystem fileSystem;
 	private final ImmutableSet<String> classNames;
 

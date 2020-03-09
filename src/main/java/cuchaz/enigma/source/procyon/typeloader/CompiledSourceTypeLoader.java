@@ -9,11 +9,12 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma;
+package cuchaz.enigma.source.procyon.typeloader;
 
 import com.google.common.collect.Lists;
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
+import cuchaz.enigma.ClassProvider;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -32,10 +33,10 @@ public class CompiledSourceTypeLoader extends CachingTypeLoader {
 	//Store one instance as the classpath shouldn't change during load
 	private static final ITypeLoader CLASSPATH_TYPE_LOADER = new CachingClasspathTypeLoader();
 
-	private final CompiledSource compiledSource;
+	private final ClassProvider compiledSource;
 	private final LinkedList<Function<ClassVisitor, ClassVisitor>> visitors = new LinkedList<>();
 
-	public CompiledSourceTypeLoader(CompiledSource compiledSource) {
+	public CompiledSourceTypeLoader(ClassProvider compiledSource) {
 		this.compiledSource = compiledSource;
 	}
 

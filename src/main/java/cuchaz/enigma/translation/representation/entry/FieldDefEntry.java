@@ -12,7 +12,6 @@
 package cuchaz.enigma.translation.representation.entry;
 
 import com.google.common.base.Preconditions;
-import com.strobel.assembler.metadata.FieldDefinition;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.AccessFlags;
@@ -39,14 +38,6 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 
 	public static FieldDefEntry parse(ClassEntry owner, int access, String name, String desc, String signature) {
 		return new FieldDefEntry(owner, name, new TypeDescriptor(desc), Signature.createTypedSignature(signature), new AccessFlags(access), null);
-	}
-
-	public static FieldDefEntry parse(FieldDefinition definition) {
-		ClassEntry owner = ClassEntry.parse(definition.getDeclaringType());
-		TypeDescriptor descriptor = new TypeDescriptor(definition.getErasedSignature());
-		Signature signature = Signature.createTypedSignature(definition.getSignature());
-		AccessFlags access = new AccessFlags(definition.getModifiers());
-		return new FieldDefEntry(owner, definition.getName(), descriptor, signature, access, null);
 	}
 
 	@Override

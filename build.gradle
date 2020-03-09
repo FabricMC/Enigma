@@ -19,7 +19,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.14.3'
+version = '0.15'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
@@ -72,14 +72,15 @@ configurations {
 
 dependencies {
     compile 'com.google.guava:guava:28.0-jre'
-    compile 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
     compile 'com.google.code.gson:gson:2.8.5'
     compile 'org.ow2.asm:asm:7.1'
     compile 'org.ow2.asm:asm-commons:7.1'
     compile 'org.ow2.asm:asm-tree:7.1'
     compile 'org.ow2.asm:asm-util:7.1'
-
     compile 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+
+    compile 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
+    compile 'net.fabricmc:cfr:0.0.1'
 
     application name: "darcula", version: "1.0.0"
     application 'de.sciss:syntaxpane:1.2.+'
@@ -87,7 +88,6 @@ dependencies {
 
     testCompile 'junit:junit:4.+'
     testCompile 'org.hamcrest:hamcrest-all:1.+'
-
     proGuard 'net.sf.proguard:proguard-base:5.+'
 }
 

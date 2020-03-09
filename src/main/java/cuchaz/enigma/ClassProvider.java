@@ -4,7 +4,7 @@ import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
 
-public interface CompiledSource {
+public interface ClassProvider {
 	@Nullable
 	ClassNode getClassNode(String name);
 }
