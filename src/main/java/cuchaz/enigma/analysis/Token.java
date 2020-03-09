@@ -17,12 +17,10 @@ public class Token implements Comparable<Token> {
 	public int end;
 	public String text;
 
-	public Token(int start, int end, String source) {
+	public Token(int start, int end, String text) {
 		this.start = start;
 		this.end = end;
-		if (source != null) {
-			this.text = source.substring(start, end);
-		}
+		this.text = text;
 	}
 
 	public int getRenameOffset(String to) {

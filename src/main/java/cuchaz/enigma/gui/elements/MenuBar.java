@@ -8,6 +8,7 @@ import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -202,7 +203,7 @@ public class MenuBar extends JMenuBar {
 		}
 
 		{
-			JMenu menu = new JMenu("Decompiler");
+			JMenu menu = new JMenu(I18n.translate("menu.decompiler"));
 			add(menu);
 
 			for (Config.Decompiler decompiler : Config.Decompiler.values()) {
@@ -210,6 +211,13 @@ public class MenuBar extends JMenuBar {
 				menu.add(label);
 				label.addActionListener(event -> {
 					gui.getController().setDecompiler(decompiler.service);
+
+					try {
+						Config.getInstance().decompiler = decompiler;
+						Config.getInstance().saveConfig();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
 				});
 			}
 		}

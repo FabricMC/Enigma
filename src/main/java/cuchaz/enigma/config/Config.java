@@ -140,7 +140,8 @@ public class Config {
 	}
 
 	public enum Decompiler {
-		PROCYON("Procyon", Decompilers.PROCYON);
+		PROCYON("Procyon", Decompilers.PROCYON),
+		CFR("CFR", Decompilers.CFR);
 
 		public final DecompilerService service;
 		public final String name;

@@ -17,12 +17,6 @@ public class ProcyonSource implements Source {
     private final CompilationUnit tree;
     private String string;
 
-    private ProcyonSource(CompilationUnit tree, String string, DecompilerSettings settings) {
-        this.tree = tree;
-        this.string = string;
-        this.settings = settings;
-    }
-
     public ProcyonSource(CompilationUnit tree, DecompilerSettings settings) {
         this.settings = settings;
         this.tree = tree;
@@ -44,11 +38,6 @@ public class ProcyonSource implements Source {
         }
 
         return string;
-    }
-
-    @Override
-    public Source copy() {
-        return new ProcyonSource((CompilationUnit) tree.clone(), string, settings);
     }
 
     @Override

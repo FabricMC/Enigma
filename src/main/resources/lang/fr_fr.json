@@ -26,6 +26,7 @@
 	"menu.file.stats.title": "Choisir les membres inclus",
 	"menu.file.stats.generate": "Générer les statistiques",
 	"menu.file.exit": "Quitter",
+	"menu.decompiler": "Décompilateur",
 	"menu.view": "Affichage",
 	"menu.view.themes": "Thèmes",
 	"menu.view.themes.default": "Par défaut",

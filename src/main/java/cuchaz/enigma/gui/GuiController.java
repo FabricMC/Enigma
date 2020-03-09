@@ -34,6 +34,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.ReadableToken;
 import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.Opcodes;
@@ -82,7 +83,7 @@ public class GuiController {
 				.setProfile(profile)
 				.build();
 
-		decompilerService = Decompilers.PROCYON;
+		decompilerService = Config.getInstance().decompiler.service;
 	}
 
 	public boolean isDirty() {
@@ -189,7 +190,7 @@ public class GuiController {
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-			EnigmaProject.SourceExport source = jar.decompile(progress);
+			EnigmaProject.SourceExport source = jar.decompile(progress, decompilerService);
 
 			source.write(path, progress);
 		});
@@ -383,36 +384,36 @@ public class GuiController {
 	}
 
 	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference) {
-		refreshCurrentClass(reference, false);
+		refreshCurrentClass(reference, RefreshMode.MINIMAL);
 	}
 
-	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, boolean refreshJavadocs) {
+	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, RefreshMode mode) {
 		if (currentSource != null) {
 			loadClass(currentSource.getEntry(), () -> {
 				if (reference != null) {
 					showReference(reference);
 				}
-			}, refreshJavadocs);
+			}, mode);
 		}
 	}
 
 	private void loadClass(ClassEntry classEntry, Runnable callback) {
-		loadClass(classEntry, callback, false);
+		loadClass(classEntry, callback, RefreshMode.MINIMAL);
 	}
 
-	private void loadClass(ClassEntry classEntry, Runnable callback, boolean refreshJavadocs) {
+	private void loadClass(ClassEntry classEntry, Runnable callback, RefreshMode mode) {
 		ClassEntry targetClass = classEntry.getOutermostClass();
 
-		boolean requiresDecompile = currentSource == null || !currentSource.getEntry().equals(targetClass);
+		boolean requiresDecompile = mode == RefreshMode.FULL || currentSource == null || !currentSource.getEntry().equals(targetClass);
 		if (requiresDecompile) {
 			currentSource = null; // Or the GUI may try to find a nonexistent token
-			gui.setEditorText("(decompiling...)");
+			gui.setEditorText(I18n.translate("info_panel.editor.class.decompiling"));
 		}
 
 		DECOMPILER_SERVICE.submit(() -> {
 			try {
-				if (requiresDecompile || refreshJavadocs) {
-					currentSource = decompileSource(targetClass, refreshJavadocs);
+				if (requiresDecompile || mode == RefreshMode.JAVADOCS) {
+					currentSource = decompileSource(targetClass, mode == RefreshMode.JAVADOCS);
 				}
 
 				remapSource(project.getMapper().getDeobfuscator());
@@ -433,7 +434,7 @@ public class GuiController {
 			Source source = uncommentedSource.addJavadocs(project.getMapper());
 
 			if (source == null) {
-				gui.setEditorText("Unable to find class: " + targetClass);
+				gui.setEditorText(I18n.translate("info_panel.editor.class.not_found") + " " + targetClass);
 				return DecompiledClassSource.text(targetClass, "Unable to find class");
 			}
 
@@ -548,7 +549,7 @@ public class GuiController {
 	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
 		changeDoc(reference.getNameableEntry(), updatedDocs);
 
-		refreshCurrentClass(reference, true);
+		refreshCurrentClass(reference, RefreshMode.JAVADOCS);
 	}
 
 	public void changeDoc(Entry<?> obfEntry, String newDoc) {
@@ -597,7 +598,9 @@ public class GuiController {
 	}
 
 	public void setDecompiler(DecompilerService service) {
+		uncommentedSource = null;
 		decompilerService = service;
 		decompiler = createDecompiler();
+		refreshCurrentClass(null, RefreshMode.FULL);
 	}
 }

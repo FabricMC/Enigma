@@ -6,6 +6,7 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.Token;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
+import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;

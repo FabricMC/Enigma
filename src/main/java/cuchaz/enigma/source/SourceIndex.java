@@ -18,18 +18,25 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class SourceIndex {
-    private final String source;
+    private String source;
+    private List<Integer> lineOffsets;
     private final TreeMap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReference;
     private final Multimap<EntryReference<Entry<?>, Entry<?>>, Token> referenceToTokens;
     private final Map<Entry<?>, Token> declarationToToken;
-    private final List<Integer> lineOffsets;
 
-    public SourceIndex(String source) {
-        this.source = source;
+    public SourceIndex() {
         tokenToReference = new TreeMap<>();
         referenceToTokens = HashMultimap.create();
         declarationToToken = Maps.newHashMap();
+    }
 
+    public SourceIndex(String source) {
+        this();
+        setSource(source);
+    }
+
+    public void setSource(String source) {
+        this.source = source;
         lineOffsets = Lists.newArrayList();
         lineOffsets.add(0);
 

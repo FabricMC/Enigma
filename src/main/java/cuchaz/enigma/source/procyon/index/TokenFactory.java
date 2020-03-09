@@ -17,11 +17,10 @@ public class TokenFactory {
         String name = node instanceof Identifier ? ((Identifier) node).getName() : "";
         Region region = node.getRegion();
 
-        Token token = new Token(
-                index.getPosition(region.getBeginLine(), region.getBeginColumn()),
-                index.getPosition(region.getEndLine(), region.getEndColumn()),
-                index.getSource()
-        );
+        int start = index.getPosition(region.getBeginLine(), region.getBeginColumn());
+        int end = index.getPosition(region.getEndLine(), region.getEndColumn());
+        String text = index.getSource().substring(start, end);
+        Token token = new Token(start, end, text);
 
         boolean isAnonymousInner =
                 node instanceof Identifier &&
