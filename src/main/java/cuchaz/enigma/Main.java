@@ -25,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.google.common.io.MoreFiles;
+
 public class Main {
 
 	public static void main(String[] args) throws IOException {
@@ -78,6 +80,8 @@ public class Main {
 								Path mappingsPath = options.valueOf(mappings);
 								if (Files.isDirectory(mappingsPath)) {
 									controller.openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsPath);
+								} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(mappingsPath))) {
+									controller.openMappings(MappingFormat.ENIGMA_ZIP, mappingsPath);
 								} else {
 									controller.openMappings(MappingFormat.ENIGMA_FILE, mappingsPath);
 								}
