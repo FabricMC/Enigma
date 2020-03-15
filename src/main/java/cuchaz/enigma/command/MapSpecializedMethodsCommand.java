@@ -37,9 +37,9 @@ public class MapSpecializedMethodsCommand extends Command {
     @Override
     public void run(String... args) throws IOException, MappingParseException {
         run(Paths.get(args[0]), args[1], Paths.get(args[2]), args[3], Paths.get(args[4]));
-	}
+    }
 
-	public void run(Path jar, String sourceFormat, Path sourcePath, String resultFormat, Path output) throws IOException, MappingParseException {
+    public void run(Path jar, String sourceFormat, Path sourcePath, String resultFormat, Path output) throws IOException, MappingParseException {
         MappingSaveParameters saveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
         EntryTree<EntryMapping> source = MappingCommandsUtil.read(sourceFormat, sourcePath, saveParameters);
         EntryTree<EntryMapping> result = new HashEntryTree<>();

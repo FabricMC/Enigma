@@ -168,13 +168,13 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	ZIP {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path zip, ProgressListener progress, MappingSaveParameters saveParameters) {
-	        try (FileSystem fs = FileSystems.newFileSystem(new URI("jar:file", null, zip.toUri().getPath(), ""), Collections.singletonMap("create", "true"))) {
-	        	DIRECTORY.write(mappings, delta, fs.getPath("/"), progress, saveParameters);
-	        } catch (IOException e) {
+			try (FileSystem fs = FileSystems.newFileSystem(new URI("jar:file", null, zip.toUri().getPath(), ""), Collections.singletonMap("create", "true"))) {
+				DIRECTORY.write(mappings, delta, fs.getPath("/"), progress, saveParameters);
+			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (URISyntaxException e) {
-	            throw new RuntimeException("Unexpected error creating URI for " + zip, e);
-	        }
+				throw new RuntimeException("Unexpected error creating URI for " + zip, e);
+			}
 		}
 	};
 
