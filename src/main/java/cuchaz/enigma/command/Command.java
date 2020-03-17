@@ -13,6 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.google.common.io.MoreFiles;
+
 public abstract class Command {
 	public final String name;
 
@@ -49,6 +51,8 @@ public abstract class Command {
 	protected static MappingFormat chooseEnigmaFormat(Path path) {
 		if (Files.isDirectory(path)) {
 			return MappingFormat.ENIGMA_DIRECTORY;
+		} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
+			return MappingFormat.ENIGMA_ZIP;
 		} else {
 			return MappingFormat.ENIGMA_FILE;
 		}

@@ -17,6 +17,7 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -81,7 +82,7 @@ public final class MappingCommandsUtil {
 
     public static EntryTree<EntryMapping> read(String type, Path path, MappingSaveParameters saveParameters) throws MappingParseException, IOException {
         if (type.equals("enigma")) {
-            return EnigmaMappingsReader.DIRECTORY.read(path, ProgressListener.none(), saveParameters);
+            return (Files.isDirectory(path) ? EnigmaMappingsReader.DIRECTORY : EnigmaMappingsReader.ZIP).read(path, ProgressListener.none(), saveParameters);
         }
 
         if (type.equals("tiny")) {

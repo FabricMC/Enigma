@@ -16,6 +16,8 @@ import cuchaz.enigma.utils.I18n;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
@@ -61,6 +63,14 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			}
 
 			return mappings;
+		}
+	},
+	ZIP {
+		@Override
+		public EntryTree<EntryMapping> read(Path zip, ProgressListener progress, MappingSaveParameters saveParameters) throws MappingParseException, IOException {
+			try (FileSystem fs = FileSystems.newFileSystem(zip, (ClassLoader) null)) {
+				return DIRECTORY.read(fs.getPath("/"), progress, saveParameters);
+			}
 		}
 	};
 

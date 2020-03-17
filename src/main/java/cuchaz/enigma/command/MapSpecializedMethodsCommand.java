@@ -36,10 +36,13 @@ public class MapSpecializedMethodsCommand extends Command {
 
     @Override
     public void run(String... args) throws IOException, MappingParseException {
+        run(Paths.get(args[0]), args[1], Paths.get(args[2]), args[3], Paths.get(args[4]));
+    }
+
+    public static void run(Path jar, String sourceFormat, Path sourcePath, String resultFormat, Path output) throws IOException, MappingParseException {
         MappingSaveParameters saveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
-        EntryTree<EntryMapping> source = MappingCommandsUtil.read(args[1], Paths.get(args[2]), saveParameters);
+        EntryTree<EntryMapping> source = MappingCommandsUtil.read(sourceFormat, sourcePath, saveParameters);
         EntryTree<EntryMapping> result = new HashEntryTree<>();
-        Path jar = Paths.get(args[0]);
         ClassCache classCache = ClassCache.of(jar);
         JarIndex jarIndex = classCache.index(ProgressListener.none());
         BridgeMethodIndex bridgeMethodIndex = jarIndex.getBridgeMethodIndex();
@@ -60,8 +63,7 @@ public class MapSpecializedMethodsCommand extends Command {
             result.insert(specialized, new EntryMapping(name));
         }
 
-        Path output = Paths.get(args[4]);
         Utils.delete(output);
-        MappingCommandsUtil.write(result, args[3], output, saveParameters);
+        MappingCommandsUtil.write(result, resultFormat, output, saveParameters);
     }
 }
