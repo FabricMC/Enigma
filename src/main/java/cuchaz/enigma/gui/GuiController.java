@@ -547,7 +547,7 @@ public class GuiController {
 	}
 
 	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
-		changeDoc(reference.getNameableEntry(), updatedDocs);
+		changeDoc(reference.entry, updatedDocs);
 
 		refreshCurrentClass(reference, RefreshMode.JAVADOCS);
 	}
