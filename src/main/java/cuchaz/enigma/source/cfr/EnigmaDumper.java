@@ -82,7 +82,7 @@ public class EnigmaDumper implements Dumper {
     }
 
     private MethodEntry getMethodEntry(MethodPrototype method) {
-        if (method.getClassType() == null) {
+        if (method == null || method.getClassType() == null) {
             return null;
         }
 
@@ -97,7 +97,7 @@ public class EnigmaDumper implements Dumper {
     private LocalVariableEntry getParameterEntry(MethodPrototype method, int parameterIndex, String name) {
         int variableIndex = method.isInstanceMethod() ? 1 : 0;
         for (int i = 0; i < parameterIndex; i++) {
-            variableIndex += method.getArgs().get(parameterIndex).getStackType().getComputationCategory();
+            variableIndex += method.getArgs().get(i).getStackType().getComputationCategory();
         }
 
         return new LocalVariableEntry(getMethodEntry(method), variableIndex, name, true, null);

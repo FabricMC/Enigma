@@ -17,6 +17,11 @@ public class TokenFactory {
         String name = node instanceof Identifier ? ((Identifier) node).getName() : "";
         Region region = node.getRegion();
 
+        if (region.getBeginLine() == 0) {
+            System.err.println("Got bad region from Procyon for node " + node);
+            return null;
+        }
+
         int start = index.getPosition(region.getBeginLine(), region.getBeginColumn());
         int end = index.getPosition(region.getEndLine(), region.getEndColumn());
         String text = index.getSource().substring(start, end);
