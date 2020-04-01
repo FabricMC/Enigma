@@ -76,10 +76,10 @@ configurations {
 dependencies {
     compile 'com.google.guava:guava:28.0-jre'
     compile 'com.google.code.gson:gson:2.8.5'
-    compile 'org.ow2.asm:asm:7.1'
-    compile 'org.ow2.asm:asm-commons:7.1'
-    compile 'org.ow2.asm:asm-tree:7.1'
-    compile 'org.ow2.asm:asm-util:7.1'
+    compile 'org.ow2.asm:asm:8.0'
+    compile 'org.ow2.asm:asm-commons:8.0'
+    compile 'org.ow2.asm:asm-tree:8.0'
+    compile 'org.ow2.asm:asm-util:8.0'
     compile 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
 
     compile 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
