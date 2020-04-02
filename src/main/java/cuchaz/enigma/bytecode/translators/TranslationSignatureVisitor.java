@@ -1,5 +1,6 @@
 package cuchaz.enigma.bytecode.translators;
 
+import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureVisitor;
 
@@ -13,7 +14,7 @@ public class TranslationSignatureVisitor extends SignatureVisitor {
 	private final Stack<String> classStack = new Stack<>();
 
 	public TranslationSignatureVisitor(Function<String, String> remapper, SignatureVisitor sv) {
-		super(Opcodes.ASM5);
+		super(Utils.ASM_VERSION);
 		this.remapper = remapper;
 		this.sv = sv;
 	}

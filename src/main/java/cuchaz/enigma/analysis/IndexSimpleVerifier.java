@@ -5,6 +5,7 @@ import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.SimpleVerifier;
@@ -17,7 +18,7 @@ public class IndexSimpleVerifier extends SimpleVerifier {
     private final InheritanceIndex inheritanceIndex;
 
     public IndexSimpleVerifier(EntryIndex entryIndex, InheritanceIndex inheritanceIndex) {
-        super(ASM7, null, null, null, false);
+        super(Utils.ASM_VERSION, null, null, null, false);
         this.entryIndex = entryIndex;
         this.inheritanceIndex = inheritanceIndex;
     }

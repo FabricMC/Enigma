@@ -12,6 +12,7 @@
 package cuchaz.enigma.utils;
 
 import com.google.common.io.CharStreams;
+import org.objectweb.asm.Opcodes;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,6 +31,8 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class Utils {
+	
+	public static final int ASM_VERSION = Opcodes.ASM8;
 
 	public static int combineHashesOrdered(Object... objs) {
 		final int prime = 67;
