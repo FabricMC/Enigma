@@ -12,6 +12,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.utils.Pair;
+import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -69,7 +70,7 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 		private final List<MethodNode> classInits = new ArrayList<>();
 
 		EnumFieldNameFindingVisitor(Map<Entry<?>, String> mappings) {
-			super(Opcodes.ASM7);
+			super(Utils.ASM_VERSION);
 			this.mappings = mappings;
 		}
 

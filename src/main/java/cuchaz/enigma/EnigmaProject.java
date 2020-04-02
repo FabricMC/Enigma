@@ -18,6 +18,7 @@ import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
+import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -152,7 +153,7 @@ public class EnigmaProject {
 					ClassNode node = classCache.getClassNode(entry.getFullName());
 					if (node != null) {
 						ClassNode translatedNode = new ClassNode();
-						node.accept(new TranslationClassVisitor(deobfuscator, Opcodes.ASM5, new SourceFixVisitor(Opcodes.ASM5, translatedNode, jarIndex)));
+						node.accept(new TranslationClassVisitor(deobfuscator, Utils.ASM_VERSION, new SourceFixVisitor(Utils.ASM_VERSION, translatedNode, jarIndex)));
 						return translatedNode;
 					}
 

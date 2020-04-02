@@ -111,7 +111,7 @@ public class GuiController {
 			}
 
 			ClassNode fixedNode = new ClassNode();
-			node.accept(new SourceFixVisitor(Opcodes.ASM7, fixedNode, project.getJarIndex()));
+			node.accept(new SourceFixVisitor(Utils.ASM_VERSION, fixedNode, project.getJarIndex()));
 			return fixedNode;
 		}, new SourceSettings(true, true));
 	}

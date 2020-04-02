@@ -19,14 +19,12 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven'
 
 group = 'cuchaz'
-version = '0.15'
+version = '0.15.1'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
 def ENV = System.getenv()
-if (ENV.BUILD_NUMBER) {
-    version = version + "." + "${System.getenv().BUILD_NUMBER}"
-}
+version = version + "+" + (ENV.BUILD_NUMBER ? ("build." + ENV.BUILD_NUMBER) : "local")
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -60,6 +58,9 @@ repositories {
 	ivy {
 		name "darcula"
 		artifactPattern "https://raw.githubusercontent.com/bulenkov/Darcula/master/build/[module].[ext]"
+		metadataSources {
+			artifact()
+		}
 	}
 }
 
@@ -73,10 +74,10 @@ configurations {
 dependencies {
     compile 'com.google.guava:guava:28.0-jre'
     compile 'com.google.code.gson:gson:2.8.5'
-    compile 'org.ow2.asm:asm:7.1'
-    compile 'org.ow2.asm:asm-commons:7.1'
-    compile 'org.ow2.asm:asm-tree:7.1'
-    compile 'org.ow2.asm:asm-util:7.1'
+    compile 'org.ow2.asm:asm:8.0'
+    compile 'org.ow2.asm:asm-commons:8.0'
+    compile 'org.ow2.asm:asm-tree:8.0'
+    compile 'org.ow2.asm:asm-util:8.0'
     compile 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
 
     compile 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
@@ -88,8 +89,10 @@ dependencies {
 
     testCompile 'junit:junit:4.+'
     testCompile 'org.hamcrest:hamcrest-all:1.+'
-    proGuard 'net.sf.proguard:proguard-base:5.+'
+    proGuard 'net.sf.proguard:proguard-base:6.+'
 }
+
+def libraryJarsArg = JavaVersion.current().java9Compatible ? "<java.home>/jmods": "<java.home>/lib/rt.jar"
 
 // For each set of test inputs, create an output jar and obfuscate it.
 file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
@@ -110,8 +113,8 @@ file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
             classpath configurations.proGuard
 
             args '@src/test/resources/proguard-test.conf', '-injars', file('build/test-inputs/' +
-                    "${theFile.name}.jar"), '-outjars', file('build/test-obf/' +
-                    "${theFile.name}.jar")
+                    "${theFile.name}.jar"), '-libraryjars', libraryJarsArg,
+                    '-outjars', file('build/test-obf/' + "${theFile.name}.jar")
         }
 
         test.dependsOn "${theFile.name}TestObf"

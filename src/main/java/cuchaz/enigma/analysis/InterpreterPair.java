@@ -1,5 +1,6 @@
 package cuchaz.enigma.analysis;
 
+import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -16,7 +17,7 @@ public class InterpreterPair<V extends Value, W extends Value> extends Interpret
     private final Interpreter<W> right;
 
     public InterpreterPair(Interpreter<V> left, Interpreter<W> right) {
-        super(Opcodes.ASM7);
+        super(Utils.ASM_VERSION);
         this.left = left;
         this.right = right;
     }
