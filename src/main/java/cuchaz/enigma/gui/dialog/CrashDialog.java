@@ -19,6 +19,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
 
 public class CrashDialog {
 
@@ -44,9 +47,24 @@ public class CrashDialog {
 
 		// buttons panel
 		JPanel buttonsPanel = new JPanel();
-		FlowLayout buttonsLayout = new FlowLayout();
-		buttonsLayout.setAlignment(FlowLayout.RIGHT);
-		buttonsPanel.setLayout(buttonsLayout);
+		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.LINE_AXIS));
+		JButton exportButton = new JButton(I18n.translate("crash.export"));
+		exportButton.addActionListener(event -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setSelectedFile(new File("enigma_crash.log"));
+			if (chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+				try {
+					File file = chooser.getSelectedFile();
+					FileWriter writer = new FileWriter(file);
+					writer.write(instance.text.getText());
+					writer.close();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+		buttonsPanel.add(exportButton);
+		buttonsPanel.add(Box.createHorizontalGlue());
 		buttonsPanel.add(Utils.unboldLabel(new JLabel(I18n.translate("crash.exit.warning"))));
 		JButton ignoreButton = new JButton(I18n.translate("crash.ignore"));
 		ignoreButton.addActionListener(event -> {
