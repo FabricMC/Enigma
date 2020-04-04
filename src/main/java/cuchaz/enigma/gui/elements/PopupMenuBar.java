@@ -101,5 +101,25 @@ public class PopupMenuBar extends JPopupMenu {
 			this.add(menu);
 			this.toggleMappingMenu = menu;
 		}
+		{
+			this.add(new JSeparator());
+		}
+		{
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.zoom.in"));
+			menu.addActionListener(event -> gui.editor.setEditorZoom(2));
+			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, InputEvent.CTRL_MASK));
+			this.add(menu);
+		}
+		{
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.zoom.out"));
+			menu.addActionListener(event -> gui.editor.setEditorZoom(-2));
+			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_MASK));
+			this.add(menu);
+		}
+		{
+			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.zoom.reset"));
+			menu.addActionListener(event -> gui.editor.resetEditorZoom());
+			this.add(menu);
+		}
 	}
 }
