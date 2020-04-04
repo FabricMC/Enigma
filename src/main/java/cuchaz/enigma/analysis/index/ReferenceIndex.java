@@ -97,7 +97,8 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	private <K extends Entry<?>, V extends Entry<?>> Multimap<K, V> remapReferences(JarIndex index, Multimap<K, V> multimap) {
-		Multimap<K, V> resolved = HashMultimap.create(multimap.keySet().size(), multimap.size() / multimap.keySet().size());
+		final int keySetSize = multimap.keySet().size();
+		Multimap<K, V> resolved = HashMultimap.create(multimap.keySet().size(), keySetSize == 0 ? 0 : multimap.size() / keySetSize);
 		for (Map.Entry<K, V> entry : multimap.entries()) {
 			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
 		}
