@@ -110,6 +110,7 @@
 
 	"crash.title": "%s - Rapport de plantage",
 	"crash.summary": "%s a planté ! =(",
+	"crash.export": "Exporter",
 	"crash.ignore": "Ignorer",
 	"crash.exit": "Quitter",
 	"crash.exit.warning": "Si vous choisissez Quitter, vous perdrez tout travail non sauvegardé."

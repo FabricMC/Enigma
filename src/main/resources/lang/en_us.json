@@ -111,6 +111,7 @@
 
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",
+	"crash.export": "Export",
 	"crash.ignore": "Ignore",
 	"crash.exit": "Exit",
 	"crash.exit.warning": "If you choose exit, you will lose any unsaved work."
