@@ -17,6 +17,8 @@ Enigma includes the following open-source libraries:
 
 ## Usage
 
+Pre-compiled jars can be found on the [fabric maven](https://maven.fabricmc.net/cuchaz/enigma/).
+
 ### Launching the GUI
 
 `java -jar enigma.jar`
