@@ -17,7 +17,7 @@ import java.awt.event.MouseEvent;
 
 public class PanelEditor extends JEditorPane {
 	private boolean mouseIsPressed = false;
-	public Integer fontSize = 12;
+	public int fontSize = 12;
 
 	public PanelEditor(Gui gui) {
 		this.setEditable(false);
@@ -103,11 +103,11 @@ public class PanelEditor extends JEditorPane {
 						case KeyEvent.VK_ADD:
 						case KeyEvent.VK_EQUALS:
 						case KeyEvent.VK_PLUS:
-							self.setEditorZoom(2);
+							self.offsetEditorZoom(2);
 							break;
 						case KeyEvent.VK_SUBTRACT:
 						case KeyEvent.VK_MINUS:
-							self.setEditorZoom(-2);
+							self.offsetEditorZoom(-2);
 							break;
 
 						default:
@@ -146,7 +146,7 @@ public class PanelEditor extends JEditorPane {
 		});
 	}
 
-	public void setEditorZoom(Integer zoomAmount) {
+	public void offsetEditorZoom(int zoomAmount) {
 		int newResult = this.fontSize + zoomAmount;
 		if (newResult > 8 && newResult < 72) {
 			this.fontSize = newResult;
