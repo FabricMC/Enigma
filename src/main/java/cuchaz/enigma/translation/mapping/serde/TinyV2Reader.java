@@ -239,7 +239,7 @@ final class TinyV2Reader implements MappingsReader {
 		if (mapping == null) {
 			throw new IllegalArgumentException("Javadoc requires a mapping in enigma!");
 		}
-		mapping.addJavadocLine(javadoc);
+		mapping.addJavadocLine(unescape(javadoc));
 	}
 
 
