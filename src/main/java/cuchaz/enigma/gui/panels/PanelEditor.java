@@ -17,11 +17,13 @@ import java.awt.event.MouseEvent;
 
 public class PanelEditor extends JEditorPane {
 	private boolean mouseIsPressed = false;
+	public int fontSize = 12;
 
 	public PanelEditor(Gui gui) {
 		this.setEditable(false);
 		this.setSelectionColor(new Color(31, 46, 90));
 		this.setCaret(new BrowserCaret());
+		this.setFont(new Font(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
 		this.addCaretListener(event -> gui.onCaretMove(event.getDot(), mouseIsPressed));
 		final PanelEditor self = this;
 		this.addMouseListener(new MouseAdapter() {
@@ -53,7 +55,6 @@ public class PanelEditor extends JEditorPane {
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
 					gui.setShouldNavigateOnClick(false);
-
 					switch (event.getKeyCode()) {
 						case KeyEvent.VK_I:
 							gui.popupMenu.showInheritanceMenu.doClick();
@@ -99,6 +100,16 @@ public class PanelEditor extends JEditorPane {
 							// prevent navigating on click when quick find activated
 							break;
 
+						case KeyEvent.VK_ADD:
+						case KeyEvent.VK_EQUALS:
+						case KeyEvent.VK_PLUS:
+							self.offsetEditorZoom(2);
+							break;
+						case KeyEvent.VK_SUBTRACT:
+						case KeyEvent.VK_MINUS:
+							self.offsetEditorZoom(-2);
+							break;
+
 						default:
 							gui.setShouldNavigateOnClick(true); // CTRL
 							break;
@@ -133,6 +144,19 @@ public class PanelEditor extends JEditorPane {
 				gui.setShouldNavigateOnClick(event.isControlDown());
 			}
 		});
+	}
+
+	public void offsetEditorZoom(int zoomAmount) {
+		int newResult = this.fontSize + zoomAmount;
+		if (newResult > 8 && newResult < 72) {
+			this.fontSize = newResult;
+			this.setFont(new Font(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
+		}
+	}
+
+	public void resetEditorZoom() {
+		this.fontSize = 12;
+		this.setFont(new Font(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
 	}
 
 	@Override

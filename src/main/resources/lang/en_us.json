@@ -56,6 +56,9 @@
 	"popup_menu.forward": "Go forward",
 	"popup_menu.mark_deobfuscated": "Mark as deobfuscated",
 	"popup_menu.reset_obfuscated": "Reset to obfuscated",
+	"popup_menu.zoom.in": "Zoom in",
+	"popup_menu.zoom.out": "Zoom out",
+	"popup_menu.zoom.reset": "Reset zoom",
 
 	"info_panel.classes.obfuscated": "Obfuscated Classes",
 	"info_panel.classes.deobfuscated": "De-obfuscated Classes",
