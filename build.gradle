@@ -1,30 +1,16 @@
-// Do it this way so people with older Gradle can hopefully still build.
-buildscript {
-    repositories {
-        jcenter()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
-    }
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'maven-publish'
 }
-
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'maven'
 
 group = 'cuchaz'
 version = '0.15.1'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
-def ENV = System.getenv()
-version = version + "+" + (ENV.BUILD_NUMBER ? ("build." + ENV.BUILD_NUMBER) : "local")
+def buildNumber = System.getenv("BUILD_NUMBER")
+version = version + "+" + (buildNumber ? "build.$buildNumber" : "local")
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -46,13 +32,8 @@ repositories {
     mavenCentral()
 
     maven {
-        name "Cuchaz Custom Repository"
-        url 'http://maven.cuchazinteractive.com'
-    }
-
-    maven {
         name "Modmuss Repository"
-        url 'http://maven.modmuss50.me/'
+        url 'https://maven.modmuss50.me/'
     }
 
 	ivy {
@@ -65,30 +46,29 @@ repositories {
 }
 
 configurations {
-    proGuard // used to download ProGuard
-    application // used for JSyntaxPane so it's not in the library POM
-
-    compile.extendsFrom application
+    proGuard
 }
 
 dependencies {
-    compile 'com.google.guava:guava:28.0-jre'
-    compile 'com.google.code.gson:gson:2.8.5'
-    compile 'org.ow2.asm:asm:8.0'
-    compile 'org.ow2.asm:asm-commons:8.0'
-    compile 'org.ow2.asm:asm-tree:8.0'
-    compile 'org.ow2.asm:asm-util:8.0'
-    compile 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+    implementation 'com.google.guava:guava:28.0-jre'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'org.ow2.asm:asm:8.0'
+    implementation 'org.ow2.asm:asm-commons:8.0'
+    implementation 'org.ow2.asm:asm-tree:8.0'
+    implementation 'org.ow2.asm:asm-util:8.0'
+    implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+    implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
+    implementation 'net.fabricmc:cfr:0.0.1'
+    implementation name: "darcula", version: "1.0.0"
+    implementation 'de.sciss:syntaxpane:1.2.+'
+    implementation 'me.xdrop:fuzzywuzzy:1.2.0'
+    implementation name: "darcula", version: "1.0.0"
+    implementation 'de.sciss:syntaxpane:1.2.+'
+    implementation 'me.xdrop:fuzzywuzzy:1.2.0'
 
-    compile 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
-    compile 'net.fabricmc:cfr:0.0.1'
+    testImplementation 'junit:junit:4.+'
+    testImplementation 'org.hamcrest:hamcrest-all:1.+'
 
-    application name: "darcula", version: "1.0.0"
-    application 'de.sciss:syntaxpane:1.2.+'
-    application 'me.xdrop:fuzzywuzzy:1.2.0'
-
-    testCompile 'junit:junit:4.+'
-    testCompile 'org.hamcrest:hamcrest-all:1.+'
     proGuard 'net.sf.proguard:proguard-base:6.+'
 }
 
@@ -103,8 +83,8 @@ file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
                 include 'cuchaz/enigma/inputs/Keep.class'
             }
 
-            archiveName = theFile.name + '.jar'
-            destinationDir = file('build/test-inputs')
+            archiveFileName = theFile.name + '.jar'
+            destinationDirectory = file('build/test-inputs')
         }
 
         task("${theFile.name}TestObf", type: JavaExec,
@@ -184,12 +164,23 @@ artifacts {
    archives sourcesJar
 }
 
-// And finally, make the build generate / install the jars.
-build.dependsOn install
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
 
-apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/maven.gradle'
-
-uploadArchives.repositories.mavenDeployer.pom.withXml {
-	asNode().dependencies.'*'.findAll() { it.artifactId.text() == 'darcula' }
-	.each() { it.parent().remove(it) }
+    // select the repositories you want to publish to
+    repositories {
+        if (project.hasProperty('mavenPass')) {
+            maven {
+                url = "http://mavenupload.modmuss50.me/"
+                credentials {
+                    username = "buildslave"
+                    password = project.getProperty('mavenPass')
+                }
+            }
+        }
+    }
 }
