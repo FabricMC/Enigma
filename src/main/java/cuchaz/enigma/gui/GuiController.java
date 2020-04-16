@@ -24,12 +24,18 @@ import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
+import cuchaz.enigma.network.EnigmaClient;
+import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.network.ServerPacketHandler;
+import cuchaz.enigma.network.packet.LoginC2SPacket;
+import cuchaz.enigma.network.packet.Packet;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -37,11 +43,11 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.ReadableToken;
 import cuchaz.enigma.utils.Utils;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import java.awt.Desktop;
 import java.awt.event.ItemEvent;
 import java.io.*;
@@ -76,6 +82,9 @@ public class GuiController {
 
 	private DecompiledClassSource currentSource;
 	private Source uncommentedSource;
+
+	private EnigmaClient client;
+	private EnigmaServer server;
 
 	public GuiController(Gui gui, EnigmaProfile profile) {
 		this.gui = gui;
@@ -142,6 +151,14 @@ public class GuiController {
 				JOptionPane.showMessageDialog(gui.getFrame(), e.getMessage());
 			}
 		});
+	}
+
+	public void openMappings(EntryTree<EntryMapping> mappings) {
+		if (project == null) return;
+
+		project.setMappings(mappings);
+		refreshClasses();
+		refreshCurrentClass();
 	}
 
 	public CompletableFuture<Void> saveMappings(Path path) {
@@ -547,12 +564,12 @@ public class GuiController {
 	}
 
 	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
-		changeDoc(reference.entry, updatedDocs);
+		changeDoc(reference.entry, Utils.isBlank(updatedDocs) ? null : updatedDocs);
 
 		refreshCurrentClass(reference, RefreshMode.JAVADOCS);
 	}
 
-	public void changeDoc(Entry<?> obfEntry, String newDoc) {
+	private void changeDoc(Entry<?> obfEntry, String newDoc) {
 		EntryRemapper mapper = project.getMapper();
 		if (mapper.getDeobfMapping(obfEntry) == null) {
 			markAsDeobfuscated(obfEntry,false); // NPE
@@ -560,7 +577,7 @@ public class GuiController {
 		mapper.mapFromObf(obfEntry, mapper.getDeobfMapping(obfEntry).withDocs(newDoc), false);
 	}
 
-	public void markAsDeobfuscated(Entry<?> obfEntry, boolean renaming) {
+	private void markAsDeobfuscated(Entry<?> obfEntry, boolean renaming) {
 		EntryRemapper mapper = project.getMapper();
 		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()), renaming);
 	}
@@ -603,4 +620,50 @@ public class GuiController {
 		decompiler = createDecompiler();
 		refreshCurrentClass(null, RefreshMode.FULL);
 	}
+
+	public EnigmaClient getClient() {
+	    return client;
+    }
+
+    public EnigmaServer getServer() {
+	    return server;
+    }
+
+    public void createClient(String username, String ip, int port) throws IOException {
+		client = new EnigmaClient(this, ip, port);
+		client.connect();
+		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), username));
+	}
+
+    public void createServer(int port) throws IOException {
+		server = new EnigmaServer(project.getJarChecksum(), EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
+		server.start();
+		client = new EnigmaClient(this, "127.0.0.1", port);
+		client.connect();
+		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), EnigmaServer.OWNER_USERNAME));
+		gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.colab.server.stop"));
+	}
+
+	public synchronized void disconnectIfConnected(String reason) {
+		if (client == null && server == null) {
+			return;
+		}
+
+		if (client != null) {
+			client.disconnect();
+		}
+		if (server != null) {
+			server.stop();
+		}
+		client = null;
+		server = null;
+		SwingUtilities.invokeLater(() -> gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.colab.server.start")));
+	}
+
+	public void sendPacket(Packet<ServerPacketHandler> packet) {
+		if (client != null) {
+			client.sendPacket(packet);
+		}
+	}
+
 }

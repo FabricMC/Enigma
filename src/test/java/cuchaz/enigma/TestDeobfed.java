@@ -70,7 +70,7 @@ public class TestDeobfed {
 
 	@Test
 	public void decompile() {
-		EnigmaProject project = new EnigmaProject(enigma, classCache, index);
+		EnigmaProject project = new EnigmaProject(enigma, classCache, index, new byte[0]);
 		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassCache(), new SourceSettings(false, false));
 
 		decompiler.getSource("a");

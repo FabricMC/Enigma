@@ -12,10 +12,7 @@
 package cuchaz.enigma;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
@@ -26,11 +23,13 @@ import cuchaz.enigma.api.service.EnigmaServiceType;
 import cuchaz.enigma.api.service.JarIndexerService;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
 
 public class Enigma {
@@ -56,7 +55,18 @@ public class Enigma {
 
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(classCache, jarIndex));
 
-		return new EnigmaProject(this, classCache, jarIndex);
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+		try (InputStream in = new DigestInputStream(Files.newInputStream(path), digest)) {
+			byte[] buffer = new byte[8192];
+			while (in.read(buffer) != -1)
+				;
+		}
+		return new EnigmaProject(this, classCache, jarIndex, digest.digest());
 	}
 
 	public EnigmaProfile getProfile() {

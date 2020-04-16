@@ -4,11 +4,12 @@ import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
+import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.stats.StatsMember;
+import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,6 +36,8 @@ public class MenuBar extends JMenuBar {
 	public final JMenuItem dropMappingsMenu;
 	public final JMenuItem exportSourceMenu;
 	public final JMenuItem exportJarMenu;
+	public final JMenuItem connectToServerMenu;
+	public final JMenuItem startServerMenu;
 	private final Gui gui;
 
 	public MenuBar(Gui gui) {
@@ -160,7 +163,7 @@ public class MenuBar extends JMenuBar {
 				JMenuItem stats = new JMenuItem(I18n.translate("menu.file.stats"));
 
 				stats.addActionListener(event -> {
-                    JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
+					JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
 					Container pane = frame.getContentPane();
 					pane.setLayout(new FlowLayout());
 
@@ -188,9 +191,9 @@ public class MenuBar extends JMenuBar {
 					});
 
 					pane.add(button);
-                    frame.pack();
-                    frame.setVisible(true);
-                });
+					frame.pack();
+					frame.setVisible(true);
+				});
 
 				menu.add(stats);
 			}
@@ -272,6 +275,69 @@ public class MenuBar extends JMenuBar {
 					}
 				});
 
+			}
+		}
+		{
+			JMenu menu = new JMenu(I18n.translate("menu.colab"));
+			this.add(menu);
+			{
+				JMenuItem item = new JMenuItem(I18n.translate("menu.colab.connect"));
+				menu.add(item);
+				item.addActionListener(event -> {
+					ConnectToServerDialog.Result result = ConnectToServerDialog.show(this.gui.getFrame());
+					if (result == null) {
+						return;
+					}
+					this.gui.getController().disconnectIfConnected(null);
+					try {
+						this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort());
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.colab.connect.error"), JOptionPane.ERROR_MESSAGE);
+						this.gui.getController().disconnectIfConnected(null);
+					}
+				});
+				this.connectToServerMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem(I18n.translate("menu.colab.server.start"));
+				menu.add(item);
+				item.addActionListener(event -> {
+					if (this.gui.getController().getServer() != null) {
+						this.gui.getController().disconnectIfConnected(null);
+						return;
+					}
+					String result = (String) JOptionPane.showInputDialog(
+							this.gui.getFrame(),
+							I18n.translate("prompt.port"),
+							I18n.translate("prompt.port"),
+							JOptionPane.QUESTION_MESSAGE,
+							null,
+							null,
+							String.valueOf(EnigmaServer.DEFAULT_PORT)
+					);
+					if (result == null) {
+						return;
+					}
+					int port;
+					try {
+						port = Integer.parseInt(result);
+					} catch (NumberFormatException e) {
+						JOptionPane.showMessageDialog(this.gui.getFrame(), I18n.translate("prompt.port.nan"), I18n.translate("prompt.port"), JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					if (port < 1024 || port >= 65536) {
+						JOptionPane.showMessageDialog(this.gui.getFrame(), I18n.translate("prompt.port.invalid"), I18n.translate("prompt.port"), JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					this.gui.getController().disconnectIfConnected(null);
+					try {
+						this.gui.getController().createServer(port);
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.colab.server.start.error"), JOptionPane.ERROR_MESSAGE);
+						this.gui.getController().disconnectIfConnected(null);
+					}
+				});
+				this.startServerMenu = item;
 			}
 		}
 		{

@@ -33,6 +33,10 @@ import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.gui.util.History;
+import cuchaz.enigma.network.packet.ChangeDocsC2SPacket;
+import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
+import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
+import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -336,6 +340,8 @@ public class Gui {
 		this.menuBar.closeMappingsMenu.setEnabled(true);
 		this.menuBar.exportSourceMenu.setEnabled(true);
 		this.menuBar.exportJarMenu.setEnabled(true);
+		this.menuBar.connectToServerMenu.setEnabled(true);
+		this.menuBar.startServerMenu.setEnabled(true);
 
 		redraw();
 	}
@@ -356,6 +362,8 @@ public class Gui {
 		this.menuBar.closeMappingsMenu.setEnabled(false);
 		this.menuBar.exportSourceMenu.setEnabled(false);
 		this.menuBar.exportJarMenu.setEnabled(false);
+		this.menuBar.connectToServerMenu.setEnabled(false);
+		this.menuBar.startServerMenu.setEnabled(false);
 
 		redraw();
 	}
@@ -599,6 +607,7 @@ public class Gui {
 		if (saveName) {
 			try {
 				this.controller.changeDocs(cursorReference, newName);
+				this.controller.sendPacket(new ChangeDocsC2SPacket(cursorReference.getNameableEntry(), newName));
 			} catch (IllegalNameException ex) {
 				javadocTextArea.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				javadocTextArea.setToolTipText(ex.getReason());
@@ -668,6 +677,7 @@ public class Gui {
 		if (saveName && newName != null && !newName.isEmpty()) {
 			try {
 				this.controller.rename(cursorReference, newName, true);
+				this.controller.sendPacket(new RenameC2SPacket(cursorReference.getNameableEntry(), newName, true));
 			} catch (IllegalNameException ex) {
 				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				renameTextField.setToolTipText(ex.getReason());
@@ -778,8 +788,10 @@ public class Gui {
 
 		if (!Objects.equals(obfEntry, deobfEntry)) {
 			this.controller.removeMapping(cursorReference);
+			this.controller.sendPacket(new RemoveMappingC2SPacket(cursorReference.getNameableEntry()));
 		} else {
 			this.controller.markAsDeobfuscated(cursorReference);
+			this.controller.sendPacket(new MarkDeobfuscatedC2SPacket(cursorReference.getNameableEntry()));
 		}
 	}
 
@@ -838,6 +850,7 @@ public class Gui {
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
 				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
+				this.controller.sendPacket(new RenameC2SPacket(prevDataChild, dataChild.getFullName(), false));
 				childNode.setUserObject(dataChild);
 			}
 			node.setUserObject(data);
@@ -845,8 +858,10 @@ public class Gui {
 			this.deobfPanel.deobfClasses.reload();
 		}
 		// class rename
-		else if (data instanceof ClassEntry)
+		else if (data instanceof ClassEntry) {
 			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
+			this.controller.sendPacket(new RenameC2SPacket((ClassEntry) prevData, ((ClassEntry) data).getFullName(), false));
+		}
 	}
 
 	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, String newName) {
@@ -895,5 +910,9 @@ public class Gui {
 
 	public void setShouldNavigateOnClick(boolean shouldNavigateOnClick) {
 		this.shouldNavigateOnClick = shouldNavigateOnClick;
+	}
+
+	public MenuBar getMenuBar() {
+		return menuBar;
 	}
 }
