@@ -1,7 +1,6 @@
 package cuchaz.enigma.bytecode.translators;
 
 import cuchaz.enigma.utils.Utils;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureVisitor;
 
 import java.util.Stack;

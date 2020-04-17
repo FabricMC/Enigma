@@ -3,6 +3,7 @@
 
 	"mapping_format.enigma_file": "Fichier Enigma",
 	"mapping_format.enigma_directory": "Répertoire Enigma",
+	"mapping_format.enigma_zip": "ZIP Enigma",
 	"mapping_format.tiny_v2": "Tiny v2",
 	"mapping_format.tiny_file": "Fichier Tiny",
 	"mapping_format.srg_file": "Fichier SRG",

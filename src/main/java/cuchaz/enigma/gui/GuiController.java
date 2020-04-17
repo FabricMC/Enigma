@@ -37,7 +37,6 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.ReadableToken;
 import cuchaz.enigma.utils.Utils;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
@@ -532,8 +531,10 @@ public class GuiController {
 		Entry<?> entry = reference.getNameableEntry();
 		project.getMapper().mapFromObf(entry, new EntryMapping(newName));
 
-		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
+		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass()) {
 			this.gui.moveClassTree(reference, newName);
+			this.markAsDeobfuscated(reference);
+		}
 
 		refreshCurrentClass(reference);
 	}
