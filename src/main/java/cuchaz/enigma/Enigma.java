@@ -21,14 +21,10 @@ import cuchaz.enigma.api.service.EnigmaService;
 import cuchaz.enigma.api.service.EnigmaServiceFactory;
 import cuchaz.enigma.api.service.EnigmaServiceType;
 import cuchaz.enigma.api.service.JarIndexerService;
+import cuchaz.enigma.utils.Utils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.ServiceLoader;
 
@@ -55,18 +51,7 @@ public class Enigma {
 
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(classCache, jarIndex));
 
-		MessageDigest digest;
-		try {
-			digest = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-		try (InputStream in = new DigestInputStream(Files.newInputStream(path), digest)) {
-			byte[] buffer = new byte[8192];
-			while (in.read(buffer) != -1)
-				;
-		}
-		return new EnigmaProject(this, classCache, jarIndex, digest.digest());
+		return new EnigmaProject(this, classCache, jarIndex, Utils.sha1(path));
 	}
 
 	public EnigmaProfile getProfile() {

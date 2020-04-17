@@ -17,15 +17,14 @@ public class PacketHelper {
 	private static final int ENTRY_CLASS = 0, ENTRY_FIELD = 1, ENTRY_METHOD = 2, ENTRY_LOCAL_VAR = 3;
 
 	public static Entry<?> readEntry(DataInput input) throws IOException {
-		return readEntry(input, true);
+		return readEntry(input, null, true);
 	}
 
-	public static Entry<?> readEntry(DataInput input, boolean includeParent) throws IOException {
+	public static Entry<?> readEntry(DataInput input, Entry<?> parent, boolean includeParent) throws IOException {
 		int type = input.readUnsignedByte();
 
-		Entry<?> parent = null;
 		if (includeParent && input.readBoolean()) {
-			parent = readEntry(input, true);
+			parent = readEntry(input, null, true);
 		}
 
 		String name = input.readUTF();
@@ -43,21 +42,21 @@ public class PacketHelper {
 			return new ClassEntry((ClassEntry) parent, name, javadocs);
 		}
 		case ENTRY_FIELD: {
-			if (parent != null && !(parent instanceof ClassEntry)) {
+			if (!(parent instanceof ClassEntry)) {
 				throw new IOException("Field requires class parent");
 			}
 			TypeDescriptor desc = new TypeDescriptor(input.readUTF());
 			return new FieldEntry((ClassEntry) parent, name, desc, javadocs);
 		}
 		case ENTRY_METHOD: {
-			if (parent != null && !(parent instanceof ClassEntry)) {
+			if (!(parent instanceof ClassEntry)) {
 				throw new IOException("Method requires class parent");
 			}
 			MethodDescriptor desc = new MethodDescriptor(input.readUTF());
 			return new MethodEntry((ClassEntry) parent, name, desc, javadocs);
 		}
 		case ENTRY_LOCAL_VAR: {
-			if (parent != null && !(parent instanceof MethodEntry)) {
+			if (!(parent instanceof MethodEntry)) {
 				throw new IOException("Local variable requires method parent");
 			}
 			int index = input.readUnsignedShort();

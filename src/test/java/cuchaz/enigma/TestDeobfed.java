@@ -13,6 +13,7 @@ package cuchaz.enigma;
 
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
@@ -70,7 +71,7 @@ public class TestDeobfed {
 
 	@Test
 	public void decompile() {
-		EnigmaProject project = new EnigmaProject(enigma, classCache, index, new byte[0]);
+		EnigmaProject project = new EnigmaProject(enigma, classCache, index, new byte[EnigmaServer.CHECKSUM_SIZE]);
 		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassCache(), new SourceSettings(false, false));
 
 		decompiler.getSource("a");

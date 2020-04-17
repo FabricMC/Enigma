@@ -1,5 +1,6 @@
 package cuchaz.enigma.network;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.network.packet.KickS2CPacket;
 import cuchaz.enigma.network.packet.Packet;
@@ -33,6 +34,7 @@ public class EnigmaServer {
 	public static final int DEFAULT_PORT = 34712;
 	public static final int PROTOCOL_VERSION = 0;
 	public static final String OWNER_USERNAME = "Owner";
+	public static final int CHECKSUM_SIZE = 20;
 
 	private final int port;
 	private ServerSocket socket;

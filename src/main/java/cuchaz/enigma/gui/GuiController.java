@@ -572,7 +572,7 @@ public class GuiController {
 	private void changeDoc(Entry<?> obfEntry, String newDoc) {
 		EntryRemapper mapper = project.getMapper();
 		if (mapper.getDeobfMapping(obfEntry) == null) {
-			markAsDeobfuscated(obfEntry,false); // NPE
+			markAsDeobfuscated(obfEntry, false); // NPE
 		}
 		mapper.mapFromObf(obfEntry, mapper.getDeobfMapping(obfEntry).withDocs(newDoc), false);
 	}
@@ -622,26 +622,26 @@ public class GuiController {
 	}
 
 	public EnigmaClient getClient() {
-	    return client;
-    }
+		return client;
+	}
 
-    public EnigmaServer getServer() {
-	    return server;
-    }
+	public EnigmaServer getServer() {
+		return server;
+	}
 
-    public void createClient(String username, String ip, int port) throws IOException {
+	public void createClient(String username, String ip, int port) throws IOException {
 		client = new EnigmaClient(this, ip, port);
 		client.connect();
 		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), username));
 	}
 
-    public void createServer(int port) throws IOException {
+	public void createServer(int port) throws IOException {
 		server = new EnigmaServer(project.getJarChecksum(), EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
 		server.start();
 		client = new EnigmaClient(this, "127.0.0.1", port);
 		client.connect();
 		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), EnigmaServer.OWNER_USERNAME));
-		gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.colab.server.stop"));
+		gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.collab.server.stop"));
 	}
 
 	public synchronized void disconnectIfConnected(String reason) {
@@ -657,7 +657,7 @@ public class GuiController {
 		}
 		client = null;
 		server = null;
-		SwingUtilities.invokeLater(() -> gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.colab.server.start")));
+		SwingUtilities.invokeLater(() -> gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.collab.server.start")));
 	}
 
 	public void sendPacket(Packet<ServerPacketHandler> packet) {

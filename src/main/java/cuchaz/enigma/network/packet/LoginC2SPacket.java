@@ -25,7 +25,7 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 	@Override
 	public void read(DataInput input) throws IOException {
 		this.protocolVersion = input.readUnsignedShort();
-		this.jarChecksum = new byte[16];
+		this.jarChecksum = new byte[EnigmaServer.CHECKSUM_SIZE];
 		input.readFully(jarChecksum);
 		this.username = input.readUTF();
 	}

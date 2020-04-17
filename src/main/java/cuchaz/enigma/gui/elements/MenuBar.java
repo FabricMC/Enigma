@@ -278,10 +278,10 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 		{
-			JMenu menu = new JMenu(I18n.translate("menu.colab"));
+			JMenu menu = new JMenu(I18n.translate("menu.collab"));
 			this.add(menu);
 			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.colab.connect"));
+				JMenuItem item = new JMenuItem(I18n.translate("menu.collab.connect"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					ConnectToServerDialog.Result result = ConnectToServerDialog.show(this.gui.getFrame());
@@ -292,14 +292,14 @@ public class MenuBar extends JMenuBar {
 					try {
 						this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort());
 					} catch (IOException e) {
-						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.colab.connect.error"), JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
 						this.gui.getController().disconnectIfConnected(null);
 					}
 				});
 				this.connectToServerMenu = item;
 			}
 			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.colab.server.start"));
+				JMenuItem item = new JMenuItem(I18n.translate("menu.collab.server.start"));
 				menu.add(item);
 				item.addActionListener(event -> {
 					if (this.gui.getController().getServer() != null) {
@@ -333,7 +333,7 @@ public class MenuBar extends JMenuBar {
 					try {
 						this.gui.getController().createServer(port);
 					} catch (IOException e) {
-						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.colab.server.start.error"), JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.server.start.error"), JOptionPane.ERROR_MESSAGE);
 						this.gui.getController().disconnectIfConnected(null);
 					}
 				});

@@ -38,7 +38,7 @@ public class SyncMappingsS2CPacket implements Packet<GuiController> {
 	}
 
 	private void readEntryTreeNode(DataInput input, Entry<?> parent) throws IOException {
-		Entry<?> entry = PacketHelper.readEntry(input, false);
+		Entry<?> entry = PacketHelper.readEntry(input, parent, false);
 		entry = withParent(entry, parent);
 		EntryMapping mapping = null;
 		if (input.readBoolean()) {

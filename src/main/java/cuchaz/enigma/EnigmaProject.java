@@ -8,6 +8,7 @@ import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
+import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
@@ -45,7 +46,7 @@ public class EnigmaProject {
 	private EntryRemapper mapper;
 
 	public EnigmaProject(Enigma enigma, ClassCache classCache, JarIndex jarIndex, byte[] jarChecksum) {
-		Preconditions.checkArgument(jarChecksum.length == 16);
+		Preconditions.checkArgument(jarChecksum.length == EnigmaServer.CHECKSUM_SIZE);
 		this.enigma = enigma;
 		this.classCache = classCache;
 		this.jarIndex = jarIndex;

@@ -24,6 +24,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -109,6 +111,24 @@ public class Utils {
 				Files.delete(p);
 			}
 		}
+	}
+
+	public static byte[] sha1(Path path) throws IOException {
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			// Algorithm guaranteed to be supported
+			throw new RuntimeException(e);
+		}
+		try (InputStream in = Files.newInputStream(path)) {
+			byte[] buffer = new byte[8192];
+			int n;
+			while ((n = in.read(buffer)) != -1) {
+				digest.update(buffer, 0, n);
+			}
+		}
+		return digest.digest();
 	}
 
 	public static String caplisiseCamelCase(String input){
