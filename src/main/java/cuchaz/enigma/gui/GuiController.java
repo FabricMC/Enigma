@@ -26,6 +26,7 @@ import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.network.EnigmaClient;
 import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.network.IntegratedEnigmaServer;
 import cuchaz.enigma.network.ServerPacketHandler;
 import cuchaz.enigma.network.packet.LoginC2SPacket;
 import cuchaz.enigma.network.packet.Packet;
@@ -636,7 +637,7 @@ public class GuiController {
 	}
 
 	public void createServer(int port) throws IOException {
-		server = new EnigmaServer(project.getJarChecksum(), EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
+		server = new IntegratedEnigmaServer(project.getJarChecksum(), EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
 		server.start();
 		client = new EnigmaClient(this, "127.0.0.1", port);
 		client.connect();

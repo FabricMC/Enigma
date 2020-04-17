@@ -14,8 +14,15 @@ import cuchaz.enigma.api.service.EnigmaServiceType;
 import cuchaz.enigma.translation.mapping.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.MappingSaveParameters;
 
+import javax.annotation.Nullable;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +46,21 @@ public final class EnigmaProfile {
 
 	private EnigmaProfile(ServiceContainer serviceProfiles) {
 		this.serviceProfiles = serviceProfiles;
+	}
+
+	public static EnigmaProfile read(@Nullable Path file) throws IOException {
+		if (file != null) {
+			try (BufferedReader reader = Files.newBufferedReader(file)) {
+				return EnigmaProfile.parse(reader);
+			}
+		} else {
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(Main.class.getResourceAsStream("/profile.json"), StandardCharsets.UTF_8))){
+				return EnigmaProfile.parse(reader);
+			} catch (IOException ex) {
+				System.out.println("Failed to load default profile, will use empty profile: " + ex.getMessage());
+				return EnigmaProfile.EMPTY;
+			}
+		}
 	}
 
 	public static EnigmaProfile parse(Reader reader) {

@@ -37,6 +37,7 @@ public class MarkDeobfuscatedC2SPacket implements Packet<ServerPacketHandler> {
 		}
 
 		handler.getServer().getMappings().mapFromObf(entry, new EntryMapping(handler.getServer().getMappings().deobfuscate(entry).getName()));
+		System.out.println(handler.getServer().getUsername(handler.getClient()) + " marked " + entry + " as deobfuscated");
 
 		int syncId = handler.getServer().lockEntry(handler.getClient(), entry);
 		handler.getServer().sendToAllExcept(handler.getClient(), new MarkDeobfuscatedS2CPacket(syncId, entry));

@@ -45,6 +45,8 @@ public class RemoveMappingC2SPacket implements Packet<ServerPacketHandler> {
 			return;
 		}
 
+		System.out.println(handler.getServer().getUsername(handler.getClient()) + " removed the mapping for " + entry);
+
 		int syncId = handler.getServer().lockEntry(handler.getClient(), entry);
 		handler.getServer().sendToAllExcept(handler.getClient(), new RemoveMappingS2CPacket(syncId, entry));
 	}

@@ -54,6 +54,8 @@ public class RenameC2SPacket implements Packet<ServerPacketHandler> {
 			return;
 		}
 
+		System.out.println(handler.getServer().getUsername(handler.getClient()) + " renamed " + entry + " to " + newName);
+
 		int syncId = handler.getServer().lockEntry(handler.getClient(), entry);
 		handler.getServer().sendToAllExcept(handler.getClient(), new RenameS2CPacket(syncId, entry, newName, refreshClassTree));
 	}

@@ -1,6 +1,5 @@
 package cuchaz.enigma.network;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.network.packet.KickS2CPacket;
 import cuchaz.enigma.network.packet.Packet;
@@ -11,7 +10,6 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-import javax.swing.SwingUtilities;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -28,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class EnigmaServer {
+public abstract class EnigmaServer {
 
 	// https://discordapp.com/channels/507304429255393322/566418023372816394/700292322918793347
 	public static final int DEFAULT_PORT = 34712;
@@ -95,7 +93,7 @@ public class EnigmaServer {
 						throw new IOException("Received invalid packet id " + packetId);
 					}
 					packet.read(input);
-					SwingUtilities.invokeLater(() -> packet.handle(new ServerPacketHandler(client, this)));
+					runOnThread(() -> packet.handle(new ServerPacketHandler(client, this)));
 				}
 			} catch (IOException e) {
 				kick(client, e.toString());
@@ -148,15 +146,21 @@ public class EnigmaServer {
 		usernames.put(client, username);
 	}
 
+	public String getUsername(Socket client) {
+		return usernames.get(client);
+	}
+
 	public void sendPacket(Socket client, Packet<GuiController> packet) {
-		int packetId = PacketRegistry.getS2CId(packet);
-		try {
-			DataOutput output = new DataOutputStream(client.getOutputStream());
-			output.writeByte(packetId);
-			packet.write(output);
-		} catch (IOException e) {
-			kick(client, e.toString());
-			e.printStackTrace();
+		if (!client.isClosed()) {
+			int packetId = PacketRegistry.getS2CId(packet);
+			try {
+				DataOutput output = new DataOutputStream(client.getOutputStream());
+				output.writeByte(packetId);
+				packet.write(output);
+			} catch (IOException e) {
+				kick(client, e.toString());
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -229,6 +233,12 @@ public class EnigmaServer {
 		} else {
 			sendPacket(client, new RenameS2CPacket(0, entry, oldName, refreshClassTree));
 		}
+	}
+
+	protected abstract void runOnThread(Runnable task);
+
+	protected boolean isRunning() {
+		return !socket.isClosed();
 	}
 
 	public byte[] getJarChecksum() {

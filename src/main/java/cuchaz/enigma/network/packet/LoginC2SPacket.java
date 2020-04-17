@@ -55,7 +55,7 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 		}
 
 		handler.getServer().setUsername(handler.getClient(), username);
-		System.out.println(username + " logged in with IP " + handler.getClient().getInetAddress().toString());
+		System.out.println(username + " logged in with IP " + handler.getClient().getInetAddress().toString() + ":" + handler.getClient().getPort());
 
 		handler.getServer().sendPacket(handler.getClient(), new SyncMappingsS2CPacket(handler.getServer().getMappings().getObfToDeobf()));
 	}
