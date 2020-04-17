@@ -100,7 +100,7 @@ public abstract class EnigmaServer {
 				e.printStackTrace();
 				return;
 			}
-			kick(client, "Disconnected");
+			kick(client, "disconnect.disconnected");
 		});
 		thread.setName("Server I/O thread #" + (nextIoId++));
 		thread.setDaemon(true);
@@ -110,7 +110,7 @@ public abstract class EnigmaServer {
 	public synchronized void stop() {
 		if (!socket.isClosed()) {
 			for (Socket client : new ArrayList<>(clients)) {
-				kick(client, "Server closed");
+				kick(client, "disconnect.server_closed");
 			}
 			try {
 				socket.close();
@@ -160,8 +160,8 @@ public abstract class EnigmaServer {
 			} catch (IOException e) {
 				if (!(packet instanceof KickS2CPacket)) {
 					kick(client, e.toString());
+					e.printStackTrace();
 				}
-				e.printStackTrace();
 			}
 		}
 	}

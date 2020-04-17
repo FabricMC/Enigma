@@ -284,6 +284,10 @@ public class MenuBar extends JMenuBar {
 				JMenuItem item = new JMenuItem(I18n.translate("menu.collab.connect"));
 				menu.add(item);
 				item.addActionListener(event -> {
+					if (this.gui.getController().getClient() != null) {
+						this.gui.getController().disconnectIfConnected(null);
+						return;
+					}
 					ConnectToServerDialog.Result result = ConnectToServerDialog.show(this.gui.getFrame());
 					if (result == null) {
 						return;

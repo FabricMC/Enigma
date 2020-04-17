@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class LoginC2SPacket implements Packet<ServerPacketHandler> {
-	private int protocolVersion;
 	private byte[] jarChecksum;
 	private String username;
 
@@ -17,14 +16,15 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 	}
 
 	public LoginC2SPacket(byte[] jarChecksum, String username) {
-		this.protocolVersion = EnigmaServer.PROTOCOL_VERSION;
 		this.jarChecksum = jarChecksum;
 		this.username = username;
 	}
 
 	@Override
 	public void read(DataInput input) throws IOException {
-		this.protocolVersion = input.readUnsignedShort();
+		if (input.readUnsignedShort() != EnigmaServer.PROTOCOL_VERSION) {
+			throw new IOException("Mismatching protocol");
+		}
 		this.jarChecksum = new byte[EnigmaServer.CHECKSUM_SIZE];
 		input.readFully(jarChecksum);
 		this.username = input.readUTF();
@@ -32,25 +32,20 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 
 	@Override
 	public void write(DataOutput output) throws IOException {
-		output.writeShort(protocolVersion);
+		output.writeShort(EnigmaServer.PROTOCOL_VERSION);
 		output.write(jarChecksum);
 		output.writeUTF(username);
 	}
 
 	@Override
 	public void handle(ServerPacketHandler handler) {
-		if (protocolVersion != EnigmaServer.PROTOCOL_VERSION) {
-			handler.getServer().kick(handler.getClient(), "Mismatching protocol version");
-			return;
-		}
-
 		if (!Arrays.equals(jarChecksum, handler.getServer().getJarChecksum())) {
-			handler.getServer().kick(handler.getClient(), "Jar checksums don't match (you have the wrong jar)!");
+			handler.getServer().kick(handler.getClient(), "disconnect.wrong_jar");
 			return;
 		}
 
 		if (handler.getServer().isUsernameTaken(username)) {
-			handler.getServer().kick(handler.getClient(), "Username is taken");
+			handler.getServer().kick(handler.getClient(), "disconnect.username_taken");
 			return;
 		}
 

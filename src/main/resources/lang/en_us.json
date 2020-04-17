@@ -42,6 +42,7 @@
 	"menu.collab": "Collab",
 	"menu.collab.connect": "Connect to server",
 	"menu.collab.connect.error": "Error connecting to server",
+	"menu.collab.disconnect": "Disconnect",
 	"menu.collab.server.start": "Start server",
 	"menu.collab.server.start.error": "Error starting server",
 	"menu.collab.server.stop": "Stop server",
@@ -123,6 +124,11 @@
 	"prompt.port": "Port",
 	"prompt.port.nan": "Port is not a number",
 	"prompt.port.invalid": "Port is out of range, should be between 1024-65535",
+
+	"disconnect.disconnected": "Disconnected",
+	"disconnect.server_closed": "Server closed",
+	"disconnect.wrong_jar": "Jar checksums don't match (you have the wrong jar)!",
+	"disconnect.username_taken": "Username is taken",
 
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",
