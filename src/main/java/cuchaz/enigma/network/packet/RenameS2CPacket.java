@@ -42,7 +42,7 @@ public class RenameS2CPacket implements Packet<GuiController> {
 
 	@Override
 	public void handle(GuiController controller) {
-		controller.rename(new EntryReference<>(entry, entry.getName()), newName, refreshClassTree);
+		controller.rename(new EntryReference<>(entry, entry.getName()), newName, refreshClassTree, false);
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }

@@ -34,7 +34,7 @@ public class RemoveMappingS2CPacket implements Packet<GuiController> {
 
 	@Override
 	public void handle(GuiController controller) {
-		controller.removeMapping(new EntryReference<>(entry, entry.getName()));
+		controller.removeMapping(new EntryReference<>(entry, entry.getName()), false);
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }

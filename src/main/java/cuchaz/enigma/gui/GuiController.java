@@ -547,27 +547,39 @@ public class GuiController {
 	}
 
 	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree) {
+		rename(reference, newName, refreshClassTree, true);
+	}
+
+	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean jumpToReference) {
 		Entry<?> entry = reference.getNameableEntry();
 		project.getMapper().mapFromObf(entry, new EntryMapping(newName));
 
 		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
 			this.gui.moveClassTree(reference, newName);
 
-		refreshCurrentClass(reference);
+		refreshCurrentClass(jumpToReference ? reference : null);
 	}
 
 	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference) {
+		removeMapping(reference, true);
+	}
+
+	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference) {
 		project.getMapper().removeByObf(reference.getNameableEntry());
 
 		if (reference.entry instanceof ClassEntry)
 			this.gui.moveClassTree(reference, false, true);
-		refreshCurrentClass(reference);
+		refreshCurrentClass(jumpToReference ? reference : null);
 	}
 
 	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
+		changeDocs(reference, updatedDocs, true);
+	}
+
+	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs, boolean jumpToReference) {
 		changeDoc(reference.entry, Utils.isBlank(updatedDocs) ? null : updatedDocs);
 
-		refreshCurrentClass(reference, RefreshMode.JAVADOCS);
+		refreshCurrentClass(jumpToReference ? reference : null, RefreshMode.JAVADOCS);
 	}
 
 	private void changeDoc(Entry<?> obfEntry, String newDoc) {
@@ -584,6 +596,10 @@ public class GuiController {
 	}
 
 	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference) {
+		markAsDeobfuscated(reference, true);
+	}
+
+	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference) {
 		EntryRemapper mapper = project.getMapper();
 		Entry<?> entry = reference.getNameableEntry();
 		mapper.mapFromObf(entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
@@ -591,7 +607,7 @@ public class GuiController {
 		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
 			this.gui.moveClassTree(reference, true, false);
 
-		refreshCurrentClass(reference);
+		refreshCurrentClass(jumpToReference ? reference : null);
 	}
 
 	public void openStats(Set<StatsMember> includedMembers) {

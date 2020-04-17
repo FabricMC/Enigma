@@ -38,7 +38,7 @@ public class ChangeDocsS2CPacket implements Packet<GuiController> {
 
 	@Override
 	public void handle(GuiController controller) {
-		controller.changeDocs(new EntryReference<>(entry, entry.getName()), newDocs);
+		controller.changeDocs(new EntryReference<>(entry, entry.getName()), newDocs, false);
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }

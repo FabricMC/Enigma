@@ -158,7 +158,9 @@ public abstract class EnigmaServer {
 				output.writeByte(packetId);
 				packet.write(output);
 			} catch (IOException e) {
-				kick(client, e.toString());
+				if (!(packet instanceof KickS2CPacket)) {
+					kick(client, e.toString());
+				}
 				e.printStackTrace();
 			}
 		}

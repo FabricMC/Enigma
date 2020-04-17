@@ -34,7 +34,7 @@ public class MarkDeobfuscatedS2CPacket implements Packet<GuiController> {
 
 	@Override
 	public void handle(GuiController controller) {
-		controller.markAsDeobfuscated(new EntryReference<>(entry, entry.getName()));
+		controller.markAsDeobfuscated(new EntryReference<>(entry, entry.getName()), false);
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }
