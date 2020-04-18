@@ -97,10 +97,6 @@ public class InterpreterPair<V extends Value, W extends Value> extends Interpret
             return null;
         }
 
-        if (left != null && right != null && left.getSize() != right.getSize()) {
-            throw new IllegalStateException("sizes don't match");
-        }
-
         return new PairValue<>(left, right);
     }
 
@@ -111,10 +107,6 @@ public class InterpreterPair<V extends Value, W extends Value> extends Interpret
         public PairValue(V left, W right) {
             if (left == null && right == null) {
                 throw new IllegalArgumentException("should use null rather than pair of nulls");
-            }
-
-            if (left != null && right != null && left.getSize() != right.getSize()) {
-                throw new IllegalArgumentException("sizes don't match");
             }
 
             this.left = left;
