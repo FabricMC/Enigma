@@ -6,10 +6,7 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -39,7 +36,6 @@ public class SyncMappingsS2CPacket implements Packet<GuiController> {
 
 	private void readEntryTreeNode(DataInput input, Entry<?> parent) throws IOException {
 		Entry<?> entry = PacketHelper.readEntry(input, parent, false);
-		entry = withParent(entry, parent);
 		EntryMapping mapping = null;
 		if (input.readBoolean()) {
 			String name = input.readUTF();
@@ -54,24 +50,6 @@ public class SyncMappingsS2CPacket implements Packet<GuiController> {
 		int size = input.readUnsignedShort();
 		for (int i = 0; i < size; i++) {
 			readEntryTreeNode(input, entry);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private static Entry<?> withParent(Entry<?> entry, Entry<?> parent) throws IOException {
-		if (parent == null) {
-			return entry;
-		}
-		if (entry instanceof LocalVariableEntry) {
-			if (!(parent instanceof MethodEntry)) {
-				throw new IOException("Local variable needs method parent");
-			}
-			return ((Entry<MethodEntry>) entry).withParent((MethodEntry) parent);
-		} else {
-			if (!(parent instanceof ClassEntry)) {
-				throw new IOException("Entry needs class parent");
-			}
-			return ((Entry<ClassEntry>) entry).withParent((ClassEntry) parent);
 		}
 	}
 
