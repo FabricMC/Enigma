@@ -8,7 +8,6 @@ import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,6 +39,9 @@ public class MenuBar extends JMenuBar {
 	public MenuBar(Gui gui) {
 		this.gui = gui;
 
+		/*
+		 * File menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.file"));
 			this.add(menu);
@@ -48,9 +50,14 @@ public class MenuBar extends JMenuBar {
 				menu.add(item);
 				item.addActionListener(event -> {
 					this.gui.jarFileChooser.setVisible(true);
-					Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(this.gui.jarFileChooser.getFile());
-					if (Files.exists(path)) {
-						gui.getController().openJar(path);
+					String file = this.gui.jarFileChooser.getFile();
+					// checks if the file name is not empty
+					if (file != null) {
+						Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(file);
+						// checks if the file name corresponds to an existing file
+						if (Files.exists(path)) {
+							gui.getController().openJar(path);
+						}
 					}
 				});
 			}
@@ -189,6 +196,7 @@ public class MenuBar extends JMenuBar {
 
 					pane.add(button);
                     frame.pack();
+                    frame.setLocationRelativeTo(this.gui.getFrame());
                     frame.setVisible(true);
                 });
 
@@ -202,6 +210,9 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 
+		/*
+		 * Decompiler menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.decompiler"));
 			add(menu);
@@ -222,6 +233,9 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 
+		/*
+		 * View menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.view"));
 			this.add(menu);
@@ -250,16 +264,12 @@ public class MenuBar extends JMenuBar {
 						pane.add(text);
 						
 						JButton okButton = new JButton(I18n.translate("menu.view.languages.ok"));
-						okButton.setAlignmentX(JButton.CENTER_ALIGNMENT);
-						okButton.setHorizontalAlignment(JButton.CENTER);
 						pane.add(okButton);
 						okButton.addActionListener(arg0 -> frame.dispose());
 						
-						frame.setSize(350, 110);
-						frame.setResizable(false);
+						frame.pack();
 						frame.setLocationRelativeTo(this.gui.getFrame());
 						frame.setVisible(true);
-						frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 					});
 				}
 
@@ -274,6 +284,10 @@ public class MenuBar extends JMenuBar {
 
 			}
 		}
+		
+		/*
+		 * Help menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.help"));
 			this.add(menu);

@@ -37,7 +37,6 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.ReadableToken;
 import cuchaz.enigma.utils.Utils;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
