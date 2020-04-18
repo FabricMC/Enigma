@@ -30,7 +30,6 @@ compileJava.dependsOn generateSources
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
 
     maven {
         name "Modmuss Repository"
@@ -52,7 +51,7 @@ dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
     implementation 'net.fabricmc:cfr:0.0.1'
-    implementation 'com.bulenkov:darcula:2018.2'
+    implementation 'com.bulenkov:darcula:1.0.0.1'
     implementation 'de.sciss:syntaxpane:1.2.0'
     implementation 'me.xdrop:fuzzywuzzy:1.2.0'
 
