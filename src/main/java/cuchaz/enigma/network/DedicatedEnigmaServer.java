@@ -11,8 +11,10 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -23,6 +25,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 	private final EnigmaProfile profile;
 	private final MappingFormat mappingFormat;
 	private final Path mappingsFile;
+	private final PrintWriter log;
 	private BlockingQueue<Runnable> tasks = new LinkedBlockingDeque<>();
 
 	public DedicatedEnigmaServer(
@@ -30,6 +33,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 			EnigmaProfile profile,
 			MappingFormat mappingFormat,
 			Path mappingsFile,
+			PrintWriter log,
 			EntryRemapper mappings,
 			int port
 	) {
@@ -37,11 +41,18 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 		this.profile = profile;
 		this.mappingFormat = mappingFormat;
 		this.mappingsFile = mappingsFile;
+		this.log = log;
 	}
 
 	@Override
 	protected void runOnThread(Runnable task) {
 		tasks.add(task);
+	}
+
+	@Override
+	public void log(String message) {
+		super.log(message);
+		log.println(message);
 	}
 
 	public static void main(String[] args) {
@@ -98,7 +109,9 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 				mappings = EntryRemapper.mapped(project.getJarIndex(), mappingFormat.read(mappingsFile, ProgressListener.none(), profile.getMappingSaveParameters()));
 			}
 
-			server = new DedicatedEnigmaServer(checksum, profile, mappingFormat, mappingsFile, mappings, port);
+			PrintWriter log = new PrintWriter(Files.newBufferedWriter(Paths.get("log.txt")));
+
+			server = new DedicatedEnigmaServer(checksum, profile, mappingFormat, mappingsFile, log, mappings, port);
 			server.start();
 			System.out.println("Server started");
 		} catch (IOException | MappingParseException e) {
@@ -130,5 +143,6 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 
 	private void saveMappings() {
 		mappingFormat.write(getMappings().getObfToDeobf(), getMappings().takeMappingDelta(), mappingsFile, ProgressListener.none(), profile.getMappingSaveParameters());
+		log.flush();
 	}
 }

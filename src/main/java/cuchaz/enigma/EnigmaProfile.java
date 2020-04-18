@@ -54,10 +54,10 @@ public final class EnigmaProfile {
 				return EnigmaProfile.parse(reader);
 			}
 		} else {
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(Main.class.getResourceAsStream("/profile.json"), StandardCharsets.UTF_8))){
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(Main.class.getResourceAsStream("/profile.json"), StandardCharsets.UTF_8))) {
 				return EnigmaProfile.parse(reader);
 			} catch (IOException ex) {
-				System.out.println("Failed to load default profile, will use empty profile: " + ex.getMessage());
+				System.err.println("Failed to load default profile, will use empty profile: " + ex.getMessage());
 				return EnigmaProfile.EMPTY;
 			}
 		}

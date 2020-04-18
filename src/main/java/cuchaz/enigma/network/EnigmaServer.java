@@ -239,6 +239,10 @@ public abstract class EnigmaServer {
 
 	protected abstract void runOnThread(Runnable task);
 
+	public void log(String message) {
+		System.out.println(message);
+	}
+
 	protected boolean isRunning() {
 		return !socket.isClosed();
 	}

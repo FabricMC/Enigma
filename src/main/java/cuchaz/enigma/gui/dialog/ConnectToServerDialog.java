@@ -39,7 +39,7 @@ public class ConnectToServerDialog {
 			JOptionPane.showMessageDialog(parentComponent, I18n.translate("prompt.port.nan"), I18n.translate("prompt.connect.title"), JOptionPane.ERROR_MESSAGE);
 			return null;
 		}
-		if (port < 1024 || port >= 65536) {
+		if (port < 0 || port >= 65536) {
 			JOptionPane.showMessageDialog(parentComponent, I18n.translate("prompt.port.invalid"), I18n.translate("prompt.connect.title"), JOptionPane.ERROR_MESSAGE);
 			return null;
 		}

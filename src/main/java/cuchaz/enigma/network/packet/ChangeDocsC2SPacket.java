@@ -49,7 +49,7 @@ public class ChangeDocsC2SPacket implements Packet<ServerPacketHandler> {
 			mapping = new EntryMapping(handler.getServer().getMappings().deobfuscate(entry).getName());
 		}
 		handler.getServer().getMappings().mapFromObf(entry, mapping.withDocs(Utils.isBlank(newDocs) ? null : newDocs));
-		System.out.println(handler.getServer().getUsername(handler.getClient()) + " updated docs for " + entry);
+		handler.getServer().log(handler.getServer().getUsername(handler.getClient()) + " updated docs for " + entry);
 
 		int syncId = handler.getServer().lockEntry(handler.getClient(), entry);
 		handler.getServer().sendToAllExcept(handler.getClient(), new ChangeDocsS2CPacket(syncId, entry, newDocs));

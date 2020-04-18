@@ -329,7 +329,7 @@ public class MenuBar extends JMenuBar {
 						JOptionPane.showMessageDialog(this.gui.getFrame(), I18n.translate("prompt.port.nan"), I18n.translate("prompt.port"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
-					if (port < 1024 || port >= 65536) {
+					if (port < 0 || port >= 65536) {
 						JOptionPane.showMessageDialog(this.gui.getFrame(), I18n.translate("prompt.port.invalid"), I18n.translate("prompt.port"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
