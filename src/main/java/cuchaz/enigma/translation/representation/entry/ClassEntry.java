@@ -98,7 +98,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	@Override
 	public void validateName(String name) throws IllegalNameException {
-		NameValidator.validateClassName(name, !isInnerClass());
+		NameValidator.validateClassName(name);
 	}
 
 	@Override

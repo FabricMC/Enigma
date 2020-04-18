@@ -26,7 +26,7 @@ public class NameValidator {
 			"boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw", "byte",
 			"else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch",
 			"extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally",
-			"long", "strictfp", "volatile", "const", "float", "native", "super", "while"
+			"long", "strictfp", "volatile", "const", "float", "native", "super", "while", "_"
 	);
 
 	static {
@@ -35,12 +35,9 @@ public class NameValidator {
 		CLASS_PATTERN = Pattern.compile(String.format("^(%s(\\.|/))*(%s)$", identifierRegex, identifierRegex));
 	}
 
-	public static void validateClassName(String name, boolean packageRequired) {
+	public static void validateClassName(String name) {
 		if (!CLASS_PATTERN.matcher(name).matches() || ILLEGAL_IDENTIFIERS.contains(name)) {
 			throw new IllegalNameException(name, "This doesn't look like a legal class name");
-		}
-		if (packageRequired && ClassEntry.getPackageName(name) == null) {
-			throw new IllegalNameException(name, "Class must be in a package");
 		}
 	}
 

@@ -43,6 +43,9 @@ public class MenuBar extends JMenuBar {
 	public MenuBar(Gui gui) {
 		this.gui = gui;
 
+		/*
+		 * File menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.file"));
 			this.add(menu);
@@ -51,9 +54,14 @@ public class MenuBar extends JMenuBar {
 				menu.add(item);
 				item.addActionListener(event -> {
 					this.gui.jarFileChooser.setVisible(true);
-					Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(this.gui.jarFileChooser.getFile());
-					if (Files.exists(path)) {
-						gui.getController().openJar(path);
+					String file = this.gui.jarFileChooser.getFile();
+					// checks if the file name is not empty
+					if (file != null) {
+						Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(file);
+						// checks if the file name corresponds to an existing file
+						if (Files.exists(path)) {
+							gui.getController().openJar(path);
+						}
 					}
 				});
 			}
@@ -192,7 +200,7 @@ public class MenuBar extends JMenuBar {
 
 					pane.add(button);
 					frame.pack();
-					frame.setVisible(true);
+					frame.setLocationRelativeTo(this.gui.getFrame());frame.setVisible(true);
 				});
 
 				menu.add(stats);
@@ -205,6 +213,9 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 
+		/*
+		 * Decompiler menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.decompiler"));
 			add(menu);
@@ -225,6 +236,9 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 
+		/*
+		 * View menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.view"));
 			this.add(menu);
@@ -253,16 +267,12 @@ public class MenuBar extends JMenuBar {
 						pane.add(text);
 						
 						JButton okButton = new JButton(I18n.translate("menu.view.languages.ok"));
-						okButton.setAlignmentX(JButton.CENTER_ALIGNMENT);
-						okButton.setHorizontalAlignment(JButton.CENTER);
 						pane.add(okButton);
 						okButton.addActionListener(arg0 -> frame.dispose());
 						
-						frame.setSize(350, 110);
-						frame.setResizable(false);
+						frame.pack();
 						frame.setLocationRelativeTo(this.gui.getFrame());
 						frame.setVisible(true);
-						frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 					});
 				}
 
@@ -277,6 +287,10 @@ public class MenuBar extends JMenuBar {
 
 			}
 		}
+
+		/*
+		 * Collab menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.collab"));
 			this.add(menu);
@@ -344,6 +358,10 @@ public class MenuBar extends JMenuBar {
 				this.startServerMenu = item;
 			}
 		}
+
+		/*
+		 * Help menu
+		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.help"));
 			this.add(menu);

@@ -53,7 +53,6 @@ import java.awt.event.*;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Gui {
@@ -509,7 +508,7 @@ public class Gui {
 		container.add(panel);
 	}
 
-	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry entry) {
+	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry<?> entry) {
 		if (!getController().project.isRenamable(entry))
 			return null;
 		JPanel panel = new JPanel();

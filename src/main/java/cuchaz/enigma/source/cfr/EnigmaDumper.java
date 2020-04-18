@@ -43,7 +43,13 @@ public class EnigmaDumper implements Dumper {
     }
 
     private String getDesc(JavaTypeInstance type) {
-        type = type.getDeGenerifiedType();
+        if (!type.isUsableType() && type != RawJavaType.VOID) {
+            throw new IllegalArgumentException(type.toString());
+        }
+
+        if (type instanceof JavaGenericBaseInstance) {
+            return getDesc(type.getDeGenerifiedType());
+        }
 
         if (type instanceof JavaRefTypeInstance) {
             return "L" + type.getRawName().replace('.', '/') + ";";

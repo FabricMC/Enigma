@@ -77,7 +77,11 @@ public class PanelEditor extends JEditorPane {
 							break;
 
 						case KeyEvent.VK_C:
-							gui.popupMenu.showCallsMenu.doClick();
+							if (event.isShiftDown()) {
+								gui.popupMenu.showCallsSpecificMenu.doClick();
+							} else {
+								gui.popupMenu.showCallsMenu.doClick();
+							}
 							break;
 
 						case KeyEvent.VK_O:

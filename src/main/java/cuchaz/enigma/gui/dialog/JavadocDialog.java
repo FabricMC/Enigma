@@ -74,7 +74,7 @@ public class JavadocDialog {
 		// show the frame
 		frame.setSize(600, 400);
 		frame.setLocationRelativeTo(parent);
-		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
 	public static void init(JFrame parent, JTextArea area, Callback callback) {

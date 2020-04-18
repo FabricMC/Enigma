@@ -4,7 +4,6 @@ import cuchaz.enigma.analysis.index.BridgeMethodIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
