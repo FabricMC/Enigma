@@ -60,7 +60,7 @@
 	"popup_menu.zoom.out": "Verkleinern",
 	"popup_menu.zoom.reset": "Größe zurücksetzen",
 
-	"info_panel.classes.obfuscated": "Nicht obfuskierte Klassen:",
+	"info_panel.classes.obfuscated": "Nicht deobfuskierte Klassen:",
 	"info_panel.classes.deobfuscated": "Deobfuskierte Klassen:",
 	"info_panel.identifier": "Informationen zum Bezeichner:",
 	"info_panel.identifier.none": "Es wurde kein Bezeichner ausgewählt.",
