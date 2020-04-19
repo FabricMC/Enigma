@@ -65,7 +65,7 @@
 	"info_panel.identifier": "Informationen zum Bezeichner:",
 	"info_panel.identifier.none": "Es wurde kein Bezeichner ausgewählt.",
 	"info_panel.identifier.variable": "Variable",
-	"info_panel.identifier.field": "Datenfeld",
+	"info_panel.identifier.field": "Feld",
 	"info_panel.identifier.method": "Methode",
 	"info_panel.identifier.constructor": "Konstruktur",
 	"info_panel.identifier.class": "Klasse",
