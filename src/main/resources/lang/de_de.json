@@ -47,7 +47,7 @@
 
 	"popup_menu.rename": "Umbenennen",
 	"popup_menu.javadoc": "Javadoc bearbeiten",
-	"popup_menu.inheritance": "Vererbung zeigen",
+	"popup_menu.inheritance": "Vererbung anzeigen",
 	"popup_menu.implementations": "Implementierungen anzeigen",
 	"popup_menu.calls": "Aufrufe anzeigen",
 	"popup_menu.calls.specific": "Aufrufe anzeigen (spezifisch)",
