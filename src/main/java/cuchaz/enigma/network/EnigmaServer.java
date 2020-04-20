@@ -19,12 +19,12 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class EnigmaServer {
 
@@ -36,7 +36,7 @@ public abstract class EnigmaServer {
 
 	private final int port;
 	private ServerSocket socket;
-	private List<Socket> clients = new ArrayList<>();
+	private List<Socket> clients = new CopyOnWriteArrayList<>();
 	private Map<Socket, String> usernames = new HashMap<>();
 	private Set<Socket> unapprovedClients = new HashSet<>();
 
@@ -109,7 +109,7 @@ public abstract class EnigmaServer {
 
 	public synchronized void stop() {
 		if (!socket.isClosed()) {
-			for (Socket client : new ArrayList<>(clients)) {
+			for (Socket client : clients) {
 				kick(client, "disconnect.server_closed");
 			}
 			try {
@@ -167,13 +167,13 @@ public abstract class EnigmaServer {
 	}
 
 	public void sendToAll(Packet<GuiController> packet) {
-		for (Socket client : new ArrayList<>(clients)) {
+		for (Socket client : clients) {
 			sendPacket(client, packet);
 		}
 	}
 
 	public void sendToAllExcept(Socket excluded, Packet<GuiController> packet) {
-		for (Socket client : new ArrayList<>(clients)) {
+		for (Socket client : clients) {
 			if (client != excluded) {
 				sendPacket(client, packet);
 			}

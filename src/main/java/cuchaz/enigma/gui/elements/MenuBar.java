@@ -200,7 +200,8 @@ public class MenuBar extends JMenuBar {
 
 					pane.add(button);
 					frame.pack();
-					frame.setLocationRelativeTo(this.gui.getFrame());frame.setVisible(true);
+					frame.setLocationRelativeTo(this.gui.getFrame());
+					frame.setVisible(true);
 				});
 
 				menu.add(stats);
