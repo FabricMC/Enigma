@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -142,9 +143,10 @@ public class Utils {
 			entries.removeIf(entry -> !entry.getName().toLowerCase(Locale.ROOT).endsWith(".class"));
 			// different implementations may add zip entries in a different order
 			entries.sort(Comparator.comparing(ZipEntry::getName));
+			byte[] buffer = new byte[8192];
 			for (ZipEntry entry : entries) {
+				digest.update(entry.getName().getBytes(StandardCharsets.UTF_8));
 				try (InputStream in = zip.getInputStream(entry)) {
-					byte[] buffer = new byte[8192];
 					int n;
 					while ((n = in.read(buffer)) != -1) {
 						digest.update(buffer, 0, n);
