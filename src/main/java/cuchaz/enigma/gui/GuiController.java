@@ -49,7 +49,7 @@ import org.objectweb.asm.tree.ClassNode;
 import javax.annotation.Nullable;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import java.awt.Desktop;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.*;
 import java.nio.file.Path;
@@ -407,11 +407,39 @@ public class GuiController {
 
 	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, RefreshMode mode) {
 		if (currentSource != null) {
-			loadClass(currentSource.getEntry(), () -> {
-				if (reference != null) {
-					showReference(reference);
+			if (reference == null) {
+				int obfSelectionStart = currentSource.getObfuscatedOffset(gui.editor.getSelectionStart());
+				int obfSelectionEnd = currentSource.getObfuscatedOffset(gui.editor.getSelectionEnd());
+
+				Rectangle viewportBounds = gui.sourceScroller.getViewport().getViewRect();
+				// Here we pick an "anchor position", which we want to stay in the same vertical location on the screen after the new text has been set
+				int anchorModelPos = gui.editor.getSelectionStart();
+				Rectangle anchorViewPos = Utils.safeModelToView(gui.editor, anchorModelPos);
+				if (anchorViewPos.y < viewportBounds.y || anchorViewPos.y >= viewportBounds.y + viewportBounds.height) {
+					anchorModelPos = gui.editor.viewToModel(new Point(0, viewportBounds.y));
+					anchorViewPos = Utils.safeModelToView(gui.editor, anchorModelPos);
 				}
-			}, mode);
+				int obfAnchorPos = currentSource.getObfuscatedOffset(anchorModelPos);
+				Rectangle anchorViewPos_f = anchorViewPos;
+				int scrollX = gui.sourceScroller.getHorizontalScrollBar().getValue();
+
+				loadClass(currentSource.getEntry(), () -> SwingUtilities.invokeLater(() -> {
+					int newAnchorModelPos = currentSource.getDeobfuscatedOffset(obfAnchorPos);
+					Rectangle newAnchorViewPos = Utils.safeModelToView(gui.editor, newAnchorModelPos);
+					int newScrollY = newAnchorViewPos.y - (anchorViewPos_f.y - viewportBounds.y);
+
+					gui.editor.select(currentSource.getDeobfuscatedOffset(obfSelectionStart), currentSource.getDeobfuscatedOffset(obfSelectionEnd));
+					// Changing the selection scrolls to the caret position inside a SwingUtilities.invokeLater call, so
+					// we need to wrap our change to the scroll position inside another invokeLater so it happens after
+					// the caret's own scrolling.
+					SwingUtilities.invokeLater(() -> {
+						gui.sourceScroller.getHorizontalScrollBar().setValue(Math.min(scrollX, gui.sourceScroller.getHorizontalScrollBar().getMaximum()));
+						gui.sourceScroller.getVerticalScrollBar().setValue(Math.min(newScrollY, gui.sourceScroller.getVerticalScrollBar().getMaximum()));
+					});
+				}), mode);
+			} else {
+				loadClass(currentSource.getEntry(), () -> showReference(reference), mode);
+			}
 		}
 	}
 

@@ -76,6 +76,7 @@ public class Gui {
 	private JFrame frame;
 	public Config.LookAndFeel editorFeel;
 	public PanelEditor editor;
+	public JScrollPane sourceScroller;
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
 	private PanelIdentifier infoPanel;
@@ -149,7 +150,7 @@ public class Gui {
 		Themes.updateTheme(this);
 		selectionHighlightPainter = new SelectionHighlightPainter();
 		this.editor = new PanelEditor(this);
-		JScrollPane sourceScroller = new JScrollPane(this.editor);
+		this.sourceScroller = new JScrollPane(this.editor);
 		this.editor.setContentType("text/enigma-sources");
 		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();

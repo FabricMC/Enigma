@@ -15,6 +15,8 @@ import com.google.common.io.CharStreams;
 import org.objectweb.asm.Opcodes;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -98,6 +100,19 @@ public class Utils {
 		manager.setInitialDelay(0);
 		manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
 		manager.setInitialDelay(oldDelay);
+	}
+
+	public static Rectangle safeModelToView(JTextComponent component, int modelPos) {
+		if (modelPos < 0) {
+			modelPos = 0;
+		} else if (modelPos >= component.getText().length()) {
+			modelPos = component.getText().length();
+		}
+		try {
+			return component.modelToView(modelPos);
+		} catch (BadLocationException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static boolean getSystemPropertyAsBoolean(String property, boolean defValue) {
