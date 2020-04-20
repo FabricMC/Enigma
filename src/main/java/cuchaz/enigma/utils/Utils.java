@@ -28,11 +28,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class Utils {
 	
@@ -128,7 +128,7 @@ public class Utils {
 		}
 	}
 
-	public static byte[] sha1(Path path) throws IOException {
+	public static byte[] zipSha1(Path path) throws IOException {
 		MessageDigest digest;
 		try {
 			digest = MessageDigest.getInstance("SHA-1");
@@ -136,11 +136,20 @@ public class Utils {
 			// Algorithm guaranteed to be supported
 			throw new RuntimeException(e);
 		}
-		try (InputStream in = Files.newInputStream(path)) {
-			byte[] buffer = new byte[8192];
-			int n;
-			while ((n = in.read(buffer)) != -1) {
-				digest.update(buffer, 0, n);
+		try (ZipFile zip = new ZipFile(path.toFile())) {
+			List<? extends ZipEntry> entries = Collections.list(zip.entries());
+			// only compare classes (some implementations may not generate directory entries)
+			entries.removeIf(entry -> !entry.getName().toLowerCase(Locale.ROOT).endsWith(".class"));
+			// different implementations may add zip entries in a different order
+			entries.sort(Comparator.comparing(ZipEntry::getName));
+			for (ZipEntry entry : entries) {
+				try (InputStream in = zip.getInputStream(entry)) {
+					byte[] buffer = new byte[8192];
+					int n;
+					while ((n = in.read(buffer)) != -1) {
+						digest.update(buffer, 0, n);
+					}
+				}
 			}
 		}
 		return digest.digest();

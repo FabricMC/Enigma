@@ -51,7 +51,7 @@ public class Enigma {
 
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(classCache, jarIndex));
 
-		return new EnigmaProject(this, classCache, jarIndex, Utils.sha1(path));
+		return new EnigmaProject(this, classCache, jarIndex, Utils.zipSha1(path));
 	}
 
 	public EnigmaProfile getProfile() {

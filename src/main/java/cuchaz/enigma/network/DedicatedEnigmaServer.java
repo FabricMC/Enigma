@@ -86,7 +86,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 		System.out.println("Starting Enigma server");
 		DedicatedEnigmaServer server;
 		try {
-			byte[] checksum = Utils.sha1(parsedArgs.valueOf(jarOpt));
+			byte[] checksum = Utils.zipSha1(parsedArgs.valueOf(jarOpt));
 
 			EnigmaProfile profile = EnigmaProfile.read(profileFile);
 			Enigma enigma = Enigma.builder().setProfile(profile).build();

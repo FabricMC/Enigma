@@ -59,6 +59,7 @@ public abstract class EnigmaServer {
 
 	public void start() throws IOException {
 		socket = new ServerSocket(port);
+		log("Server started on port " + port);
 		Thread thread = new Thread(() -> {
 			try {
 				while (!socket.isClosed()) {
@@ -129,13 +130,15 @@ public abstract class EnigmaServer {
 			list.remove(client);
 			return list.isEmpty();
 		});
-		usernames.remove(client);
+		String username = usernames.remove(client);
 		try {
 			client.close();
 		} catch (IOException e) {
 			System.err.println("Failed to close server client socket");
 			e.printStackTrace();
 		}
+
+		System.out.println("Kicked " + username + " because " + reason);
 	}
 
 	public boolean isUsernameTaken(String username) {
