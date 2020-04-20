@@ -59,7 +59,7 @@ public abstract class EnigmaServer {
 
 	public void start() throws IOException {
 		socket = new ServerSocket(port);
-		log("Server started on port " + port);
+		log("Server started on " + socket.getInetAddress() + ":" + port);
 		Thread thread = new Thread(() -> {
 			try {
 				while (!socket.isClosed()) {

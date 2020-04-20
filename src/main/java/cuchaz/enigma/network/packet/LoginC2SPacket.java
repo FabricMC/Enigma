@@ -39,16 +39,16 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 
 	@Override
 	public void handle(ServerPacketHandler handler) {
+		boolean usernameTaken = handler.getServer().isUsernameTaken(username);
 		handler.getServer().setUsername(handler.getClient(), username);
 		handler.getServer().log(username + " logged in with IP " + handler.getClient().getInetAddress().toString() + ":" + handler.getClient().getPort());
-
-		if (!Arrays.equals(jarChecksum, handler.getServer().getJarChecksum())) {
-			handler.getServer().kick(handler.getClient(), "disconnect.wrong_jar");
+		if (usernameTaken) {
+			handler.getServer().kick(handler.getClient(), "disconnect.username_taken");
 			return;
 		}
 
-		if (handler.getServer().isUsernameTaken(username)) {
-			handler.getServer().kick(handler.getClient(), "disconnect.username_taken");
+		if (!Arrays.equals(jarChecksum, handler.getServer().getJarChecksum())) {
+			handler.getServer().kick(handler.getClient(), "disconnect.wrong_jar");
 			return;
 		}
 
