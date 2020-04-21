@@ -100,7 +100,7 @@ public class Gui {
 
 	private JPanel statusBar;
 	private JLabel connectionStatusLabel;
-	private JLabel lastActionLabel;
+	private JLabel statusLabel;
 
 	public JTextField renameTextField;
 	public JTextArea javadocTextArea;
@@ -338,9 +338,9 @@ public class Gui {
 		// init status bar
 		statusBar = new JPanel(new BorderLayout());
 		statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
-		connectionStatusLabel = new JLabel(I18n.translate("status.disconnected"));
-		lastActionLabel = new JLabel(I18n.translate("status.ready"));
-		statusBar.add(lastActionLabel, BorderLayout.CENTER);
+		connectionStatusLabel = new JLabel();
+		statusLabel = new JLabel();
+		statusBar.add(statusLabel, BorderLayout.CENTER);
 		statusBar.add(connectionStatusLabel, BorderLayout.EAST);
 		pane.add(statusBar, BorderLayout.SOUTH);
 
@@ -972,13 +972,13 @@ public class Gui {
 		boolean isAtBottom = verticalScrollBar.getValue() == verticalScrollBar.getMaximum();
 		messageModel.addElement(message);
 		if (isAtBottom) verticalScrollBar.setValue(verticalScrollBar.getMaximum());
-		lastActionLabel.setText(message.translate());
+		statusLabel.setText(message.translate());
 	}
 
 	public void setUserList(List<String> users) {
 		userModel.clear();
 		users.forEach(userModel::addElement);
-		connectionStatusLabel.setText(String.format(I18n.translate("status.connected"), users.size()));
+		connectionStatusLabel.setText(String.format(I18n.translate("status.connected_user_count"), users.size()));
 	}
 
 	private void sendMessage() {
@@ -990,6 +990,7 @@ public class Gui {
 	}
 
 	public void setConnectionState(ConnectionState state) {
+		statusLabel.setText(I18n.translate("status.ready"));
 		switch (state) {
 			case NOT_CONNECTED:
 				menuBar.connectToServerMenu.setEnabled(true);

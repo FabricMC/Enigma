@@ -142,7 +142,8 @@
 	"message.rename.text": "%s renamed %s to %s",
 
 	"status.disconnected": "Disconnected.",
-	"status.connected": "Connected (%d users).",
+	"status.connected": "Connected.",
+	"status.connected_user_count": "Connected (%d users).",
 	"status.ready": "Ready.",
 
 	"crash.title": "%s - Crash Report",
