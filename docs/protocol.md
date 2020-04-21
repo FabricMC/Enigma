@@ -76,6 +76,7 @@ The IDs for client-to-server packets are as follows:
 - 3: `RemoveMapping`
 - 4: `ChangeDocs`
 - 5: `MarkDeobfuscated`
+- 6: `Message`
 
 The IDs for server-to-client packets are as follows:
 - 0: `Kick`
