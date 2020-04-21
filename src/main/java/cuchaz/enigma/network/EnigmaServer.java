@@ -113,18 +113,20 @@ public abstract class EnigmaServer {
 		thread.start();
 	}
 
-	public synchronized void stop() {
-		if (!socket.isClosed()) {
-			for (Socket client : clients) {
-				kick(client, "disconnect.server_closed");
+	public void stop() {
+		runOnThread(() -> {
+			if (!socket.isClosed()) {
+				for (Socket client : clients) {
+					kick(client, "disconnect.server_closed");
+				}
+				try {
+					socket.close();
+				} catch (IOException e) {
+					System.err.println("Failed to close server socket");
+					e.printStackTrace();
+				}
 			}
-			try {
-				socket.close();
-			} catch (IOException e) {
-				System.err.println("Failed to close server socket");
-				e.printStackTrace();
-			}
-		}
+		});
 	}
 
 	public void kick(Socket client, String reason) {
