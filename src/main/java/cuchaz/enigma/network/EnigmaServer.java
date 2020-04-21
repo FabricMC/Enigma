@@ -130,9 +130,10 @@ public abstract class EnigmaServer {
 	}
 
 	public void kick(Socket client, String reason) {
+		if (!clients.remove(client)) return;
+
 		sendPacket(client, new KickS2CPacket(reason));
 
-		if (!clients.remove(client)) return;
 		clientsNeedingConfirmation.values().removeIf(list -> {
 			list.remove(client);
 			return list.isEmpty();
