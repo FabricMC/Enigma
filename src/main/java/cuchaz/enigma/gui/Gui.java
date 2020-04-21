@@ -11,6 +11,18 @@
 
 package cuchaz.enigma.gui;
 
+import java.awt.*;
+import java.awt.event.*;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+
+import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Highlighter;
+import javax.swing.tree.*;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
@@ -21,6 +33,7 @@ import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
+import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
@@ -33,27 +46,14 @@ import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.gui.util.History;
-import cuchaz.enigma.network.packet.ChangeDocsC2SPacket;
-import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
-import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
-import cuchaz.enigma.network.packet.RenameC2SPacket;
+import cuchaz.enigma.network.packet.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Message;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
-
-import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Highlighter;
-import javax.swing.tree.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.*;
-import java.util.function.Function;
 
 public class Gui {
 
@@ -87,6 +87,20 @@ public class Gui {
 	private JTree callsTree;
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
+
+	private JSplitPane splitRight;
+	private JSplitPane logSplit;
+	private CollapsibleTabbedPane logTabs;
+	private JList<String> users;
+	private DefaultListModel<String> userModel;
+	private JScrollPane messageScrollPane;
+	private JList<Message> messages;
+	private DefaultListModel<Message> messageModel;
+	private JTextField chatBox;
+
+	private JPanel statusBar;
+	private JLabel connectionStatusLabel;
+	private JLabel statusLabel;
 
 	public JTextField renameTextField;
 	public JTextArea javadocTextArea;
@@ -283,7 +297,34 @@ public class Gui {
 		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritancePanel);
 		tabs.addTab(I18n.translate("info_panel.tree.implementations"), implementationsPanel);
 		tabs.addTab(I18n.translate("info_panel.tree.calls"), callPanel);
-		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabs);
+		logTabs = new CollapsibleTabbedPane(JTabbedPane.BOTTOM);
+		userModel = new DefaultListModel<>();
+		users = new JList<>(userModel);
+		messageModel = new DefaultListModel<>();
+		messages = new JList<>(messageModel);
+		messages.setCellRenderer(new MessageListCellRenderer());
+		JPanel messagePanel = new JPanel(new BorderLayout());
+		messageScrollPane = new JScrollPane(this.messages);
+		messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+		JPanel chatPanel = new JPanel(new BorderLayout());
+		chatBox = new JTextField();
+		AbstractAction sendListener = new AbstractAction("Send") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				sendMessage();
+			}
+		};
+		chatBox.addActionListener(sendListener);
+		JButton chatSendButton = new JButton(sendListener);
+		chatPanel.add(chatBox, BorderLayout.CENTER);
+		chatPanel.add(chatSendButton, BorderLayout.EAST);
+		messagePanel.add(chatPanel, BorderLayout.SOUTH);
+		logTabs.addTab(I18n.translate("log_panel.users"), new JScrollPane(this.users));
+		logTabs.addTab(I18n.translate("log_panel.messages"), messagePanel);
+		logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
+		logSplit.setResizeWeight(0.5);
+		logSplit.resetToPreferredSizes();
+		splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
 		JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
@@ -294,7 +335,17 @@ public class Gui {
 		this.menuBar = new MenuBar(this);
 		this.frame.setJMenuBar(this.menuBar);
 
+		// init status bar
+		statusBar = new JPanel(new BorderLayout());
+		statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
+		connectionStatusLabel = new JLabel();
+		statusLabel = new JLabel();
+		statusBar.add(statusLabel, BorderLayout.CENTER);
+		statusBar.add(connectionStatusLabel, BorderLayout.EAST);
+		pane.add(statusBar, BorderLayout.SOUTH);
+
 		// init state
+		setConnectionState(ConnectionState.NOT_CONNECTED);
 		onCloseJar();
 
 		this.frame.addWindowListener(new WindowAdapter() {
@@ -915,4 +966,56 @@ public class Gui {
 	public MenuBar getMenuBar() {
 		return menuBar;
 	}
+
+	public void addMessage(Message message) {
+		JScrollBar verticalScrollBar = messageScrollPane.getVerticalScrollBar();
+		boolean isAtBottom = verticalScrollBar.getValue() >= verticalScrollBar.getMaximum() - verticalScrollBar.getModel().getExtent();
+		messageModel.addElement(message);
+		if (isAtBottom) {
+			SwingUtilities.invokeLater(() -> verticalScrollBar.setValue(verticalScrollBar.getMaximum() - verticalScrollBar.getModel().getExtent()));
+		}
+		statusLabel.setText(message.translate());
+	}
+
+	public void setUserList(List<String> users) {
+		userModel.clear();
+		users.forEach(userModel::addElement);
+		connectionStatusLabel.setText(String.format(I18n.translate("status.connected_user_count"), users.size()));
+	}
+
+	private void sendMessage() {
+		String text = chatBox.getText().trim();
+		if (!text.isEmpty()) {
+			getController().sendPacket(new MessageC2SPacket(text));
+		}
+		chatBox.setText("");
+	}
+
+	public void setConnectionState(ConnectionState state) {
+		statusLabel.setText(I18n.translate("status.ready"));
+		switch (state) {
+			case NOT_CONNECTED:
+				menuBar.connectToServerMenu.setEnabled(true);
+				menuBar.connectToServerMenu.setText(I18n.translate("menu.collab.connect"));
+				menuBar.startServerMenu.setText(I18n.translate("menu.collab.server.start"));
+				connectionStatusLabel.setText(I18n.translate("status.disconnected"));
+				logSplit.setLeftComponent(null);
+				splitRight.setRightComponent(tabs);
+				break;
+			case HOSTING:
+				menuBar.connectToServerMenu.setEnabled(false);
+				menuBar.startServerMenu.setText(I18n.translate("menu.collab.server.stop"));
+				connectionStatusLabel.setText(I18n.translate("status.connected"));
+				splitRight.setRightComponent(logSplit);
+				logSplit.setLeftComponent(tabs);
+				break;
+			case CONNECTED:
+				menuBar.connectToServerMenu.setText(I18n.translate("menu.collab.disconnect"));
+				connectionStatusLabel.setText(I18n.translate("status.connected"));
+				splitRight.setRightComponent(logSplit);
+				logSplit.setLeftComponent(tabs);
+				break;
+		}
+	}
+
 }

@@ -2,13 +2,16 @@ package cuchaz.enigma.network;
 
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.network.packet.KickS2CPacket;
+import cuchaz.enigma.network.packet.MessageS2CPacket;
 import cuchaz.enigma.network.packet.Packet;
 import cuchaz.enigma.network.packet.PacketRegistry;
 import cuchaz.enigma.network.packet.RemoveMappingS2CPacket;
 import cuchaz.enigma.network.packet.RenameS2CPacket;
+import cuchaz.enigma.network.packet.UserListS2CPacket;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.Message;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -19,6 +22,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -108,24 +113,27 @@ public abstract class EnigmaServer {
 		thread.start();
 	}
 
-	public synchronized void stop() {
-		if (!socket.isClosed()) {
-			for (Socket client : clients) {
-				kick(client, "disconnect.server_closed");
+	public void stop() {
+		runOnThread(() -> {
+			if (!socket.isClosed()) {
+				for (Socket client : clients) {
+					kick(client, "disconnect.server_closed");
+				}
+				try {
+					socket.close();
+				} catch (IOException e) {
+					System.err.println("Failed to close server socket");
+					e.printStackTrace();
+				}
 			}
-			try {
-				socket.close();
-			} catch (IOException e) {
-				System.err.println("Failed to close server socket");
-				e.printStackTrace();
-			}
-		}
+		});
 	}
 
 	public void kick(Socket client, String reason) {
+		if (!clients.remove(client)) return;
+
 		sendPacket(client, new KickS2CPacket(reason));
 
-		clients.remove(client);
 		clientsNeedingConfirmation.values().removeIf(list -> {
 			list.remove(client);
 			return list.isEmpty();
@@ -138,7 +146,11 @@ public abstract class EnigmaServer {
 			e.printStackTrace();
 		}
 
-		System.out.println("Kicked " + username + " because " + reason);
+		if (username != null) {
+			System.out.println("Kicked " + username + " because " + reason);
+			sendMessage(Message.disconnect(username));
+		}
+		sendUsernamePacket();
 	}
 
 	public boolean isUsernameTaken(String username) {
@@ -147,6 +159,13 @@ public abstract class EnigmaServer {
 
 	public void setUsername(Socket client, String username) {
 		usernames.put(client, username);
+		sendUsernamePacket();
+	}
+
+	private void sendUsernamePacket() {
+		List<String> usernames = new ArrayList<>(this.usernames.values());
+		Collections.sort(usernames);
+		sendToAll(new UserListS2CPacket(usernames));
 	}
 
 	public String getUsername(Socket client) {
@@ -256,6 +275,11 @@ public abstract class EnigmaServer {
 
 	public EntryRemapper getMappings() {
 		return mappings;
+	}
+
+	public void sendMessage(Message message) {
+		log(String.format("[MSG] %s", message.translate()));
+		sendToAll(new MessageS2CPacket(message));
 	}
 
 }

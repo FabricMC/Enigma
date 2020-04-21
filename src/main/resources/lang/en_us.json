@@ -86,6 +86,9 @@
 	"info_panel.tree.implementations": "Implementations",
 	"info_panel.tree.calls": "Call Graph",
 
+	"log_panel.messages": "Messages",
+	"log_panel.users": "Users",
+
 	"progress.operation": "%s - Operation in progress",
 	"progress.jar.indexing": "Indexing jar",
 	"progress.jar.indexing.entries": "Entries...",
@@ -129,6 +132,19 @@
 	"disconnect.server_closed": "Server closed",
 	"disconnect.wrong_jar": "Jar checksums don't match (you have the wrong jar)!",
 	"disconnect.username_taken": "Username is taken",
+
+	"message.chat.text": "%s: %s",
+	"message.connect.text": "[+] %s",
+	"message.disconnect.text": "[-] %s",
+	"message.edit_docs.text": "%s edited docs for %s",
+	"message.mark_deobf.text": "%s marked %s as deobfuscated",
+	"message.remove_mapping.text": "%s removed mappings for %s",
+	"message.rename.text": "%s renamed %s to %s",
+
+	"status.disconnected": "Disconnected.",
+	"status.connected": "Connected.",
+	"status.connected_user_count": "Connected (%d users).",
+	"status.ready": "Ready.",
 
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",

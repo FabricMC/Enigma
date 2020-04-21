@@ -31,6 +31,7 @@ public class PacketRegistry {
 		registerC2S(3, RemoveMappingC2SPacket.class, RemoveMappingC2SPacket::new);
 		registerC2S(4, ChangeDocsC2SPacket.class, ChangeDocsC2SPacket::new);
 		registerC2S(5, MarkDeobfuscatedC2SPacket.class, MarkDeobfuscatedC2SPacket::new);
+		registerC2S(6, MessageC2SPacket.class, MessageC2SPacket::new);
 
 		registerS2C(0, KickS2CPacket.class, KickS2CPacket::new);
 		registerS2C(1, SyncMappingsS2CPacket.class, SyncMappingsS2CPacket::new);
@@ -38,6 +39,8 @@ public class PacketRegistry {
 		registerS2C(3, RemoveMappingS2CPacket.class, RemoveMappingS2CPacket::new);
 		registerS2C(4, ChangeDocsS2CPacket.class, ChangeDocsS2CPacket::new);
 		registerS2C(5, MarkDeobfuscatedS2CPacket.class, MarkDeobfuscatedS2CPacket::new);
+		registerS2C(6, MessageS2CPacket.class, MessageS2CPacket::new);
+		registerS2C(7, UserListS2CPacket.class, UserListS2CPacket::new);
 	}
 
 	public static int getC2SId(Packet<ServerPacketHandler> packet) {

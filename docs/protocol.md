@@ -76,6 +76,7 @@ The IDs for client-to-server packets are as follows:
 - 3: `RemoveMapping`
 - 4: `ChangeDocs`
 - 5: `MarkDeobfuscated`
+- 6: `Message`
 
 The IDs for server-to-client packets are as follows:
 - 0: `Kick`
@@ -84,6 +85,8 @@ The IDs for server-to-client packets are as follows:
 - 3: `RemoveMapping`
 - 4: `ChangeDocs`
 - 5: `MarkDeobfuscated`
+- 6: `Message`
+- 7: `UserList`
 
 ### The Entry struct
 ```c
@@ -118,6 +121,67 @@ struct Entry {
 - `descriptor`: The field/method descriptor.
 - `index`: The index of the local variable in the local variable table.
 - `parameter`: Whether the local variable is a parameter.
+
+### The Message struct
+```c
+enum MessageType {
+    MESSAGE_CHAT = 0,
+    MESSAGE_CONNECT = 1,
+    MESSAGE_DISCONNECT = 2,
+    MESSAGE_EDIT_DOCS = 3,
+    MESSAGE_MARK_DEOBF = 4,
+    MESSAGE_REMOVE_MAPPING = 5,
+    MESSAGE_RENAME = 6
+};
+typedef unsigned byte message_type_t;
+
+struct Message {
+    message_type_t type;
+    union { // Note that the size of this varies depending on type, it is not constant size
+        struct {
+            utf user;
+            utf message;
+        } chat;
+        struct {
+            utf user;
+        } connect;
+        struct {
+            utf user;
+        } disconnect;
+        struct {
+            utf user;
+            Entry entry;
+        } edit_docs;
+        struct {
+            utf user;
+            Entry entry;
+        } mark_deobf;
+        struct {
+            utf user;
+            Entry entry;
+        } remove_mapping;
+        struct {
+            utf user;
+            Entry entry;
+            utf new_name;
+        } rename;
+    } data;
+};
+```
+- `type`: The type of message this is. One of `MESSAGE_CHAT`, `MESSAGE_CONNECT`, `MESSAGE_DISCONNECT`,
+    `MESSAGE_EDIT_DOCS`, `MESSAGE_MARK_DEOBF`, `MESSAGE_REMOVE_MAPPING`, `MESSAGE_RENAME`.
+- `chat`: Chat message. Use in case `type` is `MESSAGE_CHAT`
+- `connect`: Sent when a user connects. Use in case `type` is `MESSAGE_CONNECT`
+- `disconnect`: Sent when a user disconnects. Use in case `type` is `MESSAGE_DISCONNECT`
+- `edit_docs`: Sent when a user edits the documentation of an entry. Use in case `type` is `MESSAGE_EDIT_DOCS`
+- `mark_deobf`: Sent when a user marks an entry as deobfuscated. Use in case `type` is `MESSAGE_MARK_DEOBF`
+- `remove_mapping`: Sent when a user removes a mapping. Use in case `type` is `MESSAGE_REMOVE_MAPPING`
+- `rename`: Sent when a user renames an entry. Use in case `type` is `MESSAGE_RENAME`
+- `user`: The user that performed the action.
+- `message`: The message the user sent.
+- `entry`: The entry that was modified.
+- `new_name`: The new name for the entry.
+
 
 ### Login (client-to-server)
 ```c
@@ -178,6 +242,14 @@ struct MarkDeobfuscatedC2SPacket {
 }
 ```
 - `obf_entry`: the obfuscated name and descriptor of the entry to mark as deobfuscated.
+
+### Message (client-to-server)
+```c
+struct MessageC2SPacket {
+    utf message;
+}
+```
+- `message`: The text message the user sent.
 
 ### Kick (server-to-client)
 ```c
@@ -259,3 +331,18 @@ struct MarkDeobfuscatedS2CPacket {
 ```
 - `sync_id`: the sync ID of the change for locking purposes.
 - `obf_entry`: the obfuscated name and descriptor of the entry to mark as deobfuscated.
+
+### Message (server-to-client)
+```c
+struct MessageS2CPacket {
+    Message message;
+}
+```
+
+### UserList (server-to-client)
+```c
+struct UserListS2CPacket {
+    unsigned short len;
+    utf user[len];
+}
+```
