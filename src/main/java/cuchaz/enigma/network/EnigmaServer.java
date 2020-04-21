@@ -38,6 +38,7 @@ public abstract class EnigmaServer {
 	public static final int PROTOCOL_VERSION = 0;
 	public static final String OWNER_USERNAME = "Owner";
 	public static final int CHECKSUM_SIZE = 20;
+	public static final int MAX_PASSWORD_LENGTH = 255; // length is written as a byte in the login packet
 
 	private final int port;
 	private ServerSocket socket;
@@ -46,6 +47,7 @@ public abstract class EnigmaServer {
 	private Set<Socket> unapprovedClients = new HashSet<>();
 
 	private final byte[] jarChecksum;
+	private final char[] password;
 
 	public static final int DUMMY_SYNC_ID = 0;
 	private final EntryRemapper mappings;
@@ -56,8 +58,9 @@ public abstract class EnigmaServer {
 
 	private static int nextIoId = 0;
 
-	public EnigmaServer(byte[] jarChecksum, EntryRemapper mappings, int port) {
+	public EnigmaServer(byte[] jarChecksum, char[] password, EntryRemapper mappings, int port) {
 		this.jarChecksum = jarChecksum;
+		this.password = password;
 		this.mappings = mappings;
 		this.port = port;
 	}
@@ -271,6 +274,10 @@ public abstract class EnigmaServer {
 
 	public byte[] getJarChecksum() {
 		return jarChecksum;
+	}
+
+	public char[] getPassword() {
+		return password;
 	}
 
 	public EntryRemapper getMappings() {

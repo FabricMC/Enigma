@@ -5,9 +5,9 @@ import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
+import cuchaz.enigma.gui.dialog.CreateServerDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.stats.StatsMember;
-import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
 
@@ -309,11 +309,12 @@ public class MenuBar extends JMenuBar {
 					}
 					this.gui.getController().disconnectIfConnected(null);
 					try {
-						this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort());
+						this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort(), result.getPassword());
 					} catch (IOException e) {
 						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
 						this.gui.getController().disconnectIfConnected(null);
 					}
+					Arrays.fill(result.getPassword(), (char)0);
 				});
 				this.connectToServerMenu = item;
 			}
@@ -325,32 +326,13 @@ public class MenuBar extends JMenuBar {
 						this.gui.getController().disconnectIfConnected(null);
 						return;
 					}
-					String result = (String) JOptionPane.showInputDialog(
-							this.gui.getFrame(),
-							I18n.translate("prompt.port"),
-							I18n.translate("prompt.port"),
-							JOptionPane.QUESTION_MESSAGE,
-							null,
-							null,
-							String.valueOf(EnigmaServer.DEFAULT_PORT)
-					);
+					CreateServerDialog.Result result = CreateServerDialog.show(this.gui.getFrame());
 					if (result == null) {
-						return;
-					}
-					int port;
-					try {
-						port = Integer.parseInt(result);
-					} catch (NumberFormatException e) {
-						JOptionPane.showMessageDialog(this.gui.getFrame(), I18n.translate("prompt.port.nan"), I18n.translate("prompt.port"), JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					if (port < 0 || port >= 65536) {
-						JOptionPane.showMessageDialog(this.gui.getFrame(), I18n.translate("prompt.port.invalid"), I18n.translate("prompt.port"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					this.gui.getController().disconnectIfConnected(null);
 					try {
-						this.gui.getController().createServer(port);
+						this.gui.getController().createServer(result.getPort(), result.getPassword());
 					} catch (IOException e) {
 						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.server.start.error"), JOptionPane.ERROR_MESSAGE);
 						this.gui.getController().disconnectIfConnected(null);

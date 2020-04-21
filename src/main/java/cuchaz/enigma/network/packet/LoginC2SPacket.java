@@ -11,13 +11,15 @@ import java.util.Arrays;
 
 public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 	private byte[] jarChecksum;
+	private char[] password;
 	private String username;
 
 	LoginC2SPacket() {
 	}
 
-	public LoginC2SPacket(byte[] jarChecksum, String username) {
+	public LoginC2SPacket(byte[] jarChecksum, char[] password, String username) {
 		this.jarChecksum = jarChecksum;
+		this.password = password;
 		this.username = username;
 	}
 
@@ -28,6 +30,10 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 		}
 		this.jarChecksum = new byte[EnigmaServer.CHECKSUM_SIZE];
 		input.readFully(jarChecksum);
+		this.password = new char[input.readUnsignedByte()];
+		for (int i = 0; i < password.length; i++) {
+			password[i] = input.readChar();
+		}
 		this.username = input.readUTF();
 	}
 
@@ -35,6 +41,10 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 	public void write(DataOutput output) throws IOException {
 		output.writeShort(EnigmaServer.PROTOCOL_VERSION);
 		output.write(jarChecksum);
+		output.writeByte(password.length);
+		for (char c : password) {
+			output.writeChar(c);
+		}
 		output.writeUTF(username);
 	}
 
@@ -43,6 +53,12 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 		boolean usernameTaken = handler.getServer().isUsernameTaken(username);
 		handler.getServer().setUsername(handler.getClient(), username);
 		handler.getServer().log(username + " logged in with IP " + handler.getClient().getInetAddress().toString() + ":" + handler.getClient().getPort());
+
+		if (!Arrays.equals(password, handler.getServer().getPassword())) {
+			handler.getServer().kick(handler.getClient(), "disconnect.wrong_password");
+			return;
+		}
+
 		if (usernameTaken) {
 			handler.getServer().kick(handler.getClient(), "disconnect.username_taken");
 			return;

@@ -675,19 +675,19 @@ public class GuiController {
 		return server;
 	}
 
-	public void createClient(String username, String ip, int port) throws IOException {
+	public void createClient(String username, String ip, int port, char[] password) throws IOException {
 		client = new EnigmaClient(this, ip, port);
 		client.connect();
-		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), username));
+		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), password, username));
 		gui.setConnectionState(ConnectionState.CONNECTED);
 	}
 
-	public void createServer(int port) throws IOException {
-		server = new IntegratedEnigmaServer(project.getJarChecksum(), EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
+	public void createServer(int port, char[] password) throws IOException {
+		server = new IntegratedEnigmaServer(project.getJarChecksum(), password, EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
 		server.start();
 		client = new EnigmaClient(this, "127.0.0.1", port);
 		client.connect();
-		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), EnigmaServer.OWNER_USERNAME));
+		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), password, EnigmaServer.OWNER_USERNAME));
 		gui.setConnectionState(ConnectionState.HOSTING);
 	}
 

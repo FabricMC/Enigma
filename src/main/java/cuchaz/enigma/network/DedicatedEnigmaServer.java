@@ -30,6 +30,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 
 	public DedicatedEnigmaServer(
 			byte[] jarChecksum,
+			char[] password,
 			EnigmaProfile profile,
 			MappingFormat mappingFormat,
 			Path mappingsFile,
@@ -37,7 +38,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 			EntryRemapper mappings,
 			int port
 	) {
-		super(jarChecksum, mappings, port);
+		super(jarChecksum, password, mappings, port);
 		this.profile = profile;
 		this.mappingFormat = mappingFormat;
 		this.mappingsFile = mappingsFile;
@@ -77,11 +78,20 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 				.ofType(Integer.class)
 				.defaultsTo(EnigmaServer.DEFAULT_PORT);
 
+		OptionSpec<String> passwordOpt = parser.accepts("password", "The password to join the server")
+				.withRequiredArg()
+				.defaultsTo("");
+
 		OptionSet parsedArgs = parser.parse(args);
 		Path jar = parsedArgs.valueOf(jarOpt);
 		Path mappingsFile = parsedArgs.valueOf(mappingsOpt);
 		Path profileFile = parsedArgs.valueOf(profileOpt);
 		int port = parsedArgs.valueOf(portOpt);
+		char[] password = parsedArgs.valueOf(passwordOpt).toCharArray();
+		if (password.length > EnigmaServer.MAX_PASSWORD_LENGTH) {
+			System.err.println("Password too long, must be at most " + EnigmaServer.MAX_PASSWORD_LENGTH + " characters");
+			System.exit(1);
+		}
 
 		System.out.println("Starting Enigma server");
 		DedicatedEnigmaServer server;
@@ -111,7 +121,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 
 			PrintWriter log = new PrintWriter(Files.newBufferedWriter(Paths.get("log.txt")));
 
-			server = new DedicatedEnigmaServer(checksum, profile, mappingFormat, mappingsFile, log, mappings, port);
+			server = new DedicatedEnigmaServer(checksum, password, profile, mappingFormat, mappingsFile, log, mappings, port);
 			server.start();
 			System.out.println("Server started");
 		} catch (IOException | MappingParseException e) {

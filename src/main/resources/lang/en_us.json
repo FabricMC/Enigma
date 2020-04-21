@@ -127,10 +127,14 @@
 	"prompt.port": "Port",
 	"prompt.port.nan": "Port is not a number",
 	"prompt.port.invalid": "Port is out of range, should be between 0-65535",
+	"prompt.password": "Password",
+	"prompt.password.too_long": "Password is too long, it must be at most 255 characters.",
+	"prompt.create_server.title": "Create server",
 
 	"disconnect.disconnected": "Disconnected",
 	"disconnect.server_closed": "Server closed",
 	"disconnect.wrong_jar": "Jar checksums don't match (you have the wrong jar)!",
+	"disconnect.wrong_password": "Incorrect password",
 	"disconnect.username_taken": "Username is taken",
 
 	"message.chat.text": "%s: %s",
