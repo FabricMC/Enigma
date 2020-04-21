@@ -342,7 +342,7 @@ struct MessageS2CPacket {
 ### UserList (server-to-client)
 ```c
 struct UserListS2CPacket {
-    int len;
+    unsigned short len;
     utf user[len];
 }
 ```
