@@ -12,6 +12,7 @@
 package cuchaz.enigma.gui.dialog;
 
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -72,7 +73,7 @@ public class JavadocDialog {
 		pane.add(buttonsPanel, BorderLayout.SOUTH);
 
 		// show the frame
-		frame.setSize(600, 400);
+		frame.setSize(ScaleUtil.getDimension(600, 400));
 		frame.setLocationRelativeTo(parent);
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}

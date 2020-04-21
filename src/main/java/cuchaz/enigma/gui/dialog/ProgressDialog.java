@@ -14,6 +14,7 @@ package cuchaz.enigma.gui.dialog;
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -48,11 +49,11 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 		this.labelText.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 		panel.add(this.labelText, BorderLayout.NORTH);
 		panel.add(this.progress, BorderLayout.CENTER);
-		panel.setPreferredSize(new Dimension(360, 50));
+		panel.setPreferredSize(ScaleUtil.getDimension(360, 50));
 
 		// show the frame
 		pane.doLayout();
-		this.frame.setSize(400, 120);
+		this.frame.setSize(ScaleUtil.getDimension(400, 120));
 		this.frame.setResizable(false);
 		this.frame.setLocationRelativeTo(parent);
 		this.frame.setVisible(true);

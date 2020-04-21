@@ -38,6 +38,8 @@
 	"menu.view.languages.title": "Change language",
 	"menu.view.languages.summary": "The new language will be applied after the next restart.",
 	"menu.view.languages.ok": "Ok",
+	"menu.view.scale": "Scale",
+	"menu.view.scale.custom": "Custom...",
 	"menu.view.search": "Search",
 	"menu.help": "Help",
 	"menu.help.about": "About",

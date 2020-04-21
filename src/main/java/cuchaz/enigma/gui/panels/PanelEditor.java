@@ -7,6 +7,7 @@ import cuchaz.enigma.gui.BrowserCaret;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.gui.util.ScaleUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +24,7 @@ public class PanelEditor extends JEditorPane {
 		this.setEditable(false);
 		this.setSelectionColor(new Color(31, 46, 90));
 		this.setCaret(new BrowserCaret());
-		this.setFont(new Font(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
+		this.setFont(ScaleUtil.getFont(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
 		this.addCaretListener(event -> gui.onCaretMove(event.getDot(), mouseIsPressed));
 		final PanelEditor self = this;
 		this.addMouseListener(new MouseAdapter() {
@@ -154,13 +155,13 @@ public class PanelEditor extends JEditorPane {
 		int newResult = this.fontSize + zoomAmount;
 		if (newResult > 8 && newResult < 72) {
 			this.fontSize = newResult;
-			this.setFont(new Font(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
+			this.setFont(ScaleUtil.getFont(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
 		}
 	}
 
 	public void resetEditorZoom() {
 		this.fontSize = 12;
-		this.setFont(new Font(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
+		this.setFont(ScaleUtil.getFont(this.getFont().getFontName(), Font.PLAIN, this.fontSize));
 	}
 
 	@Override

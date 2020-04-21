@@ -13,6 +13,7 @@ package cuchaz.enigma.gui.dialog;
 
 import cuchaz.enigma.Constants;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -59,7 +60,7 @@ public class AboutDialog {
 
 		// show the frame
 		pane.doLayout();
-		frame.setSize(400, 220);
+		frame.setSize(ScaleUtil.getDimension(400, 220));
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(parent);
 		frame.setVisible(true);

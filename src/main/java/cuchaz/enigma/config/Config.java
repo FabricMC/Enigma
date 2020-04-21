@@ -7,6 +7,7 @@ import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.Decompilers;
 
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.gui.util.ScaleUtil;
 
 import javax.swing.*;
 import javax.swing.plaf.metal.MetalLookAndFeel;
@@ -78,7 +79,7 @@ public class Config {
 		public static boolean isDarkLaf() {
 			// a bit of a hack because swing doesn't give any API for that, and we need colors that aren't defined in look and feel
 			JPanel panel = new JPanel();
-			panel.setSize(new Dimension(10, 10));
+			panel.setSize(ScaleUtil.getDimension(10, 10));
 			panel.doLayout();
 
 			BufferedImage image = new BufferedImage(panel.getSize().width, panel.getSize().height, BufferedImage.TYPE_INT_RGB);
@@ -186,6 +187,8 @@ public class Config {
 	public String language = I18n.DEFAULT_LANGUAGE;
 
 	public LookAndFeel lookAndFeel = LookAndFeel.DEFAULT;
+
+	public float scaleFactor = 1.0f;
 
 	public Decompiler decompiler = Decompiler.PROCYON;
 

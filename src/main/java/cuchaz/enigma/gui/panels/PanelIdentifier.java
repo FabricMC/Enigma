@@ -2,6 +2,7 @@ package cuchaz.enigma.gui.panels;
 
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
@@ -15,7 +16,7 @@ public class PanelIdentifier extends JPanel {
 		this.gui = gui;
 
 		this.setLayout(new GridLayout(4, 1, 0, 0));
-		this.setPreferredSize(new Dimension(0, 100));
+		this.setPreferredSize(ScaleUtil.getDimension(0, 100));
 		this.setBorder(BorderFactory.createTitledBorder(I18n.translate("info_panel.identifier")));
 	}
 
