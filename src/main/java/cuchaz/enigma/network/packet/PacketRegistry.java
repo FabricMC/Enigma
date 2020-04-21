@@ -38,6 +38,8 @@ public class PacketRegistry {
 		registerS2C(3, RemoveMappingS2CPacket.class, RemoveMappingS2CPacket::new);
 		registerS2C(4, ChangeDocsS2CPacket.class, ChangeDocsS2CPacket::new);
 		registerS2C(5, MarkDeobfuscatedS2CPacket.class, MarkDeobfuscatedS2CPacket::new);
+		registerS2C(6, MessageS2CPacket.class, MessageS2CPacket::new);
+		registerS2C(7, UserListS2CPacket.class, UserListS2CPacket::new);
 	}
 
 	public static int getC2SId(Packet<ServerPacketHandler> packet) {

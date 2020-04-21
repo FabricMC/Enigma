@@ -2,13 +2,16 @@ package cuchaz.enigma.network;
 
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.network.packet.KickS2CPacket;
+import cuchaz.enigma.network.packet.MessageS2CPacket;
 import cuchaz.enigma.network.packet.Packet;
 import cuchaz.enigma.network.packet.PacketRegistry;
 import cuchaz.enigma.network.packet.RemoveMappingS2CPacket;
 import cuchaz.enigma.network.packet.RenameS2CPacket;
+import cuchaz.enigma.network.packet.UserListS2CPacket;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.Message;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -19,6 +22,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -139,6 +144,8 @@ public abstract class EnigmaServer {
 		}
 
 		System.out.println("Kicked " + username + " because " + reason);
+		sendMessage(Message.disconnect(username));
+		sendUsernamePacket();
 	}
 
 	public boolean isUsernameTaken(String username) {
@@ -147,6 +154,13 @@ public abstract class EnigmaServer {
 
 	public void setUsername(Socket client, String username) {
 		usernames.put(client, username);
+		sendUsernamePacket();
+	}
+
+	private void sendUsernamePacket() {
+		List<String> usernames = new ArrayList<>(this.usernames.values());
+		Collections.sort(usernames);
+		sendToAll(new UserListS2CPacket(usernames));
 	}
 
 	public String getUsername(Socket client) {
@@ -256,6 +270,11 @@ public abstract class EnigmaServer {
 
 	public EntryRemapper getMappings() {
 		return mappings;
+	}
+
+	public void sendMessage(Message message) {
+		log(message.toString());
+		sendToAll(new MessageS2CPacket(message));
 	}
 
 }

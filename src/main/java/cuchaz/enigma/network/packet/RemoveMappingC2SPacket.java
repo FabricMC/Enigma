@@ -3,6 +3,7 @@ package cuchaz.enigma.network.packet;
 import cuchaz.enigma.network.ServerPacketHandler;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.Message;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -49,5 +50,6 @@ public class RemoveMappingC2SPacket implements Packet<ServerPacketHandler> {
 
 		int syncId = handler.getServer().lockEntry(handler.getClient(), entry);
 		handler.getServer().sendToAllExcept(handler.getClient(), new RemoveMappingS2CPacket(syncId, entry));
+		handler.getServer().sendMessage(Message.removeMapping(handler.getServer().getUsername(handler.getClient()), entry));
 	}
 }

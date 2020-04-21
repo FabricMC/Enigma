@@ -11,6 +11,18 @@
 
 package cuchaz.enigma.gui;
 
+import java.awt.*;
+import java.awt.event.*;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+
+import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Highlighter;
+import javax.swing.tree.*;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Constants;
@@ -41,19 +53,9 @@ import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Message;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
-
-import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Highlighter;
-import javax.swing.tree.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.*;
-import java.util.function.Function;
 
 public class Gui {
 
@@ -87,6 +89,17 @@ public class Gui {
 	private JTree callsTree;
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
+
+	private JSplitPane logSplit;
+	private JTabbedPane logTabs;
+	private JList<String> users;
+	private DefaultListModel<String> userModel;
+	private JList<Message> messages;
+	private DefaultListModel<Message> messageModel;
+
+	private JPanel statusBar;
+	private JLabel connectionStatusLabel;
+	private JLabel lastActionLabel;
 
 	public JTextField renameTextField;
 	public JTextArea javadocTextArea;
@@ -283,7 +296,18 @@ public class Gui {
 		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritancePanel);
 		tabs.addTab(I18n.translate("info_panel.tree.implementations"), implementationsPanel);
 		tabs.addTab(I18n.translate("info_panel.tree.calls"), callPanel);
-		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabs);
+		logTabs = new JTabbedPane(JTabbedPane.BOTTOM);
+		userModel = new DefaultListModel<>();
+		users = new JList<>(userModel);
+		messageModel = new DefaultListModel<>();
+		messages = new JList<>(messageModel);
+		messages.setCellRenderer(new MessageListCellRenderer());
+		logTabs.addTab(I18n.translate("log_panel.users"), this.users);
+		logTabs.addTab(I18n.translate("log_panel.messages"), this.messages);
+		logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
+		logSplit.setResizeWeight(0.5);
+		logSplit.resetToPreferredSizes();
+		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
 		JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
@@ -293,6 +317,15 @@ public class Gui {
 		// init menus
 		this.menuBar = new MenuBar(this);
 		this.frame.setJMenuBar(this.menuBar);
+
+		// init status bar
+		statusBar = new JPanel(new BorderLayout());
+		statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
+		connectionStatusLabel = new JLabel("Disconnected.");
+		lastActionLabel = new JLabel("Ready.");
+		statusBar.add(lastActionLabel, BorderLayout.CENTER);
+		statusBar.add(connectionStatusLabel, BorderLayout.EAST);
+		pane.add(statusBar, BorderLayout.SOUTH);
 
 		// init state
 		onCloseJar();
@@ -915,4 +948,14 @@ public class Gui {
 	public MenuBar getMenuBar() {
 		return menuBar;
 	}
+
+	public void addMessage(Message message) {
+		messageModel.addElement(message);
+	}
+
+	public void setUserList(List<String> users) {
+		userModel.clear();
+		users.forEach(userModel::addElement);
+	}
+
 }

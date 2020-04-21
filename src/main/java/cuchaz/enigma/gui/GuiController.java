@@ -42,6 +42,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Message;
 import cuchaz.enigma.utils.ReadableToken;
 import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.tree.ClassNode;
@@ -718,6 +719,14 @@ public class GuiController {
 		if (client != null) {
 			client.sendPacket(packet);
 		}
+	}
+
+	public void addMessage(Message message) {
+		gui.addMessage(message);
+	}
+
+	public void updateUserList(List<String> users) {
+		gui.setUserList(users);
 	}
 
 }
