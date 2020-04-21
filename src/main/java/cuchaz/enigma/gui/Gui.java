@@ -33,6 +33,7 @@ import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
+import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
@@ -45,10 +46,7 @@ import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.gui.util.History;
-import cuchaz.enigma.network.packet.ChangeDocsC2SPacket;
-import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
-import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
-import cuchaz.enigma.network.packet.RenameC2SPacket;
+import cuchaz.enigma.network.packet.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -91,11 +89,13 @@ public class Gui {
 	private JTabbedPane tabs;
 
 	private JSplitPane logSplit;
-	private JTabbedPane logTabs;
+	private CollapsibleTabbedPane logTabs;
 	private JList<String> users;
 	private DefaultListModel<String> userModel;
+	private JScrollPane messageScrollPane;
 	private JList<Message> messages;
 	private DefaultListModel<Message> messageModel;
+	private JTextField chatBox;
 
 	private JPanel statusBar;
 	private JLabel connectionStatusLabel;
@@ -296,14 +296,30 @@ public class Gui {
 		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritancePanel);
 		tabs.addTab(I18n.translate("info_panel.tree.implementations"), implementationsPanel);
 		tabs.addTab(I18n.translate("info_panel.tree.calls"), callPanel);
-		logTabs = new JTabbedPane(JTabbedPane.BOTTOM);
+		logTabs = new CollapsibleTabbedPane(JTabbedPane.BOTTOM);
 		userModel = new DefaultListModel<>();
 		users = new JList<>(userModel);
 		messageModel = new DefaultListModel<>();
 		messages = new JList<>(messageModel);
 		messages.setCellRenderer(new MessageListCellRenderer());
-		logTabs.addTab(I18n.translate("log_panel.users"), this.users);
-		logTabs.addTab(I18n.translate("log_panel.messages"), this.messages);
+		JPanel messagePanel = new JPanel(new BorderLayout());
+		messageScrollPane = new JScrollPane(this.messages);
+		messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+		JPanel chatPanel = new JPanel(new BorderLayout());
+		chatBox = new JTextField();
+		AbstractAction sendListener = new AbstractAction("Send") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				sendMessage();
+			}
+		};
+		chatBox.addActionListener(sendListener);
+		JButton chatSendButton = new JButton(sendListener);
+		chatPanel.add(chatBox, BorderLayout.CENTER);
+		chatPanel.add(chatSendButton, BorderLayout.EAST);
+		messagePanel.add(chatPanel, BorderLayout.SOUTH);
+		logTabs.addTab(I18n.translate("log_panel.users"), new JScrollPane(this.users));
+		logTabs.addTab(I18n.translate("log_panel.messages"), messagePanel);
 		logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
 		logSplit.setResizeWeight(0.5);
 		logSplit.resetToPreferredSizes();
@@ -321,7 +337,7 @@ public class Gui {
 		// init status bar
 		statusBar = new JPanel(new BorderLayout());
 		statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
-		connectionStatusLabel = new JLabel("Disconnected.");
+		connectionStatusLabel = new JLabel(I18n.translate("status.disconnected"));
 		lastActionLabel = new JLabel("Ready.");
 		statusBar.add(lastActionLabel, BorderLayout.CENTER);
 		statusBar.add(connectionStatusLabel, BorderLayout.EAST);
@@ -343,6 +359,14 @@ public class Gui {
 		this.frame.setMinimumSize(new Dimension(640, 480));
 		this.frame.setVisible(true);
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+	}
+
+	private void sendMessage() {
+		String text = chatBox.getText().trim();
+		if (!text.isEmpty()) {
+			getController().sendPacket(new MessageC2SPacket(text));
+		}
+		chatBox.setText("");
 	}
 
 	public JFrame getFrame() {
@@ -950,12 +974,17 @@ public class Gui {
 	}
 
 	public void addMessage(Message message) {
+		JScrollBar verticalScrollBar = messageScrollPane.getVerticalScrollBar();
+		boolean isAtBottom = verticalScrollBar.getValue() == verticalScrollBar.getMaximum();
 		messageModel.addElement(message);
+		if (isAtBottom) verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+		lastActionLabel.setText(message.translate());
 	}
 
 	public void setUserList(List<String> users) {
 		userModel.clear();
 		users.forEach(userModel::addElement);
+		connectionStatusLabel.setText(String.format(I18n.translate("status.connected"), users.size()));
 	}
 
 }

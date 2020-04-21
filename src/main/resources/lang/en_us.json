@@ -141,6 +141,10 @@
 	"message.remove_mapping.text": "%s removed mappings for %s",
 	"message.rename.text": "%s renamed %s to %s",
 
+	"status.disconnected": "Disconnected.",
+	"status.connected": "Connected (%d users).",
+	"status.ready": "Ready.",
+
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",
 	"crash.export": "Export",

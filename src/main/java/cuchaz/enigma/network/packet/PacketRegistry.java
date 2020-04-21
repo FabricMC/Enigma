@@ -31,6 +31,7 @@ public class PacketRegistry {
 		registerC2S(3, RemoveMappingC2SPacket.class, RemoveMappingC2SPacket::new);
 		registerC2S(4, ChangeDocsC2SPacket.class, ChangeDocsC2SPacket::new);
 		registerC2S(5, MarkDeobfuscatedC2SPacket.class, MarkDeobfuscatedC2SPacket::new);
+		registerC2S(6, MessageC2SPacket.class, MessageC2SPacket::new);
 
 		registerS2C(0, KickS2CPacket.class, KickS2CPacket::new);
 		registerS2C(1, SyncMappingsS2CPacket.class, SyncMappingsS2CPacket::new);

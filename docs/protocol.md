@@ -242,6 +242,14 @@ struct MarkDeobfuscatedC2SPacket {
 ```
 - `obf_entry`: the obfuscated name and descriptor of the entry to mark as deobfuscated.
 
+### Message (client-to-server)
+```c
+struct MessageC2SPacket {
+    utf message;
+}
+```
+- `message`: The text message the user sent.
+
 ### Kick (server-to-client)
 ```c
 struct KickS2CPacket {
