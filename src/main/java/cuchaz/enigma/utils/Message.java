@@ -8,67 +8,96 @@ import java.util.Objects;
 import cuchaz.enigma.network.packet.PacketHelper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-public interface Message {
+public abstract class Message {
 
-	static Chat chat(String user, String message) {
+	public final String user;
+	
+	public static Chat chat(String user, String message) {
 		return new Chat(user, message);
 	}
 
-	static Connect connect(String user) {
+	public static Connect connect(String user) {
 		return new Connect(user);
 	}
 
-	static Disconnect disconnect(String user) {
+	public static Disconnect disconnect(String user) {
 		return new Disconnect(user);
 	}
 
-	static EditDocs editDocs(String user, Entry<?> entry) {
+	public static EditDocs editDocs(String user, Entry<?> entry) {
 		return new EditDocs(user, entry);
 	}
 
-	static MarkDeobf markDeobf(String user, Entry<?> entry) {
+	public static MarkDeobf markDeobf(String user, Entry<?> entry) {
 		return new MarkDeobf(user, entry);
 	}
 
-	static RemoveMapping removeMapping(String user, Entry<?> entry) {
+	public static RemoveMapping removeMapping(String user, Entry<?> entry) {
 		return new RemoveMapping(user, entry);
 	}
 
-	static Rename rename(String user, Entry<?> entry, String newName) {
+	public static Rename rename(String user, Entry<?> entry, String newName) {
 		return new Rename(user, entry, newName);
 	}
 
-	String translate();
+	public abstract String translate();
 
-	Type getType();
+	public abstract Type getType();
 
-	static Message read(DataInput input) throws IOException {
+	public static Message read(DataInput input) throws IOException {
 		byte typeId = input.readByte();
 		if (typeId < 0 || typeId >= Type.values().length) throw new IOException(String.format("Invalid message type ID %d", typeId));
 		Type type = Type.values()[typeId];
+		String user = input.readUTF();
 		switch (type) {
 			case CHAT:
-				return Chat.read(input);
+				String message = input.readUTF();
+				return chat(user, message);
 			case CONNECT:
-				return Connect.read(input);
+				return connect(user);
 			case DISCONNECT:
-				return Disconnect.read(input);
+				return disconnect(user);
 			case EDIT_DOCS:
-				return EditDocs.read(input);
+				Entry<?> entry = PacketHelper.readEntry(input);
+				return editDocs(user, entry);
 			case MARK_DEOBF:
-				return MarkDeobf.read(input);
+				entry = PacketHelper.readEntry(input);
+				return markDeobf(user, entry);
 			case REMOVE_MAPPING:
-				return RemoveMapping.read(input);
+				entry = PacketHelper.readEntry(input);
+				return removeMapping(user, entry);
 			case RENAME:
-				return Rename.read(input);
+				entry = PacketHelper.readEntry(input);
+				String newName = input.readUTF();
+				return rename(user, entry, newName);
 			default:
 				throw new IllegalStateException("unreachable");
 		}
 	}
 
-	void write(DataOutput output) throws IOException;
+	public void write(DataOutput output) throws IOException {
+		output.writeByte(getType().ordinal());
+		output.writeUTF(user);
+	}
 
-	enum Type {
+	private Message(String user) {
+		this.user = user;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Message message = (Message) o;
+		return Objects.equals(user, message.user);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(user);
+	}
+
+	public enum Type {
 		CHAT,
 		CONNECT,
 		DISCONNECT,
@@ -78,26 +107,18 @@ public interface Message {
 		RENAME,
 	}
 
-	final class Chat implements Message {
+	public static final class Chat extends Message {
 
-		public final String user;
 		public final String message;
 
 		private Chat(String user, String message) {
-			this.user = user;
+			super(user);
 			this.message = message;
-		}
-
-		private static Chat read(DataInput input) throws IOException {
-			String user = input.readUTF();
-			String message = input.readUTF();
-			return Message.chat(user, message);
 		}
 
 		@Override
 		public void write(DataOutput output) throws IOException {
-			output.write(getType().ordinal());
-			output.writeUTF(user);
+			super.write(output);
 			output.writeUTF(message);
 		}
 
@@ -115,14 +136,14 @@ public interface Message {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
+			if (!super.equals(o)) return false;
 			Chat chat = (Chat) o;
-			return Objects.equals(user, chat.user) &&
-					Objects.equals(message, chat.message);
+			return Objects.equals(message, chat.message);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(user, message);
+			return Objects.hash(super.hashCode(), message);
 		}
 
 		@Override
@@ -132,23 +153,10 @@ public interface Message {
 
 	}
 
-	final class Connect implements Message {
-
-		public final String user;
+	public static final class Connect extends Message {
 
 		private Connect(String user) {
-			this.user = user;
-		}
-
-		private static Connect read(DataInput input) throws IOException {
-			String user = input.readUTF();
-			return Message.connect(user);
-		}
-
-		@Override
-		public void write(DataOutput output) throws IOException {
-			output.write(getType().ordinal());
-			output.writeUTF(user);
+			super(user);
 		}
 
 		@Override
@@ -162,42 +170,16 @@ public interface Message {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			Connect connect = (Connect) o;
-			return Objects.equals(user, connect.user);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(user);
-		}
-
-		@Override
 		public String toString() {
 			return String.format("Message.Connect { user: '%s' }", user);
 		}
 
 	}
 
-	final class Disconnect implements Message {
-
-		public final String user;
+	public static final class Disconnect extends Message {
 
 		private Disconnect(String user) {
-			this.user = user;
-		}
-
-		private static Disconnect read(DataInput input) throws IOException {
-			String user = input.readUTF();
-			return Message.disconnect(user);
-		}
-
-		@Override
-		public void write(DataOutput output) throws IOException {
-			output.write(getType().ordinal());
-			output.writeUTF(user);
+			super(user);
 		}
 
 		@Override
@@ -211,45 +193,24 @@ public interface Message {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			Disconnect that = (Disconnect) o;
-			return Objects.equals(user, that.user);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(user);
-		}
-
-		@Override
 		public String toString() {
 			return String.format("Message.Disconnect { user: '%s' }", user);
 		}
 
 	}
 
-	final class EditDocs implements Message {
+	public static  final class EditDocs extends Message {
 
-		public final String user;
 		public final Entry<?> entry;
 
 		private EditDocs(String user, Entry<?> entry) {
-			this.user = user;
+			super(user);
 			this.entry = entry;
-		}
-
-		private static EditDocs read(DataInput input) throws IOException {
-			String user = input.readUTF();
-			Entry<?> entry = PacketHelper.readEntry(input);
-			return Message.editDocs(user, entry);
 		}
 
 		@Override
 		public void write(DataOutput output) throws IOException {
-			output.write(getType().ordinal());
-			output.writeUTF(user);
+			super.write(output);
 			PacketHelper.writeEntry(output, entry);
 		}
 
@@ -267,14 +228,14 @@ public interface Message {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
+			if (!super.equals(o)) return false;
 			EditDocs editDocs = (EditDocs) o;
-			return Objects.equals(user, editDocs.user) &&
-					Objects.equals(entry, editDocs.entry);
+			return Objects.equals(entry, editDocs.entry);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(user, entry);
+			return Objects.hash(super.hashCode(), entry);
 		}
 
 		@Override
@@ -284,26 +245,18 @@ public interface Message {
 
 	}
 
-	final class MarkDeobf implements Message {
+	public static final class MarkDeobf extends Message {
 
-		public final String user;
 		public final Entry<?> entry;
 
 		private MarkDeobf(String user, Entry<?> entry) {
-			this.user = user;
+			super(user);
 			this.entry = entry;
-		}
-
-		private static MarkDeobf read(DataInput input) throws IOException {
-			String user = input.readUTF();
-			Entry<?> entry = PacketHelper.readEntry(input);
-			return Message.markDeobf(user, entry);
 		}
 
 		@Override
 		public void write(DataOutput output) throws IOException {
-			output.write(getType().ordinal());
-			output.writeUTF(user);
+			super.write(output);
 			PacketHelper.writeEntry(output, entry);
 		}
 
@@ -321,14 +274,14 @@ public interface Message {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
+			if (!super.equals(o)) return false;
 			MarkDeobf markDeobf = (MarkDeobf) o;
-			return Objects.equals(user, markDeobf.user) &&
-					Objects.equals(entry, markDeobf.entry);
+			return Objects.equals(entry, markDeobf.entry);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(user, entry);
+			return Objects.hash(super.hashCode(), entry);
 		}
 
 		@Override
@@ -338,26 +291,18 @@ public interface Message {
 
 	}
 
-	final class RemoveMapping implements Message {
+	public static final class RemoveMapping extends Message {
 
-		public final String user;
 		public final Entry<?> entry;
 
 		private RemoveMapping(String user, Entry<?> entry) {
-			this.user = user;
+			super(user);
 			this.entry = entry;
-		}
-
-		private static RemoveMapping read(DataInput input) throws IOException {
-			String user = input.readUTF();
-			Entry<?> entry = PacketHelper.readEntry(input);
-			return Message.removeMapping(user, entry);
 		}
 
 		@Override
 		public void write(DataOutput output) throws IOException {
-			output.write(getType().ordinal());
-			output.writeUTF(user);
+			super.write(output);
 			PacketHelper.writeEntry(output, entry);
 		}
 
@@ -375,14 +320,14 @@ public interface Message {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
-			RemoveMapping removeMapping = (RemoveMapping) o;
-			return Objects.equals(user, removeMapping.user) &&
-					Objects.equals(entry, removeMapping.entry);
+			if (!super.equals(o)) return false;
+			RemoveMapping that = (RemoveMapping) o;
+			return Objects.equals(entry, that.entry);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(user, entry);
+			return Objects.hash(super.hashCode(), entry);
 		}
 
 		@Override
@@ -392,29 +337,20 @@ public interface Message {
 
 	}
 
-	final class Rename implements Message {
+	public static final class Rename extends Message {
 
-		public final String user;
 		public final Entry<?> entry;
 		public final String newName;
 
 		private Rename(String user, Entry<?> entry, String newName) {
-			this.user = user;
+			super(user);
 			this.entry = entry;
 			this.newName = newName;
 		}
 
-		private static Rename read(DataInput input) throws IOException {
-			String user = input.readUTF();
-			Entry<?> entry = PacketHelper.readEntry(input);
-			String newName = input.readUTF();
-			return Message.rename(user, entry, newName);
-		}
-
 		@Override
 		public void write(DataOutput output) throws IOException {
-			output.write(getType().ordinal());
-			output.writeUTF(user);
+			super.write(output);
 			PacketHelper.writeEntry(output, entry);
 			output.writeUTF(newName);
 		}
@@ -433,15 +369,15 @@ public interface Message {
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
+			if (!super.equals(o)) return false;
 			Rename rename = (Rename) o;
-			return Objects.equals(user, rename.user) &&
-					Objects.equals(entry, rename.entry) &&
+			return Objects.equals(entry, rename.entry) &&
 					Objects.equals(newName, rename.newName);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(user, entry, newName);
+			return Objects.hash(super.hashCode(), entry, newName);
 		}
 
 		@Override
