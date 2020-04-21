@@ -88,6 +88,7 @@ public class Gui {
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
 
+	private JSplitPane splitRight;
 	private JSplitPane logSplit;
 	private CollapsibleTabbedPane logTabs;
 	private JList<String> users;
@@ -323,7 +324,7 @@ public class Gui {
 		logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
 		logSplit.setResizeWeight(0.5);
 		logSplit.resetToPreferredSizes();
-		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
+		splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
 		JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
@@ -338,12 +339,13 @@ public class Gui {
 		statusBar = new JPanel(new BorderLayout());
 		statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
 		connectionStatusLabel = new JLabel(I18n.translate("status.disconnected"));
-		lastActionLabel = new JLabel("Ready.");
+		lastActionLabel = new JLabel(I18n.translate("status.ready"));
 		statusBar.add(lastActionLabel, BorderLayout.CENTER);
 		statusBar.add(connectionStatusLabel, BorderLayout.EAST);
 		pane.add(statusBar, BorderLayout.SOUTH);
 
 		// init state
+		setConnectionState(ConnectionState.NOT_CONNECTED);
 		onCloseJar();
 
 		this.frame.addWindowListener(new WindowAdapter() {
@@ -359,14 +361,6 @@ public class Gui {
 		this.frame.setMinimumSize(new Dimension(640, 480));
 		this.frame.setVisible(true);
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-	}
-
-	private void sendMessage() {
-		String text = chatBox.getText().trim();
-		if (!text.isEmpty()) {
-			getController().sendPacket(new MessageC2SPacket(text));
-		}
-		chatBox.setText("");
 	}
 
 	public JFrame getFrame() {
@@ -985,6 +979,40 @@ public class Gui {
 		userModel.clear();
 		users.forEach(userModel::addElement);
 		connectionStatusLabel.setText(String.format(I18n.translate("status.connected"), users.size()));
+	}
+
+	private void sendMessage() {
+		String text = chatBox.getText().trim();
+		if (!text.isEmpty()) {
+			getController().sendPacket(new MessageC2SPacket(text));
+		}
+		chatBox.setText("");
+	}
+
+	public void setConnectionState(ConnectionState state) {
+		switch (state) {
+			case NOT_CONNECTED:
+				menuBar.connectToServerMenu.setEnabled(true);
+				menuBar.connectToServerMenu.setText(I18n.translate("menu.collab.connect"));
+				menuBar.startServerMenu.setText(I18n.translate("menu.collab.server.start"));
+				connectionStatusLabel.setText(I18n.translate("status.disconnected"));
+				logSplit.setLeftComponent(null);
+				splitRight.setRightComponent(tabs);
+				break;
+			case HOSTING:
+				menuBar.connectToServerMenu.setEnabled(false);
+				menuBar.startServerMenu.setText(I18n.translate("menu.collab.server.stop"));
+				connectionStatusLabel.setText(I18n.translate("status.connected"));
+				splitRight.setRightComponent(logSplit);
+				logSplit.setLeftComponent(tabs);
+				break;
+			case CONNECTED:
+				menuBar.connectToServerMenu.setText(I18n.translate("menu.collab.disconnect"));
+				connectionStatusLabel.setText(I18n.translate("status.connected"));
+				splitRight.setRightComponent(logSplit);
+				logSplit.setLeftComponent(tabs);
+				break;
+		}
 	}
 
 }

@@ -679,7 +679,7 @@ public class GuiController {
 		client = new EnigmaClient(this, ip, port);
 		client.connect();
 		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), username));
-		gui.getMenuBar().connectToServerMenu.setText(I18n.translate("menu.collab.disconnect"));
+		gui.setConnectionState(ConnectionState.CONNECTED);
 	}
 
 	public void createServer(int port) throws IOException {
@@ -688,8 +688,7 @@ public class GuiController {
 		client = new EnigmaClient(this, "127.0.0.1", port);
 		client.connect();
 		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), EnigmaServer.OWNER_USERNAME));
-		gui.getMenuBar().connectToServerMenu.setEnabled(false);
-		gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.collab.server.stop"));
+		gui.setConnectionState(ConnectionState.HOSTING);
 	}
 
 	public synchronized void disconnectIfConnected(String reason) {
@@ -709,9 +708,7 @@ public class GuiController {
 			if (reason != null) {
 				JOptionPane.showMessageDialog(gui.getFrame(), I18n.translate(reason), I18n.translate("disconnect.disconnected"), JOptionPane.INFORMATION_MESSAGE);
 			}
-			gui.getMenuBar().connectToServerMenu.setEnabled(true);
-			gui.getMenuBar().connectToServerMenu.setText(I18n.translate("menu.collab.connect"));
-			gui.getMenuBar().startServerMenu.setText(I18n.translate("menu.collab.server.start"));
+			gui.setConnectionState(ConnectionState.NOT_CONNECTED);
 		});
 	}
 

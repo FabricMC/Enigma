@@ -148,7 +148,7 @@ public abstract class Message {
 
 		@Override
 		public String toString() {
-			return String.format("Message.Chat { user: '%s', message: '%s'}", user, message);
+			return String.format("Message.Chat { user: '%s', message: '%s' }", user, message);
 		}
 
 	}

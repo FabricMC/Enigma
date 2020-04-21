@@ -128,6 +128,8 @@ public abstract class EnigmaServer {
 	}
 
 	public void kick(Socket client, String reason) {
+		if (!clients.contains(client)) return;
+
 		sendPacket(client, new KickS2CPacket(reason));
 
 		clients.remove(client);
@@ -143,8 +145,10 @@ public abstract class EnigmaServer {
 			e.printStackTrace();
 		}
 
-		System.out.println("Kicked " + username + " because " + reason);
-		sendMessage(Message.disconnect(username));
+		if (username != null) {
+			System.out.println("Kicked " + username + " because " + reason);
+			sendMessage(Message.disconnect(username));
+		}
 		sendUsernamePacket();
 	}
 
@@ -273,7 +277,7 @@ public abstract class EnigmaServer {
 	}
 
 	public void sendMessage(Message message) {
-		log(message.toString());
+		log(String.format("[MSG] %s", message.translate()));
 		sendToAll(new MessageS2CPacket(message));
 	}
 
