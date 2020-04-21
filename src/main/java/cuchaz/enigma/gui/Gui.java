@@ -969,9 +969,11 @@ public class Gui {
 
 	public void addMessage(Message message) {
 		JScrollBar verticalScrollBar = messageScrollPane.getVerticalScrollBar();
-		boolean isAtBottom = verticalScrollBar.getValue() == verticalScrollBar.getMaximum();
+		boolean isAtBottom = verticalScrollBar.getValue() >= verticalScrollBar.getMaximum() - verticalScrollBar.getModel().getExtent();
 		messageModel.addElement(message);
-		if (isAtBottom) verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+		if (isAtBottom) {
+			SwingUtilities.invokeLater(() -> verticalScrollBar.setValue(verticalScrollBar.getMaximum() - verticalScrollBar.getModel().getExtent()));
+		}
 		statusLabel.setText(message.translate());
 	}
 
