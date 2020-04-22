@@ -294,7 +294,9 @@ public class MenuBar extends JMenuBar {
 
 					JMenuItem customScale = new JMenuItem(I18n.translate("menu.view.scale.custom"));
 					customScale.addActionListener(event -> {
-						String answer = JOptionPane.showInputDialog(gui.getFrame(), "Custom Scale", Float.toString(ScaleUtil.getScaleFactor() * 100));
+						String answer = (String) JOptionPane.showInputDialog(gui.getFrame(), "Custom Scale", "Custom Scale",
+								JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(ScaleUtil.getScaleFactor() * 100));
+						if (answer == null) return;
 						float newScale = 1.0f;
 						try {
 							newScale = Float.parseFloat(answer) / 100f;
