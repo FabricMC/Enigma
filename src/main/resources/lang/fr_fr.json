@@ -52,10 +52,10 @@
 	"menu.help.github": "Page Github",
 
 	"popup_menu.rename": "Renommer",
-	"popup_menu.javadoc": "Éditer le Javadoc",
+	"popup_menu.javadoc": "Éditer les javadocs",
 	"popup_menu.inheritance": "Afficher l'héritage",
 	"popup_menu.implementations": "Afficher les implémentations",
-	"popup_menu.calls": "Afficher les appels",
+	"popup_menu.calls": "Afficher les appels (tous)",
 	"popup_menu.calls.specific": "Afficher les appels (spécifiques)",
 	"popup_menu.declaration": "Aller à la déclaration",
 	"popup_menu.back": "Annuler",
@@ -84,6 +84,9 @@
 	"info_panel.tree.inheritance": "Héritage",
 	"info_panel.tree.implementations": "Implémentations",
 	"info_panel.tree.calls": "Graphique des appels",
+
+	"log_panel.messages": "Messages",
+	"log_panel.users": "Utilisateurs",
 
 	"progress.operation": "%s - Opération en cours",
 	"progress.jar.indexing": "Indexation du jar",
@@ -123,11 +126,28 @@
 	"prompt.port": "Port",
 	"prompt.port.nan": "Le port n'est pas un nombre",
 	"prompt.port.invalid": "Le port est hors de portée. Il doit être compris entre 1024 et 65535.",
-	
+	"prompt.password": "Password",
+	"prompt.password.too_long": "Password is too long, it must be at most 255 characters.",
+	"prompt.create_server.title": "Create server",
+
 	"disconnect.disconnected": "Déconnecté",
 	"disconnect.server_closed": "Serveur fermé",
 	"disconnect.wrong_jar": "Les sommes de contrôle du jar ne correspondent pas (vous avez le mauvais jar) !",
+	"disconnect.wrong_password": "Mot de passe incorrect",
 	"disconnect.username_taken": "Le nom d'utilisateur est déjà pris",
+
+	"message.chat.text": "%s : %s",
+	"message.connect.text": "[+] %s",
+	"message.disconnect.text": "[-] %s",
+	"message.edit_docs.text": "%s a édité les javadocs de %s",
+	"message.mark_deobf.text": "%s a marqué %s comme déobfusqué",
+	"message.remove_mapping.text": "%s a supprimé les mappings de %s",
+	"message.rename.text": "%s a renommé %s en %s",
+
+	"status.disconnected": "Déconnecté.",
+	"status.connected": "Connecté.",
+	"status.connected_user_count": "Connecté (%d utilisateurs).",
+	"status.ready": "Prêt.",
 
 	"crash.title": "%s - Rapport de plantage",
 	"crash.summary": "%s a planté ! =(",
