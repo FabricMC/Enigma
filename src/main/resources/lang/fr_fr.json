@@ -126,9 +126,9 @@
 	"prompt.port": "Port",
 	"prompt.port.nan": "Le port n'est pas un nombre",
 	"prompt.port.invalid": "Le port est hors de portée. Il doit être compris entre 1024 et 65535.",
-	"prompt.password": "Password",
-	"prompt.password.too_long": "Password is too long, it must be at most 255 characters.",
-	"prompt.create_server.title": "Create server",
+	"prompt.password": "Mot de passe",
+	"prompt.password.too_long": "Le mot de passe est trop long. Il ne doit pas dépasser 255 caractères.",
+	"prompt.create_server.title": "Créer un serveur",
 
 	"disconnect.disconnected": "Déconnecté",
 	"disconnect.server_closed": "Serveur fermé",
