@@ -9,15 +9,19 @@ import java.util.stream.Stream;
 
 import javax.swing.*;
 
-import cuchaz.enigma.gui.elements.VerifiableTextField;
+import cuchaz.enigma.gui.elements.ValidatableTextField;
 import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.ServerAddress;
+import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class ConnectToServerDialog extends JDialog {
 
+	private final ValidationContext vc = new ValidationContext();
+
 	private final JTextField usernameField;
-	private final VerifiableTextField ipField;
+	private final ValidatableTextField ipField;
 	private final JPasswordField passwordField;
 	private boolean success = false;
 
@@ -29,7 +33,7 @@ public class ConnectToServerDialog extends JDialog {
 		Container inputContainer = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		usernameField = new JTextField(System.getProperty("user.name"));
-		ipField = new VerifiableTextField();
+		ipField = new ValidatableTextField();
 		passwordField = new JPasswordField();
 
 		List<JLabel> labels = Stream.of("prompt.connect.username", "prompt.connect.address", "prompt.password")
@@ -76,31 +80,32 @@ public class ConnectToServerDialog extends JDialog {
 	}
 
 	private void confirm() {
-		if (validateInputs()) {
+		vc.reset();
+		validateInputs();
+		if (vc.canProceed()) {
 			success = true;
 			setVisible(false);
 		}
 	}
 
 	private void cancel() {
-			success = false;
-			setVisible(false);
+		success = false;
+		setVisible(false);
 	}
 
-	public boolean validateInputs() {
-		boolean error = false;
-		ipField.clearErrorState();
-
-		if (ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT) == null) {
-			ipField.addError("Invalid IP/Port combination");
-			error = true;
+	public void validateInputs() {
+		vc.setActiveElement(ipField);
+		if (ipField.getText().trim().isEmpty()) {
+			vc.raise(Message.EMPTY_FIELD);
+		} else if (ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT) == null) {
+			vc.raise(Message.INVALID_IP, ipField.getText());
 		}
-
-		return !error;
 	}
 
 	public Result getResult() {
-		if (!success) return null;
+		vc.reset();
+		validateInputs();
+		if (!vc.canProceed()) return null;
 		return new Result(
 				usernameField.getText(),
 				Objects.requireNonNull(ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT)),
