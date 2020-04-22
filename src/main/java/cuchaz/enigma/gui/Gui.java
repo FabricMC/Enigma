@@ -64,6 +64,7 @@ public class Gui {
 	private final MenuBar menuBar;
 	// state
 	public History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
+	public EntryReference<Entry<?>, Entry<?>> renamingReference;
 	public EntryReference<Entry<?>, Entry<?>> cursorReference;
 	private boolean shouldNavigateOnClick;
 
@@ -615,10 +616,12 @@ public class Gui {
 		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
 		boolean isRenamable = isToken && this.controller.project.isRenamable(cursorReference);
 
-		if (isToken) {
-			showCursorReference(cursorReference);
-		} else {
-			infoPanel.clearReference();
+		if (!isRenaming()) {
+			if (isToken) {
+				showCursorReference(cursorReference);
+			} else {
+				infoPanel.clearReference();
+			}
 		}
 
 		this.popupMenu.renameMenu.setEnabled(isRenamable);
@@ -640,6 +643,11 @@ public class Gui {
 	}
 
 	public void startDocChange() {
+		EntryReference<Entry<?>, Entry<?>> curReference = cursorReference;
+		if (isRenaming()) {
+			finishRename(false);
+		}
+		renamingReference = curReference;
 
 		// init the text box
 		javadocTextArea = new JTextArea(10, 40);
@@ -657,8 +665,8 @@ public class Gui {
 		String newName = javadocTextArea.getText();
 		if (saveName) {
 			try {
-				this.controller.changeDocs(cursorReference, newName);
-				this.controller.sendPacket(new ChangeDocsC2SPacket(cursorReference.getNameableEntry(), newName));
+				this.controller.changeDocs(renamingReference, newName);
+				this.controller.sendPacket(new ChangeDocsC2SPacket(renamingReference.getNameableEntry(), newName));
 			} catch (IllegalNameException ex) {
 				javadocTextArea.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				javadocTextArea.setToolTipText(ex.getReason());
@@ -720,15 +728,19 @@ public class Gui {
 		else
 			renameTextField.selectAll();
 
+		renamingReference = cursorReference;
+
 		redraw();
 	}
 
 	private void finishRename(boolean saveName) {
 		String newName = renameTextField.getText();
+		renameTextField = null;
+
 		if (saveName && newName != null && !newName.isEmpty()) {
 			try {
-				this.controller.rename(cursorReference, newName, true);
-				this.controller.sendPacket(new RenameC2SPacket(cursorReference.getNameableEntry(), newName, true));
+				this.controller.rename(renamingReference, newName, true);
+				this.controller.sendPacket(new RenameC2SPacket(renamingReference.getNameableEntry(), newName, true));
 			} catch (IllegalNameException ex) {
 				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				renameTextField.setToolTipText(ex.getReason());
@@ -738,15 +750,15 @@ public class Gui {
 		}
 
 		// abort the rename
-		JPanel panel = (JPanel) infoPanel.getComponent(0);
-		panel.remove(panel.getComponentCount() - 1);
-		panel.add(Utils.unboldLabel(new JLabel(cursorReference.getNameableName(), JLabel.LEFT)));
-
-		renameTextField = null;
+		showCursorReference(cursorReference);
 
 		this.editor.grabFocus();
 
 		redraw();
+	}
+
+	private boolean isRenaming() {
+		return renameTextField != null;
 	}
 
 	public void showInheritance() {
