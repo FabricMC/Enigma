@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'cuchaz'
-version = '0.15.1'
+version = '0.15.2'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
@@ -35,14 +35,6 @@ repositories {
         name "Modmuss Repository"
         url 'https://maven.modmuss50.me/'
     }
-
-	ivy {
-		name "darcula"
-		artifactPattern "https://raw.githubusercontent.com/bulenkov/Darcula/master/build/[module].[ext]"
-		metadataSources {
-			artifact()
-		}
-	}
 }
 
 configurations {
@@ -57,13 +49,10 @@ dependencies {
     implementation 'org.ow2.asm:asm-tree:8.0'
     implementation 'org.ow2.asm:asm-util:8.0'
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
-    implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.+'
+    implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
     implementation 'net.fabricmc:cfr:0.0.1'
-    implementation name: "darcula", version: "1.0.0"
-    implementation 'de.sciss:syntaxpane:1.2.+'
-    implementation 'me.xdrop:fuzzywuzzy:1.2.0'
-    implementation name: "darcula", version: "1.0.0"
-    implementation 'de.sciss:syntaxpane:1.2.+'
+    implementation 'com.bulenkov:darcula:1.0.0.1'
+    implementation 'de.sciss:syntaxpane:1.2.0'
     implementation 'me.xdrop:fuzzywuzzy:1.2.0'
 
     testImplementation 'junit:junit:4.+'
@@ -158,16 +147,14 @@ task sourcesJar(type: Jar, dependsOn: generateSources) {
     from sourceSets.main.resources
 }
 
-artifacts {
-   archives shadowJar
-   archives libJar
-   archives sourcesJar
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifact jar
+            from components.java
+
+            artifact shadowJar
+            artifact libJar
+            artifact sourcesJar
         }
     }
 
