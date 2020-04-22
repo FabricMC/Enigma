@@ -1,96 +1,45 @@
 package cuchaz.enigma.gui.dialog;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Frame;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.swing.*;
 
 import cuchaz.enigma.gui.elements.ValidatablePasswordField;
 import cuchaz.enigma.gui.elements.ValidatableTextField;
 import cuchaz.enigma.network.EnigmaServer;
-import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
 import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.StandardValidation;
-import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class CreateServerDialog extends JDialog {
+public class CreateServerDialog extends AbstractDialog {
 
-	private final ValidationContext vc = new ValidationContext();
-
-	private final ValidatableTextField portField;
-	private final ValidatablePasswordField passwordField;
-	private boolean actionConfirm = false;
+	private ValidatableTextField portField;
+	private ValidatablePasswordField passwordField;
 
 	public CreateServerDialog(Frame owner) {
-		super(owner, I18n.translate("prompt.create_server.title"), true);
+		super(owner, "prompt.create_server.title", "prompt.create_server.confirm", "prompt.cancel");
 
-		Container contentPane = getContentPane();
-		contentPane.setLayout(new BorderLayout());
-		Container inputContainer = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
+		setSize(new Dimension(400, 150));
+		setLocationRelativeTo(owner);
+	}
+
+	@Override
+	protected List<Pair<String, Component>> createComponents() {
 		portField = new ValidatableTextField(Integer.toString(EnigmaServer.DEFAULT_PORT));
 		passwordField = new ValidatablePasswordField();
 
-		java.util.List<JLabel> labels = Stream.of("prompt.create_server.port", "prompt.password")
-				.map(I18n::translate)
-				.map(JLabel::new)
-				.collect(Collectors.toList());
-		List<JTextField> inputs = Arrays.asList(portField, passwordField);
+		portField.addActionListener(event -> confirm());
+		passwordField.addActionListener(event -> confirm());
 
-		for (int i = 0; i < inputs.size(); i += 1) {
-			c.gridy = i;
-			c.insets = new Insets(4, 4, 4, 4);
-
-			c.gridx = 0;
-			c.weightx = 0.0;
-			c.anchor = GridBagConstraints.LINE_END;
-			c.fill = GridBagConstraints.NONE;
-			inputContainer.add(labels.get(i), c);
-
-			c.gridx = 1;
-			c.weightx = 1.0;
-			c.anchor = GridBagConstraints.LINE_START;
-			c.fill = GridBagConstraints.HORIZONTAL;
-			inputs.get(i).addActionListener(event -> confirm());
-			inputContainer.add(inputs.get(i), c);
-		}
-		contentPane.add(inputContainer, BorderLayout.CENTER);
-		Container buttonContainer = new JPanel(new GridBagLayout());
-		c = new GridBagConstraints();
-		c.weightx = 1.0;
-		c.insets = new Insets(4, 4, 4, 4);
-		c.anchor = GridBagConstraints.LINE_END;
-		JButton connectButton = new JButton(I18n.translate("prompt.create_server.confirm"));
-		connectButton.addActionListener(event -> confirm());
-		buttonContainer.add(connectButton, c);
-		c.weightx = 0.0;
-		c.anchor = GridBagConstraints.CENTER;
-		JButton abortButton = new JButton(I18n.translate("prompt.cancel"));
-		abortButton.addActionListener(event -> cancel());
-		buttonContainer.add(abortButton, c);
-		contentPane.add(buttonContainer, BorderLayout.SOUTH);
-
-		setLocationRelativeTo(owner);
-		setSize(new Dimension(400, 150));
+		return Arrays.asList(
+				new Pair<>("prompt.create_server.port", portField),
+				new Pair<>("prompt.password", passwordField)
+		);
 	}
 
-	private void confirm() {
-		vc.reset();
-		validateInputs();
-		if (vc.canProceed()) {
-			actionConfirm = true;
-			setVisible(false);
-		}
-	}
-
-	private void cancel() {
-		actionConfirm = false;
-		setVisible(false);
-	}
-
+	@Override
 	public void validateInputs() {
 		vc.setActiveElement(portField);
 		StandardValidation.isIntInRange(vc, portField.getText(), 0, 65535);
@@ -101,7 +50,7 @@ public class CreateServerDialog extends JDialog {
 	}
 
 	public Result getResult() {
-		if (!actionConfirm) return null;
+		if (!isActionConfirm()) return null;
 		vc.reset();
 		validateInputs();
 		if (!vc.canProceed()) return null;
