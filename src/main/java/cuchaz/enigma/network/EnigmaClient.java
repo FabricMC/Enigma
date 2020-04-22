@@ -62,7 +62,7 @@ public class EnigmaClient {
 	}
 
 	public synchronized void disconnect() {
-		if (!socket.isClosed()) {
+		if (socket != null && !socket.isClosed()) {
 			try {
 				socket.close();
 			} catch (IOException e1) {
