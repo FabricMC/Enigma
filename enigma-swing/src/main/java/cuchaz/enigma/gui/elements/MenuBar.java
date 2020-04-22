@@ -227,7 +227,7 @@ public class MenuBar {
 		}
 		this.gui.getController().disconnectIfConnected(null);
 		try {
-			this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort(), result.getPassword());
+			this.gui.getController().createClient(result.getUsername(), result.getAddress().address, result.getAddress().port, result.getPassword());
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
 			this.gui.getController().disconnectIfConnected(null);
