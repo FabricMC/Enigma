@@ -49,7 +49,7 @@
 	"popup_menu.javadoc": "Edit Javadoc",
 	"popup_menu.inheritance": "Show Inheritance",
 	"popup_menu.implementations": "Show Implementations",
-	"popup_menu.calls": "Show Calls",
+	"popup_menu.calls": "Show Calls (All Implementations)",
 	"popup_menu.calls.specific": "Show Calls (Specific)",
 	"popup_menu.declaration": "Go to Declaration",
 	"popup_menu.back": "Go back",
