@@ -89,10 +89,10 @@ public class ConnectToServerDialog extends JDialog {
 
 	public boolean validateInputs() {
 		boolean error = false;
-		ipField.setErrorState(false);
+		ipField.clearErrorState();
 
 		if (ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT) == null) {
-			ipField.setErrorState(true);
+			ipField.addError("Invalid IP/Port combination");
 			error = true;
 		}
 

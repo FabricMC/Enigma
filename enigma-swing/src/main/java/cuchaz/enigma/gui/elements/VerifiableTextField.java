@@ -6,6 +6,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
 public class VerifiableTextField extends JTextField {
@@ -32,16 +34,36 @@ public class VerifiableTextField extends JTextField {
 	}
 
 	{
-		addFocusListener(new FocusAdapter() {
+		getDocument().addDocumentListener(new DocumentListener() {
 			@Override
-			public void focusGained(FocusEvent e) {
-				setErrorState(false);
+			public void insertUpdate(DocumentEvent e) {
+				clearErrorState();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				clearErrorState();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				clearErrorState();
 			}
 		});
 	}
 
-	public void setErrorState(boolean b) {
-		this.hasError = b;
+	@Override
+	public void setText(String t) {
+		super.setText(t);
+	}
+
+	public void clearErrorState() {
+		this.hasError = false;
+		repaint();
+	}
+
+	public void addError(String message) {
+		this.hasError = true;
 		repaint();
 	}
 
