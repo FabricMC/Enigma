@@ -67,6 +67,8 @@ public class Gui {
 	public EntryReference<Entry<?>, Entry<?>> renamingReference;
 	public EntryReference<Entry<?>, Entry<?>> cursorReference;
 	private boolean shouldNavigateOnClick;
+	private ConnectionState connectionState;
+	private boolean isJarOpen;
 
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
@@ -385,20 +387,14 @@ public class Gui {
 		setEditorText(null);
 
 		// update menu
-		this.menuBar.closeJarMenu.setEnabled(true);
-		this.menuBar.openMappingsMenus.forEach(item -> item.setEnabled(true));
-		this.menuBar.saveMappingsMenu.setEnabled(false);
-		this.menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(true));
-		this.menuBar.closeMappingsMenu.setEnabled(true);
-		this.menuBar.exportSourceMenu.setEnabled(true);
-		this.menuBar.exportJarMenu.setEnabled(true);
-		this.menuBar.connectToServerMenu.setEnabled(true);
-		this.menuBar.startServerMenu.setEnabled(true);
+		isJarOpen = true;
 
+		updateUiState();
 		redraw();
 	}
 
 	public void onCloseJar() {
+
 		// update gui
 		this.frame.setTitle(Constants.NAME);
 		setObfClasses(null);
@@ -407,16 +403,10 @@ public class Gui {
 		this.classesPanel.removeAll();
 
 		// update menu
-		this.menuBar.closeJarMenu.setEnabled(false);
-		this.menuBar.openMappingsMenus.forEach(item -> item.setEnabled(false));
-		this.menuBar.saveMappingsMenu.setEnabled(false);
-		this.menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(false));
-		this.menuBar.closeMappingsMenu.setEnabled(false);
-		this.menuBar.exportSourceMenu.setEnabled(false);
-		this.menuBar.exportJarMenu.setEnabled(false);
-		this.menuBar.connectToServerMenu.setEnabled(false);
-		this.menuBar.startServerMenu.setEnabled(false);
+		isJarOpen = false;
+		setMappingsFile(null);
 
+		updateUiState();
 		redraw();
 	}
 
@@ -430,7 +420,7 @@ public class Gui {
 
 	public void setMappingsFile(Path path) {
 		this.enigmaMappingsFileChooser.setSelectedFile(path != null ? path.toFile() : null);
-		this.menuBar.saveMappingsMenu.setEnabled(path != null);
+		updateUiState();
 	}
 
 	public void setEditorText(String source) {
@@ -1003,31 +993,42 @@ public class Gui {
 		chatBox.setText("");
 	}
 
-	public void setConnectionState(ConnectionState state) {
-		statusLabel.setText(I18n.translate("status.ready"));
-		switch (state) {
-			case NOT_CONNECTED:
-				menuBar.connectToServerMenu.setEnabled(true);
-				menuBar.connectToServerMenu.setText(I18n.translate("menu.collab.connect"));
-				menuBar.startServerMenu.setText(I18n.translate("menu.collab.server.start"));
-				connectionStatusLabel.setText(I18n.translate("status.disconnected"));
-				logSplit.setLeftComponent(null);
-				splitRight.setRightComponent(tabs);
-				break;
-			case HOSTING:
-				menuBar.connectToServerMenu.setEnabled(false);
-				menuBar.startServerMenu.setText(I18n.translate("menu.collab.server.stop"));
-				connectionStatusLabel.setText(I18n.translate("status.connected"));
-				splitRight.setRightComponent(logSplit);
-				logSplit.setLeftComponent(tabs);
-				break;
-			case CONNECTED:
-				menuBar.connectToServerMenu.setText(I18n.translate("menu.collab.disconnect"));
-				connectionStatusLabel.setText(I18n.translate("status.connected"));
-				splitRight.setRightComponent(logSplit);
-				logSplit.setLeftComponent(tabs);
-				break;
+	/**
+	 * Updates the state of the UI elements (button text, enabled state, ...) to reflect the current program state.
+	 * This is a central place to update the UI state to prevent multiple code paths from changing the same state,
+	 * causing inconsistencies.
+	 */
+	public void updateUiState() {
+		menuBar.connectToServerMenu.setEnabled(connectionState != ConnectionState.HOSTING);
+		menuBar.connectToServerMenu.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "menu.collab.connect" : "menu.collab.disconnect"));
+		menuBar.startServerMenu.setEnabled(connectionState != ConnectionState.CONNECTED);
+		menuBar.startServerMenu.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "menu.collab.server.start" : "menu.collab.server.stop"));
+
+		menuBar.closeJarMenu.setEnabled(isJarOpen);
+		menuBar.openMappingsMenus.forEach(item -> item.setEnabled(isJarOpen));
+		menuBar.saveMappingsMenu.setEnabled(isJarOpen && enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
+		menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(isJarOpen));
+		menuBar.closeMappingsMenu.setEnabled(isJarOpen);
+		menuBar.exportSourceMenu.setEnabled(isJarOpen);
+		menuBar.exportJarMenu.setEnabled(isJarOpen);
+		menuBar.connectToServerMenu.setEnabled(isJarOpen);
+		menuBar.startServerMenu.setEnabled(isJarOpen);
+
+		connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
+
+		if (connectionState == ConnectionState.NOT_CONNECTED) {
+			logSplit.setLeftComponent(null);
+			splitRight.setRightComponent(tabs);
+		} else {
+			splitRight.setRightComponent(logSplit);
+			logSplit.setLeftComponent(tabs);
 		}
+	}
+
+	public void setConnectionState(ConnectionState state) {
+		connectionState = state;
+		statusLabel.setText(I18n.translate("status.ready"));
+		updateUiState();
 	}
 
 }
