@@ -34,7 +34,7 @@ public class ScaleUtil {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		listeners.forEach($ -> $.accept(clamped));
+		listeners.forEach(op -> op.accept(clamped));
 	}
 
 	public static void addListener(Consumer<Float> op) {
@@ -73,11 +73,11 @@ public class ScaleUtil {
 		float scale = getScaleFactor();
 		UiDefaultsScaler.updateAndApplyGlobalScaling((int) (100 * scale), true);
 		try {
-			Field $DEFAULT_FONT = DefaultSyntaxKit.class.getDeclaredField("DEFAULT_FONT");
-			$DEFAULT_FONT.setAccessible(true);
-			Font font = (Font) $DEFAULT_FONT.get(null);
+			Field defaultFontField = DefaultSyntaxKit.class.getDeclaredField("DEFAULT_FONT");
+			defaultFontField.setAccessible(true);
+			Font font = (Font) defaultFontField.get(null);
 			font = font.deriveFont(12 * scale);
-			$DEFAULT_FONT.set(null, font);
+			defaultFontField.set(null, font);
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			e.printStackTrace();
 		}

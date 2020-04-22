@@ -290,7 +290,7 @@ public class MenuBar extends JMenuBar {
 								scale.add(menuItem);
 								return new Pair<>(realScaleFactor, menuItem);
 							})
-							.collect(Collectors.toMap($ -> $.a, $ -> $.b));
+							.collect(Collectors.toMap(x -> x.a, x -> x.b));
 
 					JMenuItem customScale = new JMenuItem(I18n.translate("menu.view.scale.custom"));
 					customScale.addActionListener(event -> {
