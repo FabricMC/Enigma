@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import javax.swing.UIManager;
 
@@ -20,13 +19,14 @@ import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class ScaleUtil {
 
-	private static List<Consumer<Float>> listeners = new ArrayList<>();
+	private static List<ScaleChangeListener> listeners = new ArrayList<>();
 
 	public static float getScaleFactor() {
 		return Config.getInstance().scaleFactor;
 	}
 
 	public static void setScaleFactor(float scaleFactor) {
+		float oldScale = getScaleFactor();
 		float clamped = Math.min(Math.max(0.25f, scaleFactor), 10.0f);
 		Config.getInstance().scaleFactor = clamped;
 		try {
@@ -34,11 +34,15 @@ public class ScaleUtil {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		listeners.forEach(op -> op.accept(clamped));
+		listeners.forEach(l -> l.onScaleChanged(clamped, oldScale));
 	}
 
-	public static void addListener(Consumer<Float> op) {
-		listeners.add(op);
+	public static void addListener(ScaleChangeListener listener) {
+		listeners.add(listener);
+	}
+
+	public static void removeListener(ScaleChangeListener listener) {
+		listeners.remove(listener);
 	}
 
 	public static Dimension getDimension(int width, int height) {

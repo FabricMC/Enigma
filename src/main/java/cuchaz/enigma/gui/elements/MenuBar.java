@@ -305,7 +305,7 @@ public class MenuBar extends JMenuBar {
 						ScaleUtil.setScaleFactor(newScale);
 					});
 					scale.add(customScale);
-					ScaleUtil.addListener(newScale -> {
+					ScaleUtil.addListener((newScale, _oldScale) -> {
 						JRadioButtonMenuItem mi = map.get(newScale);
 						if (mi != null) {
 							mi.setSelected(true);
