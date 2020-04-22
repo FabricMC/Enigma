@@ -23,7 +23,7 @@ public class ConnectToServerDialog extends JDialog {
 	private final JTextField usernameField;
 	private final ValidatableTextField ipField;
 	private final JPasswordField passwordField;
-	private boolean success = false;
+	private boolean actionConfirm = false;
 
 	public ConnectToServerDialog(Frame owner) {
 		super(owner, I18n.translate("prompt.connect.title"), true);
@@ -70,7 +70,7 @@ public class ConnectToServerDialog extends JDialog {
 		buttonContainer.add(connectButton, c);
 		c.weightx = 0.0;
 		c.anchor = GridBagConstraints.CENTER;
-		JButton abortButton = new JButton(I18n.translate("prompt.connect.cancel"));
+		JButton abortButton = new JButton(I18n.translate("prompt.cancel"));
 		abortButton.addActionListener(event -> cancel());
 		buttonContainer.add(abortButton, c);
 		contentPane.add(buttonContainer, BorderLayout.SOUTH);
@@ -83,13 +83,13 @@ public class ConnectToServerDialog extends JDialog {
 		vc.reset();
 		validateInputs();
 		if (vc.canProceed()) {
-			success = true;
+			actionConfirm = true;
 			setVisible(false);
 		}
 	}
 
 	private void cancel() {
-		success = false;
+		actionConfirm = false;
 		setVisible(false);
 	}
 
@@ -98,11 +98,12 @@ public class ConnectToServerDialog extends JDialog {
 		if (ipField.getText().trim().isEmpty()) {
 			vc.raise(Message.EMPTY_FIELD);
 		} else if (ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT) == null) {
-			vc.raise(Message.INVALID_IP, ipField.getText());
+			vc.raise(Message.INVALID_IP);
 		}
 	}
 
 	public Result getResult() {
+		if (!actionConfirm) return null;
 		vc.reset();
 		validateInputs();
 		if (!vc.canProceed()) return null;
