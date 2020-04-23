@@ -60,19 +60,27 @@ public class SearchUtil<T extends SearchEntry> {
 			term = term.toUpperCase(Locale.ROOT);
 			float maxScore = 0;
 			for (String[] name : components) {
-				float baseScore = 0;
 				float scorePerChar = 1f / Arrays.stream(name).mapToInt(String::length).sum();
-				String remaining = term;
-				for (String component : name) {
-					component = component.toUpperCase(Locale.ROOT);
-					int l = compareEqualLength(remaining, component);
-					remaining = remaining.substring(l);
-					baseScore += scorePerChar * l;
+				Map<String, Float> snapshots = new HashMap<>();
+				snapshots.put(term, 0f);
+				for (int componentIndex = 0; componentIndex < name.length; componentIndex++) {
+					String component = name[componentIndex];
+					float posMultiplier = (name.length - componentIndex) * 0.3f;
+					Map<String, Float> newSnapshots = new HashMap<>();
+					for (Map.Entry<String, Float> snapshot : snapshots.entrySet()) {
+						String remaining = snapshot.getKey();
+						float score = snapshot.getValue();
+						component = component.toUpperCase(Locale.ROOT);
+						int l = compareEqualLength(remaining, component);
+						for (int i = 1; i <= l; i++) {
+							float baseScore = scorePerChar * i;
+							float chainBonus = (i - 1) * 0.5f;
+							newSnapshots.put(remaining.substring(i), score + baseScore * posMultiplier + chainBonus);
+						}
+					}
+					newSnapshots.forEach((k, v) -> snapshots.compute(k, (_k, v1) -> v1 == null ? v : Math.max(v, v1)));
 				}
-				if (!remaining.isEmpty()) {
-					baseScore = 0;
-				}
-				maxScore = Math.max(maxScore, baseScore);
+				maxScore = Math.max(maxScore, snapshots.getOrDefault("", 0f));
 			}
 			return maxScore * (hits + 1);
 		}
