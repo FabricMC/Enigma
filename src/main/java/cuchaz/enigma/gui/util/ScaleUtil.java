@@ -7,7 +7,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
 
 import com.github.swingdpi.UiDefaultsScaler;
 import com.github.swingdpi.plaf.BasicTweaker;
@@ -67,6 +69,10 @@ public class ScaleUtil {
 
 	public static int scale(int i) {
 		return (int) (i * getScaleFactor());
+	}
+
+	public static Border createEmptyBorder(int top, int left, int bottom, int right) {
+		return BorderFactory.createEmptyBorder(scale(top), scale(left), scale(bottom), scale(right));
 	}
 
 	public static int invert(int i) {
