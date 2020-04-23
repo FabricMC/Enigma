@@ -48,9 +48,9 @@ public class SearchDialog {
 		this.parent = parent;
 
 		this.classes = parent.getController().project.getJarIndex().getEntryIndex().getClasses().parallelStream()
+				.filter(e -> !e.isInnerClass())
 				.map(e -> SearchEntryImpl.from(e, parent.getController()))
 				.collect(Collectors.toList());
-		this.classes.removeIf(e -> e.obf.isInnerClass());
 
 		su = new SearchUtil<>();
 		su.addAll(classes);
@@ -115,10 +115,10 @@ public class SearchDialog {
 
 		JPanel buttonBar = new JPanel();
 		buttonBar.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		JButton open = new JButton("Open");
+		JButton open = new JButton(I18n.translate("prompt.open"));
 		open.addActionListener(event -> openSelected());
 		buttonBar.add(open);
-		JButton cancel = new JButton("Cancel");
+		JButton cancel = new JButton(I18n.translate("prompt.cancel"));
 		cancel.addActionListener(event -> close());
 		buttonBar.add(cancel);
 		contentPane.add(buttonBar, BorderLayout.SOUTH);

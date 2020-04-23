@@ -113,6 +113,8 @@
 	"prompt.close.save": "Save and close",
 	"prompt.close.discard": "Discard changes",
 	"prompt.close.cancel": "Cancel",
+	"prompt.open": "Open",
+	"prompt.cancel": "Cancel",
 
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",
