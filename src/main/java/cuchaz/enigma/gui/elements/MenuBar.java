@@ -1,16 +1,8 @@
 package cuchaz.enigma.gui.elements;
 
-import cuchaz.enigma.config.Config;
-import cuchaz.enigma.config.Themes;
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.dialog.AboutDialog;
-import cuchaz.enigma.gui.dialog.SearchDialog;
-import cuchaz.enigma.gui.stats.StatsMember;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.utils.I18n;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Container;
+import java.awt.Desktop;
+import java.awt.FlowLayout;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -20,9 +12,22 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.swing.*;
+
+import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.Themes;
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.dialog.AboutDialog;
+import cuchaz.enigma.gui.dialog.SearchDialog;
+import cuchaz.enigma.gui.stats.StatsMember;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
 
 public class MenuBar extends JMenuBar {
 
@@ -167,7 +172,7 @@ public class MenuBar extends JMenuBar {
 				JMenuItem stats = new JMenuItem(I18n.translate("menu.file.stats"));
 
 				stats.addActionListener(event -> {
-                    JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
+					JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
 					Container pane = frame.getContentPane();
 					pane.setLayout(new FlowLayout());
 
@@ -195,10 +200,10 @@ public class MenuBar extends JMenuBar {
 					});
 
 					pane.add(button);
-                    frame.pack();
-                    frame.setLocationRelativeTo(this.gui.getFrame());
-                    frame.setVisible(true);
-                });
+					frame.pack();
+					frame.setLocationRelativeTo(this.gui.getFrame());
+					frame.setVisible(true);
+				});
 
 				menu.add(stats);
 			}
@@ -247,7 +252,7 @@ public class MenuBar extends JMenuBar {
 					themes.add(theme);
 					theme.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));
 				}
-				
+
 				JMenu languages = new JMenu(I18n.translate("menu.view.languages"));
 				menu.add(languages);
 				for (String lang : I18n.getAvailableLanguages()) {
@@ -258,20 +263,62 @@ public class MenuBar extends JMenuBar {
 						JFrame frame = new JFrame(I18n.translate("menu.view.languages.title"));
 						Container pane = frame.getContentPane();
 						pane.setLayout(new FlowLayout());
-						
+
 						JLabel text = new JLabel((I18n.translate("menu.view.languages.summary")));
 						text.setHorizontalAlignment(JLabel.CENTER);
 						pane.add(text);
-						
+
 						JButton okButton = new JButton(I18n.translate("menu.view.languages.ok"));
 						pane.add(okButton);
 						okButton.addActionListener(arg0 -> frame.dispose());
-						
+
 						frame.pack();
 						frame.setLocationRelativeTo(this.gui.getFrame());
 						frame.setVisible(true);
 					});
 				}
+
+				JMenu scale = new JMenu(I18n.translate("menu.view.scale"));
+				{
+					ButtonGroup scaleGroup = new ButtonGroup();
+					Map<Float, JRadioButtonMenuItem> map = IntStream.of(100, 125, 150, 175, 200)
+							.mapToObj(scaleFactor -> {
+								float realScaleFactor = scaleFactor / 100f;
+								JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
+								menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
+								scaleGroup.add(menuItem);
+								scale.add(menuItem);
+								return new Pair<>(realScaleFactor, menuItem);
+							})
+							.collect(Collectors.toMap(x -> x.a, x -> x.b));
+
+					JMenuItem customScale = new JMenuItem(I18n.translate("menu.view.scale.custom"));
+					customScale.addActionListener(event -> {
+						String answer = (String) JOptionPane.showInputDialog(gui.getFrame(), "Custom Scale", "Custom Scale",
+								JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(ScaleUtil.getScaleFactor() * 100));
+						if (answer == null) return;
+						float newScale = 1.0f;
+						try {
+							newScale = Float.parseFloat(answer) / 100f;
+						} catch (NumberFormatException ignored) {
+						}
+						ScaleUtil.setScaleFactor(newScale);
+					});
+					scale.add(customScale);
+					ScaleUtil.addListener((newScale, _oldScale) -> {
+						JRadioButtonMenuItem mi = map.get(newScale);
+						if (mi != null) {
+							mi.setSelected(true);
+						} else {
+							scaleGroup.clearSelection();
+						}
+					});
+					JRadioButtonMenuItem mi = map.get(ScaleUtil.getScaleFactor());
+					if (mi != null) {
+						mi.setSelected(true);
+					}
+				}
+				menu.add(scale);
 
 				JMenuItem search = new JMenuItem(I18n.translate("menu.view.search"));
 				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
@@ -284,7 +331,7 @@ public class MenuBar extends JMenuBar {
 
 			}
 		}
-		
+
 		/*
 		 * Help menu
 		 */

@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 
@@ -107,7 +108,7 @@ public class SearchDialog {
 		frame.setContentPane(pane);
 		frame.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
 
-		frame.setSize(360, 500);
+		frame.setSize(ScaleUtil.getDimension(360, 500));
 		frame.setAlwaysOnTop(true);
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(parent.getFrame());
