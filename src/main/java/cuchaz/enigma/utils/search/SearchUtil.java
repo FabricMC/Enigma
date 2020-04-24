@@ -99,7 +99,7 @@ public class SearchUtil<T extends SearchEntry> {
 					for (int i = 1; i <= l; i++) {
 						float baseScore = scorePerChar * i;
 						float chainBonus = (i - 1) * 0.5f;
-						newSnapshots.put(remaining.substring(i), score + baseScore * posMultiplier + chainBonus);
+						merge(newSnapshots, Collections.singletonMap(remaining.substring(i), score + baseScore * posMultiplier + chainBonus), Math::max);
 					}
 				}
 				merge(snapshots, newSnapshots, Math::max);
