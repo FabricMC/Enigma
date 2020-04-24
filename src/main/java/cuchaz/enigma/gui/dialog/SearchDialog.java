@@ -19,7 +19,6 @@ import java.awt.event.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

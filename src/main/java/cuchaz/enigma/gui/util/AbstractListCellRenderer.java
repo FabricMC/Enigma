@@ -42,7 +42,7 @@ public abstract class AbstractListCellRenderer<E> extends JPanel implements List
 
 	@Override
 	public Component getListCellRendererComponent(JList<? extends E> list, E value, int index, boolean isSelected, boolean cellHasFocus) {
-		updateUiForEntry(list,value,index,isSelected,cellHasFocus);
+		updateUiForEntry(list, value, index, isSelected, cellHasFocus);
 
 		if (isSelected) {
 			setBackground(list.getSelectionBackground());
