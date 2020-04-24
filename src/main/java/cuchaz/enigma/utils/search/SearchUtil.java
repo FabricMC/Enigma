@@ -136,7 +136,6 @@ public class SearchUtil<T extends SearchEntry> {
 	 * <p>
 	 * Example of how words get split (using <code>|</code> as seperator):
 	 * <p><code>MinecraftClientGame -> Minecraft|Client|Game</code></p>
-	 * <p><code>MinecraftClientGame -> Minecraft|Client|Game</code></p>
 	 * <p><code>HTTPInputStream -> HTTP|Input|Stream</code></p>
 	 * <p><code>class_932 -> class|_|932</code></p>
 	 * <p><code>X11FontManager -> X|11|Font|Manager</code></p>
