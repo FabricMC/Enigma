@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'cuchaz'
-version = '0.15.2'
+version = '0.15.3'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
@@ -51,9 +51,10 @@ dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
     implementation 'net.fabricmc:cfr:0.0.1'
-    implementation 'com.bulenkov:darcula:1.0.0.1'
+    implementation 'com.bulenkov:darcula:1.0.0-bobbylight'
     implementation 'de.sciss:syntaxpane:1.2.0'
     implementation 'me.xdrop:fuzzywuzzy:1.2.0'
+    implementation 'com.github.lukeu:swing-dpi:0.6'
 
     testImplementation 'junit:junit:4.+'
     testImplementation 'org.hamcrest:hamcrest-all:1.+'

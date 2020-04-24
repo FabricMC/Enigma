@@ -52,6 +52,7 @@ import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Message;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
@@ -141,6 +142,8 @@ public class Gui {
 
 		this.controller = new GuiController(this, profile);
 
+		Themes.updateTheme(this);
+
 		// init file choosers
 		this.jarFileChooser = new FileDialog(getFrame(), I18n.translate("menu.file.jar.open"), FileDialog.LOAD);
 
@@ -157,14 +160,13 @@ public class Gui {
 		splitClasses.setResizeWeight(0.3);
 		this.classesPanel = new JPanel();
 		this.classesPanel.setLayout(new BorderLayout());
-		this.classesPanel.setPreferredSize(new Dimension(250, 0));
+		this.classesPanel.setPreferredSize(ScaleUtil.getDimension(250, 0));
 
 		// init info panel
 		infoPanel = new PanelIdentifier(this);
 		infoPanel.clearReference();
 
 		// init editor
-		Themes.updateTheme(this);
 		selectionHighlightPainter = new SelectionHighlightPainter();
 		this.editor = new PanelEditor(this);
 		this.sourceScroller = new JScrollPane(this.editor);
@@ -279,8 +281,8 @@ public class Gui {
 				}
 			}
 		});
-		tokens.setPreferredSize(new Dimension(0, 200));
-		tokens.setMinimumSize(new Dimension(0, 200));
+		tokens.setPreferredSize(ScaleUtil.getDimension(0, 200));
+		tokens.setMinimumSize(ScaleUtil.getDimension(0, 200));
 		JSplitPane callPanel = new JSplitPane(
 				JSplitPane.VERTICAL_SPLIT,
 				true,
@@ -296,7 +298,7 @@ public class Gui {
 		centerPanel.add(infoPanel, BorderLayout.NORTH);
 		centerPanel.add(sourceScroller, BorderLayout.CENTER);
 		tabs = new JTabbedPane();
-		tabs.setPreferredSize(new Dimension(250, 0));
+		tabs.setPreferredSize(ScaleUtil.getDimension(250, 0));
 		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritancePanel);
 		tabs.addTab(I18n.translate("info_panel.tree.implementations"), implementationsPanel);
 		tabs.addTab(I18n.translate("info_panel.tree.calls"), callPanel);
@@ -360,10 +362,11 @@ public class Gui {
 
 		// show the frame
 		pane.doLayout();
-		this.frame.setSize(1024, 576);
-		this.frame.setMinimumSize(new Dimension(640, 480));
+		this.frame.setSize(ScaleUtil.getDimension(1024, 576));
+		this.frame.setMinimumSize(ScaleUtil.getDimension(640, 480));
 		this.frame.setVisible(true);
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		this.frame.setLocationRelativeTo(null);
 	}
 
 	public JFrame getFrame() {
@@ -543,7 +546,7 @@ public class Gui {
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
 
 		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-		label.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
+		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
 		panel.add(label);
 
 		panel.add(Utils.unboldLabel(new JLabel(value, JLabel.LEFT)));
@@ -557,11 +560,11 @@ public class Gui {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
 		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-		label.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
+		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
 		panel.add(label);
 		JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
 		((JLabel) combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
-		combo.setPreferredSize(new Dimension(100, label.getPreferredSize().height));
+		combo.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
 
 		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry);
 		if (mapping != null) {
@@ -687,7 +690,7 @@ public class Gui {
 		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
 		renameTextField.setText(translatedReference.getNameableName());
 
-		renameTextField.setPreferredSize(new Dimension(360, renameTextField.getPreferredSize().height));
+		renameTextField.setPreferredSize(ScaleUtil.getDimension(360, ScaleUtil.invert(renameTextField.getPreferredSize().height)));
 		renameTextField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
