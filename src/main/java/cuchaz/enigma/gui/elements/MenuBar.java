@@ -8,11 +8,11 @@ import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
 import cuchaz.enigma.gui.dialog.CreateServerDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.stats.StatsMember;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
 
-import javax.swing.*;
-import java.awt.*;
 import java.awt.Container;
 import java.awt.Desktop;
 import java.awt.FlowLayout;
@@ -26,21 +26,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import javax.swing.*;
 
-import cuchaz.enigma.config.Config;
-import cuchaz.enigma.config.Themes;
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.dialog.AboutDialog;
-import cuchaz.enigma.gui.dialog.SearchDialog;
-import cuchaz.enigma.gui.stats.StatsMember;
-import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.Pair;
 
 public class MenuBar extends JMenuBar {
 
