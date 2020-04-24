@@ -12,7 +12,6 @@ Enigma includes the following open-source libraries:
  - [Guava](https://github.com/google/guava) (Apache-2.0)
  - [SyntaxPane](https://github.com/Sciss/SyntaxPane) (Apache-2.0)
  - [Darcula](https://github.com/bulenkov/Darcula) (Apache-2.0)
- - [fuzzywuzzy](https://github.com/xdrop/fuzzywuzzy/) (GPL-3.0)
  - [jopt-simple](https://github.com/jopt-simple/jopt-simple) (MIT)
  - [ASM](https://asm.ow2.io/) (BSD-3-Clause)
 

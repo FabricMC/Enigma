@@ -155,8 +155,9 @@ public class SearchDialog {
 	private void updateList() {
 		DefaultListModel<SearchEntryImpl> listModel = new DefaultListModel<>();
 
-		List<SearchEntryImpl> results = su.search(searchField.getText(), 100);
-		results.forEach(listModel::addElement);
+		su.search(searchField.getText())
+				.limit(100)
+				.forEach(listModel::addElement);
 
 		classList.setModel(listModel);
 	}
