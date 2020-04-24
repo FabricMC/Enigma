@@ -229,7 +229,7 @@ public class SearchDialog {
 			this.add(mainName, BorderLayout.WEST);
 
 			secondaryName = new JLabel();
-			secondaryName.setFont(secondaryName.getFont().deriveFont(Font.ITALIC, 12));
+			secondaryName.setFont(secondaryName.getFont().deriveFont(Font.ITALIC));
 			secondaryName.setForeground(Color.GRAY);
 			this.add(secondaryName, BorderLayout.EAST);
 		}
