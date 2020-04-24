@@ -118,7 +118,7 @@ public abstract class EnigmaServer {
 
 	public void stop() {
 		runOnThread(() -> {
-			if (!socket.isClosed()) {
+			if (socket != null && !socket.isClosed()) {
 				for (Socket client : clients) {
 					kick(client, "disconnect.server_closed");
 				}
