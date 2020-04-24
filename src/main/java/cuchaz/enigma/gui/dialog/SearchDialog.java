@@ -36,27 +36,20 @@ import cuchaz.enigma.utils.search.SearchUtil;
 
 public class SearchDialog {
 
-	private JTextField searchField;
-	private JList<SearchEntryImpl> classList;
-	private JDialog dialog;
+	private final JTextField searchField;
+	private final DefaultListModel<SearchEntryImpl> classListModel;
+	private final JList<SearchEntryImpl> classList;
+	private final JDialog dialog;
 
 	private final Gui parent;
-	private final List<SearchEntryImpl> classes;
 	private final SearchUtil<SearchEntryImpl> su;
 
 	public SearchDialog(Gui parent) {
 		this.parent = parent;
 
-		this.classes = parent.getController().project.getJarIndex().getEntryIndex().getClasses().parallelStream()
-				.filter(e -> !e.isInnerClass())
-				.map(e -> SearchEntryImpl.from(e, parent.getController()))
-				.collect(Collectors.toList());
 
 		su = new SearchUtil<>();
-		su.addAll(classes);
-	}
 
-	public void show() {
 		dialog = new JDialog(parent.getFrame(), I18n.translate("menu.view.search"), true);
 		JPanel contentPane = new JPanel();
 		contentPane.setBorder(ScaleUtil.createEmptyBorder(4, 4, 4, 4));
@@ -98,7 +91,9 @@ public class SearchDialog {
 		searchField.addActionListener(e -> openSelected());
 		contentPane.add(searchField, BorderLayout.NORTH);
 
+		classListModel = new DefaultListModel<>();
 		classList = new JList<>();
+		classList.setModel(classListModel);
 		classList.setCellRenderer(new ListCellRendererImpl());
 		classList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		classList.addMouseListener(new MouseAdapter() {
@@ -107,7 +102,7 @@ public class SearchDialog {
 				if (mouseEvent.getClickCount() >= 2) {
 					int idx = classList.locationToIndex(mouseEvent.getPoint());
 					SearchEntryImpl entry = classList.getModel().getElementAt(idx);
-					openEntry(entry.obf);
+					openEntry(entry);
 				}
 			}
 		});
@@ -123,43 +118,70 @@ public class SearchDialog {
 		buttonBar.add(cancel);
 		contentPane.add(buttonBar, BorderLayout.SOUTH);
 
-		dialog.setContentPane(contentPane);
+		// apparently the class list doesn't update by itself when the list
+		// state changes and the dialog is hidden
+		dialog.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				classList.updateUI();
+			}
+		});
 
+		dialog.setContentPane(contentPane);
 		dialog.setSize(ScaleUtil.getDimension(400, 500));
 		dialog.setLocationRelativeTo(parent.getFrame());
-		dialog.setVisible(true);
-		dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	}
 
-		dialog.requestFocus();
+	public void show() {
+		su.clear();
+		parent.getController().project.getJarIndex().getEntryIndex().getClasses().parallelStream()
+				.filter(e -> !e.isInnerClass())
+				.map(e -> SearchEntryImpl.from(e, parent.getController()))
+				.map(SearchUtil.Entry::from)
+				.sequential()
+				.forEach(su::add);
+
+		updateList();
+
 		searchField.requestFocus();
+		searchField.selectAll();
+
+		dialog.setVisible(true);
+	}
+
+	public SearchUtil<SearchEntryImpl> getSearchUtil() {
+		return su;
 	}
 
 	private void openSelected() {
 		SearchEntryImpl selectedValue = classList.getSelectedValue();
 		if (selectedValue != null) {
-			openEntry(selectedValue.obf);
+			openEntry(selectedValue);
 		}
 	}
 
-	private void openEntry(ClassEntry e) {
+	private void openEntry(SearchEntryImpl e) {
 		close();
-		parent.getController().navigateTo(e);
-		parent.getDeobfPanel().deobfClasses.setSelectionClass(e);
+		su.hit(e);
+		parent.getController().navigateTo(e.obf);
+		parent.getDeobfPanel().deobfClasses.setSelectionClass(e.obf);
 	}
 
 	private void close() {
-		dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
+		dialog.setVisible(false);
 	}
 
 	// Updates the list of class names
 	private void updateList() {
-		DefaultListModel<SearchEntryImpl> listModel = new DefaultListModel<>();
+		classListModel.clear();
 
 		su.search(searchField.getText())
 				.limit(100)
-				.forEach(listModel::addElement);
+				.forEach(classListModel::addElement);
+	}
 
-		classList.setModel(listModel);
+	public void dispose() {
+		dialog.dispose();
 	}
 
 	private static final class SearchEntryImpl implements SearchEntry {
@@ -179,6 +201,11 @@ public class SearchDialog {
 			} else {
 				return Collections.singletonList(obf.getSimpleName());
 			}
+		}
+
+		@Override
+		public String getIdentifier() {
+			return obf.getFullName();
 		}
 
 		@Override

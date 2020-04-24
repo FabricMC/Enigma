@@ -325,7 +325,7 @@ public class MenuBar extends JMenuBar {
 				menu.add(search);
 				search.addActionListener(event -> {
 					if (this.gui.getController().project != null) {
-						new SearchDialog(this.gui).show();
+						this.gui.getSearchDialog().show();
 					}
 				});
 
