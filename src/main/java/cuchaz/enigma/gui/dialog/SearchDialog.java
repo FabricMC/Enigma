@@ -46,7 +46,6 @@ public class SearchDialog {
 	public SearchDialog(Gui parent) {
 		this.parent = parent;
 
-
 		su = new SearchUtil<>();
 
 		dialog = new JDialog(parent.getFrame(), I18n.translate("menu.view.search"), true);
@@ -79,9 +78,11 @@ public class SearchDialog {
 				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
 					int next = classList.isSelectionEmpty() ? 0 : classList.getSelectedIndex() + 1;
 					classList.setSelectedIndex(next);
+					classList.ensureIndexIsVisible(next);
 				} else if (e.getKeyCode() == KeyEvent.VK_UP) {
 					int prev = classList.isSelectionEmpty() ? classList.getModel().getSize() : classList.getSelectedIndex() - 1;
 					classList.setSelectedIndex(prev);
+					classList.ensureIndexIsVisible(prev);
 				} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
 					close();
 				}
@@ -146,10 +147,6 @@ public class SearchDialog {
 		searchField.selectAll();
 
 		dialog.setVisible(true);
-	}
-
-	public SearchUtil<SearchEntryImpl> getSearchUtil() {
-		return su;
 	}
 
 	private void openSelected() {
@@ -222,8 +219,8 @@ public class SearchDialog {
 
 	private static final class ListCellRendererImpl extends AbstractListCellRenderer<SearchEntryImpl> {
 
-		private JLabel mainName;
-		private JLabel secondaryName;
+		private final JLabel mainName;
+		private final JLabel secondaryName;
 
 		public ListCellRendererImpl() {
 			this.setLayout(new BorderLayout());
