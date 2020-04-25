@@ -813,15 +813,15 @@ public class Gui {
 	public void close() {
 		if (!this.controller.isDirty()) {
 			// everything is saved, we can exit safely
-			close0();
+			exit();
 		} else {
 			// ask to save before closing
 			showDiscardDiag((response) -> {
 				if (response == JOptionPane.YES_OPTION) {
 					this.saveMapping();
-					close0();
+					exit();
 				} else if (response == JOptionPane.NO_OPTION) {
-					close0();
+					exit();
 				}
 
 				return null;
@@ -829,7 +829,7 @@ public class Gui {
 		}
 	}
 
-	private void close0() {
+	private void exit() {
 		if (searchDialog != null) {
 			searchDialog.dispose();
 		}
