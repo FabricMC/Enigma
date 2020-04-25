@@ -728,12 +728,12 @@ public class Gui {
 
 	private void finishRename(boolean saveName) {
 		String newName = renameTextField.getText();
-		renameTextField = null;
 
 		if (saveName && newName != null && !newName.isEmpty()) {
 			try {
 				this.controller.rename(renamingReference, newName, true);
 				this.controller.sendPacket(new RenameC2SPacket(renamingReference.getNameableEntry(), newName, true));
+				renameTextField = null;
 			} catch (IllegalNameException ex) {
 				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				renameTextField.setToolTipText(ex.getReason());
@@ -741,6 +741,8 @@ public class Gui {
 			}
 			return;
 		}
+
+		renameTextField = null;
 
 		// abort the rename
 		showCursorReference(cursorReference);
