@@ -40,6 +40,8 @@ import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.*;
+import cuchaz.enigma.gui.elements.rpanel.RPanelContainer;
+import cuchaz.enigma.gui.elements.rpanel.RPanelContainer.ButtonLocation;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
@@ -77,14 +79,17 @@ public class Gui {
 
 	private final EditorTabbedPane editorTabbedPane;
 
+	private final RPanelContainer left = new RPanelContainer(ButtonLocation.LEFT);
+	private final RPanelContainer right = new RPanelContainer(ButtonLocation.RIGHT);
+	private final RPanelContainer bottom = new RPanelContainer(ButtonLocation.BOTTOM);
+
 	private final JPanel classesPanel = new JPanel(new BorderLayout());
-	private final JSplitPane splitClasses;
 	private final JTabbedPane tabs = new JTabbedPane();
 	private final CollapsibleTabbedPane logTabs = new CollapsibleTabbedPane(JTabbedPane.BOTTOM);
 	private final JSplitPane logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
 	private final JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
-	private final JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
+	private final JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.left, splitRight);
 
 	private final DefaultListModel<String> userModel = new DefaultListModel<>();
 	private final DefaultListModel<Message> messageModel = new DefaultListModel<>();
@@ -115,7 +120,6 @@ public class Gui {
 		this.implementationsTree = new ImplementationsTree(this);
 		this.callsTree = new CallsTree(this);
 		this.editorTabbedPane = new EditorTabbedPane(this);
-		this.splitClasses = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, this.obfPanel, this.deobfPanel);
 
 		this.setupUi();
 
@@ -137,8 +141,8 @@ public class Gui {
 
 		this.exportJarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		this.splitClasses.setResizeWeight(0.3);
-		this.classesPanel.setPreferredSize(ScaleUtil.getDimension(250, 0));
+		left.attach(obfPanel.getPanel());
+		left.attach(deobfPanel.getPanel());
 
 		// layout controls
 		Container workArea = this.mainWindow.workArea();
@@ -180,7 +184,7 @@ public class Gui {
 		// restore state
 		int[] layout = UiConfig.getLayout();
 		if (layout.length >= 4) {
-			this.splitClasses.setDividerLocation(layout[0]);
+			// this.splitClasses.setDividerLocation(layout[0]);
 			this.splitCenter.setDividerLocation(layout[1]);
 			this.splitRight.setDividerLocation(layout[2]);
 			this.logSplit.setDividerLocation(layout[3]);
@@ -223,8 +227,8 @@ public class Gui {
 
 	public void setSingleClassTree(boolean singleClassTree) {
 		this.singleClassTree = singleClassTree;
-		this.classesPanel.removeAll();
-		this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
+		// this.classesPanel.removeAll();
+		// this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
 		getController().refreshClasses();
 		retranslateUi();
 	}
@@ -234,15 +238,15 @@ public class Gui {
 	}
 
 	public void onStartOpenJar() {
-		this.classesPanel.removeAll();
+//		this.classesPanel.removeAll();
 		redraw();
 	}
 
 	public void onFinishOpenJar(String jarName) {
 		// update gui
 		this.mainWindow.setTitle(Enigma.NAME + " - " + jarName);
-		this.classesPanel.removeAll();
-		this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
+//		this.classesPanel.removeAll();
+//		this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
 		this.editorTabbedPane.closeAllEditorTabs();
 
 		// update menu
@@ -258,7 +262,7 @@ public class Gui {
 		setObfClasses(null);
 		setDeobfClasses(null);
 		this.editorTabbedPane.closeAllEditorTabs();
-		this.classesPanel.removeAll();
+//		this.classesPanel.removeAll();
 
 		// update menu
 		isJarOpen = false;
@@ -430,7 +434,7 @@ public class Gui {
 		UiConfig.setWindowPos("Main Window", this.mainWindow.frame().getLocationOnScreen());
 		UiConfig.setWindowSize("Main Window", this.mainWindow.frame().getSize());
 		UiConfig.setLayout(
-				this.splitClasses.getDividerLocation(),
+				0, // this.splitClasses.getDividerLocation(),
 				this.splitCenter.getDividerLocation(),
 				this.splitRight.getDividerLocation(),
 				this.logSplit.getDividerLocation());
