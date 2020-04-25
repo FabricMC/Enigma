@@ -1004,10 +1004,10 @@ public class Gui {
 	 * causing inconsistencies.
 	 */
 	public void updateUiState() {
-		menuBar.connectToServerMenu.setEnabled(connectionState != ConnectionState.HOSTING);
-		menuBar.connectToServerMenu.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "menu.collab.connect" : "menu.collab.disconnect"));
-		menuBar.startServerMenu.setEnabled(connectionState != ConnectionState.CONNECTED);
-		menuBar.startServerMenu.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "menu.collab.server.start" : "menu.collab.server.stop"));
+		menuBar.connectToServerMenu.setEnabled(isJarOpen && connectionState != ConnectionState.HOSTING);
+		menuBar.connectToServerMenu.setText(I18n.translate(connectionState != ConnectionState.CONNECTED ? "menu.collab.connect" : "menu.collab.disconnect"));
+		menuBar.startServerMenu.setEnabled(isJarOpen && connectionState != ConnectionState.CONNECTED);
+		menuBar.startServerMenu.setText(I18n.translate(connectionState != ConnectionState.HOSTING ? "menu.collab.server.start" : "menu.collab.server.stop"));
 
 		menuBar.closeJarMenu.setEnabled(isJarOpen);
 		menuBar.openMappingsMenus.forEach(item -> item.setEnabled(isJarOpen));
@@ -1016,8 +1016,6 @@ public class Gui {
 		menuBar.closeMappingsMenu.setEnabled(isJarOpen);
 		menuBar.exportSourceMenu.setEnabled(isJarOpen);
 		menuBar.exportJarMenu.setEnabled(isJarOpen);
-		menuBar.connectToServerMenu.setEnabled(isJarOpen);
-		menuBar.startServerMenu.setEnabled(isJarOpen);
 
 		connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
 
