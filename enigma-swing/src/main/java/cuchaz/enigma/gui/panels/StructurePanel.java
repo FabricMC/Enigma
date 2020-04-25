@@ -12,6 +12,7 @@ import javax.swing.tree.TreePath;
 import cuchaz.enigma.analysis.StructureTreeNode;
 import cuchaz.enigma.analysis.StructureTreeOptions;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.elements.rpanel.RPanel;
 import cuchaz.enigma.gui.renderer.StructureOptionListCellRenderer;
 import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.GuiUtil;
@@ -25,7 +26,7 @@ import cuchaz.enigma.utils.I18n;
 public class StructurePanel {
     private final Gui gui;
 
-    private final JPanel panel = new JPanel(new BorderLayout());
+    private final RPanel panel = new RPanel();
 
     private final JPanel optionsPanel;
 
@@ -74,8 +75,10 @@ public class StructurePanel {
 
         this.retranslateUi();
 
-        this.panel.add(this.optionsPanel, BorderLayout.NORTH);
-        this.panel.add(new JScrollPane(this.structureTree));
+        Container contentPane = this.panel.getContentPane();
+        contentPane.setLayout(new BorderLayout());
+        contentPane.add(this.optionsPanel, BorderLayout.NORTH);
+        contentPane.add(new JScrollPane(this.structureTree));
     }
 
     public void showStructure(EditorPanel editor) {
@@ -129,12 +132,13 @@ public class StructurePanel {
     }
 
     public void retranslateUi() {
+        this.panel.setTitle(I18n.translate("info_panel.tree.structure"));
         this.obfuscationVisibilityLabel.setText(I18n.translate("structure.options.obfuscation"));
         this.documentationVisibilityLabel.setText(I18n.translate("structure.options.documentation"));
         this.sortingOrderLabel.setText(I18n.translate("structure.options.sorting"));
     }
 
-    public JPanel getPanel() {
+    public RPanel getPanel() {
         return this.panel;
     }
 

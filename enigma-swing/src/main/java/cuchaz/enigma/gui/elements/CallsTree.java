@@ -1,6 +1,5 @@
 package cuchaz.enigma.gui.elements;
 
-import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Vector;
@@ -13,6 +12,7 @@ import javax.swing.tree.TreePath;
 import cuchaz.enigma.analysis.ReferenceTreeNode;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.TokenListCellRenderer;
+import cuchaz.enigma.gui.elements.rpanel.RPanel;
 import cuchaz.enigma.gui.renderer.CallsTreeCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -22,9 +22,10 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 
 public class CallsTree {
-	private final JPanel panel = new JPanel(new BorderLayout());
+	private final RPanel panel = new RPanel();
 
 	private final JTree callsTree = new JTree();
 	private final JList<Token> tokens = new JList<>();
@@ -56,7 +57,7 @@ public class CallsTree {
 
 		contentPane.setResizeWeight(1); // let the top side take all the slack
 		contentPane.resetToPreferredSizes();
-		this.panel.add(contentPane, BorderLayout.CENTER);
+		this.panel.setContentPane(contentPane);
 	}
 
 	public void showCalls(Entry<?> entry, boolean recurse) {
@@ -116,10 +117,10 @@ public class CallsTree {
 	}
 
 	public void retranslateUi() {
-
+		this.panel.setTitle(I18n.translate("info_panel.tree.calls"));
 	}
 
-	public JPanel getPanel() {
+	public RPanel getPanel() {
 		return this.panel;
 	}
 }

@@ -1,10 +1,10 @@
 package cuchaz.enigma.gui.elements;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.event.MouseEvent;
 
 import javax.annotation.Nullable;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.*;
@@ -12,13 +12,14 @@ import javax.swing.tree.*;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.elements.rpanel.RPanel;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.SingleTreeSelectionModel;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 public abstract class AbstractInheritanceTree {
-	private final JPanel panel = new JPanel(new BorderLayout());
+	private final RPanel panel = new RPanel();
 
 	private final JTree tree = new JTree();
 
@@ -33,7 +34,9 @@ public abstract class AbstractInheritanceTree {
 		this.tree.setShowsRootHandles(true);
 		this.tree.addMouseListener(GuiUtil.onMouseClick(this::onClick));
 
-		this.panel.add(new JScrollPane(this.tree));
+		Container contentPane = this.panel.getContentPane();
+		contentPane.setLayout(new BorderLayout());
+		contentPane.add(new JScrollPane(this.tree));
 	}
 
 	private void onClick(MouseEvent event) {
@@ -72,7 +75,7 @@ public abstract class AbstractInheritanceTree {
 	}
 
 	public void retranslateUi() {
-
+		this.panel.setTitle(this.getPanelName());
 	}
 
 	@Nullable
@@ -80,7 +83,7 @@ public abstract class AbstractInheritanceTree {
 
 	protected abstract String getPanelName();
 
-	public JPanel getPanel() {
+	public RPanel getPanel() {
 		return this.panel;
 	}
 }

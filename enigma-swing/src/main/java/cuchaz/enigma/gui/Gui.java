@@ -40,8 +40,8 @@ import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.*;
-import cuchaz.enigma.gui.elements.rpanel.DecoratedRPanelContainer;
 import cuchaz.enigma.gui.elements.rpanel.DecoratedRPanelContainer.ButtonLocation;
+import cuchaz.enigma.gui.elements.rpanel.DoubleRPanelContainer;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
@@ -79,14 +79,14 @@ public class Gui {
 
 	private final EditorTabbedPane editorTabbedPane;
 
-	private final DecoratedRPanelContainer left = new DecoratedRPanelContainer(ButtonLocation.LEFT);
-	private final DecoratedRPanelContainer right = new DecoratedRPanelContainer(ButtonLocation.RIGHT);
-	private final DecoratedRPanelContainer bottom = new DecoratedRPanelContainer(ButtonLocation.BOTTOM);
+	private final DoubleRPanelContainer left = new DoubleRPanelContainer(ButtonLocation.LEFT);
+	private final DoubleRPanelContainer right = new DoubleRPanelContainer(ButtonLocation.RIGHT);
+	private final DoubleRPanelContainer bottom = new DoubleRPanelContainer(ButtonLocation.BOTTOM);
 
 	private final JPanel classesPanel = new JPanel(new BorderLayout());
 	private final JTabbedPane tabs = new JTabbedPane();
 	private final CollapsibleTabbedPane logTabs = new CollapsibleTabbedPane(JTabbedPane.BOTTOM);
-	private final JSplitPane logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
+	private final JSplitPane logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, right.getUi(), logTabs);
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
 	private final JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
 	private final JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.left.getUi(), splitRight);
@@ -141,8 +141,8 @@ public class Gui {
 
 		this.exportJarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		left.getInner().attach(obfPanel.getPanel());
-		left.getInner().attach(deobfPanel.getPanel());
+		left.getRight().attach(obfPanel.getPanel());
+		left.getLeft().attach(deobfPanel.getPanel());
 
 		// layout controls
 		Container workArea = this.mainWindow.workArea();
@@ -151,11 +151,11 @@ public class Gui {
 		centerPanel.add(infoPanel.getUi(), BorderLayout.NORTH);
 		centerPanel.add(this.editorTabbedPane.getUi(), BorderLayout.CENTER);
 
-		tabs.setPreferredSize(ScaleUtil.getDimension(250, 0));
-		tabs.addTab(I18n.translate("info_panel.tree.structure"), structurePanel.getPanel());
-		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritanceTree.getPanel());
-		tabs.addTab(I18n.translate("info_panel.tree.implementations"), implementationsTree.getPanel());
-		tabs.addTab(I18n.translate("info_panel.tree.calls"), callsTree.getPanel());
+		right.getUi().setPreferredSize(ScaleUtil.getDimension(250, 0));
+		right.getLeft().attach(structurePanel.getPanel());
+		right.getLeft().attach(inheritanceTree.getPanel());
+		right.getLeft().attach(implementationsTree.getPanel());
+		right.getLeft().attach(callsTree.getPanel());
 
 		messages.setCellRenderer(new MessageListCellRenderer());
 		JPanel chatPanel = new JPanel(new BorderLayout());
@@ -356,7 +356,6 @@ public class Gui {
 		if (cursorReference == null) return;
 
 		this.inheritanceTree.display(cursorReference.entry);
-		tabs.setSelectedIndex(1);
 	}
 
 	public void showImplementations(EditorPanel editor) {
@@ -364,7 +363,6 @@ public class Gui {
 		if (cursorReference == null) return;
 
 		this.implementationsTree.display(cursorReference.entry);
-		tabs.setSelectedIndex(2);
 	}
 
 	public void showCalls(EditorPanel editor, boolean recurse) {
@@ -372,7 +370,6 @@ public class Gui {
 		if (cursorReference == null) return;
 
 		this.callsTree.showCalls(cursorReference.entry, recurse);
-		tabs.setSelectedIndex(3);
 	}
 
 	public void toggleMapping(EditorPanel editor) {
@@ -579,10 +576,10 @@ public class Gui {
 
 		if (connectionState == ConnectionState.NOT_CONNECTED) {
 			logSplit.setLeftComponent(null);
-			splitRight.setRightComponent(tabs);
+			splitRight.setRightComponent(right.getUi());
 		} else {
 			splitRight.setRightComponent(logSplit);
-			logSplit.setLeftComponent(tabs);
+			logSplit.setLeftComponent(right.getUi());
 		}
 
 		splitRight.setDividerLocation(splitRight.getDividerLocation());
@@ -591,10 +588,6 @@ public class Gui {
 	public void retranslateUi() {
 		this.jarFileChooser.setDialogTitle(I18n.translate("menu.file.jar.open"));
 		this.exportJarFileChooser.setDialogTitle(I18n.translate("menu.file.export.jar"));
-		this.tabs.setTitleAt(0, I18n.translate("info_panel.tree.structure"));
-		this.tabs.setTitleAt(1, I18n.translate("info_panel.tree.inheritance"));
-		this.tabs.setTitleAt(2, I18n.translate("info_panel.tree.implementations"));
-		this.tabs.setTitleAt(3, I18n.translate("info_panel.tree.calls"));
 		this.logTabs.setTitleAt(0, I18n.translate("log_panel.users"));
 		this.logTabs.setTitleAt(1, I18n.translate("log_panel.messages"));
 		this.connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
