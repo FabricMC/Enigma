@@ -40,8 +40,8 @@ import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.*;
-import cuchaz.enigma.gui.elements.rpanel.RPanelContainer;
-import cuchaz.enigma.gui.elements.rpanel.RPanelContainer.ButtonLocation;
+import cuchaz.enigma.gui.elements.rpanel.DecoratedRPanelContainer;
+import cuchaz.enigma.gui.elements.rpanel.DecoratedRPanelContainer.ButtonLocation;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
@@ -79,9 +79,9 @@ public class Gui {
 
 	private final EditorTabbedPane editorTabbedPane;
 
-	private final RPanelContainer left = new RPanelContainer(ButtonLocation.LEFT);
-	private final RPanelContainer right = new RPanelContainer(ButtonLocation.RIGHT);
-	private final RPanelContainer bottom = new RPanelContainer(ButtonLocation.BOTTOM);
+	private final DecoratedRPanelContainer left = new DecoratedRPanelContainer(ButtonLocation.LEFT);
+	private final DecoratedRPanelContainer right = new DecoratedRPanelContainer(ButtonLocation.RIGHT);
+	private final DecoratedRPanelContainer bottom = new DecoratedRPanelContainer(ButtonLocation.BOTTOM);
 
 	private final JPanel classesPanel = new JPanel(new BorderLayout());
 	private final JTabbedPane tabs = new JTabbedPane();
@@ -89,7 +89,7 @@ public class Gui {
 	private final JSplitPane logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
 	private final JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
-	private final JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.left, splitRight);
+	private final JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.left.getUi(), splitRight);
 
 	private final DefaultListModel<String> userModel = new DefaultListModel<>();
 	private final DefaultListModel<Message> messageModel = new DefaultListModel<>();
@@ -141,8 +141,8 @@ public class Gui {
 
 		this.exportJarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		left.attach(obfPanel.getPanel());
-		left.attach(deobfPanel.getPanel());
+		left.getInner().attach(obfPanel.getPanel());
+		left.getInner().attach(deobfPanel.getPanel());
 
 		// layout controls
 		Container workArea = this.mainWindow.workArea();
