@@ -160,7 +160,11 @@ public class SearchDialog {
 		close();
 		su.hit(e);
 		parent.getController().navigateTo(e.obf);
-		parent.getDeobfPanel().deobfClasses.setSelectionClass(e.obf);
+		if (e.deobf != null) {
+			parent.getDeobfPanel().deobfClasses.setSelectionClass(e.deobf);
+		} else {
+			parent.getObfPanel().obfClasses.setSelectionClass(e.obf);
+		}
 	}
 
 	private void close() {
@@ -211,7 +215,7 @@ public class SearchDialog {
 
 		public static SearchEntryImpl from(ClassEntry e, GuiController controller) {
 			ClassEntry deobf = controller.project.getMapper().deobfuscate(e);
-			if (deobf == e) deobf = null;
+			if (deobf.equals(e)) deobf = null;
 			return new SearchEntryImpl(e, deobf);
 		}
 

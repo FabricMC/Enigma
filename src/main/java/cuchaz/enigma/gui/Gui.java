@@ -901,6 +901,10 @@ public class Gui {
 		this.obfPanel.obfClasses.restoreExpansionState(this.obfPanel.obfClasses, stateObf);
 	}
 
+	public PanelObf getObfPanel() {
+		return obfPanel;
+	}
+
 	public PanelDeobf getDeobfPanel() {
 		return deobfPanel;
 	}
