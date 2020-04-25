@@ -18,8 +18,8 @@ import java.util.stream.IntStream;
 
 import javax.swing.*;
 
-import cuchaz.enigma.config.Config;
-import cuchaz.enigma.config.Themes;
+import cuchaz.enigma.gui.config.GuiConfig;
+import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
@@ -222,15 +222,15 @@ public class MenuBar extends JMenuBar {
 			JMenu menu = new JMenu(I18n.translate("menu.decompiler"));
 			add(menu);
 
-			for (Config.Decompiler decompiler : Config.Decompiler.values()) {
+			for (GuiConfig.Decompiler decompiler : GuiConfig.Decompiler.values()) {
 				JMenuItem label = new JMenuItem(decompiler.name);
 				menu.add(label);
 				label.addActionListener(event -> {
 					gui.getController().setDecompiler(decompiler.service);
 
 					try {
-						Config.getInstance().decompiler = decompiler;
-						Config.getInstance().saveConfig();
+						GuiConfig.getInstance().decompiler = decompiler;
+						GuiConfig.getInstance().saveConfig();
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -247,7 +247,7 @@ public class MenuBar extends JMenuBar {
 			{
 				JMenu themes = new JMenu(I18n.translate("menu.view.themes"));
 				menu.add(themes);
-				for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
+				for (GuiConfig.LookAndFeel lookAndFeel : GuiConfig.LookAndFeel.values()) {
 					JMenuItem theme = new JMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
 					themes.add(theme);
 					theme.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));

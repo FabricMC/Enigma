@@ -11,7 +11,7 @@
 
 package cuchaz.enigma.gui.highlight;
 
-import cuchaz.enigma.config.Config;
+import cuchaz.enigma.gui.config.GuiConfig;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
@@ -27,7 +27,7 @@ public class BoxHighlightPainter implements Highlighter.HighlightPainter {
 		this.borderColor = borderColor;
 	}
 
-	public static BoxHighlightPainter create(Config.AlphaColorEntry entry, Config.AlphaColorEntry entryOutline) {
+	public static BoxHighlightPainter create(GuiConfig.AlphaColorEntry entry, GuiConfig.AlphaColorEntry entryOutline) {
 		return new BoxHighlightPainter(entry != null ? entry.get() : null, entryOutline != null ? entryOutline.get() : null);
 	}
 

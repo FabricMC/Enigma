@@ -17,16 +17,18 @@ import com.google.common.reflect.ClassPath.ResourceInfo;
 import com.google.gson.Gson;
 
 import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.SimpleConfig;
 
 public class I18n {
 	public static final String DEFAULT_LANGUAGE = "en_us";
 	private static final Gson GSON = new Gson();
+	private static Config config = SimpleConfig.INSTANCE;
 	private static Map<String, String> translations = Maps.newHashMap();
 	private static Map<String, String> defaultTranslations = Maps.newHashMap();
 	private static Map<String, String> languageNames = Maps.newHashMap();
 	
 	static {
-		translations = load(Config.getInstance().language);
+		translations = load(config.getLanguage());
 		defaultTranslations = load(DEFAULT_LANGUAGE);
 	}
 	
@@ -59,11 +61,21 @@ public class I18n {
 	public static String getLanguageName(String language) {
 		return languageNames.get(language);
 	}
+
+	/**
+	 * Sets the current config instance and reloads the translations based on that config.
+	 *
+	 * @param config the new config instance
+	 */
+	public static void setConfig(Config config) {
+		I18n.config = config;
+		translations = load(config.getLanguage());
+	}
 	
 	public static void setLanguage(String language) {
-		Config.getInstance().language = language;
+		config.setLanguage(language);
 		try {
-			Config.getInstance().saveConfig();
+			config.saveConfig();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

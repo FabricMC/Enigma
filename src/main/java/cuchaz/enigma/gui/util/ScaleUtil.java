@@ -14,7 +14,7 @@ import com.github.swingdpi.plaf.BasicTweaker;
 import com.github.swingdpi.plaf.MetalTweaker;
 import com.github.swingdpi.plaf.NimbusTweaker;
 import com.github.swingdpi.plaf.WindowsTweaker;
-import cuchaz.enigma.config.Config;
+import cuchaz.enigma.gui.config.GuiConfig;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class ScaleUtil {
@@ -22,15 +22,15 @@ public class ScaleUtil {
 	private static List<ScaleChangeListener> listeners = new ArrayList<>();
 
 	public static float getScaleFactor() {
-		return Config.getInstance().scaleFactor;
+		return GuiConfig.getInstance().scaleFactor;
 	}
 
 	public static void setScaleFactor(float scaleFactor) {
 		float oldScale = getScaleFactor();
 		float clamped = Math.min(Math.max(0.25f, scaleFactor), 10.0f);
-		Config.getInstance().scaleFactor = clamped;
+		GuiConfig.getInstance().scaleFactor = clamped;
 		try {
-			Config.getInstance().saveConfig();
+			GuiConfig.getInstance().saveConfig();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

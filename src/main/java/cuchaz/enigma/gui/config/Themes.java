@@ -1,12 +1,9 @@
-package cuchaz.enigma.config;
+package cuchaz.enigma.gui.config;
 
-import java.awt.Font;
 import java.io.IOException;
-import java.lang.reflect.Field;
 
 import javax.swing.SwingUtilities;
 
-import com.github.swingdpi.UiDefaultsScaler;
 import com.google.common.collect.ImmutableMap;
 import cuchaz.enigma.gui.EnigmaSyntaxKit;
 import cuchaz.enigma.gui.Gui;
@@ -17,13 +14,13 @@ import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class Themes {
 
-	public static void setLookAndFeel(Gui gui, Config.LookAndFeel lookAndFeel) {
-		Config.getInstance().lookAndFeel = lookAndFeel;
+	public static void setLookAndFeel(Gui gui, GuiConfig.LookAndFeel lookAndFeel) {
+		GuiConfig.getInstance().lookAndFeel = lookAndFeel;
 		updateTheme(gui);
 	}
 
 	public static void updateTheme(Gui gui) {
-		Config config = Config.getInstance();
+		GuiConfig config = GuiConfig.getInstance();
 		config.lookAndFeel.setGlobalLAF();
 		config.lookAndFeel.apply(config);
 		try {

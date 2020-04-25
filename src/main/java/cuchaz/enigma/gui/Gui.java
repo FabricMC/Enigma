@@ -29,8 +29,8 @@ import cuchaz.enigma.Constants;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.ExceptionIgnorer;
 import cuchaz.enigma.analysis.*;
-import cuchaz.enigma.config.Config;
-import cuchaz.enigma.config.Themes;
+import cuchaz.enigma.gui.config.GuiConfig;
+import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
@@ -72,7 +72,7 @@ public class Gui {
 	public FileDialog exportJarFileChooser;
 	private GuiController controller;
 	private JFrame frame;
-	public Config.LookAndFeel editorFeel;
+	public GuiConfig.LookAndFeel editorFeel;
 	public PanelEditor editor;
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
@@ -88,10 +88,10 @@ public class Gui {
 	public JTextField renameTextField;
 	public JTextArea javadocTextArea;
 
-	public void setEditorTheme(Config.LookAndFeel feel) {
+	public void setEditorTheme(GuiConfig.LookAndFeel feel) {
 		if (editor != null && (editorFeel == null || editorFeel != feel)) {
 			editor.updateUI();
-			editor.setBackground(new Color(Config.getInstance().editorBackground));
+			editor.setBackground(new Color(GuiConfig.getInstance().editorBackground));
 			if (editorFeel != null) {
 				getController().refreshCurrentClass();
 			}
@@ -101,7 +101,7 @@ public class Gui {
 	}
 
 	public Gui(EnigmaProfile profile) {
-		Config.getInstance().lookAndFeel.setGlobalLAF();
+		GuiConfig.getInstance().lookAndFeel.setGlobalLAF();
 
 		// init frame
 		this.frame = new JFrame(Constants.NAME);
@@ -150,7 +150,7 @@ public class Gui {
 		this.editor = new PanelEditor(this);
 		JScrollPane sourceScroller = new JScrollPane(this.editor);
 		this.editor.setContentType("text/enigma-sources");
-		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
+		this.editor.setBackground(new Color(GuiConfig.getInstance().editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 

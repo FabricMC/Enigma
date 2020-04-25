@@ -19,7 +19,7 @@ import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
-import cuchaz.enigma.config.Config;
+import cuchaz.enigma.gui.config.GuiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
@@ -82,7 +82,7 @@ public class GuiController {
 				.setProfile(profile)
 				.build();
 
-		decompilerService = Config.getInstance().decompiler.service;
+		decompilerService = GuiConfig.getInstance().decompiler.service;
 	}
 
 	public boolean isDirty() {
@@ -456,7 +456,7 @@ public class GuiController {
 
 		currentSource.remapSource(project, translator);
 
-		gui.setEditorTheme(Config.getInstance().lookAndFeel);
+		gui.setEditorTheme(GuiConfig.getInstance().lookAndFeel);
 		gui.setSource(currentSource);
 	}
 

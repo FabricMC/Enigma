@@ -12,7 +12,7 @@
 package cuchaz.enigma.gui;
 
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
-import cuchaz.enigma.config.Config;
+import cuchaz.enigma.gui.config.GuiConfig;
 
 import javax.swing.*;
 import javax.swing.tree.TreeCellRenderer;
@@ -29,7 +29,7 @@ class MethodTreeCellRenderer implements TreeCellRenderer {
 	@Override
 	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 		Component ret = parent.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-		Config config = Config.getInstance();
+		GuiConfig config = GuiConfig.getInstance();
 		if (!(value instanceof MethodInheritanceTreeNode) || ((MethodInheritanceTreeNode) value).isImplemented()) {
 			ret.setForeground(new Color(config.defaultTextColor));
 			ret.setFont(ret.getFont().deriveFont(Font.PLAIN));
