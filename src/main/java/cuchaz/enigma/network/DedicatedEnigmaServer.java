@@ -82,6 +82,11 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 				.withRequiredArg()
 				.defaultsTo("");
 
+		OptionSpec<Path> logFileOpt = parser.accepts("log", "The log file to write to")
+				.withRequiredArg()
+				.withValuesConvertedBy(Main.PathConverter.INSTANCE)
+				.defaultsTo(Paths.get("log.txt"));
+
 		OptionSet parsedArgs = parser.parse(args);
 		Path jar = parsedArgs.valueOf(jarOpt);
 		Path mappingsFile = parsedArgs.valueOf(mappingsOpt);
@@ -92,6 +97,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 			System.err.println("Password too long, must be at most " + EnigmaServer.MAX_PASSWORD_LENGTH + " characters");
 			System.exit(1);
 		}
+		Path logFile = parsedArgs.valueOf(logFileOpt);
 
 		System.out.println("Starting Enigma server");
 		DedicatedEnigmaServer server;
@@ -119,7 +125,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 				mappings = EntryRemapper.mapped(project.getJarIndex(), mappingFormat.read(mappingsFile, ProgressListener.none(), profile.getMappingSaveParameters()));
 			}
 
-			PrintWriter log = new PrintWriter(Files.newBufferedWriter(Paths.get("log.txt")));
+			PrintWriter log = new PrintWriter(Files.newBufferedWriter(logFile));
 
 			server = new DedicatedEnigmaServer(checksum, password, profile, mappingFormat, mappingsFile, log, mappings, port);
 			server.start();
