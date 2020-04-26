@@ -155,7 +155,8 @@ public class Gui {
 		right.getLeft().attach(structurePanel.getPanel());
 		right.getLeft().attach(inheritanceTree.getPanel());
 		right.getLeft().attach(implementationsTree.getPanel());
-		right.getLeft().attach(callsTree.getPanel());
+		//right.getLeft().attach(callsTree.getPanel());
+		callsTree.getPanel().windowize();
 
 		messages.setCellRenderer(new MessageListCellRenderer());
 		JPanel chatPanel = new JPanel(new BorderLayout());
