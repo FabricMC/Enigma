@@ -155,8 +155,7 @@ public class Gui {
 		right.getLeft().attach(structurePanel.getPanel());
 		right.getLeft().attach(inheritanceTree.getPanel());
 		right.getLeft().attach(implementationsTree.getPanel());
-		//right.getLeft().attach(callsTree.getPanel());
-		callsTree.getPanel().windowize();
+		right.getLeft().attach(callsTree.getPanel());
 
 		messages.setCellRenderer(new MessageListCellRenderer());
 		JPanel chatPanel = new JPanel(new BorderLayout());
@@ -190,6 +189,19 @@ public class Gui {
 			this.splitRight.setDividerLocation(layout[2]);
 			this.logSplit.setDividerLocation(layout[3]);
 		}
+
+		left.addDragTarget(structurePanel.getPanel());
+		left.addDragTarget(inheritanceTree.getPanel());
+		left.addDragTarget(implementationsTree.getPanel());
+		left.addDragTarget(callsTree.getPanel());
+		left.addDragTarget(obfPanel.getPanel());
+		left.addDragTarget(deobfPanel.getPanel());
+		right.addDragTarget(structurePanel.getPanel());
+		right.addDragTarget(inheritanceTree.getPanel());
+		right.addDragTarget(implementationsTree.getPanel());
+		right.addDragTarget(callsTree.getPanel());
+		right.addDragTarget(obfPanel.getPanel());
+		right.addDragTarget(deobfPanel.getPanel());
 
 		this.mainWindow.statusBar().addPermanentComponent(this.connectionStatusLabel);
 
