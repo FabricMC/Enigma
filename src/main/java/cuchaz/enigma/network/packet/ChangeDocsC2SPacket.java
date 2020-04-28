@@ -26,13 +26,13 @@ public class ChangeDocsC2SPacket implements Packet<ServerPacketHandler> {
 	@Override
 	public void read(DataInput input) throws IOException {
 		this.entry = PacketHelper.readEntry(input);
-		this.newDocs = input.readUTF();
+		this.newDocs = PacketHelper.readString(input);
 	}
 
 	@Override
 	public void write(DataOutput output) throws IOException {
 		PacketHelper.writeEntry(output, entry);
-		output.writeUTF(newDocs);
+		PacketHelper.writeString(output, newDocs);
 	}
 
 	@Override

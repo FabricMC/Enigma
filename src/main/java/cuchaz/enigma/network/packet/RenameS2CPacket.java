@@ -28,7 +28,7 @@ public class RenameS2CPacket implements Packet<GuiController> {
 	public void read(DataInput input) throws IOException {
 		this.syncId = input.readUnsignedShort();
 		this.entry = PacketHelper.readEntry(input);
-		this.newName = input.readUTF();
+		this.newName = PacketHelper.readString(input);
 		this.refreshClassTree = input.readBoolean();
 	}
 
@@ -36,7 +36,7 @@ public class RenameS2CPacket implements Packet<GuiController> {
 	public void write(DataOutput output) throws IOException {
 		output.writeShort(syncId);
 		PacketHelper.writeEntry(output, entry);
-		output.writeUTF(newName);
+		PacketHelper.writeString(output, newName);
 		output.writeBoolean(refreshClassTree);
 	}
 

@@ -27,14 +27,14 @@ public class RenameC2SPacket implements Packet<ServerPacketHandler> {
 	@Override
 	public void read(DataInput input) throws IOException {
 		this.entry = PacketHelper.readEntry(input);
-		this.newName = input.readUTF();
+		this.newName = PacketHelper.readString(input);
 		this.refreshClassTree = input.readBoolean();
 	}
 
 	@Override
 	public void write(DataOutput output) throws IOException {
 		PacketHelper.writeEntry(output, entry);
-		output.writeUTF(newName);
+		PacketHelper.writeString(output, newName);
 		output.writeBoolean(refreshClassTree);
 	}
 

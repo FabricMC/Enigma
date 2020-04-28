@@ -34,7 +34,7 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 		for (int i = 0; i < password.length; i++) {
 			password[i] = input.readChar();
 		}
-		this.username = input.readUTF();
+		this.username = PacketHelper.readString(input);
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 		for (char c : password) {
 			output.writeChar(c);
 		}
-		output.writeUTF(username);
+		PacketHelper.writeString(output, username);
 	}
 
 	@Override

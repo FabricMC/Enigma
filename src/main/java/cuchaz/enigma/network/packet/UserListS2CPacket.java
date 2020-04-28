@@ -32,7 +32,7 @@ public class UserListS2CPacket implements Packet<GuiController> {
 	public void write(DataOutput output) throws IOException {
 		output.writeShort(users.size());
 		for (String user : users) {
-			output.writeUTF(user);
+			PacketHelper.writeString(output, user);
 		}
 	}
 

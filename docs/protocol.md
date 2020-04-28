@@ -4,7 +4,10 @@ concatenated one after the other.
 
 In this document, data will be represented in C-like pseudocode. The primitive data types will be the same as those
 defined by Java's [DataOutputStream](https://docs.oracle.com/javase/7/docs/api/java/io/DataOutputStream.html), i.e. in
-big-endian order for multi-byte integers (`short`, `int` and `long`) and a modified UTF-8 format for Strings.
+big-endian order for multi-byte integers (`short`, `int` and `long`). The one exception is for Strings, which do *not*
+use the same modified UTF format as in `DataOutputStream`, I repeat, the normal `writeUTF` method in `DataOutputStream`
+(and the corresponding method in `DataInputStream`) should *not* be used. Instead, there is a custom `utf` struct for
+Strings, seebelow.
 
 ## Login protocol
 ```
@@ -87,6 +90,17 @@ The IDs for server-to-client packets are as follows:
 - 5: `MarkDeobfuscated`
 - 6: `Message`
 - 7: `UserList`
+
+### The utf struct
+```c
+struct utf {
+    unsigned short length;
+    byte data[length];
+}
+```
+- `length`: The number of bytes in the UTF-8 encoding of the string. Note, this may not be the same as the number of
+            Unicode characters in the string.
+- `data`: A standard UTF-8 encoded byte array representing the string. 
 
 ### The Entry struct
 ```c
@@ -188,6 +202,8 @@ struct Message {
 struct LoginC2SPacket {
     unsigned short protocol_version;
     byte checksum[20];
+    unsigned byte password_length;
+    char password[password_length];
     utf username;
 }
 ```
@@ -195,6 +211,8 @@ struct LoginC2SPacket {
                       kicked immediately. Currently always equal to 0.
 - `checksum`: the SHA-1 hash of the JAR file the client has open. If this does not match the SHA-1 hash of the JAR file
               the server has open, the client will be kicked.
+- `password`: the password needed to log into the server. Note that each `char` is 2 bytes, as per the Java data type.
+              If this password is incorrect, the client will be kicked.
 - `username`: the username of the user logging in. If the username is not unique, the client will be kicked.
 
 ### ConfirmChange (client-to-server)

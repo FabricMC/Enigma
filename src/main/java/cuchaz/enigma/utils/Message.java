@@ -79,7 +79,7 @@ public abstract class Message {
 
 	public void write(DataOutput output) throws IOException {
 		output.writeByte(getType().ordinal());
-		output.writeUTF(user);
+		PacketHelper.writeString(output, user);
 	}
 
 	private Message(String user) {
@@ -121,7 +121,7 @@ public abstract class Message {
 		@Override
 		public void write(DataOutput output) throws IOException {
 			super.write(output);
-			output.writeUTF(message);
+			PacketHelper.writeString(output, message);
 		}
 
 		@Override
@@ -354,7 +354,7 @@ public abstract class Message {
 		public void write(DataOutput output) throws IOException {
 			super.write(output);
 			PacketHelper.writeEntry(output, entry);
-			output.writeUTF(newName);
+			PacketHelper.writeString(output, newName);
 		}
 
 		@Override

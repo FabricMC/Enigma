@@ -20,12 +20,12 @@ public class MessageC2SPacket implements Packet<ServerPacketHandler> {
 
 	@Override
 	public void read(DataInput input) throws IOException {
-		message = input.readUTF();
+		message = PacketHelper.readString(input);
 	}
 
 	@Override
 	public void write(DataOutput output) throws IOException {
-		output.writeUTF(message);
+		PacketHelper.writeString(output, message);
 	}
 
 	@Override

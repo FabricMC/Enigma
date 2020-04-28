@@ -67,10 +67,10 @@ public class SyncMappingsS2CPacket implements Packet<GuiController> {
 		EntryMapping value = node.getValue();
 		output.writeBoolean(value != null);
 		if (value != null) {
-			output.writeUTF(value.getTargetName());
+			PacketHelper.writeString(output, value.getTargetName());
 			output.writeBoolean(value.getJavadoc() != null);
 			if (value.getJavadoc() != null) {
-				output.writeUTF(value.getJavadoc());
+				PacketHelper.writeString(output, value.getJavadoc());
 			}
 		}
 		Collection<? extends EntryTreeNode<EntryMapping>> children = node.getChildNodes();

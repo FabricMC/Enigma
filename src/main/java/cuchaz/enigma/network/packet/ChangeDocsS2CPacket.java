@@ -26,14 +26,14 @@ public class ChangeDocsS2CPacket implements Packet<GuiController> {
 	public void read(DataInput input) throws IOException {
 		this.syncId = input.readUnsignedShort();
 		this.entry = PacketHelper.readEntry(input);
-		this.newDocs = input.readUTF();
+		this.newDocs = PacketHelper.readString(input);
 	}
 
 	@Override
 	public void write(DataOutput output) throws IOException {
 		output.writeShort(syncId);
 		PacketHelper.writeEntry(output, entry);
-		output.writeUTF(newDocs);
+		PacketHelper.writeString(output, newDocs);
 	}
 
 	@Override

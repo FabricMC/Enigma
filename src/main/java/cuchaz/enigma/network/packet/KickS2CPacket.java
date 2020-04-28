@@ -18,12 +18,12 @@ public class KickS2CPacket implements Packet<GuiController> {
 
 	@Override
 	public void read(DataInput input) throws IOException {
-		this.reason = input.readUTF();
+		this.reason = PacketHelper.readString(input);
 	}
 
 	@Override
 	public void write(DataOutput output) throws IOException {
-		output.writeUTF(reason);
+		PacketHelper.writeString(output, reason);
 	}
 
 	@Override
