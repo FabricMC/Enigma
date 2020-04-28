@@ -151,6 +151,7 @@ public class Gui {
 		centerPanel.add(infoPanel.getUi(), BorderLayout.NORTH);
 		centerPanel.add(this.editorTabbedPane.getUi(), BorderLayout.CENTER);
 
+		left.getUi().setPreferredSize(ScaleUtil.getDimension(300, 0));
 		right.getUi().setPreferredSize(ScaleUtil.getDimension(250, 0));
 		right.getLeft().attach(structurePanel.getPanel());
 		right.getLeft().attach(inheritanceTree.getPanel());
