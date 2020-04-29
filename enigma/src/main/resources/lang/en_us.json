@@ -155,6 +155,11 @@
 	"status.connected_user_count": "Connected (%d users).",
 	"status.ready": "Ready.",
 
+	"validation.message.empty_field": "This field is required.",
+	"validation.message.not_int": "Value must be an integer.",
+	"validation.message.field_out_of_range_int": "Value must be an integer between %d and %d.",
+	"validation.message.field_length_out_of_range": "Value must be less than %d characters long.",
+
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",
 	"crash.export": "Export",
