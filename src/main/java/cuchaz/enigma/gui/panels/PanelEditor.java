@@ -126,7 +126,7 @@ public class PanelEditor extends JEditorPane {
 			public void keyTyped(KeyEvent event) {
 				if (!gui.popupMenu.renameMenu.isEnabled()) return;
 
-				if (!event.isControlDown() && !event.isAltDown()) {
+				if (!event.isControlDown() && !event.isAltDown() && Character.isJavaIdentifierPart(event.getKeyChar())) {
 					EnigmaProject project = gui.getController().project;
 					EntryReference<Entry<?>, Entry<?>> reference = project.getMapper().deobfuscate(gui.cursorReference);
 					Entry<?> entry = reference.getNameableEntry();

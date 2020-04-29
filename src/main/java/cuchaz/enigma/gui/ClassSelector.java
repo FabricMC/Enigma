@@ -11,6 +11,17 @@
 
 package cuchaz.enigma.gui;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.*;
+
+import javax.annotation.Nullable;
+import javax.swing.JOptionPane;
+import javax.swing.JTree;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.tree.*;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -20,15 +31,6 @@ import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
-
-import javax.annotation.Nullable;
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.tree.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.*;
 
 public class ClassSelector extends JTree {
 
@@ -420,7 +422,9 @@ public class ClassSelector extends JTree {
 		for (ClassSelectorPackageNode packageNode : packageNodes()) {
 			for (ClassSelectorClassNode classNode : classNodes(packageNode)) {
 				if (classNode.getClassEntry().equals(classEntry)) {
-					setSelectionPath(new TreePath(new Object[]{getModel().getRoot(), packageNode, classNode}));
+					TreePath path = new TreePath(new Object[]{getModel().getRoot(), packageNode, classNode});
+					setSelectionPath(path);
+					scrollPathToVisible(path);
 				}
 			}
 		}

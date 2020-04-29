@@ -11,150 +11,248 @@
 
 package cuchaz.enigma.gui.dialog;
 
-import com.google.common.collect.Lists;
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.gui.util.ScaleUtil;
-import me.xdrop.fuzzywuzzy.FuzzySearch;
-import me.xdrop.fuzzywuzzy.model.ExtractedResult;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.GuiController;
+import cuchaz.enigma.gui.util.AbstractListCellRenderer;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.search.SearchEntry;
+import cuchaz.enigma.utils.search.SearchUtil;
 
 public class SearchDialog {
 
-	private JTextField searchField;
-	private JList<String> classList;
-	private JFrame frame;
+	private final JTextField searchField;
+	private final DefaultListModel<SearchEntryImpl> classListModel;
+	private final JList<SearchEntryImpl> classList;
+	private final JDialog dialog;
 
-	private Gui parent;
-	private List<ClassEntry> deobfClasses;
-
-	private KeyEventDispatcher keyEventDispatcher;
+	private final Gui parent;
+	private final SearchUtil<SearchEntryImpl> su;
 
 	public SearchDialog(Gui parent) {
 		this.parent = parent;
 
-		deobfClasses = Lists.newArrayList();
-		this.parent.getController().addSeparatedClasses(Lists.newArrayList(), deobfClasses);
-		deobfClasses.removeIf(ClassEntry::isInnerClass);
+		su = new SearchUtil<>();
+
+		dialog = new JDialog(parent.getFrame(), I18n.translate("menu.view.search"), true);
+		JPanel contentPane = new JPanel();
+		contentPane.setBorder(ScaleUtil.createEmptyBorder(4, 4, 4, 4));
+		contentPane.setLayout(new BorderLayout(ScaleUtil.scale(4), ScaleUtil.scale(4)));
+
+		searchField = new JTextField();
+		searchField.getDocument().addDocumentListener(new DocumentListener() {
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				updateList();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				updateList();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				updateList();
+			}
+
+		});
+		searchField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+					int next = classList.isSelectionEmpty() ? 0 : classList.getSelectedIndex() + 1;
+					classList.setSelectedIndex(next);
+					classList.ensureIndexIsVisible(next);
+				} else if (e.getKeyCode() == KeyEvent.VK_UP) {
+					int prev = classList.isSelectionEmpty() ? classList.getModel().getSize() : classList.getSelectedIndex() - 1;
+					classList.setSelectedIndex(prev);
+					classList.ensureIndexIsVisible(prev);
+				} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+					close();
+				}
+			}
+		});
+		searchField.addActionListener(e -> openSelected());
+		contentPane.add(searchField, BorderLayout.NORTH);
+
+		classListModel = new DefaultListModel<>();
+		classList = new JList<>();
+		classList.setModel(classListModel);
+		classList.setCellRenderer(new ListCellRendererImpl());
+		classList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		classList.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent mouseEvent) {
+				if (mouseEvent.getClickCount() >= 2) {
+					int idx = classList.locationToIndex(mouseEvent.getPoint());
+					SearchEntryImpl entry = classList.getModel().getElementAt(idx);
+					openEntry(entry);
+				}
+			}
+		});
+		contentPane.add(new JScrollPane(classList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), BorderLayout.CENTER);
+
+		JPanel buttonBar = new JPanel();
+		buttonBar.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		JButton open = new JButton(I18n.translate("prompt.open"));
+		open.addActionListener(event -> openSelected());
+		buttonBar.add(open);
+		JButton cancel = new JButton(I18n.translate("prompt.cancel"));
+		cancel.addActionListener(event -> close());
+		buttonBar.add(cancel);
+		contentPane.add(buttonBar, BorderLayout.SOUTH);
+
+		// apparently the class list doesn't update by itself when the list
+		// state changes and the dialog is hidden
+		dialog.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				classList.updateUI();
+			}
+		});
+
+		dialog.setContentPane(contentPane);
+		dialog.setSize(ScaleUtil.getDimension(400, 500));
+		dialog.setLocationRelativeTo(parent.getFrame());
 	}
 
 	public void show() {
-		frame = new JFrame(I18n.translate("menu.view.search"));
-		frame.setVisible(false);
-		JPanel pane = new JPanel();
-		pane.setBorder(new EmptyBorder(5, 10, 5, 10));
+		su.clear();
+		parent.getController().project.getJarIndex().getEntryIndex().getClasses().parallelStream()
+				.filter(e -> !e.isInnerClass())
+				.map(e -> SearchEntryImpl.from(e, parent.getController()))
+				.map(SearchUtil.Entry::from)
+				.sequential()
+				.forEach(su::add);
 
-		addRow(pane, jPanel -> {
-			searchField = new JTextField("", 20);
+		updateList();
 
-			searchField.addKeyListener(new KeyAdapter() {
-				@Override
-				public void keyTyped(KeyEvent keyEvent) {
-					updateList();
-				}
-			});
+		searchField.requestFocus();
+		searchField.selectAll();
 
-			jPanel.add(searchField);
-		});
-
-		addRow(pane, jPanel -> {
-			classList = new JList<>();
-			classList.setLayoutOrientation(JList.VERTICAL);
-			classList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-			classList.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent mouseEvent) {
-					if(mouseEvent.getClickCount() >= 2){
-						openSelected();
-					}
-				}
-			});
-			jPanel.add(classList);
-		});
-
-
-		keyEventDispatcher = keyEvent -> {
-			if(!frame.isVisible()){
-				return false;
-			}
-			if(keyEvent.getKeyCode() == KeyEvent.VK_DOWN){
-				int next = classList.isSelectionEmpty() ? 0 : classList.getSelectedIndex() + 1;
-				classList.setSelectedIndex(next);
-			}
-			if(keyEvent.getKeyCode() == KeyEvent.VK_UP){
-				int next = classList.isSelectionEmpty() ? classList.getModel().getSize() : classList.getSelectedIndex() - 1;
-				classList.setSelectedIndex(next);
-			}
-			if(keyEvent.getKeyCode() == KeyEvent.VK_ENTER){
-				openSelected();
-			}
-			if(keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE){
-				close();
-			}
-			return false;
-		};
-
-		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyEventDispatcher);
-
-		frame.setContentPane(pane);
-		frame.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
-
-		frame.setSize(ScaleUtil.getDimension(360, 500));
-		frame.setAlwaysOnTop(true);
-		frame.setResizable(false);
-		frame.setLocationRelativeTo(parent.getFrame());
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-
-		searchField.requestFocusInWindow();
+		dialog.setVisible(true);
 	}
 
-	private void openSelected(){
-		close();
-		if(classList.isSelectionEmpty()){
-			return;
+	private void openSelected() {
+		SearchEntryImpl selectedValue = classList.getSelectedValue();
+		if (selectedValue != null) {
+			openEntry(selectedValue);
 		}
-		deobfClasses.stream()
-			.filter(classEntry -> classEntry.getSimpleName().equals(classList.getSelectedValue())).
-			findFirst()
-			.ifPresent(classEntry -> {
-				parent.getController().navigateTo(classEntry);
-				parent.getDeobfPanel().deobfClasses.setSelectionClass(classEntry);
-			});
 	}
 
-	private void close(){
-		frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-		KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(keyEventDispatcher);
+	private void openEntry(SearchEntryImpl e) {
+		close();
+		su.hit(e);
+		parent.getController().navigateTo(e.obf);
+		if (e.deobf != null) {
+			parent.getDeobfPanel().deobfClasses.setSelectionClass(e.deobf);
+		} else {
+			parent.getObfPanel().obfClasses.setSelectionClass(e.obf);
+		}
 	}
 
-	private void addRow(JPanel pane, Consumer<JPanel> consumer) {
-		JPanel panel = new JPanel(new FlowLayout());
-		consumer.accept(panel);
-		pane.add(panel, BorderLayout.CENTER);
+	private void close() {
+		dialog.setVisible(false);
 	}
 
-	//Updates the list of class names
+	// Updates the list of class names
 	private void updateList() {
-		DefaultListModel<String> listModel = new DefaultListModel<>();
+		classListModel.clear();
 
-		//Basic search using the Fuzzy libary
-		//TODO improve on this, to not just work from string and to keep the ClassEntry
-		List<ExtractedResult> results = FuzzySearch.extractTop(searchField.getText(), deobfClasses.stream().map(ClassEntry::getSimpleName).collect(Collectors.toList()), 25);
-		results.forEach(extractedResult -> listModel.addElement(extractedResult.getString()));
-
-		classList.setModel(listModel);
+		su.search(searchField.getText())
+				.limit(100)
+				.forEach(classListModel::addElement);
 	}
 
+	public void dispose() {
+		dialog.dispose();
+	}
 
+	private static final class SearchEntryImpl implements SearchEntry {
+
+		public final ClassEntry obf;
+		public final ClassEntry deobf;
+
+		private SearchEntryImpl(ClassEntry obf, ClassEntry deobf) {
+			this.obf = obf;
+			this.deobf = deobf;
+		}
+
+		@Override
+		public List<String> getSearchableNames() {
+			if (deobf != null) {
+				return Arrays.asList(obf.getSimpleName(), deobf.getSimpleName());
+			} else {
+				return Collections.singletonList(obf.getSimpleName());
+			}
+		}
+
+		@Override
+		public String getIdentifier() {
+			return obf.getFullName();
+		}
+
+		@Override
+		public String toString() {
+			return String.format("SearchEntryImpl { obf: %s, deobf: %s }", obf, deobf);
+		}
+
+		public static SearchEntryImpl from(ClassEntry e, GuiController controller) {
+			ClassEntry deobf = controller.project.getMapper().deobfuscate(e);
+			if (deobf.equals(e)) deobf = null;
+			return new SearchEntryImpl(e, deobf);
+		}
+
+	}
+
+	private static final class ListCellRendererImpl extends AbstractListCellRenderer<SearchEntryImpl> {
+
+		private final JLabel mainName;
+		private final JLabel secondaryName;
+
+		public ListCellRendererImpl() {
+			this.setLayout(new BorderLayout());
+
+			mainName = new JLabel();
+			this.add(mainName, BorderLayout.WEST);
+
+			secondaryName = new JLabel();
+			secondaryName.setFont(secondaryName.getFont().deriveFont(Font.ITALIC));
+			secondaryName.setForeground(Color.GRAY);
+			this.add(secondaryName, BorderLayout.EAST);
+		}
+
+		@Override
+		public void updateUiForEntry(JList<? extends SearchEntryImpl> list, SearchEntryImpl value, int index, boolean isSelected, boolean cellHasFocus) {
+			if (value.deobf == null) {
+				mainName.setText(value.obf.getSimpleName());
+				mainName.setToolTipText(value.obf.getFullName());
+				secondaryName.setText("");
+				secondaryName.setToolTipText("");
+			} else {
+				mainName.setText(value.deobf.getSimpleName());
+				mainName.setToolTipText(value.deobf.getFullName());
+				secondaryName.setText(value.obf.getSimpleName());
+				secondaryName.setToolTipText(value.obf.getFullName());
+			}
+		}
+
+	}
 
 }

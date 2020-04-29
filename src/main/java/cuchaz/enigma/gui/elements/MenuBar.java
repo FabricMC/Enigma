@@ -29,6 +29,16 @@ import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Pair;
 
+import javax.swing.*;
+
+import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.Themes;
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.dialog.AboutDialog;
+import cuchaz.enigma.gui.stats.StatsMember;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.utils.I18n;
+
 public class MenuBar extends JMenuBar {
 
 	public final JMenuItem closeJarMenu;
@@ -325,7 +335,7 @@ public class MenuBar extends JMenuBar {
 				menu.add(search);
 				search.addActionListener(event -> {
 					if (this.gui.getController().project != null) {
-						new SearchDialog(this.gui).show();
+						this.gui.getSearchDialog().show();
 					}
 				});
 

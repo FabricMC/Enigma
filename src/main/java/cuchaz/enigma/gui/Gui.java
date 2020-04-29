@@ -33,6 +33,7 @@ import cuchaz.enigma.config.Config;
 import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
+import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
@@ -67,6 +68,7 @@ public class Gui {
 
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
+	public SearchDialog searchDialog;
 	public JFileChooser enigmaMappingsFileChooser;
 	public JFileChooser exportSourceFileChooser;
 	public FileDialog exportJarFileChooser;
@@ -811,21 +813,28 @@ public class Gui {
 	public void close() {
 		if (!this.controller.isDirty()) {
 			// everything is saved, we can exit safely
-			this.frame.dispose();
-			System.exit(0);
+			exit();
 		} else {
 			// ask to save before closing
 			showDiscardDiag((response) -> {
 				if (response == JOptionPane.YES_OPTION) {
 					this.saveMapping();
-					this.frame.dispose();
+					exit();
 				} else if (response == JOptionPane.NO_OPTION) {
-					this.frame.dispose();
+					exit();
 				}
 
 				return null;
 			}, I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
 		}
+	}
+
+	private void exit() {
+		if (searchDialog != null) {
+			searchDialog.dispose();
+		}
+		this.frame.dispose();
+		System.exit(0);
 	}
 
 	public void redraw() {
@@ -892,6 +901,10 @@ public class Gui {
 		this.obfPanel.obfClasses.restoreExpansionState(this.obfPanel.obfClasses, stateObf);
 	}
 
+	public PanelObf getObfPanel() {
+		return obfPanel;
+	}
+
 	public PanelDeobf getDeobfPanel() {
 		return deobfPanel;
 	}
@@ -899,4 +912,12 @@ public class Gui {
 	public void setShouldNavigateOnClick(boolean shouldNavigateOnClick) {
 		this.shouldNavigateOnClick = shouldNavigateOnClick;
 	}
+
+	public SearchDialog getSearchDialog() {
+		if (searchDialog == null) {
+			searchDialog = new SearchDialog(this);
+		}
+		return searchDialog;
+	}
+
 }
