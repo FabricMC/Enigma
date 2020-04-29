@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'cuchaz'
-version = '0.15.3'
+version = '0.15.4'
 
 def generatedSourcesDir = "$buildDir/generated-src"
 
