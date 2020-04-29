@@ -123,6 +123,8 @@
 	"prompt.close.save": "Save and close",
 	"prompt.close.discard": "Discard changes",
 	"prompt.close.cancel": "Cancel",
+	"prompt.open": "Open",
+	"prompt.cancel": "Cancel",
 	"prompt.connect.title": "Connect to server",
 	"prompt.connect.username": "Username",
 	"prompt.connect.ip": "IP",
