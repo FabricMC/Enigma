@@ -253,7 +253,7 @@ public class PanelEditor {
 			}
 		});
 
-		handle.getSource().thenAccept(s -> setSource(s));
+		handle.getSource().thenAcceptAsync(s -> setSource(s));
 
 		this.classHandle = handle;
 		listeners.forEach(l -> l.onClassHandleChanged(this, handle));
