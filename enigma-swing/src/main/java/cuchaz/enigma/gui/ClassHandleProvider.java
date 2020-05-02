@@ -319,7 +319,7 @@ public final class ClassHandleProvider {
 
 		@Override
 		public void close() {
-			entry.closeHandle(this);
+			if (valid) entry.closeHandle(this);
 		}
 
 		private void checkValid() {
