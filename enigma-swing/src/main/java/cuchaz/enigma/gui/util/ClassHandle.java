@@ -26,6 +26,7 @@ public interface ClassHandle extends AutoCloseable {
 
 	ClassHandle copy();
 
+	@Override
 	void close();
 
 }

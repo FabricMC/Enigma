@@ -63,6 +63,7 @@ public class Gui {
 	private final PanelDeobf deobfPanel;
 
 	private final MenuBar menuBar;
+
 	// state
 	public History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
 	public EntryReference<Entry<?>, Entry<?>> renamingReference;
