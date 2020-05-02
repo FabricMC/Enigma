@@ -591,7 +591,7 @@ public class Gui {
 	@Nullable
 	public PanelEditor getActiveEditor() {
 		return editors.values().stream()
-				.filter(e -> e.getUi() == openFiles.getSelectedComponent())
+				.filter(e -> e.getUi() == ((JScrollPane)openFiles.getSelectedComponent()).getViewport().getView())
 				.findFirst()
 				.orElse(null);
 	}
