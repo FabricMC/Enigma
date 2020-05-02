@@ -38,7 +38,7 @@ public class ChangeDocsS2CPacket implements Packet<ClientPacketHandler> {
 
 	@Override
 	public void handle(ClientPacketHandler controller) {
-		controller.changeDocs(new EntryReference<>(entry, entry.getName()), newDocs, false);
+		controller.changeDocs(new EntryReference<>(entry, entry.getName()), newDocs);
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }

@@ -11,13 +11,13 @@ import java.util.List;
 public interface ClientPacketHandler {
     void openMappings(EntryTree<EntryMapping> mappings);
 
-    void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean jumpToReference);
+    void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree);
 
-    void removeMapping(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference);
+    void removeMapping(EntryReference<Entry<?>, Entry<?>> reference);
 
-    void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs, boolean jumpToReference);
+    void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs);
 
-    void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference);
+    void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference);
 
     void disconnectIfConnected(String reason);
 

@@ -3,6 +3,7 @@ package cuchaz.enigma.gui.elements;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JTextField;
@@ -11,12 +12,12 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
-import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.Validatable;
 
 public class ValidatableTextField extends JTextField implements Validatable {
 
-	private List<String> messages = new ArrayList<>();
+	private List<ParameterizedMessage> messages = new ArrayList<>();
 	private String tooltipText = null;
 
 	public ValidatableTextField() {
@@ -77,7 +78,14 @@ public class ValidatableTextField extends JTextField implements Validatable {
 		}
 		if (!messages.isEmpty()) {
 			strings.add("Error(s): ");
-			messages.forEach(s -> strings.add(String.format(" - %s", s)));
+
+			messages.forEach(msg -> {
+				strings.add(String.format(" - %s", msg.getText()));
+				String longDesc = msg.getLongText();
+				if (!longDesc.isEmpty()) {
+					Arrays.stream(longDesc.split("\n")).map(s -> String.format("   %s", s)).forEach(strings::add);
+				}
+			});
 		}
 		if (strings.isEmpty()) {
 			super.setToolTipText(null);
@@ -94,8 +102,8 @@ public class ValidatableTextField extends JTextField implements Validatable {
 	}
 
 	@Override
-	public void addMessage(Message message, Object[] args) {
-		messages.add(message.format(args));
+	public void addMessage(ParameterizedMessage message) {
+		messages.add(message);
 		setToolTipText0();
 		repaint();
 	}

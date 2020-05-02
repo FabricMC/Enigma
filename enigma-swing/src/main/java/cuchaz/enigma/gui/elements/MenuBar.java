@@ -321,7 +321,7 @@ public class MenuBar {
 			if (lookAndFeel.equals(Config.getInstance().lookAndFeel)) {
 				themeButton.setSelected(true);
 			}
-			themeButton.addActionListener(_e -> Themes.setLookAndFeel(gui, lookAndFeel));
+			themeButton.addActionListener(_e -> Themes.setLookAndFeel(lookAndFeel));
 			themesMenu.add(themeButton);
 		}
 	}

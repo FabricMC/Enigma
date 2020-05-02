@@ -10,8 +10,8 @@ import javax.annotation.Nullable;
 public class ValidationContext {
 
 	private Validatable activeElement = null;
-	private Set<Validatable> elements = new HashSet<>();
-	private List<Entry> messages = new ArrayList<>();
+	private final Set<Validatable> elements = new HashSet<>();
+	private final List<ParameterizedMessage> messages = new ArrayList<>();
 
 	public void setActiveElement(@Nullable Validatable v) {
 		if (v != null) {
@@ -21,10 +21,11 @@ public class ValidationContext {
 	}
 
 	public void raise(Message message, Object... args) {
+		ParameterizedMessage pm = new ParameterizedMessage(message, args);
 		if (activeElement != null) {
-			activeElement.addMessage(message, args);
+			activeElement.addMessage(pm);
 		}
-		messages.add(new Entry(message, args));
+		messages.add(pm);
 	}
 
 	public boolean canProceed() {
@@ -36,16 +37,6 @@ public class ValidationContext {
 		elements.forEach(Validatable::clearMessages);
 		elements.clear();
 		messages.clear();
-	}
-
-	private static final class Entry {
-		public final Message message;
-		public final Object[] args;
-
-		private Entry(Message message, Object[] args) {
-			this.message = message;
-			this.args = args;
-		}
 	}
 
 }

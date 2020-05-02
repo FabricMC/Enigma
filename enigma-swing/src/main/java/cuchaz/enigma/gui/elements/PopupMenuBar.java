@@ -1,6 +1,7 @@
 package cuchaz.enigma.gui.elements;
 
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.utils.I18n;
 
 import javax.swing.*;
@@ -20,10 +21,10 @@ public class PopupMenuBar extends JPopupMenu {
 	public final JMenuItem openNextMenu;
 	public final JMenuItem toggleMappingMenu;
 
-	public PopupMenuBar(Gui gui) {
+	public PopupMenuBar(PanelEditor editor, Gui gui) {
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.rename"));
-			menu.addActionListener(event -> gui.startRename());
+			menu.addActionListener(event -> gui.startRename(editor));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -31,7 +32,7 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.javadoc"));
-			menu.addActionListener(event -> gui.startDocChange());
+			menu.addActionListener(event -> gui.startDocChange(editor));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -39,7 +40,7 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.inheritance"));
-			menu.addActionListener(event -> gui.showInheritance());
+			menu.addActionListener(event -> gui.showInheritance(editor));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -47,7 +48,7 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.implementations"));
-			menu.addActionListener(event -> gui.showImplementations());
+			menu.addActionListener(event -> gui.showImplementations(editor));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -55,7 +56,7 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.calls"));
-			menu.addActionListener(event -> gui.showCalls(true));
+			menu.addActionListener(event -> gui.showCalls(editor, true));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -63,7 +64,7 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.calls.specific"));
-			menu.addActionListener(event -> gui.showCalls(false));
+			menu.addActionListener(event -> gui.showCalls(editor, false));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK + InputEvent.SHIFT_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -71,7 +72,7 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.declaration"));
-			menu.addActionListener(event -> gui.getController().navigateTo(gui.cursorReference.entry));
+			menu.addActionListener(event -> gui.getController().navigateTo(editor.getCursorReference().entry));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -95,7 +96,7 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.mark_deobfuscated"));
-			menu.addActionListener(event -> gui.toggleMapping());
+			menu.addActionListener(event -> gui.toggleMapping(editor));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
 			menu.setEnabled(false);
 			this.add(menu);
@@ -106,19 +107,19 @@ public class PopupMenuBar extends JPopupMenu {
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.zoom.in"));
-			menu.addActionListener(event -> gui.editor.offsetEditorZoom(2));
+			menu.addActionListener(event -> editor.offsetEditorZoom(2));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, InputEvent.CTRL_DOWN_MASK));
 			this.add(menu);
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.zoom.out"));
-			menu.addActionListener(event -> gui.editor.offsetEditorZoom(-2));
+			menu.addActionListener(event -> editor.offsetEditorZoom(-2));
 			menu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK));
 			this.add(menu);
 		}
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.zoom.reset"));
-			menu.addActionListener(event -> gui.editor.resetEditorZoom());
+			menu.addActionListener(event -> editor.resetEditorZoom());
 			this.add(menu);
 		}
 	}

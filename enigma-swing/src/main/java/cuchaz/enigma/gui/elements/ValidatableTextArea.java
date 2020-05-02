@@ -5,8 +5,9 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import javax.swing.JPasswordField;
+import javax.swing.JTextArea;
 import javax.swing.JToolTip;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -15,28 +16,32 @@ import javax.swing.text.Document;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.Validatable;
 
-public class ValidatablePasswordField extends JPasswordField implements Validatable {
+public class ValidatableTextArea extends JTextArea implements Validatable {
 
 	private List<ParameterizedMessage> messages = new ArrayList<>();
 	private String tooltipText = null;
 
-	public ValidatablePasswordField() {
+	public ValidatableTextArea() {
 	}
 
-	public ValidatablePasswordField(String text) {
+	public ValidatableTextArea(String text) {
 		super(text);
 	}
 
-	public ValidatablePasswordField(int columns) {
-		super(columns);
+	public ValidatableTextArea(int rows, int columns) {
+		super(rows, columns);
 	}
 
-	public ValidatablePasswordField(String text, int columns) {
-		super(text, columns);
+	public ValidatableTextArea(String text, int rows, int columns) {
+		super(text, rows, columns);
 	}
 
-	public ValidatablePasswordField(Document doc, String txt, int columns) {
-		super(doc, txt, columns);
+	public ValidatableTextArea(Document doc) {
+		super(doc);
+	}
+
+	public ValidatableTextArea(Document doc, String text, int rows, int columns) {
+		super(doc, text, rows, columns);
 	}
 
 	{

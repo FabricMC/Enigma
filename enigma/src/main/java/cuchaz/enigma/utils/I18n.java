@@ -5,9 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableList;
@@ -22,12 +21,12 @@ public class I18n {
 	private static Map<String, String> translations = Maps.newHashMap();
 	private static Map<String, String> defaultTranslations = Maps.newHashMap();
 	private static Map<String, String> languageNames = Maps.newHashMap();
-	
+
 	static {
 		defaultTranslations = load(DEFAULT_LANGUAGE);
 		translations = defaultTranslations;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static Map<String, String> load(String language) {
 		try (InputStream inputStream = I18n.class.getResourceAsStream("/lang/" + language + ".json")) {
@@ -41,30 +40,50 @@ public class I18n {
 		}
 		return Collections.emptyMap();
 	}
-	
-	public static String translate(String key) {
+
+	public static String translateOrNull(String key) {
 		String value = translations.get(key);
-		if (value != null) {
-			return value;
-		}
-		value = defaultTranslations.get(key);
-		if (value != null) {
-			return value;
-		}
-		return key;
+		if (value != null) return value;
+
+		return defaultTranslations.get(key);
 	}
-	
+
+	public static String translate(String key) {
+		String tr = translateOrNull(key);
+		return tr != null ? tr : key;
+	}
+
+	public static String translateOrEmpty(String key, Object... args) {
+		String text = translateOrNull(key);
+		if (text != null) {
+			return String.format(text, args);
+		} else {
+			return "";
+		}
+	}
+
+	public static String translateFormatted(String key, Object... args) {
+		String text = translateOrNull(key);
+		if (text != null) {
+			return String.format(text, args);
+		} else if (args.length == 0) {
+			return key;
+		} else {
+			return key + Arrays.stream(args).map(Objects::toString).collect(Collectors.joining(", ", "[", "]"));
+		}
+	}
+
 	public static String getLanguageName(String language) {
 		return languageNames.get(language);
 	}
-	
+
 	public static void setLanguage(String language) {
 		translations = load(language);
 	}
-	
+
 	public static ArrayList<String> getAvailableLanguages() {
 		ArrayList<String> list = new ArrayList<String>();
-		
+
 		try {
 			ImmutableList<ResourceInfo> resources = ClassPath.from(Thread.currentThread().getContextClassLoader()).getResources().asList();
 			Stream<ResourceInfo> dirStream = resources.stream();
@@ -81,7 +100,7 @@ public class I18n {
 		}
 		return list;
 	}
-	
+
 	private static void loadLanguageName(String fileName) {
 		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream("lang/" + fileName + ".json")) {
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {

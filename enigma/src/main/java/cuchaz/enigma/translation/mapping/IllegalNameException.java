@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.translation.mapping;
 
+@Deprecated // input validation
 public class IllegalNameException extends RuntimeException {
 
 	private String name;

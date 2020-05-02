@@ -42,7 +42,7 @@ public class RenameS2CPacket implements Packet<ClientPacketHandler> {
 
 	@Override
 	public void handle(ClientPacketHandler controller) {
-		controller.rename(new EntryReference<>(entry, entry.getName()), newName, refreshClassTree, false);
+		controller.rename(new EntryReference<>(entry, entry.getName()), newName, refreshClassTree);
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }
