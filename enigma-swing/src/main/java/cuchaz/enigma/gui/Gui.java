@@ -103,6 +103,7 @@ public class Gui {
 
 	private final JTabbedPane openFiles;
 	private final HashMap<ClassEntry, PanelEditor> editors = new HashMap<>();
+	private final HashMap<ClassEntry, JScrollPane> components = new HashMap<>();
 
 	public JTextField renameTextField;
 
@@ -396,7 +397,9 @@ public class Gui {
 			ClassHandle ch = controller.getClassHandleProvider().openClass(entry);
 			if (ch == null) return null;
 			PanelEditor ed = new PanelEditor(this, ch);
-			openFiles.addTab(ed.getFileName(), ed.getUi());
+			JScrollPane scrollPane = new JScrollPane(ed.getUi());
+			openFiles.addTab(ed.getFileName(), scrollPane);
+			components.put(e, scrollPane);
 			ed.addListener(new EditorActionListener() {
 				@Override
 				public void onCursorReferenceChanged(PanelEditor editor, EntryReference<Entry<?>, Entry<?>> ref) {
@@ -404,9 +407,11 @@ public class Gui {
 				}
 
 				@Override
-				public void onClassHandleChanged(PanelEditor editor, ClassHandle ch) {
-					editors.values().remove(editor);
+				public void onClassHandleChanged(PanelEditor editor, ClassEntry old, ClassHandle ch) {
+					editors.remove(old);
+					JScrollPane scrollPane = Objects.requireNonNull(components.remove(old));
 					editors.put(ch.getRef(), editor);
+					components.put(ch.getRef(), scrollPane);
 				}
 
 				@Override
@@ -417,7 +422,7 @@ public class Gui {
 			return ed;
 		});
 		if (panelEditor != null) {
-			openFiles.setSelectedComponent(panelEditor.getUi());
+			openFiles.setSelectedComponent(components.get(entry));
 		}
 		return panelEditor;
 	}
@@ -439,6 +444,7 @@ public class Gui {
 		for (Iterator<PanelEditor> iter = editors.values().iterator(); iter.hasNext(); ) {
 			PanelEditor e = iter.next();
 			openFiles.remove(e.getUi());
+			components.remove(e.getClassHandle().getRef());
 			e.destroy();
 			iter.remove();
 		}

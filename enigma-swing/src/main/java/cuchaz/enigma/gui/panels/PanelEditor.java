@@ -13,6 +13,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.swing.JEditorPane;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
 
@@ -224,15 +225,16 @@ public class PanelEditor {
 			this.boxHighlightPainters = boxHighlightPainters;
 		};
 
-		setClassHandle0(handle);
+		setClassHandle0(null, handle);
 	}
 
 	public void setClassHandle(ClassHandle handle) {
+		ClassEntry old = this.classHandle.getRef();
 		this.classHandle.close();
-		setClassHandle0(handle);
+		setClassHandle0(old, handle);
 	}
 
-	private void setClassHandle0(ClassHandle handle) {
+	private void setClassHandle0(ClassEntry old, ClassHandle handle) {
 		setCursorReference(null);
 
 		handle.addListener(new ClassHandleListener() {
@@ -253,10 +255,10 @@ public class PanelEditor {
 			}
 		});
 
-		handle.getSource().thenAcceptAsync(s -> setSource(s));
+		handle.getSource().thenAcceptAsync(s -> setSource(s), SwingUtilities::invokeLater);
 
 		this.classHandle = handle;
-		listeners.forEach(l -> l.onClassHandleChanged(this, handle));
+		listeners.forEach(l -> l.onClassHandleChanged(this, old, handle));
 	}
 
 	public void setup() {
