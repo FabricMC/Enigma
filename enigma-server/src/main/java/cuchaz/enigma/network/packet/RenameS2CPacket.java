@@ -1,12 +1,12 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.network.ClientPacketHandler;
-import cuchaz.enigma.translation.representation.entry.Entry;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.network.ClientPacketHandler;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public class RenameS2CPacket implements Packet<ClientPacketHandler> {
 	private int syncId;
