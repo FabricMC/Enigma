@@ -7,7 +7,7 @@ defined by Java's [DataOutputStream](https://docs.oracle.com/javase/7/docs/api/j
 big-endian order for multi-byte integers (`short`, `int` and `long`). The one exception is for Strings, which do *not*
 use the same modified UTF format as in `DataOutputStream`, I repeat, the normal `writeUTF` method in `DataOutputStream`
 (and the corresponding method in `DataInputStream`) should *not* be used. Instead, there is a custom `utf` struct for
-Strings, seebelow.
+Strings, see below.
 
 ## Login protocol
 ```
