@@ -124,6 +124,7 @@ public final class ClassHandleProvider {
 
 		private final ClassHandleProvider p;
 		private final ClassEntry entry;
+		private ClassEntry deobfRef;
 		private final List<ClassHandleImpl> handles = new ArrayList<>();
 		private Source uncommentedSource;
 		private DecompiledClassSource source;
@@ -141,6 +142,7 @@ public final class ClassHandleProvider {
 		private Entry(ClassHandleProvider p, ClassEntry entry) {
 			this.p = p;
 			this.entry = entry;
+			this.deobfRef = p.project.getMapper().deobfuscate(entry);
 			invalidate();
 		}
 
@@ -152,15 +154,32 @@ public final class ClassHandleProvider {
 			return handle;
 		}
 
+		@Nullable
+		public ClassEntry getDeobfRef() {
+			return deobfRef;
+		}
+
+		private void checkDeobfRefForUpdate() {
+			ClassEntry newDeobf = p.project.getMapper().deobfuscate(entry);
+			if (!Objects.equals(deobfRef, newDeobf)) {
+				deobfRef = newDeobf;
+				// copy the list so we don't call event listener code with the lock active
+				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDeobfRefChanged(newDeobf));
+			}
+		}
+
 		public void invalidate() {
+			checkDeobfRefForUpdate();
 			continueMapSource(continueIndexSource(continueInsertJavadoc(decompile())));
 		}
 
 		public void invalidateJavadoc() {
+			checkDeobfRefForUpdate();
 			continueMapSource(continueIndexSource(continueInsertJavadoc(CompletableFuture.completedFuture(uncommentedSource))));
 		}
 
 		public void invalidateMapped() {
+			checkDeobfRefForUpdate();
 			continueMapSource(CompletableFuture.completedFuture(source));
 		}
 
@@ -171,7 +190,7 @@ public final class ClassHandleProvider {
 
 				Source uncommentedSource = p.decompiler.getSource(entry.getFullName());
 				Entry.this.uncommentedSource = uncommentedSource;
-				withLock(lock.readLock(), () -> handles.forEach(h -> h.onUncommentedSourceChanged(uncommentedSource)));
+				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onUncommentedSourceChanged(uncommentedSource));
 				return uncommentedSource;
 			}, p.pool);
 		}
@@ -182,7 +201,7 @@ public final class ClassHandleProvider {
 				if (uncommentedSource == null || javadocVersion.get() != v) return null;
 
 				Source source = uncommentedSource.addJavadocs(p.project.getMapper());
-				withLock(lock.readLock(), () -> handles.forEach(h -> h.onDocsChanged(source)));
+				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDocsChanged(source));
 				return source;
 			}, p.pool);
 		}
@@ -206,7 +225,7 @@ public final class ClassHandleProvider {
 				if (source == null || mappedVersion.get() != v) return;
 
 				source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
-				withLock(lock.readLock(), () -> handles.forEach(h -> h.onMappedSourceChanged(source)));
+				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onMappedSourceChanged(source));
 			}, p.pool);
 		}
 
@@ -247,7 +266,6 @@ public final class ClassHandleProvider {
 				return f;
 			}
 		}
-
 	}
 
 	private static final class ClassHandleImpl implements ClassHandle {
@@ -273,7 +291,7 @@ public final class ClassHandleProvider {
 		public ClassEntry getDeobfRef() {
 			checkValid();
 			// cache this?
-			return entry.p.project.getMapper().deobfuscate(entry.entry);
+			return entry.getDeobfRef();
 		}
 
 		@Override
@@ -298,6 +316,10 @@ public final class ClassHandleProvider {
 
 		public void onMappedSourceChanged(DecompiledClassSource source) {
 			listeners.forEach(l -> l.onMappedSourceChanged(this, source));
+		}
+
+		public void onDeobfRefChanged(ClassEntry newDeobf) {
+			listeners.forEach(l -> l.onDeobfRefChanged(this, newDeobf));
 		}
 
 		@Override

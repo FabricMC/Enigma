@@ -239,7 +239,7 @@ public class PanelEditor {
 
 		handle.addListener(new ClassHandleListener() {
 			@Override
-			public void onDeobfRefChanged(ClassHandle h) {
+			public void onDeobfRefChanged(ClassHandle h, ClassEntry deobfRef) {
 				listeners.forEach(l -> l.onTitleChanged(PanelEditor.this, getFileName()));
 			}
 

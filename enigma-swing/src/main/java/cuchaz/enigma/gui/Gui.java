@@ -416,7 +416,7 @@ public class Gui {
 
 				@Override
 				public void onTitleChanged(PanelEditor editor, String title) {
-					openFiles.setTitleAt(openFiles.indexOfComponent(editor.getUi()), editor.getFileName());
+					openFiles.setTitleAt(openFiles.indexOfComponent(editorScrollPanes.get(editor.getClassHandle().getRef())), editor.getFileName());
 				}
 			});
 			return ed;

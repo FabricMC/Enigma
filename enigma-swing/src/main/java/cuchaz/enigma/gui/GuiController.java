@@ -359,7 +359,7 @@ public class GuiController implements ClientPacketHandler {
 			mapper.mapFromObf(entry, new EntryMapping(entry.getName(), modifier));
 		}
 
-		chp.invalidateMapped(entry.getContainingClass());
+		chp.invalidateMapped();
 	}
 
 	public ClassInheritanceTreeNode getClassInheritance(ClassEntry entry) {
@@ -420,7 +420,7 @@ public class GuiController implements ClientPacketHandler {
 		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
 			this.gui.moveClassTree(reference, newName);
 
-		chp.invalidateMapped(reference.getLocationClassEntry());
+		chp.invalidateMapped();
 	}
 
 	@Override
@@ -430,7 +430,7 @@ public class GuiController implements ClientPacketHandler {
 		if (reference.entry instanceof ClassEntry)
 			this.gui.moveClassTree(reference, false, true);
 
-		chp.invalidateMapped(reference.getLocationClassEntry());
+		chp.invalidateMapped();
 	}
 
 	@Override
@@ -462,7 +462,7 @@ public class GuiController implements ClientPacketHandler {
 		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
 			this.gui.moveClassTree(reference, true, false);
 
-		chp.invalidateMapped(reference.getLocationClassEntry());
+		chp.invalidateMapped();
 	}
 
 	public void openStats(Set<StatsMember> includedMembers) {
