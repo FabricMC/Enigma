@@ -1,12 +1,14 @@
 package cuchaz.enigma;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
+import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
@@ -39,13 +41,16 @@ public class EnigmaProject {
 
 	private final ClassCache classCache;
 	private final JarIndex jarIndex;
+	private final byte[] jarChecksum;
 
 	private EntryRemapper mapper;
 
-	public EnigmaProject(Enigma enigma, ClassCache classCache, JarIndex jarIndex) {
+	public EnigmaProject(Enigma enigma, ClassCache classCache, JarIndex jarIndex, byte[] jarChecksum) {
+		Preconditions.checkArgument(jarChecksum.length == EnigmaServer.CHECKSUM_SIZE);
 		this.enigma = enigma;
 		this.classCache = classCache;
 		this.jarIndex = jarIndex;
+		this.jarChecksum = jarChecksum;
 
 		this.mapper = EntryRemapper.empty(jarIndex);
 	}
@@ -68,6 +73,10 @@ public class EnigmaProject {
 
 	public JarIndex getJarIndex() {
 		return jarIndex;
+	}
+
+	public byte[] getJarChecksum() {
+		return jarChecksum;
 	}
 
 	public EntryRemapper getMapper() {

@@ -15,6 +15,8 @@ import com.google.common.io.CharStreams;
 import org.objectweb.asm.Opcodes;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -22,13 +24,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class Utils {
 	
@@ -98,6 +103,19 @@ public class Utils {
 		manager.setInitialDelay(oldDelay);
 	}
 
+	public static Rectangle safeModelToView(JTextComponent component, int modelPos) {
+		if (modelPos < 0) {
+			modelPos = 0;
+		} else if (modelPos >= component.getText().length()) {
+			modelPos = component.getText().length();
+		}
+		try {
+			return component.modelToView(modelPos);
+		} catch (BadLocationException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public static boolean getSystemPropertyAsBoolean(String property, boolean defValue) {
 		String value = System.getProperty(property);
 		return value == null ? defValue : Boolean.parseBoolean(value);
@@ -111,11 +129,51 @@ public class Utils {
 		}
 	}
 
+	public static byte[] zipSha1(Path path) throws IOException {
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			// Algorithm guaranteed to be supported
+			throw new RuntimeException(e);
+		}
+		try (ZipFile zip = new ZipFile(path.toFile())) {
+			List<? extends ZipEntry> entries = Collections.list(zip.entries());
+			// only compare classes (some implementations may not generate directory entries)
+			entries.removeIf(entry -> !entry.getName().toLowerCase(Locale.ROOT).endsWith(".class"));
+			// different implementations may add zip entries in a different order
+			entries.sort(Comparator.comparing(ZipEntry::getName));
+			byte[] buffer = new byte[8192];
+			for (ZipEntry entry : entries) {
+				digest.update(entry.getName().getBytes(StandardCharsets.UTF_8));
+				try (InputStream in = zip.getInputStream(entry)) {
+					int n;
+					while ((n = in.read(buffer)) != -1) {
+						digest.update(buffer, 0, n);
+					}
+				}
+			}
+		}
+		return digest.digest();
+	}
+
 	public static String caplisiseCamelCase(String input){
 		StringJoiner stringJoiner = new StringJoiner(" ");
 		for (String word : input.toLowerCase(Locale.ROOT).split("_")) {
 			stringJoiner.add(word.substring(0, 1).toUpperCase(Locale.ROOT) + word.substring(1));
 		}
 		return stringJoiner.toString();
+	}
+
+	public static boolean isBlank(String input) {
+		if (input == null) {
+			return true;
+		}
+		for (int i = 0; i < input.length(); i++) {
+			if (!Character.isWhitespace(input.charAt(i))) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

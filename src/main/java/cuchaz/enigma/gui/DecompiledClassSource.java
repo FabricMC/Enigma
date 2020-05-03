@@ -126,6 +126,32 @@ public class DecompiledClassSource {
 		highlightedTokens.computeIfAbsent(highlightType, t -> new ArrayList<>()).add(token);
 	}
 
+	public int getObfuscatedOffset(int deobfOffset) {
+		return getOffset(remappedIndex, obfuscatedIndex, deobfOffset);
+	}
+
+	public int getDeobfuscatedOffset(int obfOffset) {
+		return getOffset(obfuscatedIndex, remappedIndex, obfOffset);
+	}
+
+	private static int getOffset(SourceIndex fromIndex, SourceIndex toIndex, int fromOffset) {
+		int relativeOffset = 0;
+
+		Iterator<Token> fromTokenItr = fromIndex.referenceTokens().iterator();
+		Iterator<Token> toTokenItr = toIndex.referenceTokens().iterator();
+		while (fromTokenItr.hasNext() && toTokenItr.hasNext()) {
+			Token fromToken = fromTokenItr.next();
+			Token toToken = toTokenItr.next();
+			if (fromToken.end > fromOffset) {
+				break;
+			}
+
+			relativeOffset = toToken.end - fromToken.end;
+		}
+
+		return fromOffset + relativeOffset;
+	}
+
 	@Override
 	public String toString() {
 		return remappedIndex.getSource();

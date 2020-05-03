@@ -34,6 +34,7 @@ import cuchaz.enigma.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
+import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
@@ -46,10 +47,12 @@ import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
 import cuchaz.enigma.gui.util.History;
+import cuchaz.enigma.network.packet.*;
 import cuchaz.enigma.throwables.IllegalNameException;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Message;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.Utils;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
@@ -63,8 +66,11 @@ public class Gui {
 	private final MenuBar menuBar;
 	// state
 	public History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
+	public EntryReference<Entry<?>, Entry<?>> renamingReference;
 	public EntryReference<Entry<?>, Entry<?>> cursorReference;
 	private boolean shouldNavigateOnClick;
+	private ConnectionState connectionState;
+	private boolean isJarOpen;
 
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
@@ -76,6 +82,7 @@ public class Gui {
 	private JFrame frame;
 	public Config.LookAndFeel editorFeel;
 	public PanelEditor editor;
+	public JScrollPane sourceScroller;
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
 	private PanelIdentifier infoPanel;
@@ -86,6 +93,20 @@ public class Gui {
 	private JTree callsTree;
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
+
+	private JSplitPane splitRight;
+	private JSplitPane logSplit;
+	private CollapsibleTabbedPane logTabs;
+	private JList<String> users;
+	private DefaultListModel<String> userModel;
+	private JScrollPane messageScrollPane;
+	private JList<Message> messages;
+	private DefaultListModel<Message> messageModel;
+	private JTextField chatBox;
+
+	private JPanel statusBar;
+	private JLabel connectionStatusLabel;
+	private JLabel statusLabel;
 
 	public JTextField renameTextField;
 	public JTextArea javadocTextArea;
@@ -150,7 +171,7 @@ public class Gui {
 		// init editor
 		selectionHighlightPainter = new SelectionHighlightPainter();
 		this.editor = new PanelEditor(this);
-		JScrollPane sourceScroller = new JScrollPane(this.editor);
+		this.sourceScroller = new JScrollPane(this.editor);
 		this.editor.setContentType("text/enigma-sources");
 		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
@@ -283,7 +304,34 @@ public class Gui {
 		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritancePanel);
 		tabs.addTab(I18n.translate("info_panel.tree.implementations"), implementationsPanel);
 		tabs.addTab(I18n.translate("info_panel.tree.calls"), callPanel);
-		JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, tabs);
+		logTabs = new CollapsibleTabbedPane(JTabbedPane.BOTTOM);
+		userModel = new DefaultListModel<>();
+		users = new JList<>(userModel);
+		messageModel = new DefaultListModel<>();
+		messages = new JList<>(messageModel);
+		messages.setCellRenderer(new MessageListCellRenderer());
+		JPanel messagePanel = new JPanel(new BorderLayout());
+		messageScrollPane = new JScrollPane(this.messages);
+		messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+		JPanel chatPanel = new JPanel(new BorderLayout());
+		chatBox = new JTextField();
+		AbstractAction sendListener = new AbstractAction("Send") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				sendMessage();
+			}
+		};
+		chatBox.addActionListener(sendListener);
+		JButton chatSendButton = new JButton(sendListener);
+		chatPanel.add(chatBox, BorderLayout.CENTER);
+		chatPanel.add(chatSendButton, BorderLayout.EAST);
+		messagePanel.add(chatPanel, BorderLayout.SOUTH);
+		logTabs.addTab(I18n.translate("log_panel.users"), new JScrollPane(this.users));
+		logTabs.addTab(I18n.translate("log_panel.messages"), messagePanel);
+		logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
+		logSplit.setResizeWeight(0.5);
+		logSplit.resetToPreferredSizes();
+		splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
 		JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
@@ -294,7 +342,17 @@ public class Gui {
 		this.menuBar = new MenuBar(this);
 		this.frame.setJMenuBar(this.menuBar);
 
+		// init status bar
+		statusBar = new JPanel(new BorderLayout());
+		statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
+		connectionStatusLabel = new JLabel();
+		statusLabel = new JLabel();
+		statusBar.add(statusLabel, BorderLayout.CENTER);
+		statusBar.add(connectionStatusLabel, BorderLayout.EAST);
+		pane.add(statusBar, BorderLayout.SOUTH);
+
 		// init state
+		setConnectionState(ConnectionState.NOT_CONNECTED);
 		onCloseJar();
 
 		this.frame.addWindowListener(new WindowAdapter() {
@@ -334,18 +392,14 @@ public class Gui {
 		setEditorText(null);
 
 		// update menu
-		this.menuBar.closeJarMenu.setEnabled(true);
-		this.menuBar.openMappingsMenus.forEach(item -> item.setEnabled(true));
-		this.menuBar.saveMappingsMenu.setEnabled(false);
-		this.menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(true));
-		this.menuBar.closeMappingsMenu.setEnabled(true);
-		this.menuBar.exportSourceMenu.setEnabled(true);
-		this.menuBar.exportJarMenu.setEnabled(true);
+		isJarOpen = true;
 
+		updateUiState();
 		redraw();
 	}
 
 	public void onCloseJar() {
+
 		// update gui
 		this.frame.setTitle(Constants.NAME);
 		setObfClasses(null);
@@ -354,14 +408,10 @@ public class Gui {
 		this.classesPanel.removeAll();
 
 		// update menu
-		this.menuBar.closeJarMenu.setEnabled(false);
-		this.menuBar.openMappingsMenus.forEach(item -> item.setEnabled(false));
-		this.menuBar.saveMappingsMenu.setEnabled(false);
-		this.menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(false));
-		this.menuBar.closeMappingsMenu.setEnabled(false);
-		this.menuBar.exportSourceMenu.setEnabled(false);
-		this.menuBar.exportJarMenu.setEnabled(false);
+		isJarOpen = false;
+		setMappingsFile(null);
 
+		updateUiState();
 		redraw();
 	}
 
@@ -375,7 +425,7 @@ public class Gui {
 
 	public void setMappingsFile(Path path) {
 		this.enigmaMappingsFileChooser.setSelectedFile(path != null ? path.toFile() : null);
-		this.menuBar.saveMappingsMenu.setEnabled(path != null);
+		updateUiState();
 	}
 
 	public void setEditorText(String source) {
@@ -561,10 +611,12 @@ public class Gui {
 		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
 		boolean isRenamable = isToken && this.controller.project.isRenamable(cursorReference);
 
-		if (isToken) {
-			showCursorReference(cursorReference);
-		} else {
-			infoPanel.clearReference();
+		if (!isRenaming()) {
+			if (isToken) {
+				showCursorReference(cursorReference);
+			} else {
+				infoPanel.clearReference();
+			}
 		}
 
 		this.popupMenu.renameMenu.setEnabled(isRenamable);
@@ -586,6 +638,11 @@ public class Gui {
 	}
 
 	public void startDocChange() {
+		EntryReference<Entry<?>, Entry<?>> curReference = cursorReference;
+		if (isRenaming()) {
+			finishRename(false);
+		}
+		renamingReference = curReference;
 
 		// init the text box
 		javadocTextArea = new JTextArea(10, 40);
@@ -603,7 +660,8 @@ public class Gui {
 		String newName = javadocTextArea.getText();
 		if (saveName) {
 			try {
-				this.controller.changeDocs(cursorReference, newName);
+				this.controller.changeDocs(renamingReference, newName);
+				this.controller.sendPacket(new ChangeDocsC2SPacket(renamingReference.getNameableEntry(), newName));
 			} catch (IllegalNameException ex) {
 				javadocTextArea.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				javadocTextArea.setToolTipText(ex.getReason());
@@ -665,14 +723,19 @@ public class Gui {
 		else
 			renameTextField.selectAll();
 
+		renamingReference = cursorReference;
+
 		redraw();
 	}
 
 	private void finishRename(boolean saveName) {
 		String newName = renameTextField.getText();
+
 		if (saveName && newName != null && !newName.isEmpty()) {
 			try {
-				this.controller.rename(cursorReference, newName, true);
+				this.controller.rename(renamingReference, newName, true);
+				this.controller.sendPacket(new RenameC2SPacket(renamingReference.getNameableEntry(), newName, true));
+				renameTextField = null;
 			} catch (IllegalNameException ex) {
 				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
 				renameTextField.setToolTipText(ex.getReason());
@@ -681,16 +744,18 @@ public class Gui {
 			return;
 		}
 
-		// abort the rename
-		JPanel panel = (JPanel) infoPanel.getComponent(0);
-		panel.remove(panel.getComponentCount() - 1);
-		panel.add(Utils.unboldLabel(new JLabel(cursorReference.getNameableName(), JLabel.LEFT)));
-
 		renameTextField = null;
+
+		// abort the rename
+		showCursorReference(cursorReference);
 
 		this.editor.grabFocus();
 
 		redraw();
+	}
+
+	private boolean isRenaming() {
+		return renameTextField != null;
 	}
 
 	public void showInheritance() {
@@ -783,8 +848,10 @@ public class Gui {
 
 		if (!Objects.equals(obfEntry, deobfEntry)) {
 			this.controller.removeMapping(cursorReference);
+			this.controller.sendPacket(new RemoveMappingC2SPacket(cursorReference.getNameableEntry()));
 		} else {
 			this.controller.markAsDeobfuscated(cursorReference);
+			this.controller.sendPacket(new MarkDeobfuscatedC2SPacket(cursorReference.getNameableEntry()));
 		}
 	}
 
@@ -850,6 +917,7 @@ public class Gui {
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
 				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
+				this.controller.sendPacket(new RenameC2SPacket(prevDataChild, dataChild.getFullName(), false));
 				childNode.setUserObject(dataChild);
 			}
 			node.setUserObject(data);
@@ -857,8 +925,10 @@ public class Gui {
 			this.deobfPanel.deobfClasses.reload();
 		}
 		// class rename
-		else if (data instanceof ClassEntry)
+		else if (data instanceof ClassEntry) {
 			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
+			this.controller.sendPacket(new RenameC2SPacket((ClassEntry) prevData, ((ClassEntry) data).getFullName(), false));
+		}
 	}
 
 	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, String newName) {
@@ -918,6 +988,71 @@ public class Gui {
 			searchDialog = new SearchDialog(this);
 		}
 		return searchDialog;
+	}
+
+
+	public MenuBar getMenuBar() {
+		return menuBar;
+	}
+
+	public void addMessage(Message message) {
+		JScrollBar verticalScrollBar = messageScrollPane.getVerticalScrollBar();
+		boolean isAtBottom = verticalScrollBar.getValue() >= verticalScrollBar.getMaximum() - verticalScrollBar.getModel().getExtent();
+		messageModel.addElement(message);
+		if (isAtBottom) {
+			SwingUtilities.invokeLater(() -> verticalScrollBar.setValue(verticalScrollBar.getMaximum() - verticalScrollBar.getModel().getExtent()));
+		}
+		statusLabel.setText(message.translate());
+	}
+
+	public void setUserList(List<String> users) {
+		userModel.clear();
+		users.forEach(userModel::addElement);
+		connectionStatusLabel.setText(String.format(I18n.translate("status.connected_user_count"), users.size()));
+	}
+
+	private void sendMessage() {
+		String text = chatBox.getText().trim();
+		if (!text.isEmpty()) {
+			getController().sendPacket(new MessageC2SPacket(text));
+		}
+		chatBox.setText("");
+	}
+
+	/**
+	 * Updates the state of the UI elements (button text, enabled state, ...) to reflect the current program state.
+	 * This is a central place to update the UI state to prevent multiple code paths from changing the same state,
+	 * causing inconsistencies.
+	 */
+	public void updateUiState() {
+		menuBar.connectToServerMenu.setEnabled(isJarOpen && connectionState != ConnectionState.HOSTING);
+		menuBar.connectToServerMenu.setText(I18n.translate(connectionState != ConnectionState.CONNECTED ? "menu.collab.connect" : "menu.collab.disconnect"));
+		menuBar.startServerMenu.setEnabled(isJarOpen && connectionState != ConnectionState.CONNECTED);
+		menuBar.startServerMenu.setText(I18n.translate(connectionState != ConnectionState.HOSTING ? "menu.collab.server.start" : "menu.collab.server.stop"));
+
+		menuBar.closeJarMenu.setEnabled(isJarOpen);
+		menuBar.openMappingsMenus.forEach(item -> item.setEnabled(isJarOpen));
+		menuBar.saveMappingsMenu.setEnabled(isJarOpen && enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
+		menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(isJarOpen));
+		menuBar.closeMappingsMenu.setEnabled(isJarOpen);
+		menuBar.exportSourceMenu.setEnabled(isJarOpen);
+		menuBar.exportJarMenu.setEnabled(isJarOpen);
+
+		connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
+
+		if (connectionState == ConnectionState.NOT_CONNECTED) {
+			logSplit.setLeftComponent(null);
+			splitRight.setRightComponent(tabs);
+		} else {
+			splitRight.setRightComponent(logSplit);
+			logSplit.setLeftComponent(tabs);
+		}
+	}
+
+	public void setConnectionState(ConnectionState state) {
+		connectionState = state;
+		statusLabel.setText(I18n.translate("status.ready"));
+		updateUiState();
 	}
 
 }

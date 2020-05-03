@@ -24,24 +24,33 @@ import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
+import cuchaz.enigma.network.EnigmaClient;
+import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.network.IntegratedEnigmaServer;
+import cuchaz.enigma.network.ServerPacketHandler;
+import cuchaz.enigma.network.packet.LoginC2SPacket;
+import cuchaz.enigma.network.packet.Packet;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.throwables.MappingParseException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Message;
 import cuchaz.enigma.utils.ReadableToken;
 import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
 import javax.swing.JOptionPane;
-import java.awt.Desktop;
+import javax.swing.SwingUtilities;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.*;
 import java.nio.file.Path;
@@ -75,6 +84,9 @@ public class GuiController {
 
 	private DecompiledClassSource currentSource;
 	private Source uncommentedSource;
+
+	private EnigmaClient client;
+	private EnigmaServer server;
 
 	public GuiController(Gui gui, EnigmaProfile profile) {
 		this.gui = gui;
@@ -141,6 +153,14 @@ public class GuiController {
 				JOptionPane.showMessageDialog(gui.getFrame(), e.getMessage());
 			}
 		});
+	}
+
+	public void openMappings(EntryTree<EntryMapping> mappings) {
+		if (project == null) return;
+
+		project.setMappings(mappings);
+		refreshClasses();
+		refreshCurrentClass();
 	}
 
 	public CompletableFuture<Void> saveMappings(Path path) {
@@ -388,11 +408,39 @@ public class GuiController {
 
 	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, RefreshMode mode) {
 		if (currentSource != null) {
-			loadClass(currentSource.getEntry(), () -> {
-				if (reference != null) {
-					showReference(reference);
+			if (reference == null) {
+				int obfSelectionStart = currentSource.getObfuscatedOffset(gui.editor.getSelectionStart());
+				int obfSelectionEnd = currentSource.getObfuscatedOffset(gui.editor.getSelectionEnd());
+
+				Rectangle viewportBounds = gui.sourceScroller.getViewport().getViewRect();
+				// Here we pick an "anchor position", which we want to stay in the same vertical location on the screen after the new text has been set
+				int anchorModelPos = gui.editor.getSelectionStart();
+				Rectangle anchorViewPos = Utils.safeModelToView(gui.editor, anchorModelPos);
+				if (anchorViewPos.y < viewportBounds.y || anchorViewPos.y >= viewportBounds.y + viewportBounds.height) {
+					anchorModelPos = gui.editor.viewToModel(new Point(0, viewportBounds.y));
+					anchorViewPos = Utils.safeModelToView(gui.editor, anchorModelPos);
 				}
-			}, mode);
+				int obfAnchorPos = currentSource.getObfuscatedOffset(anchorModelPos);
+				Rectangle anchorViewPos_f = anchorViewPos;
+				int scrollX = gui.sourceScroller.getHorizontalScrollBar().getValue();
+
+				loadClass(currentSource.getEntry(), () -> SwingUtilities.invokeLater(() -> {
+					int newAnchorModelPos = currentSource.getDeobfuscatedOffset(obfAnchorPos);
+					Rectangle newAnchorViewPos = Utils.safeModelToView(gui.editor, newAnchorModelPos);
+					int newScrollY = newAnchorViewPos.y - (anchorViewPos_f.y - viewportBounds.y);
+
+					gui.editor.select(currentSource.getDeobfuscatedOffset(obfSelectionStart), currentSource.getDeobfuscatedOffset(obfSelectionEnd));
+					// Changing the selection scrolls to the caret position inside a SwingUtilities.invokeLater call, so
+					// we need to wrap our change to the scroll position inside another invokeLater so it happens after
+					// the caret's own scrolling.
+					SwingUtilities.invokeLater(() -> {
+						gui.sourceScroller.getHorizontalScrollBar().setValue(Math.min(scrollX, gui.sourceScroller.getHorizontalScrollBar().getMaximum()));
+						gui.sourceScroller.getVerticalScrollBar().setValue(Math.min(newScrollY, gui.sourceScroller.getVerticalScrollBar().getMaximum()));
+					});
+				}), mode);
+			} else {
+				loadClass(currentSource.getEntry(), () -> showReference(reference), mode);
+			}
 		}
 	}
 
@@ -528,43 +576,59 @@ public class GuiController {
 	}
 
 	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree) {
+		rename(reference, newName, refreshClassTree, true);
+	}
+
+	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean jumpToReference) {
 		Entry<?> entry = reference.getNameableEntry();
 		project.getMapper().mapFromObf(entry, new EntryMapping(newName));
 
 		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
 			this.gui.moveClassTree(reference, newName);
 
-		refreshCurrentClass(reference);
+		refreshCurrentClass(jumpToReference ? reference : null);
 	}
 
 	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference) {
+		removeMapping(reference, true);
+	}
+
+	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference) {
 		project.getMapper().removeByObf(reference.getNameableEntry());
 
 		if (reference.entry instanceof ClassEntry)
 			this.gui.moveClassTree(reference, false, true);
-		refreshCurrentClass(reference);
+		refreshCurrentClass(jumpToReference ? reference : null);
 	}
 
 	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
-		changeDoc(reference.entry, updatedDocs);
-
-		refreshCurrentClass(reference, RefreshMode.JAVADOCS);
+		changeDocs(reference, updatedDocs, true);
 	}
 
-	public void changeDoc(Entry<?> obfEntry, String newDoc) {
+	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs, boolean jumpToReference) {
+		changeDoc(reference.entry, Utils.isBlank(updatedDocs) ? null : updatedDocs);
+
+		refreshCurrentClass(jumpToReference ? reference : null, RefreshMode.JAVADOCS);
+	}
+
+	private void changeDoc(Entry<?> obfEntry, String newDoc) {
 		EntryRemapper mapper = project.getMapper();
 		if (mapper.getDeobfMapping(obfEntry) == null) {
-			markAsDeobfuscated(obfEntry,false); // NPE
+			markAsDeobfuscated(obfEntry, false); // NPE
 		}
 		mapper.mapFromObf(obfEntry, mapper.getDeobfMapping(obfEntry).withDocs(newDoc), false);
 	}
 
-	public void markAsDeobfuscated(Entry<?> obfEntry, boolean renaming) {
+	private void markAsDeobfuscated(Entry<?> obfEntry, boolean renaming) {
 		EntryRemapper mapper = project.getMapper();
 		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()), renaming);
 	}
 
 	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference) {
+		markAsDeobfuscated(reference, true);
+	}
+
+	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference) {
 		EntryRemapper mapper = project.getMapper();
 		Entry<?> entry = reference.getNameableEntry();
 		mapper.mapFromObf(entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
@@ -572,7 +636,7 @@ public class GuiController {
 		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
 			this.gui.moveClassTree(reference, true, false);
 
-		refreshCurrentClass(reference);
+		refreshCurrentClass(jumpToReference ? reference : null);
 	}
 
 	public void openStats(Set<StatsMember> includedMembers) {
@@ -602,4 +666,64 @@ public class GuiController {
 		decompiler = createDecompiler();
 		refreshCurrentClass(null, RefreshMode.FULL);
 	}
+
+	public EnigmaClient getClient() {
+		return client;
+	}
+
+	public EnigmaServer getServer() {
+		return server;
+	}
+
+	public void createClient(String username, String ip, int port, char[] password) throws IOException {
+		client = new EnigmaClient(this, ip, port);
+		client.connect();
+		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), password, username));
+		gui.setConnectionState(ConnectionState.CONNECTED);
+	}
+
+	public void createServer(int port, char[] password) throws IOException {
+		server = new IntegratedEnigmaServer(project.getJarChecksum(), password, EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
+		server.start();
+		client = new EnigmaClient(this, "127.0.0.1", port);
+		client.connect();
+		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), password, EnigmaServer.OWNER_USERNAME));
+		gui.setConnectionState(ConnectionState.HOSTING);
+	}
+
+	public synchronized void disconnectIfConnected(String reason) {
+		if (client == null && server == null) {
+			return;
+		}
+
+		if (client != null) {
+			client.disconnect();
+		}
+		if (server != null) {
+			server.stop();
+		}
+		client = null;
+		server = null;
+		SwingUtilities.invokeLater(() -> {
+			if (reason != null) {
+				JOptionPane.showMessageDialog(gui.getFrame(), I18n.translate(reason), I18n.translate("disconnect.disconnected"), JOptionPane.INFORMATION_MESSAGE);
+			}
+			gui.setConnectionState(ConnectionState.NOT_CONNECTED);
+		});
+	}
+
+	public void sendPacket(Packet<ServerPacketHandler> packet) {
+		if (client != null) {
+			client.sendPacket(packet);
+		}
+	}
+
+	public void addMessage(Message message) {
+		gui.addMessage(message);
+	}
+
+	public void updateUserList(List<String> users) {
+		gui.setUserList(users);
+	}
+
 }

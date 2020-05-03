@@ -1,5 +1,18 @@
 package cuchaz.enigma.gui.elements;
 
+import cuchaz.enigma.config.Config;
+import cuchaz.enigma.config.Themes;
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.dialog.AboutDialog;
+import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
+import cuchaz.enigma.gui.dialog.CreateServerDialog;
+import cuchaz.enigma.gui.dialog.SearchDialog;
+import cuchaz.enigma.gui.stats.StatsMember;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
+
 import java.awt.Container;
 import java.awt.Desktop;
 import java.awt.FlowLayout;
@@ -13,21 +26,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import javax.swing.*;
 
-import cuchaz.enigma.config.Config;
-import cuchaz.enigma.config.Themes;
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.dialog.AboutDialog;
-import cuchaz.enigma.gui.dialog.SearchDialog;
-import cuchaz.enigma.gui.stats.StatsMember;
-import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.Pair;
 
 import javax.swing.*;
 
@@ -49,6 +52,8 @@ public class MenuBar extends JMenuBar {
 	public final JMenuItem dropMappingsMenu;
 	public final JMenuItem exportSourceMenu;
 	public final JMenuItem exportJarMenu;
+	public final JMenuItem connectToServerMenu;
+	public final JMenuItem startServerMenu;
 	private final Gui gui;
 
 	public MenuBar(Gui gui) {
@@ -342,6 +347,58 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 
+		/*
+		 * Collab menu
+		 */
+		{
+			JMenu menu = new JMenu(I18n.translate("menu.collab"));
+			this.add(menu);
+			{
+				JMenuItem item = new JMenuItem(I18n.translate("menu.collab.connect"));
+				menu.add(item);
+				item.addActionListener(event -> {
+					if (this.gui.getController().getClient() != null) {
+						this.gui.getController().disconnectIfConnected(null);
+						return;
+					}
+					ConnectToServerDialog.Result result = ConnectToServerDialog.show(this.gui.getFrame());
+					if (result == null) {
+						return;
+					}
+					this.gui.getController().disconnectIfConnected(null);
+					try {
+						this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort(), result.getPassword());
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
+						this.gui.getController().disconnectIfConnected(null);
+					}
+					Arrays.fill(result.getPassword(), (char)0);
+				});
+				this.connectToServerMenu = item;
+			}
+			{
+				JMenuItem item = new JMenuItem(I18n.translate("menu.collab.server.start"));
+				menu.add(item);
+				item.addActionListener(event -> {
+					if (this.gui.getController().getServer() != null) {
+						this.gui.getController().disconnectIfConnected(null);
+						return;
+					}
+					CreateServerDialog.Result result = CreateServerDialog.show(this.gui.getFrame());
+					if (result == null) {
+						return;
+					}
+					this.gui.getController().disconnectIfConnected(null);
+					try {
+						this.gui.getController().createServer(result.getPort(), result.getPassword());
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.server.start.error"), JOptionPane.ERROR_MESSAGE);
+						this.gui.getController().disconnectIfConnected(null);
+					}
+				});
+				this.startServerMenu = item;
+			}
+		}
 		/*
 		 * Help menu
 		 */

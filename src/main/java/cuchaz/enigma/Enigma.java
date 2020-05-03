@@ -21,6 +21,7 @@ import cuchaz.enigma.api.service.EnigmaService;
 import cuchaz.enigma.api.service.EnigmaServiceFactory;
 import cuchaz.enigma.api.service.EnigmaServiceType;
 import cuchaz.enigma.api.service.JarIndexerService;
+import cuchaz.enigma.utils.Utils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -50,7 +51,7 @@ public class Enigma {
 
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(classCache, jarIndex));
 
-		return new EnigmaProject(this, classCache, jarIndex);
+		return new EnigmaProject(this, classCache, jarIndex, Utils.zipSha1(path));
 	}
 
 	public EnigmaProfile getProfile() {
