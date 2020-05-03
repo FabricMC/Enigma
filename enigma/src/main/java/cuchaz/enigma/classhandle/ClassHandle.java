@@ -1,11 +1,11 @@
-package cuchaz.enigma.gui.util;
+package cuchaz.enigma.classhandle;
 
 import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nullable;
 
 import cuchaz.enigma.gui.DecompiledClassSource;
-import cuchaz.enigma.gui.events.ClassHandleListener;
+import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 

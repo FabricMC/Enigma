@@ -2,7 +2,7 @@ package cuchaz.enigma.gui.events;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.panels.PanelEditor;
-import cuchaz.enigma.gui.util.ClassHandle;
+import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 

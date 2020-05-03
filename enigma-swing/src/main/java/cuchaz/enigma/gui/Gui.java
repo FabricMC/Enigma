@@ -41,7 +41,7 @@ import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
-import cuchaz.enigma.gui.util.ClassHandle;
+import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.gui.util.ScaleUtil;

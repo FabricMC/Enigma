@@ -1,7 +1,7 @@
-package cuchaz.enigma.gui.events;
+package cuchaz.enigma.events;
 
 import cuchaz.enigma.gui.DecompiledClassSource;
-import cuchaz.enigma.gui.util.ClassHandle;
+import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.source.Source;
 
 public interface ClassHandleListener {

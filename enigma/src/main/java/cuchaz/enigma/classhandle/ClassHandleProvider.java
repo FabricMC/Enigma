@@ -1,4 +1,4 @@
-package cuchaz.enigma.gui;
+package cuchaz.enigma.classhandle;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -13,8 +13,8 @@ import javax.annotation.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
-import cuchaz.enigma.gui.events.ClassHandleListener;
-import cuchaz.enigma.gui.util.ClassHandle;
+import cuchaz.enigma.events.ClassHandleListener;
+import cuchaz.enigma.gui.DecompiledClassSource;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Utils;
@@ -22,7 +22,6 @@ import org.objectweb.asm.tree.ClassNode;
 
 import static cuchaz.enigma.utils.Utils.withLock;
 
-// TODO move out of gui package
 public final class ClassHandleProvider {
 
 	private final EnigmaProject project;
