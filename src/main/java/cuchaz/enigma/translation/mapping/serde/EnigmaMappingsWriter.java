@@ -271,7 +271,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected String writeMethod(MethodEntry entry, EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder(EnigmaFormat.METHOD + " ");
 		builder.append(entry.getName()).append(' ');
-		writeMapping(builder, mapping);
+		if (mapping != null && !mapping.getTargetName().equals(entry.getName())) {
+			writeMapping(builder, mapping);
+		}
 
 		builder.append(entry.getDesc().toString());
 
@@ -281,7 +283,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected String writeField(FieldEntry entry, EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder(EnigmaFormat.FIELD + " ");
 		builder.append(entry.getName()).append(' ');
-		writeMapping(builder, mapping);
+		if (mapping != null && !mapping.getTargetName().equals(entry.getName())) {
+			writeMapping(builder, mapping);
+		}
 
 		builder.append(entry.getDesc().toString());
 

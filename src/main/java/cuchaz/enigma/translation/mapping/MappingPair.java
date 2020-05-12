@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 public class MappingPair<E extends Entry<?>, M> {
 	private final E entry;
-	private final M mapping;
+	private M mapping;
 
 	public MappingPair(E entry, @Nullable M mapping) {
 		this.entry = entry;
@@ -24,5 +24,9 @@ public class MappingPair<E extends Entry<?>, M> {
 	@Nullable
 	public M getMapping() {
 		return mapping;
+	}
+
+	public void setMapping(M mapping) {
+		this.mapping = mapping;
 	}
 }
