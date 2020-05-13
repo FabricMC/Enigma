@@ -179,8 +179,9 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			throw new IllegalStateException("Javadoc has no parent!");
 		// Empty string to concat
 		String jdLine = tokens.length > 1 ? String.join(" ", Arrays.copyOfRange(tokens,1,tokens.length))  : "";
-		if (parent.getMapping() == null)
-			throw new IllegalStateException("Javadoc requires a mapping!");
+		if (parent.getMapping() == null) {
+			parent.setMapping(new RawEntryMapping(parent.getEntry().getName(), AccessModifier.UNCHANGED));
+		}
 		parent.getMapping().addJavadocLine(MappingHelper.unescape(jdLine));
 	}
 
@@ -228,7 +229,10 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		AccessModifier modifier = AccessModifier.UNCHANGED;
 		TypeDescriptor descriptor;
 
-		if (tokens.length == 4) {
+		if (tokens.length == 3) {
+			mapping = tokens[1];
+			descriptor = new TypeDescriptor(tokens[2]);
+		} else if (tokens.length == 4) {
 			AccessModifier parsedModifier = parseModifier(tokens[3]);
 			if (parsedModifier != null) {
 				descriptor = new TypeDescriptor(tokens[2]);
