@@ -1,0 +1,63 @@
+configurations {
+    proGuard
+}
+
+dependencies {
+    implementation 'org.ow2.asm:asm:8.0'
+    implementation 'org.ow2.asm:asm-commons:8.0'
+    implementation 'org.ow2.asm:asm-tree:8.0'
+    implementation 'org.ow2.asm:asm-util:8.0'
+
+    implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
+    implementation 'net.fabricmc:cfr:0.0.1'
+
+    testImplementation 'junit:junit:4.+'
+    testImplementation 'org.hamcrest:hamcrest-all:1.+'
+    proGuard 'net.sf.proguard:proguard-base:6.+'
+}
+
+// Generate "version.txt" file
+
+ext.genOutputDir = file("$buildDir/generated-resources")
+
+task generateVersionFile {
+    ext.outputFile = file("$genOutputDir/version.txt")
+    outputs.file(outputFile)
+    doLast {
+        outputFile.text = "${project.version}"
+    }
+}
+
+sourceSets.main.output.dir genOutputDir, builtBy: generateVersionFile
+
+// Generate obfuscated JARs for tests
+
+def libraryJarsArg = JavaVersion.current().java9Compatible ? "<java.home>/jmods" : "<java.home>/lib/rt.jar"
+
+file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
+    if (theFile.directory) {
+        task("${theFile.name}TestJar", type: Jar) {
+            from(sourceSets.test.output) {
+                include "cuchaz/enigma/inputs/$theFile.name/**/*.class"
+                include 'cuchaz/enigma/inputs/Keep.class'
+            }
+
+            archiveFileName = theFile.name + '.jar'
+            destinationDirectory = file('build/test-inputs')
+        }
+
+        task("${theFile.name}TestObf", type: JavaExec,
+                dependsOn: "${theFile.name}TestJar") {
+            main 'proguard.ProGuard'
+            classpath configurations.proGuard
+
+            args '@src/test/resources/proguard-test.conf', '-injars', file('build/test-inputs/' +
+                    "${theFile.name}.jar"), '-libraryjars', libraryJarsArg,
+                    '-outjars', file('build/test-obf/' + "${theFile.name}.jar")
+        }
+
+        test.dependsOn "${theFile.name}TestObf"
+    }
+}
+
+test.dependsOn 'translationTestObf'

@@ -1,0 +1,6 @@
+dependencies {
+    implementation project(':enigma')
+    implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+}
+
+jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.network.DedicatedEnigmaServer'

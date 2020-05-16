@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(':enigma')
+}
+
+jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.command.Main'
