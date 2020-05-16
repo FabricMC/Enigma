@@ -201,8 +201,7 @@ public class PanelEditor {
 						}
 					}
 
-					popupMenu.renameMenu.doClick();
-					gui.renameTextField.setText(name);
+					gui.startRename(PanelEditor.this, name);
 				}
 			}
 
@@ -240,13 +239,20 @@ public class PanelEditor {
 		handle.addListener(new ClassHandleListener() {
 			@Override
 			public void onDeobfRefChanged(ClassHandle h, ClassEntry deobfRef) {
-				listeners.forEach(l -> l.onTitleChanged(PanelEditor.this, getFileName()));
+				SwingUtilities.invokeLater(() -> {
+					listeners.forEach(l -> l.onTitleChanged(PanelEditor.this, getFileName()));
+				});
 			}
 
 			@Override
 			public void onMappedSourceChanged(ClassHandle h, DecompiledClassSource s) {
-				setSource(s);
-				showReference0(cursorReference);
+				SwingUtilities.invokeLater(() -> {
+					EntryReference<Entry<?>, Entry<?>> cr = getCursorReference();
+					setSource(s);
+					if (cr != null) {
+						showReference0(cr);
+					}
+				});
 			}
 
 			@Override
@@ -394,7 +400,7 @@ public class PanelEditor {
 	}
 
 	public void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		cursorReference = reference;
+		setCursorReference(reference);
 		showReference0(reference);
 	}
 

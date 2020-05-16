@@ -2,6 +2,7 @@ package cuchaz.enigma.gui.util;
 
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Insets;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -49,6 +50,10 @@ public class ScaleUtil {
 
 	public static Dimension getDimension(int width, int height) {
 		return new Dimension(scale(width), scale(height));
+	}
+
+	public static Insets getInsets(int top, int left, int bottom, int right) {
+		return new Insets(scale(top), scale(left), scale(bottom), scale(right));
 	}
 
 	public static Font getFont(String fontName, int plain, int fontSize) {
@@ -106,5 +111,4 @@ public class ScaleUtil {
 		}
 		return new BasicTweaker(dpiScaling);
 	}
-
 }

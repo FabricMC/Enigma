@@ -1,32 +1,246 @@
 package cuchaz.enigma.gui.panels;
 
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.util.GuiUtil;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.gui.util.ScaleUtil;
-
-import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.util.function.Consumer;
 
-public class PanelIdentifier extends JPanel {
+import javax.swing.BorderFactory;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import cuchaz.enigma.EnigmaProject;
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.elements.CovertTextField;
+import cuchaz.enigma.gui.events.CovertTextFieldListener;
+import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.ValidationContext;
+
+public class PanelIdentifier {
 
 	private final Gui gui;
+
+	private final JPanel ui;
+
+	private Entry<?> entry;
+	private Entry<?> deobfEntry;
+
+	private CovertTextField nameField;
+
+	private final ValidationContext vc = new ValidationContext();
 
 	public PanelIdentifier(Gui gui) {
 		this.gui = gui;
 
-		this.setLayout(new GridLayout(4, 1, 0, 0));
-		this.setPreferredSize(ScaleUtil.getDimension(0, 100));
-		this.setBorder(BorderFactory.createTitledBorder(I18n.translate("info_panel.identifier")));
+		this.ui = new JPanel();
+		this.ui.setLayout(new GridBagLayout());
+		this.ui.setPreferredSize(ScaleUtil.getDimension(0, 100));
+		this.ui.setBorder(BorderFactory.createTitledBorder(I18n.translate("info_panel.identifier")));
+		this.ui.setEnabled(false);
 	}
 
-	public void clearReference() {
-		this.removeAll();
-		JLabel label = new JLabel(I18n.translate("info_panel.identifier.none"));
-		GuiUtil.unboldLabel(label);
-		label.setHorizontalAlignment(JLabel.CENTER);
-		this.add(label);
-
-		gui.redraw();
+	public void setReference(Entry<?> entry) {
+		this.entry = entry;
+		refreshReference();
 	}
+
+	public boolean startRenaming() {
+		if (this.nameField == null) return false;
+
+		this.nameField.startEditing();
+
+		return true;
+	}
+
+	public boolean startRenaming(String text) {
+		if (this.nameField == null) return false;
+
+		this.nameField.startEditing();
+		this.nameField.setEditText(text);
+
+		return true;
+	}
+
+	private void onModifierChanged(AccessModifier modifier) {
+		throw new IllegalStateException("not implemented");
+	}
+
+	public void refreshReference() {
+		this.deobfEntry = entry == null ? null : gui.getController().project.getMapper().deobfuscate(this.entry);
+
+		this.nameField = null;
+
+		TableHelper th = new TableHelper(this.ui, this.entry, this.gui.getController().project);
+		th.begin();
+		if (this.entry == null) {
+			this.ui.setEnabled(false);
+		} else {
+			this.ui.setEnabled(true);
+
+			if (deobfEntry instanceof ClassEntry) {
+				ClassEntry ce = (ClassEntry) deobfEntry;
+				if (ce.isJre()) {
+					th.addStringRow(I18n.translate("info_panel.identifier.class"), ce.getFullName());
+				} else {
+					this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.class"), ce.getFullName());
+				}
+				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
+			} else if (deobfEntry instanceof FieldEntry) {
+				FieldEntry fe = (FieldEntry) deobfEntry;
+				this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.field"), fe.getName());
+				th.addStringRow(I18n.translate("info_panel.identifier.class"), fe.getParent().getFullName());
+				th.addStringRow(I18n.translate("info_panel.identifier.type_descriptor"), fe.getDesc().toString());
+				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
+			} else if (deobfEntry instanceof MethodEntry) {
+				MethodEntry me = (MethodEntry) deobfEntry;
+				if (me.isConstructor()) {
+					th.addStringRow(I18n.translate("info_panel.identifier.constructor"), me.getParent().getFullName());
+				} else {
+					this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.method"), me.getName());
+					th.addStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
+				}
+				th.addStringRow(I18n.translate("info_panel.identifier.method_descriptor"), me.getDesc().toString());
+				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
+			} else if (deobfEntry instanceof LocalVariableEntry) {
+				LocalVariableEntry lve = (LocalVariableEntry) deobfEntry;
+				this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.variable"), lve.getName());
+				th.addStringRow(I18n.translate("info_panel.identifier.class"), lve.getContainingClass().getFullName());
+				th.addStringRow(I18n.translate("info_panel.identifier.method"), lve.getParent().getName());
+				th.addStringRow(I18n.translate("info_panel.identifier.index"), Integer.toString(lve.getIndex()));
+			} else {
+				th.addStringRow("Name", this.deobfEntry.getName());
+
+				ClassEntry c = this.deobfEntry.getContainingClass();
+				if (c != null) {
+					th.addStringRow("Class", c.getName());
+				}
+			}
+		}
+		th.end();
+
+		if (this.nameField != null) {
+			this.nameField.addListener(new CovertTextFieldListener() {
+				@Override
+				public void onStartEditing(CovertTextField field) {
+					int i = field.getText().lastIndexOf('/');
+					if (i != -1) {
+						field.selectSubstring(i);
+					}
+				}
+
+				@Override
+				public boolean tryStopEditing(CovertTextField field, boolean abort) {
+					if (abort) return true;
+					vc.reset();
+					vc.setActiveElement(field);
+					validateRename(field.getText());
+					return vc.canProceed();
+				}
+
+				@Override
+				public void onStopEditing(CovertTextField field, boolean abort) {
+					if (abort) return;
+					throw new IllegalStateException("not implemented");
+				}
+			});
+		}
+
+		this.ui.validate();
+		this.ui.repaint();
+	}
+
+	private void validateRename(String newName) {
+		vc.raise(Message.INVALID_NAME);
+	}
+
+	public JPanel getUi() {
+		return ui;
+	}
+
+	private static final class TableHelper {
+
+		private final Container c;
+		private final Entry<?> e;
+		private final EnigmaProject project;
+		private final GridBagConstraints col1;
+		private final GridBagConstraints col2;
+
+		public TableHelper(Container c, Entry<?> e, EnigmaProject project) {
+			this.c = c;
+			this.e = e;
+			this.project = project;
+			this.col1 = new GridBagConstraints();
+			this.col2 = new GridBagConstraints();
+			Insets insets = ScaleUtil.getInsets(2, 2, 2, 2);
+			this.col1.gridx = 0;
+			this.col1.gridy = 0;
+			this.col1.insets = insets;
+			this.col1.anchor = GridBagConstraints.WEST;
+			this.col2.gridx = 1;
+			this.col2.gridy = 0;
+			this.col2.weightx = 1.0;
+			this.col2.fill = GridBagConstraints.HORIZONTAL;
+			this.col2.insets = insets;
+			this.col2.anchor = GridBagConstraints.WEST;
+		}
+
+		public void begin() {
+			c.removeAll();
+			c.setLayout(new GridBagLayout());
+		}
+
+		public void addRow(Component c1, Component c2) {
+			c.add(c1, col1);
+			c.add(c2, col2);
+
+			col1.gridy += 1;
+			col2.gridy += 1;
+		}
+
+		public CovertTextField addCovertTextField(String c1, String c2) {
+			CovertTextField textField = new CovertTextField(c2);
+			addRow(new JLabel(c1), textField.getUi());
+			return textField;
+		}
+
+		public void addStringRow(String c1, String c2) {
+			addRow(new JLabel(c1), GuiUtil.unboldLabel(new JLabel(c2)));
+		}
+
+		public JComboBox<AccessModifier> addModifierRow(String c1, Consumer<AccessModifier> changeListener) {
+			if (!project.isRenamable(e))
+				return null;
+			JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
+			EntryMapping mapping = project.getMapper().getDeobfMapping(e);
+			if (mapping != null) {
+				combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
+			} else {
+				combo.setSelectedIndex(AccessModifier.UNCHANGED.ordinal());
+			}
+			combo.addItemListener(event -> {
+				if (event.getStateChange() == ItemEvent.SELECTED) {
+					AccessModifier modifier = (AccessModifier) event.getItem();
+					changeListener.accept(modifier);
+				}
+			});
+
+			addRow(new JLabel(c1), combo);
+
+			return combo;
+		}
+
+		public void end() {
+			// Add an empty panel with y-weight=1 so that all the other elements get placed at the top edge
+			this.col1.weighty = 1.0;
+			c.add(new JPanel(), col1);
+		}
+
+	}
+
 }

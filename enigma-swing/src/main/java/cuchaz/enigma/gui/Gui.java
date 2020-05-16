@@ -11,10 +11,11 @@
 
 package cuchaz.enigma.gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.FileDialog;
 import java.awt.event.*;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.*;
 import java.util.function.Function;
 
@@ -26,6 +27,7 @@ import com.google.common.collect.Lists;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.gui.config.Config;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
@@ -51,9 +53,10 @@ import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.IllegalNameException;
-import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.utils.I18n;
 
@@ -105,8 +108,6 @@ public class Gui {
 	private final HashMap<ClassEntry, PanelEditor> editors = new HashMap<>();
 	private final HashMap<ClassEntry, JScrollPane> editorScrollPanes = new HashMap<>();
 
-	public JTextField renameTextField;
-
 	public Gui(EnigmaProfile profile) {
 		Config.getInstance().lookAndFeel.setGlobalLAF();
 
@@ -152,7 +153,6 @@ public class Gui {
 
 		// init info panel
 		infoPanel = new PanelIdentifier(this);
-		infoPanel.clearReference();
 
 		// init editor
 
@@ -274,7 +274,7 @@ public class Gui {
 		// layout controls
 		JPanel centerPanel = new JPanel();
 		centerPanel.setLayout(new BorderLayout());
-		centerPanel.add(infoPanel, BorderLayout.NORTH);
+		centerPanel.add(infoPanel.getUi(), BorderLayout.NORTH);
 		centerPanel.add(openFiles, BorderLayout.CENTER);
 		tabs = new JTabbedPane();
 		tabs.setPreferredSize(ScaleUtil.getDimension(250, 0));
@@ -477,121 +477,118 @@ public class Gui {
 	private void updateSelectedReference(PanelEditor editor, EntryReference<Entry<?>, Entry<?>> ref) {
 		if (editor != getActiveEditor()) return;
 
-		if (ref != null) {
-			showCursorReference(ref);
-		} else {
-			infoPanel.clearReference();
-		}
+		showCursorReference(ref);
 	}
 
 	private void showCursorReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		if (reference == null) {
-			infoPanel.clearReference();
-			return;
-		}
-
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(reference);
-
-		infoPanel.removeAll();
-		if (translatedReference.entry instanceof ClassEntry) {
-			showClassEntry((ClassEntry) translatedReference.entry);
-		} else if (translatedReference.entry instanceof FieldEntry) {
-			showFieldEntry((FieldEntry) translatedReference.entry);
-		} else if (translatedReference.entry instanceof MethodEntry) {
-			showMethodEntry((MethodEntry) translatedReference.entry);
-		} else if (translatedReference.entry instanceof LocalVariableEntry) {
-			showLocalVariableEntry((LocalVariableEntry) translatedReference.entry);
-		} else {
-			throw new Error("Unknown entry desc: " + translatedReference.entry.getClass().getName());
-		}
-
-		redraw();
+		infoPanel.setReference(reference == null ? null : reference.entry);
+//		if (reference == null) {
+//			infoPanel.clearReference();
+//			return;
+//		}
+//
+//		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(reference);
+//
+//		infoPanel.removeAll();
+//		if (translatedReference.entry instanceof ClassEntry) {
+//			showClassEntry((ClassEntry) reference.entry, (ClassEntry) translatedReference.entry);
+//		} else if (translatedReference.entry instanceof FieldEntry) {
+//			showFieldEntry((FieldEntry) reference.entry, (FieldEntry) translatedReference.entry);
+//		} else if (translatedReference.entry instanceof MethodEntry) {
+//			showMethodEntry((MethodEntry) reference.entry, (MethodEntry) translatedReference.entry);
+//		} else if (translatedReference.entry instanceof LocalVariableEntry) {
+//			showLocalVariableEntry((LocalVariableEntry) translatedReference.entry);
+//		} else {
+//			throw new Error("Unknown entry desc: " + translatedReference.entry.getClass().getName());
+//		}
+//
+//		redraw();
 	}
 
-	private void showLocalVariableEntry(LocalVariableEntry entry) {
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.variable"), entry.getName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getContainingClass().getFullName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getParent().getName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.index"), Integer.toString(entry.getIndex()));
-	}
-
-	private void showClassEntry(ClassEntry entry) {
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getFullName());
-		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
-	}
-
-	private void showFieldEntry(FieldEntry entry) {
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.field"), entry.getName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.type_descriptor"), entry.getDesc().toString());
-		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
-	}
-
-	private void showMethodEntry(MethodEntry entry) {
-		if (entry.isConstructor()) {
-			addNameValue(infoPanel, I18n.translate("info_panel.identifier.constructor"), entry.getParent().getFullName());
-		} else {
-			addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getName());
-			addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
-		}
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method_descriptor"), entry.getDesc().toString());
-		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
-	}
-
-	private void addNameValue(JPanel container, String name, String value) {
-		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
-
-		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-		panel.add(label);
-
-		panel.add(GuiUtil.unboldLabel(new JLabel(value, JLabel.LEFT)));
-
-		container.add(panel);
-	}
-
-	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry<?> entry) {
-		if (!getController().project.isRenamable(entry))
-			return null;
-		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
-		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-		panel.add(label);
-		JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
-		((JLabel) combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
-		combo.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-
-		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry);
-		if (mapping != null) {
-			combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
-		} else {
-			combo.setSelectedIndex(AccessModifier.UNCHANGED.ordinal());
-		}
-
-		combo.addItemListener(event -> {
-			EntryReference<Entry<?>, Entry<?>> cursorReference = getCursorReference();
-			if (cursorReference == null) return;
-
-			if (event.getStateChange() == ItemEvent.SELECTED) {
-				Entry<?> e = cursorReference.entry;
-				AccessModifier modifier = (AccessModifier) event.getItem();
-				getController().onModifierChanged(e, modifier);
-			}
-		});
-
-		panel.add(combo);
-
-		container.add(panel);
-
-		return combo;
-	}
+//	private void showLocalVariableEntry(LocalVariableEntry entry) {
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.variable"), entry.getName());
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getContainingClass().getFullName());
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getParent().getName());
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.index"), Integer.toString(entry.getIndex()));
+//	}
+//
+//	private void showClassEntry(ClassEntry obf, ClassEntry entry) {
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getFullName());
+//		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), obf);
+//	}
+//
+//	private void showFieldEntry(FieldEntry obf, FieldEntry entry) {
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.field"), entry.getName());
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.type_descriptor"), entry.getDesc().toString());
+//		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), obf);
+//	}
+//
+//	private void showMethodEntry(MethodEntry obf, MethodEntry entry) {
+//		if (entry.isConstructor()) {
+//			addNameValue(infoPanel, I18n.translate("info_panel.identifier.constructor"), entry.getParent().getFullName());
+//		} else {
+//			addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getName());
+//			addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
+//		}
+//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method_descriptor"), entry.getDesc().toString());
+//		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), obf);
+//	}
+//
+//	private void addNameValue(JPanel container, String name, String value) {
+//		JPanel panel = new JPanel();
+//		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
+//
+//		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
+//		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
+//		panel.add(label);
+//
+//		panel.add(Utils.unboldLabel(new JLabel(value, JLabel.LEFT)));
+//
+//		container.add(panel);
+//	}
+//
+//	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry<?> entry) {
+//		if (!getController().project.isRenamable(entry))
+//			return null;
+//		JPanel panel = new JPanel();
+//		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
+//		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
+//		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
+//		panel.add(label);
+//		JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
+//		((JLabel) combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
+//		combo.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
+//
+//		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry);
+//		if (mapping != null) {
+//			combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
+//		} else {
+//			combo.setSelectedIndex(AccessModifier.UNCHANGED.ordinal());
+//		}
+//
+//		combo.addItemListener(event -> {
+//			EntryReference<Entry<?>, Entry<?>> cursorReference = getCursorReference();
+//			if (cursorReference == null) return;
+//
+//			if (event.getStateChange() == ItemEvent.SELECTED) {
+//				Entry<?> e = cursorReference.entry;
+//				AccessModifier modifier = (AccessModifier) event.getItem();
+//				getController().onModifierChanged(e, modifier);
+//			}
+//		});
+//
+//		panel.add(combo);
+//
+//		container.add(panel);
+//
+//		return combo;
+//	}
 
 	@Nullable
 	public PanelEditor getActiveEditor() {
 		return editors.values().stream()
-				.filter(e -> e.getUi() == ((JScrollPane)openFiles.getSelectedComponent()).getViewport().getView())
+				.filter(e -> e.getUi() == ((JScrollPane) openFiles.getSelectedComponent()).getViewport().getView())
 				.findFirst()
 				.orElse(null);
 	}
@@ -608,79 +605,87 @@ public class Gui {
 		JavadocDialog.show(frame, getController(), cursorReference);
 	}
 
+	public void startRename(PanelEditor editor, String text) {
+		if (editor != getActiveEditor()) return;
+
+		infoPanel.startRenaming(text);
+	}
+
 	public void startRename(PanelEditor editor) {
-		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-		if (cursorReference == null) return;
+		if (editor != getActiveEditor()) return;
 
-		// init the text box
-		renameTextField = new JTextField();
-
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
-		renameTextField.setText(translatedReference.getNameableName());
-
-		renameTextField.setPreferredSize(ScaleUtil.getDimension(360, ScaleUtil.invert(renameTextField.getPreferredSize().height)));
-		renameTextField.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent event) {
-				switch (event.getKeyCode()) {
-					case KeyEvent.VK_ENTER:
-						finishRename(cursorReference, true);
-						break;
-
-					case KeyEvent.VK_ESCAPE:
-						finishRename(cursorReference, false);
-						break;
-					default:
-						break;
-				}
-			}
-		});
-
-		// find the label with the name and replace it with the text box
-		JPanel panel = (JPanel) infoPanel.getComponent(0);
-		panel.remove(panel.getComponentCount() - 1);
-		panel.add(renameTextField);
-		renameTextField.grabFocus();
-
-		int offset = renameTextField.getText().lastIndexOf('/') + 1;
-		// If it's a class and isn't in the default package, assume that it's deobfuscated.
-		if (translatedReference.getNameableEntry() instanceof ClassEntry && renameTextField.getText().contains("/") && offset != 0)
-			renameTextField.select(offset, renameTextField.getText().length());
-		else
-			renameTextField.selectAll();
-
-		renamingReference = cursorReference;
-
-		redraw();
+		infoPanel.startRenaming();
+//		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
+//		if (cursorReference == null) return;
+//
+//		// init the text box
+//		renameTextField = new JTextField();
+//
+//		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
+//		renameTextField.setText(translatedReference.getNameableName());
+//
+//		renameTextField.setPreferredSize(ScaleUtil.getDimension(360, ScaleUtil.invert(renameTextField.getPreferredSize().height)));
+//		renameTextField.addKeyListener(new KeyAdapter() {
+//			@Override
+//			public void keyPressed(KeyEvent event) {
+//				switch (event.getKeyCode()) {
+//					case KeyEvent.VK_ENTER:
+//						finishRename(cursorReference, true);
+//						break;
+//
+//					case KeyEvent.VK_ESCAPE:
+//						finishRename(cursorReference, false);
+//						break;
+//					default:
+//						break;
+//				}
+//			}
+//		});
+//
+//		// find the label with the name and replace it with the text box
+//		JPanel panel = (JPanel) infoPanel.getComponent(0);
+//		panel.remove(panel.getComponentCount() - 1);
+//		panel.add(renameTextField);
+//		renameTextField.grabFocus();
+//
+//		int offset = renameTextField.getText().lastIndexOf('/') + 1;
+//		// If it's a class and isn't in the default package, assume that it's deobfuscated.
+//		if (translatedReference.getNameableEntry() instanceof ClassEntry && renameTextField.getText().contains("/") && offset != 0)
+//			renameTextField.select(offset, renameTextField.getText().length());
+//		else
+//			renameTextField.selectAll();
+//
+//		renamingReference = cursorReference;
+//
+//		redraw();
 	}
 
-	private void finishRename(EntryReference<Entry<?>, Entry<?>> cursorReference, boolean saveName) {
-		String newName = renameTextField.getText();
+//	private void finishRename(EntryReference<Entry<?>, Entry<?>> cursorReference, boolean saveName) {
+//		String newName = renameTextField.getText();
+//
+//		if (saveName && newName != null && !newName.isEmpty()) {
+//			try {
+//				this.controller.rename(renamingReference, newName, true);
+//				this.controller.sendPacket(new RenameC2SPacket(renamingReference.getNameableEntry(), newName, true));
+//				renameTextField = null;
+//			} catch (IllegalNameException ex) {
+//				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
+//				renameTextField.setToolTipText(ex.getReason());
+//				Utils.showToolTipNow(renameTextField);
+//			}
+//			return;
+//		}
+//
+//		renameTextField = null;
+//
+//		infoPanel.refreshReference();
+//
+//		redraw();
+//	}
 
-		if (saveName && newName != null && !newName.isEmpty()) {
-			try {
-				this.controller.rename(renamingReference, newName, true);
-				this.controller.sendPacket(new RenameC2SPacket(renamingReference.getNameableEntry(), newName, true));
-				renameTextField = null;
-			} catch (IllegalNameException ex) {
-				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
-				renameTextField.setToolTipText(ex.getReason());
-				GuiUtil.showToolTipNow(renameTextField);
-			}
-			return;
-		}
-
-		renameTextField = null;
-
-		// abort the rename
-		showCursorReference(cursorReference);
-
-		redraw();
-	}
-
-	private boolean isRenaming() {
-		return renameTextField != null;
-	}
+//	private boolean isRenaming() {
+//		return renameTextField != null;
+//	}
 
 	public void showInheritance(PanelEditor editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
@@ -968,6 +973,10 @@ public class Gui {
 
 	public ConnectionState getConnectionState() {
 		return this.connectionState;
+	}
+
+	public PanelIdentifier getInfoPanel() {
+		return infoPanel;
 	}
 
 }
