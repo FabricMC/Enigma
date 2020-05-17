@@ -12,6 +12,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.Validatable;
 
@@ -113,10 +114,10 @@ public class ValidatableTextField extends JTextField implements Validatable {
 		super.paint(g);
 		if (!messages.isEmpty()) {
 			g.setColor(Color.RED);
-			int x1 = getWidth() - 9;
-			int x2 = getWidth() - 2;
-			int y1 = 1;
-			int y2 = 8;
+			int x1 = getWidth() - ScaleUtil.scale(8) - 1;
+			int x2 = getWidth() - ScaleUtil.scale(1) - 1;
+			int y1 = ScaleUtil.scale(1);
+			int y2 = ScaleUtil.scale(8);
 			g.fillPolygon(new int[]{x1, x2, x2}, new int[]{y1, y1, y2}, 3);
 		}
 	}
