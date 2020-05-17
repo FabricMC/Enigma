@@ -68,12 +68,11 @@ public class SearchUtil<T extends SearchEntry> {
 					float score = value.getScore(term, hitCount.getOrDefault(value.searchEntry.getIdentifier(), 0));
 					if (score <= 0) return;
 					score = -score; // sort descending
-					int index;
 					try {
 						scoresLock.lock();
 						if (control.get()) return;
 						int dataSize = size.getAndIncrement();
-						index = Arrays.binarySearch(scores, 0, dataSize, score);
+						int index = Arrays.binarySearch(scores, 0, dataSize, score);
 						if (index < 0) {
 							index = ~index;
 						}
