@@ -941,18 +941,18 @@ public class Gui {
 	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, boolean isOldOb, boolean isNewOb) {
 		ClassEntry classEntry = obfReference.entry.getContainingClass();
 
-		// Ob -> deob
 		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
 		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
 
-		if (isOldOb && !isNewOb) {
+		// Ob -> deob
+		if (!isNewOb) {
 			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
 			this.obfPanel.obfClasses.moveClassOut(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
 		// Deob -> ob
-		else if (isNewOb && !isOldOb) {
+		else if (!isOldOb) {
 			this.obfPanel.obfClasses.moveClassIn(classEntry);
 			this.deobfPanel.deobfClasses.moveClassOut(classEntry);
 			this.deobfPanel.deobfClasses.reload();
