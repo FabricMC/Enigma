@@ -36,12 +36,13 @@ import cuchaz.enigma.utils.search.SearchUtil;
 public class SearchDialog {
 
 	private final JTextField searchField;
-	private final DefaultListModel<SearchEntryImpl> classListModel;
+	private DefaultListModel<SearchEntryImpl> classListModel;
 	private final JList<SearchEntryImpl> classList;
 	private final JDialog dialog;
 
 	private final Gui parent;
 	private final SearchUtil<SearchEntryImpl> su;
+	private SearchUtil.SearchControl currentSearch;
 
 	public SearchDialog(Gui parent) {
 		this.parent = parent;
@@ -173,11 +174,13 @@ public class SearchDialog {
 
 	// Updates the list of class names
 	private void updateList() {
-		classListModel.clear();
+		if (currentSearch != null) currentSearch.stop();
 
-		su.search(searchField.getText())
-				.limit(100)
-				.forEach(classListModel::addElement);
+		DefaultListModel<SearchEntryImpl> classListModel = new DefaultListModel<>();
+		this.classListModel = classListModel;
+		classList.setModel(classListModel);
+
+		currentSearch = su.asyncSearch(searchField.getText(), (idx, e) -> SwingUtilities.invokeLater(() -> classListModel.insertElementAt(e, idx)));
 	}
 
 	public void dispose() {
