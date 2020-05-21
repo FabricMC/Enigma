@@ -1,20 +1,22 @@
 package cuchaz.enigma.gui.panels;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JEditorPane;
+
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.config.Config;
 import cuchaz.enigma.gui.BrowserCaret;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.gui.util.ScaleUtil;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class PanelEditor extends JEditorPane {
 	private boolean mouseIsPressed = false;
@@ -40,11 +42,11 @@ public class PanelEditor extends JEditorPane {
 						self.setCaretPosition(self.viewToModel(e.getPoint()));
 						break;
 
-					case 4: // Back navigation
+					case 6: // Back navigation
 						gui.getController().openPreviousReference();
 						break;
 
-					case 5: // Forward navigation
+					case 7: // Forward navigation
 						gui.getController().openNextReference();
 						break;
 				}
