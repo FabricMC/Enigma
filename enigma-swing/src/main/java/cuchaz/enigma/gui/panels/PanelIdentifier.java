@@ -156,7 +156,7 @@ public class PanelIdentifier {
 	private void doRename(String newName) {
 		gui.getController().rename(vc, new EntryReference<>(entry, deobfEntry.getName()), newName, true);
 		if (!vc.canProceed()) return;
-		gui.getController().getClient().sendPacket(new RenameC2SPacket(entry, newName, true));
+		gui.getController().sendPacket(new RenameC2SPacket(entry, newName, true));
 	}
 
 	public JPanel getUi() {
