@@ -39,6 +39,9 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
 
 		configuration.put("Action.quick-find", "cuchaz.enigma.gui.QuickFindAction, menu F");
 
+		// This is an action written in javascript that is useless for enigma's
+		// use case, and removing it causes the editor to load way faster the
+		// first time
 		configuration.remove("Action.insert-date");
 	}
 
