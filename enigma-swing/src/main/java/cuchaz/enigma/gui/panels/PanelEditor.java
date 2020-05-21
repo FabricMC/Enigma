@@ -2,10 +2,8 @@ package cuchaz.enigma.gui.panels;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.Rectangle;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,8 +13,11 @@ import javax.annotation.Nullable;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
+import javax.swing.text.Highlighter.HighlightPainter;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
@@ -422,6 +423,51 @@ public class PanelEditor {
 		} else {
 			gui.showTokens(this, tokens);
 		}
+	}
+
+	public void navigateToToken(Token token, HighlightPainter highlightPainter) {
+		// set the caret position to the token
+		Document document = editor.getDocument();
+		int clampedPosition = Math.min(Math.max(token.start, 0), document.getLength());
+
+		editor.setCaretPosition(clampedPosition);
+		editor.grabFocus();
+
+		try {
+			// make sure the token is visible in the scroll window
+			Rectangle start = editor.modelToView(token.start);
+			Rectangle end = editor.modelToView(token.end);
+			final Rectangle show = start.union(end);
+			show.grow(start.width * 10, start.height * 6);
+			SwingUtilities.invokeLater(() -> editor.scrollRectToVisible(show));
+		} catch (BadLocationException ex) {
+			throw new Error(ex);
+		}
+
+		// highlight the token momentarily
+		final Timer timer = new Timer(200, new ActionListener() {
+			private int counter = 0;
+			private Object highlight = null;
+
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				if (counter % 2 == 0) {
+					try {
+						highlight = editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
+					} catch (BadLocationException ex) {
+						// don't care
+					}
+				} else if (highlight != null) {
+					editor.getHighlighter().removeHighlight(highlight);
+				}
+
+				if (counter++ > 6) {
+					Timer timer = (Timer) event.getSource();
+					timer.stop();
+				}
+			}
+		});
+		timer.start();
 	}
 
 	public void addListener(EditorActionListener listener) {

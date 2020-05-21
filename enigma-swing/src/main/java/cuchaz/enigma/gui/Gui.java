@@ -448,7 +448,7 @@ public class Gui {
 		if (token == null) {
 			throw new IllegalArgumentException("Token cannot be null!");
 		}
-		CodeReader.navigateToToken(editor.getEditor(), token, SelectionHighlightPainter.INSTANCE);
+		editor.navigateToToken(token, SelectionHighlightPainter.INSTANCE);
 		redraw();
 	}
 
