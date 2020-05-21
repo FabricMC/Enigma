@@ -3,6 +3,7 @@ package cuchaz.enigma.gui.panels;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -60,10 +61,25 @@ public class ClosableTabTitlePane {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// for some reason registering a mouse listener on this makes
-				// events never go to the tabbed pane, so we have to select the
-				// tab manually
-				if (SwingUtilities.isLeftMouseButton(e) && parent != null) {
-					parent.setSelectedIndex(parent.indexOfTabComponent(ui));
+				// events never go to the tabbed pane, so we have to redirect
+				// the event for tab selection and context menu to work
+				if (parent != null) {
+					Point pt = new Point(e.getXOnScreen(), e.getYOnScreen());
+					SwingUtilities.convertPointFromScreen(pt, parent);
+					MouseEvent e1 = new MouseEvent(
+							parent,
+							e.getID(),
+							e.getWhen(),
+							e.getModifiersEx(),
+							(int) pt.getX(),
+							(int) pt.getY(),
+							e.getXOnScreen(),
+							e.getYOnScreen(),
+							e.getClickCount(),
+							e.isPopupTrigger(),
+							e.getButton()
+					);
+					parent.dispatchEvent(e1);
 				}
 			}
 		});

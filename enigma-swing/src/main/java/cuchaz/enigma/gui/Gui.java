@@ -35,6 +35,7 @@ import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
+import cuchaz.enigma.gui.elements.EditorTabPopupMenu;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.ValidatableUi;
 import cuchaz.enigma.gui.events.EditorActionListener;
@@ -68,7 +69,6 @@ public class Gui {
 
 	// state
 	public History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
-	public EntryReference<Entry<?>, Entry<?>> renamingReference;
 	private ConnectionState connectionState;
 	private boolean isJarOpen;
 
@@ -103,6 +103,7 @@ public class Gui {
 	private JLabel connectionStatusLabel;
 	private JLabel statusLabel;
 
+	private final EditorTabPopupMenu editorTabPopupMenu;
 	private final JTabbedPane openFiles;
 	private final HashMap<ClassEntry, PanelEditor> editors = new HashMap<>();
 
@@ -265,7 +266,19 @@ public class Gui {
 		callPanel.setResizeWeight(1); // let the top side take all the slack
 		callPanel.resetToPreferredSizes();
 
+		editorTabPopupMenu = new EditorTabPopupMenu(this);
 		openFiles = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
+		openFiles.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					int i = openFiles.getUI().tabForCoordinate(openFiles, e.getX(), e.getY());
+					if (i != -1) {
+						editorTabPopupMenu.show(openFiles, e.getX(), e.getY(), PanelEditor.byUi(openFiles.getComponentAt(i)));
+					}
+				}
+			}
+		});
 
 		// layout controls
 		JPanel centerPanel = new JPanel();
@@ -416,6 +429,16 @@ public class Gui {
 					titlePane.setText(editor.getFileName());
 				}
 			});
+
+			ed.getEditor().addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					if (e.getKeyCode() == KeyEvent.VK_4 && (e.getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) != 0) {
+						closeEditor(ed);
+					}
+				}
+			});
+
 			return ed;
 		});
 		if (panelEditor != null) {
@@ -446,8 +469,31 @@ public class Gui {
 	public void closeAllEditorTabs() {
 		for (Iterator<PanelEditor> iter = editors.values().iterator(); iter.hasNext(); ) {
 			PanelEditor e = iter.next();
-			closeEditor(e);
+			openFiles.remove(e.getUi());
+			e.destroy();
 			iter.remove();
+		}
+	}
+
+	public void closeTabsLeftOf(PanelEditor ed) {
+		int index = openFiles.indexOfComponent(ed.getUi());
+		for (int i = index - 1; i >= 0; i--) {
+			closeEditor(PanelEditor.byUi(openFiles.getComponentAt(i)));
+		}
+	}
+
+	public void closeTabsRightOf(PanelEditor ed) {
+		int index = openFiles.indexOfComponent(ed.getUi());
+		for (int i = openFiles.getTabCount() - 1; i > index; i--) {
+			closeEditor(PanelEditor.byUi(openFiles.getComponentAt(i)));
+		}
+	}
+
+	public void closeTabsExcept(PanelEditor ed) {
+		int index = openFiles.indexOfComponent(ed.getUi());
+		for (int i = openFiles.getTabCount() - 1; i >= 0; i--) {
+			if (i == index) continue;
+			closeEditor(PanelEditor.byUi(openFiles.getComponentAt(i)));
 		}
 	}
 
