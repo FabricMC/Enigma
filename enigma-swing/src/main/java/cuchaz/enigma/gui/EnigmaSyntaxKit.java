@@ -38,6 +38,8 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
 		configuration.put("RightMarginColumn", "999"); //No need to have a right margin, if someone wants it add a config
 
 		configuration.put("Action.quick-find", "cuchaz.enigma.gui.QuickFindAction, menu F");
+
+		configuration.remove("Action.insert-date");
 	}
 
 	public static void invalidate() {
