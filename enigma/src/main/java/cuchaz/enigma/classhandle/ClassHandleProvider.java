@@ -40,6 +40,14 @@ public final class ClassHandleProvider {
 		this.decompiler = createDecompiler();
 	}
 
+	/**
+	 * Open a class by entry. Schedules decompilation immediately if this is the
+	 * only handle to the class.
+	 *
+	 * @param entry the entry of the class to open
+	 * @return a handle to the class, {@code null} if a class by that name does
+	 * not exist
+	 */
 	@Nullable
 	public ClassHandle openClass(ClassEntry entry) {
 		if (!project.getJarIndex().getEntryIndex().hasClass(entry)) return null;
@@ -50,7 +58,18 @@ public final class ClassHandleProvider {
 		});
 	}
 
+	/**
+	 * Set the decompiler service to use when decompiling classes. Invalidates
+	 * all currently open classes.
+	 *
+	 * <p>If the current decompiler service equals the old one, no classes will
+	 * be invalidated.
+	 *
+	 * @param ds the decompiler service to use
+	 */
 	public void setDecompilerService(DecompilerService ds) {
+		if (this.ds.equals(ds)) return;
+
 		this.ds = ds;
 		this.decompiler = createDecompiler();
 		withLock(lock.readLock(), () -> {
@@ -58,6 +77,11 @@ public final class ClassHandleProvider {
 		});
 	}
 
+	/**
+	 * Gets the current decompiler service in use.
+	 *
+	 * @return the current decompiler service
+	 */
 	public DecompilerService getDecompilerService() {
 		return ds;
 	}
@@ -76,12 +100,24 @@ public final class ClassHandleProvider {
 		}, new SourceSettings(true, true));
 	}
 
+	/**
+	 * Invalidates all mappings. This causes all open class handles to be
+	 * re-remapped.
+	 */
 	public void invalidateMapped() {
 		withLock(lock.readLock(), () -> {
 			handles.values().forEach(Entry::invalidateMapped);
 		});
 	}
 
+	/**
+	 * Invalidates mappings for a single class. Note that this does not
+	 * invalidate any mappings of other classes where this class is used, so
+	 * this should not be used to notify that the mapped name for this class has
+	 * changed.
+	 *
+	 * @param entry the class entry to invalidate
+	 */
 	public void invalidateMapped(ClassEntry entry) {
 		withLock(lock.readLock(), () -> {
 			Entry e = handles.get(entry);
@@ -91,6 +127,12 @@ public final class ClassHandleProvider {
 		});
 	}
 
+	/**
+	 * Invalidates javadoc for a single class. This also causes the class to be
+	 * remapped again.
+	 *
+	 * @param entry the class entry to invalidate
+	 */
 	public void invalidateJavadoc(ClassEntry entry) {
 		withLock(lock.readLock(), () -> {
 			Entry e = handles.get(entry);
@@ -106,6 +148,15 @@ public final class ClassHandleProvider {
 		});
 	}
 
+	/**
+	 * Destroy this class handle provider. The decompiler threads will try to
+	 * shutdown cleanly, and then every open class handle will also be deleted.
+	 * This causes {@link ClassHandleListener#onDeleted(ClassHandle)} to get
+	 * called.
+	 *
+	 * <p>After this method is called, this class handle provider can no longer
+	 * be used.
+	 */
 	public void destroy() {
 		pool.shutdown();
 		try {
@@ -190,6 +241,8 @@ public final class ClassHandleProvider {
 
 				Source uncommentedSource = p.decompiler.getSource(entry.getFullName());
 				Entry.this.uncommentedSource = uncommentedSource;
+				Entry.this.waitingUncommentedSources.forEach(f -> f.complete(uncommentedSource));
+				Entry.this.waitingUncommentedSources.clear();
 				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onUncommentedSourceChanged(uncommentedSource));
 				return uncommentedSource;
 			}, p.pool);
@@ -215,6 +268,8 @@ public final class ClassHandleProvider {
 				index.resolveReferences(p.project.getMapper().getObfResolver());
 				DecompiledClassSource source = new DecompiledClassSource(entry, index);
 				Entry.this.source = source;
+				Entry.this.waitingSources.forEach(s -> s.complete(source));
+				Entry.this.waitingSources.clear();
 				return source;
 			}, p.pool);
 		}
