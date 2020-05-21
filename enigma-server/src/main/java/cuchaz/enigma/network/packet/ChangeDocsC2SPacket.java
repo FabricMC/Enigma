@@ -1,15 +1,17 @@
 package cuchaz.enigma.network.packet;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.ServerPacketHandler;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.Utils;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import cuchaz.enigma.utils.validation.PrintValidatable;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class ChangeDocsC2SPacket implements Packet<ServerPacketHandler> {
 	private Entry<?> entry;
@@ -37,6 +39,9 @@ public class ChangeDocsC2SPacket implements Packet<ServerPacketHandler> {
 
 	@Override
 	public void handle(ServerPacketHandler handler) {
+		ValidationContext vc = new ValidationContext();
+		vc.setActiveElement(PrintValidatable.INSTANCE);
+
 		EntryMapping mapping = handler.getServer().getMappings().getDeobfMapping(entry);
 
 		boolean valid = handler.getServer().canModifyEntry(handler.getClient(), entry);
@@ -49,11 +54,12 @@ public class ChangeDocsC2SPacket implements Packet<ServerPacketHandler> {
 		if (mapping == null) {
 			mapping = new EntryMapping(handler.getServer().getMappings().deobfuscate(entry).getName());
 		}
-		handler.getServer().getMappings().mapFromObf(entry, mapping.withDocs(Utils.isBlank(newDocs) ? null : newDocs));
+		handler.getServer().getMappings().mapFromObf(vc, entry, mapping.withDocs(Utils.isBlank(newDocs) ? null : newDocs));
+
+		if (!vc.canProceed()) return;
 
 		int syncId = handler.getServer().lockEntry(handler.getClient(), entry);
 		handler.getServer().sendToAllExcept(handler.getClient(), new ChangeDocsS2CPacket(syncId, entry, newDocs));
 		handler.getServer().sendMessage(Message.editDocs(handler.getServer().getUsername(handler.getClient()), entry));
 	}
-
 }

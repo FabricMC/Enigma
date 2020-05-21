@@ -34,7 +34,6 @@ import cuchaz.enigma.gui.elements.ValidatableTextArea;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.packet.ChangeDocsC2SPacket;
-import cuchaz.enigma.translation.mapping.IllegalNameException;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.Message;
@@ -147,30 +146,38 @@ public class JavadocDialog {
 		this.ui.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
+	// Called when the "Save" button gets clicked.
 	public void doSave() {
 		vc.reset();
 		validate();
 		if (!vc.canProceed()) return;
 		save();
+		if (!vc.canProceed()) return;
+		close();
 	}
 
 	public void close() {
 		this.ui.setVisible(false);
+		this.ui.dispose();
 	}
 
 	public void validate() {
 		vc.setActiveElement(text);
-		// TODO validate doc text immediately, not only on save -> get rid of exception
+
+		if (text.getText().contains("*/")) {
+			vc.raise(Message.ILLEGAL_DOC_COMMENT_END);
+		}
+
+		controller.changeDocs(vc, entry, text.getText(), true);
 	}
 
 	public void save() {
 		vc.setActiveElement(text);
-		try {
-			controller.changeDocs(entry, text.getText());
-			controller.sendPacket(new ChangeDocsC2SPacket(entry.getNameableEntry(), text.getText()));
-		} catch (IllegalNameException ex) {
-			vc.raise(Message.INVALID_NAME, ex.getReason());
-		}
+		controller.changeDocs(vc, entry, text.getText());
+
+		if (!vc.canProceed()) return;
+
+		controller.sendPacket(new ChangeDocsC2SPacket(entry.getNameableEntry(), text.getText()));
 	}
 
 	public static void show(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry) {

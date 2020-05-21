@@ -1,9 +1,7 @@
 package cuchaz.enigma.gui.elements;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JTextField;
@@ -12,7 +10,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
-import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.Validatable;
 
@@ -73,26 +70,7 @@ public class ValidatableTextField extends JTextField implements Validatable {
 	}
 
 	private void setToolTipText0() {
-		List<String> strings = new ArrayList<>();
-		if (tooltipText != null) {
-			strings.add(tooltipText);
-		}
-		if (!messages.isEmpty()) {
-			strings.add("Error(s): ");
-
-			messages.forEach(msg -> {
-				strings.add(String.format(" - %s", msg.getText()));
-				String longDesc = msg.getLongText();
-				if (!longDesc.isEmpty()) {
-					Arrays.stream(longDesc.split("\n")).map(s -> String.format("   %s", s)).forEach(strings::add);
-				}
-			});
-		}
-		if (strings.isEmpty()) {
-			super.setToolTipText(null);
-		} else {
-			super.setToolTipText(String.join("\n", strings));
-		}
+		super.setToolTipText(ValidatableUi.getTooltipText(tooltipText, messages));
 	}
 
 	@Override
@@ -112,14 +90,7 @@ public class ValidatableTextField extends JTextField implements Validatable {
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
-		if (!messages.isEmpty()) {
-			g.setColor(Color.RED);
-			int x1 = getWidth() - ScaleUtil.scale(8) - 1;
-			int x2 = getWidth() - ScaleUtil.scale(1) - 1;
-			int y1 = ScaleUtil.scale(1);
-			int y2 = ScaleUtil.scale(8);
-			g.fillPolygon(new int[]{x1, x2, x2}, new int[]{y1, y1, y2}, 3);
-		}
+		ValidatableUi.drawMarker(this, g, messages);
 	}
 
 }

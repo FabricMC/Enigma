@@ -10,6 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import cuchaz.enigma.EnigmaProject;
+import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.elements.CovertTextField;
 import cuchaz.enigma.gui.events.CovertTextFieldListener;
@@ -19,7 +20,6 @@ import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class PanelIdentifier {
@@ -68,7 +68,7 @@ public class PanelIdentifier {
 	}
 
 	private void onModifierChanged(AccessModifier modifier) {
-		throw new IllegalStateException("not implemented");
+		gui.validateImmediateAction(vc -> this.gui.getController().onModifierChanged(vc, entry, modifier));
 	}
 
 	public void refreshReference() {
@@ -85,15 +85,11 @@ public class PanelIdentifier {
 
 			if (deobfEntry instanceof ClassEntry) {
 				ClassEntry ce = (ClassEntry) deobfEntry;
-				if (ce.isJre()) {
-					th.addStringRow(I18n.translate("info_panel.identifier.class"), ce.getFullName());
-				} else {
-					this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.class"), ce.getFullName());
-				}
+				this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.class"), ce.getFullName());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
 			} else if (deobfEntry instanceof FieldEntry) {
 				FieldEntry fe = (FieldEntry) deobfEntry;
-				this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.field"), fe.getName());
+				this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.field"), fe.getName());
 				th.addStringRow(I18n.translate("info_panel.identifier.class"), fe.getParent().getFullName());
 				th.addStringRow(I18n.translate("info_panel.identifier.type_descriptor"), fe.getDesc().toString());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
@@ -102,24 +98,19 @@ public class PanelIdentifier {
 				if (me.isConstructor()) {
 					th.addStringRow(I18n.translate("info_panel.identifier.constructor"), me.getParent().getFullName());
 				} else {
-					this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.method"), me.getName());
+					this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.method"), me.getName());
 					th.addStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
 				}
 				th.addStringRow(I18n.translate("info_panel.identifier.method_descriptor"), me.getDesc().toString());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
 			} else if (deobfEntry instanceof LocalVariableEntry) {
 				LocalVariableEntry lve = (LocalVariableEntry) deobfEntry;
-				this.nameField = th.addCovertTextField(I18n.translate("info_panel.identifier.variable"), lve.getName());
+				this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.variable"), lve.getName());
 				th.addStringRow(I18n.translate("info_panel.identifier.class"), lve.getContainingClass().getFullName());
 				th.addStringRow(I18n.translate("info_panel.identifier.method"), lve.getParent().getName());
 				th.addStringRow(I18n.translate("info_panel.identifier.index"), Integer.toString(lve.getIndex()));
 			} else {
-				th.addStringRow("Name", this.deobfEntry.getName());
-
-				ClassEntry c = this.deobfEntry.getContainingClass();
-				if (c != null) {
-					th.addStringRow("Class", c.getName());
-				}
+				throw new IllegalStateException("unreachable");
 			}
 		}
 		th.end();
@@ -130,7 +121,7 @@ public class PanelIdentifier {
 				public void onStartEditing(CovertTextField field) {
 					int i = field.getText().lastIndexOf('/');
 					if (i != -1) {
-						field.selectSubstring(i);
+						field.selectSubstring(i + 1);
 					}
 				}
 
@@ -146,7 +137,9 @@ public class PanelIdentifier {
 				@Override
 				public void onStopEditing(CovertTextField field, boolean abort) {
 					if (abort) return;
-					throw new IllegalStateException("not implemented");
+					vc.reset();
+					vc.setActiveElement(field);
+					doRename(field.getText());
 				}
 			});
 		}
@@ -156,7 +149,11 @@ public class PanelIdentifier {
 	}
 
 	private void validateRename(String newName) {
-		vc.raise(Message.INVALID_NAME);
+		gui.getController().rename(vc, new EntryReference<>(entry, deobfEntry.getName()), newName, true, true);
+	}
+
+	private void doRename(String newName) {
+		gui.getController().rename(vc, new EntryReference<>(entry, deobfEntry.getName()), newName, true);
 	}
 
 	public JPanel getUi() {
@@ -207,6 +204,15 @@ public class PanelIdentifier {
 			CovertTextField textField = new CovertTextField(c2);
 			addRow(new JLabel(c1), textField.getUi());
 			return textField;
+		}
+
+		public CovertTextField addRenameTextField(String c1, String c2) {
+			if (project.isRenamable(e)) {
+				return addCovertTextField(c1, c2);
+			} else {
+				addStringRow(c1, c2);
+				return null;
+			}
 		}
 
 		public void addStringRow(String c1, String c2) {

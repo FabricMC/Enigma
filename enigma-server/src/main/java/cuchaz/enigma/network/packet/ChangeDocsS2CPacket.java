@@ -7,6 +7,8 @@ import java.io.IOException;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.network.ClientPacketHandler;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.validation.PrintValidatable;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class ChangeDocsS2CPacket implements Packet<ClientPacketHandler> {
 	private int syncId;
@@ -38,7 +40,12 @@ public class ChangeDocsS2CPacket implements Packet<ClientPacketHandler> {
 
 	@Override
 	public void handle(ClientPacketHandler controller) {
-		controller.changeDocs(new EntryReference<>(entry, entry.getName()), newDocs);
+		ValidationContext vc = new ValidationContext();
+		vc.setActiveElement(PrintValidatable.INSTANCE);
+
+		controller.changeDocs(vc, new EntryReference<>(entry, entry.getName()), newDocs);
+
+		if (!vc.canProceed()) return;
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }

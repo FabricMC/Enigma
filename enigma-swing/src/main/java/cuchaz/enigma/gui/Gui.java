@@ -17,6 +17,7 @@ import java.awt.FileDialog;
 import java.awt.event.*;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
@@ -35,6 +36,7 @@ import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
 import cuchaz.enigma.gui.elements.MenuBar;
+import cuchaz.enigma.gui.elements.ValidatableUi;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
@@ -43,22 +45,22 @@ import cuchaz.enigma.gui.panels.PanelDeobf;
 import cuchaz.enigma.gui.panels.PanelEditor;
 import cuchaz.enigma.gui.panels.PanelIdentifier;
 import cuchaz.enigma.gui.panels.PanelObf;
-import cuchaz.enigma.classhandle.ClassHandle;
-import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
 import cuchaz.enigma.network.packet.MessageC2SPacket;
 import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.source.Token;
-import cuchaz.enigma.translation.mapping.IllegalNameException;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import cuchaz.enigma.network.Message;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.validation.ParameterizedMessage;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class Gui {
 
@@ -153,8 +155,6 @@ public class Gui {
 
 		// init info panel
 		infoPanel = new PanelIdentifier(this);
-
-		// init editor
 
 		// init inheritance panel
 		inheritanceTree = new JTree();
@@ -482,108 +482,7 @@ public class Gui {
 
 	private void showCursorReference(EntryReference<Entry<?>, Entry<?>> reference) {
 		infoPanel.setReference(reference == null ? null : reference.entry);
-//		if (reference == null) {
-//			infoPanel.clearReference();
-//			return;
-//		}
-//
-//		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(reference);
-//
-//		infoPanel.removeAll();
-//		if (translatedReference.entry instanceof ClassEntry) {
-//			showClassEntry((ClassEntry) reference.entry, (ClassEntry) translatedReference.entry);
-//		} else if (translatedReference.entry instanceof FieldEntry) {
-//			showFieldEntry((FieldEntry) reference.entry, (FieldEntry) translatedReference.entry);
-//		} else if (translatedReference.entry instanceof MethodEntry) {
-//			showMethodEntry((MethodEntry) reference.entry, (MethodEntry) translatedReference.entry);
-//		} else if (translatedReference.entry instanceof LocalVariableEntry) {
-//			showLocalVariableEntry((LocalVariableEntry) translatedReference.entry);
-//		} else {
-//			throw new Error("Unknown entry desc: " + translatedReference.entry.getClass().getName());
-//		}
-//
-//		redraw();
 	}
-
-//	private void showLocalVariableEntry(LocalVariableEntry entry) {
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.variable"), entry.getName());
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getContainingClass().getFullName());
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getParent().getName());
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.index"), Integer.toString(entry.getIndex()));
-//	}
-//
-//	private void showClassEntry(ClassEntry obf, ClassEntry entry) {
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getFullName());
-//		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), obf);
-//	}
-//
-//	private void showFieldEntry(FieldEntry obf, FieldEntry entry) {
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.field"), entry.getName());
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.type_descriptor"), entry.getDesc().toString());
-//		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), obf);
-//	}
-//
-//	private void showMethodEntry(MethodEntry obf, MethodEntry entry) {
-//		if (entry.isConstructor()) {
-//			addNameValue(infoPanel, I18n.translate("info_panel.identifier.constructor"), entry.getParent().getFullName());
-//		} else {
-//			addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getName());
-//			addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
-//		}
-//		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method_descriptor"), entry.getDesc().toString());
-//		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), obf);
-//	}
-//
-//	private void addNameValue(JPanel container, String name, String value) {
-//		JPanel panel = new JPanel();
-//		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
-//
-//		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-//		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-//		panel.add(label);
-//
-//		panel.add(Utils.unboldLabel(new JLabel(value, JLabel.LEFT)));
-//
-//		container.add(panel);
-//	}
-//
-//	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry<?> entry) {
-//		if (!getController().project.isRenamable(entry))
-//			return null;
-//		JPanel panel = new JPanel();
-//		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
-//		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-//		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-//		panel.add(label);
-//		JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
-//		((JLabel) combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
-//		combo.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-//
-//		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry);
-//		if (mapping != null) {
-//			combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
-//		} else {
-//			combo.setSelectedIndex(AccessModifier.UNCHANGED.ordinal());
-//		}
-//
-//		combo.addItemListener(event -> {
-//			EntryReference<Entry<?>, Entry<?>> cursorReference = getCursorReference();
-//			if (cursorReference == null) return;
-//
-//			if (event.getStateChange() == ItemEvent.SELECTED) {
-//				Entry<?> e = cursorReference.entry;
-//				AccessModifier modifier = (AccessModifier) event.getItem();
-//				getController().onModifierChanged(e, modifier);
-//			}
-//		});
-//
-//		panel.add(combo);
-//
-//		container.add(panel);
-//
-//		return combo;
-//	}
 
 	@Nullable
 	public PanelEditor getActiveEditor() {
@@ -615,77 +514,7 @@ public class Gui {
 		if (editor != getActiveEditor()) return;
 
 		infoPanel.startRenaming();
-//		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-//		if (cursorReference == null) return;
-//
-//		// init the text box
-//		renameTextField = new JTextField();
-//
-//		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
-//		renameTextField.setText(translatedReference.getNameableName());
-//
-//		renameTextField.setPreferredSize(ScaleUtil.getDimension(360, ScaleUtil.invert(renameTextField.getPreferredSize().height)));
-//		renameTextField.addKeyListener(new KeyAdapter() {
-//			@Override
-//			public void keyPressed(KeyEvent event) {
-//				switch (event.getKeyCode()) {
-//					case KeyEvent.VK_ENTER:
-//						finishRename(cursorReference, true);
-//						break;
-//
-//					case KeyEvent.VK_ESCAPE:
-//						finishRename(cursorReference, false);
-//						break;
-//					default:
-//						break;
-//				}
-//			}
-//		});
-//
-//		// find the label with the name and replace it with the text box
-//		JPanel panel = (JPanel) infoPanel.getComponent(0);
-//		panel.remove(panel.getComponentCount() - 1);
-//		panel.add(renameTextField);
-//		renameTextField.grabFocus();
-//
-//		int offset = renameTextField.getText().lastIndexOf('/') + 1;
-//		// If it's a class and isn't in the default package, assume that it's deobfuscated.
-//		if (translatedReference.getNameableEntry() instanceof ClassEntry && renameTextField.getText().contains("/") && offset != 0)
-//			renameTextField.select(offset, renameTextField.getText().length());
-//		else
-//			renameTextField.selectAll();
-//
-//		renamingReference = cursorReference;
-//
-//		redraw();
 	}
-
-//	private void finishRename(EntryReference<Entry<?>, Entry<?>> cursorReference, boolean saveName) {
-//		String newName = renameTextField.getText();
-//
-//		if (saveName && newName != null && !newName.isEmpty()) {
-//			try {
-//				this.controller.rename(renamingReference, newName, true);
-//				this.controller.sendPacket(new RenameC2SPacket(renamingReference.getNameableEntry(), newName, true));
-//				renameTextField = null;
-//			} catch (IllegalNameException ex) {
-//				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
-//				renameTextField.setToolTipText(ex.getReason());
-//				Utils.showToolTipNow(renameTextField);
-//			}
-//			return;
-//		}
-//
-//		renameTextField = null;
-//
-//		infoPanel.refreshReference();
-//
-//		redraw();
-//	}
-
-//	private boolean isRenaming() {
-//		return renameTextField != null;
-//	}
 
 	public void showInheritance(PanelEditor editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
@@ -774,10 +603,10 @@ public class Gui {
 		Entry<?> deobfEntry = controller.project.getMapper().deobfuscate(obfEntry);
 
 		if (!Objects.equals(obfEntry, deobfEntry)) {
-			this.controller.removeMapping(cursorReference);
+			if (!validateImmediateAction(vc -> this.controller.removeMapping(vc, cursorReference))) return;
 			this.controller.sendPacket(new RemoveMappingC2SPacket(cursorReference.getNameableEntry()));
 		} else {
-			this.controller.markAsDeobfuscated(cursorReference);
+			if (!validateImmediateAction(vc -> this.controller.markAsDeobfuscated(vc, cursorReference))) return;
 			this.controller.sendPacket(new MarkDeobfuscatedC2SPacket(cursorReference.getNameableEntry()));
 		}
 	}
@@ -836,37 +665,51 @@ public class Gui {
 		this.frame.repaint();
 	}
 
-	public void onPanelRename(Object prevData, Object data, DefaultMutableTreeNode node) throws IllegalNameException {
-		// package rename
+	public void onPanelRename(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node) {
 		if (data instanceof String) {
+			// package rename
 			for (int i = 0; i < node.getChildCount(); i++) {
 				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
-				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
+				this.controller.rename(vc, new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
+				if (!vc.canProceed()) return;
 				this.controller.sendPacket(new RenameC2SPacket(prevDataChild, dataChild.getFullName(), false));
 				childNode.setUserObject(dataChild);
 			}
 			node.setUserObject(data);
 			// Ob package will never be modified, just reload deob view
 			this.deobfPanel.deobfClasses.reload();
-		}
-		// class rename
-		else if (data instanceof ClassEntry) {
-			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
-			this.controller.sendPacket(new RenameC2SPacket((ClassEntry) prevData, ((ClassEntry) data).getFullName(), false));
+		} else if (data instanceof ClassEntry) {
+			// class rename
+
+			// assume this is deobf since the obf tree doesn't allow renaming in
+			// the first place
+			// TODO optimize reverse class lookup, although it looks like it's
+			//      fast enough for now
+			EntryRemapper mapper = this.controller.project.getMapper();
+			ClassEntry deobf = (ClassEntry) prevData;
+			ClassEntry obf = mapper.getObfToDeobf().getAllEntries()
+					.filter(e -> e instanceof ClassEntry)
+					.map(e -> (ClassEntry) e)
+					.filter(e -> mapper.deobfuscate(e).equals(deobf))
+					.findAny().get();
+
+			this.controller.rename(vc, new EntryReference<>(obf, obf.getFullName()), ((ClassEntry) data).getFullName(), false);
+			if (!vc.canProceed()) return;
+			this.controller.sendPacket(new RenameC2SPacket(obf, ((ClassEntry) data).getFullName(), false));
 		}
 	}
 
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, String newName) {
-		String oldEntry = obfReference.entry.getContainingClass().getPackageName();
+	public void moveClassTree(Entry<?> obfEntry, String newName) {
+		String oldEntry = obfEntry.getContainingClass().getPackageName();
 		String newEntry = new ClassEntry(newName).getPackageName();
-		moveClassTree(obfReference, oldEntry == null, newEntry == null);
+		moveClassTree(obfEntry, oldEntry == null, newEntry == null);
 	}
 
 	// TODO: getExpansionState will *not* actually update itself based on name changes!
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, boolean isOldOb, boolean isNewOb) {
-		ClassEntry classEntry = obfReference.entry.getContainingClass();
+	public void moveClassTree(Entry<?> obfEntry, boolean isOldOb, boolean isNewOb) {
+		ClassEntry classEntry = obfEntry.getContainingClass();
 
 		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
 		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
@@ -977,6 +820,17 @@ public class Gui {
 
 	public PanelIdentifier getInfoPanel() {
 		return infoPanel;
+	}
+
+	public boolean validateImmediateAction(Consumer<ValidationContext> op) {
+		ValidationContext vc = new ValidationContext();
+		op.accept(vc);
+		if (!vc.canProceed()) {
+			List<ParameterizedMessage> messages = vc.getMessages();
+			String text = ValidatableUi.formatMessages(messages);
+			JOptionPane.showMessageDialog(this.getFrame(), text, String.format("%d message(s)", messages.size()), JOptionPane.ERROR_MESSAGE);
+		}
+		return vc.canProceed();
 	}
 
 }

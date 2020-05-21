@@ -1,13 +1,14 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.network.ServerPacketHandler;
-import cuchaz.enigma.translation.mapping.IllegalNameException;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.network.Message;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+
+import cuchaz.enigma.network.Message;
+import cuchaz.enigma.network.ServerPacketHandler;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.validation.PrintValidatable;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class RemoveMappingC2SPacket implements Packet<ServerPacketHandler> {
 	private Entry<?> entry;
@@ -31,14 +32,14 @@ public class RemoveMappingC2SPacket implements Packet<ServerPacketHandler> {
 
 	@Override
 	public void handle(ServerPacketHandler handler) {
+		ValidationContext vc = new ValidationContext();
+		vc.setActiveElement(PrintValidatable.INSTANCE);
+
 		boolean valid = handler.getServer().canModifyEntry(handler.getClient(), entry);
 
 		if (valid) {
-			try {
-				handler.getServer().getMappings().removeByObf(entry);
-			} catch (IllegalNameException e) {
-				valid = false;
-			}
+			handler.getServer().getMappings().removeByObf(vc, entry);
+			valid = vc.canProceed();
 		}
 
 		if (!valid) {

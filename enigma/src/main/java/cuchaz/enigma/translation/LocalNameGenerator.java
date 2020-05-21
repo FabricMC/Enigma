@@ -1,10 +1,10 @@
 package cuchaz.enigma.translation;
 
-import cuchaz.enigma.translation.mapping.NameValidator;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-
 import java.util.Collection;
 import java.util.Locale;
+
+import cuchaz.enigma.translation.mapping.IdentifierValidation;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 
 public class LocalNameGenerator {
 	public static String generateArgumentName(int index, TypeDescriptor desc, Collection<TypeDescriptor> arguments) {
@@ -12,7 +12,7 @@ public class LocalNameGenerator {
 		String translatedName;
 		int nameIndex = index + 1;
 		StringBuilder nameBuilder = new StringBuilder(getTypeName(desc));
-		if (!uniqueType || NameValidator.isReserved(nameBuilder.toString())) {
+		if (!uniqueType || IdentifierValidation.isReservedMethodName(nameBuilder.toString())) {
 			nameBuilder.append(nameIndex);
 		}
 		translatedName = nameBuilder.toString();

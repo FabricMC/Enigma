@@ -1,5 +1,10 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.Collection;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translatable;
@@ -8,10 +13,7 @@ import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.entry.Entry;
-
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.stream.Stream;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class EntryRemapper {
 	private final DeltaTrackingTree<EntryMapping> obfToDeobf;
@@ -39,26 +41,32 @@ public class EntryRemapper {
 		return new EntryRemapper(index, new HashEntryTree<>());
 	}
 
-	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		mapFromObf(obfuscatedEntry, deobfMapping, true);
+	public <E extends Entry<?>> void mapFromObf(ValidationContext vc, E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
+		mapFromObf(vc, obfuscatedEntry, deobfMapping, true);
 	}
 
-	public <E extends Entry<?>> void mapFromObf(E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming) {
+	public <E extends Entry<?>> void mapFromObf(ValidationContext vc, E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming) {
+		mapFromObf(vc, obfuscatedEntry, deobfMapping, renaming, false);
+	}
+
+	public <E extends Entry<?>> void mapFromObf(ValidationContext vc, E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming, boolean validateOnly) {
 		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, renaming ? ResolutionStrategy.RESOLVE_ROOT : ResolutionStrategy.RESOLVE_CLOSEST);
 
 		if (renaming && deobfMapping != null) {
 			for (E resolvedEntry : resolvedEntries) {
-				validator.validateRename(resolvedEntry, deobfMapping.getTargetName());
+				validator.validateRename(vc, resolvedEntry, deobfMapping.getTargetName());
 			}
 		}
+
+		if (validateOnly || !vc.canProceed()) return;
 
 		for (E resolvedEntry : resolvedEntries) {
 			obfToDeobf.insert(resolvedEntry, deobfMapping);
 		}
 	}
 
-	public void removeByObf(Entry<?> obfuscatedEntry) {
-		mapFromObf(obfuscatedEntry, null);
+	public void removeByObf(ValidationContext vc, Entry<?> obfuscatedEntry) {
+		mapFromObf(vc, obfuscatedEntry, null);
 	}
 
 	@Nullable
