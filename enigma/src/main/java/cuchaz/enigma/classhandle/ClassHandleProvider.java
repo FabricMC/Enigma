@@ -233,7 +233,6 @@ public final class ClassHandleProvider {
 			classHandle.destroy();
 			withLock(lock.writeLock(), () -> {
 				handles.remove(classHandle);
-				// TODO don't delete immediately, but cache for a bit
 				if (handles.isEmpty()) {
 					p.deleteEntry(this);
 				}
