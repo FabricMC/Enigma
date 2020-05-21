@@ -1,6 +1,7 @@
 package cuchaz.enigma.gui.panels;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.*;
@@ -10,10 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.swing.JEditorPane;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
@@ -229,6 +227,19 @@ public class PanelEditor {
 		};
 
 		setClassHandle0(null, handle);
+
+		ui.putClientProperty(PanelEditor.class, this);
+	}
+
+	@Nullable
+	public static PanelEditor byUi(Component ui) {
+		if (ui instanceof JComponent) {
+			Object prop = ((JComponent) ui).getClientProperty(PanelEditor.class);
+			if (prop instanceof PanelEditor) {
+				return (PanelEditor) prop;
+			}
+		}
+		return null;
 	}
 
 	public void setClassHandle(ClassHandle handle) {

@@ -41,10 +41,7 @@ import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
-import cuchaz.enigma.gui.panels.PanelDeobf;
-import cuchaz.enigma.gui.panels.PanelEditor;
-import cuchaz.enigma.gui.panels.PanelIdentifier;
-import cuchaz.enigma.gui.panels.PanelObf;
+import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.Message;
@@ -397,6 +394,11 @@ public class Gui {
 			if (ch == null) return null;
 			PanelEditor ed = new PanelEditor(this, ch);
 			openFiles.addTab(ed.getFileName(), ed.getUi());
+
+			ClosableTabTitlePane titlePane = new ClosableTabTitlePane(ed.getFileName(), () -> closeEditor(ed));
+			openFiles.setTabComponentAt(openFiles.indexOfComponent(ed.getUi()), titlePane.getUi());
+			titlePane.setTabbedPane(openFiles);
+
 			ed.addListener(new EditorActionListener() {
 				@Override
 				public void onCursorReferenceChanged(PanelEditor editor, EntryReference<Entry<?>, Entry<?>> ref) {
@@ -411,7 +413,7 @@ public class Gui {
 
 				@Override
 				public void onTitleChanged(PanelEditor editor, String title) {
-					openFiles.setTitleAt(openFiles.indexOfComponent(editor.getUi()), editor.getFileName());
+					titlePane.setText(editor.getFileName());
 				}
 			});
 			return ed;
@@ -435,11 +437,16 @@ public class Gui {
 		updateUiState();
 	}
 
+	public void closeEditor(PanelEditor ed) {
+		openFiles.remove(ed.getUi());
+		editors.remove(ed.getClassHandle().getRef());
+		ed.destroy();
+	}
+
 	public void closeAllEditorTabs() {
 		for (Iterator<PanelEditor> iter = editors.values().iterator(); iter.hasNext(); ) {
 			PanelEditor e = iter.next();
-			openFiles.remove(e.getUi());
-			e.destroy();
+			closeEditor(e);
 			iter.remove();
 		}
 	}
@@ -480,10 +487,7 @@ public class Gui {
 
 	@Nullable
 	public PanelEditor getActiveEditor() {
-		return editors.values().stream()
-				.filter(e -> e.getUi() == openFiles.getSelectedComponent())
-				.findFirst()
-				.orElse(null);
+		return PanelEditor.byUi(openFiles.getSelectedComponent());
 	}
 
 	@Nullable

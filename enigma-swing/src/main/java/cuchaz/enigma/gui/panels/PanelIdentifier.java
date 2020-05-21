@@ -16,6 +16,7 @@ import cuchaz.enigma.gui.elements.CovertTextField;
 import cuchaz.enigma.gui.events.CovertTextFieldListener;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -154,6 +155,8 @@ public class PanelIdentifier {
 
 	private void doRename(String newName) {
 		gui.getController().rename(vc, new EntryReference<>(entry, deobfEntry.getName()), newName, true);
+		if (!vc.canProceed()) return;
+		gui.getController().getClient().sendPacket(new RenameC2SPacket(entry, newName, true));
 	}
 
 	public JPanel getUi() {
