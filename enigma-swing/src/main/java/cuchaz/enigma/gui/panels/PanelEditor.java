@@ -13,6 +13,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.swing.JEditorPane;
+import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
@@ -46,7 +47,8 @@ import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class PanelEditor {
 
-	private final JEditorPane ui;
+	private final JScrollPane ui;
+	private final JEditorPane editor;
 	private final PopupMenuBar popupMenu;
 
 	private final GuiController controller;
@@ -71,25 +73,26 @@ public class PanelEditor {
 		this.gui = gui;
 		this.controller = gui.getController();
 
-		this.ui = new JEditorPane();
-		this.ui.setEditable(false);
-		this.ui.setSelectionColor(new Color(31, 46, 90));
-		this.ui.setCaret(new BrowserCaret());
-		this.ui.setFont(ScaleUtil.getFont(this.ui.getFont().getFontName(), Font.PLAIN, this.fontSize));
-		this.ui.addCaretListener(event -> onCaretMove(event.getDot(), mouseIsPressed));
-		this.ui.setCaretColor(new Color(Config.getInstance().caretColor));
-		this.ui.setContentType("text/enigma-sources");
-		this.ui.setBackground(new Color(Config.getInstance().editorBackground));
-		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.ui.getEditorKit();
-		kit.toggleComponent(this.ui, "de.sciss.syntaxpane.components.TokenMarker");
+		this.editor = new JEditorPane();
+		this.ui = new JScrollPane(editor);
+		this.editor.setEditable(false);
+		this.editor.setSelectionColor(new Color(31, 46, 90));
+		this.editor.setCaret(new BrowserCaret());
+		this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
+		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), mouseIsPressed));
+		this.editor.setCaretColor(new Color(Config.getInstance().caretColor));
+		this.editor.setContentType("text/enigma-sources");
+		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
+		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
+		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
 		// init editor popup menu
 		this.popupMenu = new PopupMenuBar(this, gui);
-		this.ui.setComponentPopupMenu(this.popupMenu);
+		this.editor.setComponentPopupMenu(this.popupMenu);
 
 		this.boxHighlightPainters = Themes.getBoxHighlightPainters();
 
-		this.ui.addMouseListener(new MouseAdapter() {
+		this.editor.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent mouseEvent) {
 				mouseIsPressed = true;
@@ -99,7 +102,7 @@ public class PanelEditor {
 			public void mouseReleased(MouseEvent e) {
 				switch (e.getButton()) {
 					case MouseEvent.BUTTON3: // Right click
-						ui.setCaretPosition(ui.viewToModel(e.getPoint()));
+						editor.setCaretPosition(editor.viewToModel(e.getPoint()));
 						break;
 
 					case 4: // Back navigation
@@ -113,7 +116,7 @@ public class PanelEditor {
 				mouseIsPressed = false;
 			}
 		});
-		this.ui.addKeyListener(new KeyAdapter() {
+		this.editor.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
@@ -213,8 +216,8 @@ public class PanelEditor {
 
 		themeChangeListener = (laf, boxHighlightPainters) -> {
 			if ((editorLaf == null || editorLaf != laf)) {
-				this.ui.updateUI();
-				this.ui.setBackground(new Color(Config.getInstance().editorBackground));
+				this.editor.updateUI();
+				this.editor.setBackground(new Color(Config.getInstance().editorBackground));
 				if (editorLaf != null) {
 					gui.getController().getClassHandleProvider().invalidateMapped(classHandle.getRef());
 				}
@@ -280,13 +283,13 @@ public class PanelEditor {
 		int newResult = this.fontSize + zoomAmount;
 		if (newResult > 8 && newResult < 72) {
 			this.fontSize = newResult;
-			this.ui.setFont(ScaleUtil.getFont(this.ui.getFont().getFontName(), Font.PLAIN, this.fontSize));
+			this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
 		}
 	}
 
 	public void resetEditorZoom() {
 		this.fontSize = 12;
-		this.ui.setFont(ScaleUtil.getFont(this.ui.getFont().getFontName(), Font.PLAIN, this.fontSize));
+		this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
 	}
 
 	public void onCaretMove(int pos, boolean fromClick) {
@@ -358,19 +361,19 @@ public class PanelEditor {
 	}
 
 	public void setEditorText(String source) {
-		ui.getHighlighter().removeAllHighlights();
-		ui.setText(source);
+		editor.getHighlighter().removeAllHighlights();
+		editor.setText(source);
 	}
 
 	public void setSource(DecompiledClassSource source) {
 		this.source = source;
-		ui.setText(source.toString());
+		editor.setText(source.toString());
 		setHighlightedTokens(source.getHighlightedTokens());
 	}
 
 	public void setHighlightedTokens(Map<TokenHighlightType, Collection<Token>> tokens) {
 		// remove any old highlighters
-		ui.getHighlighter().removeAllHighlights();
+		editor.getHighlighter().removeAllHighlights();
 
 		if (boxHighlightPainters != null) {
 			for (TokenHighlightType type : tokens.keySet()) {
@@ -381,14 +384,14 @@ public class PanelEditor {
 			}
 		}
 
-		ui.validate();
-		ui.repaint();
+		editor.validate();
+		editor.repaint();
 	}
 
 	private void setHighlightedTokens(Iterable<Token> tokens, Highlighter.HighlightPainter painter) {
 		for (Token token : tokens) {
 			try {
-				ui.getHighlighter().addHighlight(token.start, token.end, painter);
+				editor.getHighlighter().addHighlight(token.start, token.end, painter);
 			} catch (BadLocationException ex) {
 				throw new IllegalArgumentException(ex);
 			}
@@ -429,8 +432,12 @@ public class PanelEditor {
 		listeners.remove(listener);
 	}
 
-	public JEditorPane getUi() {
+	public JScrollPane getUi() {
 		return ui;
+	}
+
+	public JEditorPane getEditor() {
+		return editor;
 	}
 
 	public DecompiledClassSource getSource() {
