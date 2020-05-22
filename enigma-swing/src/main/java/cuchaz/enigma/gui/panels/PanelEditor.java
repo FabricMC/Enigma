@@ -5,12 +5,10 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.Nullable;
+import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -31,6 +29,7 @@ import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
+import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
 import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.source.Token;
@@ -67,6 +66,7 @@ public class PanelEditor {
 
 	private ClassHandle classHandle;
 	private DecompiledClassSource source;
+	private boolean settingSource;
 
 	public PanelEditor(Gui gui, ClassHandle handle) {
 		this.gui = gui;
@@ -261,18 +261,11 @@ public class PanelEditor {
 
 			@Override
 			public void onMappedSourceChanged(ClassHandle h, DecompiledClassSource s) {
-				SwingUtilities.invokeLater(() -> {
-					EntryReference<Entry<?>, Entry<?>> cr = getCursorReference();
-					setSource(s);
-					if (cr != null) {
-						showReference0(cr);
-					}
-				});
+				SwingUtilities.invokeLater(() -> setSource(s));
 			}
 
 			@Override
 			public void onDeleted(ClassHandle h) {
-
 			}
 		});
 
@@ -310,7 +303,16 @@ public class PanelEditor {
 		EntryRemapper mapper = controller.project.getMapper();
 		Token token = getToken(pos);
 
-		setCursorReference(getReference(token));
+		if (settingSource) {
+			EntryReference<Entry<?>, Entry<?>> ref = getCursorReference();
+			EntryReference<Entry<?>, Entry<?>> refAtCursor = getReference(token);
+			if (editor.getDocument().getLength() != 0 && !Objects.equals(refAtCursor, ref)) {
+				showReference0(ref);
+			}
+			return;
+		} else {
+			setCursorReference(getReference(token));
+		}
 
 		Entry<?> referenceEntry = cursorReference != null ? cursorReference.entry : null;
 
@@ -378,9 +380,15 @@ public class PanelEditor {
 	}
 
 	public void setSource(DecompiledClassSource source) {
-		this.source = source;
-		editor.setText(source.toString());
-		setHighlightedTokens(source.getHighlightedTokens());
+		try {
+			settingSource = true;
+			this.source = source;
+			editor.setText(source.toString());
+			setHighlightedTokens(source.getHighlightedTokens());
+		} finally {
+			settingSource = false;
+		}
+		showReference0(getCursorReference());
 	}
 
 	public void setHighlightedTokens(Map<TokenHighlightType, Collection<Token>> tokens) {
@@ -436,7 +444,14 @@ public class PanelEditor {
 		}
 	}
 
-	public void navigateToToken(Token token, HighlightPainter highlightPainter) {
+	public void navigateToToken(Token token) {
+		if (token == null) {
+			throw new IllegalArgumentException("Token cannot be null!");
+		}
+		navigateToToken(token, SelectionHighlightPainter.INSTANCE);
+	}
+
+	private void navigateToToken(Token token, HighlightPainter highlightPainter) {
 		// set the caret position to the token
 		Document document = editor.getDocument();
 		int clampedPosition = Math.min(Math.max(token.start, 0), document.getLength());
@@ -448,7 +463,7 @@ public class PanelEditor {
 			// make sure the token is visible in the scroll window
 			Rectangle start = editor.modelToView(token.start);
 			Rectangle end = editor.modelToView(token.end);
-			final Rectangle show = start.union(end);
+			Rectangle show = start.union(end);
 			show.grow(start.width * 10, start.height * 6);
 			SwingUtilities.invokeLater(() -> editor.scrollRectToVisible(show));
 		} catch (BadLocationException ex) {
@@ -456,7 +471,7 @@ public class PanelEditor {
 		}
 
 		// highlight the token momentarily
-		final Timer timer = new Timer(200, new ActionListener() {
+		Timer timer = new Timer(200, new ActionListener() {
 			private int counter = 0;
 			private Object highlight = null;
 

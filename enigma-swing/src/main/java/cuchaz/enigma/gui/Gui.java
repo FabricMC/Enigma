@@ -41,7 +41,6 @@ import cuchaz.enigma.gui.elements.ValidatableUi;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
-import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -250,7 +249,7 @@ public class Gui {
 				if (event.getClickCount() == 2) {
 					Token selected = tokens.getSelectedValue();
 					if (selected != null) {
-						showToken(openClass(controller.getTokenHandle().getRef()), selected);
+						openClass(controller.getTokenHandle().getRef()).navigateToToken(selected);
 					}
 				}
 			}
@@ -497,14 +496,6 @@ public class Gui {
 		}
 	}
 
-	public void showToken(PanelEditor editor, Token token) {
-		if (token == null) {
-			throw new IllegalArgumentException("Token cannot be null!");
-		}
-		editor.navigateToToken(token, SelectionHighlightPainter.INSTANCE);
-		redraw();
-	}
-
 	public void showTokens(PanelEditor editor, Collection<Token> tokens) {
 		Vector<Token> sortedTokens = new Vector<>(tokens);
 		Collections.sort(sortedTokens);
@@ -518,7 +509,7 @@ public class Gui {
 		}
 
 		// show the first token
-		showToken(editor, sortedTokens.get(0));
+		editor.navigateToToken(sortedTokens.get(0));
 	}
 
 	private void updateSelectedReference(PanelEditor editor, EntryReference<Entry<?>, Entry<?>> ref) {
