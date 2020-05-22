@@ -81,8 +81,20 @@ public class JavadocDialog {
 		for (JavadocTag tag : JavadocTag.values()) {
 			JButton tagButton = new JButton(tag.getText());
 			tagButton.addActionListener(action -> {
+				boolean textSelected = text.getSelectedText() != null;
 				String tagText = tag.isInline() ? "{" + tag.getText() + " }" : tag.getText() + " ";
-				text.insert(tagText, text.getCaretPosition());
+
+				if (textSelected) {
+					if (tag.isInline()) {
+						tagText = "{" + tag.getText() + " " + text.getSelectedText() + "}";
+					} else {
+						tagText = tag.getText() + " " + text.getSelectedText();
+					}
+					text.replaceSelection(tagText);
+				} else {
+					text.insert(tagText, text.getCaretPosition());
+				}
+
 				if (tag.isInline()) {
 					text.setCaretPosition(text.getCaretPosition() - 1);
 				}
@@ -123,23 +135,21 @@ public class JavadocDialog {
 	}
 
 	private enum JavadocTag {
-		CODE("@code", true),
-		LINK("@link", true),
-		LINKPLAIN("@linkplain", true),
-		RETURN("@return", false),
-		SEE("@see", false),
-		THROWS("@throws", false);
+		CODE(true),
+		LINK(true),
+		LINKPLAIN(true),
+		RETURN(false),
+		SEE(false),
+		THROWS(false);
 
-		private String text;
 		private boolean inline;
 
-		private JavadocTag(String text, boolean inline) {
-			this.text = text;
+		private JavadocTag(boolean inline) {
 			this.inline = inline;
 		}
 
 		public String getText() {
-			return this.text;
+			return "@" + this.name().toLowerCase();
 		}
 
 		public boolean isInline() {
