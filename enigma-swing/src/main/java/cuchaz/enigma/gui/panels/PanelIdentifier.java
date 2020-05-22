@@ -41,7 +41,7 @@ public class PanelIdentifier {
 
 		this.ui = new JPanel();
 		this.ui.setLayout(new GridBagLayout());
-		this.ui.setPreferredSize(ScaleUtil.getDimension(0, 100));
+		this.ui.setPreferredSize(ScaleUtil.getDimension(0, 120));
 		this.ui.setBorder(BorderFactory.createTitledBorder(I18n.translate("info_panel.identifier")));
 		this.ui.setEnabled(false);
 	}
