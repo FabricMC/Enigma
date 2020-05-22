@@ -42,6 +42,7 @@ import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.*;
 import cuchaz.enigma.gui.elements.rpanel.DecoratedRPanelContainer.ButtonLocation;
 import cuchaz.enigma.gui.elements.rpanel.DoubleRPanelContainer;
+import cuchaz.enigma.gui.elements.rpanel.RPanel;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
@@ -68,6 +69,9 @@ public class Gui {
 	private final Set<EditableType> editableTypes;
 	private boolean singleClassTree;
 
+	private final RPanel messagePanel = new RPanel();
+	private final RPanel userPanel = new RPanel();
+
 	private final MenuBar menuBar;
 	private final ObfPanel obfPanel;
 	private final DeobfPanel deobfPanel;
@@ -85,17 +89,14 @@ public class Gui {
 
 	private final JPanel classesPanel = new JPanel(new BorderLayout());
 	private final JTabbedPane tabs = new JTabbedPane();
-	private final CollapsibleTabbedPane logTabs = new CollapsibleTabbedPane(JTabbedPane.BOTTOM);
-	private final JSplitPane logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, right.getUi(), logTabs);
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
-	private final JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
+	private final JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.right.getUi());
 	private final JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.left.getUi(), splitRight);
 
 	private final DefaultListModel<String> userModel = new DefaultListModel<>();
 	private final DefaultListModel<Message> messageModel = new DefaultListModel<>();
 	private final JList<String> users = new JList<>(userModel);
 	private final JList<Message> messages = new JList<>(messageModel);
-	private final JPanel messagePanel = new JPanel(new BorderLayout());
 	private final JScrollPane messageScrollPane = new JScrollPane(this.messages);
 	private final JTextField chatBox = new JTextField();
 
@@ -158,6 +159,11 @@ public class Gui {
 		right.getLeft().attach(implementationsTree.getPanel());
 		right.getLeft().attach(callsTree.getPanel());
 
+		userPanel.getContentPane().setLayout(new BorderLayout());
+		userPanel.getContentPane().add(new JScrollPane(this.users));
+		right.getRight().attach(userPanel);
+
+		messagePanel.getContentPane().setLayout(new BorderLayout());
 		messages.setCellRenderer(new MessageListCellRenderer());
 		JPanel chatPanel = new JPanel(new BorderLayout());
 		AbstractAction sendListener = new AbstractAction("Send") {
@@ -170,12 +176,10 @@ public class Gui {
 		JButton chatSendButton = new JButton(sendListener);
 		chatPanel.add(chatBox, BorderLayout.CENTER);
 		chatPanel.add(chatSendButton, BorderLayout.EAST);
-		messagePanel.add(messageScrollPane, BorderLayout.CENTER);
-		messagePanel.add(chatPanel, BorderLayout.SOUTH);
-		logTabs.addTab(I18n.translate("log_panel.users"), new JScrollPane(this.users));
-		logTabs.addTab(I18n.translate("log_panel.messages"), messagePanel);
-		logSplit.setResizeWeight(0.5);
-		logSplit.resetToPreferredSizes();
+		messagePanel.getContentPane().add(messageScrollPane, BorderLayout.CENTER);
+		messagePanel.getContentPane().add(chatPanel, BorderLayout.SOUTH);
+		right.getRight().attach(messagePanel);
+
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
 		splitCenter.setResizeWeight(0); // let the right side take all the slack
@@ -188,7 +192,7 @@ public class Gui {
 			// this.splitClasses.setDividerLocation(layout[0]);
 			this.splitCenter.setDividerLocation(layout[1]);
 			this.splitRight.setDividerLocation(layout[2]);
-			this.logSplit.setDividerLocation(layout[3]);
+			// this.logSplit.setDividerLocation(layout[3]);
 		}
 
 		left.addDragTarget(structurePanel.getPanel());
@@ -197,12 +201,16 @@ public class Gui {
 		left.addDragTarget(callsTree.getPanel());
 		left.addDragTarget(obfPanel.getPanel());
 		left.addDragTarget(deobfPanel.getPanel());
+		left.addDragTarget(messagePanel);
+		left.addDragTarget(userPanel);
 		right.addDragTarget(structurePanel.getPanel());
 		right.addDragTarget(inheritanceTree.getPanel());
 		right.addDragTarget(implementationsTree.getPanel());
 		right.addDragTarget(callsTree.getPanel());
 		right.addDragTarget(obfPanel.getPanel());
 		right.addDragTarget(deobfPanel.getPanel());
+		right.addDragTarget(messagePanel);
+		right.addDragTarget(userPanel);
 
 		this.mainWindow.statusBar().addPermanentComponent(this.connectionStatusLabel);
 
@@ -448,7 +456,7 @@ public class Gui {
 				0, // this.splitClasses.getDividerLocation(),
 				this.splitCenter.getDividerLocation(),
 				this.splitRight.getDividerLocation(),
-				this.logSplit.getDividerLocation());
+				0 /* this.logSplit.getDividerLocation() */);
 		UiConfig.save();
 
 		if (searchDialog != null) {
@@ -589,11 +597,11 @@ public class Gui {
 		connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
 
 		if (connectionState == ConnectionState.NOT_CONNECTED) {
-			logSplit.setLeftComponent(null);
-			splitRight.setRightComponent(right.getUi());
+			userPanel.setVisible(false);
+			messagePanel.setVisible(false);
 		} else {
-			splitRight.setRightComponent(logSplit);
-			logSplit.setLeftComponent(right.getUi());
+			userPanel.setVisible(true);
+			messagePanel.setVisible(true);
 		}
 
 		splitRight.setDividerLocation(splitRight.getDividerLocation());
@@ -602,8 +610,8 @@ public class Gui {
 	public void retranslateUi() {
 		this.jarFileChooser.setDialogTitle(I18n.translate("menu.file.jar.open"));
 		this.exportJarFileChooser.setDialogTitle(I18n.translate("menu.file.export.jar"));
-		this.logTabs.setTitleAt(0, I18n.translate("log_panel.users"));
-		this.logTabs.setTitleAt(1, I18n.translate("log_panel.messages"));
+		this.userPanel.setTitle(I18n.translate("log_panel.users"));
+		this.messagePanel.setTitle(I18n.translate("log_panel.messages"));
 		this.connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
 
 		this.updateUiState();
