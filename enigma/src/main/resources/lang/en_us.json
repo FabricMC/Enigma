@@ -69,7 +69,11 @@
 	"popup_menu.zoom.in": "Zoom in",
 	"popup_menu.zoom.out": "Zoom out",
 	"popup_menu.zoom.reset": "Reset zoom",
-
+	"popup_menu.editor_tab.close": "Close",
+	"popup_menu.editor_tab.close_all": "Close All",
+	"popup_menu.editor_tab.close_others": "Close Others",
+	"popup_menu.editor_tab.close_left": "Close All to the Left",
+	"popup_menu.editor_tab.close_right": "Close All to the Right",
 	"info_panel.classes.obfuscated": "Obfuscated Classes",
 	"info_panel.classes.deobfuscated": "De-obfuscated Classes",
 	"info_panel.identifier": "Identifier Info",
