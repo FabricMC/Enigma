@@ -20,7 +20,6 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.gui.BrowserCaret;
-import cuchaz.enigma.gui.DecompiledClassSource;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.config.Config;
@@ -30,8 +29,9 @@ import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
-import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.source.DecompiledClassSource;
+import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.EntryResolver;
@@ -58,7 +58,7 @@ public class PanelEditor {
 
 	public Config.LookAndFeel editorLaf;
 	private int fontSize = 12;
-	private Map<TokenHighlightType, BoxHighlightPainter> boxHighlightPainters;
+	private Map<RenamableTokenType, BoxHighlightPainter> boxHighlightPainters;
 
 	private final List<EditorActionListener> listeners = new ArrayList<>();
 
@@ -391,12 +391,12 @@ public class PanelEditor {
 		showReference0(getCursorReference());
 	}
 
-	public void setHighlightedTokens(Map<TokenHighlightType, Collection<Token>> tokens) {
+	public void setHighlightedTokens(Map<RenamableTokenType, Collection<Token>> tokens) {
 		// remove any old highlighters
 		editor.getHighlighter().removeAllHighlights();
 
 		if (boxHighlightPainters != null) {
-			for (TokenHighlightType type : tokens.keySet()) {
+			for (RenamableTokenType type : tokens.keySet()) {
 				BoxHighlightPainter painter = boxHighlightPainters.get(type);
 				if (painter != null) {
 					setHighlightedTokens(tokens.get(type), painter);

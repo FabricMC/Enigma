@@ -11,13 +11,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.Nullable;
 
+import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.events.ClassHandleListener;
-import cuchaz.enigma.gui.DecompiledClassSource;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.tree.ClassNode;
 
 import static cuchaz.enigma.utils.Utils.withLock;
@@ -95,7 +94,7 @@ public final class ClassHandleProvider {
 			}
 
 			ClassNode fixedNode = new ClassNode();
-			node.accept(new SourceFixVisitor(Utils.ASM_VERSION, fixedNode, project.getJarIndex()));
+			node.accept(new SourceFixVisitor(Enigma.ASM_VERSION, fixedNode, project.getJarIndex()));
 			return fixedNode;
 		}, new SourceSettings(true, true));
 	}

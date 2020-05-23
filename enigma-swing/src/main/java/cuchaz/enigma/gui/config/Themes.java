@@ -8,8 +8,8 @@ import com.google.common.collect.ImmutableMap;
 import cuchaz.enigma.gui.EnigmaSyntaxKit;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
-import cuchaz.enigma.gui.highlight.TokenHighlightType;
 import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.source.RenamableTokenType;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class Themes {
@@ -33,17 +33,17 @@ public class Themes {
 		EnigmaSyntaxKit.invalidate();
 		DefaultSyntaxKit.initKit();
 		DefaultSyntaxKit.registerContentType("text/enigma-sources", EnigmaSyntaxKit.class.getName());
-		ImmutableMap<TokenHighlightType, BoxHighlightPainter> boxHighlightPainters = getBoxHighlightPainters();
+		ImmutableMap<RenamableTokenType, BoxHighlightPainter> boxHighlightPainters = getBoxHighlightPainters();
 		listeners.forEach(l -> l.onThemeChanged(config.lookAndFeel, boxHighlightPainters));
 		ScaleUtil.applyScaling();
 	}
 
-	public static ImmutableMap<TokenHighlightType, BoxHighlightPainter> getBoxHighlightPainters() {
+	public static ImmutableMap<RenamableTokenType, BoxHighlightPainter> getBoxHighlightPainters() {
 		Config config = Config.getInstance();
 		return ImmutableMap.of(
-				TokenHighlightType.OBFUSCATED, BoxHighlightPainter.create(config.obfuscatedColor, config.obfuscatedColorOutline),
-				TokenHighlightType.PROPOSED, BoxHighlightPainter.create(config.proposedColor, config.proposedColorOutline),
-				TokenHighlightType.DEOBFUSCATED, BoxHighlightPainter.create(config.deobfuscatedColor, config.deobfuscatedColorOutline)
+				RenamableTokenType.OBFUSCATED, BoxHighlightPainter.create(config.obfuscatedColor, config.obfuscatedColorOutline),
+				RenamableTokenType.PROPOSED, BoxHighlightPainter.create(config.proposedColor, config.proposedColorOutline),
+				RenamableTokenType.DEOBFUSCATED, BoxHighlightPainter.create(config.deobfuscatedColor, config.deobfuscatedColorOutline)
 		);
 	}
 

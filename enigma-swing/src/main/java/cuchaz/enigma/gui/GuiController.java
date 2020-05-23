@@ -43,6 +43,7 @@ import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.network.*;
 import cuchaz.enigma.network.packet.LoginC2SPacket;
 import cuchaz.enigma.network.packet.Packet;
+import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.Token;

@@ -1,13 +1,13 @@
-package cuchaz.enigma.gui;
+package cuchaz.enigma.source;
+
+import java.util.*;
+
+import javax.annotation.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.EnigmaServices;
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.source.Token;
 import cuchaz.enigma.api.service.NameProposalService;
-import cuchaz.enigma.gui.highlight.TokenHighlightType;
-import cuchaz.enigma.source.SourceIndex;
-import cuchaz.enigma.source.SourceRemapper;
 import cuchaz.enigma.translation.LocalNameGenerator;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
@@ -17,16 +17,13 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableDefEntry;
 
-import javax.annotation.Nullable;
-import java.util.*;
-
 public class DecompiledClassSource {
 	private final ClassEntry classEntry;
 
 	private final SourceIndex obfuscatedIndex;
 	private SourceIndex remappedIndex;
 
-	private final Map<TokenHighlightType, Collection<Token>> highlightedTokens = new EnumMap<>(TokenHighlightType.class);
+	private final Map<RenamableTokenType, Collection<Token>> highlightedTokens = new EnumMap<>(RenamableTokenType.class);
 
 	public DecompiledClassSource(ClassEntry classEntry, SourceIndex index) {
 		this.classEntry = classEntry;
@@ -55,16 +52,16 @@ public class DecompiledClassSource {
 
 		if (project.isRenamable(reference)) {
 			if (isDeobfuscated(entry, translatedEntry)) {
-				highlightToken(movedToken, TokenHighlightType.DEOBFUSCATED);
+				highlightToken(movedToken, RenamableTokenType.DEOBFUSCATED);
 				return translatedEntry.getSourceRemapName();
 			} else {
 				Optional<String> proposedName = proposeName(project, entry);
 				if (proposedName.isPresent()) {
-					highlightToken(movedToken, TokenHighlightType.PROPOSED);
+					highlightToken(movedToken, RenamableTokenType.PROPOSED);
 					return proposedName.get();
 				}
 
-				highlightToken(movedToken, TokenHighlightType.OBFUSCATED);
+				highlightToken(movedToken, RenamableTokenType.OBFUSCATED);
 			}
 		}
 
@@ -119,11 +116,11 @@ public class DecompiledClassSource {
 		return remappedIndex;
 	}
 
-	public Map<TokenHighlightType, Collection<Token>> getHighlightedTokens() {
+	public Map<RenamableTokenType, Collection<Token>> getHighlightedTokens() {
 		return highlightedTokens;
 	}
 
-	private void highlightToken(Token token, TokenHighlightType highlightType) {
+	private void highlightToken(Token token, RenamableTokenType highlightType) {
 		highlightedTokens.computeIfAbsent(highlightType, t -> new ArrayList<>()).add(token);
 	}
 

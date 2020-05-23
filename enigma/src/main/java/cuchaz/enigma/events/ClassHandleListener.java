@@ -1,7 +1,7 @@
 package cuchaz.enigma.events;
 
-import cuchaz.enigma.gui.DecompiledClassSource;
 import cuchaz.enigma.classhandle.ClassHandle;
+import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 

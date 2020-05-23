@@ -5,7 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
 import cuchaz.enigma.events.ClassHandleListener;
-import cuchaz.enigma.gui.DecompiledClassSource;
+import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 

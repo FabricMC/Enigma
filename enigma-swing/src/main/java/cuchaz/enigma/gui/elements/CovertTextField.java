@@ -11,7 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.text.Document;
 
 import cuchaz.enigma.gui.events.CovertTextFieldListener;
-import cuchaz.enigma.utils.Utils;
+import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.Validatable;
 
@@ -31,7 +31,7 @@ public class CovertTextField implements Validatable {
 		this.ui = new JPanel();
 		this.ui.setLayout(new GridLayout(1, 1, 0, 0));
 		this.textField = new ValidatableTextField(text);
-		this.label = Utils.unboldLabel(new JLabel(text));
+		this.label = GuiUtil.unboldLabel(new JLabel(text));
 		this.label.setBorder(BorderFactory.createLoweredBevelBorder());
 
 		this.label.addMouseListener(new MouseAdapter() {
