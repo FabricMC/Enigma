@@ -1,19 +1,5 @@
 package cuchaz.enigma.gui.elements;
 
-import cuchaz.enigma.gui.config.Config;
-import cuchaz.enigma.gui.config.Themes;
-import cuchaz.enigma.gui.ConnectionState;
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.dialog.AboutDialog;
-import cuchaz.enigma.gui.dialog.ChangeDialog;
-import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
-import cuchaz.enigma.gui.dialog.CreateServerDialog;
-import cuchaz.enigma.gui.dialog.StatsDialog;
-import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.Pair;
-
 import java.awt.Desktop;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -24,11 +10,23 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.swing.*;
+
+import cuchaz.enigma.gui.ConnectionState;
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.config.Config;
+import cuchaz.enigma.gui.config.Themes;
+import cuchaz.enigma.gui.dialog.*;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
 
 public class MenuBar {
 
@@ -261,8 +259,7 @@ public class MenuBar {
 		}
 	}
 
-	private static List<JMenuItem> prepareOpenMenu(JMenu openMenu, Gui gui) {
-		List<JMenuItem> openMappingsMenus = new ArrayList<>();
+	private static void prepareOpenMenu(JMenu openMenu, Gui gui) {
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getReader() != null) {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
@@ -272,15 +269,12 @@ public class MenuBar {
 						gui.getController().openMappings(format, selectedFile.toPath());
 					}
 				});
-				openMappingsMenus.add(item);
 				openMenu.add(item);
 			}
 		}
-		return openMappingsMenus;
 	}
 
-	private static List<JMenuItem> prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
-		List<JMenuItem> saveMappingsMenus = new ArrayList<>();
+	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getWriter() != null) {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
@@ -291,11 +285,9 @@ public class MenuBar {
 						saveMappingsItem.setEnabled(true);
 					}
 				});
-				saveMappingsMenus.add(item);
 				saveMappingsAsMenu.add(item);
 			}
 		}
-		return saveMappingsMenus;
 	}
 
 	private static void prepareDecompilerMenu(JMenu decompilerMenu, Gui gui) {
