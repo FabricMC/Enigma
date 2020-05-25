@@ -12,8 +12,8 @@ import javax.swing.JPanel;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.elements.CovertTextField;
-import cuchaz.enigma.gui.events.CovertTextFieldListener;
+import cuchaz.enigma.gui.elements.ConvertingTextField;
+import cuchaz.enigma.gui.events.ConvertingTextFieldListener;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
@@ -32,7 +32,7 @@ public class PanelIdentifier {
 	private Entry<?> entry;
 	private Entry<?> deobfEntry;
 
-	private CovertTextField nameField;
+	private ConvertingTextField nameField;
 
 	private final ValidationContext vc = new ValidationContext();
 
@@ -117,9 +117,9 @@ public class PanelIdentifier {
 		th.end();
 
 		if (this.nameField != null) {
-			this.nameField.addListener(new CovertTextFieldListener() {
+			this.nameField.addListener(new ConvertingTextFieldListener() {
 				@Override
-				public void onStartEditing(CovertTextField field) {
+				public void onStartEditing(ConvertingTextField field) {
 					int i = field.getText().lastIndexOf('/');
 					if (i != -1) {
 						field.selectSubstring(i + 1);
@@ -127,7 +127,7 @@ public class PanelIdentifier {
 				}
 
 				@Override
-				public boolean tryStopEditing(CovertTextField field, boolean abort) {
+				public boolean tryStopEditing(ConvertingTextField field, boolean abort) {
 					if (abort) return true;
 					vc.reset();
 					vc.setActiveElement(field);
@@ -136,7 +136,7 @@ public class PanelIdentifier {
 				}
 
 				@Override
-				public void onStopEditing(CovertTextField field, boolean abort) {
+				public void onStopEditing(ConvertingTextField field, boolean abort) {
 					if (abort) return;
 					vc.reset();
 					vc.setActiveElement(field);
@@ -203,13 +203,13 @@ public class PanelIdentifier {
 			col2.gridy += 1;
 		}
 
-		public CovertTextField addCovertTextField(String c1, String c2) {
-			CovertTextField textField = new CovertTextField(c2);
+		public ConvertingTextField addCovertTextField(String c1, String c2) {
+			ConvertingTextField textField = new ConvertingTextField(c2);
 			addRow(new JLabel(c1), textField.getUi());
 			return textField;
 		}
 
-		public CovertTextField addRenameTextField(String c1, String c2) {
+		public ConvertingTextField addRenameTextField(String c1, String c2) {
 			if (project.isRenamable(e)) {
 				return addCovertTextField(c1, c2);
 			} else {

@@ -10,7 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.text.Document;
 
-import cuchaz.enigma.gui.events.CovertTextFieldListener;
+import cuchaz.enigma.gui.events.ConvertingTextFieldListener;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.Validatable;
@@ -18,16 +18,16 @@ import cuchaz.enigma.utils.validation.Validatable;
 /**
  * A label that converts into an editable text field when you click it.
  */
-public class CovertTextField implements Validatable {
+public class ConvertingTextField implements Validatable {
 
 	private final JPanel ui;
 	private final ValidatableTextField textField;
 	private final JLabel label;
 	private boolean isEditing = false;
 
-	private final Set<CovertTextFieldListener> listeners = new HashSet<>();
+	private final Set<ConvertingTextFieldListener> listeners = new HashSet<>();
 
-	public CovertTextField(String text) {
+	public ConvertingTextField(String text) {
 		this.ui = new JPanel();
 		this.ui.setLayout(new GridLayout(1, 1, 0, 0));
 		this.textField = new ValidatableTextField(text);
@@ -155,11 +155,11 @@ public class CovertTextField implements Validatable {
 		textField.clearMessages();
 	}
 
-	public void addListener(CovertTextFieldListener listener) {
+	public void addListener(ConvertingTextFieldListener listener) {
 		this.listeners.add(listener);
 	}
 
-	public void removeListener(CovertTextFieldListener listener) {
+	public void removeListener(ConvertingTextFieldListener listener) {
 		this.listeners.remove(listener);
 	}
 
