@@ -16,6 +16,8 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.Utils;
 
 import javax.swing.*;
+import javax.swing.text.html.HTML;
+
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -72,6 +74,50 @@ public class JavadocDialog {
 		buttonsPanel.add(saveButton);
 		pane.add(buttonsPanel, BorderLayout.SOUTH);
 
+		// tags panel
+		JMenuBar tagsMenu = new JMenuBar();
+
+		// add javadoc tags
+		for (JavadocTag tag : JavadocTag.values()) {
+			JButton tagButton = new JButton(tag.getText());
+			tagButton.addActionListener(action -> {
+				boolean textSelected = text.getSelectedText() != null;
+				String tagText = tag.isInline() ? "{" + tag.getText() + " }" : tag.getText() + " ";
+
+				if (textSelected) {
+					if (tag.isInline()) {
+						tagText = "{" + tag.getText() + " " + text.getSelectedText() + "}";
+					} else {
+						tagText = tag.getText() + " " + text.getSelectedText();
+					}
+					text.replaceSelection(tagText);
+				} else {
+					text.insert(tagText, text.getCaretPosition());
+				}
+
+				if (tag.isInline()) {
+					text.setCaretPosition(text.getCaretPosition() - 1);
+				}
+				text.grabFocus();
+			});
+			tagsMenu.add(tagButton);
+		}
+
+		// add html tags
+		JComboBox<String> htmlList = new JComboBox<String>();
+		htmlList.setPreferredSize(new Dimension());
+		for (HTML.Tag htmlTag : HTML.getAllTags()) {
+			htmlList.addItem(htmlTag.toString());
+		}
+		htmlList.addActionListener(action -> {
+			String tagText = "<" + htmlList.getSelectedItem().toString() + ">";
+			text.insert(tagText, text.getCaretPosition());
+			text.grabFocus();
+		});
+		tagsMenu.add(htmlList);
+
+		pane.add(tagsMenu, BorderLayout.NORTH);
+
 		// show the frame
 		frame.setSize(ScaleUtil.getDimension(600, 400));
 		frame.setLocationRelativeTo(parent);
@@ -86,5 +132,28 @@ public class JavadocDialog {
 
 	public interface Callback {
 		void closeUi(JFrame frame, boolean save);
+	}
+
+	private enum JavadocTag {
+		CODE(true),
+		LINK(true),
+		LINKPLAIN(true),
+		RETURN(false),
+		SEE(false),
+		THROWS(false);
+
+		private boolean inline;
+
+		private JavadocTag(boolean inline) {
+			this.inline = inline;
+		}
+
+		public String getText() {
+			return "@" + this.name().toLowerCase();
+		}
+
+		public boolean isInline() {
+			return this.inline;
+		}
 	}
 }
