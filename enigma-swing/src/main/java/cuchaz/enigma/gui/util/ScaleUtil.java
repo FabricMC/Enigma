@@ -56,8 +56,8 @@ public class ScaleUtil {
 		return new Insets(scale(top), scale(left), scale(bottom), scale(right));
 	}
 
-	public static Font getFont(String fontName, int plain, int fontSize) {
-		return scaleFont(new Font(fontName, plain, fontSize));
+	public static Font getFont(String fontName, int style, int fontSize) {
+		return scaleFont(new Font(fontName, style, fontSize));
 	}
 
 	public static Font scaleFont(Font font) {

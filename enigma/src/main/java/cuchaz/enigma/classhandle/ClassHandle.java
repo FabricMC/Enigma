@@ -8,6 +8,7 @@ import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.utils.Result;
 
 /**
  * A handle to a class file. Can be treated similarly to a handle to a file.
@@ -38,25 +39,33 @@ public interface ClassHandle extends AutoCloseable {
 	ClassEntry getDeobfRef();
 
 	/**
-	 * Gets the class source asynchronously. If the class is still decompiling,
-	 * this will return an uncompleted future, otherwise it will return a
-	 * completed future.
+	 * Gets the class source, or the error generated while decompiling the
+	 * class, asynchronously. If this class has already finished decompiling,
+	 * this will return an already completed future.
 	 *
 	 * @return the class source
 	 * @throws IllegalStateException if the class handle is closed
 	 */
-	CompletableFuture<DecompiledClassSource> getSource();
+	CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> getSource();
 
 	/**
-	 * Gets the class source without any decoration asynchronously. This is the
-	 * raw source from the decompiler and will not be deobfuscated, and does not
-	 * contain any Javadoc comments added via mappings.
+	 * Gets the class source without any decoration, or the error generated
+	 * while decompiling the class, asynchronously. This is the raw source from
+	 * the decompiler and will not be deobfuscated, and does not contain any
+	 * Javadoc comments added via mappings. If this class has already finished
+	 * decompiling, this will return an already completed future.
 	 *
 	 * @return the uncommented class source
 	 * @throws IllegalStateException if the class handle is closed
 	 * @see ClassHandle#getSource()
 	 */
-	CompletableFuture<Source> getUncommentedSource();
+	CompletableFuture<Result<Source, ClassHandleError>> getUncommentedSource();
+
+	void invalidate();
+
+	void invalidateMapped();
+
+	void invalidateJavadoc();
 
 	/**
 	 * Adds a listener for this class handle.

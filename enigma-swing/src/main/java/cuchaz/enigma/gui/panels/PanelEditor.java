@@ -1,14 +1,13 @@
 package cuchaz.enigma.gui.panels;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -18,6 +17,7 @@ import javax.swing.text.Highlighter.HighlightPainter;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.classhandle.ClassHandle;
+import cuchaz.enigma.classhandle.ClassHandleError;
 import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.gui.BrowserCaret;
 import cuchaz.enigma.gui.Gui;
@@ -41,13 +41,21 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Result;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class PanelEditor {
 
-	private final JScrollPane ui;
-	private final JEditorPane editor;
+	private final JPanel ui = new JPanel();
+	private final JEditorPane editor = new JEditorPane();
+	private final JScrollPane editorScrollPane = new JScrollPane(this.editor);
 	private final PopupMenuBar popupMenu;
+	private final JLabel errorLabel = new JLabel("An error was encountered while decompiling.");
+	private final JTextArea errorTextArea = new JTextArea();
+	private final JScrollPane errorScrollPane = new JScrollPane(this.errorTextArea);
+	private final JButton retryButton = new JButton("Retry");
+
+	private DisplayMode mode = DisplayMode.INACTIVE;
 
 	private final GuiController controller;
 	private final Gui gui;
@@ -68,17 +76,15 @@ public class PanelEditor {
 	private DecompiledClassSource source;
 	private boolean settingSource;
 
-	public PanelEditor(Gui gui, ClassHandle handle) {
+	public PanelEditor(Gui gui) {
 		this.gui = gui;
 		this.controller = gui.getController();
 
-		this.editor = new JEditorPane();
-		this.ui = new JScrollPane(editor);
 		this.editor.setEditable(false);
 		this.editor.setSelectionColor(new Color(31, 46, 90));
 		this.editor.setCaret(new BrowserCaret());
 		this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
-		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), mouseIsPressed));
+		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
 		this.editor.setCaretColor(new Color(Config.getInstance().caretColor));
 		this.editor.setContentType("text/enigma-sources");
 		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
@@ -89,19 +95,22 @@ public class PanelEditor {
 		this.popupMenu = new PopupMenuBar(this, gui);
 		this.editor.setComponentPopupMenu(this.popupMenu);
 
+		this.errorTextArea.setEditable(false);
+		this.errorTextArea.setFont(ScaleUtil.getFont(Font.MONOSPACED, Font.PLAIN, 10));
+
 		this.boxHighlightPainters = Themes.getBoxHighlightPainters();
 
 		this.editor.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent mouseEvent) {
-				mouseIsPressed = true;
+				PanelEditor.this.mouseIsPressed = true;
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				switch (e.getButton()) {
 					case MouseEvent.BUTTON3: // Right click
-						editor.setCaretPosition(editor.viewToModel(e.getPoint()));
+						PanelEditor.this.editor.setCaretPosition(PanelEditor.this.editor.viewToModel(e.getPoint()));
 						break;
 
 					case 4: // Back navigation
@@ -112,57 +121,59 @@ public class PanelEditor {
 						gui.getController().openNextReference();
 						break;
 				}
-				mouseIsPressed = false;
+				PanelEditor.this.mouseIsPressed = false;
 			}
 		});
 		this.editor.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
-					shouldNavigateOnClick = false;
+					PanelEditor.this.shouldNavigateOnClick = false;
 					switch (event.getKeyCode()) {
 						case KeyEvent.VK_I:
-							popupMenu.showInheritanceMenu.doClick();
+							PanelEditor.this.popupMenu.showInheritanceMenu.doClick();
 							break;
 
 						case KeyEvent.VK_M:
-							popupMenu.showImplementationsMenu.doClick();
+							PanelEditor.this.popupMenu.showImplementationsMenu.doClick();
 							break;
 
 						case KeyEvent.VK_N:
-							popupMenu.openEntryMenu.doClick();
+							PanelEditor.this.popupMenu.openEntryMenu.doClick();
 							break;
 
 						case KeyEvent.VK_P:
-							popupMenu.openPreviousMenu.doClick();
+							PanelEditor.this.popupMenu.openPreviousMenu.doClick();
 							break;
 
 						case KeyEvent.VK_E:
-							popupMenu.openNextMenu.doClick();
+							PanelEditor.this.popupMenu.openNextMenu.doClick();
 							break;
 
 						case KeyEvent.VK_C:
 							if (event.isShiftDown()) {
-								popupMenu.showCallsSpecificMenu.doClick();
+								PanelEditor.this.popupMenu.showCallsSpecificMenu.doClick();
 							} else {
-								popupMenu.showCallsMenu.doClick();
+								PanelEditor.this.popupMenu.showCallsMenu.doClick();
 							}
 							break;
 
 						case KeyEvent.VK_O:
-							popupMenu.toggleMappingMenu.doClick();
+							PanelEditor.this.popupMenu.toggleMappingMenu.doClick();
 							break;
 
 						case KeyEvent.VK_R:
-							popupMenu.renameMenu.doClick();
+							PanelEditor.this.popupMenu.renameMenu.doClick();
 							break;
 
 						case KeyEvent.VK_D:
-							popupMenu.editJavadocMenu.doClick();
+							PanelEditor.this.popupMenu.editJavadocMenu.doClick();
 							break;
 
 						case KeyEvent.VK_F5:
-							gui.getController().getClassHandleProvider().invalidateMapped(classHandle.getRef());
+							if (PanelEditor.this.classHandle != null) {
+								PanelEditor.this.classHandle.invalidateMapped();
+							}
 							break;
 
 						case KeyEvent.VK_F:
@@ -180,7 +191,7 @@ public class PanelEditor {
 							break;
 
 						default:
-							shouldNavigateOnClick = true; // CTRL
+							PanelEditor.this.shouldNavigateOnClick = true; // CTRL
 							break;
 					}
 				}
@@ -188,11 +199,11 @@ public class PanelEditor {
 
 			@Override
 			public void keyTyped(KeyEvent event) {
-				if (!popupMenu.renameMenu.isEnabled()) return;
+				if (!PanelEditor.this.popupMenu.renameMenu.isEnabled()) return;
 
 				if (!event.isControlDown() && !event.isAltDown() && Character.isJavaIdentifierPart(event.getKeyChar())) {
 					EnigmaProject project = gui.getController().project;
-					EntryReference<Entry<?>, Entry<?>> reference = project.getMapper().deobfuscate(cursorReference);
+					EntryReference<Entry<?>, Entry<?>> reference = project.getMapper().deobfuscate(PanelEditor.this.cursorReference);
 					Entry<?> entry = reference.getNameableEntry();
 
 					String name = String.valueOf(event.getKeyChar());
@@ -209,26 +220,26 @@ public class PanelEditor {
 
 			@Override
 			public void keyReleased(KeyEvent event) {
-				shouldNavigateOnClick = event.isControlDown();
+				PanelEditor.this.shouldNavigateOnClick = event.isControlDown();
 			}
 		});
 
-		themeChangeListener = (laf, boxHighlightPainters) -> {
-			if ((editorLaf == null || editorLaf != laf)) {
+		this.retryButton.addActionListener(_e -> redecompileClass());
+
+		this.themeChangeListener = (laf, boxHighlightPainters) -> {
+			if ((this.editorLaf == null || this.editorLaf != laf)) {
 				this.editor.updateUI();
 				this.editor.setBackground(new Color(Config.getInstance().editorBackground));
-				if (editorLaf != null) {
-					gui.getController().getClassHandleProvider().invalidateMapped(classHandle.getRef());
+				if (this.editorLaf != null) {
+					this.classHandle.invalidateMapped();
 				}
 
-				editorLaf = laf;
+				this.editorLaf = laf;
 			}
 			this.boxHighlightPainters = boxHighlightPainters;
 		};
 
-		setClassHandle0(null, handle);
-
-		ui.putClientProperty(PanelEditor.class, this);
+		this.ui.putClientProperty(PanelEditor.class, this);
 	}
 
 	@Nullable
@@ -243,25 +254,36 @@ public class PanelEditor {
 	}
 
 	public void setClassHandle(ClassHandle handle) {
-		ClassEntry old = this.classHandle.getRef();
-		this.classHandle.close();
+		ClassEntry old = null;
+		if (this.classHandle != null) {
+			old = this.classHandle.getRef();
+			this.classHandle.close();
+		}
 		setClassHandle0(old, handle);
 	}
 
 	private void setClassHandle0(ClassEntry old, ClassHandle handle) {
+		this.setDisplayMode(DisplayMode.IN_PROGRESS);
 		setCursorReference(null);
 
 		handle.addListener(new ClassHandleListener() {
 			@Override
 			public void onDeobfRefChanged(ClassHandle h, ClassEntry deobfRef) {
 				SwingUtilities.invokeLater(() -> {
-					listeners.forEach(l -> l.onTitleChanged(PanelEditor.this, getFileName()));
+					PanelEditor.this.listeners.forEach(l -> l.onTitleChanged(PanelEditor.this, getFileName()));
 				});
 			}
 
 			@Override
-			public void onMappedSourceChanged(ClassHandle h, DecompiledClassSource s) {
-				SwingUtilities.invokeLater(() -> setSource(s));
+			public void onMappedSourceChanged(ClassHandle h, Result<DecompiledClassSource, ClassHandleError> res) {
+				handleDecompilerResult(res);
+			}
+
+			@Override
+			public void onInvalidate(ClassHandle h, InvalidationType t) {
+				if (t == InvalidationType.FULL) {
+					PanelEditor.this.setDisplayMode(DisplayMode.IN_PROGRESS);
+				}
 			}
 
 			@Override
@@ -269,19 +291,100 @@ public class PanelEditor {
 			}
 		});
 
-		handle.getSource().thenAcceptAsync(s -> setSource(s), SwingUtilities::invokeLater);
+		handle.getSource().thenAcceptAsync(this::handleDecompilerResult, SwingUtilities::invokeLater);
 
 		this.classHandle = handle;
-		listeners.forEach(l -> l.onClassHandleChanged(this, old, handle));
+		this.listeners.forEach(l -> l.onClassHandleChanged(this, old, handle));
 	}
 
 	public void setup() {
-		Themes.addListener(themeChangeListener);
+		Themes.addListener(this.themeChangeListener);
 	}
 
 	public void destroy() {
-		Themes.removeListener(themeChangeListener);
-		classHandle.close();
+		Themes.removeListener(this.themeChangeListener);
+		this.classHandle.close();
+	}
+
+	private void redecompileClass() {
+		if (this.classHandle != null) {
+			this.classHandle.invalidate();
+		}
+	}
+
+	private void handleDecompilerResult(Result<DecompiledClassSource, ClassHandleError> res) {
+		SwingUtilities.invokeLater(() -> {
+			if (res.isOk()) {
+				this.setSource(res.unwrap());
+			} else {
+				this.displayError(res.unwrapErr());
+			}
+		});
+	}
+
+	public void displayError(ClassHandleError t) {
+		this.setDisplayMode(DisplayMode.ERRORED);
+		this.errorTextArea.setText(t.getStackTrace());
+		this.errorTextArea.setCaretPosition(0);
+	}
+
+	public void setDisplayMode(DisplayMode mode) {
+		if (this.mode == mode) return;
+		this.ui.removeAll();
+		switch (mode) {
+			case INACTIVE:
+				break;
+			case IN_PROGRESS: {
+				this.ui.setLayout(new GridBagLayout());
+				JLabel label = new JLabel("Decompiling...", JLabel.CENTER);
+				label.setFont(ScaleUtil.getFont(label.getFont().getFontName(), Font.BOLD, 26));
+				JProgressBar pb = new JProgressBar(0, 100);
+				pb.setIndeterminate(true);
+
+				GridBagConstraints c = new GridBagConstraints();
+				c.gridx = 0;
+				c.gridy = 0;
+				c.insets = ScaleUtil.getInsets(2, 2, 2, 2);
+				c.anchor = GridBagConstraints.SOUTH;
+				this.ui.add(label, c);
+				c.gridy = 1;
+				c.anchor = GridBagConstraints.NORTH;
+				this.ui.add(pb, c);
+				break;
+			}
+			case SUCCESS: {
+				this.ui.setLayout(new GridLayout(1, 1, 0, 0));
+				this.ui.add(this.editorScrollPane);
+				break;
+			}
+			case ERRORED: {
+				this.ui.setLayout(new GridBagLayout());
+				GridBagConstraints c = new GridBagConstraints();
+				c.insets = ScaleUtil.getInsets(2, 2, 2, 2);
+				c.gridx = 0;
+				c.gridy = 0;
+				c.weightx = 1.0;
+				c.anchor = GridBagConstraints.WEST;
+				this.ui.add(this.errorLabel, c);
+				c.gridy = 1;
+				c.fill = GridBagConstraints.HORIZONTAL;
+				this.ui.add(new JSeparator(JSeparator.HORIZONTAL), c);
+				c.gridy = 2;
+				c.fill = GridBagConstraints.BOTH;
+				c.weighty = 1.0;
+				this.ui.add(this.errorScrollPane, c);
+				c.gridy = 3;
+				c.fill = GridBagConstraints.NONE;
+				c.anchor = GridBagConstraints.EAST;
+				c.weightx = 0.0;
+				c.weighty = 0.0;
+				this.ui.add(this.retryButton, c);
+				break;
+			}
+		}
+		this.ui.validate();
+		this.ui.repaint();
+		this.mode = mode;
 	}
 
 	public void offsetEditorZoom(int zoomAmount) {
@@ -298,15 +401,15 @@ public class PanelEditor {
 	}
 
 	public void onCaretMove(int pos, boolean fromClick) {
-		if (controller.project == null) return;
+		if (this.controller.project == null) return;
 
-		EntryRemapper mapper = controller.project.getMapper();
+		EntryRemapper mapper = this.controller.project.getMapper();
 		Token token = getToken(pos);
 
-		if (settingSource) {
+		if (this.settingSource) {
 			EntryReference<Entry<?>, Entry<?>> ref = getCursorReference();
 			EntryReference<Entry<?>, Entry<?>> refAtCursor = getReference(token);
-			if (editor.getDocument().getLength() != 0 && !Objects.equals(refAtCursor, ref)) {
+			if (this.editor.getDocument().getLength() != 0 && !Objects.equals(refAtCursor, ref)) {
 				showReference0(ref);
 			}
 			return;
@@ -314,17 +417,16 @@ public class PanelEditor {
 			setCursorReference(getReference(token));
 		}
 
-		Entry<?> referenceEntry = cursorReference != null ? cursorReference.entry : null;
+		Entry<?> referenceEntry = this.cursorReference != null ? this.cursorReference.entry : null;
 
-		if (referenceEntry != null && shouldNavigateOnClick && fromClick) {
-			shouldNavigateOnClick = false;
+		if (referenceEntry != null && this.shouldNavigateOnClick && fromClick) {
+			this.shouldNavigateOnClick = false;
 			Entry<?> navigationEntry = referenceEntry;
-			if (cursorReference.context == null) {
+			if (this.cursorReference.context == null) {
 				EntryResolver resolver = mapper.getObfResolver();
 				navigationEntry = resolver.resolveFirstEntry(referenceEntry, ResolutionStrategy.RESOLVE_ROOT);
 			}
-			controller.navigateTo(navigationEntry);
-			return;
+			this.controller.navigateTo(navigationEntry);
 		}
 	}
 
@@ -350,68 +452,66 @@ public class PanelEditor {
 		this.popupMenu.openNextMenu.setEnabled(this.controller.hasNextReference());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
 
-		if (referenceEntry != null && referenceEntry.equals(controller.project.getMapper().deobfuscate(referenceEntry))) {
+		if (referenceEntry != null && referenceEntry.equals(this.controller.project.getMapper().deobfuscate(referenceEntry))) {
 			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.reset_obfuscated"));
 		} else {
 			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.mark_deobfuscated"));
 		}
 
-		listeners.forEach(l -> l.onCursorReferenceChanged(this, ref));
+		this.listeners.forEach(l -> l.onCursorReferenceChanged(this, ref));
 	}
 
 	public Token getToken(int pos) {
-		if (source == null) {
+		if (this.source == null) {
 			return null;
 		}
-		return source.getIndex().getReferenceToken(pos);
+		return this.source.getIndex().getReferenceToken(pos);
 	}
 
 	@Nullable
 	public EntryReference<Entry<?>, Entry<?>> getReference(Token token) {
-		if (source == null) {
+		if (this.source == null) {
 			return null;
 		}
-		return source.getIndex().getReference(token);
-	}
-
-	public void setEditorText(String source) {
-		editor.getHighlighter().removeAllHighlights();
-		editor.setText(source);
+		return this.source.getIndex().getReference(token);
 	}
 
 	public void setSource(DecompiledClassSource source) {
+		this.setDisplayMode(DisplayMode.SUCCESS);
+		if (source == null) return;
 		try {
-			settingSource = true;
+			this.settingSource = true;
 			this.source = source;
-			editor.setText(source.toString());
+			this.editor.getHighlighter().removeAllHighlights();
+			this.editor.setText(source.toString());
 			setHighlightedTokens(source.getHighlightedTokens());
 		} finally {
-			settingSource = false;
+			this.settingSource = false;
 		}
 		showReference0(getCursorReference());
 	}
 
 	public void setHighlightedTokens(Map<RenamableTokenType, Collection<Token>> tokens) {
 		// remove any old highlighters
-		editor.getHighlighter().removeAllHighlights();
+		this.editor.getHighlighter().removeAllHighlights();
 
-		if (boxHighlightPainters != null) {
+		if (this.boxHighlightPainters != null) {
 			for (RenamableTokenType type : tokens.keySet()) {
-				BoxHighlightPainter painter = boxHighlightPainters.get(type);
+				BoxHighlightPainter painter = this.boxHighlightPainters.get(type);
 				if (painter != null) {
 					setHighlightedTokens(tokens.get(type), painter);
 				}
 			}
 		}
 
-		editor.validate();
-		editor.repaint();
+		this.editor.validate();
+		this.editor.repaint();
 	}
 
 	private void setHighlightedTokens(Iterable<Token> tokens, Highlighter.HighlightPainter painter) {
 		for (Token token : tokens) {
 			try {
-				editor.getHighlighter().addHighlight(token.start, token.end, painter);
+				this.editor.getHighlighter().addHighlight(token.start, token.end, painter);
 			} catch (BadLocationException ex) {
 				throw new IllegalArgumentException(ex);
 			}
@@ -419,7 +519,7 @@ public class PanelEditor {
 	}
 
 	public EntryReference<Entry<?>, Entry<?>> getCursorReference() {
-		return cursorReference;
+		return this.cursorReference;
 	}
 
 	public void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
@@ -433,14 +533,14 @@ public class PanelEditor {
 	 * @param reference
 	 */
 	private void showReference0(EntryReference<Entry<?>, Entry<?>> reference) {
-		if (source == null) return;
+		if (this.source == null) return;
 
-		Collection<Token> tokens = controller.getTokensForReference(source, reference);
+		Collection<Token> tokens = this.controller.getTokensForReference(this.source, reference);
 		if (tokens.isEmpty()) {
 			// DEBUG
-			System.err.println(String.format("WARNING: no tokens found for %s in %s", reference, classHandle.getRef()));
+			System.err.println(String.format("WARNING: no tokens found for %s in %s", reference, this.classHandle.getRef()));
 		} else {
-			gui.showTokens(this, tokens);
+			this.gui.showTokens(this, tokens);
 		}
 	}
 
@@ -453,21 +553,25 @@ public class PanelEditor {
 
 	private void navigateToToken(Token token, HighlightPainter highlightPainter) {
 		// set the caret position to the token
-		Document document = editor.getDocument();
+		Document document = this.editor.getDocument();
 		int clampedPosition = Math.min(Math.max(token.start, 0), document.getLength());
 
-		editor.setCaretPosition(clampedPosition);
-		editor.grabFocus();
+		this.editor.setCaretPosition(clampedPosition);
+		this.editor.grabFocus();
 
 		try {
 			// make sure the token is visible in the scroll window
-			Rectangle start = editor.modelToView(token.start);
-			Rectangle end = editor.modelToView(token.end);
+			Rectangle start = this.editor.modelToView(token.start);
+			Rectangle end = this.editor.modelToView(token.end);
 			Rectangle show = start.union(end);
 			show.grow(start.width * 10, start.height * 6);
-			SwingUtilities.invokeLater(() -> editor.scrollRectToVisible(show));
+			SwingUtilities.invokeLater(() -> this.editor.scrollRectToVisible(show));
 		} catch (BadLocationException ex) {
-			throw new Error(ex);
+			if (!this.settingSource) {
+				throw new RuntimeException(ex);
+			} else {
+				return;
+			}
 		}
 
 		// highlight the token momentarily
@@ -477,17 +581,17 @@ public class PanelEditor {
 
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				if (counter % 2 == 0) {
+				if (this.counter % 2 == 0) {
 					try {
-						highlight = editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
+						this.highlight = PanelEditor.this.editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
 					} catch (BadLocationException ex) {
 						// don't care
 					}
-				} else if (highlight != null) {
-					editor.getHighlighter().removeHighlight(highlight);
+				} else if (this.highlight != null) {
+					PanelEditor.this.editor.getHighlighter().removeHighlight(this.highlight);
 				}
 
-				if (counter++ > 6) {
+				if (this.counter++ > 6) {
 					Timer timer = (Timer) event.getSource();
 					timer.stop();
 				}
@@ -497,32 +601,39 @@ public class PanelEditor {
 	}
 
 	public void addListener(EditorActionListener listener) {
-		listeners.add(listener);
+		this.listeners.add(listener);
 	}
 
 	public void removeListener(EditorActionListener listener) {
-		listeners.remove(listener);
+		this.listeners.remove(listener);
 	}
 
-	public JScrollPane getUi() {
-		return ui;
+	public JPanel getUi() {
+		return this.ui;
 	}
 
 	public JEditorPane getEditor() {
-		return editor;
+		return this.editor;
 	}
 
 	public DecompiledClassSource getSource() {
-		return source;
+		return this.source;
 	}
 
 	public ClassHandle getClassHandle() {
-		return classHandle;
+		return this.classHandle;
 	}
 
 	public String getFileName() {
-		ClassEntry classEntry = classHandle.getDeobfRef() != null ? classHandle.getDeobfRef() : classHandle.getRef();
+		ClassEntry classEntry = this.classHandle.getDeobfRef() != null ? this.classHandle.getDeobfRef() : this.classHandle.getRef();
 		return classEntry.getSimpleName();
+	}
+
+	private enum DisplayMode {
+		INACTIVE,
+		IN_PROGRESS,
+		SUCCESS,
+		ERRORED,
 	}
 
 }

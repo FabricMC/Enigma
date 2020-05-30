@@ -15,8 +15,10 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.events.ClassHandleListener;
+import cuchaz.enigma.events.ClassHandleListener.InvalidationType;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.utils.Result;
 import org.objectweb.asm.tree.ClassNode;
 
 import static cuchaz.enigma.utils.Utils.withLock;
@@ -176,11 +178,11 @@ public final class ClassHandleProvider {
 		private final ClassEntry entry;
 		private ClassEntry deobfRef;
 		private final List<ClassHandleImpl> handles = new ArrayList<>();
-		private Source uncommentedSource;
-		private DecompiledClassSource source;
+		private Result<Source, ClassHandleError> uncommentedSource;
+		private Result<DecompiledClassSource, ClassHandleError> source;
 
-		private final List<CompletableFuture<Source>> waitingUncommentedSources = Collections.synchronizedList(new ArrayList<>());
-		private final List<CompletableFuture<DecompiledClassSource>> waitingSources = Collections.synchronizedList(new ArrayList<>());
+		private final List<CompletableFuture<Result<Source, ClassHandleError>>> waitingUncommentedSources = Collections.synchronizedList(new ArrayList<>());
+		private final List<CompletableFuture<Result<DecompiledClassSource, ClassHandleError>>> waitingSources = Collections.synchronizedList(new ArrayList<>());
 
 		private final AtomicInteger decompileVersion = new AtomicInteger();
 		private final AtomicInteger javadocVersion = new AtomicInteger();
@@ -220,25 +222,34 @@ public final class ClassHandleProvider {
 
 		public void invalidate() {
 			checkDeobfRefForUpdate();
+			withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onInvalidate(InvalidationType.FULL));
 			continueMapSource(continueIndexSource(continueInsertJavadoc(decompile())));
 		}
 
 		public void invalidateJavadoc() {
 			checkDeobfRefForUpdate();
+			withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onInvalidate(InvalidationType.JAVADOC));
 			continueMapSource(continueIndexSource(continueInsertJavadoc(CompletableFuture.completedFuture(uncommentedSource))));
 		}
 
 		public void invalidateMapped() {
 			checkDeobfRefForUpdate();
+			withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onInvalidate(InvalidationType.MAPPINGS));
 			continueMapSource(CompletableFuture.completedFuture(source));
 		}
 
-		private CompletableFuture<Source> decompile() {
+		private CompletableFuture<Result<Source, ClassHandleError>> decompile() {
 			int v = decompileVersion.incrementAndGet();
 			return CompletableFuture.supplyAsync(() -> {
 				if (decompileVersion.get() != v) return null;
 
-				Source uncommentedSource = p.decompiler.getSource(entry.getFullName());
+				Result<Source, ClassHandleError> _uncommentedSource;
+				try {
+					_uncommentedSource = Result.ok(p.decompiler.getSource(entry.getFullName()));
+				} catch (Throwable e) {
+					return Result.err(ClassHandleError.decompile(e));
+				}
+				Result<Source, ClassHandleError> uncommentedSource = _uncommentedSource;
 				Entry.this.uncommentedSource = uncommentedSource;
 				Entry.this.waitingUncommentedSources.forEach(f -> f.complete(uncommentedSource));
 				Entry.this.waitingUncommentedSources.clear();
@@ -247,38 +258,40 @@ public final class ClassHandleProvider {
 			}, p.pool);
 		}
 
-		private CompletableFuture<Source> continueInsertJavadoc(CompletableFuture<Source> f) {
+		private CompletableFuture<Result<Source, ClassHandleError>> continueInsertJavadoc(CompletableFuture<Result<Source, ClassHandleError>> f) {
 			int v = javadocVersion.incrementAndGet();
-			return f.thenApplyAsync(uncommentedSource -> {
-				if (uncommentedSource == null || javadocVersion.get() != v) return null;
-
-				Source source = uncommentedSource.addJavadocs(p.project.getMapper());
-				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDocsChanged(source));
-				return source;
+			return f.thenApplyAsync(res -> {
+				if (res == null || javadocVersion.get() != v) return null;
+				Result<Source, ClassHandleError> jdSource = res.map(s -> s.addJavadocs(p.project.getMapper()));
+				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDocsChanged(jdSource));
+				return jdSource;
 			}, p.pool);
 		}
 
-		private CompletableFuture<DecompiledClassSource> continueIndexSource(CompletableFuture<Source> f) {
+		private CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> continueIndexSource(CompletableFuture<Result<Source, ClassHandleError>> f) {
 			int v = indexVersion.incrementAndGet();
-			return f.thenApplyAsync(jdSource -> {
-				if (jdSource == null || indexVersion.get() != v) return null;
+			return f.thenApplyAsync(res -> {
+				if (res == null || indexVersion.get() != v) return null;
+				return res.andThen(jdSource -> {
+					SourceIndex index = jdSource.index();
+					index.resolveReferences(p.project.getMapper().getObfResolver());
+					DecompiledClassSource source = new DecompiledClassSource(entry, index);
+					return Result.ok(source);
+				});
+			}, p.pool);
+		}
 
-				SourceIndex index = jdSource.index();
-				index.resolveReferences(p.project.getMapper().getObfResolver());
-				DecompiledClassSource source = new DecompiledClassSource(entry, index);
-				Entry.this.source = source;
+		private void continueMapSource(CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> f) {
+			int v = mappedVersion.incrementAndGet();
+			f.thenAcceptAsync(res -> {
+				if (res == null || mappedVersion.get() != v) return;
+				res = res.map(source -> {
+					source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
+					return source;
+				});
+				Entry.this.source = res;
 				Entry.this.waitingSources.forEach(s -> s.complete(source));
 				Entry.this.waitingSources.clear();
-				return source;
-			}, p.pool);
-		}
-
-		private void continueMapSource(CompletableFuture<DecompiledClassSource> f) {
-			int v = mappedVersion.incrementAndGet();
-			f.thenAcceptAsync(source -> {
-				if (source == null || mappedVersion.get() != v) return;
-
-				source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
 				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onMappedSourceChanged(source));
 			}, p.pool);
 		}
@@ -300,21 +313,21 @@ public final class ClassHandleProvider {
 			});
 		}
 
-		public CompletableFuture<Source> getUncommentedSourceAsync() {
+		public CompletableFuture<Result<Source, ClassHandleError>> getUncommentedSourceAsync() {
 			if (uncommentedSource != null) {
 				return CompletableFuture.completedFuture(uncommentedSource);
 			} else {
-				CompletableFuture<Source> f = new CompletableFuture<>();
+				CompletableFuture<Result<Source, ClassHandleError>> f = new CompletableFuture<>();
 				waitingUncommentedSources.add(f);
 				return f;
 			}
 		}
 
-		public CompletableFuture<DecompiledClassSource> getSourceAsync() {
+		public CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> getSourceAsync() {
 			if (source != null) {
 				return CompletableFuture.completedFuture(source);
 			} else {
-				CompletableFuture<DecompiledClassSource> f = new CompletableFuture<>();
+				CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> f = new CompletableFuture<>();
 				waitingSources.add(f);
 				return f;
 			}
@@ -348,27 +361,49 @@ public final class ClassHandleProvider {
 		}
 
 		@Override
-		public CompletableFuture<DecompiledClassSource> getSource() {
+		public CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> getSource() {
 			checkValid();
 			return entry.getSourceAsync();
 		}
 
 		@Override
-		public CompletableFuture<Source> getUncommentedSource() {
+		public CompletableFuture<Result<Source, ClassHandleError>> getUncommentedSource() {
 			checkValid();
 			return entry.getUncommentedSourceAsync();
 		}
 
-		public void onUncommentedSourceChanged(Source source) {
+		@Override
+		public void invalidate() {
+			checkValid();
+			this.entry.invalidate();
+		}
+
+		@Override
+		public void invalidateMapped() {
+			checkValid();
+			this.entry.invalidateMapped();
+		}
+
+		@Override
+		public void invalidateJavadoc() {
+			checkValid();
+			this.entry.invalidateJavadoc();
+		}
+
+		public void onUncommentedSourceChanged(Result<Source, ClassHandleError> source) {
 			listeners.forEach(l -> l.onUncommentedSourceChanged(this, source));
 		}
 
-		public void onDocsChanged(Source source) {
+		public void onDocsChanged(Result<Source, ClassHandleError> source) {
 			listeners.forEach(l -> l.onDocsChanged(this, source));
 		}
 
-		public void onMappedSourceChanged(DecompiledClassSource source) {
+		public void onMappedSourceChanged(Result<DecompiledClassSource, ClassHandleError> source) {
 			listeners.forEach(l -> l.onMappedSourceChanged(this, source));
+		}
+
+		public void onInvalidate(InvalidationType t) {
+			listeners.forEach(l -> l.onInvalidate(this, t));
 		}
 
 		public void onDeobfRefChanged(ClassEntry newDeobf) {

@@ -404,7 +404,9 @@ public class Gui {
 		PanelEditor panelEditor = editors.computeIfAbsent(entry, e -> {
 			ClassHandle ch = controller.getClassHandleProvider().openClass(entry);
 			if (ch == null) return null;
-			PanelEditor ed = new PanelEditor(this, ch);
+			PanelEditor ed = new PanelEditor(this);
+			ed.setup();
+			ed.setClassHandle(ch);
 			openFiles.addTab(ed.getFileName(), ed.getUi());
 
 			ClosableTabTitlePane titlePane = new ClosableTabTitlePane(ed.getFileName(), () -> closeEditor(ed));

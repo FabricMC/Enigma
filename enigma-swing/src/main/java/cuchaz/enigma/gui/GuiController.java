@@ -220,12 +220,13 @@ public class GuiController implements ClientPacketHandler {
 		}
 
 		try {
-			SourceIndex index = tokenHandle.getSource().get().getIndex();
-			return new ReadableToken(
-					index.getLineNumber(token.start),
-					index.getColumnNumber(token.start),
-					index.getColumnNumber(token.end)
-			);
+			return tokenHandle.getSource().get()
+					.map(DecompiledClassSource::getIndex)
+					.map(index -> new ReadableToken(
+							index.getLineNumber(token.start),
+							index.getColumnNumber(token.start),
+							index.getColumnNumber(token.end)))
+					.unwrapOr(null);
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		}
