@@ -50,10 +50,16 @@ public class PanelEditor {
 	private final JEditorPane editor = new JEditorPane();
 	private final JScrollPane editorScrollPane = new JScrollPane(this.editor);
 	private final PopupMenuBar popupMenu;
-	private final JLabel errorLabel = new JLabel("An error was encountered while decompiling.");
+
+	// progress UI
+	private final JLabel decompilingLabel = new JLabel(I18n.translate("editor.decompiling"), JLabel.CENTER);
+	private final JProgressBar decompilingProgressBar = new JProgressBar(0, 100);
+
+	// error display UI
+	private final JLabel errorLabel = new JLabel(I18n.translate("editor.decompile_error"));
 	private final JTextArea errorTextArea = new JTextArea();
 	private final JScrollPane errorScrollPane = new JScrollPane(this.errorTextArea);
-	private final JButton retryButton = new JButton("Retry");
+	private final JButton retryButton = new JButton(I18n.translate("general.retry"));
 
 	private DisplayMode mode = DisplayMode.INACTIVE;
 
@@ -95,6 +101,8 @@ public class PanelEditor {
 		this.popupMenu = new PopupMenuBar(this, gui);
 		this.editor.setComponentPopupMenu(this.popupMenu);
 
+		this.decompilingLabel.setFont(ScaleUtil.getFont(this.decompilingLabel.getFont().getFontName(), Font.BOLD, 26));
+		this.decompilingProgressBar.setIndeterminate(true);
 		this.errorTextArea.setEditable(false);
 		this.errorTextArea.setFont(ScaleUtil.getFont(Font.MONOSPACED, Font.PLAIN, 10));
 
@@ -335,21 +343,20 @@ public class PanelEditor {
 			case INACTIVE:
 				break;
 			case IN_PROGRESS: {
-				this.ui.setLayout(new GridBagLayout());
-				JLabel label = new JLabel("Decompiling...", JLabel.CENTER);
-				label.setFont(ScaleUtil.getFont(label.getFont().getFontName(), Font.BOLD, 26));
-				JProgressBar pb = new JProgressBar(0, 100);
-				pb.setIndeterminate(true);
+				// make progress bar start from the left every time
+				this.decompilingProgressBar.setIndeterminate(false);
+				this.decompilingProgressBar.setIndeterminate(true);
 
+				this.ui.setLayout(new GridBagLayout());
 				GridBagConstraints c = new GridBagConstraints();
 				c.gridx = 0;
 				c.gridy = 0;
 				c.insets = ScaleUtil.getInsets(2, 2, 2, 2);
 				c.anchor = GridBagConstraints.SOUTH;
-				this.ui.add(label, c);
+				this.ui.add(this.decompilingLabel, c);
 				c.gridy = 1;
 				c.anchor = GridBagConstraints.NORTH;
-				this.ui.add(pb, c);
+				this.ui.add(this.decompilingProgressBar, c);
 				break;
 			}
 			case SUCCESS: {

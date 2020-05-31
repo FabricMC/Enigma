@@ -1,6 +1,8 @@
 {
 	"language": "English",
 
+	"general.retry": "Retry",
+
 	"mapping_format.enigma_file": "Enigma File",
 	"mapping_format.enigma_directory": "Enigma Directory",
 	"mapping_format.enigma_zip": "Enigma ZIP",
@@ -74,6 +76,9 @@
 	"popup_menu.editor_tab.close_others": "Close Others",
 	"popup_menu.editor_tab.close_left": "Close All to the Left",
 	"popup_menu.editor_tab.close_right": "Close All to the Right",
+
+	"editor.decompiling": "Decompiling...",
+	"editor.decompile_error": "An error was encountered while decompiling.",
 
 	"info_panel.classes.obfuscated": "Obfuscated Classes",
 	"info_panel.classes.deobfuscated": "De-obfuscated Classes",

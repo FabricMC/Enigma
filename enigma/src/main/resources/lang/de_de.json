@@ -1,21 +1,26 @@
 {
-		"language": "German",
+	"language": "German",
 
-		"popup_menu.editor_tab.close": "Schließen",
-		"popup_menu.editor_tab.close_all": "Alle schließen",
-		"popup_menu.editor_tab.close_others": "Andere schließen",
-		"popup_menu.editor_tab.close_left": "Alle links hiervon schließen",
-		"popup_menu.editor_tab.close_right": "Alle rechts hiervon schließen",
+	"general.retry": "Wiederholen",
 
-		"validation.message.empty_field": "Dieses Feld muss ausgefüllt werden.",
-		"validation.message.not_int": "Wert muss eine ganze Zahl sein.",
-		"validation.message.field_out_of_range_int": "Wert muss eine ganze Zahl zwischen %d und %d sein.",
-		"validation.message.field_length_out_of_range": "Wert muss kürzer als %d Zeichen sein.",
-		"validation.message.nonunique_name_class": "Name „%s“ ist in „%s“ nicht eindeutig.",
-		"validation.message.nonunique_name": "Name „%s“ ist nicht eindeutig.",
-		"validation.message.illegal_class_name": "„%s“ ist kein gültiger Klassenname.",
-		"validation.message.illegal_identifier": "„%s“ ist kein gültiger Name.",
-		"validation.message.illegal_identifier.long": "Ungültiges Zeichen „%2$s“ an Position %3$d.",
-		"validation.message.illegal_doc_comment_end": "Javadoc-Kommentar darf die Zeichenfolge „*/“ nicht enthalten.",
-		"validation.message.reserved_identifier": "„%s“ ist ein reservierter Name."
+	"popup_menu.editor_tab.close": "Schließen",
+	"popup_menu.editor_tab.close_all": "Alle schließen",
+	"popup_menu.editor_tab.close_others": "Andere schließen",
+	"popup_menu.editor_tab.close_left": "Alle links hiervon schließen",
+	"popup_menu.editor_tab.close_right": "Alle rechts hiervon schließen",
+
+	"editor.decompiling": "Dekompiliere...",
+	"editor.decompile_error": "Ein Fehler ist während des Dekompilierens aufgetreten.",
+
+	"validation.message.empty_field": "Dieses Feld muss ausgefüllt werden.",
+	"validation.message.not_int": "Wert muss eine ganze Zahl sein.",
+	"validation.message.field_out_of_range_int": "Wert muss eine ganze Zahl zwischen %d und %d sein.",
+	"validation.message.field_length_out_of_range": "Wert muss kürzer als %d Zeichen sein.",
+	"validation.message.nonunique_name_class": "Name „%s“ ist in „%s“ nicht eindeutig.",
+	"validation.message.nonunique_name": "Name „%s“ ist nicht eindeutig.",
+	"validation.message.illegal_class_name": "„%s“ ist kein gültiger Klassenname.",
+	"validation.message.illegal_identifier": "„%s“ ist kein gültiger Name.",
+	"validation.message.illegal_identifier.long": "Ungültiges Zeichen „%2$s“ an Position %3$d.",
+	"validation.message.illegal_doc_comment_end": "Javadoc-Kommentar darf die Zeichenfolge „*/“ nicht enthalten.",
+	"validation.message.reserved_identifier": "„%s“ ist ein reservierter Name."
 }
