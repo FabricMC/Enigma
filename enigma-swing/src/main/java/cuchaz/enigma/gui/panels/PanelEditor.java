@@ -409,7 +409,7 @@ public class PanelEditor {
 		if (this.settingSource) {
 			EntryReference<Entry<?>, Entry<?>> ref = getCursorReference();
 			EntryReference<Entry<?>, Entry<?>> refAtCursor = getReference(token);
-			if (this.editor.getDocument().getLength() != 0 && !Objects.equals(refAtCursor, ref)) {
+			if (this.editor.getDocument().getLength() != 0 && ref != null && !ref.equals(refAtCursor)) {
 				showReference0(ref);
 			}
 			return;
@@ -534,6 +534,7 @@ public class PanelEditor {
 	 */
 	private void showReference0(EntryReference<Entry<?>, Entry<?>> reference) {
 		if (this.source == null) return;
+		if (reference == null) return;
 
 		Collection<Token> tokens = this.controller.getTokensForReference(this.source, reference);
 		if (tokens.isEmpty()) {

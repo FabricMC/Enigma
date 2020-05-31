@@ -11,18 +11,18 @@
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.translation.Translatable;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.EntryMap;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements Translatable {
 
@@ -100,6 +100,8 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	public boolean equals(EntryReference<?, ?> other) {
+		if (other == null) return false;
+
 		// check entry first
 		boolean isEntrySame = entry.equals(other.entry);
 		if (!isEntrySame) {
