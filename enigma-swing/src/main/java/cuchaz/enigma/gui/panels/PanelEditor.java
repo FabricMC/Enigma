@@ -289,13 +289,16 @@ public class PanelEditor {
 
 			@Override
 			public void onInvalidate(ClassHandle h, InvalidationType t) {
-				if (t == InvalidationType.FULL) {
-					PanelEditor.this.setDisplayMode(DisplayMode.IN_PROGRESS);
-				}
+				SwingUtilities.invokeLater(() -> {
+					if (t == InvalidationType.FULL) {
+						PanelEditor.this.setDisplayMode(DisplayMode.IN_PROGRESS);
+					}
+				});
 			}
 
 			@Override
 			public void onDeleted(ClassHandle h) {
+				SwingUtilities.invokeLater(() -> PanelEditor.this.gui.closeEditor(PanelEditor.this));
 			}
 		});
 
