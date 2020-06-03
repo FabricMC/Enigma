@@ -1,22 +1,24 @@
 package cuchaz.enigma.gui;
 
 import cuchaz.enigma.gui.config.Config;
+import de.sciss.syntaxpane.DefaultSyntaxKit;
 import de.sciss.syntaxpane.components.LineNumbersRuler;
 import de.sciss.syntaxpane.syntaxkits.JavaSyntaxKit;
 import de.sciss.syntaxpane.util.Configuration;
 
 public class EnigmaSyntaxKit extends JavaSyntaxKit {
+
     private static Configuration configuration = null;
 
     @Override
     public Configuration getConfig() {
-        if(configuration == null){
-            initConfig(super.getConfig(JavaSyntaxKit.class));
+        if (configuration == null) {
+            initConfig(DefaultSyntaxKit.getConfig(JavaSyntaxKit.class));
         }
         return configuration;
     }
 
-    public void initConfig(Configuration baseConfig){
+    public void initConfig(Configuration baseConfig) {
         configuration = baseConfig;
         //See de.sciss.syntaxpane.TokenType
         configuration.put("Style.KEYWORD", Config.getInstance().highlightColor + ", 0");
@@ -36,9 +38,15 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
         configuration.put("RightMarginColumn", "999"); //No need to have a right margin, if someone wants it add a config
 
         configuration.put("Action.quick-find", "cuchaz.enigma.gui.QuickFindAction, menu F");
+
+        // This is an action written in javascript that is useless for enigma's
+        // use case, and removing it causes the editor to load way faster the
+        // first time
+        configuration.remove("Action.insert-date");
     }
 
-    public static void invalidate(){
+    public static void invalidate() {
         configuration = null;
     }
+
 }

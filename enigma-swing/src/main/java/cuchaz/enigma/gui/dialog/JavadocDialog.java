@@ -19,34 +19,64 @@ import javax.swing.*;
 import javax.swing.text.html.HTML;
 
 import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+import javax.swing.*;
+
+import com.google.common.base.Strings;
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.gui.GuiController;
+import cuchaz.enigma.gui.elements.ValidatableTextArea;
+import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.network.packet.ChangeDocsC2SPacket;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.ValidationContext;
+
 public class JavadocDialog {
 
-	private static JavadocDialog instance = null;
+	private final JDialog ui;
+	private final GuiController controller;
+	private final EntryReference<Entry<?>, Entry<?>> entry;
 
-	private JFrame frame;
+	private final ValidatableTextArea text;
 
-	private JavadocDialog(JFrame parent, JTextArea text, Callback callback) {
-		// init frame
-		frame = new JFrame(I18n.translate("javadocs.edit"));
-		final Container pane = frame.getContentPane();
-		pane.setLayout(new BorderLayout());
+	private final ValidationContext vc = new ValidationContext();
+
+	private JavadocDialog(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry, String preset) {
+		this.ui = new JDialog(parent, I18n.translate("javadocs.edit"));
+		this.controller = controller;
+		this.entry = entry;
+		this.text = new ValidatableTextArea(10, 40);
+
+		// set up dialog
+		Container contentPane = ui.getContentPane();
+		contentPane.setLayout(new BorderLayout());
 
 		// editor panel
-		text.setTabSize(2);
-		pane.add(new JScrollPane(text), BorderLayout.CENTER);
-		text.addKeyListener(new KeyAdapter() {
+		this.text.setText(preset);
+		this.text.setTabSize(2);
+		contentPane.add(new JScrollPane(this.text), BorderLayout.CENTER);
+		this.text.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				switch (event.getKeyCode()) {
 					case KeyEvent.VK_ENTER:
-						if (event.isControlDown())
-							callback.closeUi(frame, true);
+						if (event.isControlDown()) {
+							doSave();
+							if (vc.canProceed()) {
+								close();
+							}
+						}
 						break;
 					case KeyEvent.VK_ESCAPE:
-						callback.closeUi(frame, false);
+						close();
 						break;
 					default:
 						break;
@@ -56,23 +86,15 @@ public class JavadocDialog {
 
 		// buttons panel
 		JPanel buttonsPanel = new JPanel();
-		FlowLayout buttonsLayout = new FlowLayout();
-		buttonsLayout.setAlignment(FlowLayout.RIGHT);
-		buttonsPanel.setLayout(buttonsLayout);
+		buttonsPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		buttonsPanel.add(GuiUtil.unboldLabel(new JLabel(I18n.translate("javadocs.instruction"))));
 		JButton cancelButton = new JButton(I18n.translate("javadocs.cancel"));
-		cancelButton.addActionListener(event -> {
-			// close (hide) the dialog
-			callback.closeUi(frame, false);
-		});
+		cancelButton.addActionListener(event -> close());
 		buttonsPanel.add(cancelButton);
 		JButton saveButton = new JButton(I18n.translate("javadocs.save"));
-		saveButton.addActionListener(event -> {
-			// exit enigma
-			callback.closeUi(frame, true);
-		});
+		saveButton.addActionListener(event -> doSave());
 		buttonsPanel.add(saveButton);
-		pane.add(buttonsPanel, BorderLayout.SOUTH);
+		contentPane.add(buttonsPanel, BorderLayout.SOUTH);
 
 		// tags panel
 		JMenuBar tagsMenu = new JMenuBar();
@@ -116,22 +138,56 @@ public class JavadocDialog {
 		});
 		tagsMenu.add(htmlList);
 
-		pane.add(tagsMenu, BorderLayout.NORTH);
+		contentPane.add(tagsMenu, BorderLayout.NORTH);
 
 		// show the frame
-		frame.setSize(ScaleUtil.getDimension(600, 400));
-		frame.setLocationRelativeTo(parent);
-		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		this.ui.setSize(ScaleUtil.getDimension(600, 400));
+		this.ui.setLocationRelativeTo(parent);
+		this.ui.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
-	public static void init(JFrame parent, JTextArea area, Callback callback) {
-		instance = new JavadocDialog(parent, area, callback);
-		instance.frame.doLayout();
-		instance.frame.setVisible(true);
+	// Called when the "Save" button gets clicked.
+	public void doSave() {
+		vc.reset();
+		validate();
+		if (!vc.canProceed()) return;
+		save();
+		if (!vc.canProceed()) return;
+		close();
 	}
 
-	public interface Callback {
-		void closeUi(JFrame frame, boolean save);
+	public void close() {
+		this.ui.setVisible(false);
+		this.ui.dispose();
+	}
+
+	public void validate() {
+		vc.setActiveElement(text);
+
+		if (text.getText().contains("*/")) {
+			vc.raise(Message.ILLEGAL_DOC_COMMENT_END);
+		}
+
+		controller.changeDocs(vc, entry, text.getText(), true);
+	}
+
+	public void save() {
+		vc.setActiveElement(text);
+		controller.changeDocs(vc, entry, text.getText());
+
+		if (!vc.canProceed()) return;
+
+		controller.sendPacket(new ChangeDocsC2SPacket(entry.getNameableEntry(), text.getText()));
+	}
+
+	public static void show(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry) {
+		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(entry);
+		String text = Strings.nullToEmpty(translatedReference.entry.getJavadocs());
+
+		JavadocDialog dialog = new JavadocDialog(parent, controller, entry, text);
+		dialog.ui.doLayout();
+		dialog.ui.setVisible(true);
+		dialog.text.grabFocus();
 	}
 
 	private enum JavadocTag {
@@ -156,4 +212,5 @@ public class JavadocDialog {
 			return this.inline;
 		}
 	}
+
 }

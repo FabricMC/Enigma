@@ -321,7 +321,7 @@ public class MenuBar {
 			if (lookAndFeel.equals(Config.getInstance().lookAndFeel)) {
 				themeButton.setSelected(true);
 			}
-			themeButton.addActionListener(_e -> Themes.setLookAndFeel(gui, lookAndFeel));
+			themeButton.addActionListener(_e -> Themes.setLookAndFeel(lookAndFeel));
 			themesMenu.add(themeButton);
 		}
 	}
@@ -335,7 +335,12 @@ public class MenuBar {
 				languageButton.setSelected(true);
 			}
 			languageButton.addActionListener(event -> {
-				I18n.setLanguage(lang);
+				Config.getInstance().language = lang;
+						try {
+							Config.getInstance().saveConfig();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 				ChangeDialog.show(gui);
 			});
 			languagesMenu.add(languageButton);

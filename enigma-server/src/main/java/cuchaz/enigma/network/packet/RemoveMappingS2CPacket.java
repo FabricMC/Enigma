@@ -1,12 +1,14 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.network.ClientPacketHandler;
-import cuchaz.enigma.translation.representation.entry.Entry;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.network.ClientPacketHandler;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.validation.PrintValidatable;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class RemoveMappingS2CPacket implements Packet<ClientPacketHandler> {
 	private int syncId;
@@ -34,7 +36,12 @@ public class RemoveMappingS2CPacket implements Packet<ClientPacketHandler> {
 
 	@Override
 	public void handle(ClientPacketHandler controller) {
-		controller.removeMapping(new EntryReference<>(entry, entry.getName()), false);
+		ValidationContext vc = new ValidationContext();
+		vc.setActiveElement(PrintValidatable.INSTANCE);
+
+		controller.removeMapping(vc, new EntryReference<>(entry, entry.getName()));
+
+		if (!vc.canProceed()) return;
 		controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 	}
 }

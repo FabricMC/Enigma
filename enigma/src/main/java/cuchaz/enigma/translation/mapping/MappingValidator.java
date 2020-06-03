@@ -1,17 +1,20 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.stream.Collectors;
+
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.stream.Collectors;
+import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class MappingValidator {
+
 	private final EntryTree<EntryMapping> obfToDeobf;
 	private final Translator deobfuscator;
 	private final JarIndex index;
@@ -22,15 +25,15 @@ public class MappingValidator {
 		this.index = index;
 	}
 
-	public void validateRename(Entry<?> entry, String name) throws IllegalNameException {
+	public void validateRename(ValidationContext vc, Entry<?> entry, String name) {
 		Collection<Entry<?>> equivalentEntries = index.getEntryResolver().resolveEquivalentEntries(entry);
 		for (Entry<?> equivalentEntry : equivalentEntries) {
-			equivalentEntry.validateName(name);
-			validateUnique(equivalentEntry, name);
+			equivalentEntry.validateName(vc, name);
+			validateUnique(vc, equivalentEntry, name);
 		}
 	}
 
-	private void validateUnique(Entry<?> entry, String name) {
+	private void validateUnique(ValidationContext vc, Entry<?> entry, String name) {
 		ClassEntry containingClass = entry.getContainingClass();
 		Collection<ClassEntry> relatedClasses = getRelatedClasses(containingClass);
 
@@ -45,9 +48,9 @@ public class MappingValidator {
 			if (!isUnique(translatedEntry, translatedSiblings, name)) {
 				Entry<?> parent = translatedEntry.getParent();
 				if (parent != null) {
-					throw new IllegalNameException(name, "Name is not unique in " + parent + "!");
+					vc.raise(Message.NONUNIQUE_NAME_CLASS, name, parent);
 				} else {
-					throw new IllegalNameException(name, "Name is not unique!");
+					vc.raise(Message.NONUNIQUE_NAME, name);
 				}
 			}
 		}
@@ -72,4 +75,5 @@ public class MappingValidator {
 		}
 		return true;
 	}
+
 }

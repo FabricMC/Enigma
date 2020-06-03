@@ -1,6 +1,8 @@
 {
 	"language": "English",
 
+	"general.retry": "Retry",
+
 	"mapping_format.enigma_file": "Enigma File",
 	"mapping_format.enigma_directory": "Enigma Directory",
 	"mapping_format.enigma_zip": "Enigma ZIP",
@@ -69,6 +71,14 @@
 	"popup_menu.zoom.in": "Zoom in",
 	"popup_menu.zoom.out": "Zoom out",
 	"popup_menu.zoom.reset": "Reset zoom",
+	"popup_menu.editor_tab.close": "Close",
+	"popup_menu.editor_tab.close_all": "Close All",
+	"popup_menu.editor_tab.close_others": "Close Others",
+	"popup_menu.editor_tab.close_left": "Close All to the Left",
+	"popup_menu.editor_tab.close_right": "Close All to the Right",
+
+	"editor.decompiling": "Decompiling...",
+	"editor.decompile_error": "An error was encountered while decompiling.",
 
 	"info_panel.classes.obfuscated": "Obfuscated Classes",
 	"info_panel.classes.deobfuscated": "De-obfuscated Classes",
@@ -79,8 +89,8 @@
 	"info_panel.identifier.method": "Method",
 	"info_panel.identifier.constructor": "Constructor",
 	"info_panel.identifier.class": "Class",
-	"info_panel.identifier.type_descriptor": "TypeDescriptor",
-	"info_panel.identifier.method_descriptor": "MethodDescriptor",
+	"info_panel.identifier.type_descriptor": "Type Descriptor",
+	"info_panel.identifier.method_descriptor": "Method Descriptor",
 	"info_panel.identifier.modifier": "Modifier",
 	"info_panel.identifier.index": "Index",
 	"info_panel.editor.class.decompiling": "(decompiling...)",
@@ -149,11 +159,22 @@
 	"message.mark_deobf.text": "%s marked %s as deobfuscated",
 	"message.remove_mapping.text": "%s removed mappings for %s",
 	"message.rename.text": "%s renamed %s to %s",
-
 	"status.disconnected": "Disconnected.",
 	"status.connected": "Connected.",
 	"status.connected_user_count": "Connected (%d users).",
 	"status.ready": "Ready.",
+
+	"validation.message.empty_field": "This field is required.",
+	"validation.message.not_int": "Value must be an integer.",
+	"validation.message.field_out_of_range_int": "Value must be an integer between %d and %d.",
+	"validation.message.field_length_out_of_range": "Value must be less than %d characters long.",
+	"validation.message.nonunique_name_class": "Name '%s' is not unique in '%s'.",
+	"validation.message.nonunique_name": "Name '%s' is not unique.",
+	"validation.message.illegal_class_name": "'%s' is not a valid class name.",
+	"validation.message.illegal_identifier": "'%s' is not a valid identifier.",
+	"validation.message.illegal_identifier.long": "Invalid character '%2$s' at position %3$d.",
+	"validation.message.illegal_doc_comment_end": "Javadoc comment cannot contain the character sequence '*/'.",
+	"validation.message.reserved_identifier": "'%s' is a reserved identifier.",
 
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",

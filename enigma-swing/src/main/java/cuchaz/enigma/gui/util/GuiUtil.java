@@ -40,17 +40,4 @@ public class GuiUtil {
         manager.setInitialDelay(oldDelay);
     }
 
-    public static Rectangle safeModelToView(JTextComponent component, int modelPos) {
-        if (modelPos < 0) {
-            modelPos = 0;
-        } else if (modelPos >= component.getText().length()) {
-            modelPos = component.getText().length();
-        }
-        try {
-            return component.modelToView(modelPos);
-        } catch (BadLocationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }

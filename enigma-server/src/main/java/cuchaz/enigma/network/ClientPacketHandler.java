@@ -5,19 +5,20 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.network.packet.Packet;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 import java.util.List;
 
 public interface ClientPacketHandler {
     void openMappings(EntryTree<EntryMapping> mappings);
 
-    void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean jumpToReference);
+    void rename(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree);
 
-    void removeMapping(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference);
+    void removeMapping(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference);
 
-    void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs, boolean jumpToReference);
+    void changeDocs(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs);
 
-    void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference);
+    void markAsDeobfuscated(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference);
 
     void disconnectIfConnected(String reason);
 

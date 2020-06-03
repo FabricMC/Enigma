@@ -11,16 +11,17 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import cuchaz.enigma.translation.mapping.IllegalNameException;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.NameValidator;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
+import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Objects;
+
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.IdentifierValidation;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<ClassEntry> {
 	private final String fullName;
@@ -97,8 +98,8 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
-	public void validateName(String name) throws IllegalNameException {
-		NameValidator.validateClassName(name);
+	public void validateName(ValidationContext vc, String name) {
+		IdentifierValidation.validateClassName(vc, name);
 	}
 
 	@Override

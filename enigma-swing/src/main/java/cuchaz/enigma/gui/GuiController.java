@@ -11,27 +11,46 @@
 
 package cuchaz.enigma.gui;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.service.ObfuscationTestService;
+import cuchaz.enigma.classhandle.ClassHandle;
+import cuchaz.enigma.classhandle.ClassHandleProvider;
 import cuchaz.enigma.gui.config.Config;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
-import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.network.*;
 import cuchaz.enigma.network.packet.LoginC2SPacket;
 import cuchaz.enigma.network.packet.Packet;
-import cuchaz.enigma.source.*;
-import cuchaz.enigma.translation.mapping.serde.MappingParseException;
+import cuchaz.enigma.source.DecompiledClassSource;
+import cuchaz.enigma.source.DecompilerService;
+import cuchaz.enigma.source.SourceIndex;
+import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
@@ -41,44 +60,21 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
-
-import javax.annotation.Nullable;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.io.*;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class GuiController implements ClientPacketHandler {
-	private static final ExecutorService DECOMPILER_SERVICE = Executors.newSingleThreadExecutor(
-			new ThreadFactoryBuilder()
-					.setDaemon(true)
-					.setNameFormat("decompiler-thread")
-					.build()
-	);
-
 	private final Gui gui;
 	public final Enigma enigma;
 
 	public EnigmaProject project;
-	private DecompilerService decompilerService;
-	private Decompiler decompiler;
 	private IndexTreeBuilder indexTreeBuilder;
 
 	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
 
-	private DecompiledClassSource currentSource;
-	private Source uncommentedSource;
+	private ClassHandleProvider chp;
+
+	private ClassHandle tokenHandle;
 
 	private EnigmaClient client;
 	private EnigmaServer server;
@@ -88,8 +84,6 @@ public class GuiController implements ClientPacketHandler {
 		this.enigma = Enigma.builder()
 				.setProfile(profile)
 				.build();
-
-		decompilerService = Config.getInstance().decompiler.service;
 	}
 
 	public boolean isDirty() {
@@ -102,13 +96,15 @@ public class GuiController implements ClientPacketHandler {
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			project = enigma.openJar(jarPath, progress);
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
-			decompiler = project.createDecompiler(decompilerService);
+			chp = new ClassHandleProvider(project, Config.getInstance().decompiler.service);
 			gui.onFinishOpenJar(jarPath.getFileName().toString());
 			refreshClasses();
 		});
 	}
 
 	public void closeJar() {
+		this.chp.destroy();
+		this.chp = null;
 		this.project = null;
 		this.gui.onCloseJar();
 	}
@@ -129,7 +125,7 @@ public class GuiController implements ClientPacketHandler {
 				loadedMappingPath = path;
 
 				refreshClasses();
-				refreshCurrentClass();
+				chp.invalidateMapped();
 			} catch (MappingParseException e) {
 				JOptionPane.showMessageDialog(gui.getFrame(), e.getMessage());
 			}
@@ -142,7 +138,7 @@ public class GuiController implements ClientPacketHandler {
 
 		project.setMappings(mappings);
 		refreshClasses();
-		refreshCurrentClass();
+		chp.invalidateMapped();
 	}
 
 	public CompletableFuture<Void> saveMappings(Path path) {
@@ -177,7 +173,7 @@ public class GuiController implements ClientPacketHandler {
 
 		this.gui.setMappingsFile(null);
 		refreshClasses();
-		refreshCurrentClass();
+		chp.invalidateMapped();
 	}
 
 	public CompletableFuture<Void> dropMappings() {
@@ -191,7 +187,7 @@ public class GuiController implements ClientPacketHandler {
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-			EnigmaProject.SourceExport source = jar.decompile(progress, decompilerService);
+			EnigmaProject.SourceExport source = jar.decompile(progress, chp.getDecompilerService());
 
 			source.write(path, progress);
 		});
@@ -206,32 +202,34 @@ public class GuiController implements ClientPacketHandler {
 		});
 	}
 
-	public Token getToken(int pos) {
-		if (this.currentSource == null) {
-			return null;
+	public void setTokenHandle(ClassHandle handle) {
+		if (tokenHandle != null) {
+			tokenHandle.close();
 		}
-		return this.currentSource.getIndex().getReferenceToken(pos);
+
+		tokenHandle = handle;
 	}
 
-	@Nullable
-	public EntryReference<Entry<?>, Entry<?>> getReference(Token token) {
-		if (this.currentSource == null) {
-			return null;
-		}
-		return this.currentSource.getIndex().getReference(token);
+	public ClassHandle getTokenHandle() {
+		return tokenHandle;
 	}
 
 	public ReadableToken getReadableToken(Token token) {
-		if (this.currentSource == null) {
+		if (tokenHandle == null) {
 			return null;
 		}
 
-		SourceIndex index = this.currentSource.getIndex();
-		return new ReadableToken(
-				index.getLineNumber(token.start),
-				index.getColumnNumber(token.start),
-				index.getColumnNumber(token.end)
-		);
+		try {
+			return tokenHandle.getSource().get()
+					.map(DecompiledClassSource::getIndex)
+					.map(index -> new ReadableToken(
+							index.getLineNumber(token.start),
+							index.getColumnNumber(token.start),
+							index.getColumnNumber(token.end)))
+					.unwrapOr(null);
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
@@ -271,39 +269,13 @@ public class GuiController implements ClientPacketHandler {
 	 * @param reference the reference
 	 */
 	private void setReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		// get the reference target class
-		ClassEntry classEntry = reference.getLocationClassEntry();
-		if (!project.isRenamable(classEntry)) {
-			throw new IllegalArgumentException("Obfuscated class " + classEntry + " was not found in the jar!");
-		}
-
-		if (this.currentSource == null || !this.currentSource.getEntry().equals(classEntry)) {
-			// deobfuscate the class, then navigate to the reference
-			loadClass(classEntry, () -> showReference(reference));
-		} else {
-			showReference(reference);
-		}
+		gui.openClass(reference.getLocationClassEntry()).showReference(reference);
 	}
 
-	/**
-	 * Navigates to the reference without modifying history. Assumes the class is loaded.
-	 *
-	 * @param reference
-	 */
-	private void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		Collection<Token> tokens = getTokensForReference(reference);
-		if (tokens.isEmpty()) {
-			// DEBUG
-			System.err.println(String.format("WARNING: no tokens found for %s in %s", reference, this.currentSource.getEntry()));
-		} else {
-			this.gui.showTokens(tokens);
-		}
-	}
-
-	public Collection<Token> getTokensForReference(EntryReference<Entry<?>, Entry<?>> reference) {
+	public Collection<Token> getTokensForReference(DecompiledClassSource source, EntryReference<Entry<?>, Entry<?>> reference) {
 		EntryRemapper mapper = this.project.getMapper();
 
-		SourceIndex index = this.currentSource.getIndex();
+		SourceIndex index = source.getIndex();
 		return mapper.getObfResolver().resolveReference(reference, ResolutionStrategy.RESOLVE_CLOSEST)
 				.stream()
 				.flatMap(r -> index.getReferenceTokens(r).stream())
@@ -380,131 +352,17 @@ public class GuiController implements ClientPacketHandler {
 		});
 	}
 
-	public void refreshCurrentClass() {
-		refreshCurrentClass(null);
-	}
+	public void onModifierChanged(ValidationContext vc, Entry<?> entry, AccessModifier modifier) {
+		EntryRemapper mapper = project.getMapper();
 
-	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference) {
-		refreshCurrentClass(reference, RefreshMode.MINIMAL);
-	}
-
-	private void refreshCurrentClass(EntryReference<Entry<?>, Entry<?>> reference, RefreshMode mode) {
-		if (currentSource != null) {
-			if (reference == null) {
-				int obfSelectionStart = currentSource.getObfuscatedOffset(gui.editor.getSelectionStart());
-				int obfSelectionEnd = currentSource.getObfuscatedOffset(gui.editor.getSelectionEnd());
-
-				Rectangle viewportBounds = gui.sourceScroller.getViewport().getViewRect();
-				// Here we pick an "anchor position", which we want to stay in the same vertical location on the screen after the new text has been set
-				int anchorModelPos = gui.editor.getSelectionStart();
-				Rectangle anchorViewPos = GuiUtil.safeModelToView(gui.editor, anchorModelPos);
-				if (anchorViewPos.y < viewportBounds.y || anchorViewPos.y >= viewportBounds.y + viewportBounds.height) {
-					anchorModelPos = gui.editor.viewToModel(new Point(0, viewportBounds.y));
-					anchorViewPos = GuiUtil.safeModelToView(gui.editor, anchorModelPos);
-				}
-				int obfAnchorPos = currentSource.getObfuscatedOffset(anchorModelPos);
-				Rectangle anchorViewPos_f = anchorViewPos;
-				int scrollX = gui.sourceScroller.getHorizontalScrollBar().getValue();
-
-				loadClass(currentSource.getEntry(), () -> SwingUtilities.invokeLater(() -> {
-					int newAnchorModelPos = currentSource.getDeobfuscatedOffset(obfAnchorPos);
-					Rectangle newAnchorViewPos = GuiUtil.safeModelToView(gui.editor, newAnchorModelPos);
-					int newScrollY = newAnchorViewPos.y - (anchorViewPos_f.y - viewportBounds.y);
-
-					gui.editor.select(currentSource.getDeobfuscatedOffset(obfSelectionStart), currentSource.getDeobfuscatedOffset(obfSelectionEnd));
-					// Changing the selection scrolls to the caret position inside a SwingUtilities.invokeLater call, so
-					// we need to wrap our change to the scroll position inside another invokeLater so it happens after
-					// the caret's own scrolling.
-					SwingUtilities.invokeLater(() -> {
-						gui.sourceScroller.getHorizontalScrollBar().setValue(Math.min(scrollX, gui.sourceScroller.getHorizontalScrollBar().getMaximum()));
-						gui.sourceScroller.getVerticalScrollBar().setValue(Math.min(newScrollY, gui.sourceScroller.getVerticalScrollBar().getMaximum()));
-					});
-				}), mode);
-			} else {
-				loadClass(currentSource.getEntry(), () -> showReference(reference), mode);
-			}
-		}
-	}
-
-	private void loadClass(ClassEntry classEntry, Runnable callback) {
-		loadClass(classEntry, callback, RefreshMode.MINIMAL);
-	}
-
-	private void loadClass(ClassEntry classEntry, Runnable callback, RefreshMode mode) {
-		ClassEntry targetClass = classEntry.getOutermostClass();
-
-		boolean requiresDecompile = mode == RefreshMode.FULL || currentSource == null || !currentSource.getEntry().equals(targetClass);
-		if (requiresDecompile) {
-			currentSource = null; // Or the GUI may try to find a nonexistent token
-			gui.setEditorText(I18n.translate("info_panel.editor.class.decompiling"));
+		EntryMapping mapping = mapper.getDeobfMapping(entry);
+		if (mapping != null) {
+			mapper.mapFromObf(vc, entry, new EntryMapping(mapping.getTargetName(), modifier));
+		} else {
+			mapper.mapFromObf(vc, entry, new EntryMapping(entry.getName(), modifier));
 		}
 
-		DECOMPILER_SERVICE.submit(() -> {
-			try {
-				if (requiresDecompile || mode == RefreshMode.JAVADOCS) {
-					currentSource = decompileSource(targetClass, mode == RefreshMode.JAVADOCS);
-				}
-
-				remapSource(project.getMapper().getDeobfuscator());
-				callback.run();
-			} catch (Throwable t) {
-				System.err.println("An exception was thrown while decompiling class " + classEntry.getFullName());
-				t.printStackTrace(System.err);
-			}
-		});
-	}
-
-	private DecompiledClassSource decompileSource(ClassEntry targetClass, boolean onlyRefreshJavadocs) {
-		try {
-			if (!onlyRefreshJavadocs || currentSource == null || !currentSource.getEntry().equals(targetClass)) {
-				uncommentedSource = decompiler.getSource(targetClass.getFullName());
-			}
-
-			Source source = uncommentedSource.addJavadocs(project.getMapper());
-
-			if (source == null) {
-				gui.setEditorText(I18n.translate("info_panel.editor.class.not_found") + " " + targetClass);
-				return DecompiledClassSource.text(targetClass, "Unable to find class");
-			}
-
-			SourceIndex index = source.index();
-			index.resolveReferences(project.getMapper().getObfResolver());
-
-			return new DecompiledClassSource(targetClass, index);
-		} catch (Throwable t) {
-			StringWriter traceWriter = new StringWriter();
-			t.printStackTrace(new PrintWriter(traceWriter));
-
-			return DecompiledClassSource.text(targetClass, traceWriter.toString());
-		}
-	}
-
-	private void remapSource(Translator translator) {
-		if (currentSource == null) {
-			return;
-		}
-
-		currentSource.remapSource(project, translator);
-
-		gui.setEditorTheme(Config.getInstance().lookAndFeel);
-		gui.setSource(currentSource);
-	}
-
-	public void modifierChange(ItemEvent event) {
-		if (event.getStateChange() == ItemEvent.SELECTED) {
-			EntryRemapper mapper = project.getMapper();
-			Entry<?> entry = gui.cursorReference.entry;
-			AccessModifier modifier = (AccessModifier) event.getItem();
-
-			EntryMapping mapping = mapper.getDeobfMapping(entry);
-			if (mapping != null) {
-				mapper.mapFromObf(entry, new EntryMapping(mapping.getTargetName(), modifier));
-			} else {
-				mapper.mapFromObf(entry, new EntryMapping(entry.getName(), modifier));
-			}
-
-			refreshCurrentClass();
-		}
+		chp.invalidateMapped();
 	}
 
 	public ClassInheritanceTreeNode getClassInheritance(ClassEntry entry) {
@@ -557,72 +415,71 @@ public class GuiController implements ClientPacketHandler {
 		return rootNode;
 	}
 
-	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree) {
-		rename(reference, newName, refreshClassTree, true);
+	@Override
+	public void rename(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree) {
+		rename(vc, reference, newName, refreshClassTree, false);
 	}
 
-	@Override
-	public void rename(EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean jumpToReference) {
+	public void rename(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean validateOnly) {
 		Entry<?> entry = reference.getNameableEntry();
-		project.getMapper().mapFromObf(entry, new EntryMapping(newName));
+		project.getMapper().mapFromObf(vc, entry, new EntryMapping(newName), true, validateOnly);
+
+		if (validateOnly || !vc.canProceed()) return;
 
 		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
-			this.gui.moveClassTree(reference, newName);
+			this.gui.moveClassTree(reference.entry, newName);
 
-		refreshCurrentClass(jumpToReference ? reference : null);
-	}
-
-	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference) {
-		removeMapping(reference, true);
+		chp.invalidateMapped();
 	}
 
 	@Override
-	public void removeMapping(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference) {
-		project.getMapper().removeByObf(reference.getNameableEntry());
+	public void removeMapping(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference) {
+		project.getMapper().removeByObf(vc, reference.getNameableEntry());
+
+		if (!vc.canProceed()) return;
 
 		if (reference.entry instanceof ClassEntry)
-			this.gui.moveClassTree(reference, false, true);
-		refreshCurrentClass(jumpToReference ? reference : null);
-	}
+			this.gui.moveClassTree(reference.entry, false, true);
 
-	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
-		changeDocs(reference, updatedDocs, true);
+		chp.invalidateMapped();
 	}
 
 	@Override
-	public void changeDocs(EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs, boolean jumpToReference) {
-		changeDoc(reference.entry, Utils.isBlank(updatedDocs) ? null : updatedDocs);
-
-		refreshCurrentClass(jumpToReference ? reference : null, RefreshMode.JAVADOCS);
+	public void changeDocs(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
+		changeDocs(vc, reference, updatedDocs, false);
 	}
 
-	private void changeDoc(Entry<?> obfEntry, String newDoc) {
+	public void changeDocs(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs, boolean validateOnly) {
+		changeDoc(vc, reference.entry, updatedDocs, validateOnly);
+
+		if (validateOnly || !vc.canProceed()) return;
+
+		chp.invalidateJavadoc(reference.getLocationClassEntry());
+	}
+
+	private void changeDoc(ValidationContext vc, Entry<?> obfEntry, String newDoc, boolean validateOnly) {
 		EntryRemapper mapper = project.getMapper();
-		if (mapper.getDeobfMapping(obfEntry) == null) {
-			markAsDeobfuscated(obfEntry, false); // NPE
+
+		EntryMapping deobfMapping = mapper.getDeobfMapping(obfEntry);
+		if (deobfMapping == null) {
+			deobfMapping = new EntryMapping(mapper.deobfuscate(obfEntry).getName());
 		}
-		mapper.mapFromObf(obfEntry, mapper.getDeobfMapping(obfEntry).withDocs(newDoc), false);
-	}
 
-	private void markAsDeobfuscated(Entry<?> obfEntry, boolean renaming) {
-		EntryRemapper mapper = project.getMapper();
-		mapper.mapFromObf(obfEntry, new EntryMapping(mapper.deobfuscate(obfEntry).getName()), renaming);
-	}
-
-	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference) {
-		markAsDeobfuscated(reference, true);
+		mapper.mapFromObf(vc, obfEntry, deobfMapping.withDocs(newDoc), false, validateOnly);
 	}
 
 	@Override
-	public void markAsDeobfuscated(EntryReference<Entry<?>, Entry<?>> reference, boolean jumpToReference) {
+	public void markAsDeobfuscated(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference) {
 		EntryRemapper mapper = project.getMapper();
 		Entry<?> entry = reference.getNameableEntry();
-		mapper.mapFromObf(entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
+		mapper.mapFromObf(vc, entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
+
+		if (!vc.canProceed()) return;
 
 		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
-			this.gui.moveClassTree(reference, true, false);
+			this.gui.moveClassTree(reference.entry, true, false);
 
-		refreshCurrentClass(jumpToReference ? reference : null);
+		chp.invalidateMapped();
 	}
 
 	public void openStats(Set<StatsMember> includedMembers) {
@@ -635,7 +492,7 @@ public class GuiController implements ClientPacketHandler {
 				try (FileWriter w = new FileWriter(statsFile)) {
 					w.write(
 							Utils.readResourceToString("/stats.html")
-								 .replace("/*data*/", data)
+									.replace("/*data*/", data)
 					);
 				}
 
@@ -647,10 +504,11 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public void setDecompiler(DecompilerService service) {
-		uncommentedSource = null;
-		decompilerService = service;
-		decompiler = project.createDecompiler(decompilerService);
-		refreshCurrentClass(null, RefreshMode.FULL);
+		chp.setDecompilerService(service);
+	}
+
+	public ClassHandleProvider getClassHandleProvider() {
+		return chp;
 	}
 
 	public EnigmaClient getClient() {

@@ -11,64 +11,64 @@
 
 package cuchaz.enigma.gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.FileDialog;
 import java.awt.event.*;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Highlighter;
 import javax.swing.tree.*;
 
-import com.google.common.base.Strings;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.gui.config.Config;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
+import cuchaz.enigma.gui.elements.EditorTabPopupMenu;
 import cuchaz.enigma.gui.elements.MenuBar;
-import cuchaz.enigma.gui.elements.PopupMenuBar;
+import cuchaz.enigma.gui.elements.ValidatableUi;
+import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.filechooser.FileChooserAny;
 import cuchaz.enigma.gui.filechooser.FileChooserFolder;
-import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
-import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
-import cuchaz.enigma.gui.highlight.TokenHighlightType;
-import cuchaz.enigma.gui.panels.PanelDeobf;
-import cuchaz.enigma.gui.panels.PanelEditor;
-import cuchaz.enigma.gui.panels.PanelIdentifier;
-import cuchaz.enigma.gui.panels.PanelObf;
-import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.util.History;
-import cuchaz.enigma.network.packet.*;
-import cuchaz.enigma.source.Token;
-import cuchaz.enigma.translation.mapping.IllegalNameException;
-import cuchaz.enigma.translation.mapping.*;
-import cuchaz.enigma.translation.representation.entry.*;
-import cuchaz.enigma.network.Message;
 import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.network.Message;
+import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
+import cuchaz.enigma.network.packet.MessageC2SPacket;
+import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
+import cuchaz.enigma.network.packet.RenameC2SPacket;
+import cuchaz.enigma.source.Token;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
-import de.sciss.syntaxpane.DefaultSyntaxKit;
+import cuchaz.enigma.utils.validation.ParameterizedMessage;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class Gui {
 
-	public final PopupMenuBar popupMenu;
 	private final PanelObf obfPanel;
 	private final PanelDeobf deobfPanel;
 
 	private final MenuBar menuBar;
+
 	// state
 	public History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
-	public EntryReference<Entry<?>, Entry<?>> renamingReference;
-	public EntryReference<Entry<?>, Entry<?>> cursorReference;
-	private boolean shouldNavigateOnClick;
 	private ConnectionState connectionState;
 	private boolean isJarOpen;
 
@@ -80,14 +80,9 @@ public class Gui {
 	public FileDialog exportJarFileChooser;
 	private GuiController controller;
 	private JFrame frame;
-	public Config.LookAndFeel editorFeel;
-	public PanelEditor editor;
-	public JScrollPane sourceScroller;
 	private JPanel classesPanel;
 	private JSplitPane splitClasses;
 	private PanelIdentifier infoPanel;
-	public Map<TokenHighlightType, BoxHighlightPainter> boxHighlightPainters;
-	private SelectionHighlightPainter selectionHighlightPainter;
 	private JTree inheritanceTree;
 	private JTree implementationsTree;
 	private JTree callsTree;
@@ -108,20 +103,9 @@ public class Gui {
 	private JLabel connectionStatusLabel;
 	private JLabel statusLabel;
 
-	public JTextField renameTextField;
-	public JTextArea javadocTextArea;
-
-	public void setEditorTheme(Config.LookAndFeel feel) {
-		if (editor != null && (editorFeel == null || editorFeel != feel)) {
-			editor.updateUI();
-			editor.setBackground(new Color(Config.getInstance().editorBackground));
-			if (editorFeel != null) {
-				getController().refreshCurrentClass();
-			}
-
-			editorFeel = feel;
-		}
-	}
+	private final EditorTabPopupMenu editorTabPopupMenu;
+	private final JTabbedPane openFiles;
+	private final HashBiMap<ClassEntry, PanelEditor> editors = HashBiMap.create();
 
 	public Gui(EnigmaProfile profile) {
 		Config.getInstance().lookAndFeel.setGlobalLAF();
@@ -144,7 +128,9 @@ public class Gui {
 
 		this.controller = new GuiController(this, profile);
 
-		Themes.updateTheme(this);
+		Themes.addListener((lookAndFeel, boxHighlightPainters) -> SwingUtilities.updateComponentTreeUI(getFrame()));
+
+		Themes.updateTheme();
 
 		// init file choosers
 		this.jarFileChooser = new FileDialog(getFrame(), I18n.translate("menu.file.jar.open"), FileDialog.LOAD);
@@ -166,20 +152,6 @@ public class Gui {
 
 		// init info panel
 		infoPanel = new PanelIdentifier(this);
-		infoPanel.clearReference();
-
-		// init editor
-		selectionHighlightPainter = new SelectionHighlightPainter();
-		this.editor = new PanelEditor(this);
-		this.sourceScroller = new JScrollPane(this.editor);
-		this.editor.setContentType("text/enigma-sources");
-		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
-		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
-		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
-
-		// init editor popup menu
-		this.popupMenu = new PopupMenuBar(this);
-		this.editor.setComponentPopupMenu(this.popupMenu);
 
 		// init inheritance panel
 		inheritanceTree = new JTree();
@@ -269,7 +241,7 @@ public class Gui {
 			}
 		});
 		tokens = new JList<>();
-		tokens.setCellRenderer(new TokenListCellRenderer(this.controller));
+		tokens.setCellRenderer(new TokenListCellRenderer(controller));
 		tokens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tokens.setLayoutOrientation(JList.VERTICAL);
 		tokens.addMouseListener(new MouseAdapter() {
@@ -278,7 +250,7 @@ public class Gui {
 				if (event.getClickCount() == 2) {
 					Token selected = tokens.getSelectedValue();
 					if (selected != null) {
-						showToken(selected);
+						openClass(controller.getTokenHandle().getRef()).navigateToToken(selected);
 					}
 				}
 			}
@@ -294,11 +266,25 @@ public class Gui {
 		callPanel.setResizeWeight(1); // let the top side take all the slack
 		callPanel.resetToPreferredSizes();
 
+		editorTabPopupMenu = new EditorTabPopupMenu(this);
+		openFiles = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
+		openFiles.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					int i = openFiles.getUI().tabForCoordinate(openFiles, e.getX(), e.getY());
+					if (i != -1) {
+						editorTabPopupMenu.show(openFiles, e.getX(), e.getY(), PanelEditor.byUi(openFiles.getComponentAt(i)));
+					}
+				}
+			}
+		});
+
 		// layout controls
 		JPanel centerPanel = new JPanel();
 		centerPanel.setLayout(new BorderLayout());
-		centerPanel.add(infoPanel, BorderLayout.NORTH);
-		centerPanel.add(sourceScroller, BorderLayout.CENTER);
+		centerPanel.add(infoPanel.getUi(), BorderLayout.NORTH);
+		centerPanel.add(openFiles, BorderLayout.CENTER);
 		tabs = new JTabbedPane();
 		tabs.setPreferredSize(ScaleUtil.getDimension(250, 0));
 		tabs.addTab(I18n.translate("info_panel.tree.inheritance"), inheritancePanel);
@@ -389,7 +375,7 @@ public class Gui {
 		this.frame.setTitle(Enigma.NAME + " - " + jarName);
 		this.classesPanel.removeAll();
 		this.classesPanel.add(splitClasses);
-		setEditorText(null);
+		closeAllEditorTabs();
 
 		// update menu
 		isJarOpen = true;
@@ -404,7 +390,7 @@ public class Gui {
 		this.frame.setTitle(Enigma.NAME);
 		setObfClasses(null);
 		setDeobfClasses(null);
-		setEditorText(null);
+		closeAllEditorTabs();
 		this.classesPanel.removeAll();
 
 		// update menu
@@ -413,6 +399,54 @@ public class Gui {
 
 		updateUiState();
 		redraw();
+	}
+
+	public PanelEditor openClass(ClassEntry entry) {
+		PanelEditor panelEditor = editors.computeIfAbsent(entry, e -> {
+			ClassHandle ch = controller.getClassHandleProvider().openClass(entry);
+			if (ch == null) return null;
+			PanelEditor ed = new PanelEditor(this);
+			ed.setup();
+			ed.setClassHandle(ch);
+			openFiles.addTab(ed.getFileName(), ed.getUi());
+
+			ClosableTabTitlePane titlePane = new ClosableTabTitlePane(ed.getFileName(), () -> closeEditor(ed));
+			openFiles.setTabComponentAt(openFiles.indexOfComponent(ed.getUi()), titlePane.getUi());
+			titlePane.setTabbedPane(openFiles);
+
+			ed.addListener(new EditorActionListener() {
+				@Override
+				public void onCursorReferenceChanged(PanelEditor editor, EntryReference<Entry<?>, Entry<?>> ref) {
+					updateSelectedReference(editor, ref);
+				}
+
+				@Override
+				public void onClassHandleChanged(PanelEditor editor, ClassEntry old, ClassHandle ch) {
+					editors.remove(old);
+					editors.put(ch.getRef(), editor);
+				}
+
+				@Override
+				public void onTitleChanged(PanelEditor editor, String title) {
+					titlePane.setText(editor.getFileName());
+				}
+			});
+
+			ed.getEditor().addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					if (e.getKeyCode() == KeyEvent.VK_4 && (e.getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) != 0) {
+						closeEditor(ed);
+					}
+				}
+			});
+
+			return ed;
+		});
+		if (panelEditor != null) {
+			openFiles.setSelectedComponent(editors.get(entry).getUi());
+		}
+		return panelEditor;
 	}
 
 	public void setObfClasses(Collection<ClassEntry> obfClasses) {
@@ -428,29 +462,49 @@ public class Gui {
 		updateUiState();
 	}
 
-	public void setEditorText(String source) {
-		this.editor.getHighlighter().removeAllHighlights();
-		this.editor.setText(source);
+	public void closeEditor(PanelEditor ed) {
+		openFiles.remove(ed.getUi());
+		editors.inverse().remove(ed);
+		ed.destroy();
 	}
 
-	public void setSource(DecompiledClassSource source) {
-		editor.setText(source.toString());
-		setHighlightedTokens(source.getHighlightedTokens());
-	}
-
-	public void showToken(final Token token) {
-		if (token == null) {
-			throw new IllegalArgumentException("Token cannot be null!");
+	public void closeAllEditorTabs() {
+		for (Iterator<PanelEditor> iter = editors.values().iterator(); iter.hasNext(); ) {
+			PanelEditor e = iter.next();
+			openFiles.remove(e.getUi());
+			e.destroy();
+			iter.remove();
 		}
-		CodeReader.navigateToToken(this.editor, token, selectionHighlightPainter);
-		redraw();
 	}
 
-	public void showTokens(Collection<Token> tokens) {
+	public void closeTabsLeftOf(PanelEditor ed) {
+		int index = openFiles.indexOfComponent(ed.getUi());
+		for (int i = index - 1; i >= 0; i--) {
+			closeEditor(PanelEditor.byUi(openFiles.getComponentAt(i)));
+		}
+	}
+
+	public void closeTabsRightOf(PanelEditor ed) {
+		int index = openFiles.indexOfComponent(ed.getUi());
+		for (int i = openFiles.getTabCount() - 1; i > index; i--) {
+			closeEditor(PanelEditor.byUi(openFiles.getComponentAt(i)));
+		}
+	}
+
+	public void closeTabsExcept(PanelEditor ed) {
+		int index = openFiles.indexOfComponent(ed.getUi());
+		for (int i = openFiles.getTabCount() - 1; i >= 0; i--) {
+			if (i == index) continue;
+			closeEditor(PanelEditor.byUi(openFiles.getComponentAt(i)));
+		}
+	}
+
+	public void showTokens(PanelEditor editor, Collection<Token> tokens) {
 		Vector<Token> sortedTokens = new Vector<>(tokens);
 		Collections.sort(sortedTokens);
 		if (sortedTokens.size() > 1) {
 			// sort the tokens and update the tokens panel
+			this.controller.setTokenHandle(editor.getClassHandle().copy());
 			this.tokens.setListData(sortedTokens);
 			this.tokens.setSelectedIndex(0);
 		} else {
@@ -458,311 +512,51 @@ public class Gui {
 		}
 
 		// show the first token
-		showToken(sortedTokens.get(0));
+		editor.navigateToToken(sortedTokens.get(0));
 	}
 
-	public void setHighlightedTokens(Map<TokenHighlightType, Collection<Token>> tokens) {
-		// remove any old highlighters
-		this.editor.getHighlighter().removeAllHighlights();
+	private void updateSelectedReference(PanelEditor editor, EntryReference<Entry<?>, Entry<?>> ref) {
+		if (editor != getActiveEditor()) return;
 
-		if (boxHighlightPainters != null) {
-			for (TokenHighlightType type : tokens.keySet()) {
-				BoxHighlightPainter painter = boxHighlightPainters.get(type);
-				if (painter != null) {
-					setHighlightedTokens(tokens.get(type), painter);
-				}
-			}
-		}
-
-		redraw();
-	}
-
-	private void setHighlightedTokens(Iterable<Token> tokens, Highlighter.HighlightPainter painter) {
-		for (Token token : tokens) {
-			try {
-				this.editor.getHighlighter().addHighlight(token.start, token.end, painter);
-			} catch (BadLocationException ex) {
-				throw new IllegalArgumentException(ex);
-			}
-		}
+		showCursorReference(ref);
 	}
 
 	private void showCursorReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		if (reference == null) {
-			infoPanel.clearReference();
-			return;
-		}
-
-		this.cursorReference = reference;
-
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(reference);
-
-		infoPanel.removeAll();
-		if (translatedReference.entry instanceof ClassEntry) {
-			showClassEntry((ClassEntry) translatedReference.entry);
-		} else if (translatedReference.entry instanceof FieldEntry) {
-			showFieldEntry((FieldEntry) translatedReference.entry);
-		} else if (translatedReference.entry instanceof MethodEntry) {
-			showMethodEntry((MethodEntry) translatedReference.entry);
-		} else if (translatedReference.entry instanceof LocalVariableEntry) {
-			showLocalVariableEntry((LocalVariableEntry) translatedReference.entry);
-		} else {
-			throw new Error("Unknown entry desc: " + translatedReference.entry.getClass().getName());
-		}
-
-		redraw();
+		infoPanel.setReference(reference == null ? null : reference.entry);
 	}
 
-	private void showLocalVariableEntry(LocalVariableEntry entry) {
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.variable"), entry.getName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getContainingClass().getFullName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getParent().getName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.index"), Integer.toString(entry.getIndex()));
+	@Nullable
+	public PanelEditor getActiveEditor() {
+		return PanelEditor.byUi(openFiles.getSelectedComponent());
 	}
 
-	private void showClassEntry(ClassEntry entry) {
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getFullName());
-		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
+	@Nullable
+	public EntryReference<Entry<?>, Entry<?>> getCursorReference() {
+		PanelEditor activeEditor = getActiveEditor();
+		return activeEditor == null ? null : activeEditor.getCursorReference();
 	}
 
-	private void showFieldEntry(FieldEntry entry) {
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.field"), entry.getName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.type_descriptor"), entry.getDesc().toString());
-		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
+	public void startDocChange(PanelEditor editor) {
+		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
+		if (cursorReference == null) return;
+		JavadocDialog.show(frame, getController(), cursorReference);
 	}
 
-	private void showMethodEntry(MethodEntry entry) {
-		if (entry.isConstructor()) {
-			addNameValue(infoPanel, I18n.translate("info_panel.identifier.constructor"), entry.getParent().getFullName());
-		} else {
-			addNameValue(infoPanel, I18n.translate("info_panel.identifier.method"), entry.getName());
-			addNameValue(infoPanel, I18n.translate("info_panel.identifier.class"), entry.getParent().getFullName());
-		}
-		addNameValue(infoPanel, I18n.translate("info_panel.identifier.method_descriptor"), entry.getDesc().toString());
-		addModifierComboBox(infoPanel, I18n.translate("info_panel.identifier.modifier"), entry);
+	public void startRename(PanelEditor editor, String text) {
+		if (editor != getActiveEditor()) return;
+
+		infoPanel.startRenaming(text);
 	}
 
-	private void addNameValue(JPanel container, String name, String value) {
-		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
+	public void startRename(PanelEditor editor) {
+		if (editor != getActiveEditor()) return;
 
-		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-		panel.add(label);
-
-		panel.add(GuiUtil.unboldLabel(new JLabel(value, JLabel.LEFT)));
-
-		container.add(panel);
+		infoPanel.startRenaming();
 	}
 
-	private JComboBox<AccessModifier> addModifierComboBox(JPanel container, String name, Entry<?> entry) {
-		if (!getController().project.isRenamable(entry))
-			return null;
-		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
-		JLabel label = new JLabel(name + ":", JLabel.RIGHT);
-		label.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-		panel.add(label);
-		JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
-		((JLabel) combo.getRenderer()).setHorizontalAlignment(JLabel.LEFT);
-		combo.setPreferredSize(ScaleUtil.getDimension(100, ScaleUtil.invert(label.getPreferredSize().height)));
-
-		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry);
-		if (mapping != null) {
-			combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
-		} else {
-			combo.setSelectedIndex(AccessModifier.UNCHANGED.ordinal());
-		}
-
-		combo.addItemListener(controller::modifierChange);
-
-		panel.add(combo);
-
-		container.add(panel);
-
-		return combo;
-	}
-
-	public void onCaretMove(int pos, boolean fromClick) {
-		if (controller.project == null)
-			return;
-		EntryRemapper mapper = controller.project.getMapper();
-		Token token = this.controller.getToken(pos);
-		boolean isToken = token != null;
-
-		cursorReference = this.controller.getReference(token);
-		Entry<?> referenceEntry = cursorReference != null ? cursorReference.entry : null;
-
-		if (referenceEntry != null && shouldNavigateOnClick && fromClick) {
-			shouldNavigateOnClick = false;
-			Entry<?> navigationEntry = referenceEntry;
-			if (cursorReference.context == null) {
-				EntryResolver resolver = mapper.getObfResolver();
-				navigationEntry = resolver.resolveFirstEntry(referenceEntry, ResolutionStrategy.RESOLVE_ROOT);
-			}
-			controller.navigateTo(navigationEntry);
-			return;
-		}
-
-		boolean isClassEntry = isToken && referenceEntry instanceof ClassEntry;
-		boolean isFieldEntry = isToken && referenceEntry instanceof FieldEntry;
-		boolean isMethodEntry = isToken && referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
-		boolean isConstructorEntry = isToken && referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
-		boolean isRenamable = isToken && this.controller.project.isRenamable(cursorReference);
-
-		if (!isRenaming()) {
-			if (isToken) {
-				showCursorReference(cursorReference);
-			} else {
-				infoPanel.clearReference();
-			}
-		}
-
-		this.popupMenu.renameMenu.setEnabled(isRenamable);
-		this.popupMenu.editJavadocMenu.setEnabled(isRenamable);
-		this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
-		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
-		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
-		this.popupMenu.showCallsSpecificMenu.setEnabled(isMethodEntry);
-		this.popupMenu.openEntryMenu.setEnabled(isRenamable && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
-		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousReference());
-		this.popupMenu.openNextMenu.setEnabled(this.controller.hasNextReference());
-		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
-
-		if (isToken && !Objects.equals(referenceEntry, mapper.deobfuscate(referenceEntry))) {
-			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.reset_obfuscated"));
-		} else {
-			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.mark_deobfuscated"));
-		}
-	}
-
-	public void startDocChange() {
-		EntryReference<Entry<?>, Entry<?>> curReference = cursorReference;
-		if (isRenaming()) {
-			finishRename(false);
-		}
-		renamingReference = curReference;
-
-		// init the text box
-		javadocTextArea = new JTextArea(10, 40);
-
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
-		javadocTextArea.setText(Strings.nullToEmpty(translatedReference.entry.getJavadocs()));
-
-		JavadocDialog.init(frame, javadocTextArea, this::finishDocChange);
-		javadocTextArea.grabFocus();
-
-		redraw();
-	}
-
-	private void finishDocChange(JFrame ui, boolean saveName) {
-		String newName = javadocTextArea.getText();
-		if (saveName) {
-			try {
-				this.controller.changeDocs(renamingReference, newName);
-				this.controller.sendPacket(new ChangeDocsC2SPacket(renamingReference.getNameableEntry(), newName));
-			} catch (IllegalNameException ex) {
-				javadocTextArea.setBorder(BorderFactory.createLineBorder(Color.red, 1));
-				javadocTextArea.setToolTipText(ex.getReason());
-				GuiUtil.showToolTipNow(javadocTextArea);
-				return;
-			}
-
-			ui.setVisible(false);
-			showCursorReference(cursorReference);
-			return;
-		}
-
-		// abort the jd change
-		javadocTextArea = null;
-		ui.setVisible(false);
-		showCursorReference(cursorReference);
-
-		this.editor.grabFocus();
-
-		redraw();
-	}
-
-	public void startRename() {
-
-		// init the text box
-		renameTextField = new JTextField();
-
-		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(cursorReference);
-		renameTextField.setText(translatedReference.getNameableName());
-
-		renameTextField.setPreferredSize(ScaleUtil.getDimension(360, ScaleUtil.invert(renameTextField.getPreferredSize().height)));
-		renameTextField.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent event) {
-				switch (event.getKeyCode()) {
-					case KeyEvent.VK_ENTER:
-						finishRename(true);
-						break;
-
-					case KeyEvent.VK_ESCAPE:
-						finishRename(false);
-						break;
-					default:
-						break;
-				}
-			}
-		});
-
-		// find the label with the name and replace it with the text box
-		JPanel panel = (JPanel) infoPanel.getComponent(0);
-		panel.remove(panel.getComponentCount() - 1);
-		panel.add(renameTextField);
-		renameTextField.grabFocus();
-
-		int offset = renameTextField.getText().lastIndexOf('/') + 1;
-		// If it's a class and isn't in the default package, assume that it's deobfuscated.
-		if (translatedReference.getNameableEntry() instanceof ClassEntry && renameTextField.getText().contains("/") && offset != 0)
-			renameTextField.select(offset, renameTextField.getText().length());
-		else
-			renameTextField.selectAll();
-
-		renamingReference = cursorReference;
-
-		redraw();
-	}
-
-	private void finishRename(boolean saveName) {
-		String newName = renameTextField.getText();
-
-		if (saveName && newName != null && !newName.isEmpty()) {
-			try {
-				this.controller.rename(renamingReference, newName, true);
-				this.controller.sendPacket(new RenameC2SPacket(renamingReference.getNameableEntry(), newName, true));
-				renameTextField = null;
-			} catch (IllegalNameException ex) {
-				renameTextField.setBorder(BorderFactory.createLineBorder(Color.red, 1));
-				renameTextField.setToolTipText(ex.getReason());
-				GuiUtil.showToolTipNow(renameTextField);
-			}
-			return;
-		}
-
-		renameTextField = null;
-
-		// abort the rename
-		showCursorReference(cursorReference);
-
-		this.editor.grabFocus();
-
-		redraw();
-	}
-
-	private boolean isRenaming() {
-		return renameTextField != null;
-	}
-
-	public void showInheritance() {
-
-		if (cursorReference == null) {
-			return;
-		}
+	public void showInheritance(PanelEditor editor) {
+		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
+		if (cursorReference == null) return;
 
 		inheritanceTree.setModel(null);
 
@@ -791,11 +585,9 @@ public class Gui {
 		redraw();
 	}
 
-	public void showImplementations() {
-
-		if (cursorReference == null) {
-			return;
-		}
+	public void showImplementations(PanelEditor editor) {
+		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
+		if (cursorReference == null) return;
 
 		implementationsTree.setModel(null);
 
@@ -821,10 +613,9 @@ public class Gui {
 		redraw();
 	}
 
-	public void showCalls(boolean recurse) {
-		if (cursorReference == null) {
-			return;
-		}
+	public void showCalls(PanelEditor editor, boolean recurse) {
+		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
+		if (cursorReference == null) return;
 
 		if (cursorReference.entry instanceof ClassEntry) {
 			ClassReferenceTreeNode node = this.controller.getClassReferences((ClassEntry) cursorReference.entry);
@@ -842,15 +633,18 @@ public class Gui {
 		redraw();
 	}
 
-	public void toggleMapping() {
+	public void toggleMapping(PanelEditor editor) {
+		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
+		if (cursorReference == null) return;
+
 		Entry<?> obfEntry = cursorReference.entry;
 		Entry<?> deobfEntry = controller.project.getMapper().deobfuscate(obfEntry);
 
 		if (!Objects.equals(obfEntry, deobfEntry)) {
-			this.controller.removeMapping(cursorReference);
+			if (!validateImmediateAction(vc -> this.controller.removeMapping(vc, cursorReference))) return;
 			this.controller.sendPacket(new RemoveMappingC2SPacket(cursorReference.getNameableEntry()));
 		} else {
-			this.controller.markAsDeobfuscated(cursorReference);
+			if (!validateImmediateAction(vc -> this.controller.markAsDeobfuscated(vc, cursorReference))) return;
 			this.controller.sendPacket(new MarkDeobfuscatedC2SPacket(cursorReference.getNameableEntry()));
 		}
 	}
@@ -909,37 +703,51 @@ public class Gui {
 		this.frame.repaint();
 	}
 
-	public void onPanelRename(Object prevData, Object data, DefaultMutableTreeNode node) throws IllegalNameException {
-		// package rename
+	public void onPanelRename(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node) {
 		if (data instanceof String) {
+			// package rename
 			for (int i = 0; i < node.getChildCount(); i++) {
 				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
-				this.controller.rename(new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
+				this.controller.rename(vc, new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
+				if (!vc.canProceed()) return;
 				this.controller.sendPacket(new RenameC2SPacket(prevDataChild, dataChild.getFullName(), false));
 				childNode.setUserObject(dataChild);
 			}
 			node.setUserObject(data);
 			// Ob package will never be modified, just reload deob view
 			this.deobfPanel.deobfClasses.reload();
-		}
-		// class rename
-		else if (data instanceof ClassEntry) {
-			this.controller.rename(new EntryReference<>((ClassEntry) prevData, ((ClassEntry) prevData).getFullName()), ((ClassEntry) data).getFullName(), false);
-			this.controller.sendPacket(new RenameC2SPacket((ClassEntry) prevData, ((ClassEntry) data).getFullName(), false));
+		} else if (data instanceof ClassEntry) {
+			// class rename
+
+			// assume this is deobf since the obf tree doesn't allow renaming in
+			// the first place
+			// TODO optimize reverse class lookup, although it looks like it's
+			//      fast enough for now
+			EntryRemapper mapper = this.controller.project.getMapper();
+			ClassEntry deobf = (ClassEntry) prevData;
+			ClassEntry obf = mapper.getObfToDeobf().getAllEntries()
+					.filter(e -> e instanceof ClassEntry)
+					.map(e -> (ClassEntry) e)
+					.filter(e -> mapper.deobfuscate(e).equals(deobf))
+					.findAny().get();
+
+			this.controller.rename(vc, new EntryReference<>(obf, obf.getFullName()), ((ClassEntry) data).getFullName(), false);
+			if (!vc.canProceed()) return;
+			this.controller.sendPacket(new RenameC2SPacket(obf, ((ClassEntry) data).getFullName(), false));
 		}
 	}
 
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, String newName) {
-		String oldEntry = obfReference.entry.getContainingClass().getPackageName();
+	public void moveClassTree(Entry<?> obfEntry, String newName) {
+		String oldEntry = obfEntry.getContainingClass().getPackageName();
 		String newEntry = new ClassEntry(newName).getPackageName();
-		moveClassTree(obfReference, oldEntry == null, newEntry == null);
+		moveClassTree(obfEntry, oldEntry == null, newEntry == null);
 	}
 
 	// TODO: getExpansionState will *not* actually update itself based on name changes!
-	public void moveClassTree(EntryReference<Entry<?>, Entry<?>> obfReference, boolean isOldOb, boolean isNewOb) {
-		ClassEntry classEntry = obfReference.entry.getContainingClass();
+	public void moveClassTree(Entry<?> obfEntry, boolean isOldOb, boolean isNewOb) {
+		ClassEntry classEntry = obfEntry.getContainingClass();
 
 		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
 		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
@@ -977,10 +785,6 @@ public class Gui {
 
 	public PanelDeobf getDeobfPanel() {
 		return deobfPanel;
-	}
-
-	public void setShouldNavigateOnClick(boolean shouldNavigateOnClick) {
-		this.shouldNavigateOnClick = shouldNavigateOnClick;
 	}
 
 	public SearchDialog getSearchDialog() {
@@ -1050,6 +854,21 @@ public class Gui {
 
 	public ConnectionState getConnectionState() {
 		return this.connectionState;
+	}
+
+	public PanelIdentifier getInfoPanel() {
+		return infoPanel;
+	}
+
+	public boolean validateImmediateAction(Consumer<ValidationContext> op) {
+		ValidationContext vc = new ValidationContext();
+		op.accept(vc);
+		if (!vc.canProceed()) {
+			List<ParameterizedMessage> messages = vc.getMessages();
+			String text = ValidatableUi.formatMessages(messages);
+			JOptionPane.showMessageDialog(this.getFrame(), text, String.format("%d message(s)", messages.size()), JOptionPane.ERROR_MESSAGE);
+		}
+		return vc.canProceed();
 	}
 
 }

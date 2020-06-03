@@ -32,4 +32,5 @@ public class TokenListCellRenderer implements ListCellRenderer<Token> {
 		label.setText(this.controller.getReadableToken(token).toString());
 		return label;
 	}
+
 }

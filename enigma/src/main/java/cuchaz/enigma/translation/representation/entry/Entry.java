@@ -11,13 +11,14 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import cuchaz.enigma.translation.mapping.IllegalNameException;
-import cuchaz.enigma.translation.Translatable;
-import cuchaz.enigma.translation.mapping.NameValidator;
-
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.annotation.Nullable;
+
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.mapping.IdentifierValidation;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public interface Entry<P extends Entry<?>> extends Translatable {
 	String getName();
@@ -92,8 +93,8 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 		return withParent((P) parent.replaceAncestor(target, replacement));
 	}
 
-	default void validateName(String name) throws IllegalNameException {
-		NameValidator.validateIdentifier(name);
+	default void validateName(ValidationContext vc, String name) {
+		IdentifierValidation.validateIdentifier(vc, name);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -16,7 +16,6 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 
 import javax.annotation.Nullable;
-import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
@@ -28,9 +27,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
-import cuchaz.enigma.translation.mapping.IllegalNameException;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class ClassSelector extends JTree {
 
@@ -103,18 +102,18 @@ public class ClassSelector extends JTree {
 					if (allowEdit && renameSelectionListener != null) {
 						Object prevData = node.getUserObject();
 						Object objectData = node.getUserObject() instanceof ClassEntry ? new ClassEntry(((ClassEntry) prevData).getPackageName() + "/" + data) : data;
-						try {
-							renameSelectionListener.onSelectionRename(node.getUserObject(), objectData, node);
-							node.setUserObject(objectData); // Make sure that it's modified
-						} catch (IllegalNameException ex) {
-							JOptionPane.showOptionDialog(gui.getFrame(), ex.getMessage(), "Enigma - Error", JOptionPane.OK_OPTION,
-									JOptionPane.ERROR_MESSAGE, null, new String[]{"Ok"}, "OK");
-							editor.cancelCellEditing();
-						}
-					} else
+						gui.validateImmediateAction(vc -> {
+							renameSelectionListener.onSelectionRename(vc, node.getUserObject(), objectData, node);
+							if (vc.canProceed()) {
+								node.setUserObject(objectData); // Make sure that it's modified
+							} else {
+								editor.cancelCellEditing();
+							}
+						});
+					} else {
 						editor.cancelCellEditing();
+					}
 				}
-
 			}
 
 			@Override
@@ -527,6 +526,6 @@ public class ClassSelector extends JTree {
 	}
 
 	public interface RenameSelectionListener {
-		void onSelectionRename(Object prevData, Object data, DefaultMutableTreeNode node);
+		void onSelectionRename(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node);
 	}
 }

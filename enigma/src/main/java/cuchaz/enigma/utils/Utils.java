@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.locks.Lock;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -77,6 +79,25 @@ public class Utils {
         }
         return digest.digest();
     }
+
+    public static void withLock(Lock l, Runnable op) {
+        try {
+            l.lock();
+            op.run();
+        } finally {
+            l.unlock();
+        }
+    }
+
+    public static <R> R withLock(Lock l, Supplier<R> op) {
+        try {
+            l.lock();
+            return op.get();
+        } finally {
+            l.unlock();
+        }
+    }
+
 
     public static boolean isBlank(String input) {
         if (input == null) {
