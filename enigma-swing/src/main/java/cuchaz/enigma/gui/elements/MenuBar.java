@@ -78,6 +78,7 @@ public class MenuBar {
 		this.fileMenu.add(this.jarCloseItem);
 		this.fileMenu.addSeparator();
 		this.fileMenu.add(this.openMenu);
+		this.fileMenu.add(this.saveMappingsItem);
 		this.fileMenu.add(this.saveMappingsAsMenu);
 		this.fileMenu.add(this.closeMappingsItem);
 		this.fileMenu.add(this.dropMappingsItem);
