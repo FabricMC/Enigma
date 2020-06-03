@@ -16,6 +16,7 @@ import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.utils.Pair;
 import cuchaz.enigma.utils.ServerAddress;
 import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.StandardValidation;
 
 public class ConnectToServerDialog extends AbstractDialog {
 
@@ -52,9 +53,7 @@ public class ConnectToServerDialog extends AbstractDialog {
 
 	public void validateInputs() {
 		vc.setActiveElement(ipField);
-		if (ipField.getText().trim().isEmpty()) {
-			vc.raise(Message.EMPTY_FIELD);
-		} else if (ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT) == null) {
+		if (StandardValidation.notBlank(vc, ipField.getText())) {
 			vc.raise(Message.INVALID_IP);
 		}
 	}
