@@ -11,6 +11,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import cuchaz.enigma.gui.elements.ValidatableTextField;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.utils.Pair;
 import cuchaz.enigma.utils.ServerAddress;
@@ -25,7 +26,10 @@ public class ConnectToServerDialog extends AbstractDialog {
 	public ConnectToServerDialog(Frame owner) {
 		super(owner, "prompt.connect.title", "prompt.connect.confirm", "prompt.cancel");
 
-		setSize(new Dimension(400, 185));
+		Dimension preferredSize = getPreferredSize();
+		preferredSize.width = ScaleUtil.scale(400);
+		setPreferredSize(preferredSize);
+		pack();
 		setLocationRelativeTo(owner);
 	}
 

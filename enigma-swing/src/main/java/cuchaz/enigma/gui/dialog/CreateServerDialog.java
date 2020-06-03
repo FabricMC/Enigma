@@ -8,6 +8,7 @@ import java.util.List;
 
 import cuchaz.enigma.gui.elements.ValidatablePasswordField;
 import cuchaz.enigma.gui.elements.ValidatableTextField;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.utils.Pair;
 import cuchaz.enigma.utils.validation.Message;
@@ -21,7 +22,10 @@ public class CreateServerDialog extends AbstractDialog {
 	public CreateServerDialog(Frame owner) {
 		super(owner, "prompt.create_server.title", "prompt.create_server.confirm", "prompt.cancel");
 
-		setSize(new Dimension(400, 150));
+		Dimension preferredSize = getPreferredSize();
+		preferredSize.width = ScaleUtil.scale(400);
+		setPreferredSize(preferredSize);
+		pack();
 		setLocationRelativeTo(owner);
 	}
 

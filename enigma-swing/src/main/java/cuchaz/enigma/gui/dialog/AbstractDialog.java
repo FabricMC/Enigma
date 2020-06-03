@@ -8,6 +8,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Pair;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -34,7 +35,7 @@ public abstract class AbstractDialog extends JDialog {
 			Component component = entry.b;
 
 			c.gridy = i;
-			c.insets = new Insets(4, 4, 4, 4);
+			c.insets = ScaleUtil.getInsets(4, 4, 4, 4);
 
 			c.gridx = 0;
 			c.weightx = 0.0;
@@ -49,19 +50,13 @@ public abstract class AbstractDialog extends JDialog {
 			inputContainer.add(component, c);
 		}
 		contentPane.add(inputContainer, BorderLayout.CENTER);
-		Container buttonContainer = new JPanel(new GridBagLayout());
-		c = new GridBagConstraints();
-		c.weightx = 1.0;
-		c.insets = new Insets(4, 4, 4, 4);
-		c.anchor = GridBagConstraints.LINE_END;
+		Container buttonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, ScaleUtil.scale(4), ScaleUtil.scale(4)));
 		JButton connectButton = new JButton(I18n.translate(confirmAction));
 		connectButton.addActionListener(event -> confirm());
-		buttonContainer.add(connectButton, c);
-		c.weightx = 0.0;
-		c.anchor = GridBagConstraints.CENTER;
+		buttonContainer.add(connectButton);
 		JButton abortButton = new JButton(I18n.translate(cancelAction));
 		abortButton.addActionListener(event -> cancel());
-		buttonContainer.add(abortButton, c);
+		buttonContainer.add(abortButton);
 		contentPane.add(buttonContainer, BorderLayout.SOUTH);
 
 		pack();
