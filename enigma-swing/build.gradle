@@ -17,7 +17,8 @@ jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.gui.Main'
 publishing {
     publications {
         shadow(MavenPublication) { publication ->
-            project.shadow.component(publication)
+            publication.from components.java
+            publication.artifact shadowJar
         }
     }
 }
