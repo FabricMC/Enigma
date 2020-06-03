@@ -10,16 +10,18 @@ public abstract class AbstractListCellRenderer<E> extends JPanel implements List
 
 	private static final Border NO_FOCUS_BORDER = BorderFactory.createEmptyBorder(1, 1, 1, 1);
 
+	private Border noFocusBorder;
+
 	public AbstractListCellRenderer() {
 		setBorder(getNoFocusBorder());
 	}
 
 	protected Border getNoFocusBorder() {
-		Border border = UIManager.getLookAndFeel().getDefaults().getBorder("List.List.cellNoFocusBorder");
-		if (border == null) {
-			return NO_FOCUS_BORDER;
+		if (noFocusBorder == null) {
+			Border border = UIManager.getLookAndFeel().getDefaults().getBorder("List.List.cellNoFocusBorder");
+			noFocusBorder = border != null ? border : NO_FOCUS_BORDER;
 		}
-		return border;
+		return noFocusBorder;
 	}
 
 	protected Border getBorder(boolean isSelected, boolean cellHasFocus) {

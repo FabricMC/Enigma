@@ -4,17 +4,16 @@ import cuchaz.enigma.gui.config.Config;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.dialog.AboutDialog;
+import cuchaz.enigma.gui.dialog.ChangeDialog;
 import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
 import cuchaz.enigma.gui.dialog.CreateServerDialog;
-import cuchaz.enigma.gui.stats.StatsMember;
+import cuchaz.enigma.gui.dialog.StatsDialog;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Pair;
 
-import java.awt.Container;
 import java.awt.Desktop;
-import java.awt.FlowLayout;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -173,42 +172,8 @@ public class MenuBar extends JMenuBar {
 			menu.addSeparator();
 			{
 				JMenuItem stats = new JMenuItem(I18n.translate("menu.file.stats"));
-
-				stats.addActionListener(event -> {
-					JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
-					Container pane = frame.getContentPane();
-					pane.setLayout(new FlowLayout());
-
-					Map<StatsMember, JCheckBox> checkboxes = Arrays
-							.stream(StatsMember.values())
-							.collect(Collectors.toMap(m -> m, m -> {
-								JCheckBox checkbox = new JCheckBox(I18n.translate("type." + m.name().toLowerCase(Locale.ROOT)));
-								pane.add(checkbox);
-								return checkbox;
-							}));
-
-					JButton button = new JButton(I18n.translate("menu.file.stats.generate"));
-
-					button.addActionListener(e -> {
-						Set<StatsMember> includedMembers = checkboxes
-								.entrySet()
-								.stream()
-								.filter(entry -> entry.getValue().isSelected())
-								.map(Map.Entry::getKey)
-								.collect(Collectors.toSet());
-
-						frame.setVisible(false);
-						frame.dispose();
-						gui.getController().openStats(includedMembers);
-					});
-
-					pane.add(button);
-					frame.pack();
-					frame.setLocationRelativeTo(this.gui.getFrame());
-					frame.setVisible(true);
-				});
-
 				menu.add(stats);
+				stats.addActionListener(event -> StatsDialog.show(this.gui));
 			}
 			menu.addSeparator();
 			{
@@ -223,12 +188,18 @@ public class MenuBar extends JMenuBar {
 		 */
 		{
 			JMenu menu = new JMenu(I18n.translate("menu.decompiler"));
-			add(menu);
+			this.add(menu);
+
+			ButtonGroup decompilerGroup = new ButtonGroup();
 
 			for (Config.Decompiler decompiler : Config.Decompiler.values()) {
-				JMenuItem label = new JMenuItem(decompiler.name);
-				menu.add(label);
-				label.addActionListener(event -> {
+				JRadioButtonMenuItem decompilerButton = new JRadioButtonMenuItem(decompiler.name);
+				decompilerGroup.add(decompilerButton);
+				if (decompiler.equals(Config.getInstance().decompiler)) {
+					decompilerButton.setSelected(true);
+				}
+				menu.add(decompilerButton);
+				decompilerButton.addActionListener(event -> {
 					gui.getController().setDecompiler(decompiler.service);
 
 					try {
@@ -250,44 +221,35 @@ public class MenuBar extends JMenuBar {
 			{
 				JMenu themes = new JMenu(I18n.translate("menu.view.themes"));
 				menu.add(themes);
+				ButtonGroup themeGroup = new ButtonGroup();
 				for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
-					JMenuItem theme = new JMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
-					themes.add(theme);
-					theme.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));
+					JRadioButtonMenuItem themeButton = new JRadioButtonMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
+					themeGroup.add(themeButton);
+					if (lookAndFeel.equals(Config.getInstance().lookAndFeel)) {
+						themeButton.setSelected(true);
+					}
+					themes.add(themeButton);
+					themeButton.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));
 				}
-
+			}
+			{
 				JMenu languages = new JMenu(I18n.translate("menu.view.languages"));
 				menu.add(languages);
+				ButtonGroup languageGroup = new ButtonGroup();
 				for (String lang : I18n.getAvailableLanguages()) {
-					JMenuItem language = new JMenuItem(I18n.getLanguageName(lang));
-					languages.add(language);
-					language.addActionListener(event -> {
-						Config.getInstance().language = lang;
-						try {
-							Config.getInstance().saveConfig();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					});
-					language.addActionListener(event -> {
-						JFrame frame = new JFrame(I18n.translate("menu.view.languages.title"));
-						Container pane = frame.getContentPane();
-						pane.setLayout(new FlowLayout());
-
-						JLabel text = new JLabel((I18n.translate("menu.view.languages.summary")));
-						text.setHorizontalAlignment(JLabel.CENTER);
-						pane.add(text);
-
-						JButton okButton = new JButton(I18n.translate("menu.view.languages.ok"));
-						pane.add(okButton);
-						okButton.addActionListener(arg0 -> frame.dispose());
-
-						frame.pack();
-						frame.setLocationRelativeTo(this.gui.getFrame());
-						frame.setVisible(true);
+					JRadioButtonMenuItem languageButton = new JRadioButtonMenuItem(I18n.getLanguageName(lang));
+					languageGroup.add(languageButton);
+					if (lang.equals(Config.getInstance().language)) {
+						languageButton.setSelected(true);
+					}
+					languages.add(languageButton);
+					languageButton.addActionListener(event -> {
+						I18n.setLanguage(lang);
+						ChangeDialog.show(this.gui);
 					});
 				}
-
+			}
+			{
 				JMenu scale = new JMenu(I18n.translate("menu.view.scale"));
 				{
 					ButtonGroup scaleGroup = new ButtonGroup();
@@ -296,6 +258,7 @@ public class MenuBar extends JMenuBar {
 								float realScaleFactor = scaleFactor / 100f;
 								JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
 								menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
+								menuItem.addActionListener(event -> ChangeDialog.show(this.gui));
 								scaleGroup.add(menuItem);
 								scale.add(menuItem);
 								return new Pair<>(realScaleFactor, menuItem);
@@ -304,7 +267,7 @@ public class MenuBar extends JMenuBar {
 
 					JMenuItem customScale = new JMenuItem(I18n.translate("menu.view.scale.custom"));
 					customScale.addActionListener(event -> {
-						String answer = (String) JOptionPane.showInputDialog(gui.getFrame(), "Custom Scale", "Custom Scale",
+						String answer = (String) JOptionPane.showInputDialog(gui.getFrame(), I18n.translate("menu.view.scale.custom.title"), I18n.translate("menu.view.scale.custom.title"),
 								JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(ScaleUtil.getScaleFactor() * 100));
 						if (answer == null) return;
 						float newScale = 1.0f;
@@ -313,6 +276,7 @@ public class MenuBar extends JMenuBar {
 						} catch (NumberFormatException ignored) {
 						}
 						ScaleUtil.setScaleFactor(newScale);
+						ChangeDialog.show(this.gui);
 					});
 					scale.add(customScale);
 					ScaleUtil.addListener((newScale, _oldScale) -> {
@@ -329,7 +293,9 @@ public class MenuBar extends JMenuBar {
 					}
 				}
 				menu.add(scale);
-
+			}
+			menu.addSeparator();
+			{
 				JMenuItem search = new JMenuItem(I18n.translate("menu.view.search"));
 				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
 				menu.add(search);
@@ -338,7 +304,6 @@ public class MenuBar extends JMenuBar {
 						this.gui.getSearchDialog().show();
 					}
 				});
-
 			}
 		}
 
@@ -394,6 +359,7 @@ public class MenuBar extends JMenuBar {
 				this.startServerMenu = item;
 			}
 		}
+
 		/*
 		 * Help menu
 		 */

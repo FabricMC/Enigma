@@ -1,6 +1,12 @@
 package cuchaz.enigma.gui.search;
 
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -11,6 +17,7 @@ public class SearchUtil<T extends SearchEntry> {
 
 	private final Map<T, Entry<T>> entries = new HashMap<>();
 	private final Map<String, Integer> hitCount = new HashMap<>();
+	private final Executor searchExecutor = Executors.newWorkStealingPool();
 
 	public void add(T entry) {
 		Entry<T> e = Entry.from(entry);
@@ -44,6 +51,59 @@ public class SearchUtil<T extends SearchEntry> {
 				.sorted(Comparator.comparingDouble(o -> -o.b))
 				.map(e -> e.a.searchEntry)
 				.sequential();
+	}
+
+	public SearchControl asyncSearch(String term, SearchResultConsumer<T> consumer) {
+		Map<String, Integer> hitCount = new HashMap<>(this.hitCount);
+		Map<T, Entry<T>> entries = new HashMap<>(this.entries);
+		float[] scores = new float[entries.size()];
+		Lock scoresLock = new ReentrantLock();
+		AtomicInteger size = new AtomicInteger();
+		AtomicBoolean control = new AtomicBoolean(false);
+		AtomicInteger elapsed = new AtomicInteger();
+		for (Entry<T> value : entries.values()) {
+			searchExecutor.execute(() -> {
+				try {
+					if (control.get()) return;
+					float score = value.getScore(term, hitCount.getOrDefault(value.searchEntry.getIdentifier(), 0));
+					if (score <= 0) return;
+					score = -score; // sort descending
+					try {
+						scoresLock.lock();
+						if (control.get()) return;
+						int dataSize = size.getAndIncrement();
+						int index = Arrays.binarySearch(scores, 0, dataSize, score);
+						if (index < 0) {
+							index = ~index;
+						}
+						System.arraycopy(scores, index, scores, index + 1, dataSize - index);
+						scores[index] = score;
+						consumer.add(index, value.searchEntry);
+					} finally {
+						scoresLock.unlock();
+					}
+				} finally {
+					elapsed.incrementAndGet();
+				}
+			});
+		}
+
+		return new SearchControl() {
+			@Override
+			public void stop() {
+				control.set(true);
+			}
+
+			@Override
+			public boolean isFinished() {
+				return entries.size() == elapsed.get();
+			}
+
+			@Override
+			public float getProgress() {
+				return (float) elapsed.get() / entries.size();
+			}
+		};
 	}
 
 	public void hit(T entry) {
@@ -190,6 +250,19 @@ public class SearchUtil<T extends SearchEntry> {
 			return list.toArray(new String[0]);
 		}
 
+	}
+
+	@FunctionalInterface
+	public interface SearchResultConsumer<T extends SearchEntry> {
+		void add(int index, T entry);
+	}
+
+	public interface SearchControl {
+		void stop();
+
+		boolean isFinished();
+
+		float getProgress();
 	}
 
 }
