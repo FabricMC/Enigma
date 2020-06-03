@@ -1,0 +1,23 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+dependencies {
+    implementation project(':enigma')
+    implementation project(':enigma-server')
+
+    implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+    implementation 'com.bulenkov:darcula:1.0.0-bobbylight'
+    implementation 'de.sciss:syntaxpane:1.2.0'
+    implementation 'com.github.lukeu:swing-dpi:0.6'
+}
+
+jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.gui.Main'
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+        }
+    }
+}
