@@ -1,18 +1,5 @@
 package cuchaz.enigma.gui.elements;
 
-import cuchaz.enigma.gui.config.Config;
-import cuchaz.enigma.gui.config.Themes;
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.dialog.AboutDialog;
-import cuchaz.enigma.gui.dialog.ChangeDialog;
-import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
-import cuchaz.enigma.gui.dialog.CreateServerDialog;
-import cuchaz.enigma.gui.dialog.StatsDialog;
-import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.Pair;
-
 import java.awt.Desktop;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -23,364 +10,365 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 import javax.swing.*;
 
-public class MenuBar extends JMenuBar {
+import cuchaz.enigma.gui.ConnectionState;
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.config.Config;
+import cuchaz.enigma.gui.config.Themes;
+import cuchaz.enigma.gui.dialog.*;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
 
-	public final JMenuItem closeJarMenu;
-	public final List<JMenuItem> openMappingsMenus;
-	public final JMenuItem saveMappingsMenu;
-	public final List<JMenuItem> saveMappingsMenus;
-	public final JMenuItem closeMappingsMenu;
-	public final JMenuItem dropMappingsMenu;
-	public final JMenuItem exportSourceMenu;
-	public final JMenuItem exportJarMenu;
-	public final JMenuItem connectToServerMenu;
-	public final JMenuItem startServerMenu;
+public class MenuBar {
+
+	private final JMenuBar ui = new JMenuBar();
+
+	private final JMenu fileMenu = new JMenu(I18n.translate("menu.file"));
+	private final JMenuItem jarOpenItem = new JMenuItem(I18n.translate("menu.file.jar.open"));
+	private final JMenuItem jarCloseItem = new JMenuItem(I18n.translate("menu.file.jar.close"));
+	private final JMenu openMenu = new JMenu(I18n.translate("menu.file.mappings.open"));
+	private final JMenuItem saveMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.save"));
+	private final JMenu saveMappingsAsMenu = new JMenu(I18n.translate("menu.file.mappings.save_as"));
+	private final JMenuItem closeMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.close"));
+	private final JMenuItem dropMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.drop"));
+	private final JMenuItem exportSourceItem = new JMenuItem(I18n.translate("menu.file.export.source"));
+	private final JMenuItem exportJarItem = new JMenuItem(I18n.translate("menu.file.export.jar"));
+	private final JMenuItem statsItem = new JMenuItem(I18n.translate("menu.file.stats"));
+	private final JMenuItem exitItem = new JMenuItem(I18n.translate("menu.file.exit"));
+
+	private final JMenu decompilerMenu = new JMenu(I18n.translate("menu.decompiler"));
+
+	private final JMenu viewMenu = new JMenu(I18n.translate("menu.view"));
+	private final JMenu themesMenu = new JMenu(I18n.translate("menu.view.themes"));
+	private final JMenu languagesMenu = new JMenu(I18n.translate("menu.view.languages"));
+	private final JMenu scaleMenu = new JMenu(I18n.translate("menu.view.scale"));
+	private final JMenuItem customScaleItem = new JMenuItem(I18n.translate("menu.view.scale.custom"));
+	private final JMenuItem searchItem = new JMenuItem(I18n.translate("menu.view.search"));
+
+	private final JMenu collabMenu = new JMenu(I18n.translate("menu.collab"));
+	private final JMenuItem connectItem = new JMenuItem(I18n.translate("menu.collab.connect"));
+	private final JMenuItem startServerItem = new JMenuItem(I18n.translate("menu.collab.server.start"));
+
+	private final JMenu helpMenu = new JMenu(I18n.translate("menu.help"));
+	private final JMenuItem aboutItem = new JMenuItem(I18n.translate("menu.help.about"));
+	private final JMenuItem githubItem = new JMenuItem(I18n.translate("menu.help.github"));
+
 	private final Gui gui;
 
 	public MenuBar(Gui gui) {
 		this.gui = gui;
 
-		/*
-		 * File menu
-		 */
-		{
-			JMenu menu = new JMenu(I18n.translate("menu.file"));
-			this.add(menu);
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.jar.open"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					this.gui.jarFileChooser.setVisible(true);
-					String file = this.gui.jarFileChooser.getFile();
-					// checks if the file name is not empty
-					if (file != null) {
-						Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(file);
-						// checks if the file name corresponds to an existing file
-						if (Files.exists(path)) {
-							gui.getController().openJar(path);
-						}
-					}
-				});
-			}
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.jar.close"));
-				menu.add(item);
-				item.addActionListener(event -> this.gui.getController().closeJar());
-				this.closeJarMenu = item;
-			}
-			menu.addSeparator();
-			JMenu openMenu = new JMenu(I18n.translate("menu.file.mappings.open"));
-			menu.add(openMenu);
-			{
-				openMappingsMenus = new ArrayList<>();
-				for (MappingFormat format : MappingFormat.values()) {
-					if (format.getReader() != null) {
-						JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
-						openMenu.add(item);
-						item.addActionListener(event -> {
-							if (this.gui.enigmaMappingsFileChooser.showOpenDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-								File selectedFile = this.gui.enigmaMappingsFileChooser.getSelectedFile();
-								this.gui.getController().openMappings(format, selectedFile.toPath());
-							}
-						});
-						openMappingsMenus.add(item);
-					}
-				}
-			}
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.mappings.save"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
-				});
-				item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-				this.saveMappingsMenu = item;
-			}
-			JMenu saveMenu = new JMenu(I18n.translate("menu.file.mappings.save_as"));
-			menu.add(saveMenu);
-			{
-				saveMappingsMenus = new ArrayList<>();
-				for (MappingFormat format : MappingFormat.values()) {
-					if (format.getWriter() != null) {
-						JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
-						saveMenu.add(item);
-						item.addActionListener(event -> {
-							// TODO: Use a specific file chooser for it
-							if (this.gui.enigmaMappingsFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-								this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
-								this.saveMappingsMenu.setEnabled(true);
-							}
-						});
-						saveMappingsMenus.add(item);
-					}
-				}
-			}
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.mappings.close"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					if (this.gui.getController().isDirty()) {
-						this.gui.showDiscardDiag((response -> {
-							if (response == JOptionPane.YES_OPTION) {
-								gui.saveMapping();
-								this.gui.getController().closeMappings();
-							} else if (response == JOptionPane.NO_OPTION)
-								this.gui.getController().closeMappings();
-							return null;
-						}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
-					} else
-						this.gui.getController().closeMappings();
+		prepareOpenMenu(this.openMenu, gui);
+		prepareSaveMappingsAsMenu(this.saveMappingsAsMenu, this.saveMappingsItem, gui);
+		prepareDecompilerMenu(this.decompilerMenu, gui);
+		prepareThemesMenu(this.themesMenu, gui);
+		prepareLanguagesMenu(this.languagesMenu, gui);
+		prepareScaleMenu(this.scaleMenu, gui);
 
-				});
-				this.closeMappingsMenu = item;
-			}
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.mappings.drop"));
-				menu.add(item);
-				item.addActionListener(event -> this.gui.getController().dropMappings());
-				this.dropMappingsMenu = item;
-			}
-			menu.addSeparator();
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.export.source"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile().toPath());
-					}
-				});
-				this.exportSourceMenu = item;
-			}
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.export.jar"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					this.gui.exportJarFileChooser.setVisible(true);
-					if (this.gui.exportJarFileChooser.getFile() != null) {
-						Path path = Paths.get(this.gui.exportJarFileChooser.getDirectory(), this.gui.exportJarFileChooser.getFile());
-						this.gui.getController().exportJar(path);
-					}
-				});
-				this.exportJarMenu = item;
-			}
-			menu.addSeparator();
-			{
-				JMenuItem stats = new JMenuItem(I18n.translate("menu.file.stats"));
-				menu.add(stats);
-				stats.addActionListener(event -> StatsDialog.show(this.gui));
-			}
-			menu.addSeparator();
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.file.exit"));
-				menu.add(item);
-				item.addActionListener(event -> this.gui.close());
-			}
-		}
+		this.fileMenu.add(this.jarOpenItem);
+		this.fileMenu.add(this.jarCloseItem);
+		this.fileMenu.addSeparator();
+		this.fileMenu.add(this.openMenu);
+		this.fileMenu.add(this.saveMappingsAsMenu);
+		this.fileMenu.add(this.closeMappingsItem);
+		this.fileMenu.add(this.dropMappingsItem);
+		this.fileMenu.addSeparator();
+		this.fileMenu.add(this.exportSourceItem);
+		this.fileMenu.add(this.exportJarItem);
+		this.fileMenu.addSeparator();
+		this.fileMenu.add(this.statsItem);
+		this.fileMenu.addSeparator();
+		this.fileMenu.add(this.exitItem);
+		this.ui.add(this.fileMenu);
 
-		/*
-		 * Decompiler menu
-		 */
-		{
-			JMenu menu = new JMenu(I18n.translate("menu.decompiler"));
-			this.add(menu);
+		this.ui.add(this.decompilerMenu);
 
-			ButtonGroup decompilerGroup = new ButtonGroup();
+		this.viewMenu.add(this.themesMenu);
+		this.viewMenu.add(this.languagesMenu);
+		this.scaleMenu.add(this.customScaleItem);
+		this.viewMenu.add(this.scaleMenu);
+		this.viewMenu.addSeparator();
+		this.viewMenu.add(this.searchItem);
+		this.ui.add(this.viewMenu);
 
-			for (Config.Decompiler decompiler : Config.Decompiler.values()) {
-				JRadioButtonMenuItem decompilerButton = new JRadioButtonMenuItem(decompiler.name);
-				decompilerGroup.add(decompilerButton);
-				if (decompiler.equals(Config.getInstance().decompiler)) {
-					decompilerButton.setSelected(true);
-				}
-				menu.add(decompilerButton);
-				decompilerButton.addActionListener(event -> {
-					gui.getController().setDecompiler(decompiler.service);
+		this.collabMenu.add(this.connectItem);
+		this.collabMenu.add(this.startServerItem);
+		this.ui.add(this.collabMenu);
 
-					try {
-						Config.getInstance().decompiler = decompiler;
-						Config.getInstance().saveConfig();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				});
-			}
-		}
+		this.helpMenu.add(this.aboutItem);
+		this.helpMenu.add(this.githubItem);
+		this.ui.add(this.helpMenu);
 
-		/*
-		 * View menu
-		 */
-		{
-			JMenu menu = new JMenu(I18n.translate("menu.view"));
-			this.add(menu);
-			{
-				JMenu themes = new JMenu(I18n.translate("menu.view.themes"));
-				menu.add(themes);
-				ButtonGroup themeGroup = new ButtonGroup();
-				for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
-					JRadioButtonMenuItem themeButton = new JRadioButtonMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
-					themeGroup.add(themeButton);
-					if (lookAndFeel.equals(Config.getInstance().lookAndFeel)) {
-						themeButton.setSelected(true);
-					}
-					themes.add(themeButton);
-					themeButton.addActionListener(event -> Themes.setLookAndFeel(gui, lookAndFeel));
-				}
-			}
-			{
-				JMenu languages = new JMenu(I18n.translate("menu.view.languages"));
-				menu.add(languages);
-				ButtonGroup languageGroup = new ButtonGroup();
-				for (String lang : I18n.getAvailableLanguages()) {
-					JRadioButtonMenuItem languageButton = new JRadioButtonMenuItem(I18n.getLanguageName(lang));
-					languageGroup.add(languageButton);
-					if (lang.equals(Config.getInstance().language)) {
-						languageButton.setSelected(true);
-					}
-					languages.add(languageButton);
-					languageButton.addActionListener(event -> {
-						I18n.setLanguage(lang);
-						ChangeDialog.show(this.gui);
-					});
-				}
-			}
-			{
-				JMenu scale = new JMenu(I18n.translate("menu.view.scale"));
-				{
-					ButtonGroup scaleGroup = new ButtonGroup();
-					Map<Float, JRadioButtonMenuItem> map = IntStream.of(100, 125, 150, 175, 200)
-							.mapToObj(scaleFactor -> {
-								float realScaleFactor = scaleFactor / 100f;
-								JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
-								menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
-								menuItem.addActionListener(event -> ChangeDialog.show(this.gui));
-								scaleGroup.add(menuItem);
-								scale.add(menuItem);
-								return new Pair<>(realScaleFactor, menuItem);
-							})
-							.collect(Collectors.toMap(x -> x.a, x -> x.b));
+		this.saveMappingsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		this.searchItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_DOWN_MASK));
 
-					JMenuItem customScale = new JMenuItem(I18n.translate("menu.view.scale.custom"));
-					customScale.addActionListener(event -> {
-						String answer = (String) JOptionPane.showInputDialog(gui.getFrame(), I18n.translate("menu.view.scale.custom.title"), I18n.translate("menu.view.scale.custom.title"),
-								JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(ScaleUtil.getScaleFactor() * 100));
-						if (answer == null) return;
-						float newScale = 1.0f;
-						try {
-							newScale = Float.parseFloat(answer) / 100f;
-						} catch (NumberFormatException ignored) {
-						}
-						ScaleUtil.setScaleFactor(newScale);
-						ChangeDialog.show(this.gui);
-					});
-					scale.add(customScale);
-					ScaleUtil.addListener((newScale, _oldScale) -> {
-						JRadioButtonMenuItem mi = map.get(newScale);
-						if (mi != null) {
-							mi.setSelected(true);
-						} else {
-							scaleGroup.clearSelection();
-						}
-					});
-					JRadioButtonMenuItem mi = map.get(ScaleUtil.getScaleFactor());
-					if (mi != null) {
-						mi.setSelected(true);
-					}
-				}
-				menu.add(scale);
-			}
-			menu.addSeparator();
-			{
-				JMenuItem search = new JMenuItem(I18n.translate("menu.view.search"));
-				search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_MASK));
-				menu.add(search);
-				search.addActionListener(event -> {
-					if (this.gui.getController().project != null) {
-						this.gui.getSearchDialog().show();
-					}
-				});
-			}
-		}
+		this.jarOpenItem.addActionListener(_e -> this.onOpenJarClicked());
+		this.jarCloseItem.addActionListener(_e -> this.gui.getController().closeJar());
+		this.saveMappingsItem.addActionListener(_e -> this.onSaveMappingsClicked());
+		this.closeMappingsItem.addActionListener(_e -> this.onCloseMappingsClicked());
+		this.dropMappingsItem.addActionListener(_e -> this.gui.getController().dropMappings());
+		this.exportSourceItem.addActionListener(_e -> this.onExportSourceClicked());
+		this.exportJarItem.addActionListener(_e -> this.onExportJarClicked());
+		this.statsItem.addActionListener(_e -> StatsDialog.show(this.gui));
+		this.exitItem.addActionListener(_e -> this.gui.close());
+		this.customScaleItem.addActionListener(_e -> this.onCustomScaleClicked());
+		this.searchItem.addActionListener(_e -> this.onSearchClicked());
+		this.connectItem.addActionListener(_e -> this.onConnectClicked());
+		this.startServerItem.addActionListener(_e -> this.onStartServerClicked());
+		this.aboutItem.addActionListener(_e -> AboutDialog.show(this.gui.getFrame()));
+		this.githubItem.addActionListener(_e -> this.onGithubClicked());
+	}
 
-		/*
-		 * Collab menu
-		 */
-		{
-			JMenu menu = new JMenu(I18n.translate("menu.collab"));
-			this.add(menu);
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.collab.connect"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					if (this.gui.getController().getClient() != null) {
-						this.gui.getController().disconnectIfConnected(null);
-						return;
-					}
-					ConnectToServerDialog.Result result = ConnectToServerDialog.show(this.gui.getFrame());
-					if (result == null) {
-						return;
-					}
-					this.gui.getController().disconnectIfConnected(null);
-					try {
-						this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort(), result.getPassword());
-					} catch (IOException e) {
-						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
-						this.gui.getController().disconnectIfConnected(null);
-					}
-					Arrays.fill(result.getPassword(), (char)0);
-				});
-				this.connectToServerMenu = item;
-			}
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.collab.server.start"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					if (this.gui.getController().getServer() != null) {
-						this.gui.getController().disconnectIfConnected(null);
-						return;
-					}
-					CreateServerDialog.Result result = CreateServerDialog.show(this.gui.getFrame());
-					if (result == null) {
-						return;
-					}
-					this.gui.getController().disconnectIfConnected(null);
-					try {
-						this.gui.getController().createServer(result.getPort(), result.getPassword());
-					} catch (IOException e) {
-						JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.server.start.error"), JOptionPane.ERROR_MESSAGE);
-						this.gui.getController().disconnectIfConnected(null);
-					}
-				});
-				this.startServerMenu = item;
-			}
-		}
+	public void updateUiState() {
+		boolean jarOpen = this.gui.isJarOpen();
+		ConnectionState connectionState = this.gui.getConnectionState();
 
-		/*
-		 * Help menu
-		 */
-		{
-			JMenu menu = new JMenu(I18n.translate("menu.help"));
-			this.add(menu);
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.help.about"));
-				menu.add(item);
-				item.addActionListener(event -> AboutDialog.show(this.gui.getFrame()));
-			}
-			{
-				JMenuItem item = new JMenuItem(I18n.translate("menu.help.github"));
-				menu.add(item);
-				item.addActionListener(event -> {
-					try {
-						Desktop.getDesktop().browse(new URL("https://github.com/FabricMC/Enigma").toURI());
-					} catch (URISyntaxException | IOException ignored) {
-					}
-				});
+		this.connectItem.setEnabled(jarOpen && connectionState != ConnectionState.HOSTING);
+		this.connectItem.setText(I18n.translate(connectionState != ConnectionState.CONNECTED ? "menu.collab.connect" : "menu.collab.disconnect"));
+		this.startServerItem.setEnabled(jarOpen && connectionState != ConnectionState.CONNECTED);
+		this.startServerItem.setText(I18n.translate(connectionState != ConnectionState.HOSTING ? "menu.collab.server.start" : "menu.collab.server.stop"));
+
+		this.jarCloseItem.setEnabled(jarOpen);
+		this.openMenu.setEnabled(jarOpen);
+		this.saveMappingsItem.setEnabled(jarOpen && this.gui.enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
+		this.saveMappingsAsMenu.setEnabled(jarOpen);
+		this.closeMappingsItem.setEnabled(jarOpen);
+		this.exportSourceItem.setEnabled(jarOpen);
+		this.exportJarItem.setEnabled(jarOpen);
+	}
+
+	public JMenuBar getUi() {
+		return this.ui;
+	}
+
+	private void onOpenJarClicked() {
+		this.gui.jarFileChooser.setVisible(true);
+		String file = this.gui.jarFileChooser.getFile();
+		// checks if the file name is not empty
+		if (file != null) {
+			Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(file);
+			// checks if the file name corresponds to an existing file
+			if (Files.exists(path)) {
+				this.gui.getController().openJar(path);
 			}
 		}
 	}
+
+	private void onSaveMappingsClicked() {
+		this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+	}
+
+	private void onCloseMappingsClicked() {
+		if (this.gui.getController().isDirty()) {
+			this.gui.showDiscardDiag((response -> {
+				if (response == JOptionPane.YES_OPTION) {
+					this.gui.saveMapping();
+					this.gui.getController().closeMappings();
+				} else if (response == JOptionPane.NO_OPTION)
+					this.gui.getController().closeMappings();
+				return null;
+			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
+		} else {
+			this.gui.getController().closeMappings();
+		}
+	}
+
+	private void onExportSourceClicked() {
+		if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+			this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile().toPath());
+		}
+	}
+
+	private void onExportJarClicked() {
+		this.gui.exportJarFileChooser.setVisible(true);
+		if (this.gui.exportJarFileChooser.getFile() != null) {
+			Path path = Paths.get(this.gui.exportJarFileChooser.getDirectory(), this.gui.exportJarFileChooser.getFile());
+			this.gui.getController().exportJar(path);
+		}
+	}
+
+	private void onCustomScaleClicked() {
+		String answer = (String) JOptionPane.showInputDialog(this.gui.getFrame(), I18n.translate("menu.view.scale.custom.title"), I18n.translate("menu.view.scale.custom.title"),
+				JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(ScaleUtil.getScaleFactor() * 100));
+		if (answer == null) return;
+		float newScale = 1.0f;
+		try {
+			newScale = Float.parseFloat(answer) / 100f;
+		} catch (NumberFormatException ignored) {
+		}
+		ScaleUtil.setScaleFactor(newScale);
+		ChangeDialog.show(this.gui);
+	}
+
+	private void onSearchClicked() {
+		if (this.gui.getController().project != null) {
+			this.gui.getSearchDialog().show();
+		}
+	}
+
+	private void onConnectClicked() {
+		if (this.gui.getController().getClient() != null) {
+			this.gui.getController().disconnectIfConnected(null);
+			return;
+		}
+		ConnectToServerDialog.Result result = ConnectToServerDialog.show(this.gui.getFrame());
+		if (result == null) {
+			return;
+		}
+		this.gui.getController().disconnectIfConnected(null);
+		try {
+			this.gui.getController().createClient(result.getUsername(), result.getIp(), result.getPort(), result.getPassword());
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
+			this.gui.getController().disconnectIfConnected(null);
+		}
+		Arrays.fill(result.getPassword(), (char) 0);
+	}
+
+	private void onStartServerClicked() {
+		if (this.gui.getController().getServer() != null) {
+			this.gui.getController().disconnectIfConnected(null);
+			return;
+		}
+		CreateServerDialog.Result result = CreateServerDialog.show(this.gui.getFrame());
+		if (result == null) {
+			return;
+		}
+		this.gui.getController().disconnectIfConnected(null);
+		try {
+			this.gui.getController().createServer(result.getPort(), result.getPassword());
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.server.start.error"), JOptionPane.ERROR_MESSAGE);
+			this.gui.getController().disconnectIfConnected(null);
+		}
+	}
+
+	private void onGithubClicked() {
+		try {
+			Desktop.getDesktop().browse(new URL("https://github.com/FabricMC/Enigma").toURI());
+		} catch (URISyntaxException | IOException ignored) {
+		}
+	}
+
+	private static void prepareOpenMenu(JMenu openMenu, Gui gui) {
+		for (MappingFormat format : MappingFormat.values()) {
+			if (format.getReader() != null) {
+				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
+				item.addActionListener(event -> {
+					if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+						File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
+						gui.getController().openMappings(format, selectedFile.toPath());
+					}
+				});
+				openMenu.add(item);
+			}
+		}
+	}
+
+	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
+		for (MappingFormat format : MappingFormat.values()) {
+			if (format.getWriter() != null) {
+				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
+				item.addActionListener(event -> {
+					// TODO: Use a specific file chooser for it
+					if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+						gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
+						saveMappingsItem.setEnabled(true);
+					}
+				});
+				saveMappingsAsMenu.add(item);
+			}
+		}
+	}
+
+	private static void prepareDecompilerMenu(JMenu decompilerMenu, Gui gui) {
+		ButtonGroup decompilerGroup = new ButtonGroup();
+
+		for (Config.Decompiler decompiler : Config.Decompiler.values()) {
+			JRadioButtonMenuItem decompilerButton = new JRadioButtonMenuItem(decompiler.name);
+			decompilerGroup.add(decompilerButton);
+			if (decompiler.equals(Config.getInstance().decompiler)) {
+				decompilerButton.setSelected(true);
+			}
+			decompilerButton.addActionListener(event -> {
+				gui.getController().setDecompiler(decompiler.service);
+
+				try {
+					Config.getInstance().decompiler = decompiler;
+					Config.getInstance().saveConfig();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
+			decompilerMenu.add(decompilerButton);
+		}
+	}
+
+	private static void prepareThemesMenu(JMenu themesMenu, Gui gui) {
+		ButtonGroup themeGroup = new ButtonGroup();
+		for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
+			JRadioButtonMenuItem themeButton = new JRadioButtonMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
+			themeGroup.add(themeButton);
+			if (lookAndFeel.equals(Config.getInstance().lookAndFeel)) {
+				themeButton.setSelected(true);
+			}
+			themeButton.addActionListener(_e -> Themes.setLookAndFeel(gui, lookAndFeel));
+			themesMenu.add(themeButton);
+		}
+	}
+
+	private static void prepareLanguagesMenu(JMenu languagesMenu, Gui gui) {
+		ButtonGroup languageGroup = new ButtonGroup();
+		for (String lang : I18n.getAvailableLanguages()) {
+			JRadioButtonMenuItem languageButton = new JRadioButtonMenuItem(I18n.getLanguageName(lang));
+			languageGroup.add(languageButton);
+			if (lang.equals(Config.getInstance().language)) {
+				languageButton.setSelected(true);
+			}
+			languageButton.addActionListener(event -> {
+				I18n.setLanguage(lang);
+				ChangeDialog.show(gui);
+			});
+			languagesMenu.add(languageButton);
+		}
+	}
+
+	private static void prepareScaleMenu(JMenu scaleMenu, Gui gui) {
+		ButtonGroup scaleGroup = new ButtonGroup();
+		Map<Float, JRadioButtonMenuItem> scaleButtons = IntStream.of(100, 125, 150, 175, 200)
+				.mapToObj(scaleFactor -> {
+					float realScaleFactor = scaleFactor / 100f;
+					JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
+					menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
+					menuItem.addActionListener(event -> ChangeDialog.show(gui));
+					scaleGroup.add(menuItem);
+					scaleMenu.add(menuItem);
+					return new Pair<>(realScaleFactor, menuItem);
+				})
+				.collect(Collectors.toMap(x -> x.a, x -> x.b));
+
+		JRadioButtonMenuItem currentScaleButton = scaleButtons.get(ScaleUtil.getScaleFactor());
+		if (currentScaleButton != null) {
+			currentScaleButton.setSelected(true);
+		}
+
+		ScaleUtil.addListener((newScale, _oldScale) -> {
+			JRadioButtonMenuItem mi = scaleButtons.get(newScale);
+			if (mi != null) {
+				mi.setSelected(true);
+			} else {
+				scaleGroup.clearSelection();
+			}
+		});
+	}
+
 }

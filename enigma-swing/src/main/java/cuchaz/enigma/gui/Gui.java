@@ -340,7 +340,7 @@ public class Gui {
 
 		// init menus
 		this.menuBar = new MenuBar(this);
-		this.frame.setJMenuBar(this.menuBar);
+		this.frame.setJMenuBar(this.menuBar.getUi());
 
 		// init status bar
 		statusBar = new JPanel(new BorderLayout());
@@ -1025,18 +1025,7 @@ public class Gui {
 	 * causing inconsistencies.
 	 */
 	public void updateUiState() {
-		menuBar.connectToServerMenu.setEnabled(isJarOpen && connectionState != ConnectionState.HOSTING);
-		menuBar.connectToServerMenu.setText(I18n.translate(connectionState != ConnectionState.CONNECTED ? "menu.collab.connect" : "menu.collab.disconnect"));
-		menuBar.startServerMenu.setEnabled(isJarOpen && connectionState != ConnectionState.CONNECTED);
-		menuBar.startServerMenu.setText(I18n.translate(connectionState != ConnectionState.HOSTING ? "menu.collab.server.start" : "menu.collab.server.stop"));
-
-		menuBar.closeJarMenu.setEnabled(isJarOpen);
-		menuBar.openMappingsMenus.forEach(item -> item.setEnabled(isJarOpen));
-		menuBar.saveMappingsMenu.setEnabled(isJarOpen && enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
-		menuBar.saveMappingsMenus.forEach(item -> item.setEnabled(isJarOpen));
-		menuBar.closeMappingsMenu.setEnabled(isJarOpen);
-		menuBar.exportSourceMenu.setEnabled(isJarOpen);
-		menuBar.exportJarMenu.setEnabled(isJarOpen);
+		menuBar.updateUiState();
 
 		connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
 
@@ -1053,6 +1042,14 @@ public class Gui {
 		connectionState = state;
 		statusLabel.setText(I18n.translate("status.ready"));
 		updateUiState();
+	}
+
+	public boolean isJarOpen() {
+		return isJarOpen;
+	}
+
+	public ConnectionState getConnectionState() {
+		return this.connectionState;
 	}
 
 }
