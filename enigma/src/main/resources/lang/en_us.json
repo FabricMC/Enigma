@@ -143,7 +143,6 @@
 	"prompt.create_server.title": "Start Server",
 	"prompt.create_server.port": "Port:",
 	"prompt.create_server.confirm": "Start",
-	"prompt.cancel": "Cancel",
 	"prompt.password": "Password:",
 
 	"disconnect.disconnected": "Disconnected",
