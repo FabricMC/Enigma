@@ -50,16 +50,18 @@ subprojects {
     }
 }
 
-publishing {
-    repositories {
-        mavenLocal()
+allprojects {
+    publishing {
+        repositories {
+            mavenLocal()
 
-        if (project.hasProperty('mavenPass')) {
-            maven {
-                url = "http://mavenupload.modmuss50.me/"
-                credentials {
-                    username = "buildslave"
-                    password = project.getProperty('mavenPass')
+            if (project.hasProperty('mavenPass')) {
+                maven {
+                    url = "http://mavenupload.modmuss50.me/"
+                    credentials {
+                        username = "buildslave"
+                        password = project.getProperty('mavenPass')
+                    }
                 }
             }
         }
