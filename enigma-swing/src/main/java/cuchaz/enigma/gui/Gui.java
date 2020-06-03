@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import javax.swing.*;
 import javax.swing.tree.*;
 
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
@@ -104,7 +105,7 @@ public class Gui {
 
 	private final EditorTabPopupMenu editorTabPopupMenu;
 	private final JTabbedPane openFiles;
-	private final HashMap<ClassEntry, PanelEditor> editors = new HashMap<>();
+	private final HashBiMap<ClassEntry, PanelEditor> editors = HashBiMap.create();
 
 	public Gui(EnigmaProfile profile) {
 		Config.getInstance().lookAndFeel.setGlobalLAF();
@@ -463,7 +464,7 @@ public class Gui {
 
 	public void closeEditor(PanelEditor ed) {
 		openFiles.remove(ed.getUi());
-		editors.remove(ed.getClassHandle().getRef());
+		editors.inverse().remove(ed);
 		ed.destroy();
 	}
 
