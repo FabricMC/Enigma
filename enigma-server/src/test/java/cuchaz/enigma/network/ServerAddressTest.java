@@ -1,6 +1,5 @@
-package cuchaz.enigma;
+package cuchaz.enigma.network;
 
-import cuchaz.enigma.utils.ServerAddress;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

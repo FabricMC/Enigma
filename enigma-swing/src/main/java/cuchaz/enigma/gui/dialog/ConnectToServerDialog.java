@@ -13,8 +13,8 @@ import javax.swing.JTextField;
 import cuchaz.enigma.gui.elements.ValidatableTextField;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.network.ServerAddress;
 import cuchaz.enigma.utils.Pair;
-import cuchaz.enigma.utils.ServerAddress;
 import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.StandardValidation;
 

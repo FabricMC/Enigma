@@ -1,4 +1,4 @@
-package cuchaz.enigma.utils;
+package cuchaz.enigma.network;
 
 import java.util.Objects;
 
