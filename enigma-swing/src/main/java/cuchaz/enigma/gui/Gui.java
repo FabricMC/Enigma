@@ -126,6 +126,8 @@ public class Gui {
 			});
 		}
 
+		System.setProperty("apple.laf.useScreenMenuBar", "true");
+
 		this.controller = new GuiController(this, profile);
 
 		Themes.addListener((lookAndFeel, boxHighlightPainters) -> SwingUtilities.updateComponentTreeUI(getFrame()));
