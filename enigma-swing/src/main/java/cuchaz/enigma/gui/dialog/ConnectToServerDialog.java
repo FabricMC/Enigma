@@ -1,64 +1,93 @@
 package cuchaz.enigma.gui.dialog;
 
-import cuchaz.enigma.network.EnigmaServer;
-import cuchaz.enigma.utils.I18n;
-
-import javax.swing.*;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Frame;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
-public class ConnectToServerDialog {
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
-	public static Result show(Frame parentComponent) {
-		JTextField usernameField = new JTextField(System.getProperty("user.name"), 20);
-		JPanel usernameRow = new JPanel();
-		usernameRow.add(new JLabel(I18n.translate("prompt.connect.username")));
-		usernameRow.add(usernameField);
-		JTextField ipField = new JTextField(20);
-		JPanel ipRow = new JPanel();
-		ipRow.add(new JLabel(I18n.translate("prompt.connect.ip")));
-		ipRow.add(ipField);
-		JTextField portField = new JTextField(String.valueOf(EnigmaServer.DEFAULT_PORT), 10);
-		JPanel portRow = new JPanel();
-		portRow.add(new JLabel(I18n.translate("prompt.port")));
-		portRow.add(portField);
-		JPasswordField passwordField = new JPasswordField(20);
-		JPanel passwordRow = new JPanel();
-		passwordRow.add(new JLabel(I18n.translate("prompt.password")));
-		passwordRow.add(passwordField);
+import cuchaz.enigma.gui.elements.ValidatableTextField;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.network.ServerAddress;
+import cuchaz.enigma.utils.Pair;
+import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.StandardValidation;
 
-		int response = JOptionPane.showConfirmDialog(parentComponent, new Object[]{usernameRow, ipRow, portRow, passwordRow}, I18n.translate("prompt.connect.title"), JOptionPane.OK_CANCEL_OPTION);
-		if (response != JOptionPane.OK_OPTION) {
-			return null;
+public class ConnectToServerDialog extends AbstractDialog {
+
+	private JTextField usernameField;
+	private ValidatableTextField ipField;
+	private JPasswordField passwordField;
+
+	public ConnectToServerDialog(Frame owner) {
+		super(owner, "prompt.connect.title", "prompt.connect.confirm", "prompt.cancel");
+
+		Dimension preferredSize = getPreferredSize();
+		preferredSize.width = ScaleUtil.scale(400);
+		setPreferredSize(preferredSize);
+		pack();
+		setLocationRelativeTo(owner);
+	}
+
+	@Override
+	protected List<Pair<String, Component>> createComponents() {
+		usernameField = new JTextField(System.getProperty("user.name"));
+		ipField = new ValidatableTextField();
+		passwordField = new JPasswordField();
+
+		usernameField.addActionListener(event -> confirm());
+		ipField.addActionListener(event -> confirm());
+		passwordField.addActionListener(event -> confirm());
+
+		return Arrays.asList(
+				new Pair<>("prompt.connect.username", usernameField),
+				new Pair<>("prompt.connect.address", ipField),
+				new Pair<>("prompt.password", passwordField)
+		);
+	}
+
+	public void validateInputs() {
+		vc.setActiveElement(ipField);
+		if (StandardValidation.notBlank(vc, ipField.getText())) {
+			vc.raise(Message.INVALID_IP);
 		}
+	}
 
-		String username = usernameField.getText();
-		String ip = ipField.getText();
-		int port;
-		try {
-			port = Integer.parseInt(portField.getText());
-		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(parentComponent, I18n.translate("prompt.port.nan"), I18n.translate("prompt.connect.title"), JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
-		if (port < 0 || port >= 65536) {
-			JOptionPane.showMessageDialog(parentComponent, I18n.translate("prompt.port.invalid"), I18n.translate("prompt.connect.title"), JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
-		char[] password = passwordField.getPassword();
+	public Result getResult() {
+		if (!isActionConfirm()) return null;
+		vc.reset();
+		validateInputs();
+		if (!vc.canProceed()) return null;
+		return new Result(
+				usernameField.getText(),
+				Objects.requireNonNull(ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT)),
+				passwordField.getPassword()
+		);
+	}
 
-		return new Result(username, ip, port, password);
+	public static Result show(Frame parent) {
+		ConnectToServerDialog d = new ConnectToServerDialog(parent);
+
+		d.setVisible(true);
+		Result r = d.getResult();
+
+		d.dispose();
+		return r;
 	}
 
 	public static class Result {
 		private final String username;
-		private final String ip;
-		private final int port;
+		private final ServerAddress address;
 		private final char[] password;
 
-		public Result(String username, String ip, int port, char[] password) {
+		public Result(String username, ServerAddress address, char[] password) {
 			this.username = username;
-			this.ip = ip;
-			this.port = port;
+			this.address = address;
 			this.password = password;
 		}
 
@@ -66,12 +95,8 @@ public class ConnectToServerDialog {
 			return username;
 		}
 
-		public String getIp() {
-			return ip;
-		}
-
-		public int getPort() {
-			return port;
+		public ServerAddress getAddress() {
+			return address;
 		}
 
 		public char[] getPassword() {

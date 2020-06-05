@@ -1,47 +1,77 @@
 package cuchaz.enigma.gui.dialog;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.util.Arrays;
+import java.util.List;
+
+import cuchaz.enigma.gui.elements.ValidatablePasswordField;
+import cuchaz.enigma.gui.elements.ValidatableTextField;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.EnigmaServer;
-import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
+import cuchaz.enigma.utils.validation.Message;
+import cuchaz.enigma.utils.validation.StandardValidation;
 
-import javax.swing.*;
-import java.awt.*;
+public class CreateServerDialog extends AbstractDialog {
 
-public class CreateServerDialog {
+	private ValidatableTextField portField;
+	private ValidatablePasswordField passwordField;
 
-	public static Result show(Frame parentComponent) {
-		JTextField portField = new JTextField(String.valueOf(EnigmaServer.DEFAULT_PORT), 10);
-		JPanel portRow = new JPanel();
-		portRow.add(new JLabel(I18n.translate("prompt.port")));
-		portRow.add(portField);
-		JPasswordField passwordField = new JPasswordField(20);
-		JPanel passwordRow = new JPanel();
-		passwordRow.add(new JLabel(I18n.translate("prompt.password")));
-		passwordRow.add(passwordField);
+	public CreateServerDialog(Frame owner) {
+		super(owner, "prompt.create_server.title", "prompt.create_server.confirm", "prompt.cancel");
 
-		int response = JOptionPane.showConfirmDialog(parentComponent, new Object[]{portRow, passwordRow}, I18n.translate("prompt.create_server.title"), JOptionPane.OK_CANCEL_OPTION);
-		if (response != JOptionPane.OK_OPTION) {
-			return null;
+		Dimension preferredSize = getPreferredSize();
+		preferredSize.width = ScaleUtil.scale(400);
+		setPreferredSize(preferredSize);
+		pack();
+		setLocationRelativeTo(owner);
+	}
+
+	@Override
+	protected List<Pair<String, Component>> createComponents() {
+		portField = new ValidatableTextField(Integer.toString(EnigmaServer.DEFAULT_PORT));
+		passwordField = new ValidatablePasswordField();
+
+		portField.addActionListener(event -> confirm());
+		passwordField.addActionListener(event -> confirm());
+
+		return Arrays.asList(
+				new Pair<>("prompt.create_server.port", portField),
+				new Pair<>("prompt.password", passwordField)
+		);
+	}
+
+	@Override
+	public void validateInputs() {
+		vc.setActiveElement(portField);
+		StandardValidation.isIntInRange(vc, portField.getText(), 0, 65535);
+		vc.setActiveElement(passwordField);
+		if (passwordField.getPassword().length > EnigmaServer.MAX_PASSWORD_LENGTH) {
+			vc.raise(Message.FIELD_LENGTH_OUT_OF_RANGE, EnigmaServer.MAX_PASSWORD_LENGTH);
 		}
+	}
 
-		int port;
-		try {
-			port = Integer.parseInt(portField.getText());
-		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(parentComponent, I18n.translate("prompt.port.nan"), I18n.translate("prompt.create_server.title"), JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
-		if (port < 0 || port >= 65536) {
-			JOptionPane.showMessageDialog(parentComponent, I18n.translate("prompt.port.invalid"), I18n.translate("prompt.create_server.title"), JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
+	public Result getResult() {
+		if (!isActionConfirm()) return null;
+		vc.reset();
+		validateInputs();
+		if (!vc.canProceed()) return null;
+		return new Result(
+				Integer.parseInt(portField.getText()),
+				passwordField.getPassword()
+		);
+	}
 
-		char[] password = passwordField.getPassword();
-		if (password.length > EnigmaServer.MAX_PASSWORD_LENGTH) {
-			JOptionPane.showMessageDialog(parentComponent, I18n.translate("prompt.password.too_long"), I18n.translate("prompt.create_server.title"), JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
+	public static Result show(Frame parent) {
+		CreateServerDialog d = new CreateServerDialog(parent);
 
-		return new Result(port, password);
+		d.setVisible(true);
+		Result r = d.getResult();
+
+		d.dispose();
+		return r;
 	}
 
 	public static class Result {
