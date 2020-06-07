@@ -14,6 +14,8 @@ import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
 import javax.swing.text.Highlighter.HighlightPainter;
 
+import de.sciss.syntaxpane.DefaultSyntaxKit;
+
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.classhandle.ClassHandle;
@@ -42,7 +44,6 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Result;
-import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class PanelEditor {
 
@@ -574,6 +575,9 @@ public class PanelEditor {
 			// make sure the token is visible in the scroll window
 			Rectangle start = this.editor.modelToView(token.start);
 			Rectangle end = this.editor.modelToView(token.end);
+			if (start == null || end == null) {
+				return;
+			}
 			Rectangle show = start.union(end);
 			show.grow(start.width * 10, start.height * 6);
 			SwingUtilities.invokeLater(() -> this.editor.scrollRectToVisible(show));
