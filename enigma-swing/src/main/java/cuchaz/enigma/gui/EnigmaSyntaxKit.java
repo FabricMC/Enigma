@@ -23,7 +23,8 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
         configuration = flattenConfiguration(baseConfig, EnigmaSyntaxKit.class);
 
         // Remove all actions except a select few because they disregard the
-        // editable state of the editor.
+        // editable state of the editor, or at least are useless anyway because
+        // they would try editing the file.
         // Also includes the Action.insert-date action which is written in
         // Javascript and causes the editor to freeze on first load.
         configuration.keySet().removeIf(s -> s.startsWith("Action.") &&
