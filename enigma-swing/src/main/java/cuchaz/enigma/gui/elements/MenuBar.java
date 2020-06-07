@@ -177,49 +177,31 @@ public class MenuBar {
 		this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
 	}
 
-	private void onCloseMappingsClicked() {
+	private void openMappingsDiscardPrompt(Runnable then) {
 		if (this.gui.getController().isDirty()) {
 			this.gui.showDiscardDiag((response -> {
 				if (response == JOptionPane.YES_OPTION) {
 					this.gui.saveMapping();
-					this.gui.getController().closeMappings();
+					then.run();
 				} else if (response == JOptionPane.NO_OPTION)
-					this.gui.getController().closeMappings();
+					then.run();
 				return null;
 			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
 		} else {
-			this.gui.getController().closeMappings();
+			then.run();
 		}
 	}
 
-	private void onReloadAllClicked() {
-		if (this.gui.getController().isDirty()) {
-			this.gui.showDiscardDiag((response -> {
-				if (response == JOptionPane.YES_OPTION) {
-					this.gui.saveMapping();
-					this.gui.getController().reloadAll();
-				} else if (response == JOptionPane.NO_OPTION)
-					this.gui.getController().reloadAll();
-				return null;
-			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
-		} else {
-			this.gui.getController().reloadAll();
-		}
+	private void onCloseMappingsClicked() {
+		openMappingsDiscardPrompt(() -> this.gui.getController().closeMappings());
 	}
 
 	private void onReloadMappingsClicked() {
-		if (this.gui.getController().isDirty()) {
-			this.gui.showDiscardDiag((response -> {
-				if (response == JOptionPane.YES_OPTION) {
-					this.gui.saveMapping();
-					this.gui.getController().reloadMappings();
-				} else if (response == JOptionPane.NO_OPTION)
-					this.gui.getController().reloadMappings();
-				return null;
-			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
-		} else {
-			this.gui.getController().reloadMappings();
-		}
+		openMappingsDiscardPrompt(() -> this.gui.getController().reloadMappings());
+	}
+
+	private void onReloadAllClicked() {
+		openMappingsDiscardPrompt(() -> this.gui.getController().reloadAll());
 	}
 
 	private void onExportSourceClicked() {
