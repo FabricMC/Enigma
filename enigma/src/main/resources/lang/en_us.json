@@ -27,6 +27,7 @@
 	"menu.file.export.jar": "Export Jar...",
 	"menu.file.stats": "Mapping Stats...",
 	"menu.file.stats.title": "Choose Included Members",
+	"menu.file.stats.top_level_package": "Top-level package:",
 	"menu.file.stats.generate": "Generate Stats",
 	"menu.file.exit": "Exit",
 	"menu.decompiler": "Decompiler",
@@ -159,6 +160,7 @@
 	"message.mark_deobf.text": "%s marked %s as deobfuscated",
 	"message.remove_mapping.text": "%s removed mappings for %s",
 	"message.rename.text": "%s renamed %s to %s",
+
 	"status.disconnected": "Disconnected.",
 	"status.connected": "Connected.",
 	"status.connected_user_count": "Connected (%d users).",
