@@ -147,6 +147,7 @@ public class MenuBar {
 		this.saveMappingsItem.setEnabled(jarOpen && this.gui.enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
 		this.saveMappingsAsMenu.setEnabled(jarOpen);
 		this.closeMappingsItem.setEnabled(jarOpen);
+		this.reloadAllItem.setEnabled(jarOpen);
 		this.exportSourceItem.setEnabled(jarOpen);
 		this.exportJarItem.setEnabled(jarOpen);
 	}
