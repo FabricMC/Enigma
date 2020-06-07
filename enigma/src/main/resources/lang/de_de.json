@@ -11,6 +11,7 @@
 
 	"editor.decompiling": "Dekompiliere...",
 	"editor.decompile_error": "Ein Fehler ist während des Dekompilierens aufgetreten.",
+	"editor.remap_error": "Ein Fehler ist während des Remappens aufgetreten.",
 
 	"validation.message.empty_field": "Dieses Feld muss ausgefüllt werden.",
 	"validation.message.not_int": "Wert muss eine ganze Zahl sein.",

@@ -28,8 +28,13 @@ public final class ClassHandleError {
 		return new ClassHandleError(Type.DECOMPILE, cause);
 	}
 
+	public static ClassHandleError remap(Throwable cause) {
+		return new ClassHandleError(Type.REMAP, cause);
+	}
+
 	public enum Type {
 		DECOMPILE,
+		REMAP,
 	}
 
 }

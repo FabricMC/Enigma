@@ -11,6 +11,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.Nullable;
 
+import org.objectweb.asm.tree.ClassNode;
+
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
@@ -19,7 +21,6 @@ import cuchaz.enigma.events.ClassHandleListener.InvalidationType;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Result;
-import org.objectweb.asm.tree.ClassNode;
 
 import static cuchaz.enigma.utils.Utils.withLock;
 
@@ -285,9 +286,13 @@ public final class ClassHandleProvider {
 			int v = mappedVersion.incrementAndGet();
 			f.thenAcceptAsync(res -> {
 				if (res == null || mappedVersion.get() != v) return;
-				res = res.map(source -> {
-					source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
-					return source;
+				res = res.andThen(source -> {
+					try {
+						source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
+						return Result.ok(source);
+					} catch (Throwable e) {
+						return Result.err(ClassHandleError.remap(e));
+					}
 				});
 				Entry.this.source = res;
 				Entry.this.waitingSources.forEach(s -> s.complete(source));

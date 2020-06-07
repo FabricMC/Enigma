@@ -57,7 +57,7 @@ public class PanelEditor {
 	private final JProgressBar decompilingProgressBar = new JProgressBar(0, 100);
 
 	// error display UI
-	private final JLabel errorLabel = new JLabel(I18n.translate("editor.decompile_error"));
+	private final JLabel errorLabel = new JLabel();
 	private final JTextArea errorTextArea = new JTextArea();
 	private final JScrollPane errorScrollPane = new JScrollPane(this.errorTextArea);
 	private final JButton retryButton = new JButton(I18n.translate("general.retry"));
@@ -336,6 +336,18 @@ public class PanelEditor {
 
 	public void displayError(ClassHandleError t) {
 		this.setDisplayMode(DisplayMode.ERRORED);
+		String str;
+		switch(t.type) {
+			case DECOMPILE:
+				str = "editor.decompile_error";
+				break;
+			case REMAP:
+				str = "editor.remap_error";
+				break;
+			default:
+				throw new IllegalStateException("unreachable");
+		}
+		this.errorLabel.setText(I18n.translate(str));
 		this.errorTextArea.setText(t.getStackTrace());
 		this.errorTextArea.setCaretPosition(0);
 	}
