@@ -31,8 +31,8 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.classhandle.ClassHandle;
-import cuchaz.enigma.gui.config.Config;
 import cuchaz.enigma.gui.config.Themes;
+import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
@@ -107,7 +107,7 @@ public class Gui {
 	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
 
 	public Gui(EnigmaProfile profile) {
-		Config.getInstance().lookAndFeel.setGlobalLAF();
+		UiConfig.getLookAndFeel().setGlobalLAF();
 
 		// init frame
 		this.frame = new JFrame(Enigma.NAME);

@@ -20,8 +20,10 @@ import javax.swing.*;
 
 import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.config.Config;
+import cuchaz.enigma.gui.config.Decompiler;
+import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.Themes;
+import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.*;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -316,21 +318,17 @@ public class MenuBar {
 	private static void prepareDecompilerMenu(JMenu decompilerMenu, Gui gui) {
 		ButtonGroup decompilerGroup = new ButtonGroup();
 
-		for (Config.Decompiler decompiler : Config.Decompiler.values()) {
+		for (Decompiler decompiler : Decompiler.values()) {
 			JRadioButtonMenuItem decompilerButton = new JRadioButtonMenuItem(decompiler.name);
 			decompilerGroup.add(decompilerButton);
-			if (decompiler.equals(Config.getInstance().decompiler)) {
+			if (decompiler.equals(UiConfig.getDecompiler())) {
 				decompilerButton.setSelected(true);
 			}
 			decompilerButton.addActionListener(event -> {
 				gui.getController().setDecompiler(decompiler.service);
 
-				try {
-					Config.getInstance().decompiler = decompiler;
-					Config.getInstance().saveConfig();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				UiConfig.setDecompiler(decompiler);
+				UiConfig.save();
 			});
 			decompilerMenu.add(decompilerButton);
 		}
@@ -338,10 +336,10 @@ public class MenuBar {
 
 	private static void prepareThemesMenu(JMenu themesMenu, Gui gui) {
 		ButtonGroup themeGroup = new ButtonGroup();
-		for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
+		for (LookAndFeel lookAndFeel : LookAndFeel.values()) {
 			JRadioButtonMenuItem themeButton = new JRadioButtonMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
 			themeGroup.add(themeButton);
-			if (lookAndFeel.equals(Config.getInstance().lookAndFeel)) {
+			if (lookAndFeel.equals(UiConfig.getLookAndFeel())) {
 				themeButton.setSelected(true);
 			}
 			themeButton.addActionListener(_e -> Themes.setLookAndFeel(lookAndFeel));
@@ -354,16 +352,12 @@ public class MenuBar {
 		for (String lang : I18n.getAvailableLanguages()) {
 			JRadioButtonMenuItem languageButton = new JRadioButtonMenuItem(I18n.getLanguageName(lang));
 			languageGroup.add(languageButton);
-			if (lang.equals(Config.getInstance().language)) {
+			if (lang.equals(UiConfig.getLanguage())) {
 				languageButton.setSelected(true);
 			}
 			languageButton.addActionListener(event -> {
-				Config.getInstance().language = lang;
-						try {
-							Config.getInstance().saveConfig();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+				UiConfig.setLanguage(lang);
+				UiConfig.save();
 				ChangeDialog.show(gui);
 			});
 			languagesMenu.add(languageButton);
