@@ -26,7 +26,8 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
         // editable state of the editor, or at least are useless anyway because
         // they would try editing the file.
         // Also includes the Action.insert-date action which is written in
-        // Javascript and causes the editor to freeze on first load.
+        // Javascript and causes the editor to freeze on first load for a short
+	    // time.
         configuration.keySet().removeIf(s -> s.startsWith("Action.") &&
                 !(s.startsWith("Action.find") ||
                         s.startsWith("Action.goto-line") ||
