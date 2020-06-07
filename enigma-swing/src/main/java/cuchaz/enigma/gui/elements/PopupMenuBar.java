@@ -1,12 +1,16 @@
 package cuchaz.enigma.gui.elements;
 
-import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.panels.PanelEditor;
-import cuchaz.enigma.utils.I18n;
-
-import javax.swing.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
+import javax.swing.KeyStroke;
+
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.panels.EditorPanel;
+import cuchaz.enigma.utils.I18n;
 
 public class PopupMenuBar extends JPopupMenu {
 
@@ -21,7 +25,7 @@ public class PopupMenuBar extends JPopupMenu {
 	public final JMenuItem openNextMenu;
 	public final JMenuItem toggleMappingMenu;
 
-	public PopupMenuBar(PanelEditor editor, Gui gui) {
+	public PopupMenuBar(EditorPanel editor, Gui gui) {
 		{
 			JMenuItem menu = new JMenuItem(I18n.translate("popup_menu.rename"));
 			menu.addActionListener(event -> gui.startRename(editor));

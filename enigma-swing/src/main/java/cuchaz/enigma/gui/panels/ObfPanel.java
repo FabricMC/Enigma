@@ -1,20 +1,23 @@
 package cuchaz.enigma.gui.panels;
 
+import java.awt.BorderLayout;
+import java.util.Comparator;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+
 import cuchaz.enigma.gui.ClassSelector;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.I18n;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.Comparator;
-
-public class PanelObf extends JPanel {
+public class ObfPanel extends JPanel {
 
 	public final ClassSelector obfClasses;
 	private final Gui gui;
 
-	public PanelObf(Gui gui) {
+	public ObfPanel(Gui gui) {
 		this.gui = gui;
 
 		Comparator<ClassEntry> obfClassComparator = (a, b) -> {
