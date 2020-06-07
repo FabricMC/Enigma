@@ -20,11 +20,11 @@ public class StatsDialog {
 		// init frame
 		JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
 		JPanel checkboxesPanel = new JPanel();
-		JPanel excludePackagePanel = new JPanel();
+		JPanel topLevelPackagePanel = new JPanel();
 		JPanel buttonPanel = new JPanel();
 		frame.setLayout(new GridLayout(3, 0));
 		frame.add(checkboxesPanel);
-		frame.add(excludePackagePanel);
+		frame.add(topLevelPackagePanel);
 		frame.add(buttonPanel);
 
 		// show checkboxes
@@ -40,8 +40,8 @@ public class StatsDialog {
 		JLabel topLevelPackageOption = new JLabel(I18n.translate("menu.file.stats.top_level_package"));
 		JTextField topLevelPackage = new JTextField();
 		topLevelPackage.setPreferredSize(ScaleUtil.getDimension(200, 25));
-		excludePackagePanel.add(topLevelPackageOption);
-		excludePackagePanel.add(topLevelPackage);
+		topLevelPackagePanel.add(topLevelPackageOption);
+		topLevelPackagePanel.add(topLevelPackage);
 
 		// show generate button
 		JButton button = new JButton(I18n.translate("menu.file.stats.generate"));
