@@ -11,8 +11,16 @@
 
 package cuchaz.enigma;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
+import org.objectweb.asm.Opcodes;
+
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.api.EnigmaPluginContext;
@@ -25,13 +33,6 @@ import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.classprovider.CombiningClassProvider;
 import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.utils.Utils;
-import org.objectweb.asm.Opcodes;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
 
 public class Enigma {
     public static final String NAME = "Enigma";
@@ -64,7 +65,7 @@ public class Enigma {
 		index.indexJar(scope, classProvider, progress);
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(scope, classProvider, index));
 
-		return new EnigmaProject(this, classProvider, index, Utils.zipSha1(path));
+		return new EnigmaProject(this, path, classProvider, index, Utils.zipSha1(path));
 	}
 
 	public EnigmaProfile getProfile() {

@@ -178,6 +178,19 @@ public class GuiController implements ClientPacketHandler {
 		chp.invalidateMapped();
 	}
 
+	public void reloadAll() {
+		Path jarPath = this.project.getJarPath();
+		MappingFormat loadedMappingFormat = this.loadedMappingFormat;
+		Path loadedMappingPath = this.loadedMappingPath;
+		if (jarPath != null) {
+			this.closeJar();
+			CompletableFuture<Void> f = this.openJar(jarPath);
+			if (loadedMappingFormat != null && loadedMappingPath != null) {
+				f.whenComplete((v, t) -> this.openMappings(loadedMappingFormat, loadedMappingPath));
+			}
+		}
+	}
+
 	public CompletableFuture<Void> dropMappings() {
 		if (project == null) return CompletableFuture.completedFuture(null);
 

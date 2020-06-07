@@ -1,7 +1,26 @@
 package cuchaz.enigma;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.tree.ClassNode;
+
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.service.NameProposalService;
@@ -23,35 +42,21 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.tree.ClassNode;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class EnigmaProject {
 	private final Enigma enigma;
 
+	private final Path jarPath;
 	private final ClassProvider classProvider;
 	private final JarIndex jarIndex;
 	private final byte[] jarChecksum;
 
 	private EntryRemapper mapper;
 
-	public EnigmaProject(Enigma enigma, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
+	public EnigmaProject(Enigma enigma, Path jarPath, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
 		Preconditions.checkArgument(jarChecksum.length == 20);
 		this.enigma = enigma;
+		this.jarPath = jarPath;
 		this.classProvider = classProvider;
 		this.jarIndex = jarIndex;
 		this.jarChecksum = jarChecksum;
@@ -69,6 +74,10 @@ public class EnigmaProject {
 
 	public Enigma getEnigma() {
 		return enigma;
+	}
+
+	public Path getJarPath() {
+		return jarPath;
 	}
 
 	public ClassProvider getClassProvider() {

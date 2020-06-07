@@ -11,16 +11,17 @@
 
 package cuchaz.enigma;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static org.hamcrest.MatcherAssert.assertThat;
