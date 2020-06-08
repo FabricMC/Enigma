@@ -45,7 +45,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Result;
 
-public class PanelEditor {
+public class EditorPanel {
 
 	private final JPanel ui = new JPanel();
 	private final JEditorPane editor = new JEditorPane();
@@ -83,7 +83,7 @@ public class PanelEditor {
 	private DecompiledClassSource source;
 	private boolean settingSource;
 
-	public PanelEditor(Gui gui) {
+	public EditorPanel(Gui gui) {
 		this.gui = gui;
 		this.controller = gui.getController();
 
@@ -112,14 +112,14 @@ public class PanelEditor {
 		this.editor.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent mouseEvent) {
-				PanelEditor.this.mouseIsPressed = true;
+				EditorPanel.this.mouseIsPressed = true;
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				switch (e.getButton()) {
 					case MouseEvent.BUTTON3: // Right click
-						PanelEditor.this.editor.setCaretPosition(PanelEditor.this.editor.viewToModel(e.getPoint()));
+						EditorPanel.this.editor.setCaretPosition(EditorPanel.this.editor.viewToModel(e.getPoint()));
 						break;
 
 					case 4: // Back navigation
@@ -130,58 +130,58 @@ public class PanelEditor {
 						gui.getController().openNextReference();
 						break;
 				}
-				PanelEditor.this.mouseIsPressed = false;
+				EditorPanel.this.mouseIsPressed = false;
 			}
 		});
 		this.editor.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
-					PanelEditor.this.shouldNavigateOnClick = false;
+					EditorPanel.this.shouldNavigateOnClick = false;
 					switch (event.getKeyCode()) {
 						case KeyEvent.VK_I:
-							PanelEditor.this.popupMenu.showInheritanceMenu.doClick();
+							EditorPanel.this.popupMenu.showInheritanceMenu.doClick();
 							break;
 
 						case KeyEvent.VK_M:
-							PanelEditor.this.popupMenu.showImplementationsMenu.doClick();
+							EditorPanel.this.popupMenu.showImplementationsMenu.doClick();
 							break;
 
 						case KeyEvent.VK_N:
-							PanelEditor.this.popupMenu.openEntryMenu.doClick();
+							EditorPanel.this.popupMenu.openEntryMenu.doClick();
 							break;
 
 						case KeyEvent.VK_P:
-							PanelEditor.this.popupMenu.openPreviousMenu.doClick();
+							EditorPanel.this.popupMenu.openPreviousMenu.doClick();
 							break;
 
 						case KeyEvent.VK_E:
-							PanelEditor.this.popupMenu.openNextMenu.doClick();
+							EditorPanel.this.popupMenu.openNextMenu.doClick();
 							break;
 
 						case KeyEvent.VK_C:
 							if (event.isShiftDown()) {
-								PanelEditor.this.popupMenu.showCallsSpecificMenu.doClick();
+								EditorPanel.this.popupMenu.showCallsSpecificMenu.doClick();
 							} else {
-								PanelEditor.this.popupMenu.showCallsMenu.doClick();
+								EditorPanel.this.popupMenu.showCallsMenu.doClick();
 							}
 							break;
 
 						case KeyEvent.VK_O:
-							PanelEditor.this.popupMenu.toggleMappingMenu.doClick();
+							EditorPanel.this.popupMenu.toggleMappingMenu.doClick();
 							break;
 
 						case KeyEvent.VK_R:
-							PanelEditor.this.popupMenu.renameMenu.doClick();
+							EditorPanel.this.popupMenu.renameMenu.doClick();
 							break;
 
 						case KeyEvent.VK_D:
-							PanelEditor.this.popupMenu.editJavadocMenu.doClick();
+							EditorPanel.this.popupMenu.editJavadocMenu.doClick();
 							break;
 
 						case KeyEvent.VK_F5:
-							if (PanelEditor.this.classHandle != null) {
-								PanelEditor.this.classHandle.invalidateMapped();
+							if (EditorPanel.this.classHandle != null) {
+								EditorPanel.this.classHandle.invalidateMapped();
 							}
 							break;
 
@@ -200,7 +200,7 @@ public class PanelEditor {
 							break;
 
 						default:
-							PanelEditor.this.shouldNavigateOnClick = true; // CTRL
+							EditorPanel.this.shouldNavigateOnClick = true; // CTRL
 							break;
 					}
 				}
@@ -208,11 +208,11 @@ public class PanelEditor {
 
 			@Override
 			public void keyTyped(KeyEvent event) {
-				if (!PanelEditor.this.popupMenu.renameMenu.isEnabled()) return;
+				if (!EditorPanel.this.popupMenu.renameMenu.isEnabled()) return;
 
 				if (!event.isControlDown() && !event.isAltDown() && Character.isJavaIdentifierPart(event.getKeyChar())) {
 					EnigmaProject project = gui.getController().project;
-					EntryReference<Entry<?>, Entry<?>> reference = project.getMapper().deobfuscate(PanelEditor.this.cursorReference);
+					EntryReference<Entry<?>, Entry<?>> reference = project.getMapper().deobfuscate(EditorPanel.this.cursorReference);
 					Entry<?> entry = reference.getNameableEntry();
 
 					String name = String.valueOf(event.getKeyChar());
@@ -223,13 +223,13 @@ public class PanelEditor {
 						}
 					}
 
-					gui.startRename(PanelEditor.this, name);
+					gui.startRename(EditorPanel.this, name);
 				}
 			}
 
 			@Override
 			public void keyReleased(KeyEvent event) {
-				PanelEditor.this.shouldNavigateOnClick = event.isControlDown();
+				EditorPanel.this.shouldNavigateOnClick = event.isControlDown();
 			}
 		});
 
@@ -248,15 +248,15 @@ public class PanelEditor {
 			this.boxHighlightPainters = boxHighlightPainters;
 		};
 
-		this.ui.putClientProperty(PanelEditor.class, this);
+		this.ui.putClientProperty(EditorPanel.class, this);
 	}
 
 	@Nullable
-	public static PanelEditor byUi(Component ui) {
+	public static EditorPanel byUi(Component ui) {
 		if (ui instanceof JComponent) {
-			Object prop = ((JComponent) ui).getClientProperty(PanelEditor.class);
-			if (prop instanceof PanelEditor) {
-				return (PanelEditor) prop;
+			Object prop = ((JComponent) ui).getClientProperty(EditorPanel.class);
+			if (prop instanceof EditorPanel) {
+				return (EditorPanel) prop;
 			}
 		}
 		return null;
@@ -279,7 +279,7 @@ public class PanelEditor {
 			@Override
 			public void onDeobfRefChanged(ClassHandle h, ClassEntry deobfRef) {
 				SwingUtilities.invokeLater(() -> {
-					PanelEditor.this.listeners.forEach(l -> l.onTitleChanged(PanelEditor.this, getFileName()));
+					EditorPanel.this.listeners.forEach(l -> l.onTitleChanged(EditorPanel.this, getFileName()));
 				});
 			}
 
@@ -292,14 +292,14 @@ public class PanelEditor {
 			public void onInvalidate(ClassHandle h, InvalidationType t) {
 				SwingUtilities.invokeLater(() -> {
 					if (t == InvalidationType.FULL) {
-						PanelEditor.this.setDisplayMode(DisplayMode.IN_PROGRESS);
+						EditorPanel.this.setDisplayMode(DisplayMode.IN_PROGRESS);
 					}
 				});
 			}
 
 			@Override
 			public void onDeleted(ClassHandle h) {
-				SwingUtilities.invokeLater(() -> PanelEditor.this.gui.closeEditor(PanelEditor.this));
+				SwingUtilities.invokeLater(() -> EditorPanel.this.gui.closeEditor(EditorPanel.this));
 			}
 		});
 
@@ -610,12 +610,12 @@ public class PanelEditor {
 			public void actionPerformed(ActionEvent event) {
 				if (this.counter % 2 == 0) {
 					try {
-						this.highlight = PanelEditor.this.editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
+						this.highlight = EditorPanel.this.editor.getHighlighter().addHighlight(token.start, token.end, highlightPainter);
 					} catch (BadLocationException ex) {
 						// don't care
 					}
 				} else if (this.highlight != null) {
-					PanelEditor.this.editor.getHighlighter().removeHighlight(this.highlight);
+					EditorPanel.this.editor.getHighlighter().removeHighlight(this.highlight);
 				}
 
 				if (this.counter++ > 6) {

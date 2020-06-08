@@ -23,7 +23,7 @@ import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class PanelIdentifier {
+public class IdentifierPanel {
 
 	private final Gui gui;
 
@@ -36,7 +36,7 @@ public class PanelIdentifier {
 
 	private final ValidationContext vc = new ValidationContext();
 
-	public PanelIdentifier(Gui gui) {
+	public IdentifierPanel(Gui gui) {
 		this.gui = gui;
 
 		this.ui = new JPanel();
