@@ -8,7 +8,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.panels.PanelEditor;
+import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.utils.I18n;
 
 public class EditorTabPopupMenu {
@@ -21,7 +21,7 @@ public class EditorTabPopupMenu {
 	private final JMenuItem closeRight;
 
 	private final Gui gui;
-	private PanelEditor editor;
+	private EditorPanel editor;
 
 	public EditorTabPopupMenu(Gui gui) {
 		this.gui = gui;
@@ -50,8 +50,8 @@ public class EditorTabPopupMenu {
 		this.ui.add(this.closeRight);
 	}
 
-	public void show(Component invoker, int x, int y, PanelEditor panelEditor) {
-		this.editor = panelEditor;
+	public void show(Component invoker, int x, int y, EditorPanel editorPanel) {
+		this.editor = editorPanel;
 		ui.show(invoker, x, y);
 	}
 
