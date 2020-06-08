@@ -1,16 +1,13 @@
 package cuchaz.enigma.gui.dialog;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.stats.StatsMember;
@@ -23,10 +20,12 @@ public class StatsDialog {
 		// init frame
 		JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
 		JPanel checkboxesPanel = new JPanel();
+		JPanel topLevelPackagePanel = new JPanel();
 		JPanel buttonPanel = new JPanel();
-		frame.setLayout(new BorderLayout());
-		frame.add(BorderLayout.NORTH, checkboxesPanel);
-		frame.add(BorderLayout.SOUTH, buttonPanel);
+		frame.setLayout(new GridLayout(3, 0));
+		frame.add(checkboxesPanel);
+		frame.add(topLevelPackagePanel);
+		frame.add(buttonPanel);
 
 		// show checkboxes
 		Map<StatsMember, JCheckBox> checkboxes = Arrays
@@ -37,13 +36,20 @@ public class StatsDialog {
 					return checkbox;
 				}));
 
+		// show top-level package option
+		JLabel topLevelPackageOption = new JLabel(I18n.translate("menu.file.stats.top_level_package"));
+		JTextField topLevelPackage = new JTextField();
+		topLevelPackage.setPreferredSize(ScaleUtil.getDimension(200, 25));
+		topLevelPackagePanel.add(topLevelPackageOption);
+		topLevelPackagePanel.add(topLevelPackage);
+
 		// show generate button
 		JButton button = new JButton(I18n.translate("menu.file.stats.generate"));
 		buttonPanel.add(button);
 		button.setEnabled(false);
 		button.addActionListener(action -> {
 			frame.dispose();
-			generateStats(gui, checkboxes);
+			generateStats(gui, checkboxes, topLevelPackage.getText());
 		});
 
 		// add action listener to each checkbox
@@ -60,12 +66,12 @@ public class StatsDialog {
 		// show the frame
 		frame.pack();
 		frame.setVisible(true);
-		frame.setSize(ScaleUtil.getDimension(500, 120));
+		frame.setSize(ScaleUtil.getDimension(500, 150));
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(gui.getFrame());
 	}
 
-	private static void generateStats(Gui gui, Map<StatsMember, JCheckBox> checkboxes) {
+	private static void generateStats(Gui gui, Map<StatsMember, JCheckBox> checkboxes, String topLevelPackage) {
 		// get members from selected checkboxes
 		Set<StatsMember> includedMembers = checkboxes
 				.entrySet()
@@ -74,9 +80,9 @@ public class StatsDialog {
 				.map(Map.Entry::getKey)
 				.collect(Collectors.toSet());
 
-		// checks if a projet is open
+		// checks if a project is open
 		if (gui.getController().project != null) {
-			gui.getController().openStats(includedMembers);
+			gui.getController().openStats(includedMembers, topLevelPackage);
 		}
 	}
 }

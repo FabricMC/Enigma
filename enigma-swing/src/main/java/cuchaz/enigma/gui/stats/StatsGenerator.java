@@ -30,7 +30,7 @@ public class StatsGenerator {
         nameProposalServices = project.getEnigma().getServices().get(NameProposalService.TYPE);
     }
 
-    public String generate(ProgressListener progress, Set<StatsMember> includedMembers) {
+    public String generate(ProgressListener progress, Set<StatsMember> includedMembers, String topLevelPackage) {
         includedMembers = EnumSet.copyOf(includedMembers);
         int totalWork = 0;
 
@@ -46,7 +46,7 @@ public class StatsGenerator {
             totalWork += entryIndex.getClasses().size();
         }
 
-        progress.init(totalWork, "progress.stats");
+        progress.init(totalWork, I18n.translate("progress.stats"));
 
         Map<String, Integer> counts = new HashMap<>();
 
@@ -97,8 +97,9 @@ public class StatsGenerator {
         Tree<Integer> tree = new Tree<>();
 
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
-            if (entry.getKey().startsWith("com.mojang")) continue; // just a few unmapped names, no point in having a subsection
-            tree.getNode(entry.getKey()).value = entry.getValue();
+            if (entry.getKey().startsWith(topLevelPackage)) {
+                tree.getNode(entry.getKey()).value = entry.getValue();
+            }
         }
 
         tree.collapse(tree.root);
