@@ -79,7 +79,9 @@ public class StatsGenerator {
         if (includedMembers.contains(StatsMember.FIELDS)) {
             for (FieldEntry field : entryIndex.getFields()) {
                 progress.step(numDone++, I18n.translate("type.fields"));
-                update(counts, field);
+                if (!((FieldDefEntry)field).getAccess().isSynthetic()) {
+                    update(counts, field);
+                }
             }
         }
 

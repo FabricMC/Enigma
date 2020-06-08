@@ -28,6 +28,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Lists;
+
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
@@ -422,7 +423,8 @@ public class GuiController implements ClientPacketHandler {
 
 	public void rename(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean validateOnly) {
 		Entry<?> entry = reference.getNameableEntry();
-		project.getMapper().mapFromObf(vc, entry, new EntryMapping(newName), true, validateOnly);
+		EntryMapping previous = project.getMapper().getDeobfMapping(entry);
+		project.getMapper().mapFromObf(vc, entry, previous != null ? previous.withName(newName) : new EntryMapping(newName), true, validateOnly);
 
 		if (validateOnly || !vc.canProceed()) return;
 
