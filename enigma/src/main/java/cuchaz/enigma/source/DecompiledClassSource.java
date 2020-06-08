@@ -51,7 +51,7 @@ public class DecompiledClassSource {
 		Entry<?> translatedEntry = translator.translate(entry);
 
 		if (project.isRenamable(reference)) {
-			if (isDeobfuscated(entry, translatedEntry)) {
+			if (project.getMapper().hasDeobfMapping(entry)) {
 				highlightToken(movedToken, RenamableTokenType.DEOBFUSCATED);
 				return translatedEntry.getSourceRemapName();
 			} else {
@@ -102,10 +102,6 @@ public class DecompiledClassSource {
 		}
 
 		return null;
-	}
-
-	private boolean isDeobfuscated(Entry<?> entry, Entry<?> translatedEntry) {
-		return !entry.getName().equals(translatedEntry.getName());
 	}
 
 	public ClassEntry getEntry() {
