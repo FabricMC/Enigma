@@ -1,5 +1,18 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
 dependencies {
     implementation project(':enigma')
 }
 
 jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.command.Main'
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            publication.from components.java
+            publication.artifact shadowJar
+        }
+    }
+}
