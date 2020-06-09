@@ -145,6 +145,7 @@ public class MenuBar {
 		this.closeMappingsItem.setEnabled(jarOpen);
 		this.exportSourceItem.setEnabled(jarOpen);
 		this.exportJarItem.setEnabled(jarOpen);
+		this.statsItem.setEnabled(jarOpen);
 	}
 
 	public JMenuBar getUi() {

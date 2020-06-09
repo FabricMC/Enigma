@@ -2,6 +2,8 @@ package cuchaz.enigma.gui.dialog;
 
 import java.awt.*;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -10,22 +12,43 @@ import java.util.stream.Collectors;
 import javax.swing.*;
 
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
+import cuchaz.enigma.gui.stats.StatsResult;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 
 public class StatsDialog {
 
 	public static void show(Gui gui) {
+		ProgressDialog.runOffThread(gui.getFrame(), listener -> {
+			final StatsGenerator statsGenerator = new StatsGenerator(gui.getController().project);
+			final Map<StatsMember, StatsResult> results = new HashMap<>();
+			for (StatsMember member : StatsMember.values()) {
+				results.put(member, statsGenerator.generate(listener, Collections.singleton(member), ""));
+			}
+			SwingUtilities.invokeLater(() -> show(gui, results));
+		});
+	}
+
+	public static void show(Gui gui, Map<StatsMember, StatsResult> results) {
 		// init frame
 		JFrame frame = new JFrame(I18n.translate("menu.file.stats.title"));
+		JPanel resultsPanel = new JPanel();
 		JPanel checkboxesPanel = new JPanel();
 		JPanel topLevelPackagePanel = new JPanel();
 		JPanel buttonPanel = new JPanel();
-		frame.setLayout(new GridLayout(3, 0));
+		frame.setLayout(new GridLayout(4, 0));
+		frame.add(resultsPanel);
 		frame.add(checkboxesPanel);
 		frame.add(topLevelPackagePanel);
 		frame.add(buttonPanel);
+
+		results.entrySet().stream()
+				.sorted(Map.Entry.comparingByKey())
+				.map(result -> result.getKey().name().toLowerCase(Locale.ROOT) + " " + result.getValue())
+				.map(JLabel::new)
+				.forEach(resultsPanel::add);
 
 		// show checkboxes
 		Map<StatsMember, JCheckBox> checkboxes = Arrays
@@ -66,7 +89,7 @@ public class StatsDialog {
 		// show the frame
 		frame.pack();
 		frame.setVisible(true);
-		frame.setSize(ScaleUtil.getDimension(500, 150));
+		frame.setSize(ScaleUtil.getDimension(500, 200));
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(gui.getFrame());
 	}

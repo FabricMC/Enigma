@@ -1,6 +1,5 @@
 package cuchaz.enigma.gui.stats;
 
-import com.google.gson.GsonBuilder;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.EntryIndex;
@@ -30,9 +29,10 @@ public class StatsGenerator {
         nameProposalServices = project.getEnigma().getServices().get(NameProposalService.TYPE);
     }
 
-    public String generate(ProgressListener progress, Set<StatsMember> includedMembers, String topLevelPackage) {
+    public StatsResult generate(ProgressListener progress, Set<StatsMember> includedMembers, String topLevelPackage) {
         includedMembers = EnumSet.copyOf(includedMembers);
         int totalWork = 0;
+        int totalMappable = 0;
 
         if (includedMembers.contains(StatsMember.METHODS) || includedMembers.contains(StatsMember.PARAMETERS)) {
             totalWork += entryIndex.getMethods().size();
@@ -63,6 +63,7 @@ public class StatsGenerator {
                 if (root == method && !((MethodDefEntry) method).getAccess().isSynthetic()) {
                     if (includedMembers.contains(StatsMember.METHODS)) {
                         update(counts, method);
+                        totalMappable ++;
                     }
 
                     if (includedMembers.contains(StatsMember.PARAMETERS)) {
@@ -70,6 +71,7 @@ public class StatsGenerator {
                         for (TypeDescriptor argument : method.getDesc().getArgumentDescs()) {
                             update(counts, new LocalVariableEntry(method, index, "", true,null));
                             index += argument.getSize();
+                            totalMappable ++;
                         }
                     }
                 }
@@ -81,6 +83,7 @@ public class StatsGenerator {
                 progress.step(numDone++, I18n.translate("type.fields"));
                 if (!((FieldDefEntry)field).getAccess().isSynthetic()) {
                     update(counts, field);
+                    totalMappable ++;
                 }
             }
         }
@@ -89,12 +92,13 @@ public class StatsGenerator {
             for (ClassEntry clazz : entryIndex.getClasses()) {
                 progress.step(numDone++, I18n.translate("type.classes"));
                 update(counts, clazz);
+                totalMappable ++;
             }
         }
 
         progress.step(-1, I18n.translate("progress.stats.data"));
 
-        Tree<Integer> tree = new Tree<>();
+        StatsResult.Tree<Integer> tree = new StatsResult.Tree<>();
 
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
             if (entry.getKey().startsWith(topLevelPackage)) {
@@ -103,7 +107,7 @@ public class StatsGenerator {
         }
 
         tree.collapse(tree.root);
-        return new GsonBuilder().setPrettyPrinting().create().toJson(tree.root);
+        return new StatsResult(totalMappable, counts.values().stream().mapToInt(i -> i).sum(), tree);
     }
 
     private void update(Map<String, Integer> counts, Entry<?> entry) {
@@ -138,63 +142,5 @@ public class StatsGenerator {
         }
 
         return true;
-    }
-
-    private static class Tree<T> {
-        public final Node<T> root;
-        private final Map<String, Node<T>> nodes = new HashMap<>();
-
-        public static class Node<T> {
-            public String name;
-            public T value;
-            public List<Node<T>> children = new ArrayList<>();
-            private final transient Map<String, Node<T>> namedChildren = new HashMap<>();
-
-            public Node(String name, T value) {
-                this.name = name;
-                this.value = value;
-            }
-        }
-
-        public Tree() {
-            root = new Node<>("", null);
-        }
-
-        public Node<T> getNode(String name) {
-            Node<T> node = nodes.get(name);
-
-            if (node == null) {
-                node = root;
-
-                for (String part : name.split("\\.")) {
-                    Node<T> child = node.namedChildren.get(part);
-
-                    if (child == null) {
-                        child = new Node<>(part, null);
-                        node.namedChildren.put(part, child);
-                        node.children.add(child);
-                    }
-
-                    node = child;
-                }
-
-                nodes.put(name, node);
-            }
-
-            return node;
-        }
-
-        public void collapse(Node<T> node) {
-            while (node.children.size() == 1) {
-                Node<T> child = node.children.get(0);
-                node.name = node.name.isEmpty() ? child.name : node.name + "." + child.name;
-                node.children = child.children;
-                node.value = child.value;
-            }
-
-            for (Node<T> child : node.children) {
-                collapse(child);
-            }
-        }
     }
 }
