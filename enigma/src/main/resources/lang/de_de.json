@@ -3,6 +3,9 @@
 
 	"general.retry": "Wiederholen",
 
+	"menu.file.stats.title": "Mapping-Statistiken",
+	"menu.file.stats.generate": "Diagramm generieren",
+
 	"popup_menu.editor_tab.close": "Schließen",
 	"popup_menu.editor_tab.close_all": "Alle schließen",
 	"popup_menu.editor_tab.close_others": "Andere schließen",
