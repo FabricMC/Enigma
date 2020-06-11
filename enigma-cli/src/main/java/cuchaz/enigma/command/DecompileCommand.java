@@ -22,12 +22,12 @@ public class DecompileCommand extends Command {
 
 	@Override
 	public boolean isValidArgument(int length) {
-		return length == 2 || length == 3;
+		return length == 3 || length == 4;
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
-		String decompilerName = getArg(args, 1, "decompiler", true);
+		String decompilerName = getArg(args, 0, "decompiler", true);
 		Path fileJarIn = getReadableFile(getArg(args, 1, "in jar", true)).toPath();
 		Path fileJarOut = getWritableFolder(getArg(args, 2, "out folder", true)).toPath();
 		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
