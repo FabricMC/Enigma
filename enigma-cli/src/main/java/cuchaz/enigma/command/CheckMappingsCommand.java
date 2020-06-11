@@ -4,6 +4,7 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -39,7 +40,7 @@ public class CheckMappingsCommand extends Command {
 
 		System.out.println("Reading JAR...");
 
-		EnigmaProject project = enigma.openJar(fileJarIn, ProgressListener.none());
+		EnigmaProject project = enigma.openJar(fileJarIn, new ClasspathClassProvider(), ProgressListener.none());
 
 		System.out.println("Reading mappings...");
 

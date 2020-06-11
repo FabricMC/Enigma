@@ -15,20 +15,21 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.ReferenceTargetType;
+import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
 import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 
-import org.objectweb.asm.ClassReader;
-
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JarIndex implements JarIndexer {
+	private final Set<String> indexedClasses = new HashSet<>();
 	private final EntryIndex entryIndex;
 	private final InheritanceIndex inheritanceIndex;
 	private final ReferenceIndex referenceIndex;
@@ -59,14 +60,21 @@ public class JarIndex implements JarIndexer {
 		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 	}
 
-	public void indexJar(ClassCache classCache, ProgressListener progress) {
+	public void indexJar(Set<String> classNames, ClassProvider classProvider, ProgressListener progress) {
+		indexedClasses.addAll(classNames);
 		progress.init(4, I18n.translate("progress.jar.indexing"));
 
 		progress.step(1, I18n.translate("progress.jar.indexing.entries"));
-		classCache.visit(() -> new IndexClassVisitor(this, Enigma.ASM_VERSION), ClassReader.SKIP_CODE);
+
+		for (String className : classNames) {
+			classProvider.get(className).accept(new IndexClassVisitor(this, Enigma.ASM_VERSION));
+		}
 
 		progress.step(2, I18n.translate("progress.jar.indexing.references"));
-		classCache.visit(() -> new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Enigma.ASM_VERSION), 0);
+
+		for (String className : classNames) {
+			classProvider.get(className).accept(new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Enigma.ASM_VERSION));
+		}
 
 		progress.step(3, I18n.translate("progress.jar.indexing.methods"));
 		bridgeMethodIndex.findBridgeMethods();
@@ -166,5 +174,9 @@ public class JarIndex implements JarIndexer {
 
 	public EntryResolver getEntryResolver() {
 		return entryResolver;
+	}
+
+	public boolean isIndexed(String internalName) {
+		return indexedClasses.contains(internalName);
 	}
 }

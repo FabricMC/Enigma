@@ -12,11 +12,10 @@
 package cuchaz.enigma;
 
 import com.google.common.collect.Lists;
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.source.SourceIndex;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.source.*;
-import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.io.IOException;
@@ -28,8 +27,8 @@ public class TokenChecker {
 	private final Decompiler decompiler;
 
 	protected TokenChecker(Path path) throws IOException {
-		ClassCache classCache = ClassCache.of(path);
-		decompiler = Decompilers.PROCYON.create(classCache, new SourceSettings(false, false));
+		CachingClassProvider classProvider = new CachingClassProvider(new JarClassProvider(path));
+		decompiler = Decompilers.PROCYON.create(classProvider, new SourceSettings(false, false));
 	}
 
 	protected String getDeclarationToken(Entry<?> entry) {

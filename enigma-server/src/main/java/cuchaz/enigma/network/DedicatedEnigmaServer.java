@@ -2,6 +2,7 @@ package cuchaz.enigma.network;
 
 import com.google.common.io.MoreFiles;
 import cuchaz.enigma.*;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -108,7 +109,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 			EnigmaProfile profile = EnigmaProfile.read(profileFile);
 			Enigma enigma = Enigma.builder().setProfile(profile).build();
 			System.out.println("Indexing Jar...");
-			EnigmaProject project = enigma.openJar(jar, ProgressListener.none());
+			EnigmaProject project = enigma.openJar(jar, new ClasspathClassProvider(), ProgressListener.none());
 
 			MappingFormat mappingFormat = MappingFormat.ENIGMA_DIRECTORY;
 			EntryRemapper mappings;

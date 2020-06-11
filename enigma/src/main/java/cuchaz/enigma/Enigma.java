@@ -13,7 +13,6 @@ package cuchaz.enigma;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.api.EnigmaPluginContext;
@@ -21,6 +20,10 @@ import cuchaz.enigma.api.service.EnigmaService;
 import cuchaz.enigma.api.service.EnigmaServiceFactory;
 import cuchaz.enigma.api.service.EnigmaServiceType;
 import cuchaz.enigma.api.service.JarIndexerService;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.ClassProvider;
+import cuchaz.enigma.classprovider.CombiningClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.utils.Utils;
 import org.objectweb.asm.Opcodes;
 
@@ -28,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 public class Enigma {
     public static final String NAME = "Enigma";
@@ -51,13 +55,16 @@ public class Enigma {
 		return new Builder();
 	}
 
-	public EnigmaProject openJar(Path path, ProgressListener progress) throws IOException {
-		ClassCache classCache = ClassCache.of(path);
-		JarIndex jarIndex = classCache.index(progress);
+	public EnigmaProject openJar(Path path, ClassProvider libraryClassProvider, ProgressListener progress) throws IOException {
+		JarClassProvider jarClassProvider = new JarClassProvider(path);
+		ClassProvider classProvider = new CachingClassProvider(new CombiningClassProvider(jarClassProvider, libraryClassProvider));
+		Set<String> scope = jarClassProvider.getClassNames();
 
-		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(classCache, jarIndex));
+		JarIndex index = JarIndex.empty();
+		index.indexJar(scope, classProvider, progress);
+		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(scope, classProvider, index));
 
-		return new EnigmaProject(this, classCache, jarIndex, Utils.zipSha1(path));
+		return new EnigmaProject(this, classProvider, index, Utils.zipSha1(path));
 	}
 
 	public EnigmaProfile getProfile() {

@@ -11,11 +11,12 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
 import cuchaz.enigma.translation.representation.AccessFlags;
@@ -26,6 +27,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 import org.objectweb.asm.Opcodes;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
@@ -35,6 +37,7 @@ import static org.hamcrest.Matchers.*;
 
 public class TestJarIndexInheritanceTree {
 
+	public static final Path JAR = Paths.get("build/test-obf/inheritanceTree.jar");
 	private JarIndex index;
 
 	private ClassEntry baseClass = newClass("a");
@@ -44,10 +47,10 @@ public class TestJarIndexInheritanceTree {
 	private FieldEntry nameField = newField(baseClass, "a", "Ljava/lang/String;");
 	private FieldEntry numThingsField = newField(subClassB, "a", "I");
 
-	public TestJarIndexInheritanceTree()
-			throws Exception {
-		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/inheritanceTree.jar"));
-		index = classCache.index(ProgressListener.none());
+	public TestJarIndexInheritanceTree() throws Exception {
+		JarClassProvider jcp = new JarClassProvider(JAR);
+		index = JarIndex.empty();
+		index.indexJar(jcp.getClassNames(), new CachingClassProvider(jcp), ProgressListener.none());
 	}
 
 	@Test

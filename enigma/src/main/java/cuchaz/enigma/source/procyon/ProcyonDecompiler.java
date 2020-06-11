@@ -11,14 +11,13 @@ import com.strobel.decompiler.languages.java.JavaFormattingOptions;
 import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
-import cuchaz.enigma.ClassProvider;
+import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.SourceSettings;
 import cuchaz.enigma.source.procyon.transformers.*;
-import cuchaz.enigma.source.procyon.typeloader.CompiledSourceTypeLoader;
-import cuchaz.enigma.source.procyon.typeloader.NoRetryMetadataSystem;
-import cuchaz.enigma.source.procyon.typeloader.SynchronizedTypeLoader;
+import cuchaz.enigma.utils.AsmUtil;
+import org.objectweb.asm.tree.ClassNode;
 
 public class ProcyonDecompiler implements Decompiler {
 	private final SourceSettings settings;
@@ -26,9 +25,21 @@ public class ProcyonDecompiler implements Decompiler {
 	private final MetadataSystem metadataSystem;
 
 	public ProcyonDecompiler(ClassProvider classProvider, SourceSettings settings) {
-		ITypeLoader typeLoader = new SynchronizedTypeLoader(new CompiledSourceTypeLoader(classProvider));
+		ITypeLoader typeLoader = (name, buffer) -> {
+			ClassNode node = classProvider.get(name);
 
-		metadataSystem = new NoRetryMetadataSystem(typeLoader);
+			if (node == null) {
+				return false;
+			}
+
+			byte[] data = AsmUtil.nodeToBytes(node);
+			buffer.reset(data.length);
+			System.arraycopy(data, 0, buffer.array(), buffer.position(), data.length);
+			buffer.position(0);
+			return true;
+		};
+
+		metadataSystem = new MetadataSystem(typeLoader);
 		metadataSystem.setEagerMethodLoadingEnabled(true);
 
 		decompilerSettings = DecompilerSettings.javaDefaults();

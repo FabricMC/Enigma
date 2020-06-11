@@ -11,6 +11,7 @@
 
 package cuchaz.enigma;
 
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
@@ -22,7 +23,7 @@ import java.nio.file.Paths;
 public class TestDeobfuscator {
 	private EnigmaProject openProject() throws IOException {
 		Enigma enigma = Enigma.create();
-		return enigma.openJar(Paths.get("build/test-obf/loneClass.jar"), ProgressListener.none());
+		return enigma.openJar(Paths.get("build/test-obf/loneClass.jar"), new ClasspathClassProvider(), ProgressListener.none());
 	}
 
 	@Test
@@ -34,7 +35,7 @@ public class TestDeobfuscator {
 	@Test
 	public void decompileClass() throws Exception {
 		EnigmaProject project = openProject();
-		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassCache(), new SourceSettings(false, false));
+		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassProvider(), new SourceSettings(false, false));
 
 		decompiler.getSource("a").asString();
 	}

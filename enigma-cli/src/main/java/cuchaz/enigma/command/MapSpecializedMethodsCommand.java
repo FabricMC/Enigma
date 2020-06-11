@@ -1,14 +1,15 @@
 package cuchaz.enigma.command;
 
 import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.BridgeMethodIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
-import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
-import cuchaz.enigma.translation.mapping.serde.MappingParseException;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
@@ -45,8 +46,11 @@ public class MapSpecializedMethodsCommand extends Command {
         MappingSaveParameters saveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
         EntryTree<EntryMapping> source = MappingCommandsUtil.read(sourceFormat, sourcePath, saveParameters);
         EntryTree<EntryMapping> result = new HashEntryTree<>();
-        ClassCache classCache = ClassCache.of(jar);
-        JarIndex jarIndex = classCache.index(ProgressListener.none());
+
+        JarClassProvider jcp = new JarClassProvider(jar);
+        JarIndex jarIndex = JarIndex.empty();
+        jarIndex.indexJar(jcp.getClassNames(), new CachingClassProvider(jcp), ProgressListener.none());
+
         BridgeMethodIndex bridgeMethodIndex = jarIndex.getBridgeMethodIndex();
         Translator translator = new MappingTranslator(source, jarIndex.getEntryResolver());
 

@@ -11,8 +11,7 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ClassCache;
-import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
@@ -28,27 +27,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class TestDeobfed {
-	private static Enigma enigma;
-	private static ClassCache classCache;
-	private static JarIndex index;
+	public static final Path OBF = Paths.get("build/test-obf/translation.jar");
+	public static final Path DEOBF = Paths.get("build/test-deobf/translation.jar");
+	private static EnigmaProject deobfProject;
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		enigma = Enigma.create();
+		Enigma enigma = Enigma.create();
 
-		Path obf = Paths.get("build/test-obf/translation.jar");
-		Path deobf = Paths.get("build/test-deobf/translation.jar");
-		Files.createDirectories(deobf.getParent());
-		EnigmaProject project = enigma.openJar(obf, ProgressListener.none());
-		project.exportRemappedJar(ProgressListener.none()).write(deobf, ProgressListener.none());
+		Files.createDirectories(DEOBF.getParent());
+		EnigmaProject obfProject = enigma.openJar(OBF, new ClasspathClassProvider(), ProgressListener.none());
+		obfProject.exportRemappedJar(ProgressListener.none()).write(DEOBF, ProgressListener.none());
 
-		classCache = ClassCache.of(deobf);
-		index = classCache.index(ProgressListener.none());
+		deobfProject = enigma.openJar(DEOBF, new ClasspathClassProvider(), ProgressListener.none());
 	}
 
 	@Test
 	public void obfEntries() {
-		assertThat(index.getEntryIndex().getClasses(), containsInAnyOrder(
+		assertThat(deobfProject.getJarIndex().getEntryIndex().getClasses(), containsInAnyOrder(
 			newClass("cuchaz/enigma/inputs/Keep"),
 			newClass("a"),
 			newClass("b"),
@@ -77,8 +73,7 @@ public class TestDeobfed {
 
 	@Test
 	public void decompile() {
-		EnigmaProject project = new EnigmaProject(enigma, classCache, index, new byte[20]);
-		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassCache(), new SourceSettings(false, false));
+		Decompiler decompiler = Decompilers.PROCYON.create(deobfProject.getClassProvider(), new SourceSettings(false, false));
 
 		decompiler.getSource("a");
 		decompiler.getSource("b");

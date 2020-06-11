@@ -15,6 +15,8 @@ import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.translation.VoidTranslator;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -23,6 +25,7 @@ import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
@@ -33,11 +36,13 @@ import static org.hamcrest.Matchers.*;
 
 public class TestJarIndexLoneClass {
 
+	public static final Path JAR = Paths.get("build/test-obf/loneClass.jar");
 	private JarIndex index;
 
 	public TestJarIndexLoneClass() throws Exception {
-		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/loneClass.jar"));
-		index = classCache.index(ProgressListener.none());
+		JarClassProvider jcp = new JarClassProvider(JAR);
+		index = JarIndex.empty();
+		index.indexJar(jcp.getClassNames(), new CachingClassProvider(jcp), ProgressListener.none());
 	}
 
 	@Test

@@ -3,6 +3,7 @@ package cuchaz.enigma.command;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -34,7 +35,7 @@ public abstract class Command {
 		Enigma enigma = Enigma.create();
 
 		System.out.println("Reading jar...");
-		EnigmaProject project = enigma.openJar(fileJarIn, progress);
+		EnigmaProject project = enigma.openJar(fileJarIn, new ClasspathClassProvider(), progress);
 
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");

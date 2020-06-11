@@ -1,10 +1,10 @@
 package cuchaz.enigma.source.cfr;
 
-import com.google.common.io.ByteStreams;
-import cuchaz.enigma.ClassProvider;
+import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.source.SourceSettings;
+import cuchaz.enigma.utils.AsmUtil;
 import org.benf.cfr.reader.apiunreleased.ClassFileSource2;
 import org.benf.cfr.reader.apiunreleased.JarContent;
 import org.benf.cfr.reader.bytecode.analysis.parse.utils.Pair;
@@ -19,15 +19,11 @@ import org.benf.cfr.reader.util.CannotLoadClassException;
 import org.benf.cfr.reader.util.collections.ListFactory;
 import org.benf.cfr.reader.util.getopt.Options;
 import org.benf.cfr.reader.util.getopt.OptionsImpl;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
 
 public class CfrDecompiler implements Decompiler {
     private final DCCommonState state;
@@ -58,21 +54,13 @@ public class CfrDecompiler implements Decompiler {
 
             @Override
             public Pair<byte[], String> getClassFileContent(String path) {
-                ClassNode node = classProvider.getClassNode(path.substring(0, path.lastIndexOf('.')));
+                ClassNode node = classProvider.get(path.substring(0, path.lastIndexOf('.')));
 
                 if (node == null) {
-                    try (InputStream classResource = CfrDecompiler.class.getClassLoader().getResourceAsStream(path)) {
-                        if (classResource != null) {
-                            return new Pair<>(ByteStreams.toByteArray(classResource), path);
-                        }
-                    } catch (IOException ignored) {}
-
                     return null;
                 }
 
-                ClassWriter cw = new ClassWriter(0);
-                node.accept(cw);
-                return new Pair<>(cw.toByteArray(), path);
+                return new Pair<>(AsmUtil.nodeToBytes(node), path);
             }
         });
     }

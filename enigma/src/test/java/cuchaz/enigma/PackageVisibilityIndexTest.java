@@ -11,12 +11,13 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.analysis.index.PackageVisibilityIndex;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
@@ -25,7 +26,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class PackageVisibilityIndexTest {
-
+	public static final Path JAR = Paths.get("build/test-obf/packageAccess.jar");
 	private static final ClassEntry KEEP = newClass("cuchaz/enigma/inputs/Keep");
 	private static final ClassEntry BASE = newClass("a");
 	private static final ClassEntry SAME_PACKAGE_CHILD = newClass("b");
@@ -35,8 +36,9 @@ public class PackageVisibilityIndexTest {
 	private final JarIndex jarIndex;
 
 	public PackageVisibilityIndexTest() throws Exception {
-		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/packageAccess.jar"));
-		jarIndex = classCache.index(ProgressListener.none());
+		JarClassProvider jcp = new JarClassProvider(JAR);
+		jarIndex = JarIndex.empty();
+		jarIndex.indexJar(jcp.getClassNames(), jcp, ProgressListener.none());
 	}
 
 	@Test

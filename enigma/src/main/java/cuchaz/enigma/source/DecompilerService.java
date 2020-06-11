@@ -1,6 +1,6 @@
 package cuchaz.enigma.source;
 
-import cuchaz.enigma.ClassProvider;
+import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.api.service.EnigmaService;
 import cuchaz.enigma.api.service.EnigmaServiceType;
 
