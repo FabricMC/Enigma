@@ -646,9 +646,8 @@ public class Gui {
 		if (cursorReference == null) return;
 
 		Entry<?> obfEntry = cursorReference.entry;
-		Entry<?> deobfEntry = controller.project.getMapper().deobfuscate(obfEntry);
 
-		if (!Objects.equals(obfEntry, deobfEntry)) {
+		if (controller.project.getMapper().hasDeobfMapping(obfEntry)) {
 			if (!validateImmediateAction(vc -> this.controller.removeMapping(vc, cursorReference))) return;
 			this.controller.sendPacket(new RemoveMappingC2SPacket(cursorReference.getNameableEntry()));
 		} else {
