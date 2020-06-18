@@ -23,6 +23,8 @@ import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.Signature;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 
+import javax.annotation.Nonnull;
+
 public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;
 	private final Signature signature;
@@ -53,14 +55,14 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	}
 
 	@Override
-	protected TranslateResult<FieldEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
+	protected TranslateResult<FieldEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
 		TypeDescriptor translatedDesc = translator.translate(desc);
 		Signature translatedSignature = translator.translate(signature);
-		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		AccessFlags translatedAccess = mapping != null ? mapping.getAccessModifier().transform(access) : access;
-		String docs = mapping != null ? mapping.getJavadoc() : null;
+		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
+		AccessFlags translatedAccess = mapping.getAccessModifier().transform(access);
+		String docs = mapping.getJavadoc();
 		return TranslateResult.of(
-				mapping == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new FieldDefEntry(parent, translatedName, translatedDesc, translatedSignature, translatedAccess, docs)
 		);
 	}

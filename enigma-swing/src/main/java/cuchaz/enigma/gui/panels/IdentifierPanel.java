@@ -15,7 +15,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import cuchaz.enigma.EnigmaProject;
-import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.EditableType;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.elements.ConvertingTextField;
@@ -24,6 +23,7 @@ import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
+import cuchaz.enigma.newabstraction.EntryChange;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -76,7 +76,7 @@ public class IdentifierPanel {
 	}
 
 	private void onModifierChanged(AccessModifier modifier) {
-		gui.validateImmediateAction(vc -> this.gui.getController().onModifierChanged(vc, entry, modifier));
+		gui.validateImmediateAction(vc -> this.gui.getController().applyChange(vc, EntryChange.modify(entry).withAccess(modifier)));
 	}
 
 	public void refreshReference() {
@@ -176,11 +176,11 @@ public class IdentifierPanel {
 	}
 
 	private void validateRename(String newName) {
-		gui.getController().rename(vc, new EntryReference<>(entry, deobfEntry.getName()), newName, true, true);
+		gui.getController().validateChange(vc, EntryChange.modify(entry).withDeobfName(newName));
 	}
 
 	private void doRename(String newName) {
-		gui.getController().rename(vc, new EntryReference<>(entry, deobfEntry.getName()), newName, true);
+		gui.getController().applyChange(vc, EntryChange.modify(entry).withDeobfName(newName));
 		if (!vc.canProceed()) return;
 		gui.getController().sendPacket(new RenameC2SPacket(entry, newName, true));
 	}
@@ -277,12 +277,7 @@ public class IdentifierPanel {
 
 			JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
 			EntryMapping mapping = project.getMapper().getDeobfMapping(e);
-
-			if (mapping != null) {
-				combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
-			} else {
-				combo.setSelectedIndex(AccessModifier.UNCHANGED.ordinal());
-			}
+			combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
 
 			if (this.gui.isEditable(type)) {
 				combo.addItemListener(event -> {

@@ -78,7 +78,7 @@ The IDs for client-to-server packets are as follows:
 - 2: `Rename`
 - 3: `RemoveMapping`
 - 4: `ChangeDocs`
-- 5: `MarkDeobfuscated`
+- 5: `MarkDeobfuscated` (unused)
 - 6: `Message`
 
 The IDs for server-to-client packets are as follows:
@@ -261,6 +261,8 @@ struct MarkDeobfuscatedC2SPacket {
 ```
 - `obf_entry`: the obfuscated name and descriptor of the entry to mark as deobfuscated.
 
+The default implementation never sends this packet.
+
 ### Message (client-to-server)
 ```c
 struct MessageC2SPacket {
@@ -316,7 +318,7 @@ struct RenameS2CPacket {
 - `sync_id`: the sync ID of the change for locking purposes.
 - `obf_entry`: the obfuscated name and descriptor of the entry to rename.
 - `new_name`: what to rename the entry to.
-- `refresh_class_tree`: whether the class tree on the sidebar of Enigma needs refreshing as a result of this change.
+- `refresh_class_tree`: unused, always true.
 
 ### RemoveMapping (server-to-client)
 ```c

@@ -25,17 +25,21 @@ public class MappingValidator {
 		this.index = index;
 	}
 
-	public void validateRename(ValidationContext vc, Entry<?> entry, String name) {
+	public boolean validateRename(ValidationContext vc, Entry<?> entry, String name) {
 		Collection<Entry<?>> equivalentEntries = index.getEntryResolver().resolveEquivalentEntries(entry);
+		boolean error = false;
 		for (Entry<?> equivalentEntry : equivalentEntries) {
 			equivalentEntry.validateName(vc, name);
-			validateUnique(vc, equivalentEntry, name);
+			error |= validateUnique(vc, equivalentEntry, name);
 		}
+		return error;
 	}
 
-	private void validateUnique(ValidationContext vc, Entry<?> entry, String name) {
+	private boolean validateUnique(ValidationContext vc, Entry<?> entry, String name) {
 		ClassEntry containingClass = entry.getContainingClass();
 		Collection<ClassEntry> relatedClasses = getRelatedClasses(containingClass);
+
+		boolean error = false;
 
 		for (ClassEntry relatedClass : relatedClasses) {
 			Entry<?> relatedEntry = entry.replaceAncestor(containingClass, relatedClass);
@@ -52,8 +56,11 @@ public class MappingValidator {
 				} else {
 					vc.raise(Message.NONUNIQUE_NAME, name);
 				}
+				error = true;
 			}
 		}
+
+		return error;
 	}
 
 	private Collection<ClassEntry> getRelatedClasses(ClassEntry classEntry) {

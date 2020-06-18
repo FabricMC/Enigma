@@ -73,7 +73,10 @@ public class TinyMappingsWriter implements MappingsWriter {
         Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
 
         EntryMapping mapping = mappings.get(entry);
-        if (mapping != null && !entry.getName().equals(mapping.getTargetName())) {
+
+        // Do not write mappings without deobfuscated name since tiny v1 doesn't
+        // support comments anyway
+        if (mapping != null && mapping.getTargetName() != null) {
             if (entry instanceof ClassEntry) {
                 writeClass(writer, (ClassEntry) entry, translator);
             } else if (entry instanceof FieldEntry) {

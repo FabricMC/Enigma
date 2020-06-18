@@ -22,7 +22,7 @@ public class DeobfPanel extends JPanel {
 
 		this.deobfClasses = new ClassSelector(gui, ClassSelector.DEOBF_CLASS_COMPARATOR, true);
 		this.deobfClasses.setSelectionListener(gui.getController()::navigateTo);
-		this.deobfClasses.setRenameSelectionListener(gui::onPanelRename);
+		this.deobfClasses.setRenameSelectionListener(gui::onRenameFromClassTree);
 
 		this.setLayout(new BorderLayout());
 		this.add(this.title, BorderLayout.NORTH);

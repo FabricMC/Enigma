@@ -4,6 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import cuchaz.enigma.newabstraction.EntryChange;
+import cuchaz.enigma.newabstraction.EntryUtil;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.network.Message;
@@ -41,19 +43,20 @@ public class ChangeDocsC2SPacket implements Packet<ServerPacketHandler> {
 		ValidationContext vc = new ValidationContext();
 		vc.setActiveElement(PrintValidatable.INSTANCE);
 
-		EntryMapping mapping = handler.getServer().getMappings().getDeobfMapping(entry);
 
 		boolean valid = handler.getServer().canModifyEntry(handler.getClient(), entry);
 		if (!valid) {
-			String oldDocs = mapping == null ? null : mapping.getJavadoc();
+			EntryMapping mapping = handler.getServer().getMappings().getDeobfMapping(entry);
+			String oldDocs = mapping.getJavadoc();
 			handler.getServer().sendPacket(handler.getClient(), new ChangeDocsS2CPacket(EnigmaServer.DUMMY_SYNC_ID, entry, oldDocs == null ? "" : oldDocs));
 			return;
 		}
 
-		if (mapping == null) {
-			mapping = new EntryMapping(handler.getServer().getMappings().deobfuscate(entry).getName());
+		if (newDocs.isBlank()) {
+			EntryUtil.applyChange(vc, handler.getServer().getMappings(), EntryChange.modify(entry).withJavadoc(newDocs));
+		} else {
+			EntryUtil.applyChange(vc, handler.getServer().getMappings(), EntryChange.modify(entry).clearJavadoc());
 		}
-		handler.getServer().getMappings().mapFromObf(vc, entry, mapping.withDocs(newDocs.isBlank() ? null : newDocs));
 
 		if (!vc.canProceed()) return;
 

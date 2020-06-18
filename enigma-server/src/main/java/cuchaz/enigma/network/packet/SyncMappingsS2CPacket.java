@@ -64,8 +64,12 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 	private static void writeEntryTreeNode(DataOutput output, EntryTreeNode<EntryMapping> node) throws IOException {
 		PacketHelper.writeEntry(output, node.getEntry(), false);
 		EntryMapping value = node.getValue();
-		output.writeBoolean(value != null);
-		if (value != null) {
+		if (value == null) value = EntryMapping.DEFAULT;
+
+		// TODO update network protocol to allow for sending javadoc without
+		// 		deobf name
+		output.writeBoolean(value.getTargetName() != null);
+		if (value.getTargetName() != null) {
 			PacketHelper.writeString(output, value.getTargetName());
 			output.writeBoolean(value.getJavadoc() != null);
 			if (value.getJavadoc() != null) {

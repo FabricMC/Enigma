@@ -75,7 +75,7 @@ public class MappingsChecker {
 		private final Map<Entry<?>, String> droppedMappings = new HashMap<>();
 
 		public void drop(Entry<?> entry, EntryMapping mapping) {
-			droppedMappings.put(entry, mapping.getTargetName());
+			droppedMappings.put(entry, mapping.getTargetName() != null ? mapping.getTargetName() : entry.getName());
 		}
 
 		void apply(EntryTree<EntryMapping> mappings) {

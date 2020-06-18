@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -39,18 +40,23 @@ import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
+import cuchaz.enigma.gui.newabstraction.EntryValidation;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.network.*;
-import cuchaz.enigma.network.packet.LoginC2SPacket;
-import cuchaz.enigma.network.packet.Packet;
+import cuchaz.enigma.network.packet.*;
+import cuchaz.enigma.newabstraction.EntryChange;
+import cuchaz.enigma.newabstraction.EntryUtil;
 import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
@@ -62,6 +68,7 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
+import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class GuiController implements ClientPacketHandler {
@@ -394,19 +401,6 @@ public class GuiController implements ClientPacketHandler {
 		});
 	}
 
-	public void onModifierChanged(ValidationContext vc, Entry<?> entry, AccessModifier modifier) {
-		EntryRemapper mapper = project.getMapper();
-
-		EntryMapping mapping = mapper.getDeobfMapping(entry);
-		if (mapping != null) {
-			mapper.mapFromObf(vc, entry, new EntryMapping(mapping.getTargetName(), modifier));
-		} else {
-			mapper.mapFromObf(vc, entry, new EntryMapping(entry.getName(), modifier));
-		}
-
-		chp.invalidateMapped();
-	}
-
 	public StructureTreeNode getClassStructure(ClassEntry entry, StructureTreeOptions options) {
 		StructureTreeNode rootNode = new StructureTreeNode(this.project, entry, entry);
 		rootNode.load(this.project, options);
@@ -464,74 +458,69 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	@Override
-	public void rename(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree) {
-		rename(vc, reference, newName, refreshClassTree, false);
-	}
-
-	public void rename(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String newName, boolean refreshClassTree, boolean validateOnly) {
-		Entry<?> entry = reference.getNameableEntry();
-		EntryMapping previous = project.getMapper().getDeobfMapping(entry);
-		project.getMapper().mapFromObf(vc, entry, previous != null ? previous.withName(newName) : new EntryMapping(newName), true, validateOnly);
+	public boolean applyChangeFromServer(EntryChange<?> change) {
+		ValidationContext vc = new ValidationContext();
+		vc.setActiveElement(PrintValidatable.INSTANCE);
+		this.applyChange0(vc, change);
 		gui.showStructure(gui.getActiveEditor());
 
-		if (validateOnly || !vc.canProceed()) return;
-
-		if (refreshClassTree && reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
-			this.gui.moveClassTree(reference.entry, newName);
-
-		chp.invalidateMapped();
+		return vc.canProceed();
 	}
 
-	@Override
-	public void removeMapping(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference) {
-		project.getMapper().removeByObf(vc, reference.getNameableEntry());
-		gui.showStructure(gui.getActiveEditor());
-
-		if (!vc.canProceed()) return;
-
-		if (reference.entry instanceof ClassEntry)
-			this.gui.moveClassTree(reference.entry, false, true);
-
-		chp.invalidateMapped();
-	}
-
-	@Override
-	public void changeDocs(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs) {
-		changeDocs(vc, reference, updatedDocs, false);
-	}
-
-	public void changeDocs(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference, String updatedDocs, boolean validateOnly) {
-		changeDoc(vc, reference.entry, updatedDocs, validateOnly);
-
-		if (validateOnly || !vc.canProceed()) return;
-
-		chp.invalidateJavadoc(reference.getLocationClassEntry());
-	}
-
-	private void changeDoc(ValidationContext vc, Entry<?> obfEntry, String newDoc, boolean validateOnly) {
-		EntryRemapper mapper = project.getMapper();
-
-		EntryMapping deobfMapping = mapper.getDeobfMapping(obfEntry);
-		if (deobfMapping == null) {
-			deobfMapping = new EntryMapping(mapper.deobfuscate(obfEntry).getName());
+	public void validateChange(ValidationContext vc, EntryChange<?> change) {
+		if (change.getDeobfName().isSet()) {
+			EntryValidation.validateRename(vc, this.project, change.getTarget(), change.getDeobfName().getNewValue());
 		}
 
-		mapper.mapFromObf(vc, obfEntry, deobfMapping.withDocs(newDoc), false, validateOnly);
+		if (change.getJavadoc().isSet()) {
+			EntryValidation.validateJavadoc(vc, change.getJavadoc().getNewValue());
+		}
 	}
 
-	@Override
-	public void markAsDeobfuscated(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference) {
-		EntryRemapper mapper = project.getMapper();
-		Entry<?> entry = reference.getNameableEntry();
-		mapper.mapFromObf(vc, entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
+	public void applyChange(ValidationContext vc, EntryChange<?> change) {
+		this.applyChange0(vc, change);
 		gui.showStructure(gui.getActiveEditor());
 
 		if (!vc.canProceed()) return;
 
-		if (reference.entry instanceof ClassEntry && !((ClassEntry) reference.entry).isInnerClass())
-			this.gui.moveClassTree(reference.entry, true, false);
+		// this might cause issues when multiple fields are changed at the same
+		// time, but that can't happen right now
 
-		chp.invalidateMapped();
+		if (change.getJavadoc().isSet()) {
+			sendPacket(new ChangeDocsC2SPacket(change.getTarget(), change.getJavadoc().getNewValue()));
+		} else if (change.getJavadoc().isReset()) {
+			sendPacket(new ChangeDocsC2SPacket(change.getTarget(), ""));
+		}
+
+		if (change.getDeobfName().isSet()) {
+			sendPacket(new RenameC2SPacket(change.getTarget(), change.getDeobfName().getNewValue(), true));
+		} else if (change.getDeobfName().isReset()) {
+			sendPacket(new RemoveMappingC2SPacket(change.getTarget()));
+		}
+	}
+
+	private void applyChange0(ValidationContext vc, EntryChange<?> change) {
+		validateChange(vc, change);
+		if (!vc.canProceed()) return;
+
+		Entry<?> target = change.getTarget();
+		EntryMapping prev = this.project.getMapper().getDeobfMapping(target);
+		EntryMapping mapping = EntryUtil.applyChange(vc, this.project.getMapper(), change);
+
+		boolean renamed = !change.getDeobfName().isUnchanged();
+
+		if (renamed && target instanceof ClassEntry && !((ClassEntry) target).isInnerClass()) {
+			this.gui.moveClassTree(target, prev.getTargetName() == null, mapping.getTargetName() == null);
+		}
+
+		if (!Objects.equals(prev.getTargetName(), mapping.getTargetName())) {
+			this.chp.invalidateMapped();
+		}
+
+		if (!Objects.equals(prev.getJavadoc(), mapping.getJavadoc())) {
+			this.chp.invalidateJavadoc(target.getTopLevelClass());
+		}
+		gui.showStructure(gui.getActiveEditor());
 	}
 
 	public void openStats(Set<StatsMember> includedMembers, String topLevelPackage, boolean includeSynthetic) {

@@ -234,7 +234,7 @@ public abstract class EnigmaServer {
 
 	public void sendCorrectMapping(Socket client, Entry<?> entry, boolean refreshClassTree) {
 		EntryMapping oldMapping = mappings.getDeobfMapping(entry);
-		String oldName = oldMapping == null ? null : oldMapping.getTargetName();
+		String oldName = oldMapping.getTargetName();
 		if (oldName == null) {
 			sendPacket(client, new RemoveMappingS2CPacket(DUMMY_SYNC_ID, entry));
 		} else {

@@ -6,7 +6,8 @@ import java.io.IOException;
 
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.ServerPacketHandler;
-import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.newabstraction.EntryChange;
+import cuchaz.enigma.newabstraction.EntryUtil;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -43,7 +44,9 @@ public class MarkDeobfuscatedC2SPacket implements Packet<ServerPacketHandler> {
 			return;
 		}
 
-		handler.getServer().getMappings().mapFromObf(vc, entry, new EntryMapping(handler.getServer().getMappings().deobfuscate(entry).getName()));
+		if (handler.getServer().getMappings().getDeobfMapping(entry).getTargetName() == null) {
+			EntryUtil.applyChange(vc, handler.getServer().getMappings(), EntryChange.modify(this.entry).withDefaultDeobfName());
+		}
 
 		if (!vc.canProceed()) return;
 

@@ -1,0 +1,90 @@
+package cuchaz.enigma.newabstraction;
+
+import java.util.Objects;
+
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.representation.entry.Entry;
+
+public class EntryChange<E extends Entry<?>> {
+
+	private final E target;
+	private final TristateChange<String> deobfName;
+	private final TristateChange<String> javadoc;
+	private final TristateChange<AccessModifier> access;
+
+	private EntryChange(E target, TristateChange<String> deobfName, TristateChange<String> javadoc, TristateChange<AccessModifier> access) {
+		this.target = target;
+		this.deobfName = deobfName;
+		this.javadoc = javadoc;
+		this.access = access;
+	}
+
+	public static <E extends Entry<?>> EntryChange<E> modify(E target) {
+		return new EntryChange<>(target, TristateChange.unchanged(), TristateChange.unchanged(), TristateChange.unchanged());
+	}
+
+	public EntryChange<E> withDeobfName(String name) {
+		return new EntryChange<>(this.target, TristateChange.set(name), this.javadoc, this.access);
+	}
+
+	public EntryChange<E> withDefaultDeobfName() {
+		return this.withDeobfName(this.target.getName());
+	}
+
+	public EntryChange<E> clearDeobfName() {
+		return new EntryChange<>(this.target, TristateChange.reset(), this.javadoc, this.access);
+	}
+
+	public EntryChange<E> withJavadoc(String javadoc) {
+		return new EntryChange<>(this.target, this.deobfName, TristateChange.set(javadoc), this.access);
+	}
+
+	public EntryChange<E> clearJavadoc() {
+		return new EntryChange<>(this.target, this.deobfName, TristateChange.reset(), this.access);
+	}
+
+	public EntryChange<E> withAccess(AccessModifier access) {
+		return new EntryChange<>(this.target, this.deobfName, this.javadoc, TristateChange.set(access));
+	}
+
+	public EntryChange<E> clearAccess() {
+		return new EntryChange<>(this.target, this.deobfName, this.javadoc, TristateChange.reset());
+	}
+
+	public TristateChange<String> getDeobfName() {
+		return this.deobfName;
+	}
+
+	public TristateChange<String> getJavadoc() {
+		return this.javadoc;
+	}
+
+	public TristateChange<AccessModifier> getAccess() {
+		return access;
+	}
+
+	public E getTarget() {
+		return target;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		EntryChange<?> that = (EntryChange<?>) o;
+		return Objects.equals(target, that.target) &&
+				Objects.equals(deobfName, that.deobfName) &&
+				Objects.equals(javadoc, that.javadoc);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(target, deobfName, javadoc);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("EntryChange { target: %s, deobfName: %s, javadoc: %s, access: %s }", target, deobfName, javadoc, access);
+	}
+
+}

@@ -1,34 +1,38 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.Objects;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class EntryMapping {
-	private final String targetName;
+public final class EntryMapping {
+	public static final EntryMapping DEFAULT = new EntryMapping(null, AccessModifier.UNCHANGED, null);
+
+	private final @Nullable String targetName;
 	private final AccessModifier accessModifier;
 	private final @Nullable String javadoc;
 
-	public EntryMapping(@Nonnull String targetName) {
+	public EntryMapping(@Nullable String targetName) {
 		this(targetName, AccessModifier.UNCHANGED);
 	}
 
-	public EntryMapping(@Nonnull String targetName, @Nullable String javadoc) {
+	public EntryMapping(@Nullable String targetName, @Nullable String javadoc) {
 		this(targetName, AccessModifier.UNCHANGED, javadoc);
 	}
 
-	public EntryMapping(@Nonnull String targetName, AccessModifier accessModifier) {
+	public EntryMapping(@Nullable String targetName, AccessModifier accessModifier) {
 		this(targetName, accessModifier, null);
 	}
 
-	public EntryMapping(@Nonnull String targetName, AccessModifier accessModifier, @Nullable String javadoc) {
+	public EntryMapping(@Nullable String targetName, AccessModifier accessModifier, @Nullable String javadoc) {
 		this.targetName = targetName;
 		this.accessModifier = accessModifier;
 		this.javadoc = javadoc;
 	}
 
-	@Nonnull
+	@Nullable
 	public String getTargetName() {
-		return targetName;
+		return this.targetName;
 	}
 
 	@Nonnull
@@ -56,20 +60,19 @@ public class EntryMapping {
 		return new EntryMapping(targetName, accessModifier, newDocs);
 	}
 
+
 	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) return true;
-
-		if (obj instanceof EntryMapping) {
-			EntryMapping mapping = (EntryMapping) obj;
-			return mapping.targetName.equals(targetName) && mapping.accessModifier.equals(accessModifier);
-		}
-
-		return false;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		EntryMapping that = (EntryMapping) o;
+		return Objects.equals(targetName, that.targetName) &&
+				accessModifier == that.accessModifier &&
+				Objects.equals(javadoc, that.javadoc);
 	}
 
 	@Override
 	public int hashCode() {
-		return targetName.hashCode() + accessModifier.hashCode() * 31;
+		return Objects.hash(targetName, accessModifier, javadoc);
 	}
 }

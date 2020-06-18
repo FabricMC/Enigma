@@ -1,10 +1,11 @@
 package cuchaz.enigma.translation.mapping;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.MappingTranslator;
@@ -50,15 +51,15 @@ public class EntryRemapper {
 		return new EntryRemapper(index, new HashEntryTree<>());
 	}
 
-	public <E extends Entry<?>> void mapFromObf(ValidationContext vc, E obfuscatedEntry, @Nullable EntryMapping deobfMapping) {
-		mapFromObf(vc, obfuscatedEntry, deobfMapping, true);
+	public void validatePutMapping(ValidationContext vc, Entry<?> obfuscatedEntry, @Nonnull EntryMapping deobfMapping) {
+		doPutMapping(vc, obfuscatedEntry, deobfMapping, true);
 	}
 
-	public <E extends Entry<?>> void mapFromObf(ValidationContext vc, E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming) {
-		mapFromObf(vc, obfuscatedEntry, deobfMapping, renaming, false);
+	public void putMapping(ValidationContext vc, Entry<?> obfuscatedEntry, @Nonnull EntryMapping deobfMapping) {
+		doPutMapping(vc, obfuscatedEntry, deobfMapping, false);
 	}
 
-	public <E extends Entry<?>> void mapFromObf(ValidationContext vc, E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming, boolean validateOnly) {
+	private void doPutMapping(ValidationContext vc, Entry<?> obfuscatedEntry, @Nonnull EntryMapping deobfMapping, boolean validateOnly) {
 		if (obfuscatedEntry instanceof FieldEntry) {
 			FieldEntry fieldEntry = (FieldEntry) obfuscatedEntry;
 			ClassEntry classEntry = fieldEntry.getParent();
@@ -66,23 +67,25 @@ public class EntryRemapper {
 			mapRecordComponentGetter(vc, classEntry, fieldEntry, deobfMapping);
 		}
 
-		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, renaming ? ResolutionStrategy.RESOLVE_ROOT : ResolutionStrategy.RESOLVE_CLOSEST);
+		boolean renaming = !Objects.equals(getDeobfMapping(obfuscatedEntry).getTargetName(), deobfMapping.getTargetName());
 
-		if (renaming && deobfMapping != null) {
-			for (E resolvedEntry : resolvedEntries) {
+		Collection<Entry<?>> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, renaming ? ResolutionStrategy.RESOLVE_ROOT : ResolutionStrategy.RESOLVE_CLOSEST);
+
+		if (renaming && deobfMapping.getTargetName() != null) {
+			for (Entry<?> resolvedEntry : resolvedEntries) {
 				validator.validateRename(vc, resolvedEntry, deobfMapping.getTargetName());
 			}
 		}
 
 		if (validateOnly || !vc.canProceed()) return;
 
-		for (E resolvedEntry : resolvedEntries) {
-			obfToDeobf.insert(resolvedEntry, deobfMapping);
+		for (Entry<?> resolvedEntry : resolvedEntries) {
+			if (deobfMapping.equals(EntryMapping.DEFAULT)) {
+				obfToDeobf.insert(resolvedEntry, null);
+			} else {
+				obfToDeobf.insert(resolvedEntry, deobfMapping);
+			}
 		}
-	}
-
-	public void removeByObf(ValidationContext vc, Entry<?> obfuscatedEntry) {
-		mapFromObf(vc, obfuscatedEntry, null);
 	}
 
 	// A little bit of a hack to also map the getter method for record fields/components.
@@ -111,16 +114,13 @@ public class EntryRemapper {
 			return;
 		}
 
-		mapFromObf(vc, methodEntry, fieldMapping != null ? new EntryMapping(fieldMapping.getTargetName()) : null);
+		putMapping(vc, methodEntry, fieldMapping != null ? new EntryMapping(fieldMapping.getTargetName()) : null);
 	}
 
-	@Nullable
+	@Nonnull
 	public EntryMapping getDeobfMapping(Entry<?> entry) {
-		return obfToDeobf.get(entry);
-	}
-
-	public boolean hasDeobfMapping(Entry<?> obfEntry) {
-		return obfToDeobf.contains(obfEntry);
+		EntryMapping entryMapping = obfToDeobf.get(entry);
+		return entryMapping == null ? EntryMapping.DEFAULT : entryMapping;
 	}
 
 	public <T extends Translatable> TranslateResult<T> extendedDeobfuscate(T translatable) {
@@ -158,4 +158,9 @@ public class EntryRemapper {
 	public EntryResolver getObfResolver() {
 		return obfResolver;
 	}
+
+	public MappingValidator getValidator() {
+		return validator;
+	}
+
 }

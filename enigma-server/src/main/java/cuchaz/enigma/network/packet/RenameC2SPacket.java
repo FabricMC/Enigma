@@ -6,7 +6,8 @@ import java.io.IOException;
 
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.ServerPacketHandler;
-import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.newabstraction.EntryChange;
+import cuchaz.enigma.newabstraction.EntryUtil;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -47,8 +48,7 @@ public class RenameC2SPacket implements Packet<ServerPacketHandler> {
 		boolean valid = handler.getServer().canModifyEntry(handler.getClient(), entry);
 
 		if (valid) {
-			EntryMapping previous = handler.getServer().getMappings().getDeobfMapping(entry);
-			handler.getServer().getMappings().mapFromObf(vc, entry, previous != null ? previous.withName(newName) : new EntryMapping(newName));
+			EntryUtil.applyChange(vc, handler.getServer().getMappings(), EntryChange.modify(entry).withDeobfName(this.newName));
 			valid = vc.canProceed();
 		}
 
