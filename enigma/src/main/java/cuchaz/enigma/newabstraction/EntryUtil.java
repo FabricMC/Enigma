@@ -23,7 +23,7 @@ public class EntryUtil {
 		if (change.getDeobfName().isSet()) {
 			self = self.withName(change.getDeobfName().getNewValue());
 		} else if (change.getDeobfName().isReset()) {
-			self = self.withName(change.getTarget().getName());
+			self = self.withName(null);
 		}
 
 		if (change.getJavadoc().isSet()) {
