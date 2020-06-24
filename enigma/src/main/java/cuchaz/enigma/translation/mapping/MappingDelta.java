@@ -1,13 +1,14 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.stream.Stream;
+
 import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.entry.Entry;
-
-import java.util.stream.Stream;
 
 public class MappingDelta<T> implements Translatable {
 	public static final Object PLACEHOLDER = new Object();
@@ -45,10 +46,12 @@ public class MappingDelta<T> implements Translatable {
 	}
 
 	@Override
-	public MappingDelta<T> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
-		return new MappingDelta<>(
+	public TranslateResult<MappingDelta<T>> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		// there's no concept of deobfuscated for this as far as I can see, so
+		// it will always be marked as obfuscated
+		return TranslateResult.obfuscated(new MappingDelta<>(
 				translator.translate(baseMappings),
 				translator.translate(changes)
-		);
+		));
 	}
 }

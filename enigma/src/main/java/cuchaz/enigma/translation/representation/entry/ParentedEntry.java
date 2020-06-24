@@ -11,14 +11,16 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
+
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
-
-import javax.annotation.Nullable;
 
 public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	protected final P parent;
@@ -39,7 +41,12 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	@Override
 	public abstract ParentedEntry<P> withName(String name);
 
-	protected abstract ParentedEntry<P> translate(Translator translator, @Nullable EntryMapping mapping);
+	protected abstract TranslateResult<? extends ParentedEntry<P>> extendedTranslate(Translator translator, @Nullable EntryMapping mapping);
+
+	@Deprecated
+	protected ParentedEntry<P> translate(Translator translator, @Nullable EntryMapping mapping)  {
+		return this.extendedTranslate(translator, mapping).getValue();
+	}
 
 	@Override
 	public String getName() {
@@ -59,14 +66,14 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	}
 
 	@Override
-	public ParentedEntry<P> translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+	public TranslateResult<? extends ParentedEntry<P>> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		P parent = getParent();
 		EntryMapping mapping = resolveMapping(resolver, mappings);
 		if (parent == null) {
-			return translate(translator, mapping);
+			return this.extendedTranslate(translator, mapping);
 		}
 		P translatedParent = translator.translate(parent);
-		return withParent(translatedParent).translate(translator, mapping);
+		return this.withParent(translatedParent).extendedTranslate(translator, mapping);
 	}
 
 	private EntryMapping resolveMapping(EntryResolver resolver, EntryMap<EntryMapping> mappings) {

@@ -475,7 +475,7 @@ public class EditorPanel {
 		this.popupMenu.openNextMenu.setEnabled(this.controller.hasNextReference());
 		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
 
-		if (referenceEntry != null && this.controller.project.getMapper().hasDeobfMapping(referenceEntry)) {
+		if (referenceEntry != null && this.controller.project.getMapper().extendedDeobfuscate(referenceEntry).isDeobfuscated()) {
 			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.reset_obfuscated"));
 		} else {
 			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.mark_deobfuscated"));

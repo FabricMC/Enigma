@@ -1,8 +1,10 @@
 package cuchaz.enigma.translation;
 
+import javax.annotation.Nullable;
+
+import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.EntryMap;
 
 public class MappingTranslator implements Translator {
 	private final EntryMap<EntryMapping> mappings;
@@ -13,12 +15,14 @@ public class MappingTranslator implements Translator {
 		this.resolver = resolver;
 	}
 
+	@Nullable
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T extends Translatable> T translate(T translatable) {
+	public <T extends Translatable> TranslateResult<T> extendedTranslate(T translatable) {
 		if (translatable == null) {
 			return null;
 		}
-		return (T) translatable.translate(this, resolver, mappings);
+		return (TranslateResult<T>) translatable.extendedTranslate(this, resolver, mappings);
 	}
+
 }

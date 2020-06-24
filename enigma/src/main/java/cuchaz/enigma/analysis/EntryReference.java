@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -136,7 +137,8 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
-		return new EntryReference<>(translator.translate(entry), translator.translate(context), this);
+	public TranslateResult<EntryReference<E, C>> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		return translator.extendedTranslate(this.entry).map(e -> new EntryReference<>(e, translator.translate(context), this));
 	}
+
 }

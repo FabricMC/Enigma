@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -76,6 +77,10 @@ public class EntryRemapper {
 
 	public boolean hasDeobfMapping(Entry<?> obfEntry) {
 		return obfToDeobf.contains(obfEntry);
+	}
+
+	public <T extends Translatable> TranslateResult<T> extendedDeobfuscate(T translatable) {
+		return deobfuscator.extendedTranslate(translatable);
 	}
 
 	public <T extends Translatable> T deobfuscate(T translatable) {
