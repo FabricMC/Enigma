@@ -1,6 +1,10 @@
 package cuchaz.enigma.gui.panels;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.util.function.Consumer;
 
@@ -19,7 +23,11 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
@@ -86,7 +94,8 @@ public class IdentifierPanel {
 
 			if (deobfEntry instanceof ClassEntry) {
 				ClassEntry ce = (ClassEntry) deobfEntry;
-				this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.class"), ce.getFullName());
+				String name = ce.isInnerClass() ? ce.getName() : ce.getFullName();
+				this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.class"), name);
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
 			} else if (deobfEntry instanceof FieldEntry) {
 				FieldEntry fe = (FieldEntry) deobfEntry;
