@@ -99,7 +99,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	@Override
 	public void validateName(ValidationContext vc, String name) {
-		IdentifierValidation.validateClassName(vc, name);
+		IdentifierValidation.validateClassName(vc, name, this.isInnerClass());
 	}
 
 	@Override
