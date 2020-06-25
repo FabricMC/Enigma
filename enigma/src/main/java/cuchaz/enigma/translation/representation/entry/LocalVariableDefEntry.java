@@ -1,11 +1,14 @@
 package cuchaz.enigma.translation.representation.entry;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
+
+import cuchaz.enigma.source.RenamableTokenType;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
-
-import javax.annotation.Nullable;
 
 /**
  * TypeDescriptor...
@@ -27,11 +30,14 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 	}
 
 	@Override
-	public LocalVariableDefEntry translate(Translator translator, @Nullable EntryMapping mapping) {
+	protected TranslateResult<LocalVariableEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
 		TypeDescriptor translatedDesc = translator.translate(desc);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		String javadoc = mapping != null ? mapping.getJavadoc() : javadocs;
-		return new LocalVariableDefEntry(parent, index, translatedName, parameter, translatedDesc, javadoc);
+		return TranslateResult.of(
+				mapping == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				new LocalVariableDefEntry(parent, index, translatedName, parameter, translatedDesc, javadoc)
+		);
 	}
 
 	@Override

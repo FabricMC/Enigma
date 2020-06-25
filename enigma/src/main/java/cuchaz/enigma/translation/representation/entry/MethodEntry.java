@@ -58,7 +58,7 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	}
 
 	@Override
-	protected TranslateResult<MethodEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
+	protected TranslateResult<? extends MethodEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		String docs = mapping != null ? mapping.getJavadoc() : null;
 		return TranslateResult.of(

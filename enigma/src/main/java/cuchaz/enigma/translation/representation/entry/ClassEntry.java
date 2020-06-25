@@ -64,7 +64,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
-	public TranslateResult<ClassEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
+	public TranslateResult<? extends ClassEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
 		if (name.charAt(0) == '[') {
 			TranslateResult<TypeDescriptor> translatedName = translator.extendedTranslate(new TypeDescriptor(name));
 			return translatedName.map(desc -> new ClassEntry(parent, desc.toString()));

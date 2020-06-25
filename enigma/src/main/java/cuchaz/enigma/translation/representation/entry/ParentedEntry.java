@@ -43,11 +43,6 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 
 	protected abstract TranslateResult<? extends ParentedEntry<P>> extendedTranslate(Translator translator, @Nullable EntryMapping mapping);
 
-	@Deprecated
-	protected ParentedEntry<P> translate(Translator translator, @Nullable EntryMapping mapping)  {
-		return this.extendedTranslate(translator, mapping).getValue();
-	}
-
 	@Override
 	public String getName() {
 		return name;
