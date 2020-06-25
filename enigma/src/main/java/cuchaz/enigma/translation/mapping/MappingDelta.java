@@ -49,7 +49,7 @@ public class MappingDelta<T> implements Translatable {
 	public TranslateResult<MappingDelta<T>> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		// there's no concept of deobfuscated for this as far as I can see, so
 		// it will always be marked as obfuscated
-		return TranslateResult.obfuscated(new MappingDelta<>(
+		return TranslateResult.ungrouped(new MappingDelta<>(
 				translator.translate(baseMappings),
 				translator.translate(changes)
 		));
