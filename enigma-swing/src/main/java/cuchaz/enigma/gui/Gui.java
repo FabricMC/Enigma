@@ -369,12 +369,11 @@ public class Gui {
 		this.frame.setLocationRelativeTo(null);
 		
 		try {
-            Class<?> clazz = Class.forName("com.apple.eawt.FullScreenUtilities");
-            Method method = clazz.getMethod("setWindowCanFullScreen", new Class<?>[] {
-                    Window.class, boolean.class });
-            method.invoke(null, frame, true);
-        } catch (Throwable ignored) {
-        }
+            		Class<?> clazz = Class.forName("com.apple.eawt.FullScreenUtilities");
+            		Method method = clazz.getMethod("setWindowCanFullScreen", new Class<?>[] {Window.class, boolean.class });
+            		method.invoke(null, frame, true);
+        	} catch (Throwable ignored) {
+        	}
 	}
 
 	public JFrame getFrame() {
