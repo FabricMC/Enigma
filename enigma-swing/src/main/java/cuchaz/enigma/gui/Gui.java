@@ -15,10 +15,14 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.FileDialog;
 import java.awt.event.*;
+import java.awt.Window;
+import java.awt.GraphicsEnvironment;
+import java.awt.GraphicsDevice;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.lang.reflect.Method;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
@@ -363,6 +367,14 @@ public class Gui {
 		this.frame.setVisible(true);
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		this.frame.setLocationRelativeTo(null);
+		
+		try {
+            Class<?> clazz = Class.forName("com.apple.eawt.FullScreenUtilities");
+            Method method = clazz.getMethod("setWindowCanFullScreen", new Class<?>[] {
+                    Window.class, boolean.class });
+            method.invoke(null, frame, true);
+        } catch (Throwable ignored) {
+        }
 	}
 
 	public JFrame getFrame() {
