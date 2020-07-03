@@ -506,7 +506,9 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public void setDecompiler(DecompilerService service) {
-		chp.setDecompilerService(service);
+		if (chp != null) {
+			chp.setDecompilerService(service);
+		}
 	}
 
 	public ClassHandleProvider getClassHandleProvider() {
