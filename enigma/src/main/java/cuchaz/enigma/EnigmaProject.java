@@ -27,12 +27,14 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EnigmaProject {
 	private final Enigma enigma;
@@ -183,15 +185,13 @@ public class EnigmaProject {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toMap(n -> n.name, Functions.identity()));
 
-		return new JarExport(jarIndex, compiled);
+		return new JarExport(compiled);
 	}
 
 	public static final class JarExport {
-		private final JarIndex jarIndex;
 		private final Map<String, ClassNode> compiled;
 
-		JarExport(JarIndex jarIndex, Map<String, ClassNode> compiled) {
-			this.jarIndex = jarIndex;
+		JarExport(Map<String, ClassNode> compiled) {
 			this.compiled = compiled;
 		}
 
@@ -221,6 +221,11 @@ public class EnigmaProject {
 		}
 
 		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
+			List<ClassSource> decompiled = this.decompileStream(progress, decompilerService, errorStrategy).collect(Collectors.toList());
+			return new SourceExport(decompiled);
+		}
+
+		public Stream<ClassSource> decompileStream(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
 			Collection<ClassNode> classes = this.compiled.values().stream()
 					.filter(classNode -> classNode.name.indexOf('$') == -1)
 					.collect(Collectors.toList());
@@ -232,20 +237,20 @@ public class EnigmaProject {
 
 			AtomicInteger count = new AtomicInteger();
 
-			Collection<ClassSource> decompiled = classes.parallelStream()
+			return classes.parallelStream()
 					.map(translatedNode -> {
 						progress.step(count.getAndIncrement(), translatedNode.name);
 
 						String source = null;
 						try {
 							source = decompileClass(translatedNode, decompiler);
-						} catch (Exception e) {
+						} catch (Throwable throwable) {
 							switch (errorStrategy) {
-								case PROPAGATE: throw e;
+								case PROPAGATE: throw throwable;
 								case IGNORE: break;
 								case TRACE_AS_SOURCE: {
 									StringWriter writer = new StringWriter();
-									e.printStackTrace(new PrintWriter(writer));
+									throwable.printStackTrace(new PrintWriter(writer));
 									source = writer.toString();
 									break;
 								}
@@ -258,10 +263,7 @@ public class EnigmaProject {
 
 						return new ClassSource(translatedNode.name, source);
 					})
-					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
-
-			return new SourceExport(decompiled);
+					.filter(Objects::nonNull);
 		}
 
 		private String decompileClass(ClassNode translatedNode, Decompiler decompiler) {
@@ -270,7 +272,7 @@ public class EnigmaProject {
 	}
 
 	public static final class SourceExport {
-		private final Collection<ClassSource> decompiled;
+		public final Collection<ClassSource> decompiled;
 
 		SourceExport(Collection<ClassSource> decompiled) {
 			this.decompiled = decompiled;
@@ -289,23 +291,23 @@ public class EnigmaProject {
 		}
 	}
 
-	private static class ClassSource {
-		private final String name;
-		private final String source;
+	public static class ClassSource {
+		public final String name;
+		public final String source;
 
 		ClassSource(String name, String source) {
 			this.name = name;
 			this.source = source;
 		}
 
-		void writeTo(Path path) throws IOException {
+		public void writeTo(Path path) throws IOException {
 			Files.createDirectories(path.getParent());
 			try (BufferedWriter writer = Files.newBufferedWriter(path)) {
 				writer.write(source);
 			}
 		}
 
-		Path resolvePath(Path root) {
+		public Path resolvePath(Path root) {
 			return root.resolve(name.replace('.', '/') + ".java");
 		}
 	}
