@@ -217,6 +217,10 @@ public class EnigmaProject {
 		}
 
 		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService) {
+			return this.decompile(progress, decompilerService, DecompileErrorStrategy.PROPAGATE);
+		}
+
+		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
 			Collection<ClassNode> classes = this.compiled.values().stream()
 					.filter(classNode -> classNode.name.indexOf('$') == -1)
 					.collect(Collectors.toList());
@@ -232,9 +236,29 @@ public class EnigmaProject {
 					.map(translatedNode -> {
 						progress.step(count.getAndIncrement(), translatedNode.name);
 
-						String source = decompileClass(translatedNode, decompiler);
+						String source = null;
+						try {
+							source = decompileClass(translatedNode, decompiler);
+						} catch (Exception e) {
+							switch (errorStrategy) {
+								case PROPAGATE: throw e;
+								case IGNORE: break;
+								case TRACE_AS_SOURCE: {
+									StringWriter writer = new StringWriter();
+									e.printStackTrace(new PrintWriter(writer));
+									source = writer.toString();
+									break;
+								}
+							}
+						}
+
+						if (source == null) {
+							return null;
+						}
+
 						return new ClassSource(translatedNode.name, source);
 					})
+					.filter(Objects::nonNull)
 					.collect(Collectors.toList());
 
 			return new SourceExport(decompiled);
@@ -284,5 +308,11 @@ public class EnigmaProject {
 		Path resolvePath(Path root) {
 			return root.resolve(name.replace('.', '/') + ".java");
 		}
+	}
+
+	public enum DecompileErrorStrategy {
+		PROPAGATE,
+		TRACE_AS_SOURCE,
+		IGNORE
 	}
 }
