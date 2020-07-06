@@ -188,9 +188,14 @@ public class GuiController implements ClientPacketHandler {
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-			EnigmaProject.SourceExport source = jar.decompile(progress, chp.getDecompilerService());
-
-			source.write(path, progress);
+			jar.decompileStream(progress, chp.getDecompilerService(), EnigmaProject.DecompileErrorStrategy.TRACE_AS_SOURCE)
+					.forEach(source -> {
+						try {
+							source.writeTo(source.resolvePath(path));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					});
 		});
 	}
 
