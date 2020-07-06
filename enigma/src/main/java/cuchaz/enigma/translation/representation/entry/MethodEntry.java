@@ -11,13 +11,17 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
+
+import cuchaz.enigma.source.RenamableTokenType;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
-
-import javax.annotation.Nullable;
-import java.util.Objects;
 
 public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable<MethodEntry> {
 
@@ -54,10 +58,13 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	}
 
 	@Override
-	public MethodEntry translate(Translator translator, @Nullable EntryMapping mapping) {
+	protected TranslateResult<? extends MethodEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		String docs = mapping != null ? mapping.getJavadoc() : null;
-		return new MethodEntry(parent, translatedName, translator.translate(descriptor), docs);
+		return TranslateResult.of(
+				mapping == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				new MethodEntry(parent, translatedName, translator.translate(descriptor), docs)
+		);
 	}
 
 	@Override

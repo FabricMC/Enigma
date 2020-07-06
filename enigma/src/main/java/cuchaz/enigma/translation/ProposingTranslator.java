@@ -1,12 +1,14 @@
 package cuchaz.enigma.translation;
 
+import java.util.Arrays;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.Entry;
-
-import java.util.Arrays;
-import java.util.Optional;
 
 public class ProposingTranslator implements Translator {
 	private final EntryRemapper mapper;
@@ -17,16 +19,16 @@ public class ProposingTranslator implements Translator {
 		this.nameProposalServices = nameProposalServices;
 	}
 
+	@Nullable
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T extends Translatable> T translate(T translatable) {
+	public <T extends Translatable> TranslateResult<T> extendedTranslate(T translatable) {
 		if (translatable == null) {
 			return null;
 		}
 
-		T deobfuscated = mapper.deobfuscate(translatable);
+		TranslateResult<T> deobfuscated = mapper.extendedDeobfuscate(translatable);
 
-		if (translatable instanceof Entry && ((Entry) deobfuscated).getName().equals(((Entry<?>) translatable).getName())) {
+		if (translatable instanceof Entry && ((Entry) deobfuscated.getValue()).getName().equals(((Entry<?>) translatable).getName())) {
 			return mapper.getObfResolver()
 					.resolveEntry((Entry<?>) translatable, ResolutionStrategy.RESOLVE_ROOT)
 					.stream()
@@ -34,7 +36,7 @@ public class ProposingTranslator implements Translator {
 					.filter(Optional::isPresent)
 					.map(Optional::get)
 					.findFirst()
-					.map(newName -> (T) ((Entry) deobfuscated).withName(newName))
+					.map(newName -> TranslateResult.proposed((T) ((Entry) deobfuscated.getValue()).withName(newName)))
 					.orElse(deobfuscated);
 		}
 

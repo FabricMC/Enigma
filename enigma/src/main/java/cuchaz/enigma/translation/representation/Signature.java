@@ -1,18 +1,20 @@
 package cuchaz.enigma.translation.representation;
 
+import java.util.function.Function;
+import java.util.regex.Pattern;
+
+import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureVisitor;
+import org.objectweb.asm.signature.SignatureWriter;
+
 import cuchaz.enigma.bytecode.translators.TranslationSignatureVisitor;
 import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import org.objectweb.asm.signature.SignatureReader;
-import org.objectweb.asm.signature.SignatureVisitor;
-import org.objectweb.asm.signature.SignatureWriter;
-
-import java.util.function.Function;
-import java.util.regex.Pattern;
 
 public class Signature implements Translatable {
 	private static final Pattern OBJECT_PATTERN = Pattern.compile(".*:Ljava/lang/Object;:.*");
@@ -92,7 +94,8 @@ public class Signature implements Translatable {
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
-		return remap(name -> translator.translate(new ClassEntry(name)).getFullName());
+	public TranslateResult<Signature> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		return TranslateResult.ungrouped(this.remap(name -> translator.translate(new ClassEntry(name)).getFullName()));
 	}
+
 }

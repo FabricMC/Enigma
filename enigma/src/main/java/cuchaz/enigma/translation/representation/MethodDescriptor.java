@@ -11,18 +11,20 @@
 
 package cuchaz.enigma.translation.representation;
 
-import com.google.common.collect.Lists;
-import cuchaz.enigma.translation.Translatable;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.EntryMap;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+
+import com.google.common.collect.Lists;
+
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.TranslateResult;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 public class MethodDescriptor implements Translatable {
 
@@ -118,12 +120,12 @@ public class MethodDescriptor implements Translatable {
 	}
 
 	@Override
-	public MethodDescriptor translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+	public TranslateResult<MethodDescriptor> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		List<TypeDescriptor> translatedArguments = new ArrayList<>(argumentDescs.size());
 		for (TypeDescriptor argument : argumentDescs) {
 			translatedArguments.add(translator.translate(argument));
 		}
-		return new MethodDescriptor(translatedArguments, translator.translate(returnDesc));
+		return TranslateResult.ungrouped(new MethodDescriptor(translatedArguments, translator.translate(returnDesc)));
 	}
 
 	public boolean canConflictWith(MethodDescriptor descriptor) {

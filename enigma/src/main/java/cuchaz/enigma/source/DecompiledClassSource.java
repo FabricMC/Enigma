@@ -9,6 +9,7 @@ import cuchaz.enigma.EnigmaServices;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.translation.LocalNameGenerator;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
@@ -48,12 +49,12 @@ public class DecompiledClassSource {
 		EntryReference<Entry<?>, Entry<?>> reference = obfuscatedIndex.getReference(token);
 
 		Entry<?> entry = reference.getNameableEntry();
-		Entry<?> translatedEntry = translator.translate(entry);
+		TranslateResult<Entry<?>> translatedEntry = translator.extendedTranslate(entry);
 
 		if (project.isRenamable(reference)) {
-			if (project.getMapper().hasDeobfMapping(entry)) {
-				highlightToken(movedToken, RenamableTokenType.DEOBFUSCATED);
-				return translatedEntry.getSourceRemapName();
+			if (!translatedEntry.isObfuscated()) {
+				highlightToken(movedToken, translatedEntry.getType());
+				return translatedEntry.getValue().getSourceRemapName();
 			} else {
 				Optional<String> proposedName = proposeName(project, entry);
 				if (proposedName.isPresent()) {
@@ -65,7 +66,7 @@ public class DecompiledClassSource {
 			}
 		}
 
-		String defaultName = generateDefaultName(translatedEntry);
+		String defaultName = generateDefaultName(translatedEntry.getValue());
 		if (defaultName != null) {
 			return defaultName;
 		}

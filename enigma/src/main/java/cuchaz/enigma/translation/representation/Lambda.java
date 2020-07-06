@@ -1,6 +1,10 @@
 package cuchaz.enigma.translation.representation;
 
+import java.util.Objects;
+
+import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -9,8 +13,6 @@ import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.translation.representation.entry.ParentedEntry;
-
-import java.util.Objects;
 
 public class Lambda implements Translatable {
 	private final String invokedName;
@@ -28,16 +30,19 @@ public class Lambda implements Translatable {
 	}
 
 	@Override
-	public Lambda translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+	public TranslateResult<Lambda> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		MethodEntry samMethod = new MethodEntry(getInterface(), invokedName, samMethodType);
 		EntryMapping samMethodMapping = resolveMapping(resolver, mappings, samMethod);
 
-		return new Lambda(
-			samMethodMapping != null ? samMethodMapping.getTargetName() : invokedName,
-			invokedType.translate(translator, resolver, mappings),
-			samMethodType.translate(translator, resolver, mappings),
-			implMethod.translate(translator, resolver, mappings),
-			instantiatedMethodType.translate(translator, resolver, mappings)
+		return TranslateResult.of(
+				samMethodMapping == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				new Lambda(
+						samMethodMapping != null ? samMethodMapping.getTargetName() : invokedName,
+						invokedType.extendedTranslate(translator, resolver, mappings).getValue(),
+						samMethodType.extendedTranslate(translator, resolver, mappings).getValue(),
+						implMethod.extendedTranslate(translator, resolver, mappings).getValue(),
+						instantiatedMethodType.extendedTranslate(translator, resolver, mappings).getValue()
+				)
 		);
 	}
 
@@ -81,10 +86,10 @@ public class Lambda implements Translatable {
 		if (o == null || getClass() != o.getClass()) return false;
 		Lambda lambda = (Lambda) o;
 		return Objects.equals(invokedName, lambda.invokedName) &&
-			Objects.equals(invokedType, lambda.invokedType) &&
-			Objects.equals(samMethodType, lambda.samMethodType) &&
-			Objects.equals(implMethod, lambda.implMethod) &&
-			Objects.equals(instantiatedMethodType, lambda.instantiatedMethodType);
+				Objects.equals(invokedType, lambda.invokedType) &&
+				Objects.equals(samMethodType, lambda.samMethodType) &&
+				Objects.equals(implMethod, lambda.implMethod) &&
+				Objects.equals(instantiatedMethodType, lambda.instantiatedMethodType);
 	}
 
 	@Override
@@ -95,11 +100,11 @@ public class Lambda implements Translatable {
 	@Override
 	public String toString() {
 		return "Lambda{" +
-			"invokedName='" + invokedName + '\'' +
-			", invokedType=" + invokedType +
-			", samMethodType=" + samMethodType +
-			", implMethod=" + implMethod +
-			", instantiatedMethodType=" + instantiatedMethodType +
-			'}';
+				"invokedName='" + invokedName + '\'' +
+				", invokedType=" + invokedType +
+				", samMethodType=" + samMethodType +
+				", implMethod=" + implMethod +
+				", instantiatedMethodType=" + instantiatedMethodType +
+				'}';
 	}
 }

@@ -4,7 +4,8 @@ public enum VoidTranslator implements Translator {
 	INSTANCE;
 
 	@Override
-	public <T extends Translatable> T translate(T translatable) {
-		return translatable;
+	public <T extends Translatable> TranslateResult<T> extendedTranslate(T translatable) {
+		return TranslateResult.obfuscated(translatable);
 	}
+
 }

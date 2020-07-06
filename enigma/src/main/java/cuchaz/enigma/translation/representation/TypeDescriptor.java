@@ -11,17 +11,19 @@
 
 package cuchaz.enigma.translation.representation;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import cuchaz.enigma.translation.Translatable;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.EntryResolver;
-import cuchaz.enigma.translation.mapping.EntryMap;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-
 import java.util.Map;
 import java.util.function.Function;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+
+import cuchaz.enigma.translation.Translatable;
+import cuchaz.enigma.translation.TranslateResult;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMap;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryResolver;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 public class TypeDescriptor implements Translatable {
 
@@ -228,8 +230,8 @@ public class TypeDescriptor implements Translatable {
 	}
 
 	@Override
-	public Translatable translate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
-		return remap(name -> translator.translate(new ClassEntry(name)).getFullName());
+	public TranslateResult<TypeDescriptor> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
+		return TranslateResult.ungrouped(this.remap(name -> translator.translate(new ClassEntry(name)).getFullName()));
 	}
 
 	public enum Primitive {

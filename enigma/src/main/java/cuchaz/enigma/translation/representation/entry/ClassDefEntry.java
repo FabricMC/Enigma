@@ -11,14 +11,18 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
+import java.util.Arrays;
+
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
+
+import cuchaz.enigma.source.RenamableTokenType;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.Signature;
-
-import javax.annotation.Nullable;
-import java.util.Arrays;
 
 public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;
@@ -71,14 +75,17 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	}
 
 	@Override
-	public ClassDefEntry translate(Translator translator, @Nullable EntryMapping mapping) {
+	public TranslateResult<ClassDefEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		AccessFlags translatedAccess = mapping != null ? mapping.getAccessModifier().transform(access) : access;
 		ClassEntry translatedSuper = translator.translate(superClass);
 		ClassEntry[] translatedInterfaces = Arrays.stream(interfaces).map(translator::translate).toArray(ClassEntry[]::new);
 		String docs = mapping != null ? mapping.getJavadoc() : null;
-		return new ClassDefEntry(parent, translatedName, translatedSignature, translatedAccess, translatedSuper, translatedInterfaces, docs);
+		return TranslateResult.of(
+				mapping == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				new ClassDefEntry(parent, translatedName, translatedSignature, translatedAccess, translatedSuper, translatedInterfaces, docs)
+		);
 	}
 
 	@Override

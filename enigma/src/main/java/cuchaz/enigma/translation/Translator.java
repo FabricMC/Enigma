@@ -11,17 +11,27 @@
 
 package cuchaz.enigma.translation;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 public interface Translator {
-	<T extends Translatable> T translate(T translatable);
+	@Nullable
+	<T extends Translatable> TranslateResult<T> extendedTranslate(@Nullable T translatable);
+
+	@Deprecated
+	@Nullable
+	default <T extends Translatable> T translate(@Nullable T translatable) {
+		TranslateResult<T> res = this.extendedTranslate(translatable);
+		return res == null ? null : res.getValue();
+	}
 
 	default <T extends Translatable> Collection<T> translate(Collection<T> translatable) {
 		return translatable.stream()

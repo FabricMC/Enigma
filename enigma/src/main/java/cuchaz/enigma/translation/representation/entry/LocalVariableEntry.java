@@ -1,11 +1,15 @@
 package cuchaz.enigma.translation.representation.entry;
 
-import com.google.common.base.Preconditions;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
-import java.util.Objects;
+
+import com.google.common.base.Preconditions;
+
+import cuchaz.enigma.source.RenamableTokenType;
+import cuchaz.enigma.translation.TranslateResult;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMapping;
 
 /**
  * TypeDescriptor...
@@ -46,10 +50,13 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	}
 
 	@Override
-	public LocalVariableEntry translate(Translator translator, @Nullable EntryMapping mapping) {
+	protected TranslateResult<LocalVariableEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
 		String javadoc = mapping != null ? mapping.getJavadoc() : null;
-		return new LocalVariableEntry(parent, index, translatedName, parameter, javadoc);
+		return TranslateResult.of(
+				mapping == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				new LocalVariableEntry(parent, index, translatedName, parameter, javadoc)
+		);
 	}
 
 	@Override
