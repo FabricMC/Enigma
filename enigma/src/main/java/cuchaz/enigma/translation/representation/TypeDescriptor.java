@@ -34,7 +34,7 @@ public class TypeDescriptor implements Translatable {
 
 		// don't deal with generics
 		// this is just for raw jvm types
-		if (desc.charAt(0) == 'T' || desc.indexOf('<') >= 0 || desc.indexOf('>') >= 0) {
+		if ((desc.charAt(0) == 'T' && readClass(desc) != null) || desc.indexOf('<') >= 0 || desc.indexOf('>') >= 0) {
 			throw new IllegalArgumentException("don't use with generic types or templates: " + desc);
 		}
 
