@@ -28,6 +28,8 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
