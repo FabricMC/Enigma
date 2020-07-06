@@ -11,14 +11,16 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
@@ -28,6 +30,7 @@ import static org.hamcrest.Matchers.*;
 
 public class TestJarIndexConstructorReferences {
 
+	public static final Path JAR = Paths.get("build/test-obf/constructors.jar");
 	private JarIndex index;
 
 	private ClassEntry baseClass = newClass("a");
@@ -37,8 +40,9 @@ public class TestJarIndexConstructorReferences {
 	private ClassEntry callerClass = newClass("b");
 
 	public TestJarIndexConstructorReferences() throws Exception {
-		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/constructors.jar"));
-		index = classCache.index(ProgressListener.none());
+		JarClassProvider jcp = new JarClassProvider(JAR);
+		index = JarIndex.empty();
+		index.indexJar(jcp.getClassNames(), new CachingClassProvider(jcp), ProgressListener.none());
 	}
 
 	@Test

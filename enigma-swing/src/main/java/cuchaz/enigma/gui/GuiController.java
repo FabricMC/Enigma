@@ -34,6 +34,7 @@ import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.service.ObfuscationTestService;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
 import cuchaz.enigma.gui.config.Config;
@@ -95,7 +96,7 @@ public class GuiController implements ClientPacketHandler {
 		this.gui.onStartOpenJar();
 
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
-			project = enigma.openJar(jarPath, progress);
+			project = enigma.openJar(jarPath, new ClasspathClassProvider(), progress);
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
 			chp = new ClassHandleProvider(project, Config.getInstance().decompiler.service);
 			gui.onFinishOpenJar(jarPath.getFileName().toString());

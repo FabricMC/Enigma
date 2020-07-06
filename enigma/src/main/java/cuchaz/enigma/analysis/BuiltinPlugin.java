@@ -12,7 +12,6 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.utils.Pair;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -51,7 +50,7 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 		final Map<Entry<?>, String> names = new HashMap<>();
 		final EnumFieldNameFindingVisitor visitor = new EnumFieldNameFindingVisitor(names);
 
-		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, ctx1 -> (classCache, jarIndex) -> classCache.visit(() -> visitor, ClassReader.SKIP_FRAMES));
+		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, ctx1 -> JarIndexerService.fromVisitor(visitor));
 		ctx.registerService("enigma:enum_name_proposer", NameProposalService.TYPE, ctx1 -> (obfEntry, remapper) -> Optional.ofNullable(names.get(obfEntry)));
 	}
 

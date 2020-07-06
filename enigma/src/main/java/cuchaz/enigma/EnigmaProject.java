@@ -2,16 +2,20 @@ package cuchaz.enigma;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
-import cuchaz.enigma.source.*;
+import cuchaz.enigma.classprovider.ClassProvider;
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.DecompilerService;
+import cuchaz.enigma.source.SourceSettings;
 import cuchaz.enigma.translation.ProposingTranslator;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.mapping.MappingsChecker;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -19,11 +23,11 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
-
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -37,16 +41,16 @@ import java.util.stream.Collectors;
 public class EnigmaProject {
 	private final Enigma enigma;
 
-	private final ClassCache classCache;
+	private final ClassProvider classProvider;
 	private final JarIndex jarIndex;
 	private final byte[] jarChecksum;
 
 	private EntryRemapper mapper;
 
-	public EnigmaProject(Enigma enigma, ClassCache classCache, JarIndex jarIndex, byte[] jarChecksum) {
+	public EnigmaProject(Enigma enigma, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
 		Preconditions.checkArgument(jarChecksum.length == 20);
 		this.enigma = enigma;
-		this.classCache = classCache;
+		this.classProvider = classProvider;
 		this.jarIndex = jarIndex;
 		this.jarChecksum = jarChecksum;
 
@@ -65,8 +69,8 @@ public class EnigmaProject {
 		return enigma;
 	}
 
-	public ClassCache getClassCache() {
-		return classCache;
+	public ClassProvider getClassProvider() {
+		return classProvider;
 	}
 
 	public JarIndex getJarIndex() {
@@ -101,20 +105,6 @@ public class EnigmaProject {
 		}
 
 		return droppedMappings.keySet();
-	}
-
-	public Decompiler createDecompiler(DecompilerService decompilerService) {
-		return decompilerService.create(name -> {
-			ClassNode node = this.getClassCache().getClassNode(name);
-
-			if (node == null) {
-				return null;
-			}
-
-			ClassNode fixedNode = new ClassNode();
-			node.accept(new SourceFixVisitor(Enigma.ASM_VERSION, fixedNode, getJarIndex()));
-			return fixedNode;
-		}, new SourceSettings(true, true));
 	}
 
 	public boolean isRenamable(Entry<?> obfEntry) {
@@ -171,7 +161,7 @@ public class EnigmaProject {
 					ClassEntry translatedEntry = deobfuscator.translate(entry);
 					progress.step(count.getAndIncrement(), translatedEntry.toString());
 
-					ClassNode node = classCache.getClassNode(entry.getFullName());
+					ClassNode node = classProvider.get(entry.getFullName());
 					if (node != null) {
 						ClassNode translatedNode = new ClassNode();
 						node.accept(new TranslationClassVisitor(deobfuscator, Enigma.ASM_VERSION, new SourceFixVisitor(Enigma.ASM_VERSION, translatedNode, jarIndex)));

@@ -11,14 +11,16 @@
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.ClassCache;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
@@ -35,13 +37,16 @@ public class TestInnerClasses {
 	private static final ClassEntry ClassTreeLevel1 = newClass("f$a");
 	private static final ClassEntry ClassTreeLevel2 = newClass("f$a$a");
 	private static final ClassEntry ClassTreeLevel3 = newClass("f$a$a$a");
+	public static final Path JAR = Paths.get("build/test-obf/innerClasses.jar");
 	private final JarIndex index;
 	private final Decompiler decompiler;
 
 	public TestInnerClasses() throws Exception {
-		ClassCache classCache = ClassCache.of(Paths.get("build/test-obf/innerClasses.jar"));
-		index = classCache.index(ProgressListener.none());
-		decompiler = Decompilers.PROCYON.create(classCache, new SourceSettings(false, false));
+		JarClassProvider jcp = new JarClassProvider(JAR);
+		CachingClassProvider classProvider = new CachingClassProvider(jcp);
+		index = JarIndex.empty();
+		index.indexJar(jcp.getClassNames(), classProvider, ProgressListener.none());
+		decompiler = Decompilers.PROCYON.create(classProvider, new SourceSettings(false, false));
 	}
 
 	@Test
