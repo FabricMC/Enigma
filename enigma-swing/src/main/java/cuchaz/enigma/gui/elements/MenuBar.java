@@ -40,6 +40,8 @@ public class MenuBar {
 	private final JMenu saveMappingsAsMenu = new JMenu(I18n.translate("menu.file.mappings.save_as"));
 	private final JMenuItem closeMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.close"));
 	private final JMenuItem dropMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.drop"));
+	private final JMenuItem reloadMappingsItem = new JMenuItem(I18n.translate("menu.file.reload_mappings"));
+	private final JMenuItem reloadAllItem = new JMenuItem(I18n.translate("menu.file.reload_all"));
 	private final JMenuItem exportSourceItem = new JMenuItem(I18n.translate("menu.file.export.source"));
 	private final JMenuItem exportJarItem = new JMenuItem(I18n.translate("menu.file.export.jar"));
 	private final JMenuItem statsItem = new JMenuItem(I18n.translate("menu.file.stats"));
@@ -83,6 +85,9 @@ public class MenuBar {
 		this.fileMenu.add(this.closeMappingsItem);
 		this.fileMenu.add(this.dropMappingsItem);
 		this.fileMenu.addSeparator();
+		this.fileMenu.add(this.reloadMappingsItem);
+		this.fileMenu.add(this.reloadAllItem);
+		this.fileMenu.addSeparator();
 		this.fileMenu.add(this.exportSourceItem);
 		this.fileMenu.add(this.exportJarItem);
 		this.fileMenu.addSeparator();
@@ -117,6 +122,8 @@ public class MenuBar {
 		this.saveMappingsItem.addActionListener(_e -> this.onSaveMappingsClicked());
 		this.closeMappingsItem.addActionListener(_e -> this.onCloseMappingsClicked());
 		this.dropMappingsItem.addActionListener(_e -> this.gui.getController().dropMappings());
+		this.reloadMappingsItem.addActionListener(_e -> this.onReloadMappingsClicked());
+		this.reloadAllItem.addActionListener(_e -> this.onReloadAllClicked());
 		this.exportSourceItem.addActionListener(_e -> this.onExportSourceClicked());
 		this.exportJarItem.addActionListener(_e -> this.onExportJarClicked());
 		this.statsItem.addActionListener(_e -> StatsDialog.show(this.gui));
@@ -143,6 +150,8 @@ public class MenuBar {
 		this.saveMappingsItem.setEnabled(jarOpen && this.gui.enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
 		this.saveMappingsAsMenu.setEnabled(jarOpen);
 		this.closeMappingsItem.setEnabled(jarOpen);
+		this.reloadMappingsItem.setEnabled(jarOpen);
+		this.reloadAllItem.setEnabled(jarOpen);
 		this.exportSourceItem.setEnabled(jarOpen);
 		this.exportJarItem.setEnabled(jarOpen);
 		this.statsItem.setEnabled(jarOpen);
@@ -169,19 +178,31 @@ public class MenuBar {
 		this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
 	}
 
-	private void onCloseMappingsClicked() {
+	private void openMappingsDiscardPrompt(Runnable then) {
 		if (this.gui.getController().isDirty()) {
 			this.gui.showDiscardDiag((response -> {
 				if (response == JOptionPane.YES_OPTION) {
 					this.gui.saveMapping();
-					this.gui.getController().closeMappings();
+					then.run();
 				} else if (response == JOptionPane.NO_OPTION)
-					this.gui.getController().closeMappings();
+					then.run();
 				return null;
 			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
 		} else {
-			this.gui.getController().closeMappings();
+			then.run();
 		}
+	}
+
+	private void onCloseMappingsClicked() {
+		openMappingsDiscardPrompt(() -> this.gui.getController().closeMappings());
+	}
+
+	private void onReloadMappingsClicked() {
+		openMappingsDiscardPrompt(() -> this.gui.getController().reloadMappings());
+	}
+
+	private void onReloadAllClicked() {
+		openMappingsDiscardPrompt(() -> this.gui.getController().reloadAll());
 	}
 
 	private void onExportSourceClicked() {

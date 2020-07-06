@@ -393,7 +393,6 @@ public class Gui {
 	}
 
 	public void onCloseJar() {
-
 		// update gui
 		this.frame.setTitle(Enigma.NAME);
 		setObfClasses(null);
