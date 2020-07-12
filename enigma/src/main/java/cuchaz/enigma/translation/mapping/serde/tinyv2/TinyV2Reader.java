@@ -71,13 +71,7 @@ public final class TinyV2Reader implements MappingsReader {
 				for (int i = INDENT_CLEAR_START[indent]; i < STATE_SIZE; i++) {
 					state.clear(i);
 					if (holds[i] != null) {
-						RawEntryMapping mapping = holds[i].getMapping();
-						if (mapping != null) {
-							EntryMapping baked = mapping.bake();
-							if (baked != null) {
-								mappings.insert(holds[i].getEntry(), baked);
-							}
-						}
+						bakeHeld(mappings, holds[i]);
 						holds[i] = null;
 					}
 				}
@@ -187,7 +181,24 @@ public final class TinyV2Reader implements MappingsReader {
 			}
 		}
 
+		//bake any remainders
+		for (MappingPair<? extends Entry<?>, RawEntryMapping> hold : holds) {
+			if (hold != null) {
+				bakeHeld(mappings, hold);
+			}
+		}
+
 		return mappings;
+	}
+
+	private static void bakeHeld(EntryTree<EntryMapping> mappings, MappingPair<? extends Entry<?>, RawEntryMapping> hold2) {
+		RawEntryMapping mapping = hold2.getMapping();
+		if (mapping != null) {
+			EntryMapping baked = mapping.bake();
+			if (baked != null) {
+				mappings.insert(hold2.getEntry(), baked);
+			}
+		}
 	}
 
 	private void unsupportKey(String[] parts) {
