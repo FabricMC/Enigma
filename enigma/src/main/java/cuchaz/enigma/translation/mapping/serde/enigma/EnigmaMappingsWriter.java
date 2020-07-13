@@ -55,8 +55,8 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> classes = mappings.getRootNodes()
-					.filter(entry -> entry instanceof ClassEntry)
-					.map(entry -> (ClassEntry) entry)
+					.filter(entry -> entry.getEntry() instanceof ClassEntry)
+					.map(entry -> (ClassEntry) entry.getEntry())
 					.collect(Collectors.toList());
 
 			progress.init(classes.size(), I18n.translate("progress.mappings.enigma_file.writing"));
@@ -148,7 +148,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		private void deleteDeadPackages(Path root, Path packagePath) throws IOException {
 			for (int i = packagePath.getNameCount() - 1; i >= 0; i--) {
 				Path subPath = packagePath.subpath(0, i + 1);
-				Path packagePart = root.resolve(subPath);
+				Path packagePart = root.resolve(subPath.toString());
 				if (isEmpty(packagePart)) {
 					Files.deleteIfExists(packagePart);
 				}
