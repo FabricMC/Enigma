@@ -52,6 +52,10 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
         configuration.put("RightMarginColumn", "999"); //No need to have a right margin, if someone wants it add a config
 
         configuration.put("Action.quick-find", "cuchaz.enigma.gui.QuickFindAction, menu F");
+
+        if (Config.getInstance().editorFont != null) {
+            configuration.put("DefaultFont", Config.getInstance().editorFont);
+        }
     }
 
     /**

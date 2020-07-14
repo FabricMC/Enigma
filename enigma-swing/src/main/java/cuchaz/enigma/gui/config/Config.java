@@ -166,6 +166,8 @@ public class Config {
 	public AlphaColorEntry deobfuscatedColor;
 	public AlphaColorEntry deobfuscatedColorOutline;
 
+	public String editorFont;
+
 	public Integer editorBackground;
 	public Integer highlightColor;
 	public Integer caretColor;
