@@ -11,10 +11,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.Nullable;
 
+import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
-
-import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.events.ClassHandleListener.InvalidationType;
 import cuchaz.enigma.source.*;
@@ -277,8 +276,8 @@ public final class ClassHandleProvider {
 				if (res == null || mappedVersion.get() != v) return;
 				res = res.andThen(source -> {
 					try {
-						source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
-						return Result.ok(source);
+						DecompiledClassSource remappedSource = source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
+						return Result.ok(remappedSource);
 					} catch (Throwable e) {
 						return Result.err(ClassHandleError.remap(e));
 					}

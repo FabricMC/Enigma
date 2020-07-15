@@ -2,12 +2,12 @@ package cuchaz.enigma.gui.panels;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -68,6 +68,7 @@ public class EditorPanel {
 	private final Gui gui;
 
 	private EntryReference<Entry<?>, Entry<?>> cursorReference;
+	private EntryReference<Entry<?>, Entry<?>> nextReference;
 	private boolean mouseIsPressed = false;
 	private boolean shouldNavigateOnClick;
 
@@ -331,13 +332,14 @@ public class EditorPanel {
 			} else {
 				this.displayError(res.unwrapErr());
 			}
+			this.nextReference = null;
 		});
 	}
 
 	public void displayError(ClassHandleError t) {
 		this.setDisplayMode(DisplayMode.ERRORED);
 		String str;
-		switch(t.type) {
+		switch (t.type) {
 			case DECOMPILE:
 				str = "editor.decompile_error";
 				break;
@@ -424,21 +426,13 @@ public class EditorPanel {
 	}
 
 	public void onCaretMove(int pos, boolean fromClick) {
+		if (this.settingSource) return;
 		if (this.controller.project == null) return;
 
 		EntryRemapper mapper = this.controller.project.getMapper();
 		Token token = getToken(pos);
 
-		if (this.settingSource) {
-			EntryReference<Entry<?>, Entry<?>> ref = getCursorReference();
-			EntryReference<Entry<?>, Entry<?>> refAtCursor = getReference(token);
-			if (this.editor.getDocument().getLength() != 0 && ref != null && !ref.equals(refAtCursor)) {
-				showReference0(ref);
-			}
-			return;
-		} else {
-			setCursorReference(getReference(token));
-		}
+		setCursorReference(getReference(token));
 
 		Entry<?> referenceEntry = this.cursorReference != null ? this.cursorReference.entry : null;
 
@@ -504,14 +498,70 @@ public class EditorPanel {
 		if (source == null) return;
 		try {
 			this.settingSource = true;
+
+			int newCaretPos = 0;
+			if (this.source != null && this.source.getEntry().equals(source.getEntry())) {
+				// calculate the length of all tokens combined before the
+				// cursor, with both the current source in the editor and the
+				// new source
+				int caretPos = this.editor.getCaretPosition();
+				List<Token> tokens = this.source.getHighlightedTokens().values().stream()
+						.flatMap(Collection::stream)
+						.sorted(Comparator.comparing(t -> t.start))
+						.collect(Collectors.toList());
+				List<Token> newTokens = source.getHighlightedTokens().values().stream()
+						.flatMap(Collection::stream)
+						.sorted(Comparator.comparing(t -> t.start))
+						.collect(Collectors.toList());
+				if (tokens.size() == newTokens.size()) {
+					newCaretPos = caretPos;
+					for (int i = 0; i < tokens.size(); i++) {
+						Token token = tokens.get(i);
+						Token newToken = newTokens.get(i);
+
+						if (caretPos < token.start) break;
+
+						// if we're inside the token and the text changed,
+						// snap the cursor to the beginning
+						if (!token.text.equals(newToken.text) && caretPos <= token.end) {
+							newCaretPos = newToken.start;
+							break;
+						}
+
+						newCaretPos += newToken.length() - token.length();
+					}
+				} else {
+					// if the token amount mismatches, the user probably
+					// switched decompilers
+
+					// check if there's a selected reference we can navigate to,
+					// but only if there's none already queued up for being selected
+					if (this.getCursorReference() != null && this.nextReference == null) {
+						this.nextReference = this.getCursorReference();
+					}
+
+					// otherwise fall back to just using the same average
+					// position in the file
+					float scale = (float) source.toString().length() / this.source.toString().length();
+					newCaretPos = (int) (caretPos * scale);
+				}
+			}
+
 			this.source = source;
 			this.editor.getHighlighter().removeAllHighlights();
 			this.editor.setText(source.toString());
+			if (this.source != null) {
+				this.editor.setCaretPosition(newCaretPos);
+			}
 			setHighlightedTokens(source.getHighlightedTokens());
+			setCursorReference(getReference(getToken(this.editor.getCaretPosition())));
 		} finally {
 			this.settingSource = false;
 		}
-		showReference0(getCursorReference());
+
+		if (this.nextReference != null) {
+			this.showReference0(this.nextReference);
+		}
 	}
 
 	public void setHighlightedTokens(Map<RenamableTokenType, Collection<Token>> tokens) {
@@ -546,8 +596,11 @@ public class EditorPanel {
 	}
 
 	public void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		setCursorReference(reference);
-		showReference0(reference);
+		if (this.mode == DisplayMode.SUCCESS) {
+			showReference0(reference);
+		} else if (this.mode != DisplayMode.ERRORED) {
+			this.nextReference = reference;
+		}
 	}
 
 	/**

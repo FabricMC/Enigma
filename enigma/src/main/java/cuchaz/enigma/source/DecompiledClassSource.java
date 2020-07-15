@@ -22,30 +22,35 @@ public class DecompiledClassSource {
 	private final ClassEntry classEntry;
 
 	private final SourceIndex obfuscatedIndex;
-	private SourceIndex remappedIndex;
+	private final SourceIndex remappedIndex;
 
-	private final Map<RenamableTokenType, Collection<Token>> highlightedTokens = new EnumMap<>(RenamableTokenType.class);
+	private final Map<RenamableTokenType, Collection<Token>> highlightedTokens;
+
+	private DecompiledClassSource(ClassEntry classEntry, SourceIndex obfuscatedIndex, SourceIndex remappedIndex, Map<RenamableTokenType, Collection<Token>> highlightedTokens) {
+		this.classEntry = classEntry;
+		this.obfuscatedIndex = obfuscatedIndex;
+		this.remappedIndex = remappedIndex;
+		this.highlightedTokens = highlightedTokens;
+	}
 
 	public DecompiledClassSource(ClassEntry classEntry, SourceIndex index) {
-		this.classEntry = classEntry;
-		this.obfuscatedIndex = index;
-		this.remappedIndex = index;
+		this(classEntry, index, index, Collections.emptyMap());
 	}
 
 	public static DecompiledClassSource text(ClassEntry classEntry, String text) {
 		return new DecompiledClassSource(classEntry, new SourceIndex(text));
 	}
 
-	public void remapSource(EnigmaProject project, Translator translator) {
-		highlightedTokens.clear();
-
+	public DecompiledClassSource remapSource(EnigmaProject project, Translator translator) {
 		SourceRemapper remapper = new SourceRemapper(obfuscatedIndex.getSource(), obfuscatedIndex.referenceTokens());
 
-		SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(project, token, movedToken, translator));
-		remappedIndex = obfuscatedIndex.remapTo(remapResult);
+		Map<RenamableTokenType, Collection<Token>> highlightedTokens = new EnumMap<>(RenamableTokenType.class);
+		SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(highlightedTokens, project, token, movedToken, translator));
+		SourceIndex remappedIndex = obfuscatedIndex.remapTo(remapResult);
+		return new DecompiledClassSource(this.classEntry, this.obfuscatedIndex, remappedIndex, highlightedTokens);
 	}
 
-	private String remapToken(EnigmaProject project, Token token, Token movedToken, Translator translator) {
+	private String remapToken(Map<RenamableTokenType, Collection<Token>> target, EnigmaProject project, Token token, Token movedToken, Translator translator) {
 		EntryReference<Entry<?>, Entry<?>> reference = obfuscatedIndex.getReference(token);
 
 		Entry<?> entry = reference.getNameableEntry();
@@ -53,16 +58,16 @@ public class DecompiledClassSource {
 
 		if (project.isRenamable(reference)) {
 			if (!translatedEntry.isObfuscated()) {
-				highlightToken(movedToken, translatedEntry.getType());
+				highlightToken(target, movedToken, translatedEntry.getType());
 				return translatedEntry.getValue().getSourceRemapName();
 			} else {
 				Optional<String> proposedName = proposeName(project, entry);
 				if (proposedName.isPresent()) {
-					highlightToken(movedToken, RenamableTokenType.PROPOSED);
+					highlightToken(target, movedToken, RenamableTokenType.PROPOSED);
 					return proposedName.get();
 				}
 
-				highlightToken(movedToken, RenamableTokenType.OBFUSCATED);
+				highlightToken(target, movedToken, RenamableTokenType.OBFUSCATED);
 			}
 		}
 
@@ -72,6 +77,10 @@ public class DecompiledClassSource {
 		}
 
 		return null;
+	}
+
+	private static void highlightToken(Map<RenamableTokenType, Collection<Token>> highlightedTokens, Token token, RenamableTokenType highlightType) {
+		highlightedTokens.computeIfAbsent(highlightType, t -> new ArrayList<>()).add(token);
 	}
 
 	private Optional<String> proposeName(EnigmaProject project, Entry<?> entry) {
@@ -115,10 +124,6 @@ public class DecompiledClassSource {
 
 	public Map<RenamableTokenType, Collection<Token>> getHighlightedTokens() {
 		return highlightedTokens;
-	}
-
-	private void highlightToken(Token token, RenamableTokenType highlightType) {
-		highlightedTokens.computeIfAbsent(highlightType, t -> new ArrayList<>()).add(token);
 	}
 
 	public int getObfuscatedOffset(int deobfOffset) {
