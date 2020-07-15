@@ -561,6 +561,7 @@ public class EditorPanel {
 
 		if (this.nextReference != null) {
 			this.showReference0(this.nextReference);
+			this.nextReference = null;
 		}
 	}
 
