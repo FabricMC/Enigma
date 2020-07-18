@@ -73,7 +73,7 @@ public final class IdentifierValidation {
 
 	private static boolean checkForReservedName(ValidationContext vc, String name) {
 		if (isReservedMethodName(name)) {
-			vc.raise(Message.RESERVED_IDENTIFIER);
+			vc.raise(Message.RESERVED_IDENTIFIER, name);
 			return true;
 		}
 		return false;
