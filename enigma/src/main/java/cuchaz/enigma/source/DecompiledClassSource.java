@@ -24,9 +24,9 @@ public class DecompiledClassSource {
 	private final SourceIndex obfuscatedIndex;
 	private final SourceIndex remappedIndex;
 
-	private final Map<RenamableTokenType, Collection<Token>> highlightedTokens;
+	private final TokenStore highlightedTokens;
 
-	private DecompiledClassSource(ClassEntry classEntry, SourceIndex obfuscatedIndex, SourceIndex remappedIndex, Map<RenamableTokenType, Collection<Token>> highlightedTokens) {
+	private DecompiledClassSource(ClassEntry classEntry, SourceIndex obfuscatedIndex, SourceIndex remappedIndex, TokenStore highlightedTokens) {
 		this.classEntry = classEntry;
 		this.obfuscatedIndex = obfuscatedIndex;
 		this.remappedIndex = remappedIndex;
@@ -34,7 +34,7 @@ public class DecompiledClassSource {
 	}
 
 	public DecompiledClassSource(ClassEntry classEntry, SourceIndex index) {
-		this(classEntry, index, index, Collections.emptyMap());
+		this(classEntry, index, index, TokenStore.empty());
 	}
 
 	public static DecompiledClassSource text(ClassEntry classEntry, String text) {
@@ -44,13 +44,13 @@ public class DecompiledClassSource {
 	public DecompiledClassSource remapSource(EnigmaProject project, Translator translator) {
 		SourceRemapper remapper = new SourceRemapper(obfuscatedIndex.getSource(), obfuscatedIndex.referenceTokens());
 
-		Map<RenamableTokenType, Collection<Token>> highlightedTokens = new EnumMap<>(RenamableTokenType.class);
-		SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(highlightedTokens, project, token, movedToken, translator));
+		TokenStore tokenStore = TokenStore.create(this.obfuscatedIndex);
+		SourceRemapper.Result remapResult = remapper.remap((token, movedToken) -> remapToken(tokenStore, project, token, movedToken, translator));
 		SourceIndex remappedIndex = obfuscatedIndex.remapTo(remapResult);
-		return new DecompiledClassSource(this.classEntry, this.obfuscatedIndex, remappedIndex, highlightedTokens);
+		return new DecompiledClassSource(this.classEntry, this.obfuscatedIndex, remappedIndex, tokenStore);
 	}
 
-	private String remapToken(Map<RenamableTokenType, Collection<Token>> target, EnigmaProject project, Token token, Token movedToken, Translator translator) {
+	private String remapToken(TokenStore target, EnigmaProject project, Token token, Token movedToken, Translator translator) {
 		EntryReference<Entry<?>, Entry<?>> reference = obfuscatedIndex.getReference(token);
 
 		Entry<?> entry = reference.getNameableEntry();
@@ -58,16 +58,16 @@ public class DecompiledClassSource {
 
 		if (project.isRenamable(reference)) {
 			if (!translatedEntry.isObfuscated()) {
-				highlightToken(target, movedToken, translatedEntry.getType());
+				target.add(translatedEntry.getType(), movedToken);
 				return translatedEntry.getValue().getSourceRemapName();
 			} else {
 				Optional<String> proposedName = proposeName(project, entry);
 				if (proposedName.isPresent()) {
-					highlightToken(target, movedToken, RenamableTokenType.PROPOSED);
+					target.add(RenamableTokenType.PROPOSED, movedToken);
 					return proposedName.get();
 				}
 
-				highlightToken(target, movedToken, RenamableTokenType.OBFUSCATED);
+				target.add(RenamableTokenType.OBFUSCATED, movedToken);
 			}
 		}
 
@@ -77,10 +77,6 @@ public class DecompiledClassSource {
 		}
 
 		return null;
-	}
-
-	private static void highlightToken(Map<RenamableTokenType, Collection<Token>> highlightedTokens, Token token, RenamableTokenType highlightType) {
-		highlightedTokens.computeIfAbsent(highlightType, t -> new ArrayList<>()).add(token);
 	}
 
 	private Optional<String> proposeName(EnigmaProject project, Entry<?> entry) {
@@ -122,8 +118,12 @@ public class DecompiledClassSource {
 		return remappedIndex;
 	}
 
-	public Map<RenamableTokenType, Collection<Token>> getHighlightedTokens() {
-		return highlightedTokens;
+	public TokenStore getTokenStore() {
+		return this.highlightedTokens;
+	}
+
+	public Map<RenamableTokenType, ? extends Collection<Token>> getHighlightedTokens() {
+		return this.highlightedTokens.getByType();
 	}
 
 	public int getObfuscatedOffset(int deobfOffset) {

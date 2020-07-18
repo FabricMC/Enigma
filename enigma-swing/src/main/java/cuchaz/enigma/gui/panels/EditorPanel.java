@@ -2,12 +2,12 @@ package cuchaz.enigma.gui.panels;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -501,38 +501,13 @@ public class EditorPanel {
 
 			int newCaretPos = 0;
 			if (this.source != null && this.source.getEntry().equals(source.getEntry())) {
-				// calculate the length of all tokens combined before the
-				// cursor, with both the current source in the editor and the
-				// new source
 				int caretPos = this.editor.getCaretPosition();
-				List<Token> tokens = this.source.getHighlightedTokens().values().stream()
-						.flatMap(Collection::stream)
-						.sorted(Comparator.comparing(t -> t.start))
-						.collect(Collectors.toList());
-				List<Token> newTokens = source.getHighlightedTokens().values().stream()
-						.flatMap(Collection::stream)
-						.sorted(Comparator.comparing(t -> t.start))
-						.collect(Collectors.toList());
-				if (tokens.size() == newTokens.size()) {
-					newCaretPos = caretPos;
-					for (int i = 0; i < tokens.size(); i++) {
-						Token token = tokens.get(i);
-						Token newToken = newTokens.get(i);
 
-						if (caretPos < token.start) break;
-
-						// if we're inside the token and the text changed,
-						// snap the cursor to the beginning
-						if (!token.text.equals(newToken.text) && caretPos <= token.end) {
-							newCaretPos = newToken.start;
-							break;
-						}
-
-						newCaretPos += newToken.length() - token.length();
-					}
+				if (this.source.getTokenStore().isCompatible(source.getTokenStore())) {
+					newCaretPos = this.source.getTokenStore().mapPosition(source.getTokenStore(), caretPos);
 				} else {
-					// if the token amount mismatches, the user probably
-					// switched decompilers
+					// if the class is the same but the token stores aren't
+					// compatible, then the user probably switched decompilers
 
 					// check if there's a selected reference we can navigate to,
 					// but only if there's none already queued up for being selected
@@ -565,7 +540,7 @@ public class EditorPanel {
 		}
 	}
 
-	public void setHighlightedTokens(Map<RenamableTokenType, Collection<Token>> tokens) {
+	public void setHighlightedTokens(Map<RenamableTokenType, ? extends Collection<Token>> tokens) {
 		// remove any old highlighters
 		this.editor.getHighlighter().removeAllHighlights();
 
