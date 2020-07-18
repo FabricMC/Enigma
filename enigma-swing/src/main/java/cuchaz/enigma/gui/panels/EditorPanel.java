@@ -31,6 +31,7 @@ import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
+import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.RenamableTokenType;
@@ -364,15 +365,9 @@ public class EditorPanel {
 				this.decompilingProgressBar.setIndeterminate(true);
 
 				this.ui.setLayout(new GridBagLayout());
-				GridBagConstraints c = new GridBagConstraints();
-				c.gridx = 0;
-				c.gridy = 0;
-				c.insets = ScaleUtil.getInsets(2, 2, 2, 2);
-				c.anchor = GridBagConstraints.SOUTH;
-				this.ui.add(this.decompilingLabel, c);
-				c.gridy = 1;
-				c.anchor = GridBagConstraints.NORTH;
-				this.ui.add(this.decompilingProgressBar, c);
+				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(ScaleUtil.scale(2));
+				this.ui.add(this.decompilingLabel, cb.pos(0, 0).anchor(GridBagConstraints.SOUTH).build());
+				this.ui.add(this.decompilingProgressBar, cb.pos(0, 1).anchor(GridBagConstraints.NORTH).build());
 				break;
 			}
 			case SUCCESS: {
@@ -382,26 +377,11 @@ public class EditorPanel {
 			}
 			case ERRORED: {
 				this.ui.setLayout(new GridBagLayout());
-				GridBagConstraints c = new GridBagConstraints();
-				c.insets = ScaleUtil.getInsets(2, 2, 2, 2);
-				c.gridx = 0;
-				c.gridy = 0;
-				c.weightx = 1.0;
-				c.anchor = GridBagConstraints.WEST;
-				this.ui.add(this.errorLabel, c);
-				c.gridy = 1;
-				c.fill = GridBagConstraints.HORIZONTAL;
-				this.ui.add(new JSeparator(JSeparator.HORIZONTAL), c);
-				c.gridy = 2;
-				c.fill = GridBagConstraints.BOTH;
-				c.weighty = 1.0;
-				this.ui.add(this.errorScrollPane, c);
-				c.gridy = 3;
-				c.fill = GridBagConstraints.NONE;
-				c.anchor = GridBagConstraints.EAST;
-				c.weightx = 0.0;
-				c.weighty = 0.0;
-				this.ui.add(this.retryButton, c);
+				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(ScaleUtil.scale(2)).weight(1.0, 0.0).anchor(GridBagConstraints.WEST);
+				this.ui.add(this.errorLabel, cb.pos(0, 0).build());
+				this.ui.add(new JSeparator(JSeparator.HORIZONTAL), cb.pos(0, 1).fill(GridBagConstraints.HORIZONTAL).build());
+				this.ui.add(this.errorScrollPane, cb.pos(0, 2).weight(1.0, 1.0).fill(GridBagConstraints.BOTH).build());
+				this.ui.add(this.retryButton, cb.pos(0, 3).weight(0.0, 0.0).anchor(GridBagConstraints.EAST).build());
 				break;
 			}
 		}

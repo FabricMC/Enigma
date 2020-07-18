@@ -8,6 +8,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Pair;
@@ -25,8 +26,6 @@ public abstract class AbstractDialog extends JDialog {
 		Container contentPane = getContentPane();
 		contentPane.setLayout(new BorderLayout());
 		Container inputContainer = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-
 		List<Pair<String, Component>> components = createComponents();
 
 		for (int i = 0; i < components.size(); i += 1) {
@@ -34,20 +33,10 @@ public abstract class AbstractDialog extends JDialog {
 			JLabel label = new JLabel(I18n.translate(entry.a));
 			Component component = entry.b;
 
-			c.gridy = i;
-			c.insets = ScaleUtil.getInsets(4, 4, 4, 4);
+			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(4);
 
-			c.gridx = 0;
-			c.weightx = 0.0;
-			c.anchor = GridBagConstraints.LINE_END;
-			c.fill = GridBagConstraints.NONE;
-			inputContainer.add(label, c);
-
-			c.gridx = 1;
-			c.weightx = 1.0;
-			c.anchor = GridBagConstraints.LINE_START;
-			c.fill = GridBagConstraints.HORIZONTAL;
-			inputContainer.add(component, c);
+			inputContainer.add(label, cb.pos(0, i).weightX(0.0).anchor(GridBagConstraints.LINE_END).fill(GridBagConstraints.NONE).build());
+			inputContainer.add(component, cb.pos(1, i).weightX(1.0).anchor(GridBagConstraints.LINE_END).fill(GridBagConstraints.HORIZONTAL).build());
 		}
 		contentPane.add(inputContainer, BorderLayout.CENTER);
 		Container buttonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, ScaleUtil.scale(4), ScaleUtil.scale(4)));

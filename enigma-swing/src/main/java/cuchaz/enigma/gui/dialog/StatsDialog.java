@@ -4,26 +4,16 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.stats.StatsResult;
+import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 
@@ -46,59 +36,37 @@ public class StatsDialog {
 		Container contentPane = dialog.getContentPane();
 		contentPane.setLayout(new GridBagLayout());
 
-		GridBagConstraints c = new GridBagConstraints();
-		c.insets = ScaleUtil.getInsets(4, 4, 4, 4);
-		c.gridy = 0;
+		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(4);
 
 		Map<StatsMember, JCheckBox> checkboxes = new HashMap<>();
 
+		int[] i = {0};
 		results.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
 			StatsMember m = e.getKey();
 			StatsResult result = e.getValue();
 
-			c.gridx = 0;
-			c.weightx = 1.0;
-			c.anchor = GridBagConstraints.WEST;
 			JCheckBox checkBox = new JCheckBox(I18n.translate("type." + m.name().toLowerCase(Locale.ROOT)));
 			checkboxes.put(m, checkBox);
-			contentPane.add(checkBox, c);
+			contentPane.add(checkBox, cb.pos(0, i[0]).weightX(1.0).anchor(GridBagConstraints.WEST).build());
 
-			c.gridx = 1;
-			c.weightx = 0.0;
-			c.anchor = GridBagConstraints.EAST;
-			contentPane.add(new JLabel(Integer.toString(result.getMapped())), c);
+			GridBagConstraintsBuilder labels = cb.anchor(GridBagConstraints.EAST);
 
-			c.gridx = 2;
-			contentPane.add(new JLabel("/"), c);
+			contentPane.add(new JLabel(Integer.toString(result.getMapped())), labels.pos(1, i[0]).build());
+			contentPane.add(new JLabel("/"), labels.pos(2, i[0]).build());
+			contentPane.add(new JLabel(Integer.toString(result.getTotal())), labels.pos(3, i[0]).build());
+			contentPane.add(new JLabel(String.format("%.2f%%", result.getPercentage())), labels.pos(4, i[0]).build());
 
-			c.gridx = 3;
-			contentPane.add(new JLabel(Integer.toString(result.getTotal())), c);
-
-			c.gridx = 4;
-			contentPane.add(new JLabel(String.format("%.2f%%", result.getPercentage())), c);
-
-			c.gridy += 1;
+			i[0]++;
 		});
 
-		c.gridx = 0;
-		c.gridwidth = 5;
-		c.weightx = 1.0;
-		c.anchor = GridBagConstraints.WEST;
+		GridBagConstraintsBuilder cb1 = cb.pos(0, 0).width(5).weightX(1.0).anchor(GridBagConstraints.WEST);
 
 		// show top-level package option
 		JLabel topLevelPackageOption = new JLabel(I18n.translate("menu.file.stats.top_level_package"));
-		contentPane.add(topLevelPackageOption, c);
+		contentPane.add(topLevelPackageOption, cb1.pos(0, results.size() + 1).build());
 
-		c.gridy += 1;
-		c.weightx = 1.0;
-		c.fill = GridBagConstraints.HORIZONTAL;
 		JTextField topLevelPackage = new JTextField();
-		contentPane.add(topLevelPackage, c);
-
-		c.gridy += 1;
-		c.weighty = 1.0;
-		c.fill = GridBagConstraints.NONE;
-		c.anchor = GridBagConstraints.SOUTHEAST;
+		contentPane.add(topLevelPackage, cb1.pos(0, results.size() + 2).fill(GridBagConstraints.HORIZONTAL).build());
 
 		// show generate button
 		JButton button = new JButton(I18n.translate("menu.file.stats.generate"));
@@ -108,7 +76,7 @@ public class StatsDialog {
 			generateStats(gui, checkboxes, topLevelPackage.getText());
 		});
 
-		contentPane.add(button, c);
+		contentPane.add(button, cb1.pos(0, results.size() + 3).weightY(1.0).anchor(GridBagConstraints.SOUTHEAST).build());
 
 		// add action listener to each checkbox
 		checkboxes.forEach((key, value) -> value.addActionListener(action -> {

@@ -4,7 +4,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.util.function.Consumer;
 
@@ -18,16 +17,13 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.elements.ConvertingTextField;
 import cuchaz.enigma.gui.events.ConvertingTextFieldListener;
+import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
@@ -177,26 +173,12 @@ public class IdentifierPanel {
 		private final Container c;
 		private final Entry<?> e;
 		private final EnigmaProject project;
-		private final GridBagConstraints col1;
-		private final GridBagConstraints col2;
+		private int row;
 
 		public TableHelper(Container c, Entry<?> e, EnigmaProject project) {
 			this.c = c;
 			this.e = e;
 			this.project = project;
-			this.col1 = new GridBagConstraints();
-			this.col2 = new GridBagConstraints();
-			Insets insets = ScaleUtil.getInsets(2, 2, 2, 2);
-			this.col1.gridx = 0;
-			this.col1.gridy = 0;
-			this.col1.insets = insets;
-			this.col1.anchor = GridBagConstraints.WEST;
-			this.col2.gridx = 1;
-			this.col2.gridy = 0;
-			this.col2.weightx = 1.0;
-			this.col2.fill = GridBagConstraints.HORIZONTAL;
-			this.col2.insets = insets;
-			this.col2.anchor = GridBagConstraints.WEST;
 		}
 
 		public void begin() {
@@ -205,11 +187,13 @@ public class IdentifierPanel {
 		}
 
 		public void addRow(Component c1, Component c2) {
-			c.add(c1, col1);
-			c.add(c2, col2);
+			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create()
+					.insets(ScaleUtil.scale(2))
+					.anchor(GridBagConstraints.WEST);
+			c.add(c1, cb.pos(0, this.row).build());
+			c.add(c2, cb.pos(1, this.row).weightX(1.0).fill(GridBagConstraints.HORIZONTAL).build());
 
-			col1.gridy += 1;
-			col2.gridy += 1;
+			this.row += 1;
 		}
 
 		public ConvertingTextField addCovertTextField(String c1, String c2) {
@@ -255,8 +239,7 @@ public class IdentifierPanel {
 
 		public void end() {
 			// Add an empty panel with y-weight=1 so that all the other elements get placed at the top edge
-			this.col1.weighty = 1.0;
-			c.add(new JPanel(), col1);
+			c.add(new JPanel(), GridBagConstraintsBuilder.create().pos(0, row).weight(0.0, 1.0).build());
 		}
 
 	}
