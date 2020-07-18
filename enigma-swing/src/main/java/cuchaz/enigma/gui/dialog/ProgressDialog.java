@@ -11,19 +11,22 @@
 
 package cuchaz.enigma.gui.dialog;
 
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.FlowLayout;
+import java.util.concurrent.CompletableFuture;
+
+import javax.swing.*;
+
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.gui.util.GuiUtil;
-import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.gui.util.ScaleUtil;
-
-import javax.swing.*;
-import java.awt.*;
-import java.util.concurrent.CompletableFuture;
+import cuchaz.enigma.utils.I18n;
 
 public class ProgressDialog implements ProgressListener, AutoCloseable {
 
-	private JFrame frame;
+	private JDialog dialog;
 	private JLabel labelTitle;
 	private JLabel labelText;
 	private JProgressBar progress;
@@ -31,8 +34,8 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 	public ProgressDialog(JFrame parent) {
 
 		// init frame
-		this.frame = new JFrame(String.format(I18n.translate("progress.operation"), Enigma.NAME));
-		final Container pane = this.frame.getContentPane();
+		this.dialog = new JDialog(parent, String.format(I18n.translate("progress.operation"), Enigma.NAME));
+		final Container pane = this.dialog.getContentPane();
 		FlowLayout layout = new FlowLayout();
 		layout.setAlignment(FlowLayout.LEFT);
 		pane.setLayout(layout);
@@ -53,11 +56,11 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 
 		// show the frame
 		pane.doLayout();
-		this.frame.setSize(ScaleUtil.getDimension(400, 120));
-		this.frame.setResizable(false);
-		this.frame.setLocationRelativeTo(parent);
-		this.frame.setVisible(true);
-		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		this.dialog.setSize(ScaleUtil.getDimension(400, 120));
+		this.dialog.setResizable(false);
+		this.dialog.setLocationRelativeTo(parent);
+		this.dialog.setVisible(true);
+		this.dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 	}
 
 	public static CompletableFuture<Void> runOffThread(final JFrame parent, final ProgressRunnable runnable) {
@@ -77,7 +80,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 
 	@Override
 	public void close() {
-		this.frame.dispose();
+		this.dialog.dispose();
 	}
 
 	@Override
@@ -99,8 +102,8 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 		}
 
 		// update the frame
-		this.frame.validate();
-		this.frame.repaint();
+		this.dialog.validate();
+		this.dialog.repaint();
 	}
 
 	public interface ProgressRunnable {
