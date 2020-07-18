@@ -2,7 +2,7 @@ package cuchaz.enigma.gui.util;
 
 import java.awt.GridBagConstraints;
 
-public class GridBagConstraintsBuilder {
+public final class GridBagConstraintsBuilder {
 
 	private final GridBagConstraints inner;
 
@@ -76,18 +76,34 @@ public class GridBagConstraintsBuilder {
 	}
 
 	public GridBagConstraintsBuilder insets(int all) {
-		return this.insets(all, all, all, all);
+		return this.insetsUnscaled(ScaleUtil.scale(all));
 	}
 
 	public GridBagConstraintsBuilder insets(int vertical, int horizontal) {
-		return this.insets(vertical, horizontal, vertical, horizontal);
+		return this.insetsUnscaled(ScaleUtil.scale(vertical), ScaleUtil.scale(horizontal));
 	}
 
 	public GridBagConstraintsBuilder insets(int top, int horizontal, int bottom) {
-		return this.insets(top, horizontal, bottom, horizontal);
+		return this.insetsUnscaled(ScaleUtil.scale(top), ScaleUtil.scale(horizontal), ScaleUtil.scale(bottom));
 	}
 
 	public GridBagConstraintsBuilder insets(int top, int right, int bottom, int left) {
+		return this.insetsUnscaled(ScaleUtil.scale(top), ScaleUtil.scale(right), ScaleUtil.scale(bottom), ScaleUtil.scale(left));
+	}
+
+	public GridBagConstraintsBuilder insetsUnscaled(int all) {
+		return this.insetsUnscaled(all, all, all, all);
+	}
+
+	public GridBagConstraintsBuilder insetsUnscaled(int vertical, int horizontal) {
+		return this.insetsUnscaled(vertical, horizontal, vertical, horizontal);
+	}
+
+	public GridBagConstraintsBuilder insetsUnscaled(int top, int horizontal, int bottom) {
+		return this.insetsUnscaled(top, horizontal, bottom, horizontal);
+	}
+
+	public GridBagConstraintsBuilder insetsUnscaled(int top, int right, int bottom, int left) {
 		GridBagConstraintsBuilder copy = this.copy();
 		copy.inner.insets.set(top, left, bottom, right);
 		return copy;

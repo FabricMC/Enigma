@@ -188,7 +188,7 @@ public class IdentifierPanel {
 
 		public void addRow(Component c1, Component c2) {
 			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create()
-					.insets(ScaleUtil.scale(2))
+					.insets(2)
 					.anchor(GridBagConstraints.WEST);
 			c.add(c1, cb.pos(0, this.row).build());
 			c.add(c2, cb.pos(1, this.row).weightX(1.0).fill(GridBagConstraints.HORIZONTAL).build());

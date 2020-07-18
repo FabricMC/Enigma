@@ -36,7 +36,7 @@ public class StatsDialog {
 		Container contentPane = dialog.getContentPane();
 		contentPane.setLayout(new GridBagLayout());
 
-		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(4);
+		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2);
 
 		Map<StatsMember, JCheckBox> checkboxes = new HashMap<>();
 

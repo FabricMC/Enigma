@@ -33,7 +33,7 @@ public abstract class AbstractDialog extends JDialog {
 			JLabel label = new JLabel(I18n.translate(entry.a));
 			Component component = entry.b;
 
-			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(4);
+			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2);
 
 			inputContainer.add(label, cb.pos(0, i).weightX(0.0).anchor(GridBagConstraints.LINE_END).fill(GridBagConstraints.NONE).build());
 			inputContainer.add(component, cb.pos(1, i).weightX(1.0).anchor(GridBagConstraints.LINE_END).fill(GridBagConstraints.HORIZONTAL).build());

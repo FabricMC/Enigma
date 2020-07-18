@@ -365,7 +365,7 @@ public class EditorPanel {
 				this.decompilingProgressBar.setIndeterminate(true);
 
 				this.ui.setLayout(new GridBagLayout());
-				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(ScaleUtil.scale(2));
+				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2);
 				this.ui.add(this.decompilingLabel, cb.pos(0, 0).anchor(GridBagConstraints.SOUTH).build());
 				this.ui.add(this.decompilingProgressBar, cb.pos(0, 1).anchor(GridBagConstraints.NORTH).build());
 				break;
@@ -377,7 +377,7 @@ public class EditorPanel {
 			}
 			case ERRORED: {
 				this.ui.setLayout(new GridBagLayout());
-				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(ScaleUtil.scale(2)).weight(1.0, 0.0).anchor(GridBagConstraints.WEST);
+				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2).weight(1.0, 0.0).anchor(GridBagConstraints.WEST);
 				this.ui.add(this.errorLabel, cb.pos(0, 0).build());
 				this.ui.add(new JSeparator(JSeparator.HORIZONTAL), cb.pos(0, 1).fill(GridBagConstraints.HORIZONTAL).build());
 				this.ui.add(this.errorScrollPane, cb.pos(0, 2).weight(1.0, 1.0).fill(GridBagConstraints.BOTH).build());
