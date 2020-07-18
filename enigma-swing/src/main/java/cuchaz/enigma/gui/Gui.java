@@ -360,9 +360,9 @@ public class Gui {
 		pane.doLayout();
 		this.frame.setSize(ScaleUtil.getDimension(1024, 576));
 		this.frame.setMinimumSize(ScaleUtil.getDimension(640, 480));
-		this.frame.setVisible(true);
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		this.frame.setLocationRelativeTo(null);
+		this.frame.setVisible(true);
 	}
 
 	public JFrame getFrame() {
