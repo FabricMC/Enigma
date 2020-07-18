@@ -109,6 +109,25 @@ public final class GridBagConstraintsBuilder {
 		return copy;
 	}
 
+	public GridBagConstraintsBuilder padding(int pad) {
+		return this.paddingUnscaled(ScaleUtil.scale(pad));
+	}
+
+	public GridBagConstraintsBuilder padding(int padX, int padY) {
+		return this.paddingUnscaled(ScaleUtil.scale(padX), ScaleUtil.scale(padY));
+	}
+
+	public GridBagConstraintsBuilder paddingUnscaled(int pad) {
+		return this.paddingUnscaled(pad, pad);
+	}
+
+	public GridBagConstraintsBuilder paddingUnscaled(int padX, int padY) {
+		GridBagConstraintsBuilder copy = this.copy();
+		copy.inner.ipadx = padX;
+		copy.inner.ipady = padY;
+		return copy;
+	}
+
 	public GridBagConstraintsBuilder copy() {
 		GridBagConstraints c = (GridBagConstraints) this.inner.clone();
 		return new GridBagConstraintsBuilder(c);
