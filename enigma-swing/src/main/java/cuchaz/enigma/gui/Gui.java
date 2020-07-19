@@ -14,6 +14,7 @@ package cuchaz.enigma.gui;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.FileDialog;
+import java.awt.Point;
 import java.awt.event.*;
 import java.nio.file.Path;
 import java.util.*;
@@ -358,10 +359,17 @@ public class Gui {
 
 		// show the frame
 		pane.doLayout();
-		this.frame.setSize(ScaleUtil.getDimension(1024, 576));
+		this.frame.setSize(UiConfig.getWindowSize("Main Window").orElse(ScaleUtil.getDimension(1024, 576)));
 		this.frame.setMinimumSize(ScaleUtil.getDimension(640, 480));
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		this.frame.setLocationRelativeTo(null);
+
+		Optional<Point> windowPos = UiConfig.getWindowPos("Main Window");
+		if (windowPos.isPresent()) {
+			this.frame.setLocation(windowPos.get());
+		} else {
+			this.frame.setLocationRelativeTo(null);
+		}
+
 		this.frame.setVisible(true);
 	}
 
@@ -697,6 +705,10 @@ public class Gui {
 	}
 
 	private void exit() {
+		UiConfig.setWindowPos("Main Window", this.frame.getLocationOnScreen());
+		UiConfig.setWindowSize("Main Window", this.frame.getSize());
+		UiConfig.save();
+
 		if (searchDialog != null) {
 			searchDialog.dispose();
 		}

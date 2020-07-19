@@ -1,6 +1,11 @@
 package cuchaz.enigma.gui.config;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 import cuchaz.enigma.config.ConfigContainer;
 import cuchaz.enigma.config.ConfigSection;
@@ -146,6 +151,44 @@ public final class UiConfig {
 
 	public static Color getLineNumbersSelectedColor() {
 		return getThemeColorRgb("Line Numbers Selected");
+	}
+
+	public static Optional<Dimension> getWindowSize(String window) {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		ConfigSection section = swing.data().section(window);
+		OptionalInt width = section.getInt(String.format("Width %s", screenSize.width));
+		OptionalInt height = section.getInt(String.format("Height %s", screenSize.height));
+		if (width.isPresent() && height.isPresent()) {
+			return Optional.of(new Dimension(width.getAsInt(), height.getAsInt()));
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	public static void setWindowSize(String window, Dimension dim) {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		ConfigSection section = swing.data().section(window);
+		section.setInt(String.format("Width %s", screenSize.width), dim.width);
+		section.setInt(String.format("Height %s", screenSize.height), dim.height);
+	}
+
+	public static Optional<Point> getWindowPos(String window) {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		ConfigSection section = swing.data().section(window);
+		OptionalInt x = section.getInt(String.format("X %s", screenSize.width));
+		OptionalInt y = section.getInt(String.format("Y %s", screenSize.height));
+		if (x.isPresent() && y.isPresent()) {
+			return Optional.of(new Point(x.getAsInt(), y.getAsInt()));
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	public static void setWindowPos(String window, Point rect) {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		ConfigSection section = swing.data().section(window);
+		section.setInt(String.format("X %s", screenSize.width), rect.x);
+		section.setInt(String.format("Y %s", screenSize.height), rect.y);
 	}
 
 	public static void setLookAndFeelDefaults(LookAndFeel laf, boolean isDark) {

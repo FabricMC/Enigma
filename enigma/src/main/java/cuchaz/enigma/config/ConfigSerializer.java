@@ -1,6 +1,7 @@
 package cuchaz.enigma.config;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -129,12 +130,14 @@ public final class ConfigSerializer {
 			if (sb.length() > 0) sb.append('\n');
 			pathStack.forEach(n -> sb.append('[').append(escapeSection(n)).append(']'));
 			sb.append('\n');
-			section.values().forEach((k, v) -> sb.append(escapeKey(k)).append('=').append(escapeValue(v)).append('\n'));
+			section.values().entrySet().stream()
+					.sorted(Entry.comparingByKey())
+					.forEach(e -> sb.append(escapeKey(e.getKey())).append('=').append(escapeValue(e.getValue())).append('\n'));
 		}
 
-		section.sections().forEach((name, sec) -> {
-			pathStack.add(name);
-			structureToString(sec, sb, pathStack);
+		section.sections().entrySet().stream().sorted(Entry.comparingByKey()).forEach(e -> {
+			pathStack.add(e.getKey());
+			structureToString(e.getValue(), sb, pathStack);
 			pathStack.remove(pathStack.size() - 1);
 		});
 	}
