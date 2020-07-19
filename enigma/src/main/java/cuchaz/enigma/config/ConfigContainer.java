@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Deque;
+import java.util.LinkedList;
 
 public class ConfigContainer {
 
@@ -65,22 +65,23 @@ public class ConfigContainer {
 
 	public static ConfigContainer parse(String source) {
 		ConfigContainer cc = ConfigContainer.create();
-		List<ConfigSection> stack = new ArrayList<>();
-		ConfigSection current = cc.data();
-		ConfigSerializer.parseStructure(source, new ConfigStructureVisitor() {
+		Deque<ConfigSection> stack = new LinkedList<>();
+		stack.push(cc.root);
+		ConfigSerializer.parse(source, new ConfigStructureVisitor() {
 			@Override
 			public void visitKeyValue(String key, String value) {
-				stack.get(stack.size() - 1).setString(key, value);
+				stack.peekLast().setString(key, value);
 			}
 
 			@Override
 			public void visitSection(String section) {
-				stack.add(stack.get(stack.size() - 1).section(section));
+				stack.add(stack.peekLast().section(section));
 			}
 
 			@Override
-			public void endSection() {
-				stack.remove(stack.size() - 1);
+			public void jumpToRootSection() {
+				stack.clear();
+				stack.push(cc.root);
 			}
 		});
 		return cc;

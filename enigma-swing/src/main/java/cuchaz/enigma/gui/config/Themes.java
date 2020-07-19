@@ -32,6 +32,7 @@ public class Themes {
 		ImmutableMap<RenamableTokenType, BoxHighlightPainter> boxHighlightPainters = getBoxHighlightPainters();
 		listeners.forEach(l -> l.onThemeChanged(laf, boxHighlightPainters));
 		ScaleUtil.applyScaling();
+		UiConfig.save();
 	}
 
 	public static ImmutableMap<RenamableTokenType, BoxHighlightPainter> getBoxHighlightPainters() {

@@ -10,31 +10,15 @@ public final class ConfigSerializer {
 	private static final Pattern FULL_RGB_COLOR = Pattern.compile("#[0-9A-Fa-f]{6}");
 	private static final Pattern MIN_RGB_COLOR = Pattern.compile("#[0-9A-Fa-f]{3}");
 
+	private static final int UNEXPECTED_TOKEN = -1;
+	private static final int NO_MATCH = -2;
+
 	public static void parse(String v, ConfigStructureVisitor visitor) {
 		String[] lines = v.split("\n");
 
-		// remove comments
-		for (int i = 0; i < lines.length; i++) {
-			String line = lines[i];
-			int pos = 0;
-			while ((pos = line.indexOf(';', pos)) != -1) {
-				if (pos == 0) {
-					lines[i] = "";
-					break;
-				} else if (line.charAt(pos - 1) != '\\') {
-					while (line.charAt(pos - 1) == ' ') {
-						pos -= 1;
-					}
-					lines[i] = line.substring(0, pos);
-					break;
-				}
-				pos += 1;
-			}
-		}
-
 		// join escaped newlines
 		int len = lines.length;
-		for (int i = len - 2; i >= 0; i++) {
+		for (int i = len - 2; i >= 0; i--) {
 			if (lines[i].endsWith("\\")) {
 				lines[i] = String.format("%s\n%s", lines[i], lines[i + 1]);
 				len -= 1;
@@ -42,26 +26,29 @@ public final class ConfigSerializer {
 		}
 
 		// parse for real
-		int lastSectionDepth = 0;
-
-		l:
 		for (int i = 0; i < len; i++) {
 			String line = lines[i];
-			if (line.trim().isEmpty()) continue;
-			if (line.startsWith("[")) {
-				// section start
-				while (lastSectionDepth > 0) {
-					visitor.endSection();
-					lastSectionDepth -= 1;
-				}
 
-				int pos = 0;
-				while (line.charAt(pos) == '[') {
-					pos = parseSection(line, pos, visitor);
-					if (pos == -1) continue l;
-					lastSectionDepth += 1;
-				}
+			// skip empty lines and comment lines
+			if (line.trim().isEmpty() || line.trim().startsWith(";")) continue;
+
+			int r;
+			boolean fail = (r = parseSectionLine(line, 0, visitor)) == NO_MATCH &&
+					(r = parseKeyValue(line, 0, visitor)) == NO_MATCH;
+		}
+	}
+
+	private static int parseSectionLine(String v, int idx, ConfigStructureVisitor visitor) {
+		if (v.startsWith("[")) {
+			visitor.jumpToRootSection();
+
+			while (idx < v.length() && v.charAt(idx) == '[') {
+				idx = parseSection(v, idx, visitor);
+				if (idx == UNEXPECTED_TOKEN) return UNEXPECTED_TOKEN;
 			}
+			return v.length();
+		} else {
+			return NO_MATCH;
 		}
 	}
 
@@ -84,9 +71,50 @@ public final class ConfigSerializer {
 				idx = nextEscape + 2;
 			} else {
 				// unexpected
-				return -1;
+				return UNEXPECTED_TOKEN;
 			}
 		}
+		return idx;
+	}
+
+	private static int parseKeyValue(String v, int idx, ConfigStructureVisitor visitor) {
+		StringBuilder sb = new StringBuilder();
+		String k = null;
+		while (idx < v.length()) {
+			int nextEq = v.indexOf('=', idx);
+			int nextEscape = v.indexOf('\\', idx);
+			int next = optMin(nextEq, nextEscape);
+			if (next == nextEq) {
+				sb.append(v, idx, nextEq);
+				k = sb.toString();
+				sb.delete(0, sb.length());
+				idx = nextEq + 1;
+				break;
+			} else if (next == nextEscape) {
+				sb.append(v, idx, nextEscape);
+				if (nextEscape + 1 < v.length()) {
+					sb.append(v.charAt(nextEscape + 1));
+				}
+				idx = nextEscape + 2;
+			} else {
+				break;
+			}
+		}
+		while (idx < v.length()) {
+			int nextEscape = v.indexOf('\\', idx);
+			if (nextEscape != -1) {
+				sb.append(v, idx, nextEscape);
+				if (nextEscape + 1 < v.length()) {
+					sb.append(v.charAt(nextEscape + 1));
+				}
+				idx = nextEscape + 2;
+			} else {
+				break;
+			}
+		}
+		sb.append(v, idx, v.length());
+		if (k == null) return NO_MATCH;
+		visitor.visitKeyValue(k, sb.toString());
 		return idx;
 	}
 
@@ -100,6 +128,7 @@ public final class ConfigSerializer {
 		if (!section.values().isEmpty()) {
 			if (sb.length() > 0) sb.append('\n');
 			pathStack.forEach(n -> sb.append('[').append(escapeSection(n)).append(']'));
+			sb.append('\n');
 			section.values().forEach((k, v) -> sb.append(escapeKey(k)).append('=').append(escapeValue(v)).append('\n'));
 		}
 
@@ -156,9 +185,9 @@ public final class ConfigSerializer {
 		if (v == null) return OptionalInt.empty();
 		try {
 			if (FULL_RGB_COLOR.matcher(v).matches()) {
-				return OptionalInt.of(Integer.parseUnsignedInt(v.substring(16), 16));
+				return OptionalInt.of(Integer.parseUnsignedInt(v.substring(1), 16));
 			} else if (MIN_RGB_COLOR.matcher(v).matches()) {
-				int result = Integer.parseUnsignedInt(v.substring(16), 16);
+				int result = Integer.parseUnsignedInt(v.substring(1), 16);
 				// change 0xABC to 0xAABBCC
 				result = (result & 0x00F) | (result & 0x0F0) << 4 | (result & 0xF00) << 8;
 				result = result | result << 4;
@@ -173,14 +202,14 @@ public final class ConfigSerializer {
 
 	public static String rgbColorToString(int color) {
 		color = color & 0xFFFFFF;
-		boolean isShort = (color & 0xF0F0F0 >> 4 ^ color & 0x0F0F0F) == 0;
+		boolean isShort = ((color & 0xF0F0F0) >> 4 ^ color & 0x0F0F0F) == 0;
 		if (isShort) {
 			int packed = color & 0x0F0F0F;
 			packed = packed & 0xF | packed >> 4;
-			packed = packed & 0xFF | packed & ~0xFF >> 4;
-			return String.format("#%03d", packed);
+			packed = packed & 0xFF | (packed & ~0xFF) >> 4;
+			return String.format("#%03x", packed);
 		} else {
-			return String.format("#%06d", color);
+			return String.format("#%06x", color);
 		}
 	}
 

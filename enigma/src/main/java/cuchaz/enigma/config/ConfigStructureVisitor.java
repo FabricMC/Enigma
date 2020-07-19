@@ -6,6 +6,6 @@ public interface ConfigStructureVisitor {
 
 	void visitSection(String section);
 
-	void endSection();
+	void jumpToRootSection();
 
 }

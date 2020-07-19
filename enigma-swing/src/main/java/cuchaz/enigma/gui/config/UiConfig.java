@@ -59,37 +59,37 @@ public final class UiConfig {
 	}
 
 	private static Color getThemeColorRgba(String colorName) {
-		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().getName());
+		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().getName()).section("Colors");
 		return fromComponents(s.getRgbColor(colorName).orElse(0), s.getDouble(String.format("%s Alpha", colorName)).orElse(0));
 	}
 
 	private static Color getThemeColorRgb(String colorName) {
-		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().getName());
+		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().getName()).section("Colors");
 		return new Color(s.getRgbColor(colorName).orElse(0));
 	}
 
 	public static Color getObfuscatedColor() {
-		return getThemeColorRgba("Obfuscated Color");
+		return getThemeColorRgba("Obfuscated");
 	}
 
 	public static Color getObfuscatedOutlineColor() {
-		return getThemeColorRgba("Obfuscated Outline Color");
+		return getThemeColorRgba("Obfuscated Outline");
 	}
 
 	public static Color getProposedColor() {
-		return getThemeColorRgba("Proposed Color");
+		return getThemeColorRgba("Proposed");
 	}
 
 	public static Color getProposedOutlineColor() {
-		return getThemeColorRgba("Proposed Outline Color");
+		return getThemeColorRgba("Proposed Outline");
 	}
 
 	public static Color getDeobfuscatedColor() {
-		return getThemeColorRgba("Deobfuscated Color");
+		return getThemeColorRgba("Deobfuscated");
 	}
 
 	public static Color getDeobfuscatedOutlineColor() {
-		return getThemeColorRgba("Deobfuscated Outline Color");
+		return getThemeColorRgba("Deobfuscated Outline");
 	}
 
 	public static Color getEditorBackgroundColor() {
@@ -97,115 +97,115 @@ public final class UiConfig {
 	}
 
 	public static Color getHighlightColor() {
-		return getThemeColorRgb("Highlight Color");
+		return getThemeColorRgb("Highlight");
 	}
 
 	public static Color getCaretColor() {
-		return getThemeColorRgb("Caret Color");
+		return getThemeColorRgb("Caret");
 	}
 
 	public static Color getSelectionHighlightColor() {
-		return getThemeColorRgb("Selection Highlight Color");
+		return getThemeColorRgb("Selection Highlight");
 	}
 
 	public static Color getStringColor() {
-		return getThemeColorRgb("String Color");
+		return getThemeColorRgb("String");
 	}
 
 	public static Color getNumberColor() {
-		return getThemeColorRgb("Number Color");
+		return getThemeColorRgb("Number");
 	}
 
 	public static Color getOperatorColor() {
-		return getThemeColorRgb("Operator Color");
+		return getThemeColorRgb("Operator");
 	}
 
 	public static Color getDelimiterColor() {
-		return getThemeColorRgb("Delimiter Color");
+		return getThemeColorRgb("Delimiter");
 	}
 
 	public static Color getTypeColor() {
-		return getThemeColorRgb("Type Color");
+		return getThemeColorRgb("Type");
 	}
 
 	public static Color getIdentifierColor() {
-		return getThemeColorRgb("Identifier Color");
+		return getThemeColorRgb("Identifier");
 	}
 
 	public static Color getTextColor() {
-		return getThemeColorRgb("Text Color");
+		return getThemeColorRgb("Text");
 	}
 
 	public static Color getLineNumbersForegroundColor() {
-		return getThemeColorRgb("Line Numbers Foreground Color");
+		return getThemeColorRgb("Line Numbers Foreground");
 	}
 
 	public static Color getLineNumbersBackgroundColor() {
-		return getThemeColorRgb("Line Numbers Background Color");
+		return getThemeColorRgb("Line Numbers Background");
 	}
 
 	public static Color getLineNumbersSelectedColor() {
-		return getThemeColorRgb("Line Numbers Selected Color");
+		return getThemeColorRgb("Line Numbers Selected");
 	}
 
 	public static void setLookAndFeelDefaults(LookAndFeel laf, boolean isDark) {
-		ConfigSection s = swing.data().section("Themes").section(laf.getName());
+		ConfigSection s = swing.data().section("Themes").section(laf.getName()).section("Colors");
 		if (!isDark) {
 			// Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
-			s.setIfAbsentRgbColor("Line Numbers Foreground Color", 0x333300);
-			s.setIfAbsentRgbColor("Line Numbers Background Color", 0xEEEEFF);
-			s.setIfAbsentRgbColor("Line Numbers Selected Color", 0xCCCCEE);
-			s.setIfAbsentRgbColor("Obfuscated Color", 0xFFDCDC);
-			s.setIfAbsentDouble("Obfuscated Color Alpha", 1.0);
-			s.setIfAbsentRgbColor("Obfuscated Outline Color", 0xFFDCDC);
-			s.setIfAbsentDouble("Obfuscated Outline Color Alpha", 1.0);
-			s.setIfAbsentRgbColor("Proposed Color", 0x000000);
-			s.setIfAbsentDouble("Proposed Color Alpha", 0.75);
-			s.setIfAbsentRgbColor("Proposed Outline Color", 0x000000);
-			s.setIfAbsentDouble("Proposed Outline Color Alpha", 0.15);
-			s.setIfAbsentRgbColor("Deobfuscated Color", 0xDCFFDC);
-			s.setIfAbsentDouble("Deobfuscated Color Alpha", 1.0);
-			s.setIfAbsentRgbColor("Deobfuscated Outline Color", 0x50A050);
-			s.setIfAbsentDouble("Deobfuscated Outline Color Alpha", 1.0);
+			s.setIfAbsentRgbColor("Line Numbers Foreground", 0x333300);
+			s.setIfAbsentRgbColor("Line Numbers Background", 0xEEEEFF);
+			s.setIfAbsentRgbColor("Line Numbers Selected", 0xCCCCEE);
+			s.setIfAbsentRgbColor("Obfuscated", 0xFFDCDC);
+			s.setIfAbsentDouble("Obfuscated Alpha", 1.0);
+			s.setIfAbsentRgbColor("Obfuscated Outline", 0xFFDCDC);
+			s.setIfAbsentDouble("Obfuscated Outline Alpha", 1.0);
+			s.setIfAbsentRgbColor("Proposed", 0x000000);
+			s.setIfAbsentDouble("Proposed Alpha", 0.75);
+			s.setIfAbsentRgbColor("Proposed Outline", 0x000000);
+			s.setIfAbsentDouble("Proposed Outline Alpha", 0.15);
+			s.setIfAbsentRgbColor("Deobfuscated", 0xDCFFDC);
+			s.setIfAbsentDouble("Deobfuscated Alpha", 1.0);
+			s.setIfAbsentRgbColor("Deobfuscated Outline", 0x50A050);
+			s.setIfAbsentDouble("Deobfuscated Outline Alpha", 1.0);
 			s.setIfAbsentRgbColor("Editor Background", 0xFFFFFF);
-			s.setIfAbsentRgbColor("Highlight Color", 0x3333EE);
-			s.setIfAbsentRgbColor("Caret Color", 0x000000);
-			s.setIfAbsentRgbColor("Selection Highlight Color", 0x000000);
-			s.setIfAbsentRgbColor("String Color", 0xCC6600);
-			s.setIfAbsentRgbColor("Number Color", 0x999933);
-			s.setIfAbsentRgbColor("Operator Color", 0x000000);
-			s.setIfAbsentRgbColor("Delimiter Color", 0x000000);
-			s.setIfAbsentRgbColor("Type Color", 0x000000);
-			s.setIfAbsentRgbColor("Identifier Color", 0x000000);
-			s.setIfAbsentRgbColor("Text Color", 0x000000);
+			s.setIfAbsentRgbColor("Highlight", 0x3333EE);
+			s.setIfAbsentRgbColor("Caret", 0x000000);
+			s.setIfAbsentRgbColor("Selection Highlight", 0x000000);
+			s.setIfAbsentRgbColor("String", 0xCC6600);
+			s.setIfAbsentRgbColor("Number", 0x999933);
+			s.setIfAbsentRgbColor("Operator", 0x000000);
+			s.setIfAbsentRgbColor("Delimiter", 0x000000);
+			s.setIfAbsentRgbColor("Type", 0x000000);
+			s.setIfAbsentRgbColor("Identifier", 0x000000);
+			s.setIfAbsentRgbColor("Text", 0x000000);
 		} else {
 			// Based off colors found here: https://github.com/dracula/dracula-theme/
-			s.setIfAbsentRgbColor("Line Numbers Foreground Color", 0xA4A4A3);
-			s.setIfAbsentRgbColor("Line Numbers Background Color", 0x313335);
-			s.setIfAbsentRgbColor("Line Numbers Selected Color", 0x606366);
-			s.setIfAbsentRgbColor("Obfuscated Color", 0xFF5555);
-			s.setIfAbsentDouble("Obfuscated Color Alpha", 0.3);
-			s.setIfAbsentRgbColor("Obfuscated Outline Color", 0xFF5555);
-			s.setIfAbsentDouble("Obfuscated Outline Color Alpha", 0.5);
-			s.setIfAbsentRgbColor("Proposed Color", 0x606366);
-			s.setIfAbsentDouble("Proposed Color Alpha", 0.3);
-			s.setIfAbsentRgbColor("Proposed Outline Color", 0x606366);
-			s.setIfAbsentDouble("Proposed Outline Color Alpha", 0.5);
-			s.setIfAbsentRgbColor("Deobfuscated Color", 0x50FA7B);
-			s.setIfAbsentDouble("Deobfuscated Color Alpha", 0.3);
-			s.setIfAbsentRgbColor("Deobfuscated Outline Color", 0x50FA7B);
-			s.setIfAbsentDouble("Deobfuscated Outline Color Alpha", 0.5);
+			s.setIfAbsentRgbColor("Line Numbers Foreground", 0xA4A4A3);
+			s.setIfAbsentRgbColor("Line Numbers Background", 0x313335);
+			s.setIfAbsentRgbColor("Line Numbers Selected", 0x606366);
+			s.setIfAbsentRgbColor("Obfuscated", 0xFF5555);
+			s.setIfAbsentDouble("Obfuscated Alpha", 0.3);
+			s.setIfAbsentRgbColor("Obfuscated Outline", 0xFF5555);
+			s.setIfAbsentDouble("Obfuscated Outline Alpha", 0.5);
+			s.setIfAbsentRgbColor("Proposed", 0x606366);
+			s.setIfAbsentDouble("Proposed Alpha", 0.3);
+			s.setIfAbsentRgbColor("Proposed Outline", 0x606366);
+			s.setIfAbsentDouble("Proposed Outline Alpha", 0.5);
+			s.setIfAbsentRgbColor("Deobfuscated", 0x50FA7B);
+			s.setIfAbsentDouble("Deobfuscated Alpha", 0.3);
+			s.setIfAbsentRgbColor("Deobfuscated Outline", 0x50FA7B);
+			s.setIfAbsentDouble("Deobfuscated Outline Alpha", 0.5);
 			s.setIfAbsentRgbColor("Editor Background", 0x282A36);
-			s.setIfAbsentRgbColor("Highlight Color", 0xFF79C6);
-			s.setIfAbsentRgbColor("Caret Color", 0xF8F8F2);
-			s.setIfAbsentRgbColor("Selection Highlight Color", 0xF8F8F2);
-			s.setIfAbsentRgbColor("String Color", 0xF1FA8C);
-			s.setIfAbsentRgbColor("Number Color", 0xBD93F9);
-			s.setIfAbsentRgbColor("Operator Color", 0xF8F8F2);
-			s.setIfAbsentRgbColor("Delimiter Color", 0xF8F8F2);
-			s.setIfAbsentRgbColor("Type Color", 0xF8F8F2);
-			s.setIfAbsentRgbColor("Identifier Color", 0xF8F8F2);
-			s.setIfAbsentRgbColor("Text Color", 0xF8F8F2);
+			s.setIfAbsentRgbColor("Highlight", 0xFF79C6);
+			s.setIfAbsentRgbColor("Caret", 0xF8F8F2);
+			s.setIfAbsentRgbColor("Selection Highlight", 0xF8F8F2);
+			s.setIfAbsentRgbColor("String", 0xF1FA8C);
+			s.setIfAbsentRgbColor("Number", 0xBD93F9);
+			s.setIfAbsentRgbColor("Operator", 0xF8F8F2);
+			s.setIfAbsentRgbColor("Delimiter", 0xF8F8F2);
+			s.setIfAbsentRgbColor("Type", 0xF8F8F2);
+			s.setIfAbsentRgbColor("Identifier", 0xF8F8F2);
+			s.setIfAbsentRgbColor("Text", 0xF8F8F2);
 		}
 	}
 
