@@ -359,13 +359,13 @@ public class Gui {
 
 		// show the frame
 		pane.doLayout();
-		this.frame.setSize(UiConfig.getWindowSize("Main Window").orElse(ScaleUtil.getDimension(1024, 576)));
+		this.frame.setSize(UiConfig.getWindowSize("Main Window", ScaleUtil.getDimension(1024, 576)));
 		this.frame.setMinimumSize(ScaleUtil.getDimension(640, 480));
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
-		Optional<Point> windowPos = UiConfig.getWindowPos("Main Window");
-		if (windowPos.isPresent()) {
-			this.frame.setLocation(windowPos.get());
+		Point windowPos = UiConfig.getWindowPos("Main Window", null);
+		if (windowPos != null) {
+			this.frame.setLocation(windowPos);
 		} else {
 			this.frame.setLocationRelativeTo(null);
 		}

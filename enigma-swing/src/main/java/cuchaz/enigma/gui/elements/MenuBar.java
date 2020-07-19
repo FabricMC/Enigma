@@ -18,6 +18,8 @@ import java.util.stream.IntStream;
 
 import javax.swing.*;
 
+import org.drjekyll.fontchooser.FontDialog;
+
 import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.config.Decompiler;
@@ -55,6 +57,7 @@ public class MenuBar {
 	private final JMenu themesMenu = new JMenu(I18n.translate("menu.view.themes"));
 	private final JMenu languagesMenu = new JMenu(I18n.translate("menu.view.languages"));
 	private final JMenu scaleMenu = new JMenu(I18n.translate("menu.view.scale"));
+	private final JMenuItem fontItem = new JMenuItem(I18n.translate("menu.view.font"));
 	private final JMenuItem customScaleItem = new JMenuItem(I18n.translate("menu.view.scale.custom"));
 	private final JMenuItem searchItem = new JMenuItem(I18n.translate("menu.view.search"));
 
@@ -104,6 +107,7 @@ public class MenuBar {
 		this.viewMenu.add(this.languagesMenu);
 		this.scaleMenu.add(this.customScaleItem);
 		this.viewMenu.add(this.scaleMenu);
+		this.viewMenu.add(this.fontItem);
 		this.viewMenu.addSeparator();
 		this.viewMenu.add(this.searchItem);
 		this.ui.add(this.viewMenu);
@@ -131,6 +135,7 @@ public class MenuBar {
 		this.statsItem.addActionListener(_e -> StatsDialog.show(this.gui));
 		this.exitItem.addActionListener(_e -> this.gui.close());
 		this.customScaleItem.addActionListener(_e -> this.onCustomScaleClicked());
+		this.fontItem.addActionListener(_e -> this.onFontClicked(this.gui));
 		this.searchItem.addActionListener(_e -> this.onSearchClicked());
 		this.connectItem.addActionListener(_e -> this.onConnectClicked());
 		this.startServerItem.addActionListener(_e -> this.onStartServerClicked());
@@ -232,6 +237,19 @@ public class MenuBar {
 		}
 		ScaleUtil.setScaleFactor(newScale);
 		ChangeDialog.show(this.gui);
+	}
+
+	private void onFontClicked(Gui gui) {
+		FontDialog fd = new FontDialog(gui.getFrame(), "Choose Font", true);
+		fd.setLocationRelativeTo(gui.getFrame());
+		fd.setSelectedFont(UiConfig.getEditorFont());
+		fd.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		fd.setVisible(true);
+
+		if (!fd.isCancelSelected()) {
+			UiConfig.setEditorFont(fd.getSelectedFont());
+			UiConfig.save();
+		}
 	}
 
 	private void onSearchClicked() {

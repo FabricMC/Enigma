@@ -1,14 +1,12 @@
 package cuchaz.enigma.gui.config;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.util.Optional;
 import java.util.OptionalInt;
 
 import cuchaz.enigma.config.ConfigContainer;
 import cuchaz.enigma.config.ConfigSection;
+import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 
 public final class UiConfig {
@@ -153,15 +151,38 @@ public final class UiConfig {
 		return getThemeColorRgb("Line Numbers Selected");
 	}
 
-	public static Optional<Dimension> getWindowSize(String window) {
+	public static Font getFont(String name, Font fallback) {
+		Optional<String> spec = swing.data().section("Fonts").getString(name);
+		return spec.map(Font::decode).orElse(fallback);
+	}
+
+	public static void setFont(String name, Font font) {
+		swing.data().section("Fonts").setString(name, encodeFont(font));
+	}
+
+	public static Font getEditorFont() {
+		return getFont("Editor", ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED)));
+	}
+
+	public static void setEditorFont(Font font) {
+		setFont("Editor", font);
+	}
+
+	public static String encodeFont(Font font) {
+		int style = font.getStyle();
+		String s = style == (Font.BOLD | Font.ITALIC) ? "bolditalic" : style == Font.ITALIC ? "italic" : style == Font.BOLD ? "bold" : "plain";
+		return String.format("%s-%s-%s", font.getName(), s, font.getSize());
+	}
+
+	public static Dimension getWindowSize(String window, Dimension fallback) {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		ConfigSection section = swing.data().section(window);
 		OptionalInt width = section.getInt(String.format("Width %s", screenSize.width));
 		OptionalInt height = section.getInt(String.format("Height %s", screenSize.height));
 		if (width.isPresent() && height.isPresent()) {
-			return Optional.of(new Dimension(width.getAsInt(), height.getAsInt()));
+			return new Dimension(width.getAsInt(), height.getAsInt());
 		} else {
-			return Optional.empty();
+			return fallback;
 		}
 	}
 
@@ -172,15 +193,15 @@ public final class UiConfig {
 		section.setInt(String.format("Height %s", screenSize.height), dim.height);
 	}
 
-	public static Optional<Point> getWindowPos(String window) {
+	public static Point getWindowPos(String window, Point fallback) {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		ConfigSection section = swing.data().section(window);
 		OptionalInt x = section.getInt(String.format("X %s", screenSize.width));
 		OptionalInt y = section.getInt(String.format("Y %s", screenSize.height));
 		if (x.isPresent() && y.isPresent()) {
-			return Optional.of(new Point(x.getAsInt(), y.getAsInt()));
+			return new Point(x.getAsInt(), y.getAsInt());
 		} else {
-			return Optional.empty();
+			return fallback;
 		}
 	}
 
@@ -200,7 +221,7 @@ public final class UiConfig {
 			s.setIfAbsentRgbColor("Line Numbers Selected", 0xCCCCEE);
 			s.setIfAbsentRgbColor("Obfuscated", 0xFFDCDC);
 			s.setIfAbsentDouble("Obfuscated Alpha", 1.0);
-			s.setIfAbsentRgbColor("Obfuscated Outline", 0xFFDCDC);
+			s.setIfAbsentRgbColor("Obfuscated Outline", 0xA05050);
 			s.setIfAbsentDouble("Obfuscated Outline Alpha", 1.0);
 			s.setIfAbsentRgbColor("Proposed", 0x000000);
 			s.setIfAbsentDouble("Proposed Alpha", 0.75);

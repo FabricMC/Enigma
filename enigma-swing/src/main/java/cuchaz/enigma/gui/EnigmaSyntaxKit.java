@@ -6,7 +6,6 @@ import de.sciss.syntaxpane.syntaxkits.JavaSyntaxKit;
 import de.sciss.syntaxpane.util.Configuration;
 
 import cuchaz.enigma.gui.config.UiConfig;
-import cuchaz.enigma.gui.config.legacy.Config;
 
 public class EnigmaSyntaxKit extends JavaSyntaxKit {
 
@@ -54,9 +53,7 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
 
 		configuration.put("Action.quick-find", "cuchaz.enigma.gui.QuickFindAction, menu F");
 
-		if (Config.getInstance().editorFont != null) {
-            configuration.put("DefaultFont", Config.getInstance().editorFont);
-        }
+        configuration.put("DefaultFont", UiConfig.encodeFont(UiConfig.getEditorFont()));
     }
 
     /**
