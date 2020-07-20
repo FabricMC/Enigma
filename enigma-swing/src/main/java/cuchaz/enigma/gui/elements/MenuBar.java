@@ -81,7 +81,7 @@ public class MenuBar {
 		prepareSaveMappingsAsMenu(this.saveMappingsAsMenu, this.saveMappingsItem, gui);
 		prepareDecompilerMenu(this.decompilerMenu, gui);
 		prepareThemesMenu(this.themesMenu, gui);
-		prepareLanguagesMenu(this.languagesMenu, gui);
+		prepareLanguagesMenu(this.languagesMenu);
 		prepareScaleMenu(this.scaleMenu, gui);
 
 		this.fileMenu.add(this.jarOpenItem);
@@ -421,7 +421,7 @@ public class MenuBar {
 		}
 	}
 
-	private static void prepareLanguagesMenu(JMenu languagesMenu, Gui gui) {
+	private static void prepareLanguagesMenu(JMenu languagesMenu) {
 		ButtonGroup languageGroup = new ButtonGroup();
 		for (String lang : I18n.getAvailableLanguages()) {
 			JRadioButtonMenuItem languageButton = new JRadioButtonMenuItem(I18n.getLanguageName(lang));
