@@ -8,7 +8,8 @@ import cuchaz.enigma.utils.Os;
 public class ConfigPaths {
 
 	public static Path getConfigFilePath(String name) {
-		return getConfigPathRoot().resolve(String.format("%src", name));
+		String fileName = Os.getOs() == Os.LINUX ? String.format("%src", name) : String.format("%s.ini", name);
+		return getConfigPathRoot().resolve(fileName);
 	}
 
 	public static Path getConfigPathRoot() {
