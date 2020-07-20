@@ -43,8 +43,8 @@ public class ChangeDialog {
 
 		// show the frame
 		frame.pack();
-		frame.setVisible(true);
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(gui.getFrame());
+		frame.setVisible(true);
 	}
 }
