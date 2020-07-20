@@ -1,6 +1,7 @@
 package cuchaz.enigma.gui.elements;
 
 import java.awt.Desktop;
+import java.awt.FileDialog;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -207,15 +208,18 @@ public class MenuBar {
 	}
 
 	private void onOpenJarClicked() {
-		this.gui.jarFileChooser.setVisible(true);
-		String file = this.gui.jarFileChooser.getFile();
+		FileDialog d = this.gui.jarFileChooser;
+		d.setDirectory(UiConfig.getLastSelectedDir());
+		d.setVisible(true);
+		String file = d.getFile();
 		// checks if the file name is not empty
 		if (file != null) {
-			Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(file);
+			Path path = Paths.get(d.getDirectory()).resolve(file);
 			// checks if the file name corresponds to an existing file
 			if (Files.exists(path)) {
 				this.gui.getController().openJar(path);
 			}
+			UiConfig.setLastSelectedDir(d.getDirectory());
 		}
 	}
 
@@ -251,16 +255,20 @@ public class MenuBar {
 	}
 
 	private void onExportSourceClicked() {
+		this.gui.exportSourceFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 		if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+			UiConfig.setLastSelectedDir(this.gui.exportSourceFileChooser.getCurrentDirectory().toString());
 			this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile().toPath());
 		}
 	}
 
 	private void onExportJarClicked() {
+		this.gui.exportJarFileChooser.setDirectory(UiConfig.getLastSelectedDir());
 		this.gui.exportJarFileChooser.setVisible(true);
 		if (this.gui.exportJarFileChooser.getFile() != null) {
 			Path path = Paths.get(this.gui.exportJarFileChooser.getDirectory(), this.gui.exportJarFileChooser.getFile());
 			this.gui.getController().exportJar(path);
+			UiConfig.setLastSelectedDir(this.gui.exportJarFileChooser.getDirectory());
 		}
 	}
 
@@ -345,9 +353,11 @@ public class MenuBar {
 			if (format.getReader() != null) {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 				item.addActionListener(event -> {
+					gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 					if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
 						gui.getController().openMappings(format, selectedFile.toPath());
+						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
 					}
 				});
 				openMenu.add(item);
@@ -361,9 +371,14 @@ public class MenuBar {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
+					if (gui.enigmaMappingsFileChooser.getCurrentDirectory() == null) {
+						gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+					}
+
 					if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
 						saveMappingsItem.setEnabled(true);
+						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
 					}
 				});
 				saveMappingsAsMenu.add(item);

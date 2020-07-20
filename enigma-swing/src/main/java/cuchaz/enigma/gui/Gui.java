@@ -76,10 +76,10 @@ public class Gui implements TranslationChangeListener {
 
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
-	public SearchDialog searchDialog;
 	public JFileChooser enigmaMappingsFileChooser;
 	public JFileChooser exportSourceFileChooser;
 	public FileDialog exportJarFileChooser;
+	public SearchDialog searchDialog;
 	private GuiController controller;
 	private JFrame frame;
 	private JPanel classesPanel;

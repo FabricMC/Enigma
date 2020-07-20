@@ -212,6 +212,14 @@ public final class UiConfig {
 		section.setInt(String.format("Y %s", screenSize.height), rect.y);
 	}
 
+	public static String getLastSelectedDir() {
+		return swing.data().section("File Dialog").getString("Selected").orElse("");
+	}
+
+	public static void setLastSelectedDir(String directory) {
+		swing.data().section("File Dialog").setString("Selected", directory);
+	}
+
 	public static void setLookAndFeelDefaults(LookAndFeel laf, boolean isDark) {
 		ConfigSection s = swing.data().section("Themes").section(laf.getName()).section("Colors");
 		if (!isDark) {
@@ -272,5 +280,4 @@ public final class UiConfig {
 			s.setIfAbsentRgbColor("Text", 0xF8F8F2);
 		}
 	}
-
 }
