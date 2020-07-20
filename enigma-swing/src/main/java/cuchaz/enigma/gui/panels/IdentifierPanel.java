@@ -164,6 +164,11 @@ public class IdentifierPanel {
 		gui.getController().sendPacket(new RenameC2SPacket(entry, newName, true));
 	}
 
+	public void retranslateUi() {
+		this.ui.setBorder(BorderFactory.createTitledBorder(I18n.translate("info_panel.identifier")));
+		this.refreshReference();
+	}
+
 	public JPanel getUi() {
 		return ui;
 	}

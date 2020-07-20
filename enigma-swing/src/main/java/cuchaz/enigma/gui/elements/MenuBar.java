@@ -28,6 +28,7 @@ import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.*;
 import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.gui.util.TranslationUtil;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Pair;
@@ -36,43 +37,45 @@ public class MenuBar {
 
 	private final JMenuBar ui = new JMenuBar();
 
-	private final JMenu fileMenu = new JMenu(I18n.translate("menu.file"));
-	private final JMenuItem jarOpenItem = new JMenuItem(I18n.translate("menu.file.jar.open"));
-	private final JMenuItem jarCloseItem = new JMenuItem(I18n.translate("menu.file.jar.close"));
-	private final JMenu openMenu = new JMenu(I18n.translate("menu.file.mappings.open"));
-	private final JMenuItem saveMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.save"));
-	private final JMenu saveMappingsAsMenu = new JMenu(I18n.translate("menu.file.mappings.save_as"));
-	private final JMenuItem closeMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.close"));
-	private final JMenuItem dropMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.drop"));
-	private final JMenuItem reloadMappingsItem = new JMenuItem(I18n.translate("menu.file.reload_mappings"));
-	private final JMenuItem reloadAllItem = new JMenuItem(I18n.translate("menu.file.reload_all"));
-	private final JMenuItem exportSourceItem = new JMenuItem(I18n.translate("menu.file.export.source"));
-	private final JMenuItem exportJarItem = new JMenuItem(I18n.translate("menu.file.export.jar"));
-	private final JMenuItem statsItem = new JMenuItem(I18n.translate("menu.file.stats"));
-	private final JMenuItem exitItem = new JMenuItem(I18n.translate("menu.file.exit"));
+	private final JMenu fileMenu = new JMenu();
+	private final JMenuItem jarOpenItem = new JMenuItem();
+	private final JMenuItem jarCloseItem = new JMenuItem();
+	private final JMenu openMenu = new JMenu();
+	private final JMenuItem saveMappingsItem = new JMenuItem();
+	private final JMenu saveMappingsAsMenu = new JMenu();
+	private final JMenuItem closeMappingsItem = new JMenuItem();
+	private final JMenuItem dropMappingsItem = new JMenuItem();
+	private final JMenuItem reloadMappingsItem = new JMenuItem();
+	private final JMenuItem reloadAllItem = new JMenuItem();
+	private final JMenuItem exportSourceItem = new JMenuItem();
+	private final JMenuItem exportJarItem = new JMenuItem();
+	private final JMenuItem statsItem = new JMenuItem();
+	private final JMenuItem exitItem = new JMenuItem();
 
-	private final JMenu decompilerMenu = new JMenu(I18n.translate("menu.decompiler"));
+	private final JMenu decompilerMenu = new JMenu();
 
-	private final JMenu viewMenu = new JMenu(I18n.translate("menu.view"));
-	private final JMenu themesMenu = new JMenu(I18n.translate("menu.view.themes"));
-	private final JMenu languagesMenu = new JMenu(I18n.translate("menu.view.languages"));
-	private final JMenu scaleMenu = new JMenu(I18n.translate("menu.view.scale"));
-	private final JMenuItem fontItem = new JMenuItem(I18n.translate("menu.view.font"));
-	private final JMenuItem customScaleItem = new JMenuItem(I18n.translate("menu.view.scale.custom"));
-	private final JMenuItem searchItem = new JMenuItem(I18n.translate("menu.view.search"));
+	private final JMenu viewMenu = new JMenu();
+	private final JMenu themesMenu = new JMenu();
+	private final JMenu languagesMenu = new JMenu();
+	private final JMenu scaleMenu = new JMenu();
+	private final JMenuItem fontItem = new JMenuItem();
+	private final JMenuItem customScaleItem = new JMenuItem();
+	private final JMenuItem searchItem = new JMenuItem();
 
-	private final JMenu collabMenu = new JMenu(I18n.translate("menu.collab"));
-	private final JMenuItem connectItem = new JMenuItem(I18n.translate("menu.collab.connect"));
-	private final JMenuItem startServerItem = new JMenuItem(I18n.translate("menu.collab.server.start"));
+	private final JMenu collabMenu = new JMenu();
+	private final JMenuItem connectItem = new JMenuItem();
+	private final JMenuItem startServerItem = new JMenuItem();
 
-	private final JMenu helpMenu = new JMenu(I18n.translate("menu.help"));
-	private final JMenuItem aboutItem = new JMenuItem(I18n.translate("menu.help.about"));
-	private final JMenuItem githubItem = new JMenuItem(I18n.translate("menu.help.github"));
+	private final JMenu helpMenu = new JMenu();
+	private final JMenuItem aboutItem = new JMenuItem();
+	private final JMenuItem githubItem = new JMenuItem();
 
 	private final Gui gui;
 
 	public MenuBar(Gui gui) {
 		this.gui = gui;
+
+		this.retranslateUi();
 
 		prepareOpenMenu(this.openMenu, gui);
 		prepareSaveMappingsAsMenu(this.saveMappingsAsMenu, this.saveMappingsItem, gui);
@@ -162,6 +165,41 @@ public class MenuBar {
 		this.exportSourceItem.setEnabled(jarOpen);
 		this.exportJarItem.setEnabled(jarOpen);
 		this.statsItem.setEnabled(jarOpen);
+	}
+
+	public void retranslateUi() {
+		this.fileMenu.setText(I18n.translate("menu.file"));
+		this.jarOpenItem.setText(I18n.translate("menu.file.jar.open"));
+		this.jarCloseItem.setText(I18n.translate("menu.file.jar.close"));
+		this.openMenu.setText(I18n.translate("menu.file.mappings.open"));
+		this.saveMappingsItem.setText(I18n.translate("menu.file.mappings.save"));
+		this.saveMappingsAsMenu.setText(I18n.translate("menu.file.mappings.save_as"));
+		this.closeMappingsItem.setText(I18n.translate("menu.file.mappings.close"));
+		this.dropMappingsItem.setText(I18n.translate("menu.file.mappings.drop"));
+		this.reloadMappingsItem.setText(I18n.translate("menu.file.reload_mappings"));
+		this.reloadAllItem.setText(I18n.translate("menu.file.reload_all"));
+		this.exportSourceItem.setText(I18n.translate("menu.file.export.source"));
+		this.exportJarItem.setText(I18n.translate("menu.file.export.jar"));
+		this.statsItem.setText(I18n.translate("menu.file.stats"));
+		this.exitItem.setText(I18n.translate("menu.file.exit"));
+
+		this.decompilerMenu.setText(I18n.translate("menu.decompiler"));
+
+		this.viewMenu.setText(I18n.translate("menu.view"));
+		this.themesMenu.setText(I18n.translate("menu.view.themes"));
+		this.languagesMenu.setText(I18n.translate("menu.view.languages"));
+		this.scaleMenu.setText(I18n.translate("menu.view.scale"));
+		this.fontItem.setText(I18n.translate("menu.view.font"));
+		this.customScaleItem.setText(I18n.translate("menu.view.scale.custom"));
+		this.searchItem.setText(I18n.translate("menu.view.search"));
+
+		this.collabMenu.setText(I18n.translate("menu.collab"));
+		this.connectItem.setText(I18n.translate("menu.collab.connect"));
+		this.startServerItem.setText(I18n.translate("menu.collab.server.start"));
+
+		this.helpMenu.setText(I18n.translate("menu.help"));
+		this.aboutItem.setText(I18n.translate("menu.help.about"));
+		this.githubItem.setText(I18n.translate("menu.help.github"));
 	}
 
 	public JMenuBar getUi() {
@@ -375,8 +413,9 @@ public class MenuBar {
 			}
 			languageButton.addActionListener(event -> {
 				UiConfig.setLanguage(lang);
+				I18n.setLanguage(lang);
+				TranslationUtil.dispatchLanguageChange();
 				UiConfig.save();
-				ChangeDialog.show(gui);
 			});
 			languagesMenu.add(languageButton);
 		}

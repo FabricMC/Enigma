@@ -13,6 +13,8 @@ import cuchaz.enigma.utils.I18n;
 public class DeobfPanel extends JPanel {
 
 	public final ClassSelector deobfClasses;
+	private final JLabel title = new JLabel();
+
 	private final Gui gui;
 
 	public DeobfPanel(Gui gui) {
@@ -23,7 +25,14 @@ public class DeobfPanel extends JPanel {
 		this.deobfClasses.setRenameSelectionListener(gui::onPanelRename);
 
 		this.setLayout(new BorderLayout());
-		this.add(new JLabel(I18n.translate("info_panel.classes.deobfuscated")), BorderLayout.NORTH);
+		this.add(this.title, BorderLayout.NORTH);
 		this.add(new JScrollPane(this.deobfClasses), BorderLayout.CENTER);
+
+		this.retranslateUi();
 	}
+
+	public void retranslateUi() {
+		this.title.setText(I18n.translate("info_panel.classes.deobfuscated"));
+	}
+
 }

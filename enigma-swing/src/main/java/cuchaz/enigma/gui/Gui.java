@@ -45,6 +45,8 @@ import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.gui.util.TranslationChangeListener;
+import cuchaz.enigma.gui.util.TranslationUtil;
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
 import cuchaz.enigma.network.packet.MessageC2SPacket;
@@ -60,7 +62,7 @@ import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class Gui {
+public class Gui implements TranslationChangeListener {
 
 	private final ObfPanel obfPanel;
 	private final DeobfPanel deobfPanel;
@@ -371,6 +373,8 @@ public class Gui {
 		}
 
 		this.frame.setVisible(true);
+
+		TranslationUtil.addListener(this);
 	}
 
 	public JFrame getFrame() {
@@ -858,6 +862,25 @@ public class Gui {
 			splitRight.setRightComponent(logSplit);
 			logSplit.setLeftComponent(tabs);
 		}
+	}
+
+	@Override
+	public void retranslateUi() {
+		this.jarFileChooser.setTitle(I18n.translate("menu.file.jar.open"));
+		this.exportJarFileChooser.setTitle(I18n.translate("menu.file.export.jar"));
+		this.tabs.setTitleAt(0, I18n.translate("info_panel.tree.inheritance"));
+		this.tabs.setTitleAt(1, I18n.translate("info_panel.tree.implementations"));
+		this.tabs.setTitleAt(2, I18n.translate("info_panel.tree.calls"));
+		this.logTabs.setTitleAt(0, I18n.translate("log_panel.users"));
+		this.logTabs.setTitleAt(1, I18n.translate("log_panel.messages"));
+		this.connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
+
+		this.updateUiState();
+
+		this.menuBar.retranslateUi();
+		this.obfPanel.retranslateUi();
+		this.deobfPanel.retranslateUi();
+		this.infoPanel.retranslateUi();
 	}
 
 	public void setConnectionState(ConnectionState state) {
