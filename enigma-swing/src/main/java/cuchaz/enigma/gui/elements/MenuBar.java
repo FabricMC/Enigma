@@ -25,7 +25,6 @@ import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.config.Decompiler;
 import cuchaz.enigma.gui.config.LookAndFeel;
-import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.*;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -413,7 +412,11 @@ public class MenuBar {
 			if (lookAndFeel.equals(UiConfig.getLookAndFeel())) {
 				themeButton.setSelected(true);
 			}
-			themeButton.addActionListener(_e -> Themes.setLookAndFeel(lookAndFeel));
+			themeButton.addActionListener(_e -> {
+				UiConfig.setLookAndFeel(lookAndFeel);
+				UiConfig.save();
+				ChangeDialog.show(gui);
+			});
 			themesMenu.add(themeButton);
 		}
 	}

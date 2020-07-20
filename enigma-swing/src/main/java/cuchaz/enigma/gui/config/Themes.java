@@ -16,12 +16,6 @@ public class Themes {
 
 	private static final Set<ThemeChangeListener> listeners = new HashSet<>();
 
-	public static void setLookAndFeel(LookAndFeel lookAndFeel) {
-		UiConfig.setLookAndFeel(lookAndFeel);
-		updateTheme();
-		UiConfig.save();
-	}
-
 	public static void updateTheme() {
 		LookAndFeel laf = UiConfig.getLookAndFeel();
 		laf.setGlobalLAF();
