@@ -69,6 +69,7 @@ public class EditorPanel {
 	private final Gui gui;
 
 	private EntryReference<Entry<?>, Entry<?>> cursorReference;
+	private EntryReference<Entry<?>, Entry<?>> nextReference;
 	private boolean mouseIsPressed = false;
 	private boolean shouldNavigateOnClick;
 
@@ -332,13 +333,14 @@ public class EditorPanel {
 			} else {
 				this.displayError(res.unwrapErr());
 			}
+			this.nextReference = null;
 		});
 	}
 
 	public void displayError(ClassHandleError t) {
 		this.setDisplayMode(DisplayMode.ERRORED);
 		String str;
-		switch(t.type) {
+		switch (t.type) {
 			case DECOMPILE:
 				str = "editor.decompile_error";
 				break;
@@ -404,21 +406,13 @@ public class EditorPanel {
 	}
 
 	public void onCaretMove(int pos, boolean fromClick) {
+		if (this.settingSource) return;
 		if (this.controller.project == null) return;
 
 		EntryRemapper mapper = this.controller.project.getMapper();
 		Token token = getToken(pos);
 
-		if (this.settingSource) {
-			EntryReference<Entry<?>, Entry<?>> ref = getCursorReference();
-			EntryReference<Entry<?>, Entry<?>> refAtCursor = getReference(token);
-			if (this.editor.getDocument().getLength() != 0 && ref != null && !ref.equals(refAtCursor)) {
-				showReference0(ref);
-			}
-			return;
-		} else {
-			setCursorReference(getReference(token));
-		}
+		setCursorReference(getReference(token));
 
 		Entry<?> referenceEntry = this.cursorReference != null ? this.cursorReference.entry : null;
 
@@ -484,17 +478,49 @@ public class EditorPanel {
 		if (source == null) return;
 		try {
 			this.settingSource = true;
+
+			int newCaretPos = 0;
+			if (this.source != null && this.source.getEntry().equals(source.getEntry())) {
+				int caretPos = this.editor.getCaretPosition();
+
+				if (this.source.getTokenStore().isCompatible(source.getTokenStore())) {
+					newCaretPos = this.source.getTokenStore().mapPosition(source.getTokenStore(), caretPos);
+				} else {
+					// if the class is the same but the token stores aren't
+					// compatible, then the user probably switched decompilers
+
+					// check if there's a selected reference we can navigate to,
+					// but only if there's none already queued up for being selected
+					if (this.getCursorReference() != null && this.nextReference == null) {
+						this.nextReference = this.getCursorReference();
+					}
+
+					// otherwise fall back to just using the same average
+					// position in the file
+					float scale = (float) source.toString().length() / this.source.toString().length();
+					newCaretPos = (int) (caretPos * scale);
+				}
+			}
+
 			this.source = source;
 			this.editor.getHighlighter().removeAllHighlights();
 			this.editor.setText(source.toString());
+			if (this.source != null) {
+				this.editor.setCaretPosition(newCaretPos);
+			}
 			setHighlightedTokens(source.getHighlightedTokens());
+			setCursorReference(getReference(getToken(this.editor.getCaretPosition())));
 		} finally {
 			this.settingSource = false;
 		}
-		showReference0(getCursorReference());
+
+		if (this.nextReference != null) {
+			this.showReference0(this.nextReference);
+			this.nextReference = null;
+		}
 	}
 
-	public void setHighlightedTokens(Map<RenamableTokenType, Collection<Token>> tokens) {
+	public void setHighlightedTokens(Map<RenamableTokenType, ? extends Collection<Token>> tokens) {
 		// remove any old highlighters
 		this.editor.getHighlighter().removeAllHighlights();
 
@@ -526,8 +552,11 @@ public class EditorPanel {
 	}
 
 	public void showReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		setCursorReference(reference);
-		showReference0(reference);
+		if (this.mode == DisplayMode.SUCCESS) {
+			showReference0(reference);
+		} else if (this.mode != DisplayMode.ERRORED) {
+			this.nextReference = reference;
+		}
 	}
 
 	/**

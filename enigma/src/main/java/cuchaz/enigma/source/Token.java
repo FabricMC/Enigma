@@ -23,9 +23,12 @@ public class Token implements Comparable<Token> {
 		this.text = text;
 	}
 
+	public int length() {
+		return this.end - this.start;
+	}
+
 	public int getRenameOffset(String to) {
-		int length = this.end - this.start;
-		return to.length() - length;
+		return to.length() - this.length();
 	}
 
 	public void rename(StringBuffer source, String to) {
