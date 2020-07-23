@@ -232,9 +232,9 @@ public final class UiConfig {
 			s.setIfAbsentRgbColor("Obfuscated Outline", 0xA05050);
 			s.setIfAbsentDouble("Obfuscated Outline Alpha", 1.0);
 			s.setIfAbsentRgbColor("Proposed", 0x000000);
-			s.setIfAbsentDouble("Proposed Alpha", 0.75);
+			s.setIfAbsentDouble("Proposed Alpha", 0.15);
 			s.setIfAbsentRgbColor("Proposed Outline", 0x000000);
-			s.setIfAbsentDouble("Proposed Outline Alpha", 0.15);
+			s.setIfAbsentDouble("Proposed Outline Alpha", 0.75);
 			s.setIfAbsentRgbColor("Deobfuscated", 0xDCFFDC);
 			s.setIfAbsentDouble("Deobfuscated Alpha", 1.0);
 			s.setIfAbsentRgbColor("Deobfuscated Outline", 0x50A050);
