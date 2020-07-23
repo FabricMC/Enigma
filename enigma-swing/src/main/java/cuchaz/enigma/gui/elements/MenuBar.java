@@ -1,13 +1,10 @@
 package cuchaz.enigma.gui.elements;
 
-import java.awt.Desktop;
 import java.awt.FileDialog;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +24,7 @@ import cuchaz.enigma.gui.config.Decompiler;
 import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.*;
+import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.gui.util.TranslationUtil;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -341,10 +339,7 @@ public class MenuBar {
 	}
 
 	private void onGithubClicked() {
-		try {
-			Desktop.getDesktop().browse(new URL("https://github.com/FabricMC/Enigma").toURI());
-		} catch (URISyntaxException | IOException ignored) {
-		}
+		GuiUtil.openUrl("https://github.com/FabricMC/Enigma");
 	}
 
 	private static void prepareOpenMenu(JMenu openMenu, Gui gui) {

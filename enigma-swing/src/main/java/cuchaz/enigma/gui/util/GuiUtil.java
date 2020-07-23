@@ -16,17 +16,25 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.ToolTipManager;
 
+import cuchaz.enigma.utils.Os;
+
 public class GuiUtil {
     public static void openUrl(String url) {
-        if (Desktop.isDesktopSupported()) {
-            Desktop desktop = Desktop.getDesktop();
-            try {
-                desktop.browse(new URI(url));
-            } catch (IOException ex) {
-                throw new Error(ex);
-            } catch (URISyntaxException ex) {
-                throw new IllegalArgumentException(ex);
+        try {
+            switch (Os.getOs()) {
+                case LINUX:
+                    new ProcessBuilder("/usr/bin/env", "xdg-open", url).start();
+                    break;
+                default:
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop desktop = Desktop.getDesktop();
+                        desktop.browse(new URI(url));
+                    }
             }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
         }
     }
 
