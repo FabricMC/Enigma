@@ -1,15 +1,20 @@
 package cuchaz.enigma.gui.util;
 
-import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.JTextComponent;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Desktop;
+import java.awt.Font;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Locale;
-import java.util.StringJoiner;
+import java.util.Map;
+
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.ToolTipManager;
 
 public class GuiUtil {
     public static void openUrl(String url) {
@@ -38,6 +43,23 @@ public class GuiUtil {
         manager.setInitialDelay(0);
         manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
         manager.setInitialDelay(oldDelay);
+    }
+
+    public static JLabel createLink(String text, Runnable action) {
+        JLabel link = new JLabel(text);
+        link.setForeground(Color.BLUE.darker());
+        link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        @SuppressWarnings("unchecked")
+        Map<TextAttribute, Object> attributes = (Map<TextAttribute, Object>) link.getFont().getAttributes();
+        attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+        link.setFont(link.getFont().deriveFont(attributes));
+        link.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                action.run();
+            }
+        });
+        return link;
     }
 
 }

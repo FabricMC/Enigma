@@ -5,6 +5,8 @@
 
 	"menu.file.stats.title": "Mapping-Statistiken",
 	"menu.file.stats.generate": "Diagramm generieren",
+	"menu.help.about.description": "Ein Tool zur Dekompilierung von Java-Code",
+	"menu.help.about.version": "Version: %s",
 
 	"popup_menu.editor_tab.close": "Schließen",
 	"popup_menu.editor_tab.close_all": "Alle schließen",

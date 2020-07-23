@@ -58,6 +58,8 @@
 	"menu.help.about": "About",
 	"menu.help.about.title": "%s - About",
 	"menu.help.about.ok": "Ok",
+	"menu.help.about.description": "A tool for deobfuscation of Java code",
+	"menu.help.about.version": "Version: %s",
 	"menu.help.github": "Github Page",
 
 	"popup_menu.rename": "Rename",

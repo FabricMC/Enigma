@@ -11,60 +11,46 @@
 
 package cuchaz.enigma.gui.dialog;
 
-import cuchaz.enigma.Enigma;
-import cuchaz.enigma.gui.util.GuiUtil;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.utils.Utils;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 import javax.swing.*;
-import java.awt.*;
-import java.io.IOException;
+
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
+import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.utils.I18n;
 
 public class AboutDialog {
 
 	public static void show(JFrame parent) {
-		// init frame
-		final JFrame frame = new JFrame(String.format(I18n.translate("menu.help.about.title"), Enigma.NAME));
-		final Container pane = frame.getContentPane();
-		pane.setLayout(new FlowLayout());
+		JDialog frame = new JDialog(parent, String.format(I18n.translate("menu.help.about.title"), Enigma.NAME), true);
+		Container pane = frame.getContentPane();
+		pane.setLayout(new GridBagLayout());
 
-		// load the content
-		try {
-			String html = Utils.readResourceToString("/about.html");
-			html = String.format(html, Enigma.NAME, Enigma.VERSION);
-			JLabel label = new JLabel(html);
-			label.setHorizontalAlignment(JLabel.CENTER);
-			pane.add(label);
-		} catch (IOException ex) {
-			throw new Error(ex);
-		}
+		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create()
+				.insets(2)
+				.weight(1.0, 0.0)
+				.anchor(GridBagConstraints.WEST);
 
-		// show the link
-		String html = "<html><a href=\"%s\">%s</a></html>";
-		html = String.format(html, Enigma.URL, Enigma.URL);
-		JButton link = new JButton(html);
-		link.addActionListener(event -> GuiUtil.openUrl(Enigma.URL));
-		link.setBorderPainted(false);
-		link.setOpaque(false);
-		link.setBackground(Color.WHITE);
-		link.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		link.setFocusable(false);
-		JPanel linkPanel = new JPanel();
-		linkPanel.add(link);
-		pane.add(linkPanel);
+		JLabel title = new JLabel(Enigma.NAME);
+		title.setFont(title.getFont().deriveFont(title.getFont().getSize2D() * 1.5f));
 
-		// show ok button
 		JButton okButton = new JButton(I18n.translate("menu.help.about.ok"));
-		pane.add(okButton);
-		okButton.addActionListener(arg0 -> frame.dispose());
+		okButton.addActionListener(e -> frame.dispose());
 
-		// show the frame
-		pane.doLayout();
-		frame.setSize(ScaleUtil.getDimension(400, 220));
+		pane.add(title, cb.pos(0, 0).build());
+		pane.add(new JLabel(I18n.translate("menu.help.about.description")), cb.pos(0, 1).width(2).build());
+		pane.add(new JLabel(I18n.translateFormatted("menu.help.about.version", Enigma.VERSION)), cb.pos(0, 2).width(2).build());
+		pane.add(GuiUtil.createLink(Enigma.URL, () -> GuiUtil.openUrl(Enigma.URL)), cb.pos(0, 3).build());
+		pane.add(okButton, cb.pos(1, 3).anchor(GridBagConstraints.SOUTHEAST).build());
+
+		frame.pack();
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(parent);
-		frame.setVisible(true);
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		frame.setVisible(true);
 	}
+
 }
