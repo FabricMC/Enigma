@@ -16,8 +16,6 @@ import java.util.stream.IntStream;
 
 import javax.swing.*;
 
-import org.drjekyll.fontchooser.FontDialog;
-
 import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.config.Decompiler;
@@ -283,16 +281,17 @@ public class MenuBar {
 	}
 
 	private void onFontClicked(Gui gui) {
-		FontDialog fd = new FontDialog(gui.getFrame(), "Choose Font", true);
-		fd.setLocationRelativeTo(gui.getFrame());
-		fd.setSelectedFont(UiConfig.getEditorFont());
-		fd.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		fd.setVisible(true);
-
-		if (!fd.isCancelSelected()) {
-			UiConfig.setEditorFont(fd.getSelectedFont());
-			UiConfig.save();
-		}
+//		FontDialog fd = new FontDialog(gui.getFrame(), "Choose Font", true);
+//		fd.setLocationRelativeTo(gui.getFrame());
+//		fd.setSelectedFont(UiConfig.getEditorFont());
+//		fd.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+//		fd.setVisible(true);
+//
+//		if (!fd.isCancelSelected()) {
+//			UiConfig.setEditorFont(fd.getSelectedFont());
+//			UiConfig.save();
+//		}
+		FontDialog.display(gui.getFrame());
 	}
 
 	private void onSearchClicked() {
