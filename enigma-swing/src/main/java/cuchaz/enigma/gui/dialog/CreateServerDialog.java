@@ -6,6 +6,7 @@ import java.awt.Frame;
 import java.util.Arrays;
 import java.util.List;
 
+import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.elements.ValidatablePasswordField;
 import cuchaz.enigma.gui.elements.ValidatableTextField;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -31,8 +32,8 @@ public class CreateServerDialog extends AbstractDialog {
 
 	@Override
 	protected List<Pair<String, Component>> createComponents() {
-		portField = new ValidatableTextField(Integer.toString(EnigmaServer.DEFAULT_PORT));
-		passwordField = new ValidatablePasswordField();
+		portField = new ValidatableTextField(Integer.toString(NetConfig.getServerPort()));
+		passwordField = new ValidatablePasswordField(NetConfig.getServerPassword());
 
 		portField.addActionListener(event -> confirm());
 		passwordField.addActionListener(event -> confirm());

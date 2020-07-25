@@ -46,7 +46,8 @@ public class ConfigSection {
 	}
 
 	public String setIfAbsentString(String key, String value) {
-		return this.values.putIfAbsent(key, value);
+		this.values.putIfAbsent(key, value);
+		return this.values.get(key);
 	}
 
 	public OptionalInt getInt(String key) {

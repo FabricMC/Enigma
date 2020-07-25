@@ -20,6 +20,7 @@ import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.config.Decompiler;
 import cuchaz.enigma.gui.config.LookAndFeel;
+import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.*;
 import cuchaz.enigma.gui.util.GuiUtil;
@@ -312,6 +313,10 @@ public class MenuBar {
 		this.gui.getController().disconnectIfConnected(null);
 		try {
 			this.gui.getController().createClient(result.getUsername(), result.getAddress().address, result.getAddress().port, result.getPassword());
+			NetConfig.setUsername(result.getUsername());
+			NetConfig.setRemoteAddress(result.getAddressStr());
+			NetConfig.setPassword(String.valueOf(result.getPassword()));
+			NetConfig.save();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
 			this.gui.getController().disconnectIfConnected(null);
@@ -331,6 +336,9 @@ public class MenuBar {
 		this.gui.getController().disconnectIfConnected(null);
 		try {
 			this.gui.getController().createServer(result.getPort(), result.getPassword());
+			NetConfig.setServerPort(result.getPort());
+			NetConfig.setServerPassword(String.valueOf(result.getPassword()));
+			NetConfig.save();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.server.start.error"), JOptionPane.ERROR_MESSAGE);
 			this.gui.getController().disconnectIfConnected(null);

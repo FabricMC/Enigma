@@ -34,9 +34,10 @@ import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.service.ObfuscationTestService;
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
+import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.stats.StatsGenerator;
@@ -563,7 +564,7 @@ public class GuiController implements ClientPacketHandler {
 		server.start();
 		client = new EnigmaClient(this, "127.0.0.1", port);
 		client.connect();
-		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), password, EnigmaServer.OWNER_USERNAME));
+		client.sendPacket(new LoginC2SPacket(project.getJarChecksum(), password, NetConfig.getUsername()));
 		gui.setConnectionState(ConnectionState.HOSTING);
 	}
 
