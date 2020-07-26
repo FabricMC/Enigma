@@ -278,7 +278,7 @@ public class MenuBar {
 		} catch (NumberFormatException ignored) {
 		}
 		ScaleUtil.setScaleFactor(newScale);
-		ChangeDialog.show(this.gui);
+		ChangeDialog.show(this.gui.getFrame());
 	}
 
 	private void onFontClicked(Gui gui) {
@@ -417,7 +417,7 @@ public class MenuBar {
 			themeButton.addActionListener(_e -> {
 				UiConfig.setLookAndFeel(lookAndFeel);
 				UiConfig.save();
-				ChangeDialog.show(gui);
+				ChangeDialog.show(gui.getFrame());
 			});
 			themesMenu.add(themeButton);
 		}
@@ -448,7 +448,7 @@ public class MenuBar {
 					float realScaleFactor = scaleFactor / 100f;
 					JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
 					menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
-					menuItem.addActionListener(event -> ChangeDialog.show(gui));
+					menuItem.addActionListener(event -> ChangeDialog.show(gui.getFrame()));
 					scaleGroup.add(menuItem);
 					scaleMenu.add(menuItem);
 					return new Pair<>(realScaleFactor, menuItem);

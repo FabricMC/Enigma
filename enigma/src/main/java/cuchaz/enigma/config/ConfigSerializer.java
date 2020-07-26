@@ -166,6 +166,18 @@ public final class ConfigSerializer {
 		return s.replace("\\n", "\n").replace("\\\\", "\\");
 	}
 
+	public static Optional<Boolean> parseBool(String v) {
+		if (v == null) return Optional.empty();
+		switch (v) {
+			case "true":
+				return Optional.of(true);
+			case "false":
+				return Optional.of(false);
+			default:
+				return Optional.empty();
+		}
+	}
+
 	public static OptionalInt parseInt(String v) {
 		if (v == null) return OptionalInt.empty();
 		try {

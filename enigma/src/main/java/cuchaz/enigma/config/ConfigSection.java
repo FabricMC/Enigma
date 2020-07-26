@@ -50,6 +50,21 @@ public class ConfigSection {
 		return this.values.get(key);
 	}
 
+	public Optional<Boolean> getBool(String key) {
+		return ConfigSerializer.parseBool(this.values.get(key));
+	}
+
+	public boolean setIfAbsentBool(String key, boolean value) {
+		return this.getBool(key).orElseGet(() -> {
+			this.setBool(key, value);
+			return value;
+		});
+	}
+
+	public void setBool(String key, boolean value) {
+		this.values.put(key, Boolean.toString(value));
+	}
+
 	public OptionalInt getInt(String key) {
 		return ConfigSerializer.parseInt(this.values.get(key));
 	}

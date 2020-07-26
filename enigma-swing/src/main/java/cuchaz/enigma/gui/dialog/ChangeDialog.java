@@ -1,22 +1,23 @@
 package cuchaz.enigma.gui.dialog;
 
 import java.awt.BorderLayout;
+import java.awt.Dialog;
+import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.utils.I18n;
 
 public class ChangeDialog {
 
-	public static void show(Gui gui) {
+	public static void show(Window parent) {
 		// init frame
-		JFrame frame = new JFrame(I18n.translate("menu.view.change.title"));
+		JDialog frame = new JDialog(parent, I18n.translate("menu.view.change.title"), Dialog.DEFAULT_MODALITY_TYPE);
 		JPanel textPanel = new JPanel();
 		JPanel buttonPanel = new JPanel();
 		frame.setLayout(new BorderLayout());
@@ -44,7 +45,8 @@ public class ChangeDialog {
 		// show the frame
 		frame.pack();
 		frame.setResizable(false);
-		frame.setLocationRelativeTo(gui.getFrame());
+		frame.setLocationRelativeTo(parent);
 		frame.setVisible(true);
 	}
+
 }

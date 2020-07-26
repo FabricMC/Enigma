@@ -1,7 +1,10 @@
 package cuchaz.enigma.gui.config;
 
+import java.awt.Font;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.swing.UIManager;
 
 import com.google.common.collect.ImmutableMap;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
@@ -19,6 +22,7 @@ public class Themes {
 	public static void updateTheme() {
 		LookAndFeel laf = UiConfig.getLookAndFeel();
 		laf.setGlobalLAF();
+		setFonts();
 		UiConfig.setLookAndFeelDefaults(laf, LookAndFeel.isDarkLaf());
 		EnigmaSyntaxKit.invalidate();
 		DefaultSyntaxKit.initKit();
@@ -27,6 +31,55 @@ public class Themes {
 		listeners.forEach(l -> l.onThemeChanged(laf, boxHighlightPainters));
 		ScaleUtil.applyScaling();
 		UiConfig.save();
+	}
+
+	private static void setFonts() {
+		if (UiConfig.shouldUseCustomFonts()) {
+			Font small = UiConfig.getSmallFont();
+			Font bold = UiConfig.getDefaultFont();
+			Font normal = UiConfig.getDefault2Font();
+
+			UIManager.put("CheckBox.font", bold);
+			UIManager.put("CheckBoxMenuItem.font", bold);
+			UIManager.put("CheckBoxMenuItem.acceleratorFont", small);
+			UIManager.put("ColorChooser.font", normal);
+			UIManager.put("ComboBox.font", bold);
+			UIManager.put("DesktopIcon.font", bold);
+			UIManager.put("EditorPane.font", normal);
+			UIManager.put("InternalFrame.titleFont", bold);
+			UIManager.put("FormattedTextField.font", normal);
+			UIManager.put("Label.font", bold);
+			UIManager.put("List.font", bold);
+			UIManager.put("Menu.acceleratorFont", small);
+			UIManager.put("Menu.font", bold);
+			UIManager.put("MenuBar.font", bold);
+			UIManager.put("MenuItem.acceleratorFont", small);
+			UIManager.put("MenuItem.font", bold);
+			UIManager.put("OptionPane.font", normal);
+			UIManager.put("Panel.font", normal);
+			UIManager.put("PasswordField.font", normal);
+			UIManager.put("PopupMenu.font", bold);
+			UIManager.put("ProgressBar.font", bold);
+			UIManager.put("RadioButton.font", bold);
+			UIManager.put("RadioButtonMenuItem.acceleratorFont", small);
+			UIManager.put("RadioButtonMenuItem.font", bold);
+			UIManager.put("ScrollPane.font", normal);
+			UIManager.put("Slider.font", bold);
+			UIManager.put("Spinner.font", bold);
+			UIManager.put("TabbedPane.font", bold);
+			UIManager.put("Table.font", normal);
+			UIManager.put("TableHeader.font", normal);
+			UIManager.put("TextArea.font", normal);
+			UIManager.put("TextField.font", normal);
+			UIManager.put("TextPane.font", normal);
+			UIManager.put("TitledBorder.font", bold);
+			UIManager.put("ToggleButton.font", bold);
+			UIManager.put("ToolBar.font", bold);
+			UIManager.put("ToolTip.font", normal);
+			UIManager.put("Tree.font", normal);
+			UIManager.put("Viewport.font", normal);
+			UIManager.put("Button.font", bold);
+		}
 	}
 
 	public static ImmutableMap<RenamableTokenType, BoxHighlightPainter> getBoxHighlightPainters() {

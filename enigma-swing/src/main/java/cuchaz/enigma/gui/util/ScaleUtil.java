@@ -32,7 +32,10 @@ public class ScaleUtil {
 		float oldScale = getScaleFactor();
 		float clamped = Math.min(Math.max(0.25f, scaleFactor), 10.0f);
 		UiConfig.setScaleFactor(clamped);
-		UiConfig.setEditorFont(rescaleFont(UiConfig.getEditorFont(), oldScale));
+		rescaleFontInConfig("Default", oldScale);
+		rescaleFontInConfig("Default 2", oldScale);
+		rescaleFontInConfig("Small", oldScale);
+		rescaleFontInConfig("Editor", oldScale);
 		UiConfig.save();
 		listeners.forEach(l -> l.onScaleChanged(clamped, oldScale));
 	}
@@ -59,6 +62,10 @@ public class ScaleUtil {
 
 	public static Font scaleFont(Font font) {
 		return createTweakerForCurrentLook(getScaleFactor()).modifyFont("", font);
+	}
+
+	private static void rescaleFontInConfig(String name, float oldScale) {
+		UiConfig.getFont(name).ifPresent(font -> UiConfig.setFont(name, rescaleFont(font, oldScale)));
 	}
 
 	public static Font rescaleFont(Font font, float oldScale) {

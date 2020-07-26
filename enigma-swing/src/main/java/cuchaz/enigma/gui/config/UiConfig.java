@@ -151,17 +151,49 @@ public final class UiConfig {
 		return getThemeColorRgb("Line Numbers Selected");
 	}
 
-	public static Font getFont(String name, Font fallback) {
-		Optional<String> spec = swing.data().section("Fonts").getString(name);
-		return spec.map(Font::decode).orElse(fallback);
+	public static boolean shouldUseCustomFonts() {
+		return swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").setIfAbsentBool("Use Custom", false);
+	}
+
+	public static void setUseCustomFonts(boolean b) {
+		swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").setBool("Use Custom", b);
+	}
+
+	public static Optional<Font> getFont(String name) {
+		Optional<String> spec = swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").getString(name);
+		return spec.map(Font::decode);
 	}
 
 	public static void setFont(String name, Font font) {
-		swing.data().section("Fonts").setString(name, encodeFont(font));
+		swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").setString(name, encodeFont(font));
+	}
+
+	public static Font getDefaultFont() {
+		return getFont("Default").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG).deriveFont(Font.BOLD)));
+	}
+
+	public static void setDefaultFont(Font font) {
+		setFont("Default", font);
+	}
+
+	public static Font getDefault2Font() {
+		return getFont("Default 2").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG)));
+	}
+
+	public static void setDefault2Font(Font font) {
+		setFont("Default 2", font);
+	}
+
+	public static Font getSmallFont() {
+		return getFont("Small").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG)));
+	}
+
+	public static void setSmallFont(Font font) {
+		setFont("Small", font);
 	}
 
 	public static Font getEditorFont() {
-		return getFont("Editor", ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED)));
+		return getFont("Editor").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED)));
 	}
 
 	public static void setEditorFont(Font font) {
