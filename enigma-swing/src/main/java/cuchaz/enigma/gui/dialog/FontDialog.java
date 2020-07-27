@@ -3,7 +3,6 @@ package cuchaz.enigma.gui.dialog;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -26,11 +25,18 @@ public class FontDialog extends JDialog {
 			"Editor"
 	);
 
-	private final JList<String> entries = new JList<>(new Vector<>(CATEGORIES));
+	private static final List<String> CATEGORY_TEXTS = Arrays.asList(
+			"fonts.cat.default",
+			"fonts.cat.default2",
+			"fonts.cat.small",
+			"fonts.cat.editor"
+	);
+
+	private final JList<String> entries = new JList<>(CATEGORY_TEXTS.stream().map(I18n::translate).toArray(String[]::new));
 	private final FontChooser chooser = new FontChooser(Font.decode(Font.DIALOG));
-	private final JCheckBox customCheckBox = new JCheckBox(I18n.translate("Use Custom Fonts"));
-	private final JButton okButton = new JButton(I18n.translate("OK"));
-	private final JButton cancelButton = new JButton(I18n.translate("Cancel"));
+	private final JCheckBox customCheckBox = new JCheckBox(I18n.translate("fonts.use_custom"));
+	private final JButton okButton = new JButton(I18n.translate("prompt.ok"));
+	private final JButton cancelButton = new JButton(I18n.translate("prompt.cancel"));
 
 	private final Font[] fonts = CATEGORIES.stream().map(name -> UiConfig.getFont(name).orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG)))).toArray(Font[]::new);
 
