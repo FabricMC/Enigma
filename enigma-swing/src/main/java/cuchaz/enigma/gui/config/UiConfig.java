@@ -62,12 +62,12 @@ public final class UiConfig {
 	}
 
 	private static Color getThemeColorRgba(String colorName) {
-		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().getName()).section("Colors");
+		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().name()).section("Colors");
 		return fromComponents(s.getRgbColor(colorName).orElse(0), s.getDouble(String.format("%s Alpha", colorName)).orElse(0));
 	}
 
 	private static Color getThemeColorRgb(String colorName) {
-		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().getName()).section("Colors");
+		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().name()).section("Colors");
 		return new Color(s.getRgbColor(colorName).orElse(0));
 	}
 
@@ -152,20 +152,20 @@ public final class UiConfig {
 	}
 
 	public static boolean shouldUseCustomFonts() {
-		return swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").setIfAbsentBool("Use Custom", false);
+		return swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").setIfAbsentBool("Use Custom", false);
 	}
 
 	public static void setUseCustomFonts(boolean b) {
-		swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").setBool("Use Custom", b);
+		swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").setBool("Use Custom", b);
 	}
 
 	public static Optional<Font> getFont(String name) {
-		Optional<String> spec = swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").getString(name);
+		Optional<String> spec = swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").getString(name);
 		return spec.map(Font::decode);
 	}
 
 	public static void setFont(String name, Font font) {
-		swing.data().section("Themes").section(getLookAndFeel().getName()).section("Fonts").setString(name, encodeFont(font));
+		swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").setString(name, encodeFont(font));
 	}
 
 	public static Font getDefaultFont() {
@@ -253,7 +253,7 @@ public final class UiConfig {
 	}
 
 	public static void setLookAndFeelDefaults(LookAndFeel laf, boolean isDark) {
-		ConfigSection s = swing.data().section("Themes").section(laf.getName()).section("Colors");
+		ConfigSection s = swing.data().section("Themes").section(laf.name()).section("Colors");
 		if (!isDark) {
 			// Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
 			s.setIfAbsentRgbColor("Line Numbers Foreground", 0x333300);
@@ -312,4 +312,5 @@ public final class UiConfig {
 			s.setIfAbsentRgbColor("Text", 0xF8F8F2);
 		}
 	}
+
 }
