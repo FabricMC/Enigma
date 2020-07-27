@@ -37,7 +37,7 @@ public class AboutDialog {
 		JLabel title = new JLabel(Enigma.NAME);
 		title.setFont(title.getFont().deriveFont(title.getFont().getSize2D() * 1.5f));
 
-		JButton okButton = new JButton(I18n.translate("menu.help.about.ok"));
+		JButton okButton = new JButton(I18n.translate("prompt.ok"));
 		okButton.addActionListener(e -> frame.dispose());
 
 		pane.add(title, cb.pos(0, 0).build());

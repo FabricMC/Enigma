@@ -1,8 +1,6 @@
 {
 	"language": "Français",
 
-	"general.retry": "Réessayer",
-
 	"mapping_format.enigma_file": "Fichier Enigma",
 	"mapping_format.enigma_directory": "Répertoire Enigma",
 	"mapping_format.enigma_zip": "ZIP Enigma",
@@ -43,7 +41,6 @@
 	"menu.view.scale.custom.title": "Échelle personnalisée",
 	"menu.view.change.title": "Modifications",
 	"menu.view.change.summary": "Les modifications seront appliquées lors du prochain redémarrage.",
-	"menu.view.change.ok": "Ok",
 	"menu.view.search": "Rechercher",
 	"menu.collab": "Collab",
 	"menu.collab.connect": "Se connecter à un serveur",
@@ -55,7 +52,6 @@
 	"menu.help": "Aide",
 	"menu.help.about": "À propos",
 	"menu.help.about.title": "%s - À propos",
-	"menu.help.about.ok": "Ok",
 	"menu.help.github": "Page Github",
 
 	"popup_menu.rename": "Renommer",
@@ -128,16 +124,17 @@
 
 	"javadocs.edit": "Éditer les Javadocs",
 	"javadocs.instruction": "Éditer les Javadocs ici.",
-	"javadocs.cancel": "Annuler",
-	"javadocs.save": "Enregistrer",
+
+	"prompt.ok": "OK",
+	"prompt.cancel": "Annuler",
+	"prompt.retry": "Réessayer",
+	"prompt.open": "Ouvrir",
+	"prompt.save": "Enregistrer",
 
 	"prompt.close.title": "Enregistrer les modifications ?",
 	"prompt.close.summary": "Vos mappings n'ont pas encore été enregistrés. Souhaitez-vous enregistrer ?",
 	"prompt.close.save": "Enregistrer et fermer",
 	"prompt.close.discard": "Annuler les modifications",
-	"prompt.close.cancel": "Annuler",
-	"prompt.open": "Ouvrir",
-	"prompt.cancel": "Annuler",
 	"prompt.connect.title": "Se connecter à un serveur",
 	"prompt.connect.username": "Nom d'utilisateur :",
 	"prompt.connect.address": "Adresse :",

@@ -232,7 +232,7 @@ public class MenuBar {
 				} else if (response == JOptionPane.NO_OPTION)
 					then.run();
 				return null;
-			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
+			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.cancel"));
 		} else {
 			then.run();
 		}

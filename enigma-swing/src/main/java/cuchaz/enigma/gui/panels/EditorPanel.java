@@ -62,7 +62,7 @@ public class EditorPanel {
 	private final JLabel errorLabel = new JLabel();
 	private final JTextArea errorTextArea = new JTextArea();
 	private final JScrollPane errorScrollPane = new JScrollPane(this.errorTextArea);
-	private final JButton retryButton = new JButton(I18n.translate("general.retry"));
+	private final JButton retryButton = new JButton(I18n.translate("prompt.retry"));
 
 	private DisplayMode mode = DisplayMode.INACTIVE;
 

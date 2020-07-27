@@ -1,8 +1,6 @@
 {
 	"language": "English",
 
-	"general.retry": "Retry",
-
 	"mapping_format.enigma_file": "Enigma File",
 	"mapping_format.enigma_directory": "Enigma Directory",
 	"mapping_format.enigma_zip": "Enigma ZIP",
@@ -45,7 +43,6 @@
 	"menu.view.scale.custom.title": "Custom Scale",
 	"menu.view.change.title": "Changes",
 	"menu.view.change.summary": "Changes will be applied after the next restart.",
-	"menu.view.change.ok": "Ok",
 	"menu.view.search": "Search",
 	"menu.collab": "Collab",
 	"menu.collab.connect": "Connect to server",
@@ -57,7 +54,6 @@
 	"menu.help": "Help",
 	"menu.help.about": "About",
 	"menu.help.about.title": "%s - About",
-	"menu.help.about.ok": "Ok",
 	"menu.help.about.description": "A tool for deobfuscation of Java code",
 	"menu.help.about.version": "Version: %s",
 	"menu.help.github": "Github Page",
@@ -132,16 +128,17 @@
 
 	"javadocs.edit": "Edit Javadocs",
 	"javadocs.instruction": "Edit javadocs here.",
-	"javadocs.cancel": "Cancel",
-	"javadocs.save": "Save",
+
+	"prompt.ok": "OK",
+	"prompt.cancel": "Cancel",
+	"prompt.retry": "Retry",
+	"prompt.save": "Save",
+	"prompt.open": "Open",
 
 	"prompt.close.title": "Save your changes?",
 	"prompt.close.summary": "Your mappings have not been saved yet. Do you want to save?",
 	"prompt.close.save": "Save and close",
 	"prompt.close.discard": "Discard changes",
-	"prompt.close.cancel": "Cancel",
-	"prompt.open": "Open",
-	"prompt.cancel": "Cancel",
 	"prompt.connect.title": "Connect to Server",
 	"prompt.connect.username": "Username:",
 	"prompt.connect.address": "Address:",

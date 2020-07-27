@@ -704,7 +704,7 @@ public class Gui implements TranslationChangeListener {
 				}
 
 				return null;
-			}, I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
+			}, I18n.translate("prompt.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.cancel"));
 		}
 	}
 

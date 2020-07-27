@@ -30,7 +30,7 @@ public class ChangeDialog {
 		textPanel.add(text);
 
 		// show ok button
-		JButton okButton = new JButton(I18n.translate("menu.view.change.ok"));
+		JButton okButton = new JButton(I18n.translate("prompt.ok"));
 		buttonPanel.add(okButton);
 		okButton.addActionListener(event -> frame.dispose());
 		okButton.addKeyListener(new KeyAdapter() {

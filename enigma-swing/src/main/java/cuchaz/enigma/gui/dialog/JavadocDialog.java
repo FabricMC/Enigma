@@ -11,23 +11,18 @@
 
 package cuchaz.enigma.gui.dialog;
 
-import cuchaz.enigma.gui.util.GuiUtil;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.gui.util.ScaleUtil;
-
-import javax.swing.*;
-import javax.swing.text.html.HTML;
-
-import java.awt.*;
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.*;
+import javax.swing.text.html.HTML;
 
 import com.google.common.base.Strings;
+
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.elements.ValidatableTextArea;
@@ -88,10 +83,10 @@ public class JavadocDialog {
 		JPanel buttonsPanel = new JPanel();
 		buttonsPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		buttonsPanel.add(GuiUtil.unboldLabel(new JLabel(I18n.translate("javadocs.instruction"))));
-		JButton cancelButton = new JButton(I18n.translate("javadocs.cancel"));
+		JButton cancelButton = new JButton(I18n.translate("prompt.cancel"));
 		cancelButton.addActionListener(event -> close());
 		buttonsPanel.add(cancelButton);
-		JButton saveButton = new JButton(I18n.translate("javadocs.save"));
+		JButton saveButton = new JButton(I18n.translate("prompt.save"));
 		saveButton.addActionListener(event -> doSave());
 		buttonsPanel.add(saveButton);
 		contentPane.add(buttonsPanel, BorderLayout.SOUTH);
