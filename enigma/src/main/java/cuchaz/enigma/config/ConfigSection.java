@@ -125,6 +125,21 @@ public class ConfigSection {
 		});
 	}
 
+	public Optional<int[]> getIntArray(String key) {
+		return this.getArray(key).map(arr -> Arrays.stream(arr).mapToInt(s -> ConfigSerializer.parseInt(s).orElse(0)).toArray());
+	}
+
+	public void setIntArray(String key, int[] value) {
+		this.setArray(key, Arrays.stream(value).mapToObj(Integer::toString).toArray(String[]::new));
+	}
+
+	public int[] setIfAbsentIntArray(String key, int[] value) {
+		return this.getIntArray(key).orElseGet(() -> {
+			this.setIntArray(key, value);
+			return value;
+		});
+	}
+
 	public <T extends Enum<T>> Optional<T> getEnum(Function<String, T> byName, String key) {
 		return ConfigSerializer.parseEnum(byName, this.values.get(key));
 	}

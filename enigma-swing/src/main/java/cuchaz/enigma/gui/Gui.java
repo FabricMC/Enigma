@@ -91,6 +91,7 @@ public class Gui implements TranslationChangeListener {
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
 
+	private JSplitPane splitCenter;
 	private JSplitPane splitRight;
 	private JSplitPane logSplit;
 	private CollapsibleTabbedPane logTabs;
@@ -331,9 +332,18 @@ public class Gui implements TranslationChangeListener {
 		splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
-		JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
+		splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
 		splitCenter.setResizeWeight(0); // let the right side take all the slack
 		pane.add(splitCenter, BorderLayout.CENTER);
+
+		// restore state
+		int[] layout = UiConfig.getLayout();
+		if (layout.length >= 4) {
+			this.splitClasses.setDividerLocation(layout[0]);
+			this.splitCenter.setDividerLocation(layout[1]);
+			this.splitRight.setDividerLocation(layout[2]);
+			this.logSplit.setDividerLocation(layout[3]);
+		}
 
 		// init menus
 		this.menuBar = new MenuBar(this);
@@ -711,6 +721,11 @@ public class Gui implements TranslationChangeListener {
 	private void exit() {
 		UiConfig.setWindowPos("Main Window", this.frame.getLocationOnScreen());
 		UiConfig.setWindowSize("Main Window", this.frame.getSize());
+		UiConfig.setLayout(
+				this.splitClasses.getDividerLocation(),
+				this.splitCenter.getDividerLocation(),
+				this.splitRight.getDividerLocation(),
+				this.logSplit.getDividerLocation());
 		UiConfig.save();
 
 		if (searchDialog != null) {

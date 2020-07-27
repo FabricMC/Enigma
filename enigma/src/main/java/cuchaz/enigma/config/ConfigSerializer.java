@@ -237,7 +237,11 @@ public final class ConfigSerializer {
 			int nextSep = v.indexOf(',', idx);
 			int nextEsc = v.indexOf('\\', idx);
 			int next = optMin(nextSep, nextEsc);
-			if (next == nextSep) {
+			if (next == -1) {
+				cur.append(v, idx, v.length());
+				l.add(cur.toString());
+				return Optional.of(l.toArray(new String[0]));
+			} else if (next == nextSep) {
 				cur.append(v, idx, nextSep);
 				l.add(cur.toString());
 				cur.delete(0, cur.length());
@@ -248,10 +252,6 @@ public final class ConfigSerializer {
 					cur.append(v.charAt(nextEsc + 1));
 				}
 				idx = nextEsc + 2;
-			} else {
-				cur.append(v, idx, v.length());
-				l.add(cur.toString());
-				return Optional.of(l.toArray(new String[0]));
 			}
 		}
 	}

@@ -40,6 +40,14 @@ public final class UiConfig {
 		swing.data().section("General").setDouble("Scale Factor", scale);
 	}
 
+	public static int[] getLayout() {
+		return swing.data().section("Main Window").getIntArray("Layout").orElseGet(() -> new int[] { -1, -1, -1, -1 });
+	}
+
+	public static void setLayout(int leftV, int left, int right, int rightH) {
+		swing.data().section("Main Window").setIntArray("Layout", new int[] { leftV, left, right, rightH });
+	}
+
 	public static LookAndFeel getLookAndFeel() {
 		return swing.data().section("Themes").setIfAbsentEnum(LookAndFeel::valueOf, "Current", LookAndFeel.NONE);
 	}
