@@ -161,4 +161,23 @@ public class ConfigSection {
 		return new ConfigSection(new HashMap<>(this.values), sections);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof ConfigSection)) return false;
+		ConfigSection that = (ConfigSection) o;
+		return values.equals(that.values) &&
+				sections.equals(that.sections);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(values, sections);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("ConfigSection { values: %s, sections: %s }", values, sections);
+	}
+
 }

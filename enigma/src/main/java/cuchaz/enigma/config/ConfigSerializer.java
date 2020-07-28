@@ -41,38 +41,42 @@ public final class ConfigSerializer {
 
 	private static int parseSectionLine(String v, int idx, ConfigStructureVisitor visitor) {
 		if (v.startsWith("[")) {
-			visitor.jumpToRootSection();
-
+			List<String> path = new ArrayList<>();
 			while (idx < v.length() && v.charAt(idx) == '[') {
-				idx = parseSection(v, idx, visitor);
+				idx = parseSection(v, idx, path);
 				if (idx == UNEXPECTED_TOKEN) return UNEXPECTED_TOKEN;
 			}
+
+			if (!path.isEmpty()) {
+				visitor.jumpToRootSection();
+				for (String s : path) {
+					visitor.visitSection(s);
+				}
+			}
+
 			return v.length();
 		} else {
 			return NO_MATCH;
 		}
 	}
 
-	private static int parseSection(String v, int idx, ConfigStructureVisitor visitor) {
+	private static int parseSection(String v, int idx, List<String> path) {
 		idx += 1; // skip leading [
 		StringBuilder sb = new StringBuilder();
 		while (idx < v.length()) {
 			int nextCloseBracket = v.indexOf(']', idx);
 			int nextEscape = v.indexOf('\\', idx);
 			int next = optMin(nextCloseBracket, nextEscape);
-			if (next == nextCloseBracket) {
+			if (next == -1) {
+				// unexpected
+				return UNEXPECTED_TOKEN;
+			} else if (next == nextCloseBracket) {
 				sb.append(v, idx, nextCloseBracket);
-				visitor.visitSection(sb.toString());
+				path.add(sb.toString());
 				return nextCloseBracket + 1;
 			} else if (next == nextEscape) {
 				sb.append(v, idx, nextEscape);
-				if (nextEscape + 1 < v.length()) {
-					sb.append(v.charAt(nextEscape + 1));
-				}
-				idx = nextEscape + 2;
-			} else {
-				// unexpected
-				return UNEXPECTED_TOKEN;
+				idx = parseEscape(v, nextEscape, sb);
 			}
 		}
 		return idx;
@@ -85,7 +89,9 @@ public final class ConfigSerializer {
 			int nextEq = v.indexOf('=', idx);
 			int nextEscape = v.indexOf('\\', idx);
 			int next = optMin(nextEq, nextEscape);
-			if (next == nextEq) {
+			if (next == -1) {
+				break;
+			} else if (next == nextEq) {
 				sb.append(v, idx, nextEq);
 				k = sb.toString();
 				sb.delete(0, sb.length());
@@ -93,22 +99,14 @@ public final class ConfigSerializer {
 				break;
 			} else if (next == nextEscape) {
 				sb.append(v, idx, nextEscape);
-				if (nextEscape + 1 < v.length()) {
-					sb.append(v.charAt(nextEscape + 1));
-				}
-				idx = nextEscape + 2;
-			} else {
-				break;
+				idx = parseEscape(v, nextEscape, sb);
 			}
 		}
 		while (idx < v.length()) {
 			int nextEscape = v.indexOf('\\', idx);
 			if (nextEscape != -1) {
 				sb.append(v, idx, nextEscape);
-				if (nextEscape + 1 < v.length()) {
-					sb.append(v.charAt(nextEscape + 1));
-				}
-				idx = nextEscape + 2;
+				idx = parseEscape(v, nextEscape, sb);
 			} else {
 				break;
 			}
@@ -116,6 +114,31 @@ public final class ConfigSerializer {
 		sb.append(v, idx, v.length());
 		if (k == null) return NO_MATCH;
 		visitor.visitKeyValue(k, sb.toString());
+		return idx;
+	}
+
+	private static int parseEscape(String v, int idx, StringBuilder sb) {
+		if (idx + 1 < v.length()) {
+			if (v.charAt(idx + 1) == 'u') {
+				if (idx + 5 < v.length()) {
+					String codePoint = v.substring(idx + 2, idx + 6);
+					try {
+						int c = Integer.parseUnsignedInt(codePoint, 16);
+						sb.append((char) c);
+					} catch (NumberFormatException ignored) {
+					}
+					idx = idx + 6;
+				}
+			} else if (v.charAt(idx + 1) == 'n') {
+				sb.append('\n');
+				idx = idx + 2;
+			} else {
+				sb.append(v.charAt(idx + 1));
+				idx = idx + 2;
+			}
+		} else {
+			idx = idx + 1;
+		}
 		return idx;
 	}
 
@@ -129,7 +152,7 @@ public final class ConfigSerializer {
 		if (!section.values().isEmpty()) {
 			if (sb.length() > 0) sb.append('\n');
 			pathStack.forEach(n -> sb.append('[').append(escapeSection(n)).append(']'));
-			sb.append('\n');
+			if (!pathStack.isEmpty()) sb.append('\n');
 			section.values().entrySet().stream()
 					.sorted(Entry.comparingByKey())
 					.forEach(e -> sb.append(escapeKey(e.getKey())).append('=').append(escapeValue(e.getValue())).append('\n'));
@@ -143,27 +166,27 @@ public final class ConfigSerializer {
 	}
 
 	private static String escapeSection(String s) {
-		return s.replace("\\", "\\\\").replace("]", "\\]");
-	}
-
-	private static String unescapeSection(String s) {
-		return s.replace("\\]", "]").replace("\\\\", "\\");
+		return s
+				.replace("\\", "\\\\")
+				.replace("\n", "\\n")
+				.replace("]", "\\]")
+				.chars().mapToObj(c -> c >= 32 && c < 127 ? Character.toString((char) c) : String.format("\\u%04x", c)).collect(Collectors.joining());
 	}
 
 	private static String escapeKey(String s) {
-		return s.replace("\\", "\\\\").replace("[", "\\[").replace("\n", "\\n").replace("=", "\\=");
-	}
-
-	private static String unescapeKey(String s) {
-		return s.replace("\\=", "=").replace("\\n", "\n").replace("\\[", "[").replace("\\\\", "\\");
+		return s
+				.replace("\\", "\\\\")
+				.replace("[", "\\[")
+				.replace("\n", "\\n")
+				.replace("=", "\\=")
+				.chars().mapToObj(c -> c >= 32 && c < 127 ? Character.toString((char) c) : String.format("\\u%04x", c)).collect(Collectors.joining());
 	}
 
 	private static String escapeValue(String s) {
-		return s.replace("\\", "\\\\").replace("\n", "\\n");
-	}
-
-	private static String unescapeValue(String s) {
-		return s.replace("\\n", "\n").replace("\\\\", "\\");
+		return s
+				.replace("\\", "\\\\")
+				.replace("\n", "\\n")
+				.chars().mapToObj(c -> c >= 32 && c < 127 ? Character.toString((char) c) : String.format("\\u%04x", c)).collect(Collectors.joining());
 	}
 
 	public static Optional<Boolean> parseBool(String v) {
