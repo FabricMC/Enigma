@@ -34,8 +34,7 @@ public class Config {
 
 	private static final File DIR_HOME = new File(System.getProperty("user.home"));
 	private static final File ENIGMA_DIR = new File(DIR_HOME, ".enigma");
-	private static final File CONFIG_FILE = new File(ENIGMA_DIR, "config.json");
-	private static final Config INSTANCE = new Config();
+	public static final File CONFIG_FILE = new File(ENIGMA_DIR, "config.json");
 
 	private final transient Gson gson; // transient to exclude it from being exposed
 
@@ -73,7 +72,7 @@ public class Config {
 
 	public Decompiler decompiler = Decompiler.PROCYON;
 
-	private Config() {
+	public Config() {
 		gson = new GsonBuilder()
 			.registerTypeAdapter(Integer.class, new IntSerializer())
 			.registerTypeAdapter(Integer.class, new IntDeserializer())
@@ -107,7 +106,4 @@ public class Config {
 		}
 	}
 
-	public static Config getInstance() {
-		return INSTANCE;
-	}
 }

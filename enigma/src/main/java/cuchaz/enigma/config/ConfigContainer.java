@@ -10,6 +10,7 @@ import java.util.LinkedList;
 public class ConfigContainer {
 
 	private Path configPath;
+	private boolean existsOnDisk;
 
 	private final ConfigSection root = new ConfigSection();
 
@@ -22,6 +23,7 @@ public class ConfigContainer {
 		try {
 			Files.createDirectories(this.configPath.getParent());
 			Files.write(this.configPath, this.serialize().getBytes(StandardCharsets.UTF_8));
+			this.existsOnDisk = true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -30,6 +32,10 @@ public class ConfigContainer {
 	public void saveAs(Path path) {
 		this.configPath = path;
 		this.save();
+	}
+
+	public boolean existsOnDisk() {
+		return this.existsOnDisk;
 	}
 
 	public String serialize() {
@@ -50,6 +56,7 @@ public class ConfigContainer {
 			if (Files.exists(path)) {
 				String s = String.join("\n", Files.readAllLines(path));
 				cc = ConfigContainer.parse(s);
+				cc.existsOnDisk = true;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

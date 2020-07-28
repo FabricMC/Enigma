@@ -19,6 +19,12 @@ public final class UiConfig {
 	// Swing specific configuration such as theming
 	private static final ConfigContainer swing = ConfigContainer.getOrCreate("enigma/enigmaswing");
 
+	static {
+		if (!swing.existsOnDisk() && !ui.existsOnDisk()) {
+			OldConfigImporter.doImport();
+		}
+	}
+
 	public static void save() {
 		ui.save();
 		swing.save();
