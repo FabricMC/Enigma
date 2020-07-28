@@ -1,6 +1,6 @@
 package cuchaz.enigma.gui.util;
 
-public interface TranslationChangeListener {
+public interface LanguageChangeListener {
 
 	void retranslateUi();
 

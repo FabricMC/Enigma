@@ -24,8 +24,8 @@ import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.*;
 import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.gui.util.TranslationUtil;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Pair;
@@ -434,7 +434,7 @@ public class MenuBar {
 			languageButton.addActionListener(event -> {
 				UiConfig.setLanguage(lang);
 				I18n.setLanguage(lang);
-				TranslationUtil.dispatchLanguageChange();
+				LanguageUtil.dispatchLanguageChange();
 				UiConfig.save();
 			});
 			languagesMenu.add(languageButton);

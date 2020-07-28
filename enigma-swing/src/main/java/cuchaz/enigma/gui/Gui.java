@@ -44,9 +44,9 @@ import cuchaz.enigma.gui.elements.ValidatableUi;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.util.History;
+import cuchaz.enigma.gui.util.LanguageChangeListener;
+import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.gui.util.TranslationChangeListener;
-import cuchaz.enigma.gui.util.TranslationUtil;
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
 import cuchaz.enigma.network.packet.MessageC2SPacket;
@@ -62,7 +62,7 @@ import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class Gui implements TranslationChangeListener {
+public class Gui implements LanguageChangeListener {
 
 	private final ObfPanel obfPanel;
 	private final DeobfPanel deobfPanel;
@@ -384,7 +384,7 @@ public class Gui implements TranslationChangeListener {
 
 		this.frame.setVisible(true);
 
-		TranslationUtil.addListener(this);
+		LanguageUtil.addListener(this);
 	}
 
 	public JFrame getFrame() {
