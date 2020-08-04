@@ -1,40 +1,22 @@
 package cuchaz.enigma.network;
 
-import cuchaz.enigma.network.packet.KickS2CPacket;
-import cuchaz.enigma.network.packet.MessageS2CPacket;
-import cuchaz.enigma.network.packet.Packet;
-import cuchaz.enigma.network.packet.PacketRegistry;
-import cuchaz.enigma.network.packet.RemoveMappingS2CPacket;
-import cuchaz.enigma.network.packet.RenameS2CPacket;
-import cuchaz.enigma.network.packet.UserListS2CPacket;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.Entry;
-
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import cuchaz.enigma.network.packet.*;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public abstract class EnigmaServer {
 
 	// https://discordapp.com/channels/507304429255393322/566418023372816394/700292322918793347
 	public static final int DEFAULT_PORT = 34712;
 	public static final int PROTOCOL_VERSION = 0;
-	public static final String OWNER_USERNAME = "Owner";
 	public static final int CHECKSUM_SIZE = 20;
 	public static final int MAX_PASSWORD_LENGTH = 255; // length is written as a byte in the login packet
 

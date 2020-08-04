@@ -3,7 +3,6 @@ package cuchaz.enigma.gui.util;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,26 +16,27 @@ import com.github.swingdpi.plaf.BasicTweaker;
 import com.github.swingdpi.plaf.MetalTweaker;
 import com.github.swingdpi.plaf.NimbusTweaker;
 import com.github.swingdpi.plaf.WindowsTweaker;
-import cuchaz.enigma.gui.config.Config;
 import de.sciss.syntaxpane.DefaultSyntaxKit;
+
+import cuchaz.enigma.gui.config.UiConfig;
 
 public class ScaleUtil {
 
 	private static List<ScaleChangeListener> listeners = new ArrayList<>();
 
 	public static float getScaleFactor() {
-		return Config.getInstance().scaleFactor;
+		return UiConfig.getScaleFactor();
 	}
 
 	public static void setScaleFactor(float scaleFactor) {
 		float oldScale = getScaleFactor();
 		float clamped = Math.min(Math.max(0.25f, scaleFactor), 10.0f);
-		Config.getInstance().scaleFactor = clamped;
-		try {
-			Config.getInstance().saveConfig();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		UiConfig.setScaleFactor(clamped);
+		rescaleFontInConfig("Default", oldScale);
+		rescaleFontInConfig("Default 2", oldScale);
+		rescaleFontInConfig("Small", oldScale);
+		rescaleFontInConfig("Editor", oldScale);
+		UiConfig.save();
 		listeners.forEach(l -> l.onScaleChanged(clamped, oldScale));
 	}
 
@@ -62,6 +62,15 @@ public class ScaleUtil {
 
 	public static Font scaleFont(Font font) {
 		return createTweakerForCurrentLook(getScaleFactor()).modifyFont("", font);
+	}
+
+	private static void rescaleFontInConfig(String name, float oldScale) {
+		UiConfig.getFont(name).ifPresent(font -> UiConfig.setFont(name, rescaleFont(font, oldScale)));
+	}
+
+	public static Font rescaleFont(Font font, float oldScale) {
+		float newSize = Math.round(font.getSize() / oldScale * getScaleFactor());
+		return font.deriveFont(newSize);
 	}
 
 	public static float scale(float f) {

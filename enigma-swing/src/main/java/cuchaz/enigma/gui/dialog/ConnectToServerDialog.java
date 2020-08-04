@@ -10,6 +10,7 @@ import java.util.Objects;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
+import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.elements.ValidatableTextField;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.EnigmaServer;
@@ -36,9 +37,9 @@ public class ConnectToServerDialog extends AbstractDialog {
 
 	@Override
 	protected List<Pair<String, Component>> createComponents() {
-		usernameField = new JTextField(System.getProperty("user.name"));
-		ipField = new ValidatableTextField();
-		passwordField = new JPasswordField();
+		usernameField = new JTextField(NetConfig.getUsername());
+		ipField = new ValidatableTextField(NetConfig.getRemoteAddress());
+		passwordField = new JPasswordField(NetConfig.getPassword());
 
 		usernameField.addActionListener(event -> confirm());
 		ipField.addActionListener(event -> confirm());
@@ -51,6 +52,7 @@ public class ConnectToServerDialog extends AbstractDialog {
 		);
 	}
 
+	@Override
 	public void validateInputs() {
 		vc.setActiveElement(ipField);
 		if (StandardValidation.notBlank(vc, ipField.getText())) {
@@ -67,6 +69,7 @@ public class ConnectToServerDialog extends AbstractDialog {
 		if (!vc.canProceed()) return null;
 		return new Result(
 				usernameField.getText(),
+				ipField.getText(),
 				Objects.requireNonNull(ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT)),
 				passwordField.getPassword()
 		);
@@ -84,17 +87,23 @@ public class ConnectToServerDialog extends AbstractDialog {
 
 	public static class Result {
 		private final String username;
+		private final String addressStr;
 		private final ServerAddress address;
 		private final char[] password;
 
-		public Result(String username, ServerAddress address, char[] password) {
+		public Result(String username, String addressStr, ServerAddress address, char[] password) {
 			this.username = username;
+			this.addressStr = addressStr;
 			this.address = address;
 			this.password = password;
 		}
 
 		public String getUsername() {
 			return username;
+		}
+
+		public String getAddressStr() {
+			return addressStr;
 		}
 
 		public ServerAddress getAddress() {

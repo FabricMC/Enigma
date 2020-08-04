@@ -10,6 +10,7 @@ dependencies {
     implementation 'com.bulenkov:darcula:1.0.0-bobbylight'
     implementation 'de.sciss:syntaxpane:1.2.0'
     implementation 'com.github.lukeu:swing-dpi:0.6'
+    implementation 'org.drjekyll:fontchooser:2.4'
 }
 
 jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.gui.Main'

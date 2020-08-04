@@ -11,19 +11,18 @@
 
 package cuchaz.enigma.gui;
 
-import cuchaz.enigma.EnigmaProfile;
-import cuchaz.enigma.gui.config.Config;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-
-import cuchaz.enigma.utils.I18n;
-import joptsimple.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.google.common.io.MoreFiles;
+import joptsimple.*;
+
+import cuchaz.enigma.EnigmaProfile;
+import cuchaz.enigma.gui.config.UiConfig;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.utils.I18n;
 
 public class Main {
 
@@ -54,7 +53,7 @@ public class Main {
 
 			EnigmaProfile parsedProfile = EnigmaProfile.read(options.valueOf(profile));
 
-			I18n.setLanguage(Config.getInstance().language);
+			I18n.setLanguage(UiConfig.getLanguage());
 			Gui gui = new Gui(parsedProfile);
 			GuiController controller = gui.getController();
 

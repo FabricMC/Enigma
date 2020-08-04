@@ -1,10 +1,9 @@
 {
 	"language": "German",
 
-	"general.retry": "Wiederholen",
-
 	"menu.file.stats.title": "Mapping-Statistiken",
 	"menu.file.stats.generate": "Diagramm generieren",
+	"menu.view.font": "Schriftarten...",
 	"menu.help.about.description": "Ein Tool zur Dekompilierung von Java-Code",
 	"menu.help.about.version": "Version: %s",
 
@@ -17,6 +16,18 @@
 	"editor.decompiling": "Dekompiliere...",
 	"editor.decompile_error": "Ein Fehler ist während des Dekompilierens aufgetreten.",
 	"editor.remap_error": "Ein Fehler ist während des Remappens aufgetreten.",
+
+	"fonts.cat.default": "Standard",
+	"fonts.cat.default2": "Standard 2",
+	"fonts.cat.small": "Klein",
+	"fonts.cat.editor": "Editor",
+	"fonts.use_custom": "Benutzerdefinierte Schriftarten verwenden",
+
+	"prompt.ok": "OK",
+	"prompt.cancel": "Abbrechen",
+	"prompt.retry": "Wiederholen",
+	"prompt.save": "Speichern",
+	"prompt.open": "Öffnen",
 
 	"validation.message.empty_field": "Dieses Feld muss ausgefüllt werden.",
 	"validation.message.not_int": "Wert muss eine ganze Zahl sein.",

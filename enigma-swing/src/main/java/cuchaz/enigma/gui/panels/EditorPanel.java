@@ -24,8 +24,9 @@ import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.gui.BrowserCaret;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
-import cuchaz.enigma.gui.config.Config;
+import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.Themes;
+import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.elements.PopupMenuBar;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
@@ -61,7 +62,7 @@ public class EditorPanel {
 	private final JLabel errorLabel = new JLabel();
 	private final JTextArea errorTextArea = new JTextArea();
 	private final JScrollPane errorScrollPane = new JScrollPane(this.errorTextArea);
-	private final JButton retryButton = new JButton(I18n.translate("general.retry"));
+	private final JButton retryButton = new JButton(I18n.translate("prompt.retry"));
 
 	private DisplayMode mode = DisplayMode.INACTIVE;
 
@@ -73,7 +74,7 @@ public class EditorPanel {
 	private boolean mouseIsPressed = false;
 	private boolean shouldNavigateOnClick;
 
-	public Config.LookAndFeel editorLaf;
+	public LookAndFeel editorLaf;
 	private int fontSize = 12;
 	private Map<RenamableTokenType, BoxHighlightPainter> boxHighlightPainters;
 
@@ -94,9 +95,9 @@ public class EditorPanel {
 		this.editor.setCaret(new BrowserCaret());
 		this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
 		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
-		this.editor.setCaretColor(new Color(Config.getInstance().caretColor));
+		this.editor.setCaretColor(UiConfig.getCaretColor());
 		this.editor.setContentType("text/enigma-sources");
-		this.editor.setBackground(new Color(Config.getInstance().editorBackground));
+		this.editor.setBackground(UiConfig.getEditorBackgroundColor());
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
@@ -240,7 +241,7 @@ public class EditorPanel {
 		this.themeChangeListener = (laf, boxHighlightPainters) -> {
 			if ((this.editorLaf == null || this.editorLaf != laf)) {
 				this.editor.updateUI();
-				this.editor.setBackground(new Color(Config.getInstance().editorBackground));
+				this.editor.setBackground(UiConfig.getEditorBackgroundColor());
 				if (this.editorLaf != null) {
 					this.classHandle.invalidateMapped();
 				}

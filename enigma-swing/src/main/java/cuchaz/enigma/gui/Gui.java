@@ -14,6 +14,7 @@ package cuchaz.enigma.gui;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.FileDialog;
+import java.awt.Point;
 import java.awt.event.*;
 import java.nio.file.Path;
 import java.util.*;
@@ -31,8 +32,8 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.classhandle.ClassHandle;
-import cuchaz.enigma.gui.config.Config;
 import cuchaz.enigma.gui.config.Themes;
+import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
@@ -43,6 +44,8 @@ import cuchaz.enigma.gui.elements.ValidatableUi;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.util.History;
+import cuchaz.enigma.gui.util.LanguageChangeListener;
+import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
@@ -59,7 +62,7 @@ import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class Gui {
+public class Gui implements LanguageChangeListener {
 
 	private final ObfPanel obfPanel;
 	private final DeobfPanel deobfPanel;
@@ -73,10 +76,10 @@ public class Gui {
 
 	public FileDialog jarFileChooser;
 	public FileDialog tinyMappingsFileChooser;
-	public SearchDialog searchDialog;
 	public JFileChooser enigmaMappingsFileChooser;
 	public JFileChooser exportSourceFileChooser;
 	public FileDialog exportJarFileChooser;
+	public SearchDialog searchDialog;
 	private GuiController controller;
 	private JFrame frame;
 	private JPanel classesPanel;
@@ -88,6 +91,7 @@ public class Gui {
 	private JList<Token> tokens;
 	private JTabbedPane tabs;
 
+	private JSplitPane splitCenter;
 	private JSplitPane splitRight;
 	private JSplitPane logSplit;
 	private CollapsibleTabbedPane logTabs;
@@ -107,7 +111,7 @@ public class Gui {
 	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
 
 	public Gui(EnigmaProfile profile) {
-		Config.getInstance().lookAndFeel.setGlobalLAF();
+		UiConfig.getLookAndFeel().setGlobalLAF();
 
 		// init frame
 		this.frame = new JFrame(Enigma.NAME);
@@ -328,9 +332,18 @@ public class Gui {
 		splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.logSplit);
 		splitRight.setResizeWeight(1); // let the left side take all the slack
 		splitRight.resetToPreferredSizes();
-		JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
+		splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.classesPanel, splitRight);
 		splitCenter.setResizeWeight(0); // let the right side take all the slack
 		pane.add(splitCenter, BorderLayout.CENTER);
+
+		// restore state
+		int[] layout = UiConfig.getLayout();
+		if (layout.length >= 4) {
+			this.splitClasses.setDividerLocation(layout[0]);
+			this.splitCenter.setDividerLocation(layout[1]);
+			this.splitRight.setDividerLocation(layout[2]);
+			this.logSplit.setDividerLocation(layout[3]);
+		}
 
 		// init menus
 		this.menuBar = new MenuBar(this);
@@ -358,11 +371,20 @@ public class Gui {
 
 		// show the frame
 		pane.doLayout();
-		this.frame.setSize(ScaleUtil.getDimension(1024, 576));
+		this.frame.setSize(UiConfig.getWindowSize("Main Window", ScaleUtil.getDimension(1024, 576)));
 		this.frame.setMinimumSize(ScaleUtil.getDimension(640, 480));
 		this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		this.frame.setLocationRelativeTo(null);
+
+		Point windowPos = UiConfig.getWindowPos("Main Window", null);
+		if (windowPos != null) {
+			this.frame.setLocation(windowPos);
+		} else {
+			this.frame.setLocationRelativeTo(null);
+		}
+
 		this.frame.setVisible(true);
+
+		LanguageUtil.addListener(this);
 	}
 
 	public JFrame getFrame() {
@@ -692,11 +714,20 @@ public class Gui {
 				}
 
 				return null;
-			}, I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
+			}, I18n.translate("prompt.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.cancel"));
 		}
 	}
 
 	private void exit() {
+		UiConfig.setWindowPos("Main Window", this.frame.getLocationOnScreen());
+		UiConfig.setWindowSize("Main Window", this.frame.getSize());
+		UiConfig.setLayout(
+				this.splitClasses.getDividerLocation(),
+				this.splitCenter.getDividerLocation(),
+				this.splitRight.getDividerLocation(),
+				this.logSplit.getDividerLocation());
+		UiConfig.save();
+
 		if (searchDialog != null) {
 			searchDialog.dispose();
 		}
@@ -846,6 +877,25 @@ public class Gui {
 			splitRight.setRightComponent(logSplit);
 			logSplit.setLeftComponent(tabs);
 		}
+	}
+
+	@Override
+	public void retranslateUi() {
+		this.jarFileChooser.setTitle(I18n.translate("menu.file.jar.open"));
+		this.exportJarFileChooser.setTitle(I18n.translate("menu.file.export.jar"));
+		this.tabs.setTitleAt(0, I18n.translate("info_panel.tree.inheritance"));
+		this.tabs.setTitleAt(1, I18n.translate("info_panel.tree.implementations"));
+		this.tabs.setTitleAt(2, I18n.translate("info_panel.tree.calls"));
+		this.logTabs.setTitleAt(0, I18n.translate("log_panel.users"));
+		this.logTabs.setTitleAt(1, I18n.translate("log_panel.messages"));
+		this.connectionStatusLabel.setText(I18n.translate(connectionState == ConnectionState.NOT_CONNECTED ? "status.disconnected" : "status.connected"));
+
+		this.updateUiState();
+
+		this.menuBar.retranslateUi();
+		this.obfPanel.retranslateUi();
+		this.deobfPanel.retranslateUi();
+		this.infoPanel.retranslateUi();
 	}
 
 	public void setConnectionState(ConnectionState state) {

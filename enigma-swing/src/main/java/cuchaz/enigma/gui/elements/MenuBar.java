@@ -1,12 +1,10 @@
 package cuchaz.enigma.gui.elements;
 
-import java.awt.Desktop;
+import java.awt.FileDialog;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,9 +18,13 @@ import javax.swing.*;
 
 import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
-import cuchaz.enigma.gui.config.Config;
-import cuchaz.enigma.gui.config.Themes;
+import cuchaz.enigma.gui.config.Decompiler;
+import cuchaz.enigma.gui.config.LookAndFeel;
+import cuchaz.enigma.gui.config.NetConfig;
+import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.*;
+import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
@@ -32,48 +34,51 @@ public class MenuBar {
 
 	private final JMenuBar ui = new JMenuBar();
 
-	private final JMenu fileMenu = new JMenu(I18n.translate("menu.file"));
-	private final JMenuItem jarOpenItem = new JMenuItem(I18n.translate("menu.file.jar.open"));
-	private final JMenuItem jarCloseItem = new JMenuItem(I18n.translate("menu.file.jar.close"));
-	private final JMenu openMenu = new JMenu(I18n.translate("menu.file.mappings.open"));
-	private final JMenuItem saveMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.save"));
-	private final JMenu saveMappingsAsMenu = new JMenu(I18n.translate("menu.file.mappings.save_as"));
-	private final JMenuItem closeMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.close"));
-	private final JMenuItem dropMappingsItem = new JMenuItem(I18n.translate("menu.file.mappings.drop"));
-	private final JMenuItem reloadMappingsItem = new JMenuItem(I18n.translate("menu.file.reload_mappings"));
-	private final JMenuItem reloadAllItem = new JMenuItem(I18n.translate("menu.file.reload_all"));
-	private final JMenuItem exportSourceItem = new JMenuItem(I18n.translate("menu.file.export.source"));
-	private final JMenuItem exportJarItem = new JMenuItem(I18n.translate("menu.file.export.jar"));
-	private final JMenuItem statsItem = new JMenuItem(I18n.translate("menu.file.stats"));
-	private final JMenuItem exitItem = new JMenuItem(I18n.translate("menu.file.exit"));
+	private final JMenu fileMenu = new JMenu();
+	private final JMenuItem jarOpenItem = new JMenuItem();
+	private final JMenuItem jarCloseItem = new JMenuItem();
+	private final JMenu openMenu = new JMenu();
+	private final JMenuItem saveMappingsItem = new JMenuItem();
+	private final JMenu saveMappingsAsMenu = new JMenu();
+	private final JMenuItem closeMappingsItem = new JMenuItem();
+	private final JMenuItem dropMappingsItem = new JMenuItem();
+	private final JMenuItem reloadMappingsItem = new JMenuItem();
+	private final JMenuItem reloadAllItem = new JMenuItem();
+	private final JMenuItem exportSourceItem = new JMenuItem();
+	private final JMenuItem exportJarItem = new JMenuItem();
+	private final JMenuItem statsItem = new JMenuItem();
+	private final JMenuItem exitItem = new JMenuItem();
 
-	private final JMenu decompilerMenu = new JMenu(I18n.translate("menu.decompiler"));
+	private final JMenu decompilerMenu = new JMenu();
 
-	private final JMenu viewMenu = new JMenu(I18n.translate("menu.view"));
-	private final JMenu themesMenu = new JMenu(I18n.translate("menu.view.themes"));
-	private final JMenu languagesMenu = new JMenu(I18n.translate("menu.view.languages"));
-	private final JMenu scaleMenu = new JMenu(I18n.translate("menu.view.scale"));
-	private final JMenuItem customScaleItem = new JMenuItem(I18n.translate("menu.view.scale.custom"));
-	private final JMenuItem searchItem = new JMenuItem(I18n.translate("menu.view.search"));
+	private final JMenu viewMenu = new JMenu();
+	private final JMenu themesMenu = new JMenu();
+	private final JMenu languagesMenu = new JMenu();
+	private final JMenu scaleMenu = new JMenu();
+	private final JMenuItem fontItem = new JMenuItem();
+	private final JMenuItem customScaleItem = new JMenuItem();
+	private final JMenuItem searchItem = new JMenuItem();
 
-	private final JMenu collabMenu = new JMenu(I18n.translate("menu.collab"));
-	private final JMenuItem connectItem = new JMenuItem(I18n.translate("menu.collab.connect"));
-	private final JMenuItem startServerItem = new JMenuItem(I18n.translate("menu.collab.server.start"));
+	private final JMenu collabMenu = new JMenu();
+	private final JMenuItem connectItem = new JMenuItem();
+	private final JMenuItem startServerItem = new JMenuItem();
 
-	private final JMenu helpMenu = new JMenu(I18n.translate("menu.help"));
-	private final JMenuItem aboutItem = new JMenuItem(I18n.translate("menu.help.about"));
-	private final JMenuItem githubItem = new JMenuItem(I18n.translate("menu.help.github"));
+	private final JMenu helpMenu = new JMenu();
+	private final JMenuItem aboutItem = new JMenuItem();
+	private final JMenuItem githubItem = new JMenuItem();
 
 	private final Gui gui;
 
 	public MenuBar(Gui gui) {
 		this.gui = gui;
 
+		this.retranslateUi();
+
 		prepareOpenMenu(this.openMenu, gui);
 		prepareSaveMappingsAsMenu(this.saveMappingsAsMenu, this.saveMappingsItem, gui);
 		prepareDecompilerMenu(this.decompilerMenu, gui);
 		prepareThemesMenu(this.themesMenu, gui);
-		prepareLanguagesMenu(this.languagesMenu, gui);
+		prepareLanguagesMenu(this.languagesMenu);
 		prepareScaleMenu(this.scaleMenu, gui);
 
 		this.fileMenu.add(this.jarOpenItem);
@@ -102,6 +107,7 @@ public class MenuBar {
 		this.viewMenu.add(this.languagesMenu);
 		this.scaleMenu.add(this.customScaleItem);
 		this.viewMenu.add(this.scaleMenu);
+		this.viewMenu.add(this.fontItem);
 		this.viewMenu.addSeparator();
 		this.viewMenu.add(this.searchItem);
 		this.ui.add(this.viewMenu);
@@ -129,6 +135,7 @@ public class MenuBar {
 		this.statsItem.addActionListener(_e -> StatsDialog.show(this.gui));
 		this.exitItem.addActionListener(_e -> this.gui.close());
 		this.customScaleItem.addActionListener(_e -> this.onCustomScaleClicked());
+		this.fontItem.addActionListener(_e -> this.onFontClicked(this.gui));
 		this.searchItem.addActionListener(_e -> this.onSearchClicked());
 		this.connectItem.addActionListener(_e -> this.onConnectClicked());
 		this.startServerItem.addActionListener(_e -> this.onStartServerClicked());
@@ -157,20 +164,58 @@ public class MenuBar {
 		this.statsItem.setEnabled(jarOpen);
 	}
 
+	public void retranslateUi() {
+		this.fileMenu.setText(I18n.translate("menu.file"));
+		this.jarOpenItem.setText(I18n.translate("menu.file.jar.open"));
+		this.jarCloseItem.setText(I18n.translate("menu.file.jar.close"));
+		this.openMenu.setText(I18n.translate("menu.file.mappings.open"));
+		this.saveMappingsItem.setText(I18n.translate("menu.file.mappings.save"));
+		this.saveMappingsAsMenu.setText(I18n.translate("menu.file.mappings.save_as"));
+		this.closeMappingsItem.setText(I18n.translate("menu.file.mappings.close"));
+		this.dropMappingsItem.setText(I18n.translate("menu.file.mappings.drop"));
+		this.reloadMappingsItem.setText(I18n.translate("menu.file.reload_mappings"));
+		this.reloadAllItem.setText(I18n.translate("menu.file.reload_all"));
+		this.exportSourceItem.setText(I18n.translate("menu.file.export.source"));
+		this.exportJarItem.setText(I18n.translate("menu.file.export.jar"));
+		this.statsItem.setText(I18n.translate("menu.file.stats"));
+		this.exitItem.setText(I18n.translate("menu.file.exit"));
+
+		this.decompilerMenu.setText(I18n.translate("menu.decompiler"));
+
+		this.viewMenu.setText(I18n.translate("menu.view"));
+		this.themesMenu.setText(I18n.translate("menu.view.themes"));
+		this.languagesMenu.setText(I18n.translate("menu.view.languages"));
+		this.scaleMenu.setText(I18n.translate("menu.view.scale"));
+		this.fontItem.setText(I18n.translate("menu.view.font"));
+		this.customScaleItem.setText(I18n.translate("menu.view.scale.custom"));
+		this.searchItem.setText(I18n.translate("menu.view.search"));
+
+		this.collabMenu.setText(I18n.translate("menu.collab"));
+		this.connectItem.setText(I18n.translate("menu.collab.connect"));
+		this.startServerItem.setText(I18n.translate("menu.collab.server.start"));
+
+		this.helpMenu.setText(I18n.translate("menu.help"));
+		this.aboutItem.setText(I18n.translate("menu.help.about"));
+		this.githubItem.setText(I18n.translate("menu.help.github"));
+	}
+
 	public JMenuBar getUi() {
 		return this.ui;
 	}
 
 	private void onOpenJarClicked() {
-		this.gui.jarFileChooser.setVisible(true);
-		String file = this.gui.jarFileChooser.getFile();
+		FileDialog d = this.gui.jarFileChooser;
+		d.setDirectory(UiConfig.getLastSelectedDir());
+		d.setVisible(true);
+		String file = d.getFile();
 		// checks if the file name is not empty
 		if (file != null) {
-			Path path = Paths.get(this.gui.jarFileChooser.getDirectory()).resolve(file);
+			Path path = Paths.get(d.getDirectory()).resolve(file);
 			// checks if the file name corresponds to an existing file
 			if (Files.exists(path)) {
 				this.gui.getController().openJar(path);
 			}
+			UiConfig.setLastSelectedDir(d.getDirectory());
 		}
 	}
 
@@ -187,7 +232,7 @@ public class MenuBar {
 				} else if (response == JOptionPane.NO_OPTION)
 					then.run();
 				return null;
-			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.close.cancel"));
+			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.cancel"));
 		} else {
 			then.run();
 		}
@@ -206,16 +251,20 @@ public class MenuBar {
 	}
 
 	private void onExportSourceClicked() {
+		this.gui.exportSourceFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 		if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+			UiConfig.setLastSelectedDir(this.gui.exportSourceFileChooser.getCurrentDirectory().toString());
 			this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile().toPath());
 		}
 	}
 
 	private void onExportJarClicked() {
+		this.gui.exportJarFileChooser.setDirectory(UiConfig.getLastSelectedDir());
 		this.gui.exportJarFileChooser.setVisible(true);
 		if (this.gui.exportJarFileChooser.getFile() != null) {
 			Path path = Paths.get(this.gui.exportJarFileChooser.getDirectory(), this.gui.exportJarFileChooser.getFile());
 			this.gui.getController().exportJar(path);
+			UiConfig.setLastSelectedDir(this.gui.exportJarFileChooser.getDirectory());
 		}
 	}
 
@@ -229,7 +278,21 @@ public class MenuBar {
 		} catch (NumberFormatException ignored) {
 		}
 		ScaleUtil.setScaleFactor(newScale);
-		ChangeDialog.show(this.gui);
+		ChangeDialog.show(this.gui.getFrame());
+	}
+
+	private void onFontClicked(Gui gui) {
+//		FontDialog fd = new FontDialog(gui.getFrame(), "Choose Font", true);
+//		fd.setLocationRelativeTo(gui.getFrame());
+//		fd.setSelectedFont(UiConfig.getEditorFont());
+//		fd.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+//		fd.setVisible(true);
+//
+//		if (!fd.isCancelSelected()) {
+//			UiConfig.setEditorFont(fd.getSelectedFont());
+//			UiConfig.save();
+//		}
+		FontDialog.display(gui.getFrame());
 	}
 
 	private void onSearchClicked() {
@@ -250,6 +313,10 @@ public class MenuBar {
 		this.gui.getController().disconnectIfConnected(null);
 		try {
 			this.gui.getController().createClient(result.getUsername(), result.getAddress().address, result.getAddress().port, result.getPassword());
+			NetConfig.setUsername(result.getUsername());
+			NetConfig.setRemoteAddress(result.getAddressStr());
+			NetConfig.setPassword(String.valueOf(result.getPassword()));
+			NetConfig.save();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
 			this.gui.getController().disconnectIfConnected(null);
@@ -269,6 +336,9 @@ public class MenuBar {
 		this.gui.getController().disconnectIfConnected(null);
 		try {
 			this.gui.getController().createServer(result.getPort(), result.getPassword());
+			NetConfig.setServerPort(result.getPort());
+			NetConfig.setServerPassword(String.valueOf(result.getPassword()));
+			NetConfig.save();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.server.start.error"), JOptionPane.ERROR_MESSAGE);
 			this.gui.getController().disconnectIfConnected(null);
@@ -276,10 +346,7 @@ public class MenuBar {
 	}
 
 	private void onGithubClicked() {
-		try {
-			Desktop.getDesktop().browse(new URL("https://github.com/FabricMC/Enigma").toURI());
-		} catch (URISyntaxException | IOException ignored) {
-		}
+		GuiUtil.openUrl("https://github.com/FabricMC/Enigma");
 	}
 
 	private static void prepareOpenMenu(JMenu openMenu, Gui gui) {
@@ -287,9 +354,11 @@ public class MenuBar {
 			if (format.getReader() != null) {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 				item.addActionListener(event -> {
+					gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 					if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
 						gui.getController().openMappings(format, selectedFile.toPath());
+						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
 					}
 				});
 				openMenu.add(item);
@@ -303,9 +372,14 @@ public class MenuBar {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 				item.addActionListener(event -> {
 					// TODO: Use a specific file chooser for it
+					if (gui.enigmaMappingsFileChooser.getCurrentDirectory() == null) {
+						gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+					}
+
 					if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
 						saveMappingsItem.setEnabled(true);
+						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
 					}
 				});
 				saveMappingsAsMenu.add(item);
@@ -316,21 +390,17 @@ public class MenuBar {
 	private static void prepareDecompilerMenu(JMenu decompilerMenu, Gui gui) {
 		ButtonGroup decompilerGroup = new ButtonGroup();
 
-		for (Config.Decompiler decompiler : Config.Decompiler.values()) {
+		for (Decompiler decompiler : Decompiler.values()) {
 			JRadioButtonMenuItem decompilerButton = new JRadioButtonMenuItem(decompiler.name);
 			decompilerGroup.add(decompilerButton);
-			if (decompiler.equals(Config.getInstance().decompiler)) {
+			if (decompiler.equals(UiConfig.getDecompiler())) {
 				decompilerButton.setSelected(true);
 			}
 			decompilerButton.addActionListener(event -> {
 				gui.getController().setDecompiler(decompiler.service);
 
-				try {
-					Config.getInstance().decompiler = decompiler;
-					Config.getInstance().saveConfig();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				UiConfig.setDecompiler(decompiler);
+				UiConfig.save();
 			});
 			decompilerMenu.add(decompilerButton);
 		}
@@ -338,33 +408,34 @@ public class MenuBar {
 
 	private static void prepareThemesMenu(JMenu themesMenu, Gui gui) {
 		ButtonGroup themeGroup = new ButtonGroup();
-		for (Config.LookAndFeel lookAndFeel : Config.LookAndFeel.values()) {
+		for (LookAndFeel lookAndFeel : LookAndFeel.values()) {
 			JRadioButtonMenuItem themeButton = new JRadioButtonMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
 			themeGroup.add(themeButton);
-			if (lookAndFeel.equals(Config.getInstance().lookAndFeel)) {
+			if (lookAndFeel.equals(UiConfig.getLookAndFeel())) {
 				themeButton.setSelected(true);
 			}
-			themeButton.addActionListener(_e -> Themes.setLookAndFeel(lookAndFeel));
+			themeButton.addActionListener(_e -> {
+				UiConfig.setLookAndFeel(lookAndFeel);
+				UiConfig.save();
+				ChangeDialog.show(gui.getFrame());
+			});
 			themesMenu.add(themeButton);
 		}
 	}
 
-	private static void prepareLanguagesMenu(JMenu languagesMenu, Gui gui) {
+	private static void prepareLanguagesMenu(JMenu languagesMenu) {
 		ButtonGroup languageGroup = new ButtonGroup();
 		for (String lang : I18n.getAvailableLanguages()) {
 			JRadioButtonMenuItem languageButton = new JRadioButtonMenuItem(I18n.getLanguageName(lang));
 			languageGroup.add(languageButton);
-			if (lang.equals(Config.getInstance().language)) {
+			if (lang.equals(UiConfig.getLanguage())) {
 				languageButton.setSelected(true);
 			}
 			languageButton.addActionListener(event -> {
-				Config.getInstance().language = lang;
-						try {
-							Config.getInstance().saveConfig();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-				ChangeDialog.show(gui);
+				UiConfig.setLanguage(lang);
+				I18n.setLanguage(lang);
+				LanguageUtil.dispatchLanguageChange();
+				UiConfig.save();
 			});
 			languagesMenu.add(languageButton);
 		}
@@ -377,7 +448,7 @@ public class MenuBar {
 					float realScaleFactor = scaleFactor / 100f;
 					JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
 					menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
-					menuItem.addActionListener(event -> ChangeDialog.show(gui));
+					menuItem.addActionListener(event -> ChangeDialog.show(gui.getFrame()));
 					scaleGroup.add(menuItem);
 					scaleMenu.add(menuItem);
 					return new Pair<>(realScaleFactor, menuItem);

@@ -15,6 +15,8 @@ import cuchaz.enigma.utils.I18n;
 public class ObfPanel extends JPanel {
 
 	public final ClassSelector obfClasses;
+	private final JLabel title = new JLabel();
+
 	private final Gui gui;
 
 	public ObfPanel(Gui gui) {
@@ -34,7 +36,14 @@ public class ObfPanel extends JPanel {
 		this.obfClasses.setRenameSelectionListener(gui::onPanelRename);
 
 		this.setLayout(new BorderLayout());
-		this.add(new JLabel(I18n.translate("info_panel.classes.obfuscated")), BorderLayout.NORTH);
+		this.add(this.title, BorderLayout.NORTH);
 		this.add(new JScrollPane(this.obfClasses), BorderLayout.CENTER);
+
+		this.retranslateUi();
 	}
+
+	public void retranslateUi() {
+		this.title.setText(I18n.translate("info_panel.classes.obfuscated"));
+	}
+
 }
