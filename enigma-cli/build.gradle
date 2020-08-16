@@ -1,4 +1,5 @@
 plugins {
+    id 'application'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
@@ -6,7 +7,9 @@ dependencies {
     implementation project(':enigma')
 }
 
-jar.manifest.attributes 'Main-Class': 'cuchaz.enigma.command.Main'
+mainClassName = 'cuchaz.enigma.command.Main'
+
+jar.manifest.attributes 'Main-Class': mainClassName
 
 publishing {
     publications {
