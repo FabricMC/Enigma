@@ -14,9 +14,11 @@ dependencies {
     implementation 'org.drjekyll:fontchooser:2.4'
 }
 
-mainClassName = 'cuchaz.enigma.gui.Main'
+application {
+    mainClass = 'cuchaz.enigma.gui.Main'
+}
 
-jar.manifest.attributes 'Main-Class': mainClassName
+jar.manifest.attributes 'Main-Class': application.mainClass
 
 publishing {
     publications {

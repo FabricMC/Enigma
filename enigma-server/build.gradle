@@ -7,6 +7,8 @@ dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
 }
 
-mainClassName = 'cuchaz.enigma.network.DedicatedEnigmaServer'
+application {
+    mainClass = 'cuchaz.enigma.network.DedicatedEnigmaServer'
+}
 
-jar.manifest.attributes 'Main-Class': mainClassName
+jar.manifest.attributes 'Main-Class': application.mainClass
