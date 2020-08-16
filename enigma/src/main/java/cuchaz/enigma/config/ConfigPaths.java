@@ -21,7 +21,7 @@ public class ConfigPaths {
 				}
 				return Paths.get(configHome);
 			case MAC:
-				return getUserHomeUnix().resolve("Library").resolve("Preferences");
+				return getUserHomeUnix().resolve("Library").resolve("Application Support");
 			case WINDOWS:
 				return Paths.get(System.getenv("LOCALAPPDATA"));
 			default:
