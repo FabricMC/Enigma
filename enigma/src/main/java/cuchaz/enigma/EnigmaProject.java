@@ -18,13 +18,13 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.service.NameProposalService;
-import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
 import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.source.Decompiler;
@@ -160,6 +160,7 @@ public class EnigmaProject {
 
 	public JarExport exportRemappedJar(ProgressListener progress) {
 		Collection<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses();
+		ClassProvider fixingClassProvider = new ObfuscationFixClassProvider(classProvider, jarIndex);
 
 		NameProposalService[] nameProposalServices = getEnigma().getServices().get(NameProposalService.TYPE).toArray(new NameProposalService[0]);
 		Translator deobfuscator = nameProposalServices.length == 0 ? mapper.getDeobfuscator() : new ProposingTranslator(mapper, nameProposalServices);
@@ -172,10 +173,10 @@ public class EnigmaProject {
 					ClassEntry translatedEntry = deobfuscator.translate(entry);
 					progress.step(count.getAndIncrement(), translatedEntry.toString());
 
-					ClassNode node = classProvider.get(entry.getFullName());
+					ClassNode node = fixingClassProvider.get(entry.getFullName());
 					if (node != null) {
 						ClassNode translatedNode = new ClassNode();
-						node.accept(new TranslationClassVisitor(deobfuscator, Enigma.ASM_VERSION, new SourceFixVisitor(Enigma.ASM_VERSION, translatedNode, jarIndex)));
+						node.accept(new TranslationClassVisitor(deobfuscator, Enigma.ASM_VERSION, translatedNode));
 						return translatedNode;
 					}
 
