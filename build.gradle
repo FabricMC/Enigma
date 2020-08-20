@@ -24,7 +24,7 @@ subprojects {
     }
 
     group = 'cuchaz'
-    version = '0.21'
+    version = '0.22'
 
     def buildNumber = System.getenv("BUILD_NUMBER")
     version = version + "+" + (buildNumber ? "build.$buildNumber" : "local")
