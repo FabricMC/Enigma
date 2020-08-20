@@ -29,7 +29,7 @@ public class StatsGenerator {
         nameProposalServices = project.getEnigma().getServices().get(NameProposalService.TYPE);
     }
 
-    public StatsResult generate(ProgressListener progress, Set<StatsMember> includedMembers, String topLevelPackage) {
+    public StatsResult generate(ProgressListener progress, Set<StatsMember> includedMembers, String topLevelPackage, boolean includeSynthetic) {
         includedMembers = EnumSet.copyOf(includedMembers);
         int totalWork = 0;
         int totalMappable = 0;
@@ -60,7 +60,7 @@ public class StatsGenerator {
                         .findFirst()
                         .orElseThrow(AssertionError::new);
 
-                if (root == method && !((MethodDefEntry) method).getAccess().isSynthetic()) {
+                if (root == method && (!((MethodDefEntry) method).getAccess().isSynthetic() || includeSynthetic)) {
                     if (includedMembers.contains(StatsMember.METHODS)) {
                         update(counts, method);
                         totalMappable ++;
@@ -81,7 +81,7 @@ public class StatsGenerator {
         if (includedMembers.contains(StatsMember.FIELDS)) {
             for (FieldEntry field : entryIndex.getFields()) {
                 progress.step(numDone++, I18n.translate("type.fields"));
-                if (!((FieldDefEntry)field).getAccess().isSynthetic()) {
+                if (!((FieldDefEntry)field).getAccess().isSynthetic() || includeSynthetic) {
                     update(counts, field);
                     totalMappable ++;
                 }

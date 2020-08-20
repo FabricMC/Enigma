@@ -513,9 +513,9 @@ public class GuiController implements ClientPacketHandler {
 		chp.invalidateMapped();
 	}
 
-	public void openStats(Set<StatsMember> includedMembers, String topLevelPackage) {
+	public void openStats(Set<StatsMember> includedMembers, String topLevelPackage, boolean includeSynthetic) {
 		ProgressDialog.runOffThread(gui.getFrame(), progress -> {
-			String data = new StatsGenerator(project).generate(progress, includedMembers, topLevelPackage).getTreeJson();
+			String data = new StatsGenerator(project).generate(progress, includedMembers, topLevelPackage, includeSynthetic).getTreeJson();
 
 			try {
 				File statsFile = File.createTempFile("stats", ".html");

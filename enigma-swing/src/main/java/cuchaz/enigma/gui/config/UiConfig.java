@@ -266,6 +266,22 @@ public final class UiConfig {
 		swing.data().section("File Dialog").setString("Selected", directory);
 	}
 
+	public static String getLastTopLevelPackage() {
+		return swing.data().section("Mapping Stats").getString("Top-level package").orElse("");
+	}
+
+	public static void setLastTopLevelPackage(String topLevelPackage) {
+		swing.data().section("Mapping Stats").setString("Top-level package", topLevelPackage);
+	}
+
+	public static boolean shouldIncludeSyntheticMembers() {
+		return swing.data().section("Mapping Stats").setIfAbsentBool("Synthetic members", false);
+	}
+
+	public static void setIncludeSyntheticMembers(boolean b) {
+		swing.data().section("Mapping Stats").setBool("Synthetic members", b);
+	}
+
 	public static void setLookAndFeelDefaults(LookAndFeel laf, boolean isDark) {
 		ConfigSection s = swing.data().section("Themes").section(laf.name()).section("Colors");
 		if (!isDark) {
