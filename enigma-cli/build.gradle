@@ -7,11 +7,9 @@ dependencies {
     implementation project(':enigma')
 }
 
-application {
-    mainClass = 'cuchaz.enigma.command.Main'
-}
+mainClassName = 'cuchaz.enigma.command.Main'
 
-jar.manifest.attributes 'Main-Class': application.mainClass
+jar.manifest.attributes 'Main-Class': mainClassName
 
 publishing {
     publications {
