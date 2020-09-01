@@ -60,13 +60,13 @@ public class StatsGenerator {
                         .findFirst()
                         .orElseThrow(AssertionError::new);
 
-                if (root == method && (!((MethodDefEntry) method).getAccess().isSynthetic() || includeSynthetic)) {
-                    if (includedMembers.contains(StatsMember.METHODS)) {
+                if (root == method) {
+                    if (includedMembers.contains(StatsMember.METHODS) && !((MethodDefEntry) method).getAccess().isSynthetic()) {
                         update(counts, method);
                         totalMappable ++;
                     }
 
-                    if (includedMembers.contains(StatsMember.PARAMETERS)) {
+                    if (includedMembers.contains(StatsMember.PARAMETERS) && (!((MethodDefEntry) method).getAccess().isSynthetic() || includeSynthetic)) {
                         int index = ((MethodDefEntry) method).getAccess().isStatic() ? 0 : 1;
                         for (TypeDescriptor argument : method.getDesc().getArgumentDescs()) {
                             update(counts, new LocalVariableEntry(method, index, "", true,null));
@@ -81,7 +81,7 @@ public class StatsGenerator {
         if (includedMembers.contains(StatsMember.FIELDS)) {
             for (FieldEntry field : entryIndex.getFields()) {
                 progress.step(numDone++, I18n.translate("type.fields"));
-                if (!((FieldDefEntry)field).getAccess().isSynthetic() || includeSynthetic) {
+                if (!((FieldDefEntry)field).getAccess().isSynthetic()) {
                     update(counts, field);
                     totalMappable ++;
                 }

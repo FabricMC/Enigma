@@ -274,12 +274,12 @@ public final class UiConfig {
 		swing.data().section("Mapping Stats").setString("Top-level package", topLevelPackage);
 	}
 
-	public static boolean shouldIncludeSyntheticMembers() {
-		return swing.data().section("Mapping Stats").setIfAbsentBool("Synthetic members", false);
+	public static boolean shouldIncludeSyntheticParameters() {
+		return swing.data().section("Mapping Stats").setIfAbsentBool("Synthetic parameters", false);
 	}
 
-	public static void setIncludeSyntheticMembers(boolean b) {
-		swing.data().section("Mapping Stats").setBool("Synthetic members", b);
+	public static void setIncludeSyntheticParameters(boolean b) {
+		swing.data().section("Mapping Stats").setBool("Synthetic parameters", b);
 	}
 
 	public static void setLookAndFeelDefaults(LookAndFeel laf, boolean isDark) {

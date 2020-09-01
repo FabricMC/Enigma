@@ -71,9 +71,9 @@ public class StatsDialog {
 		contentPane.add(topLevelPackage, cb1.pos(0, results.size() + 2).fill(GridBagConstraints.HORIZONTAL).build());
 
 		// show synthetic members option
-		JCheckBox syntheticMembersOption = new JCheckBox(I18n.translate("menu.file.stats.synthetic_members"));
-		syntheticMembersOption.setSelected(UiConfig.shouldIncludeSyntheticMembers());
-		contentPane.add(syntheticMembersOption, cb1.pos(0, results.size() + 3).build());
+		JCheckBox syntheticParametersOption = new JCheckBox(I18n.translate("menu.file.stats.synthetic_parameters"));
+		syntheticParametersOption.setSelected(UiConfig.shouldIncludeSyntheticParameters());
+		contentPane.add(syntheticParametersOption, cb1.pos(0, results.size() + 3).build());
 
 		// show generate button
 		JButton button = new JButton(I18n.translate("menu.file.stats.generate"));
@@ -82,10 +82,10 @@ public class StatsDialog {
 			dialog.dispose();
 
 			UiConfig.setLastTopLevelPackage(topLevelPackage.getText());
-			UiConfig.setIncludeSyntheticMembers(syntheticMembersOption.isSelected());
+			UiConfig.setIncludeSyntheticParameters(syntheticParametersOption.isSelected());
 			UiConfig.save();
 
-			generateStats(gui, checkboxes, topLevelPackage.getText(), syntheticMembersOption.isSelected());
+			generateStats(gui, checkboxes, topLevelPackage.getText(), syntheticParametersOption.isSelected());
 		});
 
 		contentPane.add(button, cb1.pos(0, results.size() + 4).weightY(1.0).anchor(GridBagConstraints.SOUTHEAST).build());

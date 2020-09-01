@@ -28,7 +28,7 @@
 	"menu.file.stats": "Statistiques des mappings...",
 	"menu.file.stats.title": "Statistiques des mappings",
 	"menu.file.stats.top_level_package": "Package de plus haut niveau :",
-	"menu.file.stats.synthetic_members": "Inclure les membres synthétiques",
+	"menu.file.stats.synthetic_parameters": "Inclure les paramètres synthétiques",
 	"menu.file.stats.generate": "Générer le diagramme",
 	"menu.file.exit": "Quitter",
 	"menu.decompiler": "Décompilateur",

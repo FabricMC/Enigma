@@ -28,7 +28,7 @@
 	"menu.file.stats": "Mapping Stats...",
 	"menu.file.stats.title": "Mapping Stats",
 	"menu.file.stats.top_level_package": "Top-level package:",
-	"menu.file.stats.synthetic_members": "Include synthetic members",
+	"menu.file.stats.synthetic_parameters": "Include synthetic parameters",
 	"menu.file.stats.generate": "Generate Diagram",
 	"menu.file.exit": "Exit",
 	"menu.decompiler": "Decompiler",
