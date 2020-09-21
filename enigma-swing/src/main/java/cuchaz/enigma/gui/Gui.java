@@ -747,10 +747,8 @@ public class Gui implements LanguageChangeListener {
 				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
-				this.controller.rename(vc, new EntryReference<>(prevDataChild, prevDataChild.getFullName()), dataChild.getFullName(), false);
-				if (!vc.canProceed()) return;
-				this.controller.sendPacket(new RenameC2SPacket(prevDataChild, dataChild.getFullName(), false));
-				childNode.setUserObject(dataChild);
+
+				onPanelRename(vc, prevDataChild, dataChild, node);
 			}
 			node.setUserObject(data);
 			// Ob package will never be modified, just reload deob view
