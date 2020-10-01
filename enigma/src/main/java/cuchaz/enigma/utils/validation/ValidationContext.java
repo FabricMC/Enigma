@@ -41,11 +41,13 @@ public class ValidationContext {
 	 * @param args    the arguments used when formatting the message text
 	 */
 	public void raise(Message message, Object... args) {
-		ParameterizedMessage pm = new ParameterizedMessage(message, args);
-		if (activeElement != null) {
-			activeElement.addMessage(pm);
+		ParameterizedMessage pm = new ParameterizedMessage(message, args, this.activeElement);
+		if (!this.messages.contains(pm)) {
+			if (activeElement != null) {
+				activeElement.addMessage(pm);
+			}
+			messages.add(pm);
 		}
-		messages.add(pm);
 	}
 
 	/**
