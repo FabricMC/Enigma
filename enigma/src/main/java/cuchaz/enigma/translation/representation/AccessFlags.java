@@ -8,6 +8,10 @@ import java.lang.reflect.Modifier;
 public class AccessFlags {
 	public static final AccessFlags PRIVATE = new AccessFlags(Opcodes.ACC_PRIVATE);
 	public static final AccessFlags PUBLIC = new AccessFlags(Opcodes.ACC_PUBLIC);
+	public static final int ACCESS_LEVEL_PUBLIC = 4;
+	public static final int ACCESS_LEVEL_PROTECTED = 3;
+	public static final int ACCESS_LEVEL_PACKAGE_LOCAL = 2;
+	public static final int ACCESS_LEVEL_PRIVATE = 1;
 
 	private int flags;
 
@@ -87,6 +91,23 @@ public class AccessFlags {
 
 	public int getFlags() {
 		return this.flags;
+	}
+
+	/**
+	 * Adapted from https://github.com/JetBrains/intellij-community/blob/6472c347db91d11bbf02895a767198f9d884b119/java/java-psi-api/src/com/intellij/psi/util/PsiUtil.java#L389
+	 * @return visibility access level on a 'weakness scale'
+	 */
+	public int getAccessLevel() {
+		if (isPrivate()) {
+			return ACCESS_LEVEL_PRIVATE;
+		}
+		if (isProtected()) {
+			return ACCESS_LEVEL_PROTECTED;
+		}
+		if (isPublic()) {
+			return ACCESS_LEVEL_PUBLIC;
+		}
+		return ACCESS_LEVEL_PACKAGE_LOCAL;
 	}
 
 	@Override

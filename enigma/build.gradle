@@ -53,7 +53,7 @@ file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
 
             args '@src/test/resources/proguard-test.conf', '-injars', file('build/test-inputs/' +
                     "${theFile.name}.jar"), '-libraryjars', libraryJarsArg,
-                    '-outjars', file('build/test-obf/' + "${theFile.name}.jar")
+                    '-outjars', file('build/test-obf/' + "${theFile.name}.jar"), '-printmapping', file("build/test-obf/${theFile.name}-mapping.txt")
         }
 
         test.dependsOn "${theFile.name}TestObf"
