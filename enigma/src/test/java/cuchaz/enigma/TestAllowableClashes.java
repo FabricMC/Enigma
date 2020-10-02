@@ -1,5 +1,12 @@
 package cuchaz.enigma;
 
+import java.io.IOException;
+import java.nio.file.Paths;
+
+import org.hamcrest.MatcherAssert;
+import org.junit.Assert;
+import org.junit.Test;
+
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
@@ -9,26 +16,18 @@ import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.validation.ValidationContext;
-import org.hamcrest.MatcherAssert;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.file.Paths;
 
 /**
  * Test that we can accept some name clashes that are allowed by javac
  */
 public class TestAllowableClashes {
 
-	private static final String inputBaseName = "build/test-obf/visibility";
-
 	@Test
 	public void test() throws IOException, MappingParseException {
 		//Load produced mappings
 		Enigma enigma = Enigma.create();
-		EnigmaProject project = enigma.openJar(Paths.get(inputBaseName + ".jar"), new ClasspathClassProvider(), ProgressListener.none());
-		EntryTree<EntryMapping> obfToDeobf = MappingFormat.PROGUARD.read(Paths.get(inputBaseName + "-mapping.txt"), ProgressListener.none(), null);
+		EnigmaProject project = enigma.openJar(Paths.get("build/test-obf/visibility.jar"), new ClasspathClassProvider(), ProgressListener.none());
+		EntryTree<EntryMapping> obfToDeobf = MappingFormat.PROGUARD.read(Paths.get("build/visibility-mapping.txt"), ProgressListener.none(), null);
 
 		//Load them into enigma, none should conflict
 		EntryRemapper mapper = project.getMapper();
