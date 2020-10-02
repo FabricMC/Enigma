@@ -21,19 +21,19 @@ public class EditorPopupMenu {
 
 	private final JPopupMenu ui = new JPopupMenu();
 
-	private final JMenuItem renameItem = new JMenuItem(I18n.translate("popup_menu.rename"));
-	private final JMenuItem editJavadocItem = new JMenuItem(I18n.translate("popup_menu.javadoc"));
-	private final JMenuItem showInheritanceItem = new JMenuItem(I18n.translate("popup_menu.inheritance"));
-	private final JMenuItem showImplementationsItem = new JMenuItem(I18n.translate("popup_menu.implementations"));
-	private final JMenuItem showCallsItem = new JMenuItem(I18n.translate("popup_menu.calls"));
-	private final JMenuItem showCallsSpecificItem = new JMenuItem(I18n.translate("popup_menu.calls.specific"));
-	private final JMenuItem openEntryItem = new JMenuItem(I18n.translate("popup_menu.declaration"));
-	private final JMenuItem openPreviousItem = new JMenuItem(I18n.translate("popup_menu.back"));
-	private final JMenuItem openNextItem = new JMenuItem(I18n.translate("popup_menu.forward"));
-	private final JMenuItem toggleMappingItem = new JMenuItem(I18n.translate("popup_menu.mark_deobfuscated"));
-	private final JMenuItem zoomInItem = new JMenuItem(I18n.translate("popup_menu.zoom.in"));
-	private final JMenuItem zoomOutMenu = new JMenuItem(I18n.translate("popup_menu.zoom.out"));
-	private final JMenuItem resetZoomItem = new JMenuItem(I18n.translate("popup_menu.zoom.reset"));
+	private final JMenuItem renameItem = new JMenuItem();
+	private final JMenuItem editJavadocItem = new JMenuItem();
+	private final JMenuItem showInheritanceItem = new JMenuItem();
+	private final JMenuItem showImplementationsItem = new JMenuItem();
+	private final JMenuItem showCallsItem = new JMenuItem();
+	private final JMenuItem showCallsSpecificItem = new JMenuItem();
+	private final JMenuItem openEntryItem = new JMenuItem();
+	private final JMenuItem openPreviousItem = new JMenuItem();
+	private final JMenuItem openNextItem = new JMenuItem();
+	private final JMenuItem toggleMappingItem = new JMenuItem();
+	private final JMenuItem zoomInItem = new JMenuItem();
+	private final JMenuItem zoomOutMenu = new JMenuItem();
+	private final JMenuItem resetZoomItem = new JMenuItem();
 
 	private final EditorPanel editor;
 	private final Gui gui;
@@ -41,6 +41,8 @@ public class EditorPopupMenu {
 	public EditorPopupMenu(EditorPanel editor, Gui gui) {
 		this.editor = editor;
 		this.gui = gui;
+
+		this.retranslateUi();
 
 		this.ui.add(this.renameItem);
 		this.ui.add(this.editJavadocItem);
@@ -165,6 +167,22 @@ public class EditorPopupMenu {
 		} else {
 			this.toggleMappingItem.setText(I18n.translate("popup_menu.mark_deobfuscated"));
 		}
+	}
+
+	public void retranslateUi() {
+		this.renameItem.setText(I18n.translate("popup_menu.rename"));
+		this.editJavadocItem.setText(I18n.translate("popup_menu.javadoc"));
+		this.showInheritanceItem.setText(I18n.translate("popup_menu.inheritance"));
+		this.showImplementationsItem.setText(I18n.translate("popup_menu.implementations"));
+		this.showCallsItem.setText(I18n.translate("popup_menu.calls"));
+		this.showCallsSpecificItem.setText(I18n.translate("popup_menu.calls.specific"));
+		this.openEntryItem.setText(I18n.translate("popup_menu.declaration"));
+		this.openPreviousItem.setText(I18n.translate("popup_menu.back"));
+		this.openNextItem.setText(I18n.translate("popup_menu.forward"));
+		this.toggleMappingItem.setText(I18n.translate("popup_menu.mark_deobfuscated"));
+		this.zoomInItem.setText(I18n.translate("popup_menu.zoom.in"));
+		this.zoomOutMenu.setText(I18n.translate("popup_menu.zoom.out"));
+		this.resetZoomItem.setText(I18n.translate("popup_menu.zoom.reset"));
 	}
 
 	public JPopupMenu getUi() {

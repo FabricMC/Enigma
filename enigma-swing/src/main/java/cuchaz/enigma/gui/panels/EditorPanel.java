@@ -1,39 +1,20 @@
 package cuchaz.enigma.gui.panels;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
 import javax.swing.text.Highlighter.HighlightPainter;
+
+import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
@@ -63,7 +44,6 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Result;
-import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 public class EditorPanel {
 
@@ -622,6 +602,10 @@ public class EditorPanel {
 	public String getFileName() {
 		ClassEntry classEntry = this.classHandle.getDeobfRef() != null ? this.classHandle.getDeobfRef() : this.classHandle.getRef();
 		return classEntry.getSimpleName();
+	}
+
+	public void retranslateUi() {
+		this.popupMenu.retranslateUi();
 	}
 
 	private enum DisplayMode {
