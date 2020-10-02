@@ -1,7 +1,12 @@
 package cuchaz.enigma.newabstraction;
 
 import java.util.Objects;
+import java.util.Optional;
 
+import javax.annotation.Nullable;
+
+import cuchaz.enigma.EnigmaProject;
+import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
@@ -27,8 +32,9 @@ public class EntryChange<E extends Entry<?>> {
 		return new EntryChange<>(this.target, TristateChange.set(name), this.javadoc, this.access);
 	}
 
-	public EntryChange<E> withDefaultDeobfName() {
-		return this.withDeobfName(this.target.getName());
+	public EntryChange<E> withDefaultDeobfName(@Nullable EnigmaProject project) {
+		Optional<String> proposed = project != null ? DecompiledClassSource.proposeName(project, this.target) : Optional.empty();
+		return this.withDeobfName(proposed.orElse(this.target.getName()));
 	}
 
 	public EntryChange<E> clearDeobfName() {

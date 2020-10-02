@@ -45,7 +45,7 @@ public class MarkDeobfuscatedC2SPacket implements Packet<ServerPacketHandler> {
 		}
 
 		if (handler.getServer().getMappings().getDeobfMapping(entry).getTargetName() == null) {
-			EntryUtil.applyChange(vc, handler.getServer().getMappings(), EntryChange.modify(this.entry).withDefaultDeobfName());
+			EntryUtil.applyChange(vc, handler.getServer().getMappings(), EntryChange.modify(this.entry).withDefaultDeobfName(null));
 		}
 
 		if (!vc.canProceed()) return;

@@ -34,7 +34,7 @@ public class MarkDeobfuscatedS2CPacket implements Packet<ClientPacketHandler> {
 
 	@Override
 	public void handle(ClientPacketHandler controller) {
-		if (controller.applyChangeFromServer(EntryChange.modify(entry).withDefaultDeobfName())) {
+		if (controller.applyChangeFromServer(EntryChange.modify(entry).withDefaultDeobfName(null))) {
 			controller.sendPacket(new ConfirmChangeC2SPacket(syncId));
 		}
 	}
