@@ -66,11 +66,11 @@ public class EntryChange<E extends Entry<?>> {
 	}
 
 	public TristateChange<AccessModifier> getAccess() {
-		return access;
+		return this.access;
 	}
 
 	public E getTarget() {
-		return target;
+		return this.target;
 	}
 
 	@Override
@@ -78,19 +78,19 @@ public class EntryChange<E extends Entry<?>> {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		EntryChange<?> that = (EntryChange<?>) o;
-		return Objects.equals(target, that.target) &&
-				Objects.equals(deobfName, that.deobfName) &&
-				Objects.equals(javadoc, that.javadoc);
+		return Objects.equals(this.target, that.target) &&
+				Objects.equals(this.deobfName, that.deobfName) &&
+				Objects.equals(this.javadoc, that.javadoc);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(target, deobfName, javadoc);
+		return Objects.hash(this.target, this.deobfName, this.javadoc);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("EntryChange { target: %s, deobfName: %s, javadoc: %s, access: %s }", target, deobfName, javadoc, access);
+		return String.format("EntryChange { target: %s, deobfName: %s, javadoc: %s, access: %s }", this.target, this.deobfName, this.javadoc, this.access);
 	}
 
 }

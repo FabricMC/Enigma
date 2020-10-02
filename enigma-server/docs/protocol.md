@@ -75,21 +75,15 @@ struct Packet {
 The IDs for client-to-server packets are as follows:
 - 0: `Login`
 - 1: `ConfirmChange`
-- 2: `Rename`
-- 3: `RemoveMapping`
-- 4: `ChangeDocs`
-- 5: `MarkDeobfuscated` (unused)
 - 6: `Message`
+- 7: `EntryChange`
 
 The IDs for server-to-client packets are as follows:
 - 0: `Kick`
 - 1: `SyncMappings`
-- 2: `Rename`
-- 3: `RemoveMapping`
-- 4: `ChangeDocs`
-- 5: `MarkDeobfuscated`
 - 6: `Message`
 - 7: `UserList`
+- 8: `EntryChange`
 
 ### The utf struct
 ```c
@@ -196,6 +190,45 @@ struct Message {
 - `entry`: The entry that was modified.
 - `new_name`: The new name for the entry.
 
+### The entry_change struct
+```c
+typedef enum tristate_change {
+    TRISTATE_CHANGE_UNCHANGED = 0,
+    TRISTATE_CHANGE_RESET = 1,
+    TRISTATE_CHANGE_SET = 2
+} tristate_change_t;
+
+typedef enum access_modifier {
+    ACCESS_MODIFIER_UNCHANGED = 0,
+    ACCESS_MODIFIER_PUBLIC = 1,
+    ACCESS_MODIFIER_PROTECTED = 2,
+    ACCESS_MODIFIER_PRIVATE = 3
+} access_modifier_t;
+
+// Contains 4 packed values:
+// bitmask   type
+// 00000011  tristate_change_t deobf_name_change;
+// 00001100  tristate_change_t access_change;
+// 00110000  tristate_change_t javadoc_change;
+// 11000000  access_modifier_t access_modifiers;
+typedef uint8_t entry_change_flags;
+
+struct entry_change {
+    Entry entry;
+    entry_change_flags flags;
+    if <deobf_name_change == TRISTATE_CHANGE_SET> {
+        utf deobf_name;
+    }
+    if <javadoc_change == TRISTATE_CHANGE_SET> {
+        utf javadoc;
+    }
+}
+```
+- `entry`: The entry this change gets applied to.
+- `flags`: See definition of `entry_change_flags`.
+- `deobf_name`: The new deobfuscated name, if deobf_name_change == TRISTATE_CHANGE_SET
+- `javadoc`: The new javadoc, if javadoc_change == TRISTATE_CHANGE_SET
+- `access_modifiers`: The new access modifier, if access_change == TRISTATE_CHANGE_SET (otherwise 0)
 
 ### Login (client-to-server)
 ```c
@@ -223,46 +256,6 @@ struct ConfirmChangeC2SPacket {
 ```
 - `sync_id`: the sync ID to confirm.
 
-### Rename (client-to-server)
-```c
-struct RenameC2SPacket {
-    Entry obf_entry;
-    utf new_name;
-    boolean refresh_class_tree;
-}
-```
-- `obf_entry`: the obfuscated name and descriptor of the entry to rename.
-- `new_name`: what to rename the entry to.
-- `refresh_class_tree`: whether the class tree on the sidebar of Enigma needs refreshing as a result of this change.
-
-### RemoveMapping (client-to-server)
-```c
-struct RemoveMappingC2SPacket {
-    Entry obf_entry;
-}
-```
-- `obf_entry`: the obfuscated name and descriptor of the entry to remove the mapping for.
-
-### ChangeDocs (client-to-server)
-```c
-struct ChangeDocsC2SPacket {
-    Entry obf_entry;
-    utf new_docs;
-}
-```
-- `obf_entry`: the obfuscated name and descriptor of the entry to change the documentation for.
-- `new_docs`: the new documentation for this entry, or an empty string to remove the documentation.
-
-### MarkDeobfuscated (client-to-server)
-```c
-struct MarkDeobfuscatedC2SPacket {
-    Entry obf_entry;
-}
-```
-- `obf_entry`: the obfuscated name and descriptor of the entry to mark as deobfuscated.
-
-The default implementation never sends this packet.
-
 ### Message (client-to-server)
 ```c
 struct MessageC2SPacket {
@@ -270,6 +263,14 @@ struct MessageC2SPacket {
 }
 ```
 - `message`: The text message the user sent.
+
+### EntryChange (client-to-server)
+```c
+struct EntryChangeC2SPacket {
+    entry_change change;
+}
+```
+- `change`: The change to apply.
 
 ### Kick (server-to-client)
 ```c
@@ -288,13 +289,8 @@ struct SyncMappingsS2CPacket {
 struct MappingNode {
     NoParentEntry obf_entry;
     boolean is_named;
-    if<is_named> {
-        utf name;
-        boolean has_javadoc;
-        if<has_javadoc> {
-            utf javadoc;
-        }
-    }
+    utf name;
+    utf javadoc;
     unsigned short children_count;
     MappingNode children[children_count];
 }
@@ -302,55 +298,9 @@ typedef { Entry but without the has_parent or parent fields } NoParentEntry;
 ```
 - `roots`: The root mapping nodes, containing all the entries without parents.
 - `obf_entry`: The value of a node, containing the obfuscated name and descriptor of the entry.
-- `name`: The deobfuscated name of the entry, if it has a mapping.
-- `javadoc`: The documentation for the entry, if it is named and has documentation.
+- `name`: The deobfuscated name of the entry, if it exists, otherwise the empty string.
+- `javadoc`: The documentation for the entry, if it exists, otherwise the empty string.
 - `children`: The children of this node
-
-### Rename (server-to-client)
-```c
-struct RenameS2CPacket {
-    unsigned short sync_id;
-    Entry obf_entry;
-    utf new_name;
-    boolean refresh_class_tree;
-}
-```
-- `sync_id`: the sync ID of the change for locking purposes.
-- `obf_entry`: the obfuscated name and descriptor of the entry to rename.
-- `new_name`: what to rename the entry to.
-- `refresh_class_tree`: unused, always true.
-
-### RemoveMapping (server-to-client)
-```c
-struct RemoveMappingS2CPacket {
-    unsigned short sync_id;
-    Entry obf_entry;
-}
-```
-- `sync_id`: the sync ID of the change for locking purposes.
-- `obf_entry`: the obfuscated name and descriptor of the entry to remove the mapping for.
-
-### ChangeDocs (server-to-client)
-```c
-struct ChangeDocsS2CPacket {
-    unsigned short sync_id;
-    Entry obf_entry;
-    utf new_docs;
-}
-```
-- `sync_id`: the sync ID of the change for locking purposes.
-- `obf_entry`: the obfuscated name and descriptor of the entry to change the documentation for.
-- `new_docs`: the new documentation for this entry, or an empty string to remove the documentation.
-
-### MarkDeobfuscated (server-to-client)
-```c
-struct MarkDeobfuscatedS2CPacket {
-    unsigned short sync_id;
-    Entry obf_entry;
-}
-```
-- `sync_id`: the sync ID of the change for locking purposes.
-- `obf_entry`: the obfuscated name and descriptor of the entry to mark as deobfuscated.
 
 ### Message (server-to-client)
 ```c
@@ -366,3 +316,13 @@ struct UserListS2CPacket {
     utf user[len];
 }
 ```
+
+### EntryChange (server-to-client)
+```c
+struct EntryChangeS2CPacket {
+    uint16_t sync_id;
+    entry_change change;
+}
+```
+- `sync_id`: The sync ID of the change for locking purposes.
+- `change`: The change to apply.

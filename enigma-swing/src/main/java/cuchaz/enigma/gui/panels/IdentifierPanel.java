@@ -22,7 +22,6 @@ import cuchaz.enigma.gui.events.ConvertingTextFieldListener;
 import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.newabstraction.EntryChange;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -180,9 +179,8 @@ public class IdentifierPanel {
 	}
 
 	private void doRename(String newName) {
-		gui.getController().applyChange(vc, EntryChange.modify(entry).withDeobfName(newName));
-		if (!vc.canProceed()) return;
-		gui.getController().sendPacket(new RenameC2SPacket(entry, newName, true));
+		EntryChange<? extends Entry<?>> change = EntryChange.modify(entry).withDeobfName(newName);
+		gui.getController().applyChange(vc, change);
 	}
 
 	public void retranslateUi() {

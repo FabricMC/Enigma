@@ -45,7 +45,9 @@ import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.network.*;
-import cuchaz.enigma.network.packet.*;
+import cuchaz.enigma.network.packet.EntryChangeC2SPacket;
+import cuchaz.enigma.network.packet.LoginC2SPacket;
+import cuchaz.enigma.network.packet.Packet;
 import cuchaz.enigma.newabstraction.EntryChange;
 import cuchaz.enigma.newabstraction.EntryUtil;
 import cuchaz.enigma.source.DecompiledClassSource;
@@ -480,23 +482,8 @@ public class GuiController implements ClientPacketHandler {
 	public void applyChange(ValidationContext vc, EntryChange<?> change) {
 		this.applyChange0(vc, change);
 		gui.showStructure(gui.getActiveEditor());
-
 		if (!vc.canProceed()) return;
-
-		// this might cause issues when multiple fields are changed at the same
-		// time, but that can't happen right now
-
-		if (change.getJavadoc().isSet()) {
-			sendPacket(new ChangeDocsC2SPacket(change.getTarget(), change.getJavadoc().getNewValue()));
-		} else if (change.getJavadoc().isReset()) {
-			sendPacket(new ChangeDocsC2SPacket(change.getTarget(), ""));
-		}
-
-		if (change.getDeobfName().isSet()) {
-			sendPacket(new RenameC2SPacket(change.getTarget(), change.getDeobfName().getNewValue(), true));
-		} else if (change.getDeobfName().isReset()) {
-			sendPacket(new RemoveMappingC2SPacket(change.getTarget()));
-		}
+		this.sendPacket(new EntryChangeC2SPacket(change));
 	}
 
 	private void applyChange0(ValidationContext vc, EntryChange<?> change) {
