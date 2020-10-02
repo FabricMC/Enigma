@@ -46,7 +46,7 @@ public class MappingValidator {
 				.map(deobfuscator::translate)
 				.collect(Collectors.toList());
 		for (Entry<?> sibling : directTranslatedSiblings) {
-			if (entry.canConflictWith(sibling) && sibling.getName().equals(name) && isSynthetic(entry) == isSynthetic(sibling)) {
+			if (entry.canConflictWith(sibling) && sibling.getName().equals(name) && !isSynthetic(entry) && !isSynthetic(sibling)) {
 				// allow clash if one is synthetic and the other is not
 				Entry<?> parent = entry.getParent();
 				if (parent != null) {
