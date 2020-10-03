@@ -15,12 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,18 +32,10 @@ import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
-import cuchaz.enigma.translation.mapping.serde.LfPrintWriter;
-import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
-import cuchaz.enigma.translation.mapping.serde.MappingHelper;
-import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
-import cuchaz.enigma.translation.mapping.serde.MappingsWriter;
+import cuchaz.enigma.translation.mapping.serde.*;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
@@ -283,9 +270,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected String writeMethod(MethodEntry entry, @Nonnull EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder(EnigmaFormat.METHOD + " ");
 		builder.append(entry.getName()).append(' ');
-		if (mapping.getTargetName() != null) {
-			writeMapping(builder, mapping);
-		}
+		writeMapping(builder, mapping);
 
 		builder.append(entry.getDesc().toString());
 
@@ -295,9 +280,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	protected String writeField(FieldEntry entry, @Nonnull EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder(EnigmaFormat.FIELD + " ");
 		builder.append(entry.getName()).append(' ');
-		if (mapping.getTargetName() != null) {
-			writeMapping(builder, mapping);
-		}
+		writeMapping(builder, mapping);
 
 		builder.append(entry.getDesc().toString());
 
@@ -315,7 +298,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 				builder.append(mapping.getAccessModifier().getFormattedName()).append(' ');
 			}
 		} else if (mapping.getAccessModifier() != AccessModifier.UNCHANGED) {
-			System.err.println("Skipping writing access modifier for mapping with NULL deobf name!"); // TODO
+			builder.append("- ").append(mapping.getAccessModifier().getFormattedName()).append(' ');
 		}
 	}
 
