@@ -894,6 +894,7 @@ public class Gui implements LanguageChangeListener {
 		this.obfPanel.retranslateUi();
 		this.deobfPanel.retranslateUi();
 		this.infoPanel.retranslateUi();
+		this.editors.values().forEach(EditorPanel::retranslateUi);
 	}
 
 	public void setConnectionState(ConnectionState state) {

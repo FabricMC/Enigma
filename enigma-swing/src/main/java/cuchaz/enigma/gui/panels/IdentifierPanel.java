@@ -142,10 +142,16 @@ public class IdentifierPanel {
 
 				@Override
 				public void onStopEditing(ConvertingTextField field, boolean abort) {
-					if (abort) return;
-					vc.reset();
-					vc.setActiveElement(field);
-					doRename(field.getText());
+					if (!abort) {
+						vc.reset();
+						vc.setActiveElement(field);
+						doRename(field.getText());
+					}
+
+					EditorPanel e = gui.getActiveEditor();
+					if (e != null) {
+						e.getEditor().requestFocusInWindow();
+					}
 				}
 			});
 		}

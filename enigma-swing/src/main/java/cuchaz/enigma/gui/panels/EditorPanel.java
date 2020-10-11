@@ -27,7 +27,7 @@ import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
-import cuchaz.enigma.gui.elements.PopupMenuBar;
+import cuchaz.enigma.gui.elements.EditorPopupMenu;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
@@ -42,8 +42,6 @@ import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Result;
 
@@ -52,7 +50,7 @@ public class EditorPanel {
 	private final JPanel ui = new JPanel();
 	private final JEditorPane editor = new JEditorPane();
 	private final JScrollPane editorScrollPane = new JScrollPane(this.editor);
-	private final PopupMenuBar popupMenu;
+	private final EditorPopupMenu popupMenu;
 
 	// progress UI
 	private final JLabel decompilingLabel = new JLabel(I18n.translate("editor.decompiling"), JLabel.CENTER);
@@ -102,8 +100,8 @@ public class EditorPanel {
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
 		// init editor popup menu
-		this.popupMenu = new PopupMenuBar(this, gui);
-		this.editor.setComponentPopupMenu(this.popupMenu);
+		this.popupMenu = new EditorPopupMenu(this, gui);
+		this.editor.setComponentPopupMenu(this.popupMenu.getUi());
 
 		this.decompilingLabel.setFont(ScaleUtil.getFont(this.decompilingLabel.getFont().getFontName(), Font.BOLD, 26));
 		this.decompilingProgressBar.setIndeterminate(true);
@@ -141,47 +139,8 @@ public class EditorPanel {
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
 					EditorPanel.this.shouldNavigateOnClick = false;
+					if (EditorPanel.this.popupMenu.handleKeyEvent(event)) return;
 					switch (event.getKeyCode()) {
-						case KeyEvent.VK_I:
-							EditorPanel.this.popupMenu.showInheritanceMenu.doClick();
-							break;
-
-						case KeyEvent.VK_M:
-							EditorPanel.this.popupMenu.showImplementationsMenu.doClick();
-							break;
-
-						case KeyEvent.VK_N:
-							EditorPanel.this.popupMenu.openEntryMenu.doClick();
-							break;
-
-						case KeyEvent.VK_P:
-							EditorPanel.this.popupMenu.openPreviousMenu.doClick();
-							break;
-
-						case KeyEvent.VK_E:
-							EditorPanel.this.popupMenu.openNextMenu.doClick();
-							break;
-
-						case KeyEvent.VK_C:
-							if (event.isShiftDown()) {
-								EditorPanel.this.popupMenu.showCallsSpecificMenu.doClick();
-							} else {
-								EditorPanel.this.popupMenu.showCallsMenu.doClick();
-							}
-							break;
-
-						case KeyEvent.VK_O:
-							EditorPanel.this.popupMenu.toggleMappingMenu.doClick();
-							break;
-
-						case KeyEvent.VK_R:
-							EditorPanel.this.popupMenu.renameMenu.doClick();
-							break;
-
-						case KeyEvent.VK_D:
-							EditorPanel.this.popupMenu.editJavadocMenu.doClick();
-							break;
-
 						case KeyEvent.VK_F5:
 							if (EditorPanel.this.classHandle != null) {
 								EditorPanel.this.classHandle.invalidateMapped();
@@ -211,7 +170,9 @@ public class EditorPanel {
 
 			@Override
 			public void keyTyped(KeyEvent event) {
-				if (!EditorPanel.this.popupMenu.renameMenu.isEnabled()) return;
+				EntryReference<Entry<?>, Entry<?>> ref = EditorPanel.this.getCursorReference();
+				if (ref == null) return;
+				if (!EditorPanel.this.controller.project.isRenamable(ref)) return;
 
 				if (!event.isControlDown() && !event.isAltDown() && Character.isJavaIdentifierPart(event.getKeyChar())) {
 					EnigmaProject project = gui.getController().project;
@@ -431,30 +392,7 @@ public class EditorPanel {
 	private void setCursorReference(EntryReference<Entry<?>, Entry<?>> ref) {
 		this.cursorReference = ref;
 
-		Entry<?> referenceEntry = ref == null ? null : ref.entry;
-
-		boolean isClassEntry = referenceEntry instanceof ClassEntry;
-		boolean isFieldEntry = referenceEntry instanceof FieldEntry;
-		boolean isMethodEntry = referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
-		boolean isConstructorEntry = referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
-		boolean isRenamable = ref != null && this.controller.project.isRenamable(ref);
-
-		this.popupMenu.renameMenu.setEnabled(isRenamable);
-		this.popupMenu.editJavadocMenu.setEnabled(isRenamable);
-		this.popupMenu.showInheritanceMenu.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
-		this.popupMenu.showImplementationsMenu.setEnabled(isClassEntry || isMethodEntry);
-		this.popupMenu.showCallsMenu.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
-		this.popupMenu.showCallsSpecificMenu.setEnabled(isMethodEntry);
-		this.popupMenu.openEntryMenu.setEnabled(isRenamable && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
-		this.popupMenu.openPreviousMenu.setEnabled(this.controller.hasPreviousReference());
-		this.popupMenu.openNextMenu.setEnabled(this.controller.hasNextReference());
-		this.popupMenu.toggleMappingMenu.setEnabled(isRenamable);
-
-		if (referenceEntry != null && this.controller.project.getMapper().extendedDeobfuscate(referenceEntry).isDeobfuscated()) {
-			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.reset_obfuscated"));
-		} else {
-			this.popupMenu.toggleMappingMenu.setText(I18n.translate("popup_menu.mark_deobfuscated"));
-		}
+		this.popupMenu.updateUiState();
 
 		this.listeners.forEach(l -> l.onCursorReferenceChanged(this, ref));
 	}
@@ -664,6 +602,10 @@ public class EditorPanel {
 	public String getFileName() {
 		ClassEntry classEntry = this.classHandle.getDeobfRef() != null ? this.classHandle.getDeobfRef() : this.classHandle.getRef();
 		return classEntry.getSimpleName();
+	}
+
+	public void retranslateUi() {
+		this.popupMenu.retranslateUi();
 	}
 
 	private enum DisplayMode {
