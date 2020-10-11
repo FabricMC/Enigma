@@ -37,10 +37,7 @@ import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
-import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
-import cuchaz.enigma.gui.elements.EditorTabPopupMenu;
-import cuchaz.enigma.gui.elements.MenuBar;
-import cuchaz.enigma.gui.elements.ValidatableUi;
+import cuchaz.enigma.gui.elements.*;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.util.History;
@@ -107,6 +104,7 @@ public class Gui implements LanguageChangeListener {
 	private JLabel statusLabel;
 
 	private final EditorTabPopupMenu editorTabPopupMenu;
+	private final DeobfPanelPopupMenu deobfPanelPopupMenu;
 	private final JTabbedPane openFiles;
 	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
 
@@ -287,6 +285,19 @@ public class Gui implements LanguageChangeListener {
 					int i = openFiles.getUI().tabForCoordinate(openFiles, e.getX(), e.getY());
 					if (i != -1) {
 						editorTabPopupMenu.show(openFiles, e.getX(), e.getY(), EditorPanel.byUi(openFiles.getComponentAt(i)));
+					}
+				}
+			}
+		});
+
+		deobfPanelPopupMenu = new DeobfPanelPopupMenu(this);
+		deobfPanel.deobfClasses.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					int i = deobfPanel.deobfClasses.getRowForPath(deobfPanel.deobfClasses.getSelectionPath());
+					if (i != -1) {
+						deobfPanelPopupMenu.show(deobfPanel.deobfClasses, e.getX(), e.getY());
 					}
 				}
 			}
@@ -893,6 +904,7 @@ public class Gui implements LanguageChangeListener {
 		this.menuBar.retranslateUi();
 		this.obfPanel.retranslateUi();
 		this.deobfPanel.retranslateUi();
+		this.deobfPanelPopupMenu.retranslateUi();
 		this.infoPanel.retranslateUi();
 		this.editors.values().forEach(EditorPanel::retranslateUi);
 	}
