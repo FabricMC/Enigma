@@ -4,15 +4,13 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.bytecode.translators.LocalVariableFixVisitor;
 import cuchaz.enigma.bytecode.translators.SourceFixVisitor;
-import cuchaz.enigma.classprovider.ClassProvider;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-
-import javax.annotation.Nullable;
 
 /**
  * Wraps a ClassProvider to apply fixes to the following problems introduced by the obfuscator,

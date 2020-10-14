@@ -2,14 +2,13 @@ package cuchaz.enigma.translation.representation.entry;
 
 import java.util.Objects;
 
-import javax.annotation.Nullable;
-
 import com.google.common.base.Preconditions;
 
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * TypeDescriptor...

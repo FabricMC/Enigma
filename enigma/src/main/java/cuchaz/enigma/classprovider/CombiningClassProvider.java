@@ -2,7 +2,7 @@ package cuchaz.enigma.classprovider;
 
 import org.objectweb.asm.tree.ClassNode;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Combines a list of {@link ClassProvider}s into one, calling each one in a row

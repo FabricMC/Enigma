@@ -1,8 +1,7 @@
 package cuchaz.enigma.translation.mapping;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class MappingPair<E extends Entry<?>, M> {
 	private final E entry;

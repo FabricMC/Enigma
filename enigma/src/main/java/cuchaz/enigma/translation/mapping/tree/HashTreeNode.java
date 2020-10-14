@@ -2,8 +2,9 @@ package cuchaz.enigma.translation.mapping.tree;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,7 +34,7 @@ public class HashTreeNode<T> implements EntryTreeNode<T>, Iterable<HashTreeNode<
 		return children.get(entry);
 	}
 
-	@Nonnull
+	@NotNull
 	HashTreeNode<T> computeChild(Entry<?> entry) {
 		return children.computeIfAbsent(entry, HashTreeNode::new);
 	}

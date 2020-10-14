@@ -38,7 +38,7 @@ public class Enigma {
     public static final String NAME = "Enigma";
 	public static final String VERSION;
 	public static final String URL = "https://fabricmc.net";
-    public static final int ASM_VERSION = Opcodes.ASM8;
+    public static final int ASM_VERSION = Opcodes.ASM9;
 
     private final EnigmaProfile profile;
 	private final EnigmaServices services;

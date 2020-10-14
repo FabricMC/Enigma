@@ -3,12 +3,11 @@ package cuchaz.enigma.translation;
 import java.util.Arrays;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import org.jetbrains.annotations.Nullable;
 
 public class ProposingTranslator implements Translator {
 	private final EntryRemapper mapper;

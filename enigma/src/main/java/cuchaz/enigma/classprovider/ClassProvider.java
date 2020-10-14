@@ -1,8 +1,7 @@
 package cuchaz.enigma.classprovider;
 
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.tree.ClassNode;
-
-import javax.annotation.Nullable;
 
 public interface ClassProvider {
     /**

@@ -14,7 +14,7 @@ package cuchaz.enigma.translation.representation.entry;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.mapping.IdentifierValidation;

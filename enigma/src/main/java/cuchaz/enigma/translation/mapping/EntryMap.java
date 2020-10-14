@@ -1,8 +1,8 @@
 package cuchaz.enigma.translation.mapping;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.stream.Stream;
 
 public interface EntryMap<T> {

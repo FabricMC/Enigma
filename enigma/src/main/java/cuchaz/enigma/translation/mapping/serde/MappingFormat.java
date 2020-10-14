@@ -13,7 +13,7 @@ import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Reader;
 import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Writer;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 

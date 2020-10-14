@@ -9,8 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.annotation.Nullable;
-
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
@@ -19,6 +17,7 @@ import cuchaz.enigma.events.ClassHandleListener.InvalidationType;
 import cuchaz.enigma.source.*;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Result;
+import org.jetbrains.annotations.Nullable;
 
 import static cuchaz.enigma.utils.Utils.withLock;
 

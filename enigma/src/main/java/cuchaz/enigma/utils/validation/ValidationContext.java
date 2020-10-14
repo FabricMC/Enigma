@@ -2,9 +2,8 @@ package cuchaz.enigma.utils.validation;
 
 import java.util.*;
 
-import javax.annotation.Nullable;
-
 import cuchaz.enigma.utils.validation.Message.Type;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A context for user input validation. Handles collecting error messages and

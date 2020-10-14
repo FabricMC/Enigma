@@ -3,7 +3,7 @@ package cuchaz.enigma.translation.mapping;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.MappingTranslator;

@@ -1,9 +1,9 @@
 package cuchaz.enigma.classhandle;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-
-import javax.annotation.Nullable;
 
 public final class ClassHandleError {
 

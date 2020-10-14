@@ -7,7 +7,7 @@ import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.Stream;

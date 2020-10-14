@@ -13,8 +13,9 @@ import com.google.gson.reflect.TypeToken;
 import cuchaz.enigma.api.service.EnigmaServiceType;
 import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

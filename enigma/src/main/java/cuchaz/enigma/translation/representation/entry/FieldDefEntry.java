@@ -11,8 +11,6 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import javax.annotation.Nullable;
-
 import com.google.common.base.Preconditions;
 
 import cuchaz.enigma.source.RenamableTokenType;
@@ -22,6 +20,7 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.Signature;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
+import org.jetbrains.annotations.Nullable;
 
 public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;

@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
+
 import javax.swing.*;
 import javax.swing.tree.*;
 
@@ -61,6 +61,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.ValidationContext;
+import org.jetbrains.annotations.Nullable;
 
 public class Gui implements LanguageChangeListener {
 

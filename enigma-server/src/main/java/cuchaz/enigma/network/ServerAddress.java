@@ -1,8 +1,8 @@
 package cuchaz.enigma.network;
 
-import java.util.Objects;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
 public class ServerAddress {
 

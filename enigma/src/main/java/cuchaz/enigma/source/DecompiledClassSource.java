@@ -2,7 +2,7 @@ package cuchaz.enigma.source;
 
 import java.util.*;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.EnigmaServices;

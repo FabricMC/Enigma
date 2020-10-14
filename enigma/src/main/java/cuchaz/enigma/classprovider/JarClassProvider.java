@@ -2,9 +2,9 @@ package cuchaz.enigma.classprovider;
 
 import com.google.common.collect.ImmutableSet;
 import cuchaz.enigma.utils.AsmUtil;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.tree.ClassNode;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;

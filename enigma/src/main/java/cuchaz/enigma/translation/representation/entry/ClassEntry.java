@@ -14,8 +14,8 @@ package cuchaz.enigma.translation.representation.entry;
 import java.util.List;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
@@ -143,7 +143,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return parent;
 	}
 
-	@Nonnull
+	@NotNull
 	public ClassEntry getOutermostClass() {
 		if (parent == null) {
 			return this;
