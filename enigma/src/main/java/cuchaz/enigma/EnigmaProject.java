@@ -216,10 +216,6 @@ public class EnigmaProject {
 			}
 		}
 
-		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService) {
-			return this.decompile(progress, decompilerService, DecompileErrorStrategy.PROPAGATE);
-		}
-
 		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
 			List<ClassSource> decompiled = this.decompileStream(progress, decompilerService, errorStrategy).collect(Collectors.toList());
 			return new SourceExport(decompiled);
