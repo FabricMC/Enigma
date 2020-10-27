@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.swing.*;
 
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.stats.StatsResult;
@@ -24,7 +25,7 @@ public class StatsDialog {
 			final StatsGenerator statsGenerator = new StatsGenerator(gui.getController().project);
 			final Map<StatsMember, StatsResult> results = new HashMap<>();
 			for (StatsMember member : StatsMember.values()) {
-				results.put(member, statsGenerator.generate(listener, Collections.singleton(member), ""));
+				results.put(member, statsGenerator.generate(listener, Collections.singleton(member), "", false));
 			}
 			SwingUtilities.invokeLater(() -> show(gui, results));
 		});
@@ -66,17 +67,28 @@ public class StatsDialog {
 		contentPane.add(topLevelPackageOption, cb1.pos(0, results.size() + 1).build());
 
 		JTextField topLevelPackage = new JTextField();
+		topLevelPackage.setText(UiConfig.getLastTopLevelPackage());
 		contentPane.add(topLevelPackage, cb1.pos(0, results.size() + 2).fill(GridBagConstraints.HORIZONTAL).build());
+
+		// show synthetic members option
+		JCheckBox syntheticParametersOption = new JCheckBox(I18n.translate("menu.file.stats.synthetic_parameters"));
+		syntheticParametersOption.setSelected(UiConfig.shouldIncludeSyntheticParameters());
+		contentPane.add(syntheticParametersOption, cb1.pos(0, results.size() + 3).build());
 
 		// show generate button
 		JButton button = new JButton(I18n.translate("menu.file.stats.generate"));
 		button.setEnabled(false);
 		button.addActionListener(action -> {
 			dialog.dispose();
-			generateStats(gui, checkboxes, topLevelPackage.getText());
+
+			UiConfig.setLastTopLevelPackage(topLevelPackage.getText());
+			UiConfig.setIncludeSyntheticParameters(syntheticParametersOption.isSelected());
+			UiConfig.save();
+
+			generateStats(gui, checkboxes, topLevelPackage.getText(), syntheticParametersOption.isSelected());
 		});
 
-		contentPane.add(button, cb1.pos(0, results.size() + 3).weightY(1.0).anchor(GridBagConstraints.SOUTHEAST).build());
+		contentPane.add(button, cb1.pos(0, results.size() + 4).weightY(1.0).anchor(GridBagConstraints.SOUTHEAST).build());
 
 		// add action listener to each checkbox
 		checkboxes.forEach((key, value) -> value.addActionListener(action -> {
@@ -97,7 +109,7 @@ public class StatsDialog {
 		dialog.setVisible(true);
 	}
 
-	private static void generateStats(Gui gui, Map<StatsMember, JCheckBox> checkboxes, String topLevelPackage) {
+	private static void generateStats(Gui gui, Map<StatsMember, JCheckBox> checkboxes, String topLevelPackage, boolean includeSynthetic) {
 		// get members from selected checkboxes
 		Set<StatsMember> includedMembers = checkboxes
 				.entrySet()
@@ -108,7 +120,7 @@ public class StatsDialog {
 
 		// checks if a project is open
 		if (gui.getController().project != null) {
-			gui.getController().openStats(includedMembers, topLevelPackage);
+			gui.getController().openStats(includedMembers, topLevelPackage, includeSynthetic);
 		}
 	}
 }
