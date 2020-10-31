@@ -42,16 +42,15 @@ public class DeobfPanelPopupMenu {
         this.retranslateUi();
     }
 
-    public void show(Component invoker, int x, int y) {
-        this.ui.show(invoker, x, y);
+    public void show(ClassSelector deobfClasses, int x, int y) {
+        // Only enable rename class if selected path is a class
+        this.renameClass.setEnabled(deobfClasses.getSelectedClass() != null);
+
+        this.ui.show(deobfClasses, x, y);
     }
 
     public void retranslateUi() {
         this.renamePackage.setText(I18n.translate("popup_menu.deobf_panel.rename_package"));
         this.renameClass.setText(I18n.translate("popup_menu.deobf_panel.rename_class"));
-    }
-
-    public JMenuItem getRenameClass() {
-        return this.renameClass;
     }
 }

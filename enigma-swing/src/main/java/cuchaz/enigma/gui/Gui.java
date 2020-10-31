@@ -301,9 +301,6 @@ public class Gui implements LanguageChangeListener {
 						deobfPanelPopupMenu.show(deobfPanel.deobfClasses, e.getX(), e.getY());
 					}
 				}
-
-				// Only enable rename class if selected path is a class
-				deobfPanelPopupMenu.getRenameClass().setEnabled(deobfPanel.deobfClasses.getSelectedClass() != null);
 			}
 		});
 
