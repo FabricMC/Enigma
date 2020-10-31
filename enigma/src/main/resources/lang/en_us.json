@@ -79,7 +79,8 @@
 	"popup_menu.editor_tab.close_others": "Close Others",
 	"popup_menu.editor_tab.close_left": "Close All to the Left",
 	"popup_menu.editor_tab.close_right": "Close All to the Right",
-	"popup_menu.deobf_panel.rename": "Rename",
+	"popup_menu.deobf_panel.rename_package": "Rename Package",
+	"popup_menu.deobf_panel.rename_class": "Rename Class",
 
 	"editor.decompiling": "Decompiling...",
 	"editor.decompile_error": "An error was encountered while decompiling.",
