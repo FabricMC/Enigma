@@ -16,6 +16,7 @@ public class EntryUtil {
 		EntryMapping mapping = EntryUtil.applyChange(prev, change);
 
 		remapper.putMapping(vc, target, mapping);
+
 		return mapping;
 	}
 
