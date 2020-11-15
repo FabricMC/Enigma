@@ -295,6 +295,7 @@ public class Gui implements LanguageChangeListener {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (SwingUtilities.isRightMouseButton(e)) {
+					deobfPanel.deobfClasses.setSelectionRow(deobfPanel.deobfClasses.getClosestRowForLocation(e.getX(), e.getY()));
 					int i = deobfPanel.deobfClasses.getRowForPath(deobfPanel.deobfClasses.getSelectionPath());
 					if (i != -1) {
 						deobfPanelPopupMenu.show(deobfPanel.deobfClasses, e.getX(), e.getY());
