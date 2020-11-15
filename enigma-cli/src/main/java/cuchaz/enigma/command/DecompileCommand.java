@@ -2,6 +2,7 @@ package cuchaz.enigma.command;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.EnigmaProject.DecompileErrorStrategy;
 import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.Decompilers;
 
@@ -47,7 +48,7 @@ public class DecompileCommand extends Command {
 		ProgressListener progress = new ConsoleProgressListener();
 
 		EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-		EnigmaProject.SourceExport source = jar.decompile(progress, decompilerService);
+		EnigmaProject.SourceExport source = jar.decompile(progress, decompilerService, DecompileErrorStrategy.TRACE_AS_SOURCE);
 
 		source.write(fileJarOut, progress);
 	}
