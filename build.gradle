@@ -24,10 +24,9 @@ subprojects {
     }
 
     group = 'cuchaz'
-    version = '0.21.6'
+    version = '0.21.7'
 
-    def buildNumber = System.getenv("BUILD_NUMBER")
-    version = version + "+" + (buildNumber ? "build.$buildNumber" : "local")
+    version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
 
     task sourcesJar(type: Jar, dependsOn: classes) {
         classifier = 'sources'
@@ -36,6 +35,14 @@ subprojects {
 
     java {
         withSourcesJar()
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.encoding = "UTF-8"
+
+        if (JavaVersion.current().isJava9Compatible()) {
+            it.options.release = 8
+        }
     }
 
     publishing {
@@ -55,15 +62,30 @@ allprojects {
         repositories {
             mavenLocal()
 
-            if (project.hasProperty('mavenPass')) {
+            def ENV = System.getenv()
+            if (ENV.MAVEN_URL) {
                 maven {
-                    url = "http://mavenupload.modmuss50.me/"
+                    url ENV.MAVEN_URL
                     credentials {
-                        username = "buildslave"
-                        password = project.getProperty('mavenPass')
+                        username ENV.MAVEN_USERNAME
+                        password ENV.MAVEN_PASSWORD
                     }
                 }
             }
         }
     }
 }
+
+// A task to ensure that the version being released has not already been released.
+task checkVersion {
+    doFirst {
+        def xml = new URL("https://maven.fabricmc.net/cuchaz/enigma/maven-metadata.xml").text
+        def metadata = new XmlSlurper().parseText(xml)
+        def versions = metadata.versioning.versions.version*.text();
+        if (versions.contains(version)) {
+            throw new RuntimeException("${version} has already been released!")
+        }
+    }
+}
+
+publish.mustRunAfter checkVersion

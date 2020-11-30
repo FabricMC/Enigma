@@ -3,10 +3,10 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.ow2.asm:asm:8.0'
-    implementation 'org.ow2.asm:asm-commons:8.0'
-    implementation 'org.ow2.asm:asm-tree:8.0'
-    implementation 'org.ow2.asm:asm-util:8.0'
+    implementation 'org.ow2.asm:asm:9.0'
+    implementation 'org.ow2.asm:asm-commons:9.0'
+    implementation 'org.ow2.asm:asm-tree:9.0'
+    implementation 'org.ow2.asm:asm-util:9.0'
 
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
     implementation 'net.fabricmc:cfr:0.0.1'
