@@ -130,9 +130,8 @@ public final class ClassHandleProvider {
 				e.invalidateJavadoc();
 			}
 
-			Entry outermostEntry = handles.get(entry.getOutermostClass());
-			if (outermostEntry != null) {
-				outermostEntry.invalidateJavadoc();
+			if (entry.isInnerClass()) {
+				this.invalidateJavadoc(entry.getOuterClass());
 			}
 		});
 	}
