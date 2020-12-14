@@ -235,14 +235,14 @@ public class TypeDescriptor implements Translatable {
 	}
 
 	public enum Primitive {
-		BYTE('B'),
-		CHARACTER('C'),
-		SHORT('S'),
-		INTEGER('I'),
-		LONG('J'),
-		FLOAT('F'),
-		DOUBLE('D'),
-		BOOLEAN('Z');
+		BYTE('B', "byte"),
+		CHARACTER('C', "char"),
+		SHORT('S', "short"),
+		INTEGER('I', "int"),
+		LONG('J', "long"),
+		FLOAT('F', "float"),
+		DOUBLE('D', "double"),
+		BOOLEAN('Z', "boolean");
 
 		private static final Map<Character, Primitive> lookup;
 
@@ -254,9 +254,11 @@ public class TypeDescriptor implements Translatable {
 		}
 
 		private char code;
+		private String keyword;
 
-		Primitive(char code) {
+		Primitive(char code, String keyword) {
 			this.code = code;
+			this.keyword = keyword;
 		}
 
 		public static Primitive get(char code) {
@@ -265,6 +267,13 @@ public class TypeDescriptor implements Translatable {
 
 		public char getCode() {
 			return this.code;
+		}
+
+		/**
+		 * Returns the Java keyword corresponding to this primitive.
+		 */
+		public String getKeyword() {
+			return this.keyword;
 		}
 	}
 }

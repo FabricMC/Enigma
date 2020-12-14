@@ -101,6 +101,8 @@
 	"info_panel.identifier.index": "Index",
 	"info_panel.editor.class.decompiling": "(décompilation...)",
 	"info_panel.editor.class.not_found": "Impossible de trouver la classe :",
+	"info_panel.tree.structure": "Structure",
+	"info_panel.tree.structure.hide_deobfuscated": "Masquer les membres déobfusqués",
 	"info_panel.tree.inheritance": "Héritage",
 	"info_panel.tree.implementations": "Implémentations",
 	"info_panel.tree.calls": "Graphique des appels",

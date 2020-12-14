@@ -1,24 +1,24 @@
 package cuchaz.enigma.gui.util;
 
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Desktop;
-import java.awt.Font;
+import cuchaz.enigma.utils.Os;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.ToolTipManager;
-
-import cuchaz.enigma.utils.Os;
-
 public class GuiUtil {
+    public static final Icon CLASS_ICON = loadIcon("class");
+    public static final Icon METHOD_ICON = loadIcon("method");
+    public static final Icon FIELD_ICON = loadIcon("field");
+
     public static void openUrl(String url) {
         try {
             switch (Os.getOs()) {
@@ -70,4 +70,15 @@ public class GuiUtil {
         return link;
     }
 
+    public static Icon loadIcon(String name) {
+        try {
+            InputStream inputStream = GuiUtil.class.getResourceAsStream("/icons/" + name + ".png");
+            Image image = ImageIO.read(inputStream).getScaledInstance(ScaleUtil.scale(16), ScaleUtil.scale(16), Image.SCALE_DEFAULT);
+            return new ImageIcon(image);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }

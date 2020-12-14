@@ -57,10 +57,7 @@ import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -393,6 +390,13 @@ public class GuiController implements ClientPacketHandler {
 		}
 
 		chp.invalidateMapped();
+	}
+
+	public StructureTreeNode getClassStructure(ClassEntry entry, boolean hideDeobfuscated) {
+		Translator translator = this.project.getMapper().getDeobfuscator();
+		StructureTreeNode rootNode = new StructureTreeNode(translator, entry, entry);
+		rootNode.load(this.project.getJarIndex(), hideDeobfuscated);
+		return rootNode;
 	}
 
 	public ClassInheritanceTreeNode getClassInheritance(ClassEntry entry) {

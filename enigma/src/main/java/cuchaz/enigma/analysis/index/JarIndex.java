@@ -23,10 +23,7 @@ import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class JarIndex implements JarIndexer {
 	private final Set<String> indexedClasses = new HashSet<>();
@@ -40,6 +37,7 @@ public class JarIndex implements JarIndexer {
 	private final Collection<JarIndexer> indexers;
 
 	private final Multimap<String, MethodDefEntry> methodImplementations = HashMultimap.create();
+	private final Map<ClassEntry, List<ParentedEntry>> childrenByClass;
 
 	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex, PackageVisibilityIndex packageVisibilityIndex) {
 		this.entryIndex = entryIndex;
@@ -49,6 +47,7 @@ public class JarIndex implements JarIndexer {
 		this.packageVisibilityIndex = packageVisibilityIndex;
 		this.indexers = Arrays.asList(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 		this.entryResolver = new IndexEntryResolver(this);
+		this.childrenByClass = new HashMap<>();
 	}
 
 	public static JarIndex empty() {
@@ -101,6 +100,11 @@ public class JarIndex implements JarIndexer {
 		}
 
 		indexers.forEach(indexer -> indexer.indexClass(classEntry));
+		childrenByClass.putIfAbsent(classEntry, new ArrayList<>());
+		if (classEntry.isInnerClass() && !classEntry.getAccess().isSynthetic()) {
+			childrenByClass.putIfAbsent(classEntry.getParent(), new ArrayList<>());
+			childrenByClass.get(classEntry.getParent()).add(classEntry);
+		}
 	}
 
 	@Override
@@ -110,6 +114,10 @@ public class JarIndex implements JarIndexer {
 		}
 
 		indexers.forEach(indexer -> indexer.indexField(fieldEntry));
+		if (!fieldEntry.getAccess().isSynthetic()) {
+			childrenByClass.putIfAbsent(fieldEntry.getParent(), new ArrayList<>());
+			childrenByClass.get(fieldEntry.getParent()).add(fieldEntry);
+		}
 	}
 
 	@Override
@@ -119,6 +127,10 @@ public class JarIndex implements JarIndexer {
 		}
 
 		indexers.forEach(indexer -> indexer.indexMethod(methodEntry));
+		if (!methodEntry.getAccess().isSynthetic() && !methodEntry.getName().equals("<clinit>")) {
+			childrenByClass.putIfAbsent(methodEntry.getParent(), new ArrayList<>());
+			childrenByClass.get(methodEntry.getParent()).add(methodEntry);
+		}
 
 		if (!methodEntry.isConstructor()) {
 			methodImplementations.put(methodEntry.getParent().getFullName(), methodEntry);
@@ -174,6 +186,10 @@ public class JarIndex implements JarIndexer {
 
 	public EntryResolver getEntryResolver() {
 		return entryResolver;
+	}
+
+	public Map<ClassEntry, List<ParentedEntry>> getChildrenByClass() {
+		return this.childrenByClass;
 	}
 
 	public boolean isIndexed(String internalName) {

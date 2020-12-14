@@ -134,6 +134,9 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return name;
 	}
 
+	/**
+	 * Returns whether this class entry has a parent, and therefore is an inner class.
+	 */
 	public boolean isInnerClass() {
 		return parent != null;
 	}
