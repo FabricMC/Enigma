@@ -3,6 +3,7 @@ package cuchaz.enigma.analysis;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.api.service.ObfuscationTestService;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
@@ -84,24 +85,26 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
 
     @Override
     public String toString() {
-        ParentedEntry translatedEntry = this.mapper.deobfuscate(this.entry);
-        String result = translatedEntry.getName();
+        TranslateResult<ParentedEntry> translateResult = this.mapper.extendedDeobfuscate(this.entry);
+        String result = translateResult.getValue().getName();
 
-        if (!this.nameProposalServices.isEmpty()) {
-            for (NameProposalService service : this.nameProposalServices) {
-                if (service.proposeName(this.entry, this.mapper).isPresent()) {
-                    result = service.proposeName(this.entry, this.mapper).get();
+        if (translateResult.isObfuscated()) {
+            if (!this.nameProposalServices.isEmpty()) {
+                for (NameProposalService service : this.nameProposalServices) {
+                    if (service.proposeName(this.entry, this.mapper).isPresent()) {
+                        result = service.proposeName(this.entry, this.mapper).get();
+                    }
                 }
             }
         }
 
         if (this.entry instanceof FieldDefEntry) {
-            FieldDefEntry field = (FieldDefEntry) translatedEntry;
+            FieldDefEntry field = (FieldDefEntry) translateResult.getValue();
             String returnType = this.parseDesc(field.getDesc());
 
             result = result + ": " + returnType;
         } else if (this.entry instanceof MethodDefEntry) {
-            MethodDefEntry method = (MethodDefEntry) translatedEntry;
+            MethodDefEntry method = (MethodDefEntry) translateResult.getValue();
             String args = this.parseArgs(method.getDesc().getArgumentDescs());
             String returnType = this.parseDesc(method.getDesc().getReturnDesc());
 
