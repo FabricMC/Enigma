@@ -18,6 +18,7 @@ public class GuiUtil {
     public static final Icon CLASS_ICON = loadIcon("class");
     public static final Icon METHOD_ICON = loadIcon("method");
     public static final Icon FIELD_ICON = loadIcon("field");
+    public static final Icon CONSTRUCTOR_ICON = loadIcon("constructor");
 
     public static void openUrl(String url) {
         try {
