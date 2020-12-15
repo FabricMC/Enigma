@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.gui;
 
+import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
@@ -70,8 +71,22 @@ public class ClassSelector extends JTree {
 			}
 		});
 
-		final DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-		renderer.setLeafIcon(GuiUtil.CLASS_ICON);
+		final DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer() {
+			{
+				setLeafIcon(GuiUtil.CLASS_ICON);
+			}
+
+			@Override
+			public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+				super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+
+				if (leaf && value instanceof ClassSelectorClassNode) {
+					setIcon(GuiUtil.getClassIcon(gui, ((ClassSelectorClassNode) value).getObfEntry()));
+				}
+
+				return this;
+			}
+		};
 		setCellRenderer(renderer);
 
 		final JTree tree = this;

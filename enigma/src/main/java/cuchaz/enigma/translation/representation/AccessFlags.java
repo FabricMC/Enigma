@@ -51,6 +51,14 @@ public class AccessFlags {
 		return (flags & Opcodes.ACC_INTERFACE) != 0;
 	}
 
+	public boolean isAbstract() {
+		return (flags & Opcodes.ACC_ABSTRACT) != 0;
+	}
+
+	public boolean isAnnotation() {
+		return (flags & Opcodes.ACC_ANNOTATION) != 0;
+	}
+
 	public AccessFlags setPrivate() {
 		this.setVisibility(Opcodes.ACC_PRIVATE);
 		return this;
