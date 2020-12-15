@@ -393,9 +393,8 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public StructureTreeNode getClassStructure(ClassEntry entry, boolean hideDeobfuscated) {
-		Translator translator = this.project.getMapper().getDeobfuscator();
-		StructureTreeNode rootNode = new StructureTreeNode(translator, entry, entry);
-		rootNode.load(this.project.getJarIndex(), hideDeobfuscated);
+		StructureTreeNode rootNode = new StructureTreeNode(this.project, entry, entry);
+		rootNode.load(this.project, hideDeobfuscated);
 		return rootNode;
 	}
 
