@@ -2,7 +2,6 @@ package cuchaz.enigma.analysis;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.api.service.NameProposalService;
-import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
@@ -43,7 +42,7 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
             }
 
             // don't add deobfuscated members if hideDeobfuscated is true, unless it's an inner class
-            if (hideDeobfuscated && this.isDeobfuscated(project, child) && !(child instanceof ClassEntry)) {
+            if (hideDeobfuscated && !project.isObfuscated(child) && !(child instanceof ClassEntry)) {
                 continue;
             }
 
@@ -54,33 +53,6 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
 
             this.add(childNode);
         }
-    }
-
-    private boolean isDeobfuscated(EnigmaProject project, ParentedEntry child) {
-        List<ObfuscationTestService> obfuscationTestServices = project.getEnigma().getServices().get(ObfuscationTestService.TYPE);
-
-        if (!obfuscationTestServices.isEmpty()) {
-            for (ObfuscationTestService service : obfuscationTestServices) {
-                if (service.testDeobfuscated(child)) {
-                    return true;
-                }
-            }
-        }
-
-        if (!this.nameProposalServices.isEmpty()) {
-            for (NameProposalService service : this.nameProposalServices) {
-                if (service.proposeName(child, this.mapper).isPresent()) {
-                    return true;
-                }
-            }
-        }
-
-        String mappedName = project.getMapper().deobfuscate(child).getName();
-        if (mappedName != null && !mappedName.isEmpty() && !mappedName.equals(child.getName())) {
-            return true;
-        }
-
-        return false;
     }
 
     @Override
