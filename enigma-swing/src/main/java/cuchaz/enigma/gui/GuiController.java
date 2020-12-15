@@ -457,6 +457,7 @@ public class GuiController implements ClientPacketHandler {
 		Entry<?> entry = reference.getNameableEntry();
 		EntryMapping previous = project.getMapper().getDeobfMapping(entry);
 		project.getMapper().mapFromObf(vc, entry, previous != null ? previous.withName(newName) : new EntryMapping(newName), true, validateOnly);
+		gui.showStructure(gui.getActiveEditor());
 
 		if (validateOnly || !vc.canProceed()) return;
 
@@ -469,6 +470,7 @@ public class GuiController implements ClientPacketHandler {
 	@Override
 	public void removeMapping(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference) {
 		project.getMapper().removeByObf(vc, reference.getNameableEntry());
+		gui.showStructure(gui.getActiveEditor());
 
 		if (!vc.canProceed()) return;
 
@@ -507,6 +509,7 @@ public class GuiController implements ClientPacketHandler {
 		EntryRemapper mapper = project.getMapper();
 		Entry<?> entry = reference.getNameableEntry();
 		mapper.mapFromObf(vc, entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
+		gui.showStructure(gui.getActiveEditor());
 
 		if (!vc.canProceed()) return;
 
