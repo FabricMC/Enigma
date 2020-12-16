@@ -89,7 +89,7 @@ public class StructurePanel extends JPanel {
             if (entry instanceof ClassEntry) {
                 this.label.setIcon(GuiUtil.CLASS_ICON);
             } else if (entry instanceof MethodEntry) {
-                this.label.setIcon(isConstructor(entry) ? GuiUtil.CONSTRUCTOR_ICON : GuiUtil.METHOD_ICON);
+                this.label.setIcon(((MethodEntry) entry).isConstructor() ? GuiUtil.CONSTRUCTOR_ICON : GuiUtil.METHOD_ICON);
             } else if (entry instanceof FieldEntry) {
                 this.label.setIcon(GuiUtil.FIELD_ICON);
             }
@@ -97,10 +97,6 @@ public class StructurePanel extends JPanel {
             this.label.setText(value.toString());
 
             return this.label;
-        }
-
-        private boolean isConstructor(ParentedEntry<?> entry) {
-            return "<init>".equals(entry.getName());
         }
     }
 }
