@@ -39,7 +39,7 @@ public class StructurePanel extends JPanel {
         this.structureTree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
-                if (event.getClickCount() >= 2) {
+                if (event.getClickCount() >= 2 && event.getButton() == MouseEvent.BUTTON1) {
                     // get the selected node
                     TreePath path = structureTree.getSelectionPath();
                     if (path == null) {

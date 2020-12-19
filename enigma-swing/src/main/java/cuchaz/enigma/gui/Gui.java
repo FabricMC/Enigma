@@ -170,7 +170,7 @@ public class Gui implements LanguageChangeListener {
 		inheritanceTree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				if (event.getClickCount() >= 2) {
+				if (event.getClickCount() >= 2 && event.getButton() == MouseEvent.BUTTON1) {
 					// get the selected node
 					TreePath path = inheritanceTree.getSelectionPath();
 					if (path == null) {
@@ -203,7 +203,7 @@ public class Gui implements LanguageChangeListener {
 		implementationsTree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				if (event.getClickCount() >= 2) {
+				if (event.getClickCount() >= 2 && event.getButton() == MouseEvent.BUTTON1) {
 					// get the selected node
 					TreePath path = implementationsTree.getSelectionPath();
 					if (path == null) {
@@ -232,7 +232,7 @@ public class Gui implements LanguageChangeListener {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				if (event.getClickCount() >= 2) {
+				if (event.getClickCount() >= 2 && event.getButton() == MouseEvent.BUTTON1) {
 					// get the selected node
 					TreePath path = callsTree.getSelectionPath();
 					if (path == null) {
