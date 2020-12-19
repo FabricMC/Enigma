@@ -10,23 +10,19 @@ import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 import cuchaz.enigma.utils.I18n;
 
 import javax.swing.*;
-import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class StructurePanel extends JPanel {
-    private final Gui gui;
-
     private JPanel sortingPanel;
     private JCheckBox hideDeobfuscated;
 
     private JTree structureTree;
 
     public StructurePanel(Gui gui) {
-        this.gui = gui;
-
         this.sortingPanel = new JPanel();
         this.hideDeobfuscated = new JCheckBox(I18n.translate("info_panel.tree.structure.hide_deobfuscated"));
         this.hideDeobfuscated.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
@@ -63,6 +59,9 @@ public class StructurePanel extends JPanel {
         return this.sortingPanel;
     }
 
+    /**
+     * Returns whether the "Hide Deobfuscated" option of this structure panel is selected.
+     */
     public boolean shouldHideDeobfuscated() {
         return this.hideDeobfuscated.isSelected();
     }
@@ -75,28 +74,24 @@ public class StructurePanel extends JPanel {
         this.hideDeobfuscated.setText(I18n.translate("info_panel.tree.structure.hide_deobfuscated"));
     }
 
-    class StructureTreeCellRenderer implements TreeCellRenderer {
-        private JLabel label;
-
-        public StructureTreeCellRenderer() {
-            this.label = new JLabel();
-        }
+    class StructureTreeCellRenderer extends DefaultTreeCellRenderer {
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            JComponent c = (JComponent) super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
             ParentedEntry entry = ((StructureTreeNode) value).getEntry();
 
             if (entry instanceof ClassEntry) {
-                this.label.setIcon(GuiUtil.CLASS_ICON);
+                this.setIcon(GuiUtil.CLASS_ICON);
             } else if (entry instanceof MethodEntry) {
-                this.label.setIcon(((MethodEntry) entry).isConstructor() ? GuiUtil.CONSTRUCTOR_ICON : GuiUtil.METHOD_ICON);
+                this.setIcon(((MethodEntry) entry).isConstructor() ? GuiUtil.CONSTRUCTOR_ICON : GuiUtil.METHOD_ICON);
             } else if (entry instanceof FieldEntry) {
-                this.label.setIcon(GuiUtil.FIELD_ICON);
+                this.setIcon(GuiUtil.FIELD_ICON);
             }
 
-            this.label.setText(value.toString());
+            this.setText(value.toString());
 
-            return this.label;
+            return c;
         }
     }
 }
