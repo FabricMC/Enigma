@@ -167,6 +167,7 @@ public class Gui implements LanguageChangeListener {
 		// init inheritance panel
 		inheritanceTree = new JTree();
 		inheritanceTree.setModel(null);
+		inheritanceTree.setShowsRootHandles(true);
 		inheritanceTree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent event) {
@@ -200,6 +201,7 @@ public class Gui implements LanguageChangeListener {
 		// init implementations panel
 		implementationsTree = new JTree();
 		implementationsTree.setModel(null);
+		implementationsTree.setShowsRootHandles(true);
 		implementationsTree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent event) {
@@ -228,6 +230,7 @@ public class Gui implements LanguageChangeListener {
 		// init call panel
 		callsTree = new JTree();
 		callsTree.setModel(null);
+		callsTree.setShowsRootHandles(true);
 		callsTree.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("unchecked")
 			@Override

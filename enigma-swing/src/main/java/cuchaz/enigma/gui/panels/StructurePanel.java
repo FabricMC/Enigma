@@ -32,6 +32,7 @@ public class StructurePanel extends JPanel {
         this.structureTree = new JTree();
         this.structureTree.setModel(null);
         this.structureTree.setCellRenderer(new StructureTreeCellRenderer());
+        this.structureTree.setShowsRootHandles(true);
         this.structureTree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
