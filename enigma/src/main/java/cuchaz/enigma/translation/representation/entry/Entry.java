@@ -29,6 +29,13 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 		return getName();
 	}
 
+	/**
+	 * Returns the parent entry of this entry.
+	 *
+	 * <p>The parent entry should be a {@linkplain MethodEntry method} for local variables,
+	 * a {@linkplain ClassEntry class} for methods, fields and inner classes, and {@code null}
+	 * for other classes.</p>
+	 */
 	@Nullable
 	P getParent();
 

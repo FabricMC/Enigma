@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
+import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -69,10 +70,13 @@ public class ClassSelector extends JTree {
 			}
 		});
 
+		final DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+		renderer.setLeafIcon(GuiUtil.CLASS_ICON);
+		setCellRenderer(renderer);
+
 		final JTree tree = this;
 
-		final DefaultTreeCellEditor editor = new DefaultTreeCellEditor(tree,
-				(DefaultTreeCellRenderer) tree.getCellRenderer()) {
+		final DefaultTreeCellEditor editor = new DefaultTreeCellEditor(tree, renderer) {
 			@Override
 			public boolean isCellEditable(EventObject event) {
 				return isRenamable && !(event instanceof MouseEvent) && super.isCellEditable(event);

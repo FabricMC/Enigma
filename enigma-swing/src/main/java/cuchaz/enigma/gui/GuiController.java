@@ -57,10 +57,7 @@ import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -395,6 +392,12 @@ public class GuiController implements ClientPacketHandler {
 		chp.invalidateMapped();
 	}
 
+	public StructureTreeNode getClassStructure(ClassEntry entry, boolean hideDeobfuscated) {
+		StructureTreeNode rootNode = new StructureTreeNode(this.project, entry, entry);
+		rootNode.load(this.project, hideDeobfuscated);
+		return rootNode;
+	}
+
 	public ClassInheritanceTreeNode getClassInheritance(ClassEntry entry) {
 		Translator translator = project.getMapper().getDeobfuscator();
 		ClassInheritanceTreeNode rootNode = indexTreeBuilder.buildClassInheritance(translator, entry);
@@ -454,6 +457,7 @@ public class GuiController implements ClientPacketHandler {
 		Entry<?> entry = reference.getNameableEntry();
 		EntryMapping previous = project.getMapper().getDeobfMapping(entry);
 		project.getMapper().mapFromObf(vc, entry, previous != null ? previous.withName(newName) : new EntryMapping(newName), true, validateOnly);
+		gui.showStructure(gui.getActiveEditor());
 
 		if (validateOnly || !vc.canProceed()) return;
 
@@ -466,6 +470,7 @@ public class GuiController implements ClientPacketHandler {
 	@Override
 	public void removeMapping(ValidationContext vc, EntryReference<Entry<?>, Entry<?>> reference) {
 		project.getMapper().removeByObf(vc, reference.getNameableEntry());
+		gui.showStructure(gui.getActiveEditor());
 
 		if (!vc.canProceed()) return;
 
@@ -504,6 +509,7 @@ public class GuiController implements ClientPacketHandler {
 		EntryRemapper mapper = project.getMapper();
 		Entry<?> entry = reference.getNameableEntry();
 		mapper.mapFromObf(vc, entry, new EntryMapping(mapper.deobfuscate(entry).getName()));
+		gui.showStructure(gui.getActiveEditor());
 
 		if (!vc.canProceed()) return;
 

@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
@@ -156,6 +157,35 @@ public class EnigmaProject {
 
 	public boolean isRenamable(EntryReference<Entry<?>, Entry<?>> obfReference) {
 		return obfReference.isNamed() && isRenamable(obfReference.getNameableEntry());
+	}
+
+	public boolean isObfuscated(Entry<?> entry) {
+		String name = entry.getName();
+
+		List<ObfuscationTestService> obfuscationTestServices = this.getEnigma().getServices().get(ObfuscationTestService.TYPE);
+		if (!obfuscationTestServices.isEmpty()) {
+			for (ObfuscationTestService service : obfuscationTestServices) {
+				if (service.testDeobfuscated(entry)) {
+					return false;
+				}
+			}
+		}
+
+		List<NameProposalService> nameProposalServices = this.getEnigma().getServices().get(NameProposalService.TYPE);
+		if (!nameProposalServices.isEmpty()) {
+			for (NameProposalService service : nameProposalServices) {
+				if (service.proposeName(entry, mapper).isPresent()) {
+					return false;
+				}
+			}
+		}
+
+		String mappedName = mapper.deobfuscate(entry).getName();
+		if (mappedName != null && !mappedName.isEmpty() && !mappedName.equals(name)) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public JarExport exportRemappedJar(ProgressListener progress) {

@@ -11,8 +11,7 @@
 
 package cuchaz.enigma.analysis.index;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.ReferenceTargetType;
@@ -23,10 +22,7 @@ import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class JarIndex implements JarIndexer {
 	private final Set<String> indexedClasses = new HashSet<>();
@@ -40,6 +36,7 @@ public class JarIndex implements JarIndexer {
 	private final Collection<JarIndexer> indexers;
 
 	private final Multimap<String, MethodDefEntry> methodImplementations = HashMultimap.create();
+	private final ListMultimap<ClassEntry, ParentedEntry> childrenByClass;
 
 	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex, PackageVisibilityIndex packageVisibilityIndex) {
 		this.entryIndex = entryIndex;
@@ -49,6 +46,7 @@ public class JarIndex implements JarIndexer {
 		this.packageVisibilityIndex = packageVisibilityIndex;
 		this.indexers = Arrays.asList(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 		this.entryResolver = new IndexEntryResolver(this);
+		this.childrenByClass = ArrayListMultimap.create();
 	}
 
 	public static JarIndex empty() {
@@ -101,6 +99,9 @@ public class JarIndex implements JarIndexer {
 		}
 
 		indexers.forEach(indexer -> indexer.indexClass(classEntry));
+		if (classEntry.isInnerClass() && !classEntry.getAccess().isSynthetic()) {
+			childrenByClass.put(classEntry.getParent(), classEntry);
+		}
 	}
 
 	@Override
@@ -110,6 +111,9 @@ public class JarIndex implements JarIndexer {
 		}
 
 		indexers.forEach(indexer -> indexer.indexField(fieldEntry));
+		if (!fieldEntry.getAccess().isSynthetic()) {
+			childrenByClass.put(fieldEntry.getParent(), fieldEntry);
+		}
 	}
 
 	@Override
@@ -119,6 +123,9 @@ public class JarIndex implements JarIndexer {
 		}
 
 		indexers.forEach(indexer -> indexer.indexMethod(methodEntry));
+		if (!methodEntry.getAccess().isSynthetic() && !methodEntry.getName().equals("<clinit>")) {
+			childrenByClass.put(methodEntry.getParent(), methodEntry);
+		}
 
 		if (!methodEntry.isConstructor()) {
 			methodImplementations.put(methodEntry.getParent().getFullName(), methodEntry);
@@ -174,6 +181,10 @@ public class JarIndex implements JarIndexer {
 
 	public EntryResolver getEntryResolver() {
 		return entryResolver;
+	}
+
+	public ListMultimap<ClassEntry, ParentedEntry> getChildrenByClass() {
+		return this.childrenByClass;
 	}
 
 	public boolean isIndexed(String internalName) {
