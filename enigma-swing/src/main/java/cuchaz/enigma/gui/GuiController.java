@@ -57,7 +57,10 @@ import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Utils;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -97,8 +100,10 @@ public class GuiController implements ClientPacketHandler {
 			project = enigma.openJar(jarPath, new ClasspathClassProvider(), progress);
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
 			chp = new ClassHandleProvider(project, UiConfig.getDecompiler().service);
-			gui.onFinishOpenJar(jarPath.getFileName().toString());
-			refreshClasses();
+			SwingUtilities.invokeLater(() -> {
+				gui.onFinishOpenJar(jarPath.getFileName().toString());
+				refreshClasses();
+			});
 		});
 	}
 
