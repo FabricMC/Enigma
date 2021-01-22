@@ -28,11 +28,15 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements Translatable {
 
 	private static final List<String> CONSTRUCTOR_NON_NAMES = Arrays.asList("this", "super", "static");
-	public E entry;
-	public C context;
-	public ReferenceTargetType targetType;
+	public final E entry;
+	public final C context;
+	public final ReferenceTargetType targetType;
+	private final boolean declaration; // if the ref goes to the decl of the item. when true context == null
+	private final boolean sourceName;
 
-	private boolean sourceName;
+	public static <E extends Entry<?>, C extends Entry<?>> EntryReference<E, C> declaration(E entry, String sourceName) {
+		return new EntryReference<>(entry, sourceName, null, ReferenceTargetType.none(), true);
+	}
 
 	public EntryReference(E entry, String sourceName) {
 		this(entry, sourceName, null);
@@ -43,6 +47,10 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	public EntryReference(E entry, String sourceName, C context, ReferenceTargetType targetType) {
+		this(entry, sourceName, context, targetType, false);
+	}
+
+	protected EntryReference(E entry, String sourceName, C context, ReferenceTargetType targetType, boolean declaration) {
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
@@ -50,11 +58,10 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 		this.entry = entry;
 		this.context = context;
 		this.targetType = targetType;
+		this.declaration = declaration;
 
-		this.sourceName = sourceName != null && !sourceName.isEmpty();
-		if (entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor() && CONSTRUCTOR_NON_NAMES.contains(sourceName)) {
-			this.sourceName = false;
-		}
+		this.sourceName = sourceName != null && !sourceName.isEmpty() &&
+				!(entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor() && CONSTRUCTOR_NON_NAMES.contains(sourceName));
 	}
 
 	public EntryReference(E entry, C context, EntryReference<E, C> other) {
@@ -62,6 +69,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 		this.context = context;
 		this.sourceName = other.sourceName;
 		this.targetType = other.targetType;
+		this.declaration = other.declaration;
 	}
 
 	public ClassEntry getLocationClassEntry() {
@@ -73,6 +81,13 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 
 	public boolean isNamed() {
 		return this.sourceName;
+	}
+
+	/**
+	 * Returns whether this refers to the declaration of an entry.
+	 */
+	public boolean isDeclaration() {
+		return this.declaration;
 	}
 
 	public Entry<?> getNameableEntry() {
@@ -92,7 +107,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 		if (context != null) {
 			return Objects.hash(entry.hashCode(), context.hashCode());
 		}
-		return entry.hashCode();
+		return entry.hashCode() ^ Boolean.hashCode(this.declaration);
 	}
 
 	@Override
@@ -101,27 +116,21 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	public boolean equals(EntryReference<?, ?> other) {
-		if (other == null) return false;
-
-		// check entry first
-		boolean isEntrySame = entry.equals(other.entry);
-		if (!isEntrySame) {
-			return false;
-		}
-
-		// check caller
-		if (context == null && other.context == null) {
-			return true;
-		} else if (context != null && other.context != null) {
-			return context.equals(other.context);
-		}
-		return false;
+		return other != null
+				&& Objects.equals(entry, other.entry)
+				&& Objects.equals(context, other.context)
+				&& declaration == other.declaration;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		buf.append(entry);
+
+		if (declaration) {
+			buf.append("'s declaration");
+			return buf.toString();
+		}
 
 		if (context != null) {
 			buf.append(" called from ");

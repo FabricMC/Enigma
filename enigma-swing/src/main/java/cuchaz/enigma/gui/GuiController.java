@@ -273,7 +273,7 @@ public class GuiController implements ClientPacketHandler {
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
-		openReference(new EntryReference<>(entry, entry.getName()));
+		openReference(EntryReference.declaration(entry, entry.getName()));
 	}
 
 	/**
@@ -301,7 +301,7 @@ public class GuiController implements ClientPacketHandler {
 	 * @param reference the reference
 	 */
 	private void setReference(EntryReference<Entry<?>, Entry<?>> reference) {
-		gui.openClass(reference.getLocationClassEntry()).showReference(reference);
+		gui.openClass(reference.getLocationClassEntry().getOutermostClass()).showReference(reference);
 	}
 
 	public Collection<Token> getTokensForReference(DecompiledClassSource source, EntryReference<Entry<?>, Entry<?>> reference) {
