@@ -255,7 +255,7 @@ public final class ClassHandleProvider {
 			int v = javadocVersion.incrementAndGet();
 			return f.thenApplyAsync(res -> {
 				if (res == null || javadocVersion.get() != v) return null;
-				Result<Source, ClassHandleError> jdSource = res.map(s -> s.addJavadocs(p.project.getMapper()));
+				Result<Source, ClassHandleError> jdSource = res.map(s -> s.withJavadocs(p.project.getMapper()));
 				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDocsChanged(jdSource));
 				return jdSource;
 			}, p.pool);

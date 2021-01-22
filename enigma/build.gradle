@@ -2,6 +2,9 @@ configurations {
     proGuard
 }
 
+repositories.mavenLocal()
+repositories.jcenter()
+
 dependencies {
     implementation 'org.ow2.asm:asm:9.0'
     implementation 'org.ow2.asm:asm-commons:9.0'
@@ -9,11 +12,12 @@ dependencies {
     implementation 'org.ow2.asm:asm-util:9.0'
 
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
-    implementation 'net.fabricmc:cfr:0.0.1'
+    implementation 'net.fabricmc:cfr:local'
 
     testImplementation 'junit:junit:4.+'
     testImplementation 'org.hamcrest:hamcrest-all:1.+'
-    proGuard 'net.sf.proguard:proguard-base:6.+'
+    proGuard 'com.guardsquare:proguard-base:7.0.1'
+    // proguard does not yet support java 15. Add -Dorg.gradle.java.home="<olderjdk>" to bypass that
 }
 
 // Generate "version.txt" file
