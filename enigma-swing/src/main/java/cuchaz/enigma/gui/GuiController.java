@@ -130,7 +130,7 @@ public class GuiController implements ClientPacketHandler {
 				loadedMappingPath = path;
 
 				refreshClasses();
-				chp.invalidateMapped();
+				chp.invalidateJavadoc();
 			} catch (MappingParseException e) {
 				JOptionPane.showMessageDialog(gui.getFrame(), e.getMessage());
 			}
@@ -143,7 +143,7 @@ public class GuiController implements ClientPacketHandler {
 
 		project.setMappings(mappings);
 		refreshClasses();
-		chp.invalidateMapped();
+		chp.invalidateJavadoc();
 	}
 
 	public CompletableFuture<Void> saveMappings(Path path) {
@@ -178,7 +178,7 @@ public class GuiController implements ClientPacketHandler {
 
 		this.gui.setMappingsFile(null);
 		refreshClasses();
-		chp.invalidateMapped();
+		chp.invalidateJavadoc();
 	}
 
 	public void reloadAll() {

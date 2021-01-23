@@ -118,6 +118,16 @@ public final class ClassHandleProvider {
 	}
 
 	/**
+	 * Invalidates all javadoc. This causes all open class handles to be
+	 * re-remapped.
+	 */
+	public void invalidateJavadoc() {
+		withLock(lock.readLock(), () -> {
+			handles.values().forEach(Entry::invalidateJavadoc);
+		});
+	}
+
+	/**
 	 * Invalidates javadoc for a single class. This also causes the class to be
 	 * remapped again.
 	 *

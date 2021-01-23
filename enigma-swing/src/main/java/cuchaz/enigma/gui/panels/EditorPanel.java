@@ -143,7 +143,7 @@ public class EditorPanel {
 					switch (event.getKeyCode()) {
 						case KeyEvent.VK_F5:
 							if (EditorPanel.this.classHandle != null) {
-								EditorPanel.this.classHandle.invalidateMapped();
+								EditorPanel.this.classHandle.invalidate();
 							}
 							break;
 
