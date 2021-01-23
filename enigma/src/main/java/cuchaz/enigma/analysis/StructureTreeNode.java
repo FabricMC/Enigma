@@ -111,8 +111,8 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
                 modifiers.add("default");
             }
 
-            if (access.isAbstract() && !access.isInterface() && !isInterfaceMethod) {
-                // Abstract, but not an interface or an interface method (they're always abstract)
+            if (access.isAbstract() && !access.isInterface() && !isInterfaceMethod && !access.isEnum()) {
+                // Abstract, but not an interface, an interface method or an enum class (abstract is the default or meaningless)
                 modifiers.add("abstract");
             } else if (access.isFinal() && !access.isEnum()) {
                 // Final, but not an enum or an enum constant (they're always final)
