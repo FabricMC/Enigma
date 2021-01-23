@@ -489,12 +489,11 @@ public class Gui implements LanguageChangeListener {
 				}
 			});
 
-			showStructure(ed);
-
 			return ed;
 		});
 		if (editorPanel != null) {
 			openFiles.setSelectedComponent(editors.get(entry).getUi());
+			showStructure(editorPanel);
 		}
 
 		return editorPanel;
