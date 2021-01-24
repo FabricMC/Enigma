@@ -88,6 +88,7 @@ public class SourceIndex {
             EntryReference<Entry<?>, Entry<?>> reference = new EntryReference<>(deobfEntry, token.text);
             tokenToReference.put(token, reference);
             referenceToTokens.put(reference, token);
+            referenceToTokens.put(EntryReference.declaration(deobfEntry, token.text), token);
             declarationToToken.put(deobfEntry, token);
         }
     }
