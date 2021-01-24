@@ -24,7 +24,7 @@ subprojects {
     }
 
     group = 'cuchaz'
-    version = '0.22.1'
+    version = '0.22.2'
 
     version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
 
