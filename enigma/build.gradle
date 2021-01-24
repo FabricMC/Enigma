@@ -2,7 +2,6 @@ configurations {
     proGuard
 }
 
-repositories.mavenLocal()
 repositories.jcenter()
 
 dependencies {
@@ -12,12 +11,11 @@ dependencies {
     implementation 'org.ow2.asm:asm-util:9.0'
 
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
-    implementation 'net.fabricmc:cfr:local'
+    implementation 'net.fabricmc:cfr:0.0.2'
 
     testImplementation 'junit:junit:4.+'
     testImplementation 'org.hamcrest:hamcrest-all:1.+'
     proGuard 'com.guardsquare:proguard-base:7.0.1'
-    // proguard does not yet support java 15. Add -Dorg.gradle.java.home="<olderjdk>" to bypass that
 }
 
 // Generate "version.txt" file
@@ -38,6 +36,7 @@ sourceSets.main.output.dir genOutputDir, builtBy: generateVersionFile
 
 def libraryJarsArg = JavaVersion.current().java9Compatible ? "<java.home>/jmods" : "<java.home>/lib/rt.jar"
 
+// If your test fails for class file version problem with proguard, run gradle with -Dorg.gradle.java.home="<older jdk>" flag
 file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
     if (theFile.directory) {
         task("${theFile.name}TestJar", type: Jar) {
