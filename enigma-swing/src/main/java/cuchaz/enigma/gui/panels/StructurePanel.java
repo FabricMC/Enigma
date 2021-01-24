@@ -31,7 +31,7 @@ public class StructurePanel extends JPanel {
 
         this.structureTree = new JTree();
         this.structureTree.setModel(null);
-        this.structureTree.setCellRenderer(new StructureTreeCellRenderer());
+        this.structureTree.setCellRenderer(new StructureTreeCellRenderer(gui));
         this.structureTree.setShowsRootHandles(true);
         this.structureTree.addMouseListener(new MouseAdapter() {
             @Override
@@ -76,6 +76,11 @@ public class StructurePanel extends JPanel {
     }
 
     class StructureTreeCellRenderer extends DefaultTreeCellRenderer {
+        private final Gui gui;
+
+        StructureTreeCellRenderer(Gui gui) {
+            this.gui = gui;
+        }
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -83,14 +88,14 @@ public class StructurePanel extends JPanel {
             ParentedEntry entry = ((StructureTreeNode) value).getEntry();
 
             if (entry instanceof ClassEntry) {
-                this.setIcon(GuiUtil.CLASS_ICON);
+                this.setIcon(GuiUtil.getClassIcon(gui, (ClassEntry) entry));
             } else if (entry instanceof MethodEntry) {
                 this.setIcon(((MethodEntry) entry).isConstructor() ? GuiUtil.CONSTRUCTOR_ICON : GuiUtil.METHOD_ICON);
             } else if (entry instanceof FieldEntry) {
                 this.setIcon(GuiUtil.FIELD_ICON);
             }
 
-            this.setText(value.toString());
+            this.setText("<html>" + ((StructureTreeNode) value).toHtml());
 
             return c;
         }

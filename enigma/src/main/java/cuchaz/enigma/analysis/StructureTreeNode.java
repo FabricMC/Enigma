@@ -4,10 +4,12 @@ import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.ArrayList;
 import java.util.List;
 
 public class StructureTreeNode extends DefaultMutableTreeNode {
@@ -88,6 +90,37 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
         }
 
         return result;
+    }
+
+    public String toHtml() {
+        List<String> modifiers = new ArrayList<>();
+
+        if (this.entry instanceof DefEntry<?>) {
+            AccessFlags access = ((DefEntry<?>) this.entry).getAccess();
+            boolean isInterfaceMethod = false;
+
+            if (this.entry instanceof MethodEntry && this.entry.getParent() instanceof ClassDefEntry) {
+                isInterfaceMethod = ((ClassDefEntry) this.entry.getParent()).getAccess().isInterface();
+            }
+
+            if (access.isStatic() && !access.isEnum()) {
+                // Static member, but not an enum constant
+                modifiers.add("static");
+            } else if (isInterfaceMethod && !access.isAbstract()) {
+                // Non-static default interface method
+                modifiers.add("default");
+            }
+
+            if (access.isAbstract() && !access.isInterface() && !isInterfaceMethod && !access.isEnum()) {
+                // Abstract, but not an interface, an interface method or an enum class (abstract is the default or meaningless)
+                modifiers.add("abstract");
+            } else if (access.isFinal() && !access.isEnum()) {
+                // Final, but not an enum or an enum constant (they're always final)
+                modifiers.add("final");
+            }
+        }
+
+        return "<i>" + String.join(" ", modifiers) + "</i> " + toString();
     }
 
     private String parseArgs(List<TypeDescriptor> args) {

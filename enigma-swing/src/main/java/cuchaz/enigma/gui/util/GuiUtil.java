@@ -1,5 +1,8 @@
 package cuchaz.enigma.gui.util;
 
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.translation.representation.AccessFlags;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Os;
 
 import javax.imageio.ImageIO;
@@ -16,6 +19,9 @@ import java.util.Map;
 
 public class GuiUtil {
     public static final Icon CLASS_ICON = loadIcon("class");
+    public static final Icon INTERFACE_ICON = loadIcon("interface");
+    public static final Icon ENUM_ICON = loadIcon("enum");
+    public static final Icon ANNOTATION_ICON = loadIcon("annotation");
     public static final Icon METHOD_ICON = loadIcon("method");
     public static final Icon FIELD_ICON = loadIcon("field");
     public static final Icon CONSTRUCTOR_ICON = loadIcon("constructor");
@@ -81,5 +87,23 @@ public class GuiUtil {
         }
 
         return null;
+    }
+
+    public static Icon getClassIcon(Gui gui, ClassEntry entry) {
+        AccessFlags access = gui.getController().project.getJarIndex().getEntryIndex().getClassAccess(entry);
+
+        if (access != null) {
+            if (access.isAnnotation()) {
+                return ANNOTATION_ICON;
+            } else if (access.isInterface()) {
+                return INTERFACE_ICON;
+            } else if (access.isEnum()) {
+                return ENUM_ICON;
+            }
+
+            // TODO: Record icon?
+        }
+
+        return CLASS_ICON;
     }
 }
