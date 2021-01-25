@@ -215,13 +215,15 @@ public class EnigmaProject {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toMap(n -> n.name, Functions.identity()));
 
-		return new JarExport(compiled);
+		return new JarExport(mapper, compiled);
 	}
 
 	public static final class JarExport {
+		private final EntryRemapper mapper;
 		private final Map<String, ClassNode> compiled;
 
-		JarExport(Map<String, ClassNode> compiled) {
+		JarExport(EntryRemapper mapper, Map<String, ClassNode> compiled) {
+			this.mapper = mapper;
 			this.compiled = compiled;
 		}
 
@@ -293,7 +295,7 @@ public class EnigmaProject {
 		}
 
 		private String decompileClass(ClassNode translatedNode, Decompiler decompiler) {
-			return decompiler.getSource(translatedNode.name).asString();
+			return decompiler.getSource(translatedNode.name, mapper).asString();
 		}
 	}
 

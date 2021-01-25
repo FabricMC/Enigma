@@ -41,7 +41,7 @@ public class ProcyonSource implements Source {
     }
 
     @Override
-    public Source addJavadocs(EntryRemapper remapper) {
+    public Source withJavadocs(EntryRemapper remapper) {
         CompilationUnit remappedTree = (CompilationUnit) tree.clone();
         new AddJavadocsAstTransform(remapper).run(remappedTree);
         return new ProcyonSource(remappedTree, settings);

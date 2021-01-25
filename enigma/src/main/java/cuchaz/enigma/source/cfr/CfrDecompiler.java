@@ -4,6 +4,7 @@ import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.source.SourceSettings;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.utils.AsmUtil;
 import org.benf.cfr.reader.apiunreleased.ClassFileSource2;
 import org.benf.cfr.reader.apiunreleased.JarContent;
@@ -19,6 +20,7 @@ import org.benf.cfr.reader.util.CannotLoadClassException;
 import org.benf.cfr.reader.util.collections.ListFactory;
 import org.benf.cfr.reader.util.getopt.Options;
 import org.benf.cfr.reader.util.getopt.OptionsImpl;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.Collection;
@@ -27,6 +29,8 @@ import java.util.Map;
 
 public class CfrDecompiler implements Decompiler {
     private final DCCommonState state;
+    // cfr doesn't add final on params so final setting is ignored
+    private final SourceSettings settings;
 
     public CfrDecompiler(ClassProvider classProvider, SourceSettings sourceSettings) {
         Map<String, String> options = new HashMap<>();
@@ -63,10 +67,12 @@ public class CfrDecompiler implements Decompiler {
                 return new Pair<>(AsmUtil.nodeToBytes(node), path);
             }
         });
+
+        this.settings = sourceSettings;
     }
 
     @Override
-    public Source getSource(String className) {
+    public Source getSource(String className, @Nullable EntryRemapper mapper) {
         DCCommonState state = this.state;
         Options options = state.getOptions();
 
@@ -79,7 +85,8 @@ public class CfrDecompiler implements Decompiler {
         // To make sure we're analysing the cached version
         try {
             tree = state.getClassFile(tree.getClassType());
-        } catch (CannotLoadClassException ignored) {}
+        } catch (CannotLoadClassException ignored) {
+        }
 
         if (options.getOption(OptionsImpl.DECOMPILE_INNER_CLASSES)) {
             tree.loadInnerClasses(state);
@@ -91,6 +98,6 @@ public class CfrDecompiler implements Decompiler {
 
         TypeUsageCollectingDumper typeUsageCollector = new TypeUsageCollectingDumper(options, tree);
         tree.analyseTop(state, typeUsageCollector);
-        return new CfrSource(tree, state, typeUsageCollector.getRealTypeUsageInformation());
+        return new CfrSource(settings, tree, state, typeUsageCollector.getRealTypeUsageInformation(), options, mapper);
     }
 }
