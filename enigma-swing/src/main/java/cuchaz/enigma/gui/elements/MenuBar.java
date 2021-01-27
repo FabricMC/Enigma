@@ -50,6 +50,7 @@ public class MenuBar {
 	private final JMenuItem exitItem = new JMenuItem();
 
 	private final JMenu decompilerMenu = new JMenu();
+	private final JCheckBoxMenuItem decompilerShowImportsItem = new JCheckBoxMenuItem();
 
 	private final JMenu viewMenu = new JMenu();
 	private final JMenu themesMenu = new JMenu();
@@ -101,6 +102,9 @@ public class MenuBar {
 		this.fileMenu.add(this.exitItem);
 		this.ui.add(this.fileMenu);
 
+		this.decompilerMenu.addSeparator();
+		this.decompilerMenu.add(this.decompilerShowImportsItem);
+		this.decompilerShowImportsItem.setSelected(UiConfig.shouldShowImports());
 		this.ui.add(this.decompilerMenu);
 
 		this.viewMenu.add(this.themesMenu);
@@ -134,6 +138,7 @@ public class MenuBar {
 		this.exportJarItem.addActionListener(_e -> this.onExportJarClicked());
 		this.statsItem.addActionListener(_e -> StatsDialog.show(this.gui));
 		this.exitItem.addActionListener(_e -> this.gui.close());
+		this.decompilerShowImportsItem.addActionListener(_e -> this.onSourceSettingsClicked());
 		this.customScaleItem.addActionListener(_e -> this.onCustomScaleClicked());
 		this.fontItem.addActionListener(_e -> this.onFontClicked(this.gui));
 		this.searchItem.addActionListener(_e -> this.onSearchClicked());
@@ -181,6 +186,7 @@ public class MenuBar {
 		this.exitItem.setText(I18n.translate("menu.file.exit"));
 
 		this.decompilerMenu.setText(I18n.translate("menu.decompiler"));
+		this.decompilerShowImportsItem.setText(I18n.translate("menu.decompiler.show_imports"));
 
 		this.viewMenu.setText(I18n.translate("menu.view"));
 		this.themesMenu.setText(I18n.translate("menu.view.themes"));
@@ -266,6 +272,10 @@ public class MenuBar {
 			this.gui.getController().exportJar(path);
 			UiConfig.setLastSelectedDir(this.gui.exportJarFileChooser.getDirectory());
 		}
+	}
+
+	private void onSourceSettingsClicked() {
+		UiConfig.setShowImports(this.decompilerShowImportsItem.isSelected());
 	}
 
 	private void onCustomScaleClicked() {
