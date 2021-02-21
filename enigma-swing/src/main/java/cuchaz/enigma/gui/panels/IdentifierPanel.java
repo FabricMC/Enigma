@@ -4,13 +4,19 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
@@ -18,7 +24,6 @@ import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.elements.ConvertingTextField;
 import cuchaz.enigma.gui.events.ConvertingTextFieldListener;
 import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
-import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.translation.mapping.AccessModifier;
@@ -223,7 +228,16 @@ public class IdentifierPanel {
 		}
 
 		public void addStringRow(String c1, String c2) {
-			addRow(new JLabel(c1), GuiUtil.unboldLabel(new JLabel(c2)));
+			JTextField copyable = new JTextField(c2);
+			copyable.setEditable(false);
+			copyable.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+					clipboard.setContents(new StringSelection(c2), null);
+				}
+			});
+			addRow(new JLabel(c1), copyable);
 		}
 
 		public JComboBox<AccessModifier> addModifierRow(String c1, Consumer<AccessModifier> changeListener) {
