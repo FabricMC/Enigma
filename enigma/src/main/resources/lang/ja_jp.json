@@ -30,7 +30,7 @@
 	"menu.file.stats.top_level_package": "トップレベルパッケージ:",
 	"menu.file.stats.synthetic_parameters": "合成パラメータを含める",
 	"menu.file.stats.generate": "図を生成する",
-	"menu.file.exit": "終了",
+	"menu.file.exit": "ファイルを閉じる",
 	"menu.decompiler": "デコンパイラ",
 	"menu.view": "ビュー",
 	"menu.view.themes": "テーマ",
@@ -132,8 +132,8 @@
 	"progress.stats": "統計情報を作成中",
 	"progress.stats.data": "データの作成中",
 
-	"javadocs.edit": "Javadocsを編集する",
-	"javadocs.instruction": "このJavadocsを編集する",
+	"javadocs.edit": "Javadocを編集する",
+	"javadocs.instruction": "このJavadocを編集する",
 
 	"fonts.cat.default": "デフォルト",
 	"fonts.cat.default2": "デフォルト 2",
@@ -169,7 +169,7 @@
 	"message.chat.text": "%s: %s",
 	"message.connect.text": "[+] %s",
 	"message.disconnect.text": "[-] %s",
-	"message.edit_docs.text": "%s が %s のJavadocsを編集しました",
+	"message.edit_docs.text": "%s が %s のJavadocを編集しました",
 	"message.mark_deobf.text": "%s が %s を難読化解除済みとマークしました",
 	"message.remove_mapping.text": "%s が %s のマッピングを削除しました",
 	"message.rename.text": "%s が %s を %s にリネームしました",
