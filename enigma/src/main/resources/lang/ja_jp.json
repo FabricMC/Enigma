@@ -30,7 +30,7 @@
 	"menu.file.stats.top_level_package": "トップレベルパッケージ:",
 	"menu.file.stats.synthetic_parameters": "合成パラメータを含める",
 	"menu.file.stats.generate": "図を生成する",
-	"menu.file.exit": "ファイルを閉じる",
+	"menu.file.exit": "終了",
 	"menu.decompiler": "デコンパイラ",
 	"menu.view": "ビュー",
 	"menu.view.themes": "テーマ",
