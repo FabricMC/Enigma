@@ -924,9 +924,7 @@ public class Gui implements LanguageChangeListener {
 			logSplit.setLeftComponent(tabs);
 		}
 
-		if (UiConfig.getLayout().length >= 4) {
-			splitRight.setDividerLocation(UiConfig.getLayout()[2]);
-		}
+		splitRight.setDividerLocation(splitRight.getDividerLocation());
 	}
 
 	@Override
