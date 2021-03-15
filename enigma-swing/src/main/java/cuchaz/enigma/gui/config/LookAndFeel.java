@@ -8,16 +8,18 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
-import com.bulenkov.darcula.DarculaLaf;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public enum LookAndFeel {
 	DEFAULT("Default"),
 	DARCULA("Darcula"),
+	METAL("Metal"),
 	SYSTEM("System"),
 	NONE("None (JVM default)");
 
 	// the "JVM default" look and feel, get it at the beginning and store it so we can set it later
-	private static javax.swing.LookAndFeel NONE_LAF = UIManager.getLookAndFeel();
+	private static final javax.swing.LookAndFeel NONE_LAF = UIManager.getLookAndFeel();
 	private final String name;
 
 	LookAndFeel(String name) {
@@ -35,10 +37,13 @@ public enum LookAndFeel {
 					UIManager.setLookAndFeel(NONE_LAF);
 					break;
 				case DEFAULT:
+					UIManager.setLookAndFeel(new FlatLightLaf());
+					break;
+				case METAL:
 					UIManager.setLookAndFeel(new MetalLookAndFeel());
 					break;
 				case DARCULA:
-					UIManager.setLookAndFeel(new DarculaLaf());
+					UIManager.setLookAndFeel(new FlatDarculaLaf());
 					break;
 				case SYSTEM:
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
