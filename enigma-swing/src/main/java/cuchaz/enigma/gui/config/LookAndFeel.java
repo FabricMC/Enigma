@@ -10,6 +10,7 @@ import javax.swing.plaf.metal.MetalLookAndFeel;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatSystemProperties;
 
 public enum LookAndFeel {
 	DEFAULT("Default"),
@@ -31,6 +32,9 @@ public enum LookAndFeel {
 	}
 
 	public void setGlobalLAF() {
+		// Disable FlatLaf's UI scaling, we do it on our own
+		System.setProperty(FlatSystemProperties.UI_SCALE_ENABLED, "false");
+
 		try {
 			switch (this) {
 				case NONE:
