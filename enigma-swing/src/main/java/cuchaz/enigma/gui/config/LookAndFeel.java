@@ -13,23 +13,14 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatSystemProperties;
 
 public enum LookAndFeel {
-	DEFAULT("Default"),
-	DARCULA("Darcula"),
-	METAL("Metal"),
-	SYSTEM("System"),
-	NONE("None (JVM default)");
+	DEFAULT,
+	DARCULA,
+	METAL,
+	SYSTEM,
+	NONE;
 
 	// the "JVM default" look and feel, get it at the beginning and store it so we can set it later
 	private static final javax.swing.LookAndFeel NONE_LAF = UIManager.getLookAndFeel();
-	private final String name;
-
-	LookAndFeel(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return name;
-	}
 
 	public void setGlobalLAF() {
 		// Disable FlatLaf's UI scaling, we do it on our own
