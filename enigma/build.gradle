@@ -2,20 +2,16 @@ configurations {
     proGuard
 }
 
-repositories.jcenter()
-
 dependencies {
-    implementation 'org.ow2.asm:asm:9.0'
-    implementation 'org.ow2.asm:asm-commons:9.0'
-    implementation 'org.ow2.asm:asm-tree:9.0'
-    implementation 'org.ow2.asm:asm-util:9.0'
+    implementation 'org.ow2.asm:asm:9.1'
+    implementation 'org.ow2.asm:asm-commons:9.1'
+    implementation 'org.ow2.asm:asm-tree:9.1'
+    implementation 'org.ow2.asm:asm-util:9.1'
 
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
     implementation 'net.fabricmc:cfr:0.0.2'
 
-    testImplementation 'junit:junit:4.+'
-    testImplementation 'org.hamcrest:hamcrest-all:1.+'
-    proGuard 'com.guardsquare:proguard-base:7.0.1'
+    proGuard 'com.guardsquare:proguard-base:7.1.0-beta1'
 }
 
 // Generate "version.txt" file
