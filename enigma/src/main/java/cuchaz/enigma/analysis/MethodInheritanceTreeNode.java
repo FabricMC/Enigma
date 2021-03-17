@@ -48,6 +48,9 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		return null;
 	}
 
+	/**
+	 * Returns the method entry represented by this tree node.
+	 */
 	public MethodEntry getMethodEntry() {
 		return this.entry;
 	}

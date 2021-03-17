@@ -9,35 +9,45 @@
  * Jeff Martin - initial API and implementation
  ******************************************************************************/
 
-package cuchaz.enigma.gui;
+package cuchaz.enigma.gui.renderer;
 
 import java.awt.Component;
 import java.awt.Font;
 
 import javax.swing.JTree;
-import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.DefaultTreeCellRenderer;
 
+import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
+import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.config.UiConfig;
+import cuchaz.enigma.gui.util.GuiUtil;
 
-class MethodTreeCellRenderer implements TreeCellRenderer {
+public class InheritanceTreeCellRenderer extends DefaultTreeCellRenderer {
+	private final Gui gui;
 
-	private final TreeCellRenderer parent;
-
-	MethodTreeCellRenderer(TreeCellRenderer parent) {
-		this.parent = parent;
+	public InheritanceTreeCellRenderer(Gui gui) {
+		this.gui = gui;
 	}
 
 	@Override
 	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-		Component ret = parent.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+		Component ret = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+
 		if (!(value instanceof MethodInheritanceTreeNode) || ((MethodInheritanceTreeNode) value).isImplemented()) {
 			ret.setForeground(UiConfig.getTextColor());
 			ret.setFont(ret.getFont().deriveFont(Font.PLAIN));
+			if (value instanceof ClassInheritanceTreeNode) {
+				this.setIcon(GuiUtil.getClassIcon(this.gui, ((ClassInheritanceTreeNode) value).getClassEntry()));
+			} else if (value instanceof MethodInheritanceTreeNode) {
+				this.setIcon(GuiUtil.getMethodIcon(((MethodInheritanceTreeNode) value).getMethodEntry()));
+			}
 		} else {
 			ret.setForeground(UiConfig.getNumberColor());
 			ret.setFont(ret.getFont().deriveFont(Font.ITALIC));
+			this.setIcon(GuiUtil.CLASS_ICON);
 		}
+
 		return ret;
 	}
 }

@@ -84,13 +84,13 @@ public class StructurePanel extends JPanel {
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-            JComponent c = (JComponent) super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-            ParentedEntry entry = ((StructureTreeNode) value).getEntry();
+            Component c = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+            ParentedEntry<?> entry = ((StructureTreeNode) value).getEntry();
 
             if (entry instanceof ClassEntry) {
                 this.setIcon(GuiUtil.getClassIcon(gui, (ClassEntry) entry));
             } else if (entry instanceof MethodEntry) {
-                this.setIcon(((MethodEntry) entry).isConstructor() ? GuiUtil.CONSTRUCTOR_ICON : GuiUtil.METHOD_ICON);
+                this.setIcon(GuiUtil.getMethodIcon((MethodEntry) entry));
             } else if (entry instanceof FieldEntry) {
                 this.setIcon(GuiUtil.FIELD_ICON);
             }

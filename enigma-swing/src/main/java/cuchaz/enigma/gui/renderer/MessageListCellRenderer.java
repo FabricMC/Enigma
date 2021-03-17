@@ -1,4 +1,4 @@
-package cuchaz.enigma.gui;
+package cuchaz.enigma.gui.renderer;
 
 import java.awt.Component;
 
