@@ -8,7 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatSystemProperties;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -50,7 +50,7 @@ public enum LookAndFeel {
 					UIManager.setLookAndFeel(new MetalLookAndFeel());
 					break;
 				case DARCULA:
-					UIManager.setLookAndFeel(new FlatDarculaLaf());
+					UIManager.setLookAndFeel(new FlatDarkLaf());
 					break;
 				case SYSTEM:
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
