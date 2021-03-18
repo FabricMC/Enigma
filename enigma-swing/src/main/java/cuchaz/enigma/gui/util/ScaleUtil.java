@@ -95,7 +95,11 @@ public class ScaleUtil {
 
 	public static void applyScaling() {
 		float scale = getScaleFactor();
-		UiDefaultsScaler.updateAndApplyGlobalScaling((int) (100 * scale), true);
+
+		if (UiConfig.getLookAndFeel().needsScaling()) {
+			UiDefaultsScaler.updateAndApplyGlobalScaling((int) (100 * scale), true);
+		}
+
 		try {
 			Field defaultFontField = DefaultSyntaxKit.class.getDeclaredField("DEFAULT_FONT");
 			defaultFontField.setAccessible(true);
