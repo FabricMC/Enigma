@@ -44,6 +44,13 @@ public class ClassInheritanceTreeNode extends DefaultMutableTreeNode {
 		return null;
 	}
 
+	/**
+	 * Returns the class entry represented by this tree node.
+	 */
+	public ClassEntry getClassEntry() {
+		return this.obfClassEntry;
+	}
+
 	public String getObfClassName() {
 		return this.obfClassEntry.getFullName();
 	}

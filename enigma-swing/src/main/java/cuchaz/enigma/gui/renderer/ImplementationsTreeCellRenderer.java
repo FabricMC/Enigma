@@ -1,0 +1,34 @@
+package cuchaz.enigma.gui.renderer;
+
+import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
+import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
+import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.config.UiConfig;
+import cuchaz.enigma.gui.util.GuiUtil;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import java.awt.*;
+
+public class ImplementationsTreeCellRenderer extends DefaultTreeCellRenderer {
+    private final Gui gui;
+
+    public ImplementationsTreeCellRenderer(Gui gui) {
+        this.gui = gui;
+    }
+
+    @Override
+    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+        Component c = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+
+        this.setForeground(UiConfig.getTextColor());
+
+        if (value instanceof ClassImplementationsTreeNode) {
+            this.setIcon(GuiUtil.getClassIcon(this.gui, ((ClassImplementationsTreeNode) value).getClassEntry()));
+        } else if (value instanceof MethodImplementationsTreeNode) {
+            this.setIcon(GuiUtil.getMethodIcon(((MethodImplementationsTreeNode) value).getMethodEntry()));
+        }
+
+        return c;
+    }
+}

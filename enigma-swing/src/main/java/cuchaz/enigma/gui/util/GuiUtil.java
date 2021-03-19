@@ -3,6 +3,7 @@ package cuchaz.enigma.gui.util;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.Os;
 
 import javax.imageio.ImageIO;
@@ -105,5 +106,12 @@ public class GuiUtil {
         }
 
         return CLASS_ICON;
+    }
+
+    public static Icon getMethodIcon(MethodEntry entry) {
+        if (entry.isConstructor()) {
+            return CONSTRUCTOR_ICON;
+        }
+        return METHOD_ICON;
     }
 }

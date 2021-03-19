@@ -26,7 +26,7 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Returns the parented entry corresponding to this tree node.
+     * Returns the parented entry represented by this tree node.
      */
     public ParentedEntry getEntry() {
         return this.entry;

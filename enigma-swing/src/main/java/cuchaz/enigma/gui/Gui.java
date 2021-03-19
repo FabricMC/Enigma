@@ -40,6 +40,10 @@ import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.*;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.panels.*;
+import cuchaz.enigma.gui.renderer.CallsTreeCellRenderer;
+import cuchaz.enigma.gui.renderer.ImplementationsTreeCellRenderer;
+import cuchaz.enigma.gui.renderer.InheritanceTreeCellRenderer;
+import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.History;
 import cuchaz.enigma.gui.util.LanguageChangeListener;
 import cuchaz.enigma.gui.util.LanguageUtil;
@@ -167,6 +171,7 @@ public class Gui implements LanguageChangeListener {
 		// init inheritance panel
 		inheritanceTree = new JTree();
 		inheritanceTree.setModel(null);
+		inheritanceTree.setCellRenderer(new InheritanceTreeCellRenderer(this));
 		inheritanceTree.setShowsRootHandles(true);
 		inheritanceTree.addMouseListener(new MouseAdapter() {
 			@Override
@@ -191,8 +196,6 @@ public class Gui implements LanguageChangeListener {
 				}
 			}
 		});
-		TreeCellRenderer cellRenderer = inheritanceTree.getCellRenderer();
-		inheritanceTree.setCellRenderer(new MethodTreeCellRenderer(cellRenderer));
 
 		JPanel inheritancePanel = new JPanel();
 		inheritancePanel.setLayout(new BorderLayout());
@@ -201,6 +204,7 @@ public class Gui implements LanguageChangeListener {
 		// init implementations panel
 		implementationsTree = new JTree();
 		implementationsTree.setModel(null);
+		implementationsTree.setCellRenderer(new ImplementationsTreeCellRenderer(this));
 		implementationsTree.setShowsRootHandles(true);
 		implementationsTree.addMouseListener(new MouseAdapter() {
 			@Override
@@ -230,6 +234,7 @@ public class Gui implements LanguageChangeListener {
 		// init call panel
 		callsTree = new JTree();
 		callsTree.setModel(null);
+		callsTree.setCellRenderer(new CallsTreeCellRenderer(this));
 		callsTree.setShowsRootHandles(true);
 		callsTree.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("unchecked")
@@ -947,6 +952,7 @@ public class Gui implements LanguageChangeListener {
 		this.deobfPanelPopupMenu.retranslateUi();
 		this.infoPanel.retranslateUi();
 		this.structurePanel.retranslateUi();
+		this.editorTabPopupMenu.retranslateUi();
 		this.editors.values().forEach(EditorPanel::retranslateUi);
 	}
 
