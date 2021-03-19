@@ -191,6 +191,7 @@
 	"validation.message.illegal_identifier.long": "Invalid character '%2$s' at position %3$d.",
 	"validation.message.illegal_doc_comment_end": "Javadoc comment cannot contain the character sequence '*/'.",
 	"validation.message.reserved_identifier": "'%s' is a reserved identifier.",
+	"validation.message.unknown_record_getter": "Could not find a matching record component getter for %s",
 
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",

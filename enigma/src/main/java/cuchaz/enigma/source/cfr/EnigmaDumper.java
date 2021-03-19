@@ -19,6 +19,9 @@ import org.benf.cfr.reader.bytecode.analysis.types.JavaTypeInstance;
 import org.benf.cfr.reader.bytecode.analysis.types.MethodPrototype;
 import org.benf.cfr.reader.bytecode.analysis.types.RawJavaType;
 import org.benf.cfr.reader.bytecode.analysis.variables.NamedVariable;
+import org.benf.cfr.reader.entities.AccessFlag;
+import org.benf.cfr.reader.entities.ClassFile;
+import org.benf.cfr.reader.entities.ClassFileField;
 import org.benf.cfr.reader.entities.Field;
 import org.benf.cfr.reader.state.TypeUsageInformation;
 import org.benf.cfr.reader.util.getopt.Options;
@@ -33,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -129,16 +133,51 @@ public class EnigmaDumper extends StringStreamDumper {
     @Override
     public Dumper dumpClassDoc(JavaTypeInstance owner) {
         if (mapper != null) {
+            List<String> recordComponentDocs = new LinkedList<>();
+
+            if (isRecord(owner)) {
+                ClassFile classFile = ((JavaRefTypeInstance) owner).getClassFile();
+                for (ClassFileField field : classFile.getFields()) {
+                    if (field.getField().testAccessFlag(AccessFlag.ACC_STATIC)) {
+                        continue;
+                    }
+
+                    EntryMapping mapping = mapper.getDeobfMapping(getFieldEntry(owner, field.getFieldName(), field.getField().getDescriptor()));
+                    if (mapping == null) {
+                        continue;
+                    }
+
+                    String javaDoc = mapping.getJavadoc();
+                    if (javaDoc != null) {
+                        recordComponentDocs.add(String.format("@param %s %s", field.getFieldName(), javaDoc));
+                    }
+                }
+            }
+
             EntryMapping mapping = mapper.getDeobfMapping(getClassEntry(owner));
+
+            String javadoc = null;
             if (mapping != null) {
-                String javadoc = mapping.getJavadoc();
+                javadoc = mapping.getJavadoc();
+            }
+
+            if (javadoc != null || !recordComponentDocs.isEmpty()) {
+                print("/**").newln();
                 if (javadoc != null) {
-                    print("/**").newln();
                     for (String line : javadoc.split("\\R")) {
                         print(" * ").print(line).newln();
                     }
-                    print(" */").newln();
+
+                    if (!recordComponentDocs.isEmpty()) {
+                        print(" * ").newln();
+                    }
                 }
+
+                for (String componentDoc : recordComponentDocs) {
+                    print(" * ").print(componentDoc).newln();
+                }
+
+                print(" */").newln();
             }
         }
         return this;
@@ -186,7 +225,8 @@ public class EnigmaDumper extends StringStreamDumper {
 
     @Override
     public Dumper dumpFieldDoc(Field field, JavaTypeInstance owner) {
-        if (mapper != null) {
+        boolean recordComponent = isRecord(owner) && !field.testAccessFlag(AccessFlag.ACC_STATIC);
+        if (mapper != null && !recordComponent) {
             EntryMapping mapping = mapper.getDeobfMapping(getFieldEntry(owner, field.getFieldName(), field.getDescriptor()));
             if (mapping != null) {
                 String javadoc = mapping.getJavadoc();
@@ -334,6 +374,15 @@ public class EnigmaDumper extends StringStreamDumper {
 
     public String getString() {
         return sb.toString();
+    }
+
+    private boolean isRecord(JavaTypeInstance javaTypeInstance) {
+        if (javaTypeInstance instanceof JavaRefTypeInstance) {
+            ClassFile classFile = ((JavaRefTypeInstance) javaTypeInstance).getClassFile();
+            return classFile.getClassSignature().getSuperClass().getRawName().equals("java.lang.Record");
+        }
+
+        return false;
     }
 
 }

@@ -1,6 +1,8 @@
 package cuchaz.enigma.translation.mapping;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -13,7 +15,12 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class EntryRemapper {
@@ -21,6 +28,7 @@ public class EntryRemapper {
 
 	private final EntryResolver obfResolver;
 	private final Translator deobfuscator;
+	private final JarIndex jarIndex;
 
 	private final MappingValidator validator;
 
@@ -30,6 +38,7 @@ public class EntryRemapper {
 		this.obfResolver = jarIndex.getEntryResolver();
 
 		this.deobfuscator = new MappingTranslator(obfToDeobf, obfResolver);
+		this.jarIndex = jarIndex;
 
 		this.validator = new MappingValidator(obfToDeobf, deobfuscator, jarIndex);
 	}
@@ -51,6 +60,13 @@ public class EntryRemapper {
 	}
 
 	public <E extends Entry<?>> void mapFromObf(ValidationContext vc, E obfuscatedEntry, @Nullable EntryMapping deobfMapping, boolean renaming, boolean validateOnly) {
+		if (obfuscatedEntry instanceof FieldEntry) {
+			FieldEntry fieldEntry = (FieldEntry) obfuscatedEntry;
+			ClassEntry classEntry = fieldEntry.getParent();
+
+			mapRecordComponentGetter(vc, classEntry, fieldEntry, deobfMapping);
+		}
+
 		Collection<E> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, renaming ? ResolutionStrategy.RESOLVE_ROOT : ResolutionStrategy.RESOLVE_CLOSEST);
 
 		if (renaming && deobfMapping != null) {
@@ -68,6 +84,35 @@ public class EntryRemapper {
 
 	public void removeByObf(ValidationContext vc, Entry<?> obfuscatedEntry) {
 		mapFromObf(vc, obfuscatedEntry, null);
+	}
+
+	// A little bit of a hack to also map the getter method for record fields/components.
+	private void mapRecordComponentGetter(ValidationContext vc, ClassEntry classEntry, FieldEntry fieldEntry, EntryMapping fieldMapping) {
+		if (!jarIndex.getEntryIndex().getClassAccess(classEntry).isRecord() || jarIndex.getEntryIndex().getFieldAccess(fieldEntry).isStatic()) {
+			return;
+		}
+
+		// Find all the methods in this record class
+		List<MethodEntry> classMethods = jarIndex.getEntryIndex().getMethods().stream()
+				.filter(entry -> classEntry.equals(entry.getParent()))
+				.collect(Collectors.toList());
+
+		MethodEntry methodEntry = null;
+
+		for (MethodEntry method : classMethods) {
+			// Find the matching record component getter via matching the names. My understanding is this is safe, failing this it may need to be a bit more intelligent
+			if (method.getName().equals(fieldEntry.getName()) && method.getDesc().toString().equals("()" + fieldEntry.getDesc())) {
+				methodEntry = method;
+				break;
+			}
+		}
+
+		if (methodEntry == null && fieldMapping != null) {
+			vc.raise(Message.UNKNOWN_RECORD_GETTER, fieldMapping.getTargetName());
+			return;
+		}
+
+		mapFromObf(vc, methodEntry, fieldMapping != null ? new EntryMapping(fieldMapping.getTargetName()) : null);
 	}
 
 	@Nullable

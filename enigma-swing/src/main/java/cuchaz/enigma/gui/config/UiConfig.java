@@ -258,7 +258,15 @@ public final class UiConfig {
 		OptionalInt x = section.getInt(String.format("X %s", screenSize.width));
 		OptionalInt y = section.getInt(String.format("Y %s", screenSize.height));
 		if (x.isPresent() && y.isPresent()) {
-			return new Point(x.getAsInt(), y.getAsInt());
+			int ix = x.getAsInt();
+			int iy = y.getAsInt();
+
+			// Ensure that the position is on the screen.
+			if (ix < 0 || iy < 0 || ix > screenSize.width || iy > screenSize.height) {
+				return fallback;
+			}
+
+			return new Point(ix, iy);
 		} else {
 			return fallback;
 		}

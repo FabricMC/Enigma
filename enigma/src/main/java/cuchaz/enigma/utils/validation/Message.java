@@ -15,6 +15,7 @@ public class Message {
 	public static final Message ILLEGAL_IDENTIFIER = create(Type.ERROR, "illegal_identifier");
 	public static final Message RESERVED_IDENTIFIER = create(Type.ERROR, "reserved_identifier");
 	public static final Message ILLEGAL_DOC_COMMENT_END = create(Type.ERROR, "illegal_doc_comment_end");
+	public static final Message UNKNOWN_RECORD_GETTER = create(Type.ERROR, "unknown_record_getter");
 
 	public static final Message STYLE_VIOLATION = create(Type.WARNING, "style_violation");
 
