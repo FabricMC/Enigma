@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="16"
+   height="16"
+   viewBox="0 0 4.2333332 4.2333332"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="annotation.svg"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15, custom)">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     id="namedview16"
+     showgrid="false"
+     inkscape:zoom="26.5625"
+     inkscape:cx="3.1871277"
+     inkscape:cy="11.53424"
+     inkscape:window-x="-8"
+     inkscape:window-y="152"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       id="filter1135">
+      <feFlood
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood1125" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite1127" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="0.1"
+         result="blur"
+         id="feGaussianBlur1129" />
+      <feOffset
+         dx="0"
+         dy="0.2"
+         result="offset"
+         id="feOffset1131" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite1133" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1">
+    <rect
+       style="fill:#7b1fa2;fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect18"
+       width="4.2333331"
+       height="4.2333331"
+       x="0"
+       y="0"
+       ry="1.0583333" />
+    <rect
+       style="fill:#9c27b0;fill-opacity:1;stroke:none;stroke-width:0.30868;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect847"
+       width="3.7041664"
+       height="3.7041664"
+       x="0.26458332"
+       y="0.26458332"
+       ry="1.0583333" />
+    <g
+       aria-label="@"
+       transform="scale(1.1079108,0.90259972)"
+       id="text948"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.0747px;line-height:1.25;font-family:'Roboto Mono';-inkscape-font-specification:'Roboto Mono';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.401866;filter:url(#filter1135)">
+      <path
+         d="M 3.2137129,2.1376818 Q 3.2231317,1.8056708 3.145427,1.5325271 3.0677223,1.2593833 2.9146676,1.0615896 2.7616129,0.8685052 2.5379176,0.76254426 2.3142223,0.65658332 2.0340144,0.65658332 q -0.3155281,0 -0.5768984,0.13892657 Q 1.1957457,0.93443645 1.005016,1.1746146 0.81193161,1.4195021 0.69890661,1.7491583 0.5882363,2.0788146 0.57646286,2.4532099 q -0.0117734,0.369686 0.0612219,0.671086 0.0729953,0.3014 0.23311407,0.5133219 0.1624734,0.2119218 0.4120703,0.3273015 0.2495969,0.113025 0.5933813,0.113025 0.077705,0 0.1648281,-0.011773 0.087123,-0.00942 0.1742469,-0.032966 0.084769,-0.021192 0.1624734,-0.054158 0.077705,-0.032966 0.1389266,-0.077705 l -0.07535,-0.3084641 q -0.054158,0.028256 -0.1200891,0.054158 -0.065931,0.023547 -0.1389265,0.04003 -0.072995,0.021192 -0.1507,0.030611 -0.07535,0.00942 -0.1483454,0.00942 -0.2378234,0 -0.4191343,-0.080059 Q 1.2828691,3.5669771 1.1651347,3.4045037 1.0450457,3.2467396 0.98853318,3.0089162 0.93437536,2.7687381 0.9461488,2.4532099 0.95556755,2.1329724 1.0356269,1.8668927 1.1156863,1.5984583 1.2569676,1.405374 1.3935394,1.2146443 1.5842691,1.1086833 1.7749988,1.0027224 2.0128223,1.0027224 q 0.2142765,0 0.3791047,0.070641 0.1671828,0.070641 0.2778531,0.2119219 0.1106703,0.1436359 0.1624734,0.3602672 0.054158,0.2166312 0.044739,0.5062578 0,0.181311 -0.021192,0.339075 -0.021192,0.1554094 -0.061222,0.2684344 -0.037675,0.113025 -0.091833,0.1789563 -0.054158,0.063576 -0.1224437,0.063576 -0.025902,0 -0.051803,-0.00706 -0.025901,-0.00706 -0.042384,-0.028256 -0.018837,-0.021192 -0.028256,-0.063577 -0.00942,-0.042384 -0.00471,-0.1177343 L 2.5544004,1.556074 Q 2.4837598,1.480724 2.3683801,1.4265662 2.2553551,1.3700536 2.0787535,1.3700536 q -0.1766016,0 -0.3202375,0.07535 -0.1412812,0.07535 -0.2472422,0.2142765 -0.1059609,0.1412813 -0.1742469,0.339075 -0.065931,0.1954391 -0.089478,0.4403266 -0.018837,0.2001484 0.00471,0.3649766 0.023547,0.1624734 0.087123,0.2802078 0.063577,0.1177344 0.1648282,0.1813109 0.1012515,0.061222 0.2378234,0.061222 0.072995,0 0.1365719,-0.021192 0.065931,-0.023547 0.1247984,-0.063577 0.04003,-0.030611 0.077705,-0.068286 0.037675,-0.04003 0.070641,-0.087123 0.023547,0.051803 0.054158,0.094188 0.032966,0.04003 0.070641,0.070641 0.049448,0.04003 0.113025,0.061222 0.063576,0.018838 0.1342172,0.018838 0.1789562,0 0.3061093,-0.105961 Q 2.9594067,3.1195865 3.0418207,2.9476943 3.1242348,2.7781568 3.1642645,2.5662349 3.2066488,2.3519584 3.2137129,2.1376818 Z m -1.5847047,0.3014 q 0.016483,-0.1742469 0.054158,-0.3084641 0.037675,-0.1342172 0.096542,-0.22605 0.056512,-0.091833 0.1389266,-0.1389265 0.082414,-0.049449 0.1907296,-0.049449 0.028256,0 0.047094,0.00471 0.021192,0.00235 0.037675,0.00706 l -0.089478,1.0478359 -0.00235,0.028256 q -0.021192,0.037675 -0.044739,0.065931 -0.023547,0.028256 -0.047094,0.047094 -0.04003,0.030611 -0.082414,0.044739 -0.042384,0.014128 -0.084769,0.014128 -0.058867,0 -0.1036063,-0.03532 -0.042384,-0.03532 -0.070641,-0.1083156 -0.025902,-0.063576 -0.037675,-0.1624734 -0.00942,-0.1012516 -0.00235,-0.2307594 z"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:4.8224px;font-family:'Roboto Mono';-inkscape-font-specification:'Roboto Mono Semi-Bold';fill:#ffffff;fill-opacity:1;stroke-width:0.401866"
+         id="path841" />
+    </g>
+  </g>
+</svg>

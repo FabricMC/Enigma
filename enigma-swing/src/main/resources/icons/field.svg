@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   width="16"
+   height="16"
+   viewBox="0 0 4.2333332 4.2333332"
+   version="1.1"
+   id="svg8">
+  <defs
+     id="defs2">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       id="filter1135">
+      <feFlood
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood1125" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite1127" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="0.1"
+         result="blur"
+         id="feGaussianBlur1129" />
+      <feOffset
+         dx="0"
+         dy="0.2"
+         result="offset"
+         id="feOffset1131" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite1133" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1">
+    <rect
+       style="fill:#388e3c;fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect18"
+       width="4.2333331"
+       height="4.2333331"
+       x="1.9629277e-07"
+       y="0"
+       ry="1.0583333" />
+    <rect
+       style="fill:#4caf50;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect847"
+       width="3.7041667"
+       height="3.7041667"
+       x="0.26458332"
+       y="0.26458332"
+       ry="1.0583333" />
+    <g
+       aria-label="F"
+       transform="scale(1.1079108,0.90259972)"
+       id="text948"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.0747px;line-height:1.25;font-family:'Roboto Mono';-inkscape-font-specification:'Roboto Mono';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.401866;filter:url(#filter1135)">
+      <path
+         d="M 2.9123129,2.6203927 V 2.1188443 H 1.4524066 V 1.1345849 H 3.107752 V 0.63068176 H 0.83547849 V 4.0591068 H 1.4524066 V 2.6203927 Z"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:4.8224px;font-family:'Roboto Mono';-inkscape-font-specification:'Roboto Mono Semi-Bold';fill:#ffffff;fill-opacity:1;stroke-width:0.401866"
+         id="path841" />
+    </g>
+  </g>
+</svg>
