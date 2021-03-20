@@ -83,7 +83,7 @@ public class GuiUtil {
         String path = "icons/" + name + ".svg";
 
         // Do an eager check for a missing icon since FlatSVGIcon does it later at render time
-        if (GuiUtil.class.getResource(path) == null) {
+        if (GuiUtil.class.getResource('/' + path) == null) {
             throw new NoSuchElementException("Missing icon: '" + name + "' at " + path);
         }
 
