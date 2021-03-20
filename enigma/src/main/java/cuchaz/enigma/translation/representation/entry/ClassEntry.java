@@ -174,7 +174,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	public boolean isJre() {
 		String packageName = getPackageName();
-		return packageName != null && (packageName.startsWith("java") || packageName.startsWith("javax"));
+		return packageName != null && (packageName.startsWith("java/") || packageName.startsWith("javax/"));
 	}
 
 	public static String getPackageName(String name) {
