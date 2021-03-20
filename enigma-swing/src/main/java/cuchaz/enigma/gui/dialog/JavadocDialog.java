@@ -25,6 +25,7 @@ import com.google.common.base.Strings;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.GuiController;
+import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.elements.ValidatableTextArea;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -78,6 +79,7 @@ public class JavadocDialog {
 				}
 			}
 		});
+		this.text.setFont(UiConfig.shouldUseCustomFonts() ? UiConfig.getEditorFont() : UiConfig.getFallbackEditorFont());
 
 		// buttons panel
 		JPanel buttonsPanel = new JPanel();

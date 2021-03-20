@@ -8,7 +8,7 @@ dependencies {
     implementation project(':enigma-server')
 
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
-    implementation 'com.bulenkov:darcula:1.0.0-bobbylight'
+    implementation 'com.formdev:flatlaf:1.0'
     implementation 'de.sciss:syntaxpane:1.2.0'
     implementation 'com.github.lukeu:swing-dpi:0.9'
     implementation 'org.drjekyll:fontchooser:2.4'

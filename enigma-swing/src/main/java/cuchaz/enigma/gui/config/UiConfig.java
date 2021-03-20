@@ -220,11 +220,25 @@ public final class UiConfig {
 	}
 
 	public static Font getEditorFont() {
-		return getFont("Editor").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED)));
+		return getFont("Editor").orElseGet(UiConfig::getFallbackEditorFont);
 	}
 
 	public static void setEditorFont(Font font) {
 		setFont("Editor", font);
+	}
+
+	/**
+	 * Gets the fallback editor font.
+	 * It is used
+	 * <ul>
+	 * <li>when there is no custom editor font chosen</li>
+	 * <li>when custom fonts are disabled</li>
+	 * </ul>
+	 *
+	 * @return the fallback editor font
+	 */
+	public static Font getFallbackEditorFont() {
+		return ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED));
 	}
 
 	public static String encodeFont(Font font) {

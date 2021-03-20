@@ -7,6 +7,8 @@ import de.sciss.syntaxpane.util.Configuration;
 
 import cuchaz.enigma.gui.config.UiConfig;
 
+import java.awt.Font;
+
 public class EnigmaSyntaxKit extends JavaSyntaxKit {
 
 	private static Configuration configuration = null;
@@ -53,7 +55,8 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
 
 		configuration.put("Action.quick-find", "cuchaz.enigma.gui.QuickFindAction, menu F");
 
-        configuration.put("DefaultFont", UiConfig.encodeFont(UiConfig.getEditorFont()));
+		Font editorFont = UiConfig.shouldUseCustomFonts() ? UiConfig.getEditorFont() : UiConfig.getFallbackEditorFont();
+		configuration.put("DefaultFont", UiConfig.encodeFont(editorFont));
     }
 
     /**
