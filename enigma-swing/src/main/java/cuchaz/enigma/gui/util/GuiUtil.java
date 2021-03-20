@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class GuiUtil {
     public static final Icon CLASS_ICON = loadIcon("class");
@@ -79,9 +80,16 @@ public class GuiUtil {
     }
 
     public static Icon loadIcon(String name) {
+        String path = "icons/" + name + ".svg";
+
+        // Do an eager check for a missing icon since FlatSVGIcon does it later at render time
+        if (GuiUtil.class.getResource(path) == null) {
+            throw new NoSuchElementException("Missing icon: '" + name + "' at " + path);
+        }
+
         // Note: the width and height are scaled automatically because the FlatLaf UI scale
         // is set in LookAndFeel.setGlobalLAF()
-        return new FlatSVGIcon("icons/" + name + ".svg", 16, 16, GuiUtil.class.getClassLoader());
+        return new FlatSVGIcon(path, 16, 16, GuiUtil.class.getClassLoader());
     }
 
     public static Icon getClassIcon(Gui gui, ClassEntry entry) {
