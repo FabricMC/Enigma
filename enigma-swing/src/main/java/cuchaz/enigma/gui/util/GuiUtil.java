@@ -1,28 +1,29 @@
 package cuchaz.enigma.gui.util;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.Os;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class GuiUtil {
     public static final Icon CLASS_ICON = loadIcon("class");
     public static final Icon INTERFACE_ICON = loadIcon("interface");
     public static final Icon ENUM_ICON = loadIcon("enum");
     public static final Icon ANNOTATION_ICON = loadIcon("annotation");
+    public static final Icon RECORD_ICON = loadIcon("record");
     public static final Icon METHOD_ICON = loadIcon("method");
     public static final Icon FIELD_ICON = loadIcon("field");
     public static final Icon CONSTRUCTOR_ICON = loadIcon("constructor");
@@ -79,15 +80,16 @@ public class GuiUtil {
     }
 
     public static Icon loadIcon(String name) {
-        try {
-            InputStream inputStream = GuiUtil.class.getResourceAsStream("/icons/" + name + ".png");
-            Image image = ImageIO.read(inputStream).getScaledInstance(ScaleUtil.scale(16), ScaleUtil.scale(16), Image.SCALE_DEFAULT);
-            return new ImageIcon(image);
-        } catch (IOException e) {
-            e.printStackTrace();
+        String path = "icons/" + name + ".svg";
+
+        // Do an eager check for a missing icon since FlatSVGIcon does it later at render time
+        if (GuiUtil.class.getResource('/' + path) == null) {
+            throw new NoSuchElementException("Missing icon: '" + name + "' at " + path);
         }
 
-        return null;
+        // Note: the width and height are scaled automatically because the FlatLaf UI scale
+        // is set in LookAndFeel.setGlobalLAF()
+        return new FlatSVGIcon(path, 16, 16, GuiUtil.class.getClassLoader());
     }
 
     public static Icon getClassIcon(Gui gui, ClassEntry entry) {
@@ -100,9 +102,9 @@ public class GuiUtil {
                 return INTERFACE_ICON;
             } else if (access.isEnum()) {
                 return ENUM_ICON;
+            } else if (access.isRecord()) {
+                return RECORD_ICON;
             }
-
-            // TODO: Record icon?
         }
 
         return CLASS_ICON;

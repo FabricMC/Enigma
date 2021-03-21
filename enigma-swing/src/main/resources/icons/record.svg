@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   width="16"
+   height="16"
+   viewBox="0 0 4.2333332 4.2333332"
+   version="1.1"
+   id="svg8">
+  <defs
+     id="defs2">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       id="filter1135">
+      <feFlood
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood1125" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite1127" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="0.1"
+         result="blur"
+         id="feGaussianBlur1129" />
+      <feOffset
+         dx="0"
+         dy="0.2"
+         result="offset"
+         id="feOffset1131" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite1133" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1">
+    <rect
+       style="fill:#bc245d;fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect18"
+       width="4.2333331"
+       height="4.2333331"
+       x="0"
+       y="0"
+       ry="1.0583333" />
+    <rect
+       style="fill:#de3e80;fill-opacity:1;stroke:none;stroke-width:0.30868;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect847"
+       width="3.7041664"
+       height="3.7041664"
+       x="0.26458332"
+       y="0.26458332"
+       ry="1.0583333" />
+    <g
+       aria-label="R"
+       transform="scale(1.1079108,0.90259972)"
+       id="text948"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.0747px;line-height:1.25;font-family:'Roboto Mono';-inkscape-font-specification:'Roboto Mono';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.401866;filter:url(#filter1135)">
+      <path
+         d="M 1.9516004,2.7546099 2.6014941,4.0591068 H 3.258452 V 4.0284959 L 2.5237895,2.6039099 q 0.1412812,-0.063576 0.2543062,-0.1507 0.1153797,-0.087123 0.2001485,-0.2048578 0.080059,-0.113025 0.1247984,-0.2590156 0.044739,-0.1459907 0.044739,-0.3249469 0,-0.2566609 -0.089478,-0.4497453 Q 2.9711801,1.0215599 2.8087067,0.89440677 2.6438785,0.76489895 2.4178285,0.6989677 2.1917785,0.63068176 1.9162801,0.63068176 H 0.7954488 V 4.0591068 H 1.4100222 V 2.7546099 Z M 1.4100222,2.2530615 v -1.123186 h 0.5062579 q 0.1412812,0 0.2519515,0.03532 0.1106704,0.03532 0.1907297,0.1012516 0.084769,0.070641 0.1271532,0.1813109 0.044739,0.1083157 0.044739,0.2495969 0,0.1224438 -0.037675,0.2213406 -0.03532,0.096542 -0.1036062,0.1648282 -0.080059,0.082414 -0.2001485,0.1271531 -0.1177344,0.042384 -0.2684344,0.042384 z"
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:4.8224px;font-family:'Roboto Mono';-inkscape-font-specification:'Roboto Mono Semi-Bold';fill:#ffffff;fill-opacity:1;stroke-width:0.401866"
+         id="path841" />
+    </g>
+  </g>
+</svg>
