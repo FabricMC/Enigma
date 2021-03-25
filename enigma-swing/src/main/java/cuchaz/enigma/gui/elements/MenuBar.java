@@ -270,7 +270,7 @@ public class MenuBar {
 
 	private void onCustomScaleClicked() {
 		String answer = (String) JOptionPane.showInputDialog(this.gui.getFrame(), I18n.translate("menu.view.scale.custom.title"), I18n.translate("menu.view.scale.custom.title"),
-				JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(ScaleUtil.getScaleFactor() * 100));
+				JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(UiConfig.getScaleFactor() * 100));
 		if (answer == null) return;
 		float newScale = 1.0f;
 		try {
@@ -455,7 +455,7 @@ public class MenuBar {
 				})
 				.collect(Collectors.toMap(x -> x.a, x -> x.b));
 
-		JRadioButtonMenuItem currentScaleButton = scaleButtons.get(ScaleUtil.getScaleFactor());
+		JRadioButtonMenuItem currentScaleButton = scaleButtons.get(UiConfig.getScaleFactor());
 		if (currentScaleButton != null) {
 			currentScaleButton.setSelected(true);
 		}

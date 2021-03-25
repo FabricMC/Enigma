@@ -43,7 +43,7 @@ public class FontDialog extends JDialog {
 	public FontDialog(Frame owner) {
 		super(owner, "Fonts", true);
 
-		this.customCheckBox.setSelected(UiConfig.shouldUseCustomFonts());
+		this.customCheckBox.setSelected(UiConfig.useCustomFonts());
 
 		this.entries.setPreferredSize(ScaleUtil.getDimension(100, 0));
 

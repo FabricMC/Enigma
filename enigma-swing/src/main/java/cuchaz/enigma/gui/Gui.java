@@ -23,7 +23,10 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
-import javax.swing.tree.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
@@ -55,7 +58,10 @@ import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
 import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -111,7 +117,7 @@ public class Gui implements LanguageChangeListener {
 	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
 
 	public Gui(EnigmaProfile profile) {
-		UiConfig.getLookAndFeel().setGlobalLAF();
+		UiConfig.getActiveLookAndFeel().setGlobalLAF();
 
 		// init frame
 		this.frame = new JFrame(Enigma.NAME);

@@ -19,10 +19,20 @@ public final class UiConfig {
 	// Swing specific configuration such as theming
 	private static final ConfigContainer swing = ConfigContainer.getOrCreate("enigma/enigmaswing");
 
+	// These are used for getting stuff that needs to stay constant for the
+	// runtime of the program, e.g. the current theme, because changing of these
+	// settings without a restart isn't implemented correctly yet.
+	// Don't change the values in this container with the expectation that they
+	// get saved, this is purely a backup of the configuration that existed at
+	// startup.
+	private static final ConfigSection runningSwing;
+
 	static {
 		if (!swing.existsOnDisk() && !ui.existsOnDisk()) {
 			OldConfigImporter.doImport();
 		}
+
+		runningSwing = swing.data().copy();
 	}
 
 	public static void save() {
@@ -40,6 +50,10 @@ public final class UiConfig {
 
 	public static float getScaleFactor() {
 		return (float) swing.data().section("General").setIfAbsentDouble("Scale Factor", 1.0);
+	}
+
+	public static float getActiveScaleFactor() {
+		return (float) runningSwing.section("General").setIfAbsentDouble("Scale Factor", 1.0);
 	}
 
 	public static void setScaleFactor(float scale) {
@@ -71,6 +85,10 @@ public final class UiConfig {
 		return swing.data().section("Themes").setIfAbsentEnum(LookAndFeel::valueOf, "Current", LookAndFeel.NONE);
 	}
 
+	public static LookAndFeel getActiveLookAndFeel() {
+		return runningSwing.section("Themes").setIfAbsentEnum(LookAndFeel::valueOf, "Current", LookAndFeel.NONE);
+	}
+
 	public static void setLookAndFeel(LookAndFeel laf) {
 		swing.data().section("Themes").setEnum("Current", laf);
 	}
@@ -89,12 +107,12 @@ public final class UiConfig {
 	}
 
 	private static Color getThemeColorRgba(String colorName) {
-		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().name()).section("Colors");
+		ConfigSection s = runningSwing.section("Themes").section(getLookAndFeel().name()).section("Colors");
 		return fromComponents(s.getRgbColor(colorName).orElse(0), s.getDouble(String.format("%s Alpha", colorName)).orElse(0));
 	}
 
 	private static Color getThemeColorRgb(String colorName) {
-		ConfigSection s = swing.data().section("Themes").section(getLookAndFeel().name()).section("Colors");
+		ConfigSection s = runningSwing.section("Themes").section(getLookAndFeel().name()).section("Colors");
 		return new Color(s.getRgbColor(colorName).orElse(0));
 	}
 
@@ -178,8 +196,12 @@ public final class UiConfig {
 		return getThemeColorRgb("Line Numbers Selected");
 	}
 
-	public static boolean shouldUseCustomFonts() {
+	public static boolean useCustomFonts() {
 		return swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").setIfAbsentBool("Use Custom", false);
+	}
+
+	public static boolean activeUseCustomFonts() {
+		return runningSwing.section("Themes").section(getLookAndFeel().name()).section("Fonts").setIfAbsentBool("Use Custom", false);
 	}
 
 	public static void setUseCustomFonts(boolean b) {
@@ -191,12 +213,17 @@ public final class UiConfig {
 		return spec.map(Font::decode);
 	}
 
+	public static Optional<Font> getActiveFont(String name) {
+		Optional<String> spec = runningSwing.section("Themes").section(getLookAndFeel().name()).section("Fonts").getString(name);
+		return spec.map(Font::decode);
+	}
+
 	public static void setFont(String name, Font font) {
 		swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").setString(name, encodeFont(font));
 	}
 
 	public static Font getDefaultFont() {
-		return getFont("Default").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG).deriveFont(Font.BOLD)));
+		return getActiveFont("Default").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG).deriveFont(Font.BOLD)));
 	}
 
 	public static void setDefaultFont(Font font) {
@@ -204,7 +231,7 @@ public final class UiConfig {
 	}
 
 	public static Font getDefault2Font() {
-		return getFont("Default 2").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG)));
+		return getActiveFont("Default 2").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG)));
 	}
 
 	public static void setDefault2Font(Font font) {
@@ -212,7 +239,7 @@ public final class UiConfig {
 	}
 
 	public static Font getSmallFont() {
-		return getFont("Small").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG)));
+		return getActiveFont("Small").orElseGet(() -> ScaleUtil.scaleFont(Font.decode(Font.DIALOG)));
 	}
 
 	public static void setSmallFont(Font font) {
@@ -220,7 +247,7 @@ public final class UiConfig {
 	}
 
 	public static Font getEditorFont() {
-		return getFont("Editor").orElseGet(UiConfig::getFallbackEditorFont);
+		return getActiveFont("Editor").orElseGet(UiConfig::getFallbackEditorFont);
 	}
 
 	public static void setEditorFont(Font font) {

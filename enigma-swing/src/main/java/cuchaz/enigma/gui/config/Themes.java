@@ -20,7 +20,7 @@ public class Themes {
 	private static final Set<ThemeChangeListener> listeners = new HashSet<>();
 
 	public static void updateTheme() {
-		LookAndFeel laf = UiConfig.getLookAndFeel();
+		LookAndFeel laf = UiConfig.getActiveLookAndFeel();
 		laf.setGlobalLAF();
 		setFonts();
 		UiConfig.setLookAndFeelDefaults(laf, LookAndFeel.isDarkLaf());
@@ -34,7 +34,7 @@ public class Themes {
 	}
 
 	private static void setFonts() {
-		if (UiConfig.shouldUseCustomFonts()) {
+		if (UiConfig.activeUseCustomFonts()) {
 			Font small = UiConfig.getSmallFont();
 			Font bold = UiConfig.getDefaultFont();
 			Font normal = UiConfig.getDefault2Font();

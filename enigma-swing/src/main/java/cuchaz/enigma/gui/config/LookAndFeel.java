@@ -11,7 +11,6 @@ import javax.swing.plaf.metal.MetalLookAndFeel;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatSystemProperties;
-import cuchaz.enigma.gui.util.ScaleUtil;
 
 public enum LookAndFeel {
 	DEFAULT(false),
@@ -37,7 +36,7 @@ public enum LookAndFeel {
 	public void setGlobalLAF() {
 		// Configure FlatLaf's UI scale to be our scale factor.
 		// This is also used for the SVG icons, so it applies even when some other LaF is active.
-		System.setProperty(FlatSystemProperties.UI_SCALE, Float.toString(ScaleUtil.getScaleFactor()));
+		System.setProperty(FlatSystemProperties.UI_SCALE, Float.toString(UiConfig.getActiveScaleFactor()));
 
 		try {
 			switch (this) {

@@ -79,7 +79,7 @@ public class JavadocDialog {
 				}
 			}
 		});
-		this.text.setFont(UiConfig.shouldUseCustomFonts() ? UiConfig.getEditorFont() : UiConfig.getFallbackEditorFont());
+		this.text.setFont(UiConfig.activeUseCustomFonts() ? UiConfig.getEditorFont() : UiConfig.getFallbackEditorFont());
 
 		// buttons panel
 		JPanel buttonsPanel = new JPanel();

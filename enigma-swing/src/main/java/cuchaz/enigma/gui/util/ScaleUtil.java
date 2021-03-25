@@ -24,12 +24,8 @@ public class ScaleUtil {
 
 	private static List<ScaleChangeListener> listeners = new ArrayList<>();
 
-	public static float getScaleFactor() {
-		return UiConfig.getScaleFactor();
-	}
-
 	public static void setScaleFactor(float scaleFactor) {
-		float oldScale = getScaleFactor();
+		float oldScale = UiConfig.getScaleFactor();
 		float clamped = Math.min(Math.max(0.25f, scaleFactor), 10.0f);
 		UiConfig.setScaleFactor(clamped);
 		rescaleFontInConfig("Default", oldScale);
@@ -61,28 +57,29 @@ public class ScaleUtil {
 	}
 
 	public static Font scaleFont(Font font) {
-		return createTweakerForCurrentLook(getScaleFactor()).modifyFont("", font);
+		return createTweakerForCurrentLook(UiConfig.getActiveScaleFactor()).modifyFont("", font);
 	}
 
 	private static void rescaleFontInConfig(String name, float oldScale) {
 		UiConfig.getFont(name).ifPresent(font -> UiConfig.setFont(name, rescaleFont(font, oldScale)));
 	}
 
-	public static Font rescaleFont(Font font, float oldScale) {
-		float newSize = Math.round(font.getSize() / oldScale * getScaleFactor());
+	// This does not use the font that's currently active in the UI!
+	private static Font rescaleFont(Font font, float oldScale) {
+		float newSize = Math.round(font.getSize() / oldScale * UiConfig.getScaleFactor());
 		return font.deriveFont(newSize);
 	}
 
 	public static float scale(float f) {
-		return f * getScaleFactor();
+		return f * UiConfig.getActiveScaleFactor();
 	}
 
 	public static float invert(float f) {
-		return f / getScaleFactor();
+		return f / UiConfig.getActiveScaleFactor();
 	}
 
 	public static int scale(int i) {
-		return (int) (i * getScaleFactor());
+		return (int) (i * UiConfig.getActiveScaleFactor());
 	}
 
 	public static Border createEmptyBorder(int top, int left, int bottom, int right) {
@@ -90,13 +87,13 @@ public class ScaleUtil {
 	}
 
 	public static int invert(int i) {
-		return (int) (i / getScaleFactor());
+		return (int) (i / UiConfig.getActiveScaleFactor());
 	}
 
 	public static void applyScaling() {
-		float scale = getScaleFactor();
+		float scale = UiConfig.getActiveScaleFactor();
 
-		if (UiConfig.getLookAndFeel().needsScaling()) {
+		if (UiConfig.getActiveLookAndFeel().needsScaling()) {
 			UiDefaultsScaler.updateAndApplyGlobalScaling((int) (100 * scale), true);
 		}
 
