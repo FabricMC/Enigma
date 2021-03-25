@@ -99,4 +99,13 @@ public class TranslationClassVisitor extends ClassVisitor {
 		AnnotationVisitor av = super.visitTypeAnnotation(typeRef, typePath, translatedDesc.toString(), visible);
 		return new TranslationAnnotationVisitor(translator, translatedDesc.getTypeEntry(), api, av);
 	}
+
+	@Override
+	public RecordComponentVisitor visitRecordComponent(String name, String desc, String signature) {
+		// Record component names are remapped via the field mapping.
+		FieldDefEntry entry = FieldDefEntry.parse(obfClassEntry, 0, name, desc, signature);
+		FieldDefEntry translatedEntry = translator.translate(entry);
+		RecordComponentVisitor fv = super.visitRecordComponent(translatedEntry.getName(), translatedEntry.getDesc().toString(), translatedEntry.getSignature().toString());
+		return new TranslationRecordComponentVisitor(translator, api, fv);
+	}
 }
