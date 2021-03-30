@@ -170,7 +170,7 @@ public class JavadocDialog {
 
 	public void save() {
 		vc.setActiveElement(text);
-		controller.changeDocs(vc, entry, text.getText());
+		controller.changeDocs(vc, entry, text.getText().trim().isEmpty() ? null : text.getText());
 
 		if (!vc.canProceed()) return;
 
