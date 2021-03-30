@@ -207,7 +207,7 @@ public class IdentifierPanel {
 			this.row += 1;
 		}
 
-		public ConvertingTextField addCovertTextField(String c1, String c2) {
+		public ConvertingTextField addConvertingTextField(String c1, String c2) {
 			ConvertingTextField textField = new ConvertingTextField(c2);
 			addRow(new JLabel(c1), textField.getUi());
 			return textField;
@@ -215,7 +215,7 @@ public class IdentifierPanel {
 
 		public ConvertingTextField addRenameTextField(String c1, String c2) {
 			if (project.isRenamable(e)) {
-				return addCovertTextField(c1, c2);
+				return addConvertingTextField(c1, c2);
 			} else {
 				addStringRow(c1, c2);
 				return null;
