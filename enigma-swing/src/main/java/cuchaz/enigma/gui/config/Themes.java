@@ -24,6 +24,7 @@ public class Themes {
 		laf.setGlobalLAF();
 		setFonts();
 		UiConfig.setLookAndFeelDefaults(laf, LookAndFeel.isDarkLaf());
+		UIManager.put("ScrollBar.showButtons", true);
 		EnigmaSyntaxKit.invalidate();
 		DefaultSyntaxKit.initKit();
 		DefaultSyntaxKit.registerContentType("text/enigma-sources", EnigmaSyntaxKit.class.getName());
