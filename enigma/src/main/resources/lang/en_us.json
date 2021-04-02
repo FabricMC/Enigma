@@ -108,6 +108,8 @@
 	"info_panel.tree.implementations": "Implementations",
 	"info_panel.tree.calls": "Call Graph",
 
+	"popup.copied": "Copied!",
+
 	"log_panel.messages": "Messages",
 	"log_panel.users": "Users",
 

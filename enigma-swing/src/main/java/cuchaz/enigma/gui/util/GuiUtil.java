@@ -9,6 +9,7 @@ import cuchaz.enigma.utils.Os;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
@@ -51,6 +52,24 @@ public class GuiUtil {
         Font font = label.getFont();
         label.setFont(font.deriveFont(font.getStyle() & ~Font.BOLD));
         return label;
+    }
+
+    /**
+     * Puts the provided {@code text} in the system clipboard.
+     */
+    public static void copyToClipboard(String text) {
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
+    }
+
+    public static void showPopup(JComponent component, String text, int x, int y) {
+        // from https://stackoverflow.com/questions/39955015/java-swing-show-tooltip-as-a-message-dialog
+        JToolTip tooltip = new JToolTip();
+        tooltip.setTipText(text);
+        Popup p = PopupFactory.getSharedInstance().getPopup(component, tooltip, x + 10, y);
+        p.show();
+        Timer t = new Timer(1000, e -> p.hide());
+        t.setRepeats(false);
+        t.start();
     }
 
     public static void showToolTipNow(JComponent component) {

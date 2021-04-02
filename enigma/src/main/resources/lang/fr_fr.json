@@ -36,6 +36,7 @@
 	"menu.view.themes": "Thèmes",
 	"menu.view.themes.default": "Par défaut",
 	"menu.view.themes.darcula": "Darcula",
+	"menu.view.themes.metal": "Métal",
 	"menu.view.themes.system": "Système",
 	"menu.view.themes.none": "Aucun (JVM par défaut)",
 	"menu.view.languages": "Langues",
@@ -106,6 +107,8 @@
 	"info_panel.tree.inheritance": "Héritage",
 	"info_panel.tree.implementations": "Implémentations",
 	"info_panel.tree.calls": "Graphique des appels",
+
+	"popup.copied": "Copié !",
 
 	"log_panel.messages": "Messages",
 	"log_panel.users": "Utilisateurs",
@@ -191,6 +194,7 @@
 	"validation.message.illegal_identifier.long": "Caractère '%2$s' invalide à la position %3$d.",
 	"validation.message.illegal_doc_comment_end": "Un commentaire de Javadoc ne peut pas contenir la séquence de caractères '*/'.",
 	"validation.message.reserved_identifier": "'%s' est un identifiant réservé.",
+	"validation.message.unknown_record_getter": "Impossible de trouver un accesseur de composant de record correspondant pour %s",
 
 	"crash.title": "%s - Rapport de plantage",
 	"crash.summary": "%s a planté ! =(",

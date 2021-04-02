@@ -5,6 +5,8 @@ import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
@@ -97,7 +99,7 @@ public class IdentifierPanel {
 				FieldEntry fe = (FieldEntry) deobfEntry;
 				this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.field"), fe.getName());
 				th.addStringRow(I18n.translate("info_panel.identifier.class"), fe.getParent().getFullName());
-				th.addStringRow(I18n.translate("info_panel.identifier.type_descriptor"), fe.getDesc().toString());
+				th.addCopiableStringRow(I18n.translate("info_panel.identifier.type_descriptor"), fe.getDesc().toString());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
 			} else if (deobfEntry instanceof MethodEntry) {
 				MethodEntry me = (MethodEntry) deobfEntry;
@@ -107,7 +109,7 @@ public class IdentifierPanel {
 					this.nameField = th.addRenameTextField(I18n.translate("info_panel.identifier.method"), me.getName());
 					th.addStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
 				}
-				th.addStringRow(I18n.translate("info_panel.identifier.method_descriptor"), me.getDesc().toString());
+				th.addCopiableStringRow(I18n.translate("info_panel.identifier.method_descriptor"), me.getDesc().toString());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), this::onModifierChanged);
 			} else if (deobfEntry instanceof LocalVariableEntry) {
 				LocalVariableEntry lve = (LocalVariableEntry) deobfEntry;
@@ -207,6 +209,19 @@ public class IdentifierPanel {
 			this.row += 1;
 		}
 
+		public void addCopiableRow(JLabel c1, JLabel c2) {
+			c2.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if (e.getButton() == MouseEvent.BUTTON1) {
+						GuiUtil.copyToClipboard(c2.getText());
+						GuiUtil.showPopup(c2, I18n.translate("popup.copied"), e.getXOnScreen(), e.getYOnScreen());
+					}
+				}
+			});
+			addRow(c1, c2);
+		}
+
 		public ConvertingTextField addConvertingTextField(String c1, String c2) {
 			ConvertingTextField textField = new ConvertingTextField(c2);
 			addRow(new JLabel(c1), textField.getUi());
@@ -224,6 +239,10 @@ public class IdentifierPanel {
 
 		public void addStringRow(String c1, String c2) {
 			addRow(new JLabel(c1), GuiUtil.unboldLabel(new JLabel(c2)));
+		}
+
+		public void addCopiableStringRow(String c1, String c2) {
+			addCopiableRow(new JLabel(c1), GuiUtil.unboldLabel(new JLabel(c2)));
 		}
 
 		public JComboBox<AccessModifier> addModifierRow(String c1, Consumer<AccessModifier> changeListener) {
