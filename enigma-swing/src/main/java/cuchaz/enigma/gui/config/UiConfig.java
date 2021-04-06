@@ -25,13 +25,21 @@ public final class UiConfig {
 	// Don't change the values in this container with the expectation that they
 	// get saved, this is purely a backup of the configuration that existed at
 	// startup.
-	private static final ConfigSection runningSwing;
+	private static ConfigSection runningSwing;
 
 	static {
 		if (!swing.existsOnDisk() && !ui.existsOnDisk()) {
 			OldConfigImporter.doImport();
 		}
 
+		UiConfig.snapshotConfig();
+	}
+
+	// Saves the current configuration state so a consistent user interface can
+	// be provided for parts of the interface that don't support changing the
+	// configuration at runtime. Calling this after any UI elements are
+	// displayed can lead to visual glitches!
+	public static void snapshotConfig() {
 		runningSwing = swing.data().copy();
 	}
 
@@ -107,12 +115,12 @@ public final class UiConfig {
 	}
 
 	private static Color getThemeColorRgba(String colorName) {
-		ConfigSection s = runningSwing.section("Themes").section(getLookAndFeel().name()).section("Colors");
+		ConfigSection s = runningSwing.section("Themes").section(getActiveLookAndFeel().name()).section("Colors");
 		return fromComponents(s.getRgbColor(colorName).orElse(0), s.getDouble(String.format("%s Alpha", colorName)).orElse(0));
 	}
 
 	private static Color getThemeColorRgb(String colorName) {
-		ConfigSection s = runningSwing.section("Themes").section(getLookAndFeel().name()).section("Colors");
+		ConfigSection s = runningSwing.section("Themes").section(getActiveLookAndFeel().name()).section("Colors");
 		return new Color(s.getRgbColor(colorName).orElse(0));
 	}
 
@@ -197,24 +205,24 @@ public final class UiConfig {
 	}
 
 	public static boolean useCustomFonts() {
-		return swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").setIfAbsentBool("Use Custom", false);
+		return swing.data().section("Themes").section(getActiveLookAndFeel().name()).section("Fonts").setIfAbsentBool("Use Custom", false);
 	}
 
 	public static boolean activeUseCustomFonts() {
-		return runningSwing.section("Themes").section(getLookAndFeel().name()).section("Fonts").setIfAbsentBool("Use Custom", false);
+		return runningSwing.section("Themes").section(getActiveLookAndFeel().name()).section("Fonts").setIfAbsentBool("Use Custom", false);
 	}
 
 	public static void setUseCustomFonts(boolean b) {
-		swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").setBool("Use Custom", b);
+		swing.data().section("Themes").section(getActiveLookAndFeel().name()).section("Fonts").setBool("Use Custom", b);
 	}
 
 	public static Optional<Font> getFont(String name) {
-		Optional<String> spec = swing.data().section("Themes").section(getLookAndFeel().name()).section("Fonts").getString(name);
+		Optional<String> spec = swing.data().section("Themes").section(getActiveLookAndFeel().name()).section("Fonts").getString(name);
 		return spec.map(Font::decode);
 	}
 
 	public static Optional<Font> getActiveFont(String name) {
-		Optional<String> spec = runningSwing.section("Themes").section(getLookAndFeel().name()).section("Fonts").getString(name);
+		Optional<String> spec = runningSwing.section("Themes").section(getActiveLookAndFeel().name()).section("Fonts").getString(name);
 		return spec.map(Font::decode);
 	}
 

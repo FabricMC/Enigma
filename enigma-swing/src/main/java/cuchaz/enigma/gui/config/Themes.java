@@ -19,11 +19,14 @@ public class Themes {
 
 	private static final Set<ThemeChangeListener> listeners = new HashSet<>();
 
-	public static void updateTheme() {
+	// Calling this after the UI is initialized (e.g. when the user changes
+	// theme settings) is currently not functional.
+	public static void setupTheme() {
 		LookAndFeel laf = UiConfig.getActiveLookAndFeel();
 		laf.setGlobalLAF();
-		setFonts();
-		UiConfig.setLookAndFeelDefaults(laf, LookAndFeel.isDarkLaf());
+		UiConfig.setLookAndFeelDefaults(UiConfig.getLookAndFeel(), LookAndFeel.isDarkLaf());
+		UiConfig.snapshotConfig();
+		Themes.setFonts();
 		UIManager.put("ScrollBar.showButtons", true);
 		EnigmaSyntaxKit.invalidate();
 		DefaultSyntaxKit.initKit();

@@ -117,8 +117,6 @@ public class Gui implements LanguageChangeListener {
 	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
 
 	public Gui(EnigmaProfile profile) {
-		UiConfig.getActiveLookAndFeel().setGlobalLAF();
-
 		// init frame
 		this.frame = new JFrame(Enigma.NAME);
 		final Container pane = this.frame.getContentPane();
@@ -135,13 +133,9 @@ public class Gui implements LanguageChangeListener {
 			});
 		}
 
-		System.setProperty("apple.laf.useScreenMenuBar", "true");
+		Themes.addListener((lookAndFeel, boxHighlightPainters) -> SwingUtilities.updateComponentTreeUI(this.getFrame()));
 
 		this.controller = new GuiController(this, profile);
-
-		Themes.addListener((lookAndFeel, boxHighlightPainters) -> SwingUtilities.updateComponentTreeUI(getFrame()));
-
-		Themes.updateTheme();
 
 		// init file choosers
 		this.jarFileChooser = new FileDialog(getFrame(), I18n.translate("menu.file.jar.open"), FileDialog.LOAD);

@@ -20,6 +20,7 @@ import com.google.common.io.MoreFiles;
 import joptsimple.*;
 
 import cuchaz.enigma.EnigmaProfile;
+import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
@@ -54,6 +55,9 @@ public class Main {
 			EnigmaProfile parsedProfile = EnigmaProfile.read(options.valueOf(profile));
 
 			I18n.setLanguage(UiConfig.getLanguage());
+			System.setProperty("apple.laf.useScreenMenuBar", "true");
+			Themes.setupTheme();
+
 			Gui gui = new Gui(parsedProfile);
 			GuiController controller = gui.getController();
 
