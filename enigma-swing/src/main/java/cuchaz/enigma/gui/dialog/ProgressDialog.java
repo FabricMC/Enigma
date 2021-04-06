@@ -71,46 +71,48 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 	}
 
 	public static CompletableFuture<Void> runOffThread(final JFrame parent, final ProgressRunnable runnable) {
-		CompletableFuture<Void> future = new CompletableFuture<>();
-		new Thread(() ->
-		{
-			try (ProgressDialog progress = new ProgressDialog(parent)) {
+		return CompletableFuture.supplyAsync(() -> {
+			ProgressDialog progress = new ProgressDialog(parent);
+			progress.dialog.setVisible(true);
+			return progress;
+		}, SwingUtilities::invokeLater).thenAcceptAsync(progress -> {
+			// TODO use "try (progress)" with Java 9
+			try {
 				runnable.run(progress);
-				future.complete(null);
-			} catch (Exception ex) {
-				future.completeExceptionally(ex);
-				throw new Error(ex);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			} finally {
+				progress.close();
 			}
-		}).start();
-		return future;
+		});
 	}
 
 	@Override
 	public void close() {
-		this.dialog.dispose();
+		SwingUtilities.invokeLater(this.dialog::dispose);
 	}
 
 	@Override
 	public void init(int totalWork, String title) {
-		this.labelTitle.setText(title);
-		this.progress.setMinimum(0);
-		this.progress.setMaximum(totalWork);
-		this.progress.setValue(0);
+		SwingUtilities.invokeLater(() -> {
+			this.labelTitle.setText(title);
+			this.progress.setMinimum(0);
+			this.progress.setMaximum(totalWork);
+			this.progress.setValue(0);
+		});
 	}
 
 	@Override
 	public void step(int numDone, String message) {
-		this.labelText.setText(message);
-		if (numDone != -1) {
-			this.progress.setValue(numDone);
-			this.progress.setIndeterminate(false);
-		} else {
-			this.progress.setIndeterminate(true);
-		}
-
-		// update the frame
-		this.dialog.validate();
-		this.dialog.repaint();
+		SwingUtilities.invokeLater(() -> {
+			this.labelText.setText(message);
+			if (numDone != -1) {
+				this.progress.setValue(numDone);
+				this.progress.setIndeterminate(false);
+			} else {
+				this.progress.setIndeterminate(true);
+			}
+		});
 	}
 
 	public interface ProgressRunnable {
