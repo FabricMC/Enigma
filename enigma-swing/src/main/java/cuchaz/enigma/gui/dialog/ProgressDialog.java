@@ -45,35 +45,52 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 				.fill(GridBagConstraints.BOTH)
 				.weight(1.0, 0.0);
 
+		pane.add(this.labelTitle, cb.pos(0, 0).build());
+		pane.add(this.labelText, cb.pos(0, 1).build());
+		pane.add(this.progress, cb.pos(0, 2).weight(1.0, 1.0).build());
+
 		// Set label text since otherwise the label height is 0, which makes the
 		// window size get set incorrectly
 		this.labelTitle.setText("Idle");
 		this.labelText.setText("Idle");
-		this.progress.setPreferredSize(ScaleUtil.getDimension(0, 30));
-
-		pane.add(this.labelTitle, cb.pos(0, 0).build());
-		pane.add(this.labelText, cb.pos(0, 1).build());
-		// set padding because otherwise the progress bar gets cut off when
-		// using the Darkula theme
-		pane.add(this.progress, cb.pos(0, 2).weight(1.0, 1.0).padding(10).build());
+		this.progress.setPreferredSize(ScaleUtil.getDimension(0, 20));
 
 		// show the frame
+		this.dialog.setResizable(false);
+		this.reposition();
+		this.dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+	}
+
+	// This tries to set the window size to the smallest it can be vertically,
+	// and 400 units in width.
+	// Gets called twice, including after the window opens to try to fix the
+	// window size (more specifically, the progress bar size) being smaller when
+	// the dialog opens for the very first time compared to afterwards. (#366)
+	private void reposition() {
 		this.dialog.pack();
 		Dimension size = this.dialog.getSize();
 		this.dialog.setMinimumSize(size);
 		size.width = ScaleUtil.scale(400);
 		this.dialog.setSize(size);
 
-		this.dialog.setResizable(false);
-		this.dialog.setLocationRelativeTo(parent);
-		this.dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		this.dialog.setVisible(true);
+		this.dialog.setLocationRelativeTo(this.dialog.getParent());
 	}
 
 	public static CompletableFuture<Void> runOffThread(final JFrame parent, final ProgressRunnable runnable) {
 		return CompletableFuture.supplyAsync(() -> {
 			ProgressDialog progress = new ProgressDialog(parent);
+
+			// Somehow opening the dialog, disposing it, then reopening it
+			// and then repositioning it fixes the size issues detailed above
+			// most of the time.
+			// Using setVisible(false) instead of dispose() does not work as
+			// well.
+			// Don't ask me why.
 			progress.dialog.setVisible(true);
+			progress.dialog.dispose();
+			progress.dialog.setVisible(true);
+			progress.reposition();
+
 			return progress;
 		}, SwingUtilities::invokeLater).thenAcceptAsync(progress -> {
 			// TODO use "try (progress)" with Java 9
