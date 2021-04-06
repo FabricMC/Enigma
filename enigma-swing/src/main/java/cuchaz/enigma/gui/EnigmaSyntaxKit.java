@@ -48,6 +48,8 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
 		configuration.put("Style.TYPE2", String.format("%d, 1", UiConfig.getTypeColor().getRGB()));
 		configuration.put("Style.IDENTIFIER", String.format("%d, 0", UiConfig.getIdentifierColor().getRGB()));
 		configuration.put("Style.DEFAULT", String.format("%d, 0", UiConfig.getTextColor().getRGB()));
+		configuration.put("Style.WARNING", String.format("%d, 0", UiConfig.getTextColor().getRGB()));
+		configuration.put("Style.ERROR", String.format("%d, 0", UiConfig.getTextColor().getRGB()));
 		configuration.put(LineNumbersRuler.PROPERTY_BACKGROUND, String.format("%d", UiConfig.getLineNumbersBackgroundColor().getRGB()));
 		configuration.put(LineNumbersRuler.PROPERTY_FOREGROUND, String.format("%d", UiConfig.getLineNumbersForegroundColor().getRGB()));
 		configuration.put(LineNumbersRuler.PROPERTY_CURRENT_BACK, String.format("%d", UiConfig.getLineNumbersSelectedColor().getRGB()));
