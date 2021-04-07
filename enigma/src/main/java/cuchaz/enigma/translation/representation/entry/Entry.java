@@ -21,7 +21,67 @@ import cuchaz.enigma.translation.mapping.IdentifierValidation;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public interface Entry<P extends Entry<?>> extends Translatable {
+	/**
+	 * Returns the default name of this entry.
+	 *
+	 * <p>For methods, fields and inner classes, it's the same as {@link #getSimpleName()}.</p>
+	 * <p>For other classes, it's the same as {@link #getFullName()}.</p>
+	 *
+	 * <br><p>Examples:</p>
+	 * <ul>
+	 *     <li>Outer class: "domain.name.ClassA"</li>
+	 *     <li>Inner class: "ClassB"</li>
+	 *     <li>Method: "methodC"</li>
+	 * </ul>
+	 */
 	String getName();
+
+	/**
+	 * Returns the simple name of this entry.
+	 *
+	 * <p>For methods, fields and inner classes, it's the same as {@link #getName()}.</p>
+	 * <p>For other classes, it's their name without the package name.</p>
+	 *
+	 * <br><p>Examples:</p>
+	 * <ul>
+	 *     <li>Outer class: "ClassA"</li>
+	 *     <li>Inner class: "ClassB"</li>
+	 *     <li>Method: "methodC"</li>
+	 * </ul>
+	 */
+	String getSimpleName();
+
+	/**
+	 * Returns the full name of this entry.
+	 *
+	 * <p>For methods, fields and inner classes, it's their name prefixed with the full name
+	 * of their parent entry.</p>
+	 * <p>For other classes, it's their name prefixed with their package name.</p>
+	 *
+	 * <br><p>Examples:</p>
+	 * <ul>
+	 *     <li>Outer class: "domain.name.ClassA"</li>
+	 *     <li>Inner class: "domain.name.ClassA$ClassB"</li>
+	 *     <li>Method: "domain.name.ClassA.methodC"</li>
+	 * </ul>
+	 */
+	String getFullName();
+
+	/**
+	 * Returns the contextual name of this entry.
+	 *
+	 * <p>For methods, fields and inner classes, it's their name prefixed with the contextual
+	 * name of their parent entry.</p>
+	 * <p>For other classes, it's only their simple name.</p>
+	 *
+	 * <br><p>Examples:</p>
+	 * <ul>
+	 *     <li>Outer class: "ClassA"</li>
+	 *     <li>Inner class: "ClassA$ClassB"</li>
+	 *     <li>Method: "ClassA.methodC"</li>
+	 * </ul>
+	 */
+	String getContextualName();
 
 	String getJavadocs();
 
