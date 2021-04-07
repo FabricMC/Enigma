@@ -16,19 +16,22 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.util.AbstractListCellRenderer;
+import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.gui.search.SearchEntry;
 import cuchaz.enigma.gui.search.SearchUtil;
@@ -49,7 +52,7 @@ public class SearchDialog {
 
 		su = new SearchUtil<>();
 
-		dialog = new JDialog(parent.getFrame(), I18n.translate("menu.view.search"), true);
+		dialog = new JDialog(parent.getFrame(), I18n.translate("menu.search"), true);
 		JPanel contentPane = new JPanel();
 		contentPane.setBorder(ScaleUtil.createEmptyBorder(4, 4, 4, 4));
 		contentPane.setLayout(new BorderLayout(ScaleUtil.scale(4), ScaleUtil.scale(4)));
@@ -95,7 +98,7 @@ public class SearchDialog {
 		classListModel = new DefaultListModel<>();
 		classList = new JList<>();
 		classList.setModel(classListModel);
-		classList.setCellRenderer(new ListCellRendererImpl());
+		classList.setCellRenderer(new ListCellRendererImpl(parent));
 		classList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		classList.addMouseListener(new MouseAdapter() {
 			@Override
@@ -133,14 +136,37 @@ public class SearchDialog {
 		dialog.setLocationRelativeTo(parent.getFrame());
 	}
 
-	public void show() {
+	public void show(Type type) {
 		su.clear();
-		parent.getController().project.getJarIndex().getEntryIndex().getClasses().parallelStream()
-				.filter(e -> !e.isInnerClass())
-				.map(e -> SearchEntryImpl.from(e, parent.getController()))
-				.map(SearchUtil.Entry::from)
-				.sequential()
-				.forEach(su::add);
+
+		final EntryIndex entryIndex = parent.getController().project.getJarIndex().getEntryIndex();
+
+		switch (type) {
+			default:
+			case CLASS:
+				entryIndex.getClasses().parallelStream()
+						.filter(e -> !e.isInnerClass())
+						.map(e -> SearchEntryImpl.from(e, parent.getController()))
+						.map(SearchUtil.Entry::from)
+						.sequential()
+						.forEach(su::add);
+				break;
+			case METHOD:
+				entryIndex.getMethods().parallelStream()
+						.filter(e -> !e.isConstructor() && !entryIndex.getMethodAccess(e).isSynthetic())
+						.map(e -> SearchEntryImpl.from(e, parent.getController()))
+						.map(SearchUtil.Entry::from)
+						.sequential()
+						.forEach(su::add);
+				break;
+			case FIELD:
+				entryIndex.getFields().parallelStream()
+						.map(e -> SearchEntryImpl.from(e, parent.getController()))
+						.map(SearchUtil.Entry::from)
+						.sequential()
+						.forEach(su::add);
+				break;
+		}
 
 		updateList();
 
@@ -161,10 +187,18 @@ public class SearchDialog {
 		close();
 		su.hit(e);
 		parent.getController().navigateTo(e.obf);
-		if (e.deobf != null) {
-			parent.getDeobfPanel().deobfClasses.setSelectionClass(e.deobf);
+		if (e.obf instanceof ClassEntry) {
+			if (e.deobf != null) {
+				parent.getDeobfPanel().deobfClasses.setSelectionClass((ClassEntry) e.deobf);
+			} else {
+				parent.getObfPanel().obfClasses.setSelectionClass((ClassEntry) e.obf);
+			}
 		} else {
-			parent.getObfPanel().obfClasses.setSelectionClass(e.obf);
+			if (e.deobf != null) {
+				parent.getDeobfPanel().deobfClasses.setSelectionClass((ClassEntry) e.deobf.getParent());
+			} else {
+				parent.getObfPanel().obfClasses.setSelectionClass((ClassEntry) e.obf.getParent());
+			}
 		}
 	}
 
@@ -189,10 +223,10 @@ public class SearchDialog {
 
 	private static final class SearchEntryImpl implements SearchEntry {
 
-		public final ClassEntry obf;
-		public final ClassEntry deobf;
+		public final ParentedEntry<?> obf;
+		public final ParentedEntry<?> deobf;
 
-		private SearchEntryImpl(ClassEntry obf, ClassEntry deobf) {
+		private SearchEntryImpl(ParentedEntry<?> obf, ParentedEntry<?> deobf) {
 			this.obf = obf;
 			this.deobf = deobf;
 		}
@@ -216,8 +250,8 @@ public class SearchDialog {
 			return String.format("SearchEntryImpl { obf: %s, deobf: %s }", obf, deobf);
 		}
 
-		public static SearchEntryImpl from(ClassEntry e, GuiController controller) {
-			ClassEntry deobf = controller.project.getMapper().deobfuscate(e);
+		public static SearchEntryImpl from(ParentedEntry<?> e, GuiController controller) {
+			ParentedEntry<?> deobf = controller.project.getMapper().deobfuscate(e);
 			if (deobf.equals(e)) deobf = null;
 			return new SearchEntryImpl(e, deobf);
 		}
@@ -225,12 +259,13 @@ public class SearchDialog {
 	}
 
 	private static final class ListCellRendererImpl extends AbstractListCellRenderer<SearchEntryImpl> {
-
+		private final Gui gui;
 		private final JLabel mainName;
 		private final JLabel secondaryName;
 
-		public ListCellRendererImpl() {
+		public ListCellRendererImpl(Gui gui) {
 			this.setLayout(new BorderLayout());
+			this.gui = gui;
 
 			mainName = new JLabel();
 			this.add(mainName, BorderLayout.WEST);
@@ -244,18 +279,31 @@ public class SearchDialog {
 		@Override
 		public void updateUiForEntry(JList<? extends SearchEntryImpl> list, SearchEntryImpl value, int index, boolean isSelected, boolean cellHasFocus) {
 			if (value.deobf == null) {
-				mainName.setText(value.obf.getSimpleName());
+				mainName.setText(value.obf.getContextualName());
 				mainName.setToolTipText(value.obf.getFullName());
 				secondaryName.setText("");
 				secondaryName.setToolTipText("");
 			} else {
-				mainName.setText(value.deobf.getSimpleName());
+				mainName.setText(value.deobf.getContextualName());
 				mainName.setToolTipText(value.deobf.getFullName());
 				secondaryName.setText(value.obf.getSimpleName());
 				secondaryName.setToolTipText(value.obf.getFullName());
+			}
+
+			if (value.obf instanceof ClassEntry) {
+				mainName.setIcon(GuiUtil.getClassIcon(gui, (ClassEntry) value.obf));
+			} else if (value.obf instanceof MethodEntry) {
+				mainName.setIcon(GuiUtil.getMethodIcon((MethodEntry) value.obf));
+			} else if (value.obf instanceof FieldEntry) {
+				mainName.setIcon(GuiUtil.FIELD_ICON);
 			}
 		}
 
 	}
 
+	public enum Type {
+		CLASS,
+		METHOD,
+		FIELD
+	}
 }
