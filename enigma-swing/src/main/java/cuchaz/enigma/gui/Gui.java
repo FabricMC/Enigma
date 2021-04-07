@@ -47,10 +47,7 @@ import cuchaz.enigma.gui.renderer.CallsTreeCellRenderer;
 import cuchaz.enigma.gui.renderer.ImplementationsTreeCellRenderer;
 import cuchaz.enigma.gui.renderer.InheritanceTreeCellRenderer;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
-import cuchaz.enigma.gui.util.History;
-import cuchaz.enigma.gui.util.LanguageChangeListener;
-import cuchaz.enigma.gui.util.LanguageUtil;
-import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.gui.util.*;
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
 import cuchaz.enigma.network.packet.MessageC2SPacket;
@@ -172,6 +169,7 @@ public class Gui implements LanguageChangeListener {
 		inheritanceTree = new JTree();
 		inheritanceTree.setModel(null);
 		inheritanceTree.setCellRenderer(new InheritanceTreeCellRenderer(this));
+		inheritanceTree.setSelectionModel(new SingleTreeSelectionModel());
 		inheritanceTree.setShowsRootHandles(true);
 		inheritanceTree.addMouseListener(new MouseAdapter() {
 			@Override
@@ -205,6 +203,7 @@ public class Gui implements LanguageChangeListener {
 		implementationsTree = new JTree();
 		implementationsTree.setModel(null);
 		implementationsTree.setCellRenderer(new ImplementationsTreeCellRenderer(this));
+		implementationsTree.setSelectionModel(new SingleTreeSelectionModel());
 		implementationsTree.setShowsRootHandles(true);
 		implementationsTree.addMouseListener(new MouseAdapter() {
 			@Override
@@ -235,6 +234,7 @@ public class Gui implements LanguageChangeListener {
 		callsTree = new JTree();
 		callsTree.setModel(null);
 		callsTree.setCellRenderer(new CallsTreeCellRenderer(this));
+		callsTree.setSelectionModel(new SingleTreeSelectionModel());
 		callsTree.setShowsRootHandles(true);
 		callsTree.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("unchecked")
