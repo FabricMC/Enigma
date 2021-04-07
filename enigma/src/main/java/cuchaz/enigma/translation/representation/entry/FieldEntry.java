@@ -93,7 +93,7 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	@Override
 	public String toString() {
-		return this.parent.getFullName() + "." + this.name + ":" + this.desc;
+		return this.getFullName() + ":" + this.desc;
 	}
 
 	@Override

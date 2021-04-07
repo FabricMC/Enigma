@@ -62,13 +62,11 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 	@Override
 	public String toString() {
 		MethodEntry translatedEntry = translator.translate(entry);
-		String className = translatedEntry.getContainingClass().getFullName();
 
 		if (!this.implemented) {
-			return className;
+			return translatedEntry.getParent().getFullName();
 		} else {
-			String methodName = translatedEntry.getName();
-			return className + "." + methodName + "()";
+			return translatedEntry.getFullName() + "()";
 		}
 	}
 

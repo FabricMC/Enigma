@@ -102,7 +102,7 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 
 	@Override
 	public String toString() {
-		return this.parent.getFullName() + "." + this.name + this.descriptor;
+		return this.getFullName() + this.descriptor;
 	}
 
 	@Override
