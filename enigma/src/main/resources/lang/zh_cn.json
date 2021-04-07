@@ -37,7 +37,7 @@
 	"menu.view.languages": "语言",
 	"menu.view.languages.title": "更改语言",
 	"menu.view.languages.summary": "新语言将在下次重新启动后应用.",
-	"menu.view.search": "搜索",
+	"menu.search": "搜索",
 	"menu.help": "帮助",
 	"menu.help.about": "关于",
 	"menu.help.about.title": "%s - 关于",

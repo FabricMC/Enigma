@@ -112,7 +112,6 @@ public class MenuBar {
 		this.scaleMenu.add(this.customScaleItem);
 		this.viewMenu.add(this.scaleMenu);
 		this.viewMenu.add(this.fontItem);
-		this.viewMenu.addSeparator();
 		this.ui.add(this.viewMenu);
 
 		this.searchMenu.add(this.searchClassItem);
