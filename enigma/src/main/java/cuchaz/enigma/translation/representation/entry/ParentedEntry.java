@@ -45,7 +45,22 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 
 	@Override
 	public String getName() {
-		return name;
+		return this.name;
+	}
+
+	@Override
+	public String getSimpleName() {
+		return this.name;
+	}
+
+	@Override
+	public String getFullName() {
+		return this.parent.getFullName() + "." + this.name;
+	}
+
+	@Override
+	public String getContextualName() {
+		return this.parent.getContextualName() + "." + this.name;
 	}
 
 	@Override

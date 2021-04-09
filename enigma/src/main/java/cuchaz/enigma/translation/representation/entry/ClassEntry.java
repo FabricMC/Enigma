@@ -59,8 +59,26 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return this.name;
 	}
 
+	@Override
+	public String getSimpleName() {
+		int packagePos = name.lastIndexOf('/');
+		if (packagePos > 0) {
+			return name.substring(packagePos + 1);
+		}
+		return name;
+	}
+
+	@Override
 	public String getFullName() {
-		return fullName;
+		return this.fullName;
+	}
+
+	@Override
+	public String getContextualName() {
+		if (this.isInnerClass()) {
+			return this.parent.getSimpleName() + "$" + this.name;
+		}
+		return this.getSimpleName();
 	}
 
 	@Override
@@ -124,14 +142,6 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	public String getPackageName() {
 		return getPackageName(fullName);
-	}
-
-	public String getSimpleName() {
-		int packagePos = name.lastIndexOf('/');
-		if (packagePos > 0) {
-			return name.substring(packagePos + 1);
-		}
-		return name;
 	}
 
 	/**

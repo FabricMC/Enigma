@@ -3,6 +3,7 @@ package cuchaz.enigma.gui.panels;
 import cuchaz.enigma.analysis.StructureTreeNode;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.gui.util.SingleTreeSelectionModel;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
@@ -32,6 +33,7 @@ public class StructurePanel extends JPanel {
         this.structureTree = new JTree();
         this.structureTree.setModel(null);
         this.structureTree.setCellRenderer(new StructureTreeCellRenderer(gui));
+        this.structureTree.setSelectionModel(new SingleTreeSelectionModel());
         this.structureTree.setShowsRootHandles(true);
         this.structureTree.addMouseListener(new MouseAdapter() {
             @Override

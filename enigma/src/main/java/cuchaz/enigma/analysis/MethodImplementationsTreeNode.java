@@ -60,9 +60,7 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 	@Override
 	public String toString() {
 		MethodEntry translatedEntry = translator.translate(entry);
-		String className = translatedEntry.getParent().getFullName();
-		String methodName = translatedEntry.getName();
-		return className + "." + methodName + "()";
+		return translatedEntry.getFullName() + "()";
 	}
 
 	public void load(JarIndex index) {

@@ -45,7 +45,7 @@
 	"menu.view.font": "フォント...",
 	"menu.view.change.title": "変更",
 	"menu.view.change.summary": "変更は次の起動時に適用されます",
-	"menu.view.search": "検索",
+	"menu.search": "検索",
 	"menu.collab": "コラボレーション",
 	"menu.collab.connect": "サーバーに接続する",
 	"menu.collab.connect.error": "サーバーの接続でエラーが発生しました",
