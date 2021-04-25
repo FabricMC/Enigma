@@ -66,4 +66,15 @@ public enum MappingFormat {
 	public MappingsReader getReader() {
 		return reader;
 	}
+
+	public static MappingFormat[] getReadableFormats() {
+		return new MappingFormat[] {
+				ENIGMA_DIRECTORY,
+				ENIGMA_FILE,
+				TINY_V2,
+				TINY_FILE,
+				SRG_FILE,
+				ENIGMA_ZIP
+		};
+	}
 }

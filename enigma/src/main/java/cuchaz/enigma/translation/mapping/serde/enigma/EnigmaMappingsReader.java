@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -52,6 +53,9 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	DIRECTORY {
 		@Override
 		public EntryTree<EntryMapping> read(Path root, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
+			if (!Files.isDirectory(root)) {
+				throw new NotDirectoryException(root.toString());
+			}
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
 			List<Path> files = Files.walk(root).filter(f -> !Files.isDirectory(f)).filter(f -> f.toString().endsWith(".mapping")).toList();
@@ -132,8 +136,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 					mappingStack.push(pair);
 				}
 			} catch (Throwable t) {
-				t.printStackTrace();
-				throw new MappingParseException(path::toString, lineNumber + 1, t.toString());
+				throw new MappingParseException(path.toString(), lineNumber + 1, t);
 			}
 		}
 
@@ -183,7 +186,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 		for (int i = 0; i < line.length(); i++) {
 			if (line.charAt(i) == ' ') {
-				throw new MappingParseException(path::toString, lineNumber + 1, "Spaces must not be used to indent lines!");
+				throw new MappingParseException(path.toString(), lineNumber + 1, "Spaces must not be used to indent lines!");
 			}
 
 			if (line.charAt(i) != '\t') {
