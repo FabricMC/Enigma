@@ -99,6 +99,10 @@ public class EditorPanel {
 		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
 		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
+		// set unit increment to height of one line, the amount scrolled per
+		// mouse wheel rotation is then controlled by OS settings
+		this.editorScrollPane.getVerticalScrollBar().setUnitIncrement(this.editor.getFontMetrics(this.editor.getFont()).getHeight());
+
 		// init editor popup menu
 		this.popupMenu = new EditorPopupMenu(this, gui);
 		this.editor.setComponentPopupMenu(this.popupMenu.getUi());
