@@ -74,7 +74,7 @@ public class TestDeobfed {
 
 	@Test
 	public void decompile() {
-		Decompiler decompiler = Decompilers.PROCYON.create(deobfProject.getClassProvider(), new SourceSettings(false, false));
+		Decompiler decompiler = Decompilers.CFR.create(deobfProject.getClassProvider(), new SourceSettings(false, false));
 
 		decompiler.getSource("a");
 		decompiler.getSource("b");

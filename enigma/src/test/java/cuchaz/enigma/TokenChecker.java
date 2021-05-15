@@ -28,7 +28,7 @@ public class TokenChecker {
 
 	protected TokenChecker(Path path) throws IOException {
 		CachingClassProvider classProvider = new CachingClassProvider(new JarClassProvider(path));
-		decompiler = Decompilers.PROCYON.create(classProvider, new SourceSettings(false, false));
+		decompiler = Decompilers.CFR.create(classProvider, new SourceSettings(false, false));
 	}
 
 	protected String getDeclarationToken(Entry<?> entry) {

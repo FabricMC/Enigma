@@ -70,7 +70,7 @@ public class Config {
 
 	public float scaleFactor = 1.0f;
 
-	public Decompiler decompiler = Decompiler.PROCYON;
+	public Decompiler decompiler = Decompiler.CFR;
 
 	public Config() {
 		gson = new GsonBuilder()
