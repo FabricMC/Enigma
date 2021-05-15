@@ -124,9 +124,6 @@ public enum EnigmaMappingsReader implements MappingsReader {
 				MappingPair<?, RawEntryMapping> pair = parseLine(mappingStack.peek(), line);
 				if (pair != null) {
 					mappingStack.push(pair);
-					if (pair.getMapping() != null) {
-
-					}
 				}
 			} catch (Throwable t) {
 				t.printStackTrace();
