@@ -23,10 +23,10 @@ public class ImplementationsTreeCellRenderer extends DefaultTreeCellRenderer {
 
         this.setForeground(UiConfig.getTextColor());
 
-        if (value instanceof ClassImplementationsTreeNode) {
-            this.setIcon(GuiUtil.getClassIcon(this.gui, ((ClassImplementationsTreeNode) value).getClassEntry()));
-        } else if (value instanceof MethodImplementationsTreeNode) {
-            this.setIcon(GuiUtil.getMethodIcon(((MethodImplementationsTreeNode) value).getMethodEntry()));
+        if (value instanceof ClassImplementationsTreeNode node) {
+            this.setIcon(GuiUtil.getClassIcon(this.gui, node.getClassEntry()));
+        } else if (value instanceof MethodImplementationsTreeNode node) {
+            this.setIcon(GuiUtil.getMethodIcon(node.getMethodEntry()));
         }
 
         return c;

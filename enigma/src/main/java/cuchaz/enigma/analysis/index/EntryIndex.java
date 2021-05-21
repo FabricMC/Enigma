@@ -43,14 +43,14 @@ public class EntryIndex implements JarIndexer {
 	}
 
 	public boolean hasEntry(Entry<?> entry) {
-		if (entry instanceof ClassEntry) {
-			return hasClass((ClassEntry) entry);
-		} else if (entry instanceof MethodEntry) {
-			return hasMethod((MethodEntry) entry);
-		} else if (entry instanceof FieldEntry) {
-			return hasField((FieldEntry) entry);
-		} else if (entry instanceof LocalVariableEntry) {
-			return hasMethod(((LocalVariableEntry) entry).getParent());
+		if (entry instanceof ClassEntry classEntry) {
+			return hasClass(classEntry);
+		} else if (entry instanceof MethodEntry methodEntry) {
+			return hasMethod(methodEntry);
+		} else if (entry instanceof FieldEntry fieldEntry) {
+			return hasField(fieldEntry);
+		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
+			return hasMethod(localVariableEntry.getParent());
 		}
 
 		return false;
@@ -73,12 +73,12 @@ public class EntryIndex implements JarIndexer {
 
 	@Nullable
 	public AccessFlags getEntryAccess(Entry<?> entry) {
-		if (entry instanceof MethodEntry) {
-			return getMethodAccess((MethodEntry) entry);
-		} else if (entry instanceof FieldEntry) {
-			return getFieldAccess((FieldEntry) entry);
-		} else if (entry instanceof LocalVariableEntry) {
-			return getMethodAccess(((LocalVariableEntry) entry).getParent());
+		if (entry instanceof MethodEntry methodEntry) {
+			return getMethodAccess(methodEntry);
+		} else if (entry instanceof FieldEntry fieldEntry) {
+			return getFieldAccess(fieldEntry);
+		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
+			return getMethodAccess(localVariableEntry.getParent());
 		}
 
 		return null;

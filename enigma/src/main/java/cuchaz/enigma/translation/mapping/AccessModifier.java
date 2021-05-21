@@ -10,16 +10,11 @@ public enum AccessModifier {
 	}
 
 	public AccessFlags transform(AccessFlags access) {
-		switch (this) {
-			case PUBLIC:
-				return access.setPublic();
-			case PROTECTED:
-				return access.setProtected();
-			case PRIVATE:
-				return access.setPrivate();
-			case UNCHANGED:
-			default:
-				return access;
-		}
+		return switch (this) {
+			case PUBLIC -> access.setPublic();
+			case PROTECTED -> access.setProtected();
+			case PRIVATE -> access.setPrivate();
+			default -> access;
+		};
 	}
 }

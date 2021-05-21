@@ -216,11 +216,9 @@ public class Gui implements LanguageChangeListener {
 					}
 
 					Object node = path.getLastPathComponent();
-					if (node instanceof ClassImplementationsTreeNode) {
-						ClassImplementationsTreeNode classNode = (ClassImplementationsTreeNode) node;
+					if (node instanceof ClassImplementationsTreeNode classNode) {
 						controller.navigateTo(classNode.getClassEntry());
-					} else if (node instanceof MethodImplementationsTreeNode) {
-						MethodImplementationsTreeNode methodNode = (MethodImplementationsTreeNode) node;
+					} else if (node instanceof MethodImplementationsTreeNode methodNode) {
 						controller.navigateTo(methodNode.getMethodEntry());
 					}
 				}
@@ -248,8 +246,7 @@ public class Gui implements LanguageChangeListener {
 					}
 
 					Object node = path.getLastPathComponent();
-					if (node instanceof ReferenceTreeNode) {
-						ReferenceTreeNode<Entry<?>, Entry<?>> referenceNode = ((ReferenceTreeNode<Entry<?>, Entry<?>>) node);
+					if (node instanceof ReferenceTreeNode referenceNode) {
 						if (referenceNode.getReference() != null) {
 							controller.navigateTo(referenceNode.getReference());
 						} else {

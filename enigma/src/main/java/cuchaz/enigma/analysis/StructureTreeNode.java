@@ -49,7 +49,7 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
             }
 
             // don't add constructor methods if hideDeobfuscated is true
-            if (hideDeobfuscated && (child instanceof MethodEntry) && ((MethodEntry) child).isConstructor()) {
+            if (hideDeobfuscated && (child instanceof MethodEntry method) && method.isConstructor()) {
                 continue;
             }
 
@@ -95,12 +95,12 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
     public String toHtml() {
         List<String> modifiers = new ArrayList<>();
 
-        if (this.entry instanceof DefEntry<?>) {
-            AccessFlags access = ((DefEntry<?>) this.entry).getAccess();
+        if (this.entry instanceof DefEntry<?> defEntry) {
+            AccessFlags access = defEntry.getAccess();
             boolean isInterfaceMethod = false;
 
-            if (this.entry instanceof MethodEntry && this.entry.getParent() instanceof ClassDefEntry) {
-                isInterfaceMethod = ((ClassDefEntry) this.entry.getParent()).getAccess().isInterface();
+            if (this.entry instanceof MethodEntry && this.entry.getParent() instanceof ClassDefEntry parent) {
+                isInterfaceMethod = parent.getAccess().isInterface();
             }
 
             if (access.isStatic() && !access.isEnum()) {

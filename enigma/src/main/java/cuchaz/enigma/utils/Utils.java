@@ -97,17 +97,4 @@ public class Utils {
             l.unlock();
         }
     }
-
-
-    public static boolean isBlank(String input) {
-        if (input == null) {
-            return true;
-        }
-        for (int i = 0; i < input.length(); i++) {
-            if (!Character.isWhitespace(input.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

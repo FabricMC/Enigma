@@ -70,8 +70,7 @@ public class ClassReferenceTreeNode extends DefaultMutableTreeNode
 
 		if (recurse && this.children != null) {
 			for (Object child : this.children) {
-				if (child instanceof ClassReferenceTreeNode) {
-					ClassReferenceTreeNode node = (ClassReferenceTreeNode) child;
+				if (child instanceof ClassReferenceTreeNode node) {
 
 					// don't recurse into ancestor
 					Set<Entry<?>> ancestors = Sets.newHashSet();

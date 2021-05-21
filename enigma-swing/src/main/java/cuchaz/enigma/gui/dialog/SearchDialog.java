@@ -142,30 +142,23 @@ public class SearchDialog {
 		final EntryIndex entryIndex = parent.getController().project.getJarIndex().getEntryIndex();
 
 		switch (type) {
-			default:
-			case CLASS:
-				entryIndex.getClasses().parallelStream()
-						.filter(e -> !e.isInnerClass())
-						.map(e -> SearchEntryImpl.from(e, parent.getController()))
-						.map(SearchUtil.Entry::from)
-						.sequential()
-						.forEach(su::add);
-				break;
-			case METHOD:
-				entryIndex.getMethods().parallelStream()
-						.filter(e -> !e.isConstructor() && !entryIndex.getMethodAccess(e).isSynthetic())
-						.map(e -> SearchEntryImpl.from(e, parent.getController()))
-						.map(SearchUtil.Entry::from)
-						.sequential()
-						.forEach(su::add);
-				break;
-			case FIELD:
-				entryIndex.getFields().parallelStream()
-						.map(e -> SearchEntryImpl.from(e, parent.getController()))
-						.map(SearchUtil.Entry::from)
-						.sequential()
-						.forEach(su::add);
-				break;
+			case CLASS -> entryIndex.getClasses().parallelStream()
+					.filter(e -> !e.isInnerClass())
+					.map(e -> SearchEntryImpl.from(e, parent.getController()))
+					.map(SearchUtil.Entry::from)
+					.sequential()
+					.forEach(su::add);
+			case METHOD -> entryIndex.getMethods().parallelStream()
+					.filter(e -> !e.isConstructor() && !entryIndex.getMethodAccess(e).isSynthetic())
+					.map(e -> SearchEntryImpl.from(e, parent.getController()))
+					.map(SearchUtil.Entry::from)
+					.sequential()
+					.forEach(su::add);
+			case FIELD -> entryIndex.getFields().parallelStream()
+					.map(e -> SearchEntryImpl.from(e, parent.getController()))
+					.map(SearchUtil.Entry::from)
+					.sequential()
+					.forEach(su::add);
 		}
 
 		updateList();
@@ -290,10 +283,10 @@ public class SearchDialog {
 				secondaryName.setToolTipText(value.obf.getFullName());
 			}
 
-			if (value.obf instanceof ClassEntry) {
-				mainName.setIcon(GuiUtil.getClassIcon(gui, (ClassEntry) value.obf));
-			} else if (value.obf instanceof MethodEntry) {
-				mainName.setIcon(GuiUtil.getMethodIcon((MethodEntry) value.obf));
+			if (value.obf instanceof ClassEntry classEntry) {
+				mainName.setIcon(GuiUtil.getClassIcon(gui, classEntry));
+			} else if (value.obf instanceof MethodEntry methodEntry) {
+				mainName.setIcon(GuiUtil.getMethodIcon(methodEntry));
 			} else if (value.obf instanceof FieldEntry) {
 				mainName.setIcon(GuiUtil.FIELD_ICON);
 			}

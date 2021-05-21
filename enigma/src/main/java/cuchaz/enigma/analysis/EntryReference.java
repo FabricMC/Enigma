@@ -91,7 +91,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	public Entry<?> getNameableEntry() {
-		if (entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor()) {
+		if (entry instanceof MethodEntry method && method.isConstructor()) {
 			// renaming a constructor really means renaming the class
 			return entry.getContainingClass();
 		}
@@ -112,7 +112,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 
 	@Override
 	public boolean equals(Object other) {
-		return other instanceof EntryReference && equals((EntryReference<?, ?>) other);
+		return other instanceof EntryReference reference && equals(reference);
 	}
 
 	public boolean equals(EntryReference<?, ?> other) {

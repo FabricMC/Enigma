@@ -93,13 +93,10 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 
 			return progress;
 		}, SwingUtilities::invokeLater).thenAcceptAsync(progress -> {
-			// TODO use "try (progress)" with Java 9
-			try {
+			try (progress) {
 				runnable.run(progress);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
-			} finally {
-				progress.close();
 			}
 		});
 	}

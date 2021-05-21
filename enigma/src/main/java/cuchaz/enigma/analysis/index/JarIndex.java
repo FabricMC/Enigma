@@ -44,7 +44,7 @@ public class JarIndex implements JarIndexer {
 		this.referenceIndex = referenceIndex;
 		this.bridgeMethodIndex = bridgeMethodIndex;
 		this.packageVisibilityIndex = packageVisibilityIndex;
-		this.indexers = Arrays.asList(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
+		this.indexers = List.of(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 		this.entryResolver = new IndexEntryResolver(this);
 		this.childrenByClass = ArrayListMultimap.create();
 	}

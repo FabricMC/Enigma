@@ -114,7 +114,7 @@ public class InterpreterPair<V extends Value, W extends Value> extends Interpret
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof InterpreterPair.PairValue && Objects.equals(left, ((PairValue) o).left) && Objects.equals(right, ((PairValue) o).right);
+            return o instanceof InterpreterPair.PairValue pairValue && Objects.equals(left, pairValue.left) && Objects.equals(right, pairValue.right);
         }
 
         @Override
