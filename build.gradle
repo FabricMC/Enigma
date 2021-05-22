@@ -1,10 +1,12 @@
 plugins {
     id 'maven-publish'
+    id 'me.modmuss50.remotesign' version '0.1.0'
 }
 
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
+    apply plugin: 'me.modmuss50.remotesign'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -23,8 +25,8 @@ subprojects {
         testImplementation 'org.hamcrest:hamcrest-all:1.3'
     }
 
-    group = 'cuchaz'
-    version = '0.27.3'
+    group = 'net.fabricmc'
+    version = '1.0.0'
 
     version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
 
@@ -52,7 +54,49 @@ subprojects {
                 artifactId project.name
                 version project.version
                 from components.java
+
+                pom {
+                    name = project.name
+                    description = 'A deobfuscation/remapping tool for Java software.'
+                    url = 'https://github.com/FabricMC/Enigma'
+
+                    scm {
+                        connection = "scm:git:https://github.com/FabricMC/Enigma.git"
+                        developerConnection = "scm:git:git@github.com:FabricMC/Enigma.git"
+                        url = "https://github.com/FabricMC/Enigma"
+                    }
+
+                    issueManagement {
+                        system = "GitHub"
+                        url = "https://github.com/FabricMC/Enigma/issues"
+                    }
+
+                    licenses {
+                        license {
+                            name = 'GNU Lesser General Public License v3.0'
+                            url = 'https://www.gnu.org/licenses/lgpl-3.0.en.html'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = "modmuss50"
+                            name = "modmuss50"
+                            email = "modmuss50@fabricmc.net"
+                        }
+                    }
+                }
             }
+        }
+    }
+
+    def ENV = System.getenv()
+    if (ENV.SIGNING_SERVER) {
+        remoteSign {
+            requestUrl ENV.SIGNING_SERVER
+            pgpAuthKey ENV.SIGNING_PGP_KEY
+
+            sign publishing.publications.getByName(project.name)
         }
     }
 }
@@ -69,6 +113,17 @@ allprojects {
                     credentials {
                         username ENV.MAVEN_USERNAME
                         password ENV.MAVEN_PASSWORD
+                    }
+                }
+            }
+
+            if (ENV.MAVEN_CENTRAL_URL) {
+                maven {
+                    name "central"
+                    url ENV.MAVEN_CENTRAL_URL
+                    credentials {
+                        username ENV.MAVEN_CENTRAL_USERNAME
+                        password ENV.MAVEN_CENTRAL_PASSWORD
                     }
                 }
             }
