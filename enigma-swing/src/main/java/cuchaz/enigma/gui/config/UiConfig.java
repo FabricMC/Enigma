@@ -102,7 +102,7 @@ public final class UiConfig {
 	}
 
 	public static Decompiler getDecompiler() {
-		return ui.data().section("Decompiler").setIfAbsentEnum(Decompiler::valueOf, "Current", Decompiler.PROCYON);
+		return ui.data().section("Decompiler").setIfAbsentEnum(Decompiler::valueOf, "Current", Decompiler.CFR);
 	}
 
 	public static void setDecompiler(Decompiler d) {
