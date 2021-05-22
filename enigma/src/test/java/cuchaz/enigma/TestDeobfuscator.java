@@ -35,7 +35,7 @@ public class TestDeobfuscator {
 	@Test
 	public void decompileClass() throws Exception {
 		EnigmaProject project = openProject();
-		Decompiler decompiler = Decompilers.PROCYON.create(project.getClassProvider(), new SourceSettings(false, false));
+		Decompiler decompiler = Decompilers.CFR.create(project.getClassProvider(), new SourceSettings(false, false));
 
 		decompiler.getSource("a").asString();
 	}
