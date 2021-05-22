@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 public enum EnigmaMappingsReader implements MappingsReader {
 	FILE {
@@ -52,7 +51,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			List<Path> files = Files.walk(root)
 					.filter(f -> !Files.isDirectory(f))
 					.filter(f -> f.toString().endsWith(".mapping"))
-					.collect(Collectors.toList());
+					.toList();
 
 			progress.init(files.size(), I18n.translate("progress.mappings.enigma_directory.loading"));
 			int step = 0;

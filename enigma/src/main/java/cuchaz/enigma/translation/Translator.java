@@ -36,7 +36,7 @@ public interface Translator {
 	default <T extends Translatable> Collection<T> translate(Collection<T> translatable) {
 		return translatable.stream()
 				.map(this::translate)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	default <T extends Translatable> Set<T> translate(Set<T> translatable) {

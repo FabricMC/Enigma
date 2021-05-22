@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cuchaz.enigma.ProgressListener;
@@ -57,7 +56,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			Collection<ClassEntry> classes = mappings.getRootNodes()
 					.filter(entry -> entry.getEntry() instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry.getEntry())
-					.collect(Collectors.toList());
+					.toList();
 
 			progress.init(classes.size(), I18n.translate("progress.mappings.enigma_file.writing"));
 
@@ -78,7 +77,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			Collection<ClassEntry> changedClasses = delta.getChangedRoots()
 					.filter(entry -> entry instanceof ClassEntry)
 					.map(entry -> (ClassEntry) entry)
-					.collect(Collectors.toList());
+					.toList();
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
 
@@ -120,7 +119,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 				deletedClassStream = deletedClassStream.map(oldMappingTranslator::translate);
 			}
 
-			Collection<ClassEntry> deletedClasses = deletedClassStream.collect(Collectors.toList());
+			Collection<ClassEntry> deletedClasses = deletedClassStream.toList();
 
 			for (ClassEntry classEntry : deletedClasses) {
 				try {
@@ -309,9 +308,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 	private String indent(String line, int depth) {
 		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < depth; i++) {
-			builder.append("\t");
-		}
+		builder.append("\t".repeat(Math.max(0, depth)));
 		builder.append(line.trim());
 		return builder.toString();
 	}

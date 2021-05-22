@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -46,7 +45,7 @@ public class Utils {
 
     public static void delete(Path path) throws IOException {
         if (Files.exists(path)) {
-            for (Path p : Files.walk(path).sorted(Comparator.reverseOrder()).collect(Collectors.toList())) {
+            for (Path p : Files.walk(path).sorted(Comparator.reverseOrder()).toList()) {
                 Files.delete(p);
             }
         }

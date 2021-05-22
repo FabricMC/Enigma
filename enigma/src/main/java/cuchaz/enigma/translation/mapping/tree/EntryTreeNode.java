@@ -5,7 +5,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.List;
 
 public interface EntryTreeNode<T> {
 	@Nullable
@@ -28,10 +28,10 @@ public interface EntryTreeNode<T> {
 		return nodes;
 	}
 
-	default Collection<Entry<?>> getChildrenRecursively() {
+	default List<? extends Entry<?>> getChildrenRecursively() {
 		return getNodesRecursively().stream()
 				.map(EntryTreeNode::getEntry)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	default boolean hasValue() {
