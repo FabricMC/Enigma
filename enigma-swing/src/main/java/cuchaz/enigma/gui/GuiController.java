@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.swing.JOptionPane;
@@ -311,7 +310,7 @@ public class GuiController implements ClientPacketHandler {
 		return mapper.getObfResolver().resolveReference(reference, ResolutionStrategy.RESOLVE_CLOSEST)
 				.stream()
 				.flatMap(r -> index.getReferenceTokens(r).stream())
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	public void openPreviousReference() {

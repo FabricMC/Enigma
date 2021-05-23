@@ -18,14 +18,9 @@ import com.google.gson.Gson;
 public class I18n {
 	public static final String DEFAULT_LANGUAGE = "en_us";
 	private static final Gson GSON = new Gson();
-	private static Map<String, String> translations = Maps.newHashMap();
-	private static Map<String, String> defaultTranslations = Maps.newHashMap();
+	private static Map<String, String> defaultTranslations = load(DEFAULT_LANGUAGE);
+	private static Map<String, String> translations = defaultTranslations;
 	private static Map<String, String> languageNames = Maps.newHashMap();
-
-	static {
-		defaultTranslations = load(DEFAULT_LANGUAGE);
-		translations = defaultTranslations;
-	}
 
 	@SuppressWarnings("unchecked")
 	public static Map<String, String> load(String language) {

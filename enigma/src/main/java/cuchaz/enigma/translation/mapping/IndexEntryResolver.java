@@ -16,7 +16,6 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class IndexEntryResolver implements EntryResolver {
 	private final EntryIndex entryIndex;
@@ -54,7 +53,7 @@ public class IndexEntryResolver implements EntryResolver {
 				if (!resolvedChildren.isEmpty()) {
 					return resolvedChildren.stream()
 							.map(resolvedChild -> (E) entry.replaceAncestor(classChild, resolvedChild))
-							.collect(Collectors.toList());
+							.toList();
 				}
 			}
 		}

@@ -13,7 +13,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 	private EntryTree<EntryMapping> mappings;
@@ -55,7 +54,7 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 
 	@Override
 	public void write(DataOutput output) throws IOException {
-		List<EntryTreeNode<EntryMapping>> roots = mappings.getRootNodes().collect(Collectors.toList());
+		List<EntryTreeNode<EntryMapping>> roots = mappings.getRootNodes().toList();
 		output.writeInt(roots.size());
 		for (EntryTreeNode<EntryMapping> node : roots) {
 			writeEntryTreeNode(output, node);

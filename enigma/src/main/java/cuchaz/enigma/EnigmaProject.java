@@ -120,11 +120,11 @@ public class EnigmaProject {
 	}
 
 	public boolean isRenamable(Entry<?> obfEntry) {
-		if (obfEntry instanceof MethodEntry) {
+		if (obfEntry instanceof MethodEntry obfMethodEntry) {
 			// HACKHACK: Object methods are not obfuscated identifiers
-			MethodEntry obfMethodEntry = (MethodEntry) obfEntry;
 			String name = obfMethodEntry.getName();
 			String sig = obfMethodEntry.getDesc().toString();
+			//TODO replace with a map or check if declaring class is java.lang.Object
 			if (name.equals("clone") && sig.equals("()Ljava/lang/Object;")) {
 				return false;
 			} else if (name.equals("equals") && sig.equals("(Ljava/lang/Object;)Z")) {
@@ -249,14 +249,14 @@ public class EnigmaProject {
 		}
 
 		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
-			List<ClassSource> decompiled = this.decompileStream(progress, decompilerService, errorStrategy).collect(Collectors.toList());
+			List<ClassSource> decompiled = this.decompileStream(progress, decompilerService, errorStrategy).toList();
 			return new SourceExport(decompiled);
 		}
 
 		public Stream<ClassSource> decompileStream(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
 			Collection<ClassNode> classes = this.compiled.values().stream()
 					.filter(classNode -> classNode.name.indexOf('$') == -1)
-					.collect(Collectors.toList());
+					.toList();
 
 			progress.init(classes.size(), I18n.translate("progress.classes.decompiling"));
 

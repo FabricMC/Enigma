@@ -10,20 +10,11 @@ public class PrintValidatable implements Validatable {
 	public void addMessage(ParameterizedMessage message) {
 		String text = message.getText();
 		String longText = message.getLongText();
-		String type;
-		switch (message.message.type) {
-			case INFO:
-				type = "info";
-				break;
-			case WARNING:
-				type = "warning";
-				break;
-			case ERROR:
-				type = "error";
-				break;
-			default:
-				throw new IllegalStateException("unreachable");
-		}
+		String type = switch (message.message.type) {
+			case INFO -> "info";
+			case WARNING -> "warning";
+			case ERROR -> "error";
+		};
 		System.out.printf("%s: %s\n", type, text);
 		if (!longText.isEmpty()) {
 			Arrays.stream(longText.split("\n")).forEach(s -> System.out.printf("  %s\n", s));

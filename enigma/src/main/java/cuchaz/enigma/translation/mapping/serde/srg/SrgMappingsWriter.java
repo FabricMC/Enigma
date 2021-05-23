@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public enum SrgMappingsWriter implements MappingsWriter {
 	INSTANCE;
@@ -44,9 +43,9 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		List<String> fieldLines = new ArrayList<>();
 		List<String> methodLines = new ArrayList<>();
 
-		Collection<Entry<?>> rootEntries = Lists.newArrayList(mappings).stream()
+		List<? extends Entry<?>> rootEntries = Lists.newArrayList(mappings).stream()
 				.map(EntryTreeNode::getEntry)
-				.collect(Collectors.toList());
+				.toList();
 		progress.init(rootEntries.size(), I18n.translate("progress.mappings.srg_file.generating"));
 
 		int steps = 0;
@@ -111,7 +110,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		return entry.getParent().getFullName() + "/" + entry.getName();
 	}
 
-	private Collection<Entry<?>> sorted(Iterable<Entry<?>> iterable) {
+	private Collection<Entry<?>> sorted(Iterable<? extends Entry<?>> iterable) {
 		ArrayList<Entry<?>> sorted = Lists.newArrayList(iterable);
 		sorted.sort(Comparator.comparing(Entry::getName));
 		return sorted;

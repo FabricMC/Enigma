@@ -9,7 +9,6 @@ import org.objectweb.asm.tree.analysis.Value;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class InterpreterPair<V extends Value, W extends Value> extends Interpreter<InterpreterPair.PairValue<V, W>> {
     private final Interpreter<V> left;
@@ -72,8 +71,8 @@ public class InterpreterPair<V extends Value, W extends Value> extends Interpret
     @Override
     public PairValue<V, W> naryOperation(AbstractInsnNode insn, List<? extends PairValue<V, W>> values) throws AnalyzerException {
         return pair(
-                left.naryOperation(insn, values.stream().map(v -> v.left).collect(Collectors.toList())),
-                right.naryOperation(insn, values.stream().map(v -> v.right).collect(Collectors.toList()))
+                left.naryOperation(insn, values.stream().map(v -> v.left).toList()),
+                right.naryOperation(insn, values.stream().map(v -> v.right).toList())
         );
     }
 
@@ -114,7 +113,7 @@ public class InterpreterPair<V extends Value, W extends Value> extends Interpret
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof InterpreterPair.PairValue && Objects.equals(left, ((PairValue) o).left) && Objects.equals(right, ((PairValue) o).right);
+            return o instanceof InterpreterPair.PairValue pairValue && Objects.equals(left, pairValue.left) && Objects.equals(right, pairValue.right);
         }
 
         @Override

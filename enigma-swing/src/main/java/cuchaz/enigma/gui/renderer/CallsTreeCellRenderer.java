@@ -31,10 +31,10 @@ public class CallsTreeCellRenderer extends DefaultTreeCellRenderer {
             }
         // if the node represents the called entry
         } else {
-            if (value instanceof ClassReferenceTreeNode) {
-                this.setIcon(GuiUtil.getClassIcon(this.gui, ((ClassReferenceTreeNode) value).getEntry()));
-            } else if (value instanceof MethodReferenceTreeNode) {
-                this.setIcon(GuiUtil.getMethodIcon(((MethodReferenceTreeNode) value).getEntry()));
+            if (value instanceof ClassReferenceTreeNode node) {
+                this.setIcon(GuiUtil.getClassIcon(this.gui, node.getEntry()));
+            } else if (value instanceof MethodReferenceTreeNode node) {
+                this.setIcon(GuiUtil.getMethodIcon(node.getEntry()));
             } else if (value instanceof FieldReferenceTreeNode) {
                 this.setIcon(GuiUtil.FIELD_ICON);
             }

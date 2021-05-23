@@ -9,7 +9,6 @@ import cuchaz.enigma.network.EnigmaServer;
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.ServerPacketHandler;
 import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.utils.Utils;
 import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
@@ -54,7 +53,7 @@ public class ChangeDocsC2SPacket implements Packet<ServerPacketHandler> {
 		if (mapping == null) {
 			mapping = new EntryMapping(handler.getServer().getMappings().deobfuscate(entry).getName());
 		}
-		handler.getServer().getMappings().mapFromObf(vc, entry, mapping.withDocs(Utils.isBlank(newDocs) ? null : newDocs));
+		handler.getServer().getMappings().mapFromObf(vc, entry, mapping.withDocs(newDocs.isBlank() ? null : newDocs));
 
 		if (!vc.canProceed()) return;
 

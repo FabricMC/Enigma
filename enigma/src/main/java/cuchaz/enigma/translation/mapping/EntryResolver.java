@@ -7,7 +7,6 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public interface EntryResolver {
 	<E extends Entry<?>> Collection<E> resolveEntry(E entry, ResolutionStrategy strategy);
@@ -21,11 +20,11 @@ public interface EntryResolver {
 		if (reference.context != null) {
 			Collection<C> context = resolveEntry(reference.context, strategy);
 			return Streams.zip(entry.stream(), context.stream(), (e, c) -> new EntryReference<>(e, c, reference))
-					.collect(Collectors.toList());
+					.toList();
 		} else {
 			return entry.stream()
 					.map(e -> new EntryReference<>(e, null, reference))
-					.collect(Collectors.toList());
+					.toList();
 		}
 	}
 

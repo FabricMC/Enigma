@@ -11,7 +11,6 @@
 
 package cuchaz.enigma.translation.mapping;
 
-import java.util.Arrays;
 import java.util.List;
 
 import cuchaz.enigma.utils.validation.Message;
@@ -23,12 +22,13 @@ public final class IdentifierValidation {
 	private IdentifierValidation() {
 	}
 
-	private static final List<String> ILLEGAL_IDENTIFIERS = Arrays.asList(
-			"abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package", "synchronized",
-			"boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw", "byte",
-			"else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch",
-			"extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally",
-			"long", "strictfp", "volatile", "const", "float", "native", "super", "while", "true", "false", "null", "_"
+	private static final List<String> ILLEGAL_IDENTIFIERS = List.of(
+			"abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const",
+			"continue", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally",
+			"float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long",
+			"native", "new", "null", "package", "private", "protected", "public", "return", "short", "static",
+			"strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try",
+			"void", "volatile", "while", "_"
 	);
 
 	public static boolean validateClassName(ValidationContext vc, String name, boolean isInner) {
