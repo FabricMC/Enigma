@@ -102,7 +102,10 @@ public class Main {
 			EnigmaProfile parsedProfile = EnigmaProfile.read(options.valueOf(profile));
 
 			I18n.setLanguage(UiConfig.getLanguage());
-			System.setProperty("apple.laf.useScreenMenuBar", "true");
+			setDefaultSystemProperty("apple.laf.useScreenMenuBar", "true");
+			setDefaultSystemProperty("awt.useSystemAAFontSettings", "on");
+			setDefaultSystemProperty("swing.aatext", "true");
+
 			Themes.setupTheme();
 
 			Gui gui = new Gui(parsedProfile, editables);
@@ -145,6 +148,10 @@ public class Main {
 			System.out.println();
 			parser.printHelpOn(System.out);
 		}
+	}
+
+	private static void setDefaultSystemProperty(String property, String value) {
+		System.setProperty(property, System.getProperty(property, value));
 	}
 
 	public static class PathConverter implements ValueConverter<Path> {
