@@ -155,8 +155,8 @@ public class EditorPopupMenu {
 		this.editJavadocItem.setEnabled(isRenamable);
 		this.showInheritanceItem.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.showImplementationsItem.setEnabled(isClassEntry || isMethodEntry);
-		this.showCallsItem.setEnabled(isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry);
-		this.showCallsSpecificItem.setEnabled(isMethodEntry);
+		this.showCallsItem.setEnabled(isRenamable && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
+		this.showCallsSpecificItem.setEnabled(isRenamable && isMethodEntry);
 		this.openEntryItem.setEnabled(isRenamable && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
 		this.openPreviousItem.setEnabled(controller.hasPreviousReference());
 		this.openNextItem.setEnabled(controller.hasNextReference());
