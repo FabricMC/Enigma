@@ -246,13 +246,7 @@ public final class ClassHandleProvider {
 			return CompletableFuture.supplyAsync(() -> {
 				if (decompileVersion.get() != v) return null;
 
-				Result<Source, ClassHandleError> _uncommentedSource;
-				try {
-					_uncommentedSource = Result.ok(p.decompiler.getSource(entry.getFullName()));
-				} catch (Throwable e) {
-					return Result.err(ClassHandleError.decompile(e));
-				}
-				Result<Source, ClassHandleError> uncommentedSource = _uncommentedSource;
+				Result<Source, ClassHandleError> uncommentedSource = Result.ok(p.decompiler.getSource(entry.getFullName()));
 				Entry.this.uncommentedSource = uncommentedSource;
 				Entry.this.waitingUncommentedSources.forEach(f -> f.complete(uncommentedSource));
 				Entry.this.waitingUncommentedSources.clear();
@@ -281,26 +275,22 @@ public final class ClassHandleProvider {
 					DecompiledClassSource source = new DecompiledClassSource(entry, index);
 					return Result.ok(source);
 				});
-			}, p.pool);
+			}, p.pool).exceptionally(e -> Result.err(ClassHandleError.decompile(e)));
 		}
 
 		private void continueMapSource(CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> f) {
 			int v = mappedVersion.incrementAndGet();
-			f.thenAcceptAsync(res -> {
-				if (res == null || mappedVersion.get() != v) return;
-				res = res.andThen(source -> {
-					try {
-						DecompiledClassSource remappedSource = source.remapSource(p.project, p.project.getMapper().getDeobfuscator());
-						return Result.ok(remappedSource);
-					} catch (Throwable e) {
-						return Result.err(ClassHandleError.remap(e));
-					}
-				});
+			f.thenApplyAsync(res -> {
+				if (res == null || mappedVersion.get() != v) return null;
+				return res.andThen(source -> Result.ok(source.remapSource(p.project, p.project.getMapper().getDeobfuscator())));
+			}, p.pool).whenComplete((res, e) -> {
+				if (e != null) res = Result.err(ClassHandleError.remap(e));
+				if (res == null) return;
 				Entry.this.source = res;
 				Entry.this.waitingSources.forEach(s -> s.complete(source));
 				Entry.this.waitingSources.clear();
 				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onMappedSourceChanged(source));
-			}, p.pool);
+			});
 		}
 
 		public void closeHandle(ClassHandleImpl classHandle) {
