@@ -41,24 +41,26 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	public Void visitInvocationExpression(InvocationExpression node, SourceIndex index) {
 		MemberReference ref = node.getUserData(Keys.MEMBER_REFERENCE);
 
-		// get the behavior entry
-		ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
-		MethodEntry methodEntry = null;
-		if (ref instanceof MethodReference) {
-			methodEntry = new MethodEntry(classEntry, ref.getName(), new MethodDescriptor(ref.getErasedSignature()));
-		}
-		if (methodEntry != null) {
-			// get the node for the token
-			AstNode tokenNode = null;
-			if (node.getTarget() instanceof MemberReferenceExpression) {
-				tokenNode = ((MemberReferenceExpression) node.getTarget()).getMemberNameToken();
-			} else if (node.getTarget() instanceof SuperReferenceExpression) {
-				tokenNode = node.getTarget();
-			} else if (node.getTarget() instanceof ThisReferenceExpression) {
-				tokenNode = node.getTarget();
+		if (ref != null) {
+			// get the behavior entry
+			ClassEntry classEntry = new ClassEntry(ref.getDeclaringType().getInternalName());
+			MethodEntry methodEntry = null;
+			if (ref instanceof MethodReference) {
+				methodEntry = new MethodEntry(classEntry, ref.getName(), new MethodDescriptor(ref.getErasedSignature()));
 			}
-			if (tokenNode != null) {
-				index.addReference(TokenFactory.createToken(index, tokenNode), methodEntry, this.methodEntry);
+			if (methodEntry != null) {
+				// get the node for the token
+				AstNode tokenNode = null;
+				if (node.getTarget() instanceof MemberReferenceExpression) {
+					tokenNode = ((MemberReferenceExpression) node.getTarget()).getMemberNameToken();
+				} else if (node.getTarget() instanceof SuperReferenceExpression) {
+					tokenNode = node.getTarget();
+				} else if (node.getTarget() instanceof ThisReferenceExpression) {
+					tokenNode = node.getTarget();
+				}
+				if (tokenNode != null) {
+					index.addReference(TokenFactory.createToken(index, tokenNode), methodEntry, this.methodEntry);
+				}
 			}
 		}
 
