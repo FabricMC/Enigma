@@ -300,7 +300,11 @@ public final class ClassHandleProvider {
 				Entry.this.waitingSources.forEach(s -> s.complete(source));
 				Entry.this.waitingSources.clear();
 				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onMappedSourceChanged(source));
-			}, p.pool);
+			}, p.pool)
+			.exceptionally(exc -> {
+				exc.printStackTrace();
+				return null;
+			});
 		}
 
 		public void closeHandle(ClassHandleImpl classHandle) {
