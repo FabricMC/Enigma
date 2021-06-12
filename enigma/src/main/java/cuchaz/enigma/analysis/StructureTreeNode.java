@@ -1,7 +1,5 @@
 package cuchaz.enigma.analysis;
 
-import com.google.common.collect.Comparators;
-import com.google.gson.internal.Streams;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.translation.TranslateResult;

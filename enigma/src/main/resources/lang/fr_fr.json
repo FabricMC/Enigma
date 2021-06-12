@@ -112,10 +112,6 @@
 
 	"popup.copied": "Copié !",
 
-	"structure.options.sorting": "Ordre de tri",
-	"structure.options.sorting.default": "Par défaut",
-	"structure.options.sorting.a_z": "A à Z",
-	"structure.options.sorting.z_a": "Z à A",
 	"structure.options.obfuscation": "Visibilité de l'obfuscation",
 	"structure.options.obfuscation.all": "Tous",
 	"structure.options.obfuscation.obfuscated": "Seulement obfusqués",
@@ -124,6 +120,10 @@
 	"structure.options.documentation.all": "Tous",
 	"structure.options.documentation.documented": "Seulement documentés",
 	"structure.options.documentation.non_documented": "Seulement non documentés",
+	"structure.options.sorting": "Ordre de tri",
+	"structure.options.sorting.default": "Par défaut",
+	"structure.options.sorting.a_z": "A à Z",
+	"structure.options.sorting.z_a": "Z à A",
 
 	"log_panel.messages": "Messages",
 	"log_panel.users": "Utilisateurs",
