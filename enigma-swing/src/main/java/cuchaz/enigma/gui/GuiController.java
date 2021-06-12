@@ -396,9 +396,9 @@ public class GuiController implements ClientPacketHandler {
 		chp.invalidateMapped();
 	}
 
-	public StructureTreeNode getClassStructure(ClassEntry entry, boolean hideDeobfuscated) {
+	public StructureTreeNode getClassStructure(ClassEntry entry, StructureTreeOptions options) {
 		StructureTreeNode rootNode = new StructureTreeNode(this.project, entry, entry);
-		rootNode.load(this.project, hideDeobfuscated);
+		rootNode.load(this.project, options);
 		return rootNode;
 	}
 
