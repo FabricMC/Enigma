@@ -41,17 +41,17 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
             case ALL -> children;
             case OBFUSCATED -> children
                     // remove deobfuscated members if only obfuscated, unless it's an inner class
-                    .filter(e -> !(e instanceof ClassEntry) && project.isObfuscated(e))
+                    .filter(e -> (e instanceof ClassEntry) || project.isObfuscated(e))
                     // remove constructor methods if only obfuscated
                     .filter(e -> !((e instanceof MethodEntry method) && method.isConstructor()));
-            case DEOBFUSCATED -> children.filter(e -> !(e instanceof ClassEntry) && !project.isObfuscated(e));
+            case DEOBFUSCATED -> children.filter(e -> (e instanceof ClassEntry) || !project.isObfuscated(e));
         };
 
         children = switch (options.documentationVisibility()) {
             case ALL -> children;
             // TODO remove EntryRemapper.deobfuscate() calls when javadocs will no longer be tied to deobfuscation
-            case DOCUMENTED -> children.filter(e -> project.getMapper().deobfuscate(e).getJavadocs() != null && !project.getMapper().deobfuscate(e).getJavadocs().isBlank());
-            case NON_DOCUMENTED -> children.filter(e -> project.getMapper().deobfuscate(e).getJavadocs() == null || project.getMapper().deobfuscate(e).getJavadocs().isBlank());
+            case DOCUMENTED -> children.filter(e -> (e instanceof ClassEntry) || (project.getMapper().deobfuscate(e).getJavadocs() != null && !project.getMapper().deobfuscate(e).getJavadocs().isBlank()));
+            case NON_DOCUMENTED -> children.filter(e -> (e instanceof ClassEntry) || (project.getMapper().deobfuscate(e).getJavadocs() == null || project.getMapper().deobfuscate(e).getJavadocs().isBlank()));
         };
 
         children = switch (options.sortingOrder()) {
