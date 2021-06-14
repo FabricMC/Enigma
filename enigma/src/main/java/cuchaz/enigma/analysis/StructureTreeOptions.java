@@ -1,7 +1,5 @@
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.utils.I18n;
-
 public record StructureTreeOptions(
         ObfuscationVisibility obfuscationVisibility,
         DocumentationVisibility documentationVisibility,
@@ -18,9 +16,8 @@ public record StructureTreeOptions(
             this.key = key;
         }
 
-        @Override
-        public String toString() {
-            return I18n.translate("structure.options.sorting." + this.key);
+        public String getKey() {
+            return this.key;
         }
     }
 
@@ -35,9 +32,8 @@ public record StructureTreeOptions(
             this.key = key;
         }
 
-        @Override
-        public String toString() {
-            return I18n.translate("structure.options.obfuscation." + this.key);
+        public String getKey() {
+            return this.key;
         }
     }
 
@@ -52,9 +48,8 @@ public record StructureTreeOptions(
             this.key = key;
         }
 
-        @Override
-        public String toString() {
-            return I18n.translate("structure.options.documentation." + this.key);
+        public String getKey() {
+            return this.key;
         }
     }
 }
