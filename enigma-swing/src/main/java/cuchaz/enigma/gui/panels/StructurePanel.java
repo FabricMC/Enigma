@@ -3,6 +3,7 @@ package cuchaz.enigma.gui.panels;
 import cuchaz.enigma.analysis.StructureTreeOptions;
 import cuchaz.enigma.analysis.StructureTreeNode;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.renderer.StructureOptionListCellRenderer;
 import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.SingleTreeSelectionModel;
@@ -40,19 +41,19 @@ public class StructurePanel extends JPanel {
 
         this.optionsPanel.add(this.obfuscationVisibilityLabel, cb.pos(0, 0).build());
         this.obfuscationVisibility = new JComboBox<>(StructureTreeOptions.ObfuscationVisibility.values());
-        this.obfuscationVisibility.setRenderer((list, value, index, isSelected, cellHasFocus) -> new JLabel(I18n.translate("structure.options.obfuscation." + value.getKey())));
+        this.obfuscationVisibility.setRenderer(new StructureOptionListCellRenderer());
         this.obfuscationVisibility.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
         this.optionsPanel.add(this.obfuscationVisibility, cb.pos(1, 0).build());
 
         this.optionsPanel.add(this.documentationVisibilityLabel, cb.pos(0, 1).build());
         this.documentationVisibility = new JComboBox<>(StructureTreeOptions.DocumentationVisibility.values());
-        this.documentationVisibility.setRenderer((list, value, index, isSelected, cellHasFocus) -> new JLabel(I18n.translate("structure.options.documentation." + value.getKey())));
+        this.documentationVisibility.setRenderer(new StructureOptionListCellRenderer());
         this.documentationVisibility.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
         this.optionsPanel.add(this.documentationVisibility, cb.pos(1, 1).build());
 
         this.optionsPanel.add(this.sortingOrderLabel, cb.pos(0, 2).build());
         this.sortingOrder = new JComboBox<>(StructureTreeOptions.SortingOrder.values());
-        this.sortingOrder.setRenderer((list, value, index, isSelected, cellHasFocus) -> new JLabel(I18n.translate("structure.options.sorting." + value.getKey())));
+        this.sortingOrder.setRenderer(new StructureOptionListCellRenderer());
         this.sortingOrder.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
         this.optionsPanel.add(this.sortingOrder, cb.pos(1, 2).build());
 

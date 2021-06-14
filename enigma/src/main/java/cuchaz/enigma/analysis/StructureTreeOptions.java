@@ -5,51 +5,55 @@ public record StructureTreeOptions(
         DocumentationVisibility documentationVisibility,
         SortingOrder sortingOrder) {
 
-    public enum SortingOrder {
-        DEFAULT("default"),
-        A_Z("a_z"),
-        Z_A("z_a");
+    public enum ObfuscationVisibility implements Option {
+        ALL("structure.options.obfuscation.all"),
+        OBFUSCATED("structure.options.obfuscation.obfuscated"),
+        DEOBFUSCATED("structure.options.obfuscation.deobfuscated");
 
-        private final String key;
+        private final String translationKey;
 
-        SortingOrder(String key) {
-            this.key = key;
+        ObfuscationVisibility(String translationKey) {
+            this.translationKey = translationKey;
         }
 
-        public String getKey() {
-            return this.key;
-        }
-    }
-
-    public enum ObfuscationVisibility {
-        ALL("all"),
-        OBFUSCATED("obfuscated"),
-        DEOBFUSCATED("deobfuscated");
-
-        private final String key;
-
-        ObfuscationVisibility(String key) {
-            this.key = key;
-        }
-
-        public String getKey() {
-            return this.key;
+        public String getTranslationKey() {
+            return this.translationKey;
         }
     }
 
-    public enum DocumentationVisibility {
-        ALL("all"),
-        DOCUMENTED("documented"),
-        NON_DOCUMENTED("non_documented");
+    public enum DocumentationVisibility implements Option {
+        ALL("structure.options.documentation.all"),
+        DOCUMENTED("structure.options.documentation.documented"),
+        NON_DOCUMENTED("structure.options.documentation.non_documented");
 
-        private final String key;
+        private final String translationKey;
 
-        DocumentationVisibility(String key) {
-            this.key = key;
+        DocumentationVisibility(String translationKey) {
+            this.translationKey = translationKey;
         }
 
-        public String getKey() {
-            return this.key;
+        public String getTranslationKey() {
+            return this.translationKey;
         }
+    }
+
+    public enum SortingOrder implements Option {
+        DEFAULT("structure.options.sorting.default"),
+        A_Z("structure.options.sorting.a_z"),
+        Z_A("structure.options.sorting.z_a");
+
+        private final String translationKey;
+
+        SortingOrder(String translationKey) {
+            this.translationKey = translationKey;
+        }
+
+        public String getTranslationKey() {
+            return this.translationKey;
+        }
+    }
+
+    public interface Option {
+        String getTranslationKey();
     }
 }
