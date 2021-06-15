@@ -1,7 +1,10 @@
 package cuchaz.enigma.gui.panels;
 
+import cuchaz.enigma.analysis.StructureTreeOptions;
 import cuchaz.enigma.analysis.StructureTreeNode;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.renderer.StructureOptionListCellRenderer;
+import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.SingleTreeSelectionModel;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -18,17 +21,41 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class StructurePanel extends JPanel {
-    private JPanel sortingPanel;
-    private JCheckBox hideDeobfuscated;
+    private final JPanel optionsPanel;
 
-    private JTree structureTree;
+    private final JLabel obfuscationVisibilityLabel = new JLabel();
+    private final JLabel documentationVisibilityLabel = new JLabel();
+    private final JLabel sortingOrderLabel = new JLabel();
+
+    private final JComboBox<StructureTreeOptions.ObfuscationVisibility> obfuscationVisibility;
+    private final JComboBox<StructureTreeOptions.DocumentationVisibility> documentationVisibility;
+    private final JComboBox<StructureTreeOptions.SortingOrder> sortingOrder;
+
+    private final JTree structureTree;
 
     public StructurePanel(Gui gui) {
-        this.sortingPanel = new JPanel();
-        this.hideDeobfuscated = new JCheckBox(I18n.translate("info_panel.tree.structure.hide_deobfuscated"));
-        this.hideDeobfuscated.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
-        this.sortingPanel.add(this.hideDeobfuscated);
-        this.sortingPanel.setVisible(false);
+        this.optionsPanel = new JPanel(new GridBagLayout());
+        this.optionsPanel.setVisible(false);
+
+        GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(5).fill(GridBagConstraints.HORIZONTAL);
+
+        this.optionsPanel.add(this.obfuscationVisibilityLabel, cb.pos(0, 0).build());
+        this.obfuscationVisibility = new JComboBox<>(StructureTreeOptions.ObfuscationVisibility.values());
+        this.obfuscationVisibility.setRenderer(new StructureOptionListCellRenderer());
+        this.obfuscationVisibility.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
+        this.optionsPanel.add(this.obfuscationVisibility, cb.pos(1, 0).build());
+
+        this.optionsPanel.add(this.documentationVisibilityLabel, cb.pos(0, 1).build());
+        this.documentationVisibility = new JComboBox<>(StructureTreeOptions.DocumentationVisibility.values());
+        this.documentationVisibility.setRenderer(new StructureOptionListCellRenderer());
+        this.documentationVisibility.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
+        this.optionsPanel.add(this.documentationVisibility, cb.pos(1, 1).build());
+
+        this.optionsPanel.add(this.sortingOrderLabel, cb.pos(0, 2).build());
+        this.sortingOrder = new JComboBox<>(StructureTreeOptions.SortingOrder.values());
+        this.sortingOrder.setRenderer(new StructureOptionListCellRenderer());
+        this.sortingOrder.addActionListener(event -> gui.showStructure(gui.getActiveEditor()));
+        this.optionsPanel.add(this.sortingOrder, cb.pos(1, 2).build());
 
         this.structureTree = new JTree();
         this.structureTree.setModel(null);
@@ -53,20 +80,26 @@ public class StructurePanel extends JPanel {
             }
         });
 
+        this.retranslateUi();
+
         this.setLayout(new BorderLayout());
-        this.add(this.sortingPanel, BorderLayout.NORTH);
+        this.add(this.optionsPanel, BorderLayout.NORTH);
         this.add(new JScrollPane(this.structureTree));
     }
 
     public JPanel getSortingPanel() {
-        return this.sortingPanel;
+        return this.optionsPanel;
     }
 
     /**
-     * Returns whether the "Hide Deobfuscated" option of this structure panel is selected.
+     * Creates and returns the options of this structure panel.
      */
-    public boolean shouldHideDeobfuscated() {
-        return this.hideDeobfuscated.isSelected();
+    public StructureTreeOptions getOptions() {
+        return new StructureTreeOptions(
+                (StructureTreeOptions.ObfuscationVisibility) this.obfuscationVisibility.getSelectedItem(),
+                (StructureTreeOptions.DocumentationVisibility) this.documentationVisibility.getSelectedItem(),
+                (StructureTreeOptions.SortingOrder) this.sortingOrder.getSelectedItem()
+        );
     }
 
     public JTree getStructureTree() {
@@ -74,7 +107,9 @@ public class StructurePanel extends JPanel {
     }
 
     public void retranslateUi() {
-        this.hideDeobfuscated.setText(I18n.translate("info_panel.tree.structure.hide_deobfuscated"));
+        this.obfuscationVisibilityLabel.setText(I18n.translate("structure.options.obfuscation"));
+        this.documentationVisibilityLabel.setText(I18n.translate("structure.options.documentation"));
+        this.sortingOrderLabel.setText(I18n.translate("structure.options.sorting"));
     }
 
     class StructureTreeCellRenderer extends DefaultTreeCellRenderer {

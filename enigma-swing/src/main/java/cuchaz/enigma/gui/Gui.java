@@ -622,7 +622,7 @@ public class Gui implements LanguageChangeListener {
 		this.structurePanel.getSortingPanel().setVisible(true);
 
 		// get the class structure
-		StructureTreeNode node = this.controller.getClassStructure(classEntry, this.structurePanel.shouldHideDeobfuscated());
+		StructureTreeNode node = this.controller.getClassStructure(classEntry, this.structurePanel.getOptions());
 
 		// show the tree at the root
 		TreePath path = getPathToRoot(node);

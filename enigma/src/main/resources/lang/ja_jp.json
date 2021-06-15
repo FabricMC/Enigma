@@ -102,7 +102,6 @@
 	"info_panel.editor.class.decompiling": "(デコンパイル中...)",
 	"info_panel.editor.class.not_found": "クラスが見つけられません:",
 	"info_panel.tree.structure": "構造",
-	"info_panel.tree.structure.hide_deobfuscated": "難読化解除されたメンバを隠す",
 	"info_panel.tree.inheritance": "継承",
 	"info_panel.tree.implementations": "実装",
 	"info_panel.tree.calls": "呼び出し関係",
