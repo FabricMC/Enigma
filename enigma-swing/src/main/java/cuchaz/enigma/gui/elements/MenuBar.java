@@ -1,13 +1,11 @@
 package cuchaz.enigma.gui.elements;
 
-import java.awt.FileDialog;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
@@ -217,18 +215,24 @@ public class MenuBar {
 	}
 
 	private void onOpenJarClicked() {
-		FileDialog d = this.gui.jarFileChooser;
-		d.setDirectory(UiConfig.getLastSelectedDir());
+		JFileChooser d = this.gui.jarFileChooser;
+		d.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 		d.setVisible(true);
-		String file = d.getFile();
+		int result = d.showOpenDialog(gui.getFrame());
+
+		if (result != JFileChooser.APPROVE_OPTION) {
+			return;
+		}
+
+		File file = d.getSelectedFile();
 		// checks if the file name is not empty
 		if (file != null) {
-			Path path = Paths.get(d.getDirectory()).resolve(file);
+			Path path = file.toPath();
 			// checks if the file name corresponds to an existing file
 			if (Files.exists(path)) {
 				this.gui.getController().openJar(path);
 			}
-			UiConfig.setLastSelectedDir(d.getDirectory());
+			UiConfig.setLastSelectedDir(d.getCurrentDirectory().getAbsolutePath());
 		}
 	}
 
@@ -272,12 +276,18 @@ public class MenuBar {
 	}
 
 	private void onExportJarClicked() {
-		this.gui.exportJarFileChooser.setDirectory(UiConfig.getLastSelectedDir());
+		this.gui.exportJarFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 		this.gui.exportJarFileChooser.setVisible(true);
-		if (this.gui.exportJarFileChooser.getFile() != null) {
-			Path path = Paths.get(this.gui.exportJarFileChooser.getDirectory(), this.gui.exportJarFileChooser.getFile());
+		int result = this.gui.exportJarFileChooser.showSaveDialog(gui.getFrame());
+
+		if (result != JFileChooser.APPROVE_OPTION) {
+			return;
+		}
+
+		if (this.gui.exportJarFileChooser.getSelectedFile() != null) {
+			Path path = this.gui.exportJarFileChooser.getSelectedFile().toPath();
 			this.gui.getController().exportJar(path);
-			UiConfig.setLastSelectedDir(this.gui.exportJarFileChooser.getDirectory());
+			UiConfig.setLastSelectedDir(this.gui.exportJarFileChooser.getCurrentDirectory().getAbsolutePath());
 		}
 	}
 

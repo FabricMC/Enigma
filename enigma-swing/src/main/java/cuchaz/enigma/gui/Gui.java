@@ -13,7 +13,6 @@ package cuchaz.enigma.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
-import java.awt.FileDialog;
 import java.awt.Point;
 import java.awt.event.*;
 import java.nio.file.Path;
@@ -75,11 +74,11 @@ public class Gui implements LanguageChangeListener {
 	private ConnectionState connectionState;
 	private boolean isJarOpen;
 
-	public FileDialog jarFileChooser;
-	public FileDialog tinyMappingsFileChooser;
+	public JFileChooser jarFileChooser;
+	public JFileChooser tinyMappingsFileChooser;
 	public JFileChooser enigmaMappingsFileChooser;
 	public JFileChooser exportSourceFileChooser;
-	public FileDialog exportJarFileChooser;
+	public JFileChooser exportJarFileChooser;
 	public SearchDialog searchDialog;
 	private GuiController controller;
 	private JFrame frame;
@@ -135,9 +134,13 @@ public class Gui implements LanguageChangeListener {
 		this.controller = new GuiController(this, profile);
 
 		// init file choosers
-		this.jarFileChooser = new FileDialog(getFrame(), I18n.translate("menu.file.jar.open"), FileDialog.LOAD);
+		this.jarFileChooser = new JFileChooser();
+		this.jarFileChooser.setDialogTitle(I18n.translate("menu.file.jar.open"));
+		this.jarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		this.tinyMappingsFileChooser = new FileDialog(getFrame(), "Open tiny Mappings", FileDialog.LOAD);
+		this.tinyMappingsFileChooser = new JFileChooser();
+		this.tinyMappingsFileChooser.setDialogTitle("Open tiny Mappings");
+		this.tinyMappingsFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		this.enigmaMappingsFileChooser = new JFileChooser();
 		this.enigmaMappingsFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -147,7 +150,9 @@ public class Gui implements LanguageChangeListener {
 		this.exportSourceFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		this.exportSourceFileChooser.setAcceptAllFileFilterUsed(false);
 
-		this.exportJarFileChooser = new FileDialog(getFrame(), I18n.translate("menu.file.export.jar"), FileDialog.SAVE);
+		this.exportJarFileChooser = new JFileChooser();
+		this.exportJarFileChooser.setDialogTitle(I18n.translate("menu.file.export.jar"));
+		this.exportJarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		this.obfPanel = new ObfPanel(this);
 		this.deobfPanel = new DeobfPanel(this);
@@ -931,8 +936,8 @@ public class Gui implements LanguageChangeListener {
 
 	@Override
 	public void retranslateUi() {
-		this.jarFileChooser.setTitle(I18n.translate("menu.file.jar.open"));
-		this.exportJarFileChooser.setTitle(I18n.translate("menu.file.export.jar"));
+		this.jarFileChooser.setDialogTitle(I18n.translate("menu.file.jar.open"));
+		this.exportJarFileChooser.setDialogTitle(I18n.translate("menu.file.export.jar"));
 		this.tabs.setTitleAt(0, I18n.translate("info_panel.tree.structure"));
 		this.tabs.setTitleAt(1, I18n.translate("info_panel.tree.inheritance"));
 		this.tabs.setTitleAt(2, I18n.translate("info_panel.tree.implementations"));
