@@ -8,13 +8,11 @@ import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.gui.EditableType;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.panels.EditorPanel;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.*;
 import cuchaz.enigma.utils.I18n;
 
 public class EditorPopupMenu {
@@ -147,12 +145,35 @@ public class EditorPopupMenu {
 
 		boolean isClassEntry = referenceEntry instanceof ClassEntry;
 		boolean isFieldEntry = referenceEntry instanceof FieldEntry;
-		boolean isMethodEntry = referenceEntry instanceof MethodEntry && !((MethodEntry) referenceEntry).isConstructor();
-		boolean isConstructorEntry = referenceEntry instanceof MethodEntry && ((MethodEntry) referenceEntry).isConstructor();
+		boolean isMethodEntry = referenceEntry instanceof MethodEntry me && !me.isConstructor();
+		boolean isConstructorEntry = referenceEntry instanceof MethodEntry me && me.isConstructor();
 		boolean isRenamable = ref != null && controller.project.isRenamable(ref);
 
-		this.renameItem.setEnabled(isRenamable);
-		this.editJavadocItem.setEnabled(isRenamable);
+		// TODO get rid of this with Entry rework
+		EditableType type = null;
+
+		if (referenceEntry instanceof ClassEntry) {
+			type = EditableType.CLASS;
+		} else if (referenceEntry instanceof MethodEntry me) {
+			if (me.isConstructor()) {
+				// treat constructors as classes because renaming one renames
+				// the class
+				type = EditableType.CLASS;
+			} else {
+				type = EditableType.METHOD;
+			}
+		} else if (referenceEntry instanceof FieldEntry) {
+			type = EditableType.FIELD;
+		} else if (referenceEntry instanceof LocalVariableEntry lve) {
+			if (lve.isArgument()) {
+				type = EditableType.PARAMETER;
+			} else {
+				type = EditableType.LOCAL_VARIABLE;
+			}
+		}
+
+		this.renameItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)));
+		this.editJavadocItem.setEnabled(isRenamable && this.gui.isEditable(EditableType.JAVADOC));
 		this.showInheritanceItem.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.showImplementationsItem.setEnabled(isClassEntry || isMethodEntry);
 		this.showCallsItem.setEnabled(isRenamable && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
@@ -160,7 +181,7 @@ public class EditorPopupMenu {
 		this.openEntryItem.setEnabled(isRenamable && (isClassEntry || isFieldEntry || isMethodEntry || isConstructorEntry));
 		this.openPreviousItem.setEnabled(controller.hasPreviousReference());
 		this.openNextItem.setEnabled(controller.hasNextReference());
-		this.toggleMappingItem.setEnabled(isRenamable);
+		this.toggleMappingItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)));
 
 		if (referenceEntry != null && this.gui.getController().project.getMapper().extendedDeobfuscate(referenceEntry).isDeobfuscated()) {
 			this.toggleMappingItem.setText(I18n.translate("popup_menu.reset_obfuscated"));

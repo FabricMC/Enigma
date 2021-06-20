@@ -73,6 +73,7 @@ public class Gui implements LanguageChangeListener {
 	public History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
 	private ConnectionState connectionState;
 	private boolean isJarOpen;
+	private final Set<EditableType> editableTypes;
 
 	public JFileChooser jarFileChooser;
 	public JFileChooser tinyMappingsFileChooser;
@@ -112,7 +113,9 @@ public class Gui implements LanguageChangeListener {
 	private final JTabbedPane openFiles;
 	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
 
-	public Gui(EnigmaProfile profile) {
+	public Gui(EnigmaProfile profile, Set<EditableType> editableTypes) {
+		this.editableTypes = editableTypes;
+
 		// init frame
 		this.frame = new JFrame(Enigma.NAME);
 		final Container pane = this.frame.getContentPane();
@@ -596,7 +599,7 @@ public class Gui implements LanguageChangeListener {
 
 	public void startDocChange(EditorPanel editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-		if (cursorReference == null) return;
+		if (cursorReference == null || !this.isEditable(EditableType.JAVADOC)) return;
 		JavadocDialog.show(frame, getController(), cursorReference);
 	}
 
@@ -985,6 +988,10 @@ public class Gui implements LanguageChangeListener {
 			JOptionPane.showMessageDialog(this.getFrame(), text, String.format("%d message(s)", messages.size()), JOptionPane.ERROR_MESSAGE);
 		}
 		return vc.canProceed();
+	}
+
+	public boolean isEditable(EditableType t) {
+		return this.editableTypes.contains(t);
 	}
 
 }
