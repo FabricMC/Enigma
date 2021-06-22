@@ -12,7 +12,10 @@ import cuchaz.enigma.gui.EditableType;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.panels.EditorPanel;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
 public class EditorPopupMenu {
@@ -149,28 +152,7 @@ public class EditorPopupMenu {
 		boolean isConstructorEntry = referenceEntry instanceof MethodEntry me && me.isConstructor();
 		boolean isRenamable = ref != null && controller.project.isRenamable(ref);
 
-		// TODO get rid of this with Entry rework
-		EditableType type = null;
-
-		if (referenceEntry instanceof ClassEntry) {
-			type = EditableType.CLASS;
-		} else if (referenceEntry instanceof MethodEntry me) {
-			if (me.isConstructor()) {
-				// treat constructors as classes because renaming one renames
-				// the class
-				type = EditableType.CLASS;
-			} else {
-				type = EditableType.METHOD;
-			}
-		} else if (referenceEntry instanceof FieldEntry) {
-			type = EditableType.FIELD;
-		} else if (referenceEntry instanceof LocalVariableEntry lve) {
-			if (lve.isArgument()) {
-				type = EditableType.PARAMETER;
-			} else {
-				type = EditableType.LOCAL_VARIABLE;
-			}
-		}
+		EditableType type = EditableType.fromEntry(referenceEntry);
 
 		this.renameItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)));
 		this.editJavadocItem.setEnabled(isRenamable && this.gui.isEditable(EditableType.JAVADOC));
