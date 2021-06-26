@@ -60,6 +60,8 @@ public class Main {
 		parser.acceptsAll(List.of("edit-javadocs", "d"), "Enable editing Javadocs");
 		parser.acceptsAll(List.of("no-edit-javadocs", "D"), "Disable editing Javadocs");
 
+		parser.accepts("single-class-tree", "Shows all classes in the de-obfuscated panel");
+
 		parser.accepts("help", "Displays help information");
 
 		try {
@@ -105,7 +107,7 @@ public class Main {
 			System.setProperty("apple.laf.useScreenMenuBar", "true");
 			Themes.setupTheme();
 
-			Gui gui = new Gui(parsedProfile, editables);
+			Gui gui = new Gui(parsedProfile, editables, options.has("single-class-tree"));
 			GuiController controller = gui.getController();
 
 			if (options.has(jar)) {

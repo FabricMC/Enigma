@@ -74,6 +74,7 @@ public class Gui implements LanguageChangeListener {
 	private ConnectionState connectionState;
 	private boolean isJarOpen;
 	private final Set<EditableType> editableTypes;
+	public final boolean singleClassTree;
 
 	public JFileChooser jarFileChooser;
 	public JFileChooser tinyMappingsFileChooser;
@@ -113,8 +114,9 @@ public class Gui implements LanguageChangeListener {
 	private final JTabbedPane openFiles;
 	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
 
-	public Gui(EnigmaProfile profile, Set<EditableType> editableTypes) {
+	public Gui(EnigmaProfile profile, Set<EditableType> editableTypes, boolean singleClassTree) {
 		this.editableTypes = editableTypes;
+		this.singleClassTree = singleClassTree;
 
 		// init frame
 		this.frame = new JFrame(Enigma.NAME);
@@ -433,7 +435,7 @@ public class Gui implements LanguageChangeListener {
 		// update gui
 		this.frame.setTitle(Enigma.NAME + " - " + jarName);
 		this.classesPanel.removeAll();
-		this.classesPanel.add(splitClasses);
+		this.classesPanel.add(singleClassTree ? deobfPanel : splitClasses);
 		closeAllEditorTabs();
 
 		// update menu
