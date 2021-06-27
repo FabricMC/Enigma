@@ -17,6 +17,7 @@ import java.awt.Point;
 import java.awt.event.*;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -752,9 +753,10 @@ public class Gui implements LanguageChangeListener {
 		callback.apply(response);
 	}
 
-	public void saveMapping() {
+	public CompletableFuture<Void> saveMapping() {
 		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.frame) == JFileChooser.APPROVE_OPTION)
-			this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile().toPath());
+			return this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile().toPath());
+		return CompletableFuture.completedFuture(null);
 	}
 
 	public void close() {
@@ -765,7 +767,7 @@ public class Gui implements LanguageChangeListener {
 			// ask to save before closing
 			showDiscardDiag((response) -> {
 				if (response == JOptionPane.YES_OPTION) {
-					this.saveMapping();
+					this.saveMapping().join();
 					exit();
 				} else if (response == JOptionPane.NO_OPTION) {
 					exit();

@@ -244,8 +244,7 @@ public class MenuBar {
 		if (this.gui.getController().isDirty()) {
 			this.gui.showDiscardDiag((response -> {
 				if (response == JOptionPane.YES_OPTION) {
-					this.gui.saveMapping();
-					then.run();
+					this.gui.saveMapping().thenRun(then);
 				} else if (response == JOptionPane.NO_OPTION)
 					then.run();
 				return null;
