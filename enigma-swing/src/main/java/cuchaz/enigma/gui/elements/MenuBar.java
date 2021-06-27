@@ -57,9 +57,9 @@ public class MenuBar {
 	private final JMenuItem customScaleItem = new JMenuItem();
 
 	private final JMenu searchMenu = new JMenu();
-	private final JMenuItem searchClassItem = new JMenuItem();
-	private final JMenuItem searchMethodItem = new JMenuItem();
-	private final JMenuItem searchFieldItem = new JMenuItem();
+	private final JMenuItem searchClassItem = new JMenuItem(GuiUtil.CLASS_ICON);
+	private final JMenuItem searchMethodItem = new JMenuItem(GuiUtil.METHOD_ICON);
+	private final JMenuItem searchFieldItem = new JMenuItem(GuiUtil.FIELD_ICON);
 
 	private final JMenu collabMenu = new JMenu();
 	private final JMenuItem connectItem = new JMenuItem();

@@ -361,6 +361,12 @@ public class ClassSelector extends JTree {
 		}
 	}
 
+	public void collapseAll() {
+		for (ClassSelectorPackageNode packageNode : packageNodes()) {
+			collapsePath(new TreePath(new Object[]{getModel().getRoot(), packageNode}));
+		}
+	}
+
 	public ClassEntry getFirstClass() {
 		ClassSelectorPackageNode packageNode = packageNodes().get(0);
 		if (packageNode != null) {
