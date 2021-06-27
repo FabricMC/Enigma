@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 dependencies {
@@ -8,8 +8,8 @@ dependencies {
     implementation project(':enigma-server')
 
     implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
-    implementation 'com.formdev:flatlaf:1.0'
-    implementation 'com.formdev:flatlaf-extras:1.0' // for SVG icons
+    implementation 'com.formdev:flatlaf:1.2'
+    implementation 'com.formdev:flatlaf-extras:1.2' // for SVG icons
     implementation 'de.sciss:syntaxpane:1.2.0'
     implementation 'com.github.lukeu:swing-dpi:0.9'
     implementation 'org.drjekyll:fontchooser:2.4'

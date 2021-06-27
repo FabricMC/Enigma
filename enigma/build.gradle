@@ -3,15 +3,15 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.ow2.asm:asm:9.1'
-    implementation 'org.ow2.asm:asm-commons:9.1'
-    implementation 'org.ow2.asm:asm-tree:9.1'
-    implementation 'org.ow2.asm:asm-util:9.1'
+    implementation 'org.ow2.asm:asm:9.2'
+    implementation 'org.ow2.asm:asm-commons:9.2'
+    implementation 'org.ow2.asm:asm-tree:9.2'
+    implementation 'org.ow2.asm:asm-util:9.2'
 
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
-    implementation 'net.fabricmc:cfr:0.0.3'
+    implementation 'net.fabricmc:cfr:0.0.4'
 
-    proGuard 'com.guardsquare:proguard-base:7.1.0-beta4'
+    proGuard 'com.guardsquare:proguard-base:7.1.0-beta5'
 }
 
 // Generate "version.txt" file
