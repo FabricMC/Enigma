@@ -767,8 +767,8 @@ public class Gui implements LanguageChangeListener {
 			// ask to save before closing
 			showDiscardDiag((response) -> {
 				if (response == JOptionPane.YES_OPTION) {
-					this.saveMapping().join();
-					exit();
+					this.saveMapping().thenRun(this::exit);
+					// do not join, as join waits on swing to clear events
 				} else if (response == JOptionPane.NO_OPTION) {
 					exit();
 				}
