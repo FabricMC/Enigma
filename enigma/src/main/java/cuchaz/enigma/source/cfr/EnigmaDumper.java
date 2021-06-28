@@ -79,7 +79,8 @@ public class EnigmaDumper extends StringStreamDumper {
 
     private LocalVariableEntry getParameterEntry(MethodPrototype method, int parameterIndex, String name) {
         MethodEntry owner = getMethodEntry(method);
-        if (owner == null) {
+        // params may be not computed if cfr creates a lambda expression fallback, e.g. in PointOfInterestSet
+        if (owner == null || !method.parametersComputed()) {
             return null;
         }
 
