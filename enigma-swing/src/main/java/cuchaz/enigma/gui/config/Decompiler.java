@@ -4,8 +4,8 @@ import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.Decompilers;
 
 public enum Decompiler {
-	PROCYON("Procyon", Decompilers.PROCYON),
-	CFR("CFR", Decompilers.CFR);
+	CFR("CFR", Decompilers.CFR),
+	PROCYON("Procyon", Decompilers.PROCYON);
 
 	public final DecompilerService service;
 	public final String name;

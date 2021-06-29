@@ -85,6 +85,8 @@
 	"popup_menu.editor_tab.close_right": "Tout fermer sur la droite",
 	"popup_menu.deobf_panel.rename_package": "Renommer le package",
 	"popup_menu.deobf_panel.rename_class": "Renommer la classe",
+	"popup_menu.deobf_panel.expand_all": "Tout développer",
+	"popup_menu.deobf_panel.collapse_all": "Tout réduire",
 
 	"editor.decompiling": "Décompilation...",
 	"editor.decompile_error": "Une erreur est survenue lors de la décompilation.",
