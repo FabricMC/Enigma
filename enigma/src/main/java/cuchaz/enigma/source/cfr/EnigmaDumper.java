@@ -294,6 +294,10 @@ public class EnigmaDumper extends StringStreamDumper {
     public Dumper identifier(String name, Object ref, boolean defines) {
         super.identifier(name, ref, defines);
         Entry<?> entry;
+        if (defines) {
+            refs.remove(ref);
+            return this;
+        }
         if ((entry = refs.get(ref)) == null) {
             return this;
         }
