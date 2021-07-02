@@ -13,11 +13,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class CfrSource implements Source {
     private final SourceSettings settings;
     private final ClassFile tree;
-    private final SourceIndex index;
-    private final String string;
     private final DCCommonState state;
     private final TypeUsageInformation typeUsage;
     private final Options options;
+    private final EntryRemapper mapper;
+
+    private SourceIndex index;
 
     public CfrSource(SourceSettings settings, ClassFile tree, DCCommonState state, TypeUsageInformation typeUsage, Options options, @Nullable EntryRemapper mapper) {
         this.settings = settings;
@@ -25,16 +26,7 @@ public class CfrSource implements Source {
         this.state = state;
         this.typeUsage = typeUsage;
         this.options = options;
-
-        EnigmaDumper dumper = new EnigmaDumper(new StringBuilder(), settings, typeUsage, options, mapper);
-        tree.dump(state.getObfuscationMapping().wrap(dumper));
-        index = dumper.getIndex();
-        string = dumper.getString();
-    }
-
-    @Override
-    public String asString() {
-        return string;
+        this.mapper = mapper;
     }
 
     @Override
@@ -44,6 +36,23 @@ public class CfrSource implements Source {
 
     @Override
     public SourceIndex index() {
+        ensureDecompiled();
         return index;
+    }
+
+    @Override
+    public String asString() {
+        ensureDecompiled();
+        return index.getSource();
+    }
+
+    private synchronized void ensureDecompiled() {
+        if (index != null) {
+            return;
+        }
+
+        EnigmaDumper dumper = new EnigmaDumper(new StringBuilder(), settings, typeUsage, options, mapper);
+        tree.dump(state.getObfuscationMapping().wrap(dumper));
+        index = dumper.getIndex();
     }
 }
