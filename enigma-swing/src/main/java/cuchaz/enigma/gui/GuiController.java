@@ -149,6 +149,17 @@ public class GuiController implements ClientPacketHandler {
 		return saveMappings(path, loadedMappingFormat);
 	}
 
+	/**
+	 * Saves the mappings, with a dialog popping up, showing the progress.
+	 *
+	 * <p>Notice the returned completable future has to be completed by
+	 * {@link SwingUtilities#invokeLater(Runnable)}. Hence, do not try to
+	 * join on the future in gui, but rather call {@code thenXxx} methods.
+	 *
+	 * @param path the path of the save
+	 * @param format the format of the save
+	 * @return the future of saving
+	 */
 	public CompletableFuture<Void> saveMappings(Path path, MappingFormat format) {
 		if (project == null) return CompletableFuture.completedFuture(null);
 
