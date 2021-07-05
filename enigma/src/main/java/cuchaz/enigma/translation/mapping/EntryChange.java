@@ -76,16 +76,17 @@ public final class EntryChange<E extends Entry<?>> {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (!(o instanceof EntryChange)) return false;
 		EntryChange<?> that = (EntryChange<?>) o;
 		return Objects.equals(this.target, that.target) &&
 				Objects.equals(this.deobfName, that.deobfName) &&
-				Objects.equals(this.javadoc, that.javadoc);
+				Objects.equals(this.javadoc, that.javadoc) &&
+				Objects.equals(this.access, that.access);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.target, this.deobfName, this.javadoc);
+		return Objects.hash(this.target, this.deobfName, this.javadoc, this.access);
 	}
 
 	@Override
