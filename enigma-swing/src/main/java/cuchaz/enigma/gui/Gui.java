@@ -40,9 +40,8 @@ import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.elements.*;
-import cuchaz.enigma.gui.elements.rpanel.DecoratedRPanelContainer.ButtonLocation;
-import cuchaz.enigma.gui.elements.rpanel.DoubleRPanelContainer;
 import cuchaz.enigma.gui.elements.rpanel.RPanel;
+import cuchaz.enigma.gui.elements.rpanel.WorkspaceRPanelContainer;
 import cuchaz.enigma.gui.panels.*;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
@@ -83,15 +82,11 @@ public class Gui {
 
 	private final EditorTabbedPane editorTabbedPane;
 
-	private final DoubleRPanelContainer left = new DoubleRPanelContainer(ButtonLocation.LEFT);
-	private final DoubleRPanelContainer right = new DoubleRPanelContainer(ButtonLocation.RIGHT);
-	private final DoubleRPanelContainer bottom = new DoubleRPanelContainer(ButtonLocation.BOTTOM);
+	private final WorkspaceRPanelContainer workspace = new WorkspaceRPanelContainer();
 
 	private final JPanel classesPanel = new JPanel(new BorderLayout());
 	private final JTabbedPane tabs = new JTabbedPane();
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
-	private final JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, centerPanel, this.right.getUi());
-	private final JSplitPane splitCenter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, this.left.getUi(), splitRight);
 
 	private final DefaultListModel<String> userModel = new DefaultListModel<>();
 	private final DefaultListModel<Message> messageModel = new DefaultListModel<>();
@@ -142,8 +137,8 @@ public class Gui {
 
 		this.exportJarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		left.getRight().attach(obfPanel.getPanel());
-		left.getLeft().attach(deobfPanel.getPanel());
+		this.workspace.getLeftTop().attach(obfPanel.getPanel());
+		this.workspace.getLeftBottom().attach(deobfPanel.getPanel());
 
 		// layout controls
 		Container workArea = this.mainWindow.workArea();
@@ -152,16 +147,16 @@ public class Gui {
 		centerPanel.add(infoPanel.getUi(), BorderLayout.NORTH);
 		centerPanel.add(this.editorTabbedPane.getUi(), BorderLayout.CENTER);
 
-		left.getUi().setPreferredSize(ScaleUtil.getDimension(300, 0));
-		right.getUi().setPreferredSize(ScaleUtil.getDimension(250, 0));
-		right.getLeft().attach(structurePanel.getPanel());
-		right.getLeft().attach(inheritanceTree.getPanel());
-		right.getLeft().attach(implementationsTree.getPanel());
-		right.getLeft().attach(callsTree.getPanel());
+		// left.getUi().setPreferredSize(ScaleUtil.getDimension(300, 0));
+		// right.getUi().setPreferredSize(ScaleUtil.getDimension(250, 0));
+		this.workspace.getRightTop().attach(structurePanel.getPanel());
+		this.workspace.getRightTop().attach(inheritanceTree.getPanel());
+		this.workspace.getRightTop().attach(implementationsTree.getPanel());
+		this.workspace.getRightTop().attach(callsTree.getPanel());
 
 		userPanel.getContentPane().setLayout(new BorderLayout());
 		userPanel.getContentPane().add(new JScrollPane(this.users));
-		right.getRight().attach(userPanel);
+		this.workspace.getRightBottom().attach(userPanel);
 
 		messagePanel.getContentPane().setLayout(new BorderLayout());
 		messages.setCellRenderer(new MessageListCellRenderer());
@@ -178,39 +173,28 @@ public class Gui {
 		chatPanel.add(chatSendButton, BorderLayout.EAST);
 		messagePanel.getContentPane().add(messageScrollPane, BorderLayout.CENTER);
 		messagePanel.getContentPane().add(chatPanel, BorderLayout.SOUTH);
-		right.getRight().attach(messagePanel);
+		this.workspace.getRightTop().attach(messagePanel);
 
-		splitRight.setResizeWeight(1); // let the left side take all the slack
-		splitRight.resetToPreferredSizes();
-		splitCenter.setResizeWeight(0); // let the right side take all the slack
-
-		workArea.add(splitCenter, BorderLayout.CENTER);
+		this.workspace.setWorkArea(centerPanel);
+		workArea.add(this.workspace.getUi(), BorderLayout.CENTER);
 
 		// restore state
 		int[] layout = UiConfig.getLayout();
 		if (layout.length >= 4) {
 			// this.splitClasses.setDividerLocation(layout[0]);
-			this.splitCenter.setDividerLocation(layout[1]);
-			this.splitRight.setDividerLocation(layout[2]);
+			// this.splitCenter.setDividerLocation(layout[1]);
+			// this.splitRight.setDividerLocation(layout[2]);
 			// this.logSplit.setDividerLocation(layout[3]);
 		}
 
-		left.addDragTarget(structurePanel.getPanel());
-		left.addDragTarget(inheritanceTree.getPanel());
-		left.addDragTarget(implementationsTree.getPanel());
-		left.addDragTarget(callsTree.getPanel());
-		left.addDragTarget(obfPanel.getPanel());
-		left.addDragTarget(deobfPanel.getPanel());
-		left.addDragTarget(messagePanel);
-		left.addDragTarget(userPanel);
-		right.addDragTarget(structurePanel.getPanel());
-		right.addDragTarget(inheritanceTree.getPanel());
-		right.addDragTarget(implementationsTree.getPanel());
-		right.addDragTarget(callsTree.getPanel());
-		right.addDragTarget(obfPanel.getPanel());
-		right.addDragTarget(deobfPanel.getPanel());
-		right.addDragTarget(messagePanel);
-		right.addDragTarget(userPanel);
+		this.workspace.addDragTarget(structurePanel.getPanel());
+		this.workspace.addDragTarget(inheritanceTree.getPanel());
+		this.workspace.addDragTarget(implementationsTree.getPanel());
+		this.workspace.addDragTarget(callsTree.getPanel());
+		this.workspace.addDragTarget(obfPanel.getPanel());
+		this.workspace.addDragTarget(deobfPanel.getPanel());
+		this.workspace.addDragTarget(messagePanel);
+		this.workspace.addDragTarget(userPanel);
 
 		this.mainWindow.statusBar().addPermanentComponent(this.connectionStatusLabel);
 
@@ -452,11 +436,11 @@ public class Gui {
 	private void exit() {
 		UiConfig.setWindowPos("Main Window", this.mainWindow.frame().getLocationOnScreen());
 		UiConfig.setWindowSize("Main Window", this.mainWindow.frame().getSize());
-		UiConfig.setLayout(
-				0 /* this.splitClasses.getDividerLocation() */,
-				this.splitCenter.getDividerLocation(),
-				this.splitRight.getDividerLocation(),
-				0 /* this.logSplit.getDividerLocation() */);
+		// UiConfig.setLayout(
+		// 		this.splitClasses.getDividerLocation(),
+		// 		this.splitCenter.getDividerLocation(),
+		// 		this.splitRight.getDividerLocation(),
+		// 		this.logSplit.getDividerLocation());
 		UiConfig.save();
 
 		if (searchDialog != null) {
@@ -603,8 +587,6 @@ public class Gui {
 			userPanel.setVisible(true);
 			messagePanel.setVisible(true);
 		}
-
-		splitRight.setDividerLocation(splitRight.getDividerLocation());
 	}
 
 	public void retranslateUi() {
