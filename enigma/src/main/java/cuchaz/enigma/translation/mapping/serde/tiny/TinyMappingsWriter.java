@@ -76,13 +76,13 @@ public class TinyMappingsWriter implements MappingsWriter {
 
         // Do not write mappings without deobfuscated name since tiny v1 doesn't
         // support comments anyway
-        if (mapping != null && mapping.getTargetName() != null) {
+		if (mapping != null && mapping.targetName() != null) {
             if (entry instanceof ClassEntry) {
                 writeClass(writer, (ClassEntry) entry, translator);
             } else if (entry instanceof FieldEntry) {
-                writeLine(writer, serializeEntry(entry, mapping.getTargetName()));
+				writeLine(writer, serializeEntry(entry, mapping.targetName()));
             } else if (entry instanceof MethodEntry) {
-                writeLine(writer, serializeEntry(entry, mapping.getTargetName()));
+				writeLine(writer, serializeEntry(entry, mapping.targetName()));
             }
         }
 

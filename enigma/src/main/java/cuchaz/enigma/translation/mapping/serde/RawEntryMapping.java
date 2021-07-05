@@ -12,7 +12,7 @@ public final class RawEntryMapping {
 	private final List<String> javadocs = new ArrayList<>();
 
 	public RawEntryMapping(String targetName) {
-		this(targetName, null);
+		this(targetName, AccessModifier.UNCHANGED);
 	}
 
 	public RawEntryMapping(String targetName, AccessModifier access) {

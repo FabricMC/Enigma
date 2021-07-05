@@ -492,14 +492,14 @@ public class GuiController implements ClientPacketHandler {
 		boolean renamed = !change.getDeobfName().isUnchanged();
 
 		if (renamed && target instanceof ClassEntry && !((ClassEntry) target).isInnerClass()) {
-			this.gui.moveClassTree(target, prev.getTargetName() == null, mapping.getTargetName() == null);
+			this.gui.moveClassTree(target, prev.targetName() == null, mapping.targetName() == null);
 		}
 
-		if (!Objects.equals(prev.getTargetName(), mapping.getTargetName())) {
+		if (!Objects.equals(prev.targetName(), mapping.targetName())) {
 			this.chp.invalidateMapped();
 		}
 
-		if (!Objects.equals(prev.getJavadoc(), mapping.getJavadoc())) {
+		if (!Objects.equals(prev.javadoc(), mapping.javadoc())) {
 			this.chp.invalidateJavadoc(target.getTopLevelClass());
 		}
 		gui.showStructure(gui.getActiveEditor());

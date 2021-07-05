@@ -62,8 +62,8 @@ public final class TinyV2Writer implements MappingsWriter {
 		Deque<String> parts = new LinkedList<>();
 		do {
 			EntryMapping mapping = tree.get(classEntry);
-			if (mapping != null && mapping.getTargetName() != null) {
-				parts.addFirst(mapping.getTargetName());
+			if (mapping != null && mapping.targetName() != null) {
+				parts.addFirst(mapping.targetName());
 			} else {
 				parts.addFirst(classEntry.getName());
 			}
@@ -103,8 +103,8 @@ public final class TinyV2Writer implements MappingsWriter {
 			mapping = EntryMapping.DEFAULT;
 		}
 
-		if (mapping.getTargetName() != null) {
-			writer.println(mapping.getTargetName());
+		if (mapping.targetName() != null) {
+			writer.println(mapping.targetName());
 		} else {
 			writer.println(node.getEntry().getName()); // todo fix v2 name inference
 		}
@@ -136,8 +136,8 @@ public final class TinyV2Writer implements MappingsWriter {
 			mapping = EntryMapping.DEFAULT;
 		}
 
-		if (mapping.getTargetName() != null) {
-			writer.println(mapping.getTargetName());
+		if (mapping.targetName() != null) {
+			writer.println(mapping.targetName());
 		} else {
 			writer.println(node.getEntry().getName()); // todo fix v2 name inference
 		}
@@ -156,20 +156,20 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print(node.getEntry().getName());
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
-		if (mapping == null || mapping.getTargetName() == null) {
+		if (mapping == null || mapping.targetName() == null) {
 			writer.println(); // todo ???
 		} else {
-			writer.println(mapping.getTargetName());
+			writer.println(mapping.targetName());
 
 			writeComment(writer, mapping, 3);
 		}
 	}
 
 	private void writeComment(PrintWriter writer, EntryMapping mapping, int indent) {
-		if (mapping != null && mapping.getJavadoc() != null) {
+		if (mapping != null && mapping.javadoc() != null) {
 			writer.print(indent(indent));
 			writer.print("c\t");
-			writer.print(MappingHelper.escape(mapping.getJavadoc()));
+			writer.print(MappingHelper.escape(mapping.javadoc()));
 			writer.println();
 		}
 	}

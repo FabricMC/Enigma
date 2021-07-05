@@ -59,10 +59,10 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 
 	@Override
 	protected TranslateResult<? extends MethodEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
-		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
-		String docs = mapping.getJavadoc();
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		String docs = mapping.javadoc();
 		return TranslateResult.of(
-				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new MethodEntry(parent, translatedName, translator.translate(descriptor), docs)
 		);
 	}

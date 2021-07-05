@@ -275,7 +275,7 @@ public class IdentifierPanel {
 
 			JComboBox<AccessModifier> combo = new JComboBox<>(AccessModifier.values());
 			EntryMapping mapping = project.getMapper().getDeobfMapping(e);
-			combo.setSelectedIndex(mapping.getAccessModifier().ordinal());
+			combo.setSelectedIndex(mapping.accessModifier().ordinal());
 
 			if (this.gui.isEditable(type)) {
 				combo.addItemListener(event -> {

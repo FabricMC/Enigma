@@ -78,13 +78,13 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	@Override
 	public TranslateResult<ClassDefEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
 		Signature translatedSignature = translator.translate(signature);
-		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
-		AccessFlags translatedAccess = mapping.getAccessModifier().transform(access);
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		AccessFlags translatedAccess = mapping.accessModifier().transform(access);
 		ClassEntry translatedSuper = translator.translate(superClass);
 		ClassEntry[] translatedInterfaces = Arrays.stream(interfaces).map(translator::translate).toArray(ClassEntry[]::new);
-		String docs = mapping.getJavadoc();
+		String docs = mapping.javadoc();
 		return TranslateResult.of(
-				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new ClassDefEntry(parent, translatedName, translatedSignature, translatedAccess, translatedSuper, translatedInterfaces, docs)
 		);
 	}

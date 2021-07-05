@@ -178,7 +178,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		writer.println(writeClass(classEntry, classEntryMapping).trim());
-		if (classEntryMapping.getJavadoc() != null) {
+		if (classEntryMapping.javadoc() != null) {
 			writeDocs(writer, classEntryMapping, 0);
 		}
 
@@ -188,7 +188,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	private void writeDocs(PrintWriter writer, EntryMapping mapping, int depth) {
-		String jd = mapping.getJavadoc();
+		String jd = mapping.javadoc();
 		if (jd != null) {
 			for (String line : jd.split("\\R")) {
 				writer.println(indent(EnigmaFormat.COMMENT + " " + MappingHelper.escape(line), depth + 1));
@@ -215,7 +215,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			line = writeMethod(methodEntry, mapping);
 		} else if (entry instanceof FieldEntry fieldEntry) {
 			line = writeField(fieldEntry, mapping);
-		} else if (entry instanceof LocalVariableEntry varEntry && mapping.getTargetName() != null) {
+		} else if (entry instanceof LocalVariableEntry varEntry && mapping.targetName() != null) {
 			line = writeArgument(varEntry, mapping);
 		}
 
@@ -223,7 +223,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			writer.println(indent(line, depth));
 		}
 
-		if (mapping.getJavadoc() != null) {
+		if (mapping.javadoc() != null) {
 			writeDocs(writer, mapping, depth);
 		}
 
@@ -288,17 +288,17 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	}
 
 	protected String writeArgument(LocalVariableEntry entry, @Nonnull EntryMapping mapping) {
-		return EnigmaFormat.PARAMETER + " " + entry.getIndex() + ' ' + mapping.getTargetName();
+		return EnigmaFormat.PARAMETER + " " + entry.getIndex() + ' ' + mapping.targetName();
 	}
 
 	private void writeMapping(StringBuilder builder, EntryMapping mapping) {
-		if (mapping.getTargetName() != null) {
-			builder.append(mapping.getTargetName()).append(' ');
-			if (mapping.getAccessModifier() != AccessModifier.UNCHANGED) {
-				builder.append(mapping.getAccessModifier().getFormattedName()).append(' ');
+		if (mapping.targetName() != null) {
+			builder.append(mapping.targetName()).append(' ');
+			if (mapping.accessModifier() != AccessModifier.UNCHANGED) {
+				builder.append(mapping.accessModifier().getFormattedName()).append(' ');
 			}
-		} else if (mapping.getAccessModifier() != AccessModifier.UNCHANGED) {
-			builder.append("- ").append(mapping.getAccessModifier().getFormattedName()).append(' ');
+		} else if (mapping.accessModifier() != AccessModifier.UNCHANGED) {
+			builder.append("- ").append(mapping.accessModifier().getFormattedName()).append(' ');
 		}
 	}
 

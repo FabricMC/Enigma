@@ -51,10 +51,10 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 
 	@Override
 	protected TranslateResult<LocalVariableEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
-		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
-		String javadoc = mapping.getJavadoc();
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		String javadoc = mapping.javadoc();
 		return TranslateResult.of(
-				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new LocalVariableEntry(parent, index, translatedName, parameter, javadoc)
 		);
 	}

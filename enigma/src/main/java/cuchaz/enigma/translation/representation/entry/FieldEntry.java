@@ -64,10 +64,10 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 
 	@Override
 	protected TranslateResult<FieldEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
-		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
-		String docs = mapping.getJavadoc();
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		String docs = mapping.javadoc();
 		return TranslateResult.of(
-				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new FieldEntry(parent, translatedName, translator.translate(desc), docs)
 		);
 	}

@@ -67,13 +67,13 @@ public class EntryRemapper {
 			mapRecordComponentGetter(vc, classEntry, fieldEntry, deobfMapping);
 		}
 
-		boolean renaming = !Objects.equals(getDeobfMapping(obfuscatedEntry).getTargetName(), deobfMapping.getTargetName());
+		boolean renaming = !Objects.equals(getDeobfMapping(obfuscatedEntry).targetName(), deobfMapping.targetName());
 
 		Collection<Entry<?>> resolvedEntries = obfResolver.resolveEntry(obfuscatedEntry, renaming ? ResolutionStrategy.RESOLVE_ROOT : ResolutionStrategy.RESOLVE_CLOSEST);
 
-		if (renaming && deobfMapping.getTargetName() != null) {
+		if (renaming && deobfMapping.targetName() != null) {
 			for (Entry<?> resolvedEntry : resolvedEntries) {
-				validator.validateRename(vc, resolvedEntry, deobfMapping.getTargetName());
+				validator.validateRename(vc, resolvedEntry, deobfMapping.targetName());
 			}
 		}
 
@@ -110,11 +110,11 @@ public class EntryRemapper {
 		}
 
 		if (methodEntry == null && fieldMapping != null) {
-			vc.raise(Message.UNKNOWN_RECORD_GETTER, fieldMapping.getTargetName());
+			vc.raise(Message.UNKNOWN_RECORD_GETTER, fieldMapping.targetName());
 			return;
 		}
 
-		putMapping(vc, methodEntry, fieldMapping != null ? new EntryMapping(fieldMapping.getTargetName()) : null);
+		putMapping(vc, methodEntry, fieldMapping != null ? new EntryMapping(fieldMapping.targetName()) : null);
 	}
 
 	@Nonnull

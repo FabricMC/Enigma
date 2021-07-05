@@ -59,8 +59,8 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 		EntryMapping value = node.getValue();
 		if (value == null) value = EntryMapping.DEFAULT;
 
-		PacketHelper.writeString(output, value.getTargetName() != null ? value.getTargetName() : "");
-		PacketHelper.writeString(output, value.getJavadoc() != null ? value.getJavadoc() : "");
+		PacketHelper.writeString(output, value.targetName() != null ? value.targetName() : "");
+		PacketHelper.writeString(output, value.javadoc() != null ? value.javadoc() : "");
 		Collection<? extends EntryTreeNode<EntryMapping>> children = node.getChildNodes();
 		output.writeShort(children.size());
 		for (EntryTreeNode<EntryMapping> child : children) {

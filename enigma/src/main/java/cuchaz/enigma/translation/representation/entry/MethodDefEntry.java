@@ -56,11 +56,11 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 	protected TranslateResult<MethodDefEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
 		MethodDescriptor translatedDesc = translator.translate(descriptor);
 		Signature translatedSignature = translator.translate(signature);
-		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
-		AccessFlags translatedAccess = mapping.getAccessModifier().transform(access);
-		String docs = mapping.getJavadoc();
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		AccessFlags translatedAccess = mapping.accessModifier().transform(access);
+		String docs = mapping.javadoc();
 		return TranslateResult.of(
-				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new MethodDefEntry(parent, translatedName, translatedDesc, translatedSignature, translatedAccess, docs)
 		);
 	}

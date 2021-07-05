@@ -725,7 +725,7 @@ public class Gui implements LanguageChangeListener {
 
 		Entry<?> obfEntry = cursorReference.entry;
 
-		if (this.controller.project.getMapper().getDeobfMapping(obfEntry).getTargetName() != null) {
+		if (this.controller.project.getMapper().getDeobfMapping(obfEntry).targetName() != null) {
 			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).clearDeobfName()));
 		} else {
 			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).withDefaultDeobfName(this.getController().project)));

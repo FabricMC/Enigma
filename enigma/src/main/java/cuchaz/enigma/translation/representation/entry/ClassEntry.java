@@ -88,10 +88,10 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 			return translatedName.map(desc -> new ClassEntry(parent, desc.toString()));
 		}
 
-		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
-		String docs = mapping.getJavadoc();
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		String docs = mapping.javadoc();
 		return TranslateResult.of(
-				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new ClassEntry(parent, translatedName, docs)
 		);
 	}

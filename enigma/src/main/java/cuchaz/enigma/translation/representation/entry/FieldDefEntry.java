@@ -11,8 +11,6 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import javax.annotation.Nullable;
-
 import com.google.common.base.Preconditions;
 
 import cuchaz.enigma.source.RenamableTokenType;
@@ -58,11 +56,11 @@ public class FieldDefEntry extends FieldEntry implements DefEntry<ClassEntry> {
 	protected TranslateResult<FieldEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
 		TypeDescriptor translatedDesc = translator.translate(desc);
 		Signature translatedSignature = translator.translate(signature);
-		String translatedName = mapping.getTargetName() != null ? mapping.getTargetName() : name;
-		AccessFlags translatedAccess = mapping.getAccessModifier().transform(access);
-		String docs = mapping.getJavadoc();
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		AccessFlags translatedAccess = mapping.accessModifier().transform(access);
+		String docs = mapping.javadoc();
 		return TranslateResult.of(
-				mapping.getTargetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new FieldDefEntry(parent, translatedName, translatedDesc, translatedSignature, translatedAccess, docs)
 		);
 	}
