@@ -209,14 +209,14 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		String line = null;
-		if (entry instanceof ClassEntry) {
-			line = writeClass((ClassEntry) entry, mapping);
-		} else if (entry instanceof MethodEntry) {
-			line = writeMethod((MethodEntry) entry, mapping);
-		} else if (entry instanceof FieldEntry) {
-			line = writeField((FieldEntry) entry, mapping);
-		} else if (entry instanceof LocalVariableEntry && mapping.getTargetName() != null) {
-			line = writeArgument((LocalVariableEntry) entry, mapping);
+		if (entry instanceof ClassEntry classEntry) {
+			line = writeClass(classEntry, mapping);
+		} else if (entry instanceof MethodEntry methodEntry) {
+			line = writeMethod(methodEntry, mapping);
+		} else if (entry instanceof FieldEntry fieldEntry) {
+			line = writeField(fieldEntry, mapping);
+		} else if (entry instanceof LocalVariableEntry varEntry && mapping.getTargetName() != null) {
+			line = writeArgument(varEntry, mapping);
 		}
 
 		if (line != null) {

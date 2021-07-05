@@ -40,29 +40,33 @@ public class PacketHelper {
 				if (parent != null && !(parent instanceof ClassEntry)) {
 					throw new IOException("Class requires class parent");
 				}
+
 				return new ClassEntry((ClassEntry) parent, name, javadocs);
 			}
 			case ENTRY_FIELD: {
-				if (!(parent instanceof ClassEntry)) {
+				if (!(parent instanceof ClassEntry parentClass)) {
 					throw new IOException("Field requires class parent");
 				}
+
 				TypeDescriptor desc = new TypeDescriptor(readString(input));
-				return new FieldEntry((ClassEntry) parent, name, desc, javadocs);
+				return new FieldEntry(parentClass, name, desc, javadocs);
 			}
 			case ENTRY_METHOD: {
-				if (!(parent instanceof ClassEntry)) {
+				if (!(parent instanceof ClassEntry parentClass)) {
 					throw new IOException("Method requires class parent");
 				}
+
 				MethodDescriptor desc = new MethodDescriptor(readString(input));
-				return new MethodEntry((ClassEntry) parent, name, desc, javadocs);
+				return new MethodEntry(parentClass, name, desc, javadocs);
 			}
 			case ENTRY_LOCAL_VAR: {
-				if (!(parent instanceof MethodEntry)) {
+				if (!(parent instanceof MethodEntry parentMethod)) {
 					throw new IOException("Local variable requires method parent");
 				}
+
 				int index = input.readUnsignedShort();
 				boolean parameter = input.readBoolean();
-				return new LocalVariableEntry((MethodEntry) parent, index, name, parameter, javadocs);
+				return new LocalVariableEntry(parentMethod, index, name, parameter, javadocs);
 			}
 			default:
 				throw new IOException("Received unknown entry type " + type);
