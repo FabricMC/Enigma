@@ -825,6 +825,8 @@ public class Gui implements LanguageChangeListener {
 					.findAny().get();
 
 			this.controller.applyChange(vc, EntryChange.modify(obf).withDeobfName(((ClassEntry) data).getFullName()));
+		} else {
+			throw new IllegalStateException(String.format("unhandled rename object data: '%s'", data));
 		}
 	}
 
