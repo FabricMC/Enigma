@@ -453,7 +453,7 @@ public class Gui {
 		UiConfig.setWindowPos("Main Window", this.mainWindow.frame().getLocationOnScreen());
 		UiConfig.setWindowSize("Main Window", this.mainWindow.frame().getSize());
 		UiConfig.setLayout(
-				0, // this.splitClasses.getDividerLocation(),
+				0 /* this.splitClasses.getDividerLocation() */,
 				this.splitCenter.getDividerLocation(),
 				this.splitRight.getDividerLocation(),
 				0 /* this.logSplit.getDividerLocation() */);
