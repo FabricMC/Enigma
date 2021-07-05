@@ -10,7 +10,7 @@ import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.TristateChange;
 
-public class EntryChange<E extends Entry<?>> {
+public final class EntryChange<E extends Entry<?>> {
 
 	private final E target;
 	private final TristateChange<String> deobfName;
