@@ -1,6 +1,6 @@
 package cuchaz.enigma.network;
 
-import cuchaz.enigma.newabstraction.EntryChange;
+import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.network.packet.Packet;

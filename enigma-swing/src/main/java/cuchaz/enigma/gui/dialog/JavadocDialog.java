@@ -29,7 +29,7 @@ import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.elements.ValidatableTextArea;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.newabstraction.EntryChange;
+import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ValidationContext;

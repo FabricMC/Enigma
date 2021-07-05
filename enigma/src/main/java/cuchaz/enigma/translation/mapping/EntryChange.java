@@ -1,4 +1,4 @@
-package cuchaz.enigma.newabstraction;
+package cuchaz.enigma.translation.mapping;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.source.DecompiledClassSource;
-import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.utils.TristateChange;
 
 public class EntryChange<E extends Entry<?>> {
 

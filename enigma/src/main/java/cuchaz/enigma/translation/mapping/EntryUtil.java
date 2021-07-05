@@ -1,10 +1,7 @@
-package cuchaz.enigma.newabstraction;
+package cuchaz.enigma.translation.mapping;
 
 import javax.annotation.Nonnull;
 
-import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.validation.ValidationContext;
 

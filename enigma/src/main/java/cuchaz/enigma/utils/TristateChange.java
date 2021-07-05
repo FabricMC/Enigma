@@ -1,4 +1,4 @@
-package cuchaz.enigma.newabstraction;
+package cuchaz.enigma.utils;
 
 import java.util.Objects;
 

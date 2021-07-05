@@ -5,12 +5,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import cuchaz.enigma.newabstraction.EntryChange;
-import cuchaz.enigma.newabstraction.TristateChange;
 import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.utils.TristateChange;
 
 public class PacketHelper {
 

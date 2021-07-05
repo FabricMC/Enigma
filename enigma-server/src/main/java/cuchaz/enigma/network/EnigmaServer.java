@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import cuchaz.enigma.network.packet.*;
-import cuchaz.enigma.newabstraction.EntryChange;
+import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;

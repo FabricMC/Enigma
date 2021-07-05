@@ -6,8 +6,8 @@ import java.io.IOException;
 
 import cuchaz.enigma.network.Message;
 import cuchaz.enigma.network.ServerPacketHandler;
-import cuchaz.enigma.newabstraction.EntryChange;
-import cuchaz.enigma.newabstraction.EntryUtil;
+import cuchaz.enigma.translation.mapping.EntryChange;
+import cuchaz.enigma.translation.mapping.EntryUtil;
 import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
