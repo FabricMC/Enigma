@@ -32,7 +32,7 @@ public class DeobfPanel extends JPanel {
 	}
 
 	public void retranslateUi() {
-		this.title.setText(I18n.translate("info_panel.classes.deobfuscated"));
+		this.title.setText(I18n.translate(gui.isSingleClassTree() ? "info_panel.classes" : "info_panel.classes.deobfuscated"));
 	}
 
 }

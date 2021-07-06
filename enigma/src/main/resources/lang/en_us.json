@@ -90,6 +90,7 @@
 	"editor.decompile_error": "An error was encountered while decompiling.",
 	"editor.remap_error": "An error was encountered while remapping.",
 
+	"info_panel.classes": "Classes",
 	"info_panel.classes.obfuscated": "Obfuscated Classes",
 	"info_panel.classes.deobfuscated": "De-obfuscated Classes",
 	"info_panel.identifier": "Identifier Info",
