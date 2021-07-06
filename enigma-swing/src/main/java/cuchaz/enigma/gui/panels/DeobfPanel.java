@@ -16,7 +16,7 @@ import cuchaz.enigma.utils.I18n;
 
 public class DeobfPanel {
 
-	private final RPanel panel;
+	private final RPanel panel = new RPanel();
 
 	public final ClassSelector deobfClasses;
 
@@ -26,7 +26,6 @@ public class DeobfPanel {
 
 	public DeobfPanel(Gui gui) {
 		this.gui = gui;
-		this.panel = new RPanel(I18n.translate("info_panel.classes.deobfuscated"));
 		Container contentPane = panel.getContentPane();
 
 		this.deobfClasses = new ClassSelector(gui, ClassSelector.DEOBF_CLASS_COMPARATOR, true);
