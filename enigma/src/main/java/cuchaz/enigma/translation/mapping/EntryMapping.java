@@ -1,5 +1,7 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.Arrays;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -9,6 +11,14 @@ public record EntryMapping(
 		@Nullable String javadoc
 ) {
 	public static final EntryMapping DEFAULT = new EntryMapping(null, AccessModifier.UNCHANGED, null);
+
+	public EntryMapping {
+		if (accessModifier == null) {
+			accessModifier = AccessModifier.UNCHANGED;
+			System.err.println("EntryMapping initialized with 'null' accessModifier, assuming UNCHANGED. Please fix.");
+			Arrays.stream(new Exception().getStackTrace()).skip(1).map("\tat %s"::formatted).forEach(System.err::println);
+		}
+	}
 
 	public EntryMapping(@Nullable String targetName) {
 		this(targetName, AccessModifier.UNCHANGED);
