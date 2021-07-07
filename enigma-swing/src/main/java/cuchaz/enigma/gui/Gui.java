@@ -827,8 +827,6 @@ public class Gui implements LanguageChangeListener {
 		} else if (data instanceof ClassEntry) {
 			// class rename
 
-			// assume this is deobf since the obf tree doesn't allow renaming in
-			// the first place
 			// TODO optimize reverse class lookup, although it looks like it's
 			//      fast enough for now
 			EntryRemapper mapper = this.controller.project.getMapper();
