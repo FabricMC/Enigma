@@ -68,6 +68,8 @@ public class Gui {
 	private final Set<EditableType> editableTypes;
 	private boolean singleClassTree;
 
+	private final WorkspaceRPanelContainer workspace = new WorkspaceRPanelContainer();
+
 	private final RPanel messagePanel = new RPanel();
 	private final RPanel userPanel = new RPanel();
 
@@ -82,10 +84,6 @@ public class Gui {
 
 	private final EditorTabbedPane editorTabbedPane;
 
-	private final WorkspaceRPanelContainer workspace = new WorkspaceRPanelContainer();
-
-	private final JPanel classesPanel = new JPanel(new BorderLayout());
-	private final JTabbedPane tabs = new JTabbedPane();
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
 
 	private final DefaultListModel<String> userModel = new DefaultListModel<>();
@@ -149,14 +147,9 @@ public class Gui {
 
 		// left.getUi().setPreferredSize(ScaleUtil.getDimension(300, 0));
 		// right.getUi().setPreferredSize(ScaleUtil.getDimension(250, 0));
-		this.workspace.getRightTop().attach(structurePanel.getPanel());
-		this.workspace.getRightTop().attach(inheritanceTree.getPanel());
-		this.workspace.getRightTop().attach(implementationsTree.getPanel());
-		this.workspace.getRightTop().attach(callsTree.getPanel());
 
 		userPanel.getContentPane().setLayout(new BorderLayout());
 		userPanel.getContentPane().add(new JScrollPane(this.users));
-		this.workspace.getRightBottom().attach(userPanel);
 
 		messagePanel.getContentPane().setLayout(new BorderLayout());
 		messages.setCellRenderer(new MessageListCellRenderer());
@@ -173,7 +166,6 @@ public class Gui {
 		chatPanel.add(chatSendButton, BorderLayout.EAST);
 		messagePanel.getContentPane().add(messageScrollPane, BorderLayout.CENTER);
 		messagePanel.getContentPane().add(chatPanel, BorderLayout.SOUTH);
-		this.workspace.getRightTop().attach(messagePanel);
 
 		this.workspace.setWorkArea(centerPanel);
 		workArea.add(this.workspace.getUi(), BorderLayout.CENTER);
@@ -186,6 +178,15 @@ public class Gui {
 			// this.splitRight.setDividerLocation(layout[2]);
 			// this.logSplit.setDividerLocation(layout[3]);
 		}
+
+		this.workspace.getRightTop().attach(structurePanel.getPanel());
+		this.workspace.getRightTop().attach(inheritanceTree.getPanel());
+		this.workspace.getRightTop().attach(implementationsTree.getPanel());
+		this.workspace.getRightTop().attach(callsTree.getPanel());
+		this.workspace.getLeftTop().attach(obfPanel.getPanel());
+		this.workspace.getLeftBottom().attach(deobfPanel.getPanel());
+		this.workspace.getRightTop().attach(messagePanel);
+		this.workspace.getRightBottom().attach(userPanel);
 
 		this.workspace.addDragTarget(structurePanel.getPanel());
 		this.workspace.addDragTarget(inheritanceTree.getPanel());
