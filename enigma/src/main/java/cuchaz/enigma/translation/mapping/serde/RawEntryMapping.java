@@ -1,23 +1,23 @@
 package cuchaz.enigma.translation.mapping.serde;
 
-import cuchaz.enigma.translation.mapping.AccessModifier;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryMapping;
 
 public final class RawEntryMapping {
 	private final String targetName;
 	private final AccessModifier access;
-	private List<String> javadocs = new ArrayList<>();
+	private final List<String> javadocs = new ArrayList<>();
 
 	public RawEntryMapping(String targetName) {
-		this(targetName, null);
+		this(targetName, AccessModifier.UNCHANGED);
 	}
 
 	public RawEntryMapping(String targetName, AccessModifier access) {
 		this.access = access;
-		this.targetName = targetName;
+		this.targetName = targetName != null && !targetName.equals("-") ? targetName : null;
 	}
 
 	public void addJavadocLine(String line) {

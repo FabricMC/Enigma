@@ -1,47 +1,35 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.Arrays;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class EntryMapping {
-	private final String targetName;
-	private final AccessModifier accessModifier;
-	private final @Nullable String javadoc;
+public record EntryMapping(
+		@Nullable String targetName,
+		@Nonnull AccessModifier accessModifier,
+		@Nullable String javadoc
+) {
+	public static final EntryMapping DEFAULT = new EntryMapping(null, AccessModifier.UNCHANGED, null);
 
-	public EntryMapping(@Nonnull String targetName) {
+	public EntryMapping {
+		if (accessModifier == null) {
+			accessModifier = AccessModifier.UNCHANGED;
+			System.err.println("EntryMapping initialized with 'null' accessModifier, assuming UNCHANGED. Please fix.");
+			Arrays.stream(new Exception().getStackTrace()).skip(1).map("\tat %s"::formatted).forEach(System.err::println);
+		}
+	}
+
+	public EntryMapping(@Nullable String targetName) {
 		this(targetName, AccessModifier.UNCHANGED);
 	}
 
-	public EntryMapping(@Nonnull String targetName, @Nullable String javadoc) {
+	public EntryMapping(@Nullable String targetName, @Nullable String javadoc) {
 		this(targetName, AccessModifier.UNCHANGED, javadoc);
 	}
 
-	public EntryMapping(@Nonnull String targetName, AccessModifier accessModifier) {
+	public EntryMapping(@Nullable String targetName, AccessModifier accessModifier) {
 		this(targetName, accessModifier, null);
-	}
-
-	public EntryMapping(@Nonnull String targetName, AccessModifier accessModifier, @Nullable String javadoc) {
-		this.targetName = targetName;
-		this.accessModifier = accessModifier;
-		this.javadoc = javadoc;
-	}
-
-	@Nonnull
-	public String getTargetName() {
-		return targetName;
-	}
-
-	@Nonnull
-	public AccessModifier getAccessModifier() {
-		if (accessModifier == null) {
-			return AccessModifier.UNCHANGED;
-		}
-		return accessModifier;
-	}
-
-	@Nullable
-	public String getJavadoc() {
-		return javadoc;
 	}
 
 	public EntryMapping withName(String newName) {
@@ -54,22 +42,5 @@ public class EntryMapping {
 
 	public EntryMapping withDocs(String newDocs) {
 		return new EntryMapping(targetName, accessModifier, newDocs);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) return true;
-
-		if (obj instanceof EntryMapping) {
-			EntryMapping mapping = (EntryMapping) obj;
-			return mapping.targetName.equals(targetName) && mapping.accessModifier.equals(accessModifier);
-		}
-
-		return false;
-	}
-
-	@Override
-	public int hashCode() {
-		return targetName.hashCode() + accessModifier.hashCode() * 31;
 	}
 }

@@ -79,7 +79,7 @@ public class DecompiledClassSource {
 		return null;
 	}
 
-	private Optional<String> proposeName(EnigmaProject project, Entry<?> entry) {
+	public static Optional<String> proposeName(EnigmaProject project, Entry<?> entry) {
 		EnigmaServices services = project.getEnigma().getServices();
 
 		return services.get(NameProposalService.TYPE).stream().flatMap(nameProposalService -> {

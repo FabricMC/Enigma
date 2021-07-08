@@ -13,7 +13,7 @@ package cuchaz.enigma.translation.representation.entry;
 
 import java.util.Objects;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.google.common.base.Preconditions;
 
@@ -58,11 +58,11 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	}
 
 	@Override
-	protected TranslateResult<? extends MethodEntry> extendedTranslate(Translator translator, @Nullable EntryMapping mapping) {
-		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		String docs = mapping != null ? mapping.getJavadoc() : null;
+	protected TranslateResult<? extends MethodEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
+		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
+		String docs = mapping.javadoc();
 		return TranslateResult.of(
-				mapping == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
 				new MethodEntry(parent, translatedName, translator.translate(descriptor), docs)
 		);
 	}

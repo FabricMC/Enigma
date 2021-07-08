@@ -1,18 +1,18 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
-import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
-import cuchaz.enigma.network.ClientPacketHandler;
-import cuchaz.enigma.network.EnigmaServer;
-import cuchaz.enigma.translation.representation.entry.Entry;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+
+import cuchaz.enigma.network.ClientPacketHandler;
+import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 	private EntryTree<EntryMapping> mappings;
@@ -35,16 +35,9 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 
 	private void readEntryTreeNode(DataInput input, Entry<?> parent) throws IOException {
 		Entry<?> entry = PacketHelper.readEntry(input, parent, false);
-		EntryMapping mapping = null;
-		if (input.readBoolean()) {
-			String name = input.readUTF();
-			if (input.readBoolean()) {
-				String javadoc = input.readUTF();
-				mapping = new EntryMapping(name, javadoc);
-			} else {
-				mapping = new EntryMapping(name);
-			}
-		}
+		String name = PacketHelper.readString(input);
+		String javadoc = PacketHelper.readString(input);
+		EntryMapping mapping = new EntryMapping(!name.isEmpty() ? name : null, !javadoc.isEmpty() ? javadoc : null);
 		mappings.insert(entry, mapping);
 		int size = input.readUnsignedShort();
 		for (int i = 0; i < size; i++) {
@@ -64,14 +57,10 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 	private static void writeEntryTreeNode(DataOutput output, EntryTreeNode<EntryMapping> node) throws IOException {
 		PacketHelper.writeEntry(output, node.getEntry(), false);
 		EntryMapping value = node.getValue();
-		output.writeBoolean(value != null);
-		if (value != null) {
-			PacketHelper.writeString(output, value.getTargetName());
-			output.writeBoolean(value.getJavadoc() != null);
-			if (value.getJavadoc() != null) {
-				PacketHelper.writeString(output, value.getJavadoc());
-			}
-		}
+		if (value == null) value = EntryMapping.DEFAULT;
+
+		PacketHelper.writeString(output, value.targetName() != null ? value.targetName() : "");
+		PacketHelper.writeString(output, value.javadoc() != null ? value.javadoc() : "");
 		Collection<? extends EntryTreeNode<EntryMapping>> children = node.getChildNodes();
 		output.writeShort(children.size());
 		for (EntryTreeNode<EntryMapping> child : children) {

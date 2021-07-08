@@ -85,18 +85,18 @@ public class TestReadWriteCycle {
 		Assert.assertTrue("Loaded mappings don't contain testMethod1", loadedMappings.contains(testMethod1.a));
 		Assert.assertTrue("Loaded mappings don't contain testMethod2", loadedMappings.contains(testMethod2.a));
 
-		Assert.assertEquals("Incorrect mapping: testClazz", testClazz.b.getTargetName(), loadedMappings.get(testClazz.a).getTargetName());
-		Assert.assertEquals("Incorrect mapping: testField1", testField1.b.getTargetName(), loadedMappings.get(testField1.a).getTargetName());
-		Assert.assertEquals("Incorrect mapping: testField2", testField2.b.getTargetName(), loadedMappings.get(testField2.a).getTargetName());
-		Assert.assertEquals("Incorrect mapping: testMethod1", testMethod1.b.getTargetName(), loadedMappings.get(testMethod1.a).getTargetName());
-		Assert.assertEquals("Incorrect mapping: testMethod2", testMethod2.b.getTargetName(), loadedMappings.get(testMethod2.a).getTargetName());
+		Assert.assertEquals("Incorrect mapping: testClazz", testClazz.b.targetName(), loadedMappings.get(testClazz.a).targetName());
+		Assert.assertEquals("Incorrect mapping: testField1", testField1.b.targetName(), loadedMappings.get(testField1.a).targetName());
+		Assert.assertEquals("Incorrect mapping: testField2", testField2.b.targetName(), loadedMappings.get(testField2.a).targetName());
+		Assert.assertEquals("Incorrect mapping: testMethod1", testMethod1.b.targetName(), loadedMappings.get(testMethod1.a).targetName());
+		Assert.assertEquals("Incorrect mapping: testMethod2", testMethod2.b.targetName(), loadedMappings.get(testMethod2.a).targetName());
 
 		if (supportsJavadoc) {
-			Assert.assertEquals("Incorrect javadoc: testClazz", testClazz.b.getJavadoc(), loadedMappings.get(testClazz.a).getJavadoc());
-			Assert.assertEquals("Incorrect javadoc: testField1", testField1.b.getJavadoc(), loadedMappings.get(testField1.a).getJavadoc());
-			Assert.assertEquals("Incorrect javadoc: testField2", testField2.b.getJavadoc(), loadedMappings.get(testField2.a).getJavadoc());
-			Assert.assertEquals("Incorrect javadoc: testMethod1", testMethod1.b.getJavadoc(), loadedMappings.get(testMethod1.a).getJavadoc());
-			Assert.assertEquals("Incorrect javadoc: testMethod2", testMethod2.b.getJavadoc(), loadedMappings.get(testMethod2.a).getJavadoc());
+			Assert.assertEquals("Incorrect javadoc: testClazz", testClazz.b.javadoc(), loadedMappings.get(testClazz.a).javadoc());
+			Assert.assertEquals("Incorrect javadoc: testField1", testField1.b.javadoc(), loadedMappings.get(testField1.a).javadoc());
+			Assert.assertEquals("Incorrect javadoc: testField2", testField2.b.javadoc(), loadedMappings.get(testField2.a).javadoc());
+			Assert.assertEquals("Incorrect javadoc: testMethod1", testMethod1.b.javadoc(), loadedMappings.get(testMethod1.a).javadoc());
+			Assert.assertEquals("Incorrect javadoc: testMethod2", testMethod2.b.javadoc(), loadedMappings.get(testMethod2.a).javadoc());
 		}
 
 		tempFile.delete();

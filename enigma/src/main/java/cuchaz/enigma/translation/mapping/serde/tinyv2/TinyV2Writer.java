@@ -62,8 +62,8 @@ public final class TinyV2Writer implements MappingsWriter {
 		Deque<String> parts = new LinkedList<>();
 		do {
 			EntryMapping mapping = tree.get(classEntry);
-			if (mapping != null) {
-				parts.addFirst(mapping.getTargetName());
+			if (mapping != null && mapping.targetName() != null) {
+				parts.addFirst(mapping.targetName());
 			} else {
 				parts.addFirst(classEntry.getName());
 			}
@@ -81,7 +81,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		writeComment(writer, node.getValue(), 1);
 
 		for (EntryTreeNode<EntryMapping> child : node.getChildNodes()) {
-			Entry entry = child.getEntry();
+			Entry<?> entry = child.getEntry();
 			if (entry instanceof FieldEntry) {
 				writeField(writer, child);
 			} else if (entry instanceof MethodEntry) {
@@ -98,16 +98,21 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print(node.getEntry().getName());
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
-		if (mapping == null) {
-			writer.println(node.getEntry().getName()); // todo fix v2 name inference
-		} else {
-			writer.println(mapping.getTargetName());
 
-			writeComment(writer, mapping, 2);
+		if (mapping == null) {
+			mapping = EntryMapping.DEFAULT;
 		}
 
+		if (mapping.targetName() != null) {
+			writer.println(mapping.targetName());
+		} else {
+			writer.println(node.getEntry().getName()); // todo fix v2 name inference
+		}
+
+		writeComment(writer, mapping, 2);
+
 		for (EntryTreeNode<EntryMapping> child : node.getChildNodes()) {
-			Entry entry = child.getEntry();
+			Entry<?> entry = child.getEntry();
 			if (entry instanceof LocalVariableEntry) {
 				writeParameter(writer, child);
 			}
@@ -116,7 +121,7 @@ public final class TinyV2Writer implements MappingsWriter {
 	}
 
 	private void writeField(PrintWriter writer, EntryTreeNode<EntryMapping> node) {
-		if (node.getValue() == null)
+		if (node.getValue() == null || node.getValue().equals(EntryMapping.DEFAULT))
 			return; // Shortcut
 
 		writer.print(indent(1));
@@ -126,17 +131,22 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print(node.getEntry().getName());
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
-		if (mapping == null) {
-			writer.println(node.getEntry().getName()); // todo fix v2 name inference
-		} else {
-			writer.println(mapping.getTargetName());
 
-			writeComment(writer, mapping, 2);
+		if (mapping == null) {
+			mapping = EntryMapping.DEFAULT;
 		}
+
+		if (mapping.targetName() != null) {
+			writer.println(mapping.targetName());
+		} else {
+			writer.println(node.getEntry().getName()); // todo fix v2 name inference
+		}
+
+		writeComment(writer, mapping, 2);
 	}
 
 	private void writeParameter(PrintWriter writer, EntryTreeNode<EntryMapping> node) {
-		if (node.getValue() == null)
+		if (node.getValue() == null || node.getValue().equals(EntryMapping.DEFAULT))
 			return; // Shortcut
 
 		writer.print(indent(2));
@@ -146,20 +156,20 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print(node.getEntry().getName());
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
-		if (mapping == null) {
+		if (mapping == null || mapping.targetName() == null) {
 			writer.println(); // todo ???
 		} else {
-			writer.println(mapping.getTargetName());
+			writer.println(mapping.targetName());
 
 			writeComment(writer, mapping, 3);
 		}
 	}
 
 	private void writeComment(PrintWriter writer, EntryMapping mapping, int indent) {
-		if (mapping != null && mapping.getJavadoc() != null) {
+		if (mapping != null && mapping.javadoc() != null) {
 			writer.print(indent(indent));
 			writer.print("c\t");
-			writer.print(MappingHelper.escape(mapping.getJavadoc()));
+			writer.print(MappingHelper.escape(mapping.javadoc()));
 			writer.println();
 		}
 	}

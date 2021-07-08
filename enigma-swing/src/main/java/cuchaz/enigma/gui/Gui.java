@@ -49,11 +49,9 @@ import cuchaz.enigma.gui.renderer.InheritanceTreeCellRenderer;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.*;
 import cuchaz.enigma.network.Message;
-import cuchaz.enigma.network.packet.MarkDeobfuscatedC2SPacket;
 import cuchaz.enigma.network.packet.MessageC2SPacket;
-import cuchaz.enigma.network.packet.RemoveMappingC2SPacket;
-import cuchaz.enigma.network.packet.RenameC2SPacket;
 import cuchaz.enigma.source.Token;
+import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
@@ -740,12 +738,10 @@ public class Gui implements LanguageChangeListener {
 
 		Entry<?> obfEntry = cursorReference.entry;
 
-		if (controller.project.getMapper().extendedDeobfuscate(obfEntry).isDeobfuscated()) {
-			if (!validateImmediateAction(vc -> this.controller.removeMapping(vc, cursorReference))) return;
-			this.controller.sendPacket(new RemoveMappingC2SPacket(cursorReference.getNameableEntry()));
+		if (this.controller.project.getMapper().getDeobfMapping(obfEntry).targetName() != null) {
+			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).clearDeobfName()));
 		} else {
-			if (!validateImmediateAction(vc -> this.controller.markAsDeobfuscated(vc, cursorReference))) return;
-			this.controller.sendPacket(new MarkDeobfuscatedC2SPacket(cursorReference.getNameableEntry()));
+			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).withDefaultDeobfName(this.getController().project)));
 		}
 	}
 
@@ -813,7 +809,7 @@ public class Gui implements LanguageChangeListener {
 		this.frame.repaint();
 	}
 
-	public void onPanelRename(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node) {
+	public void onRenameFromClassTree(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node) {
 		if (data instanceof String) {
 			// package rename
 			for (int i = 0; i < node.getChildCount(); i++) {
@@ -821,7 +817,7 @@ public class Gui implements LanguageChangeListener {
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
 
-				onPanelRename(vc, prevDataChild, dataChild, node);
+				onRenameFromClassTree(vc, prevDataChild, dataChild, node);
 			}
 			node.setUserObject(data);
 			// Ob package will never be modified, just reload deob view
@@ -839,9 +835,9 @@ public class Gui implements LanguageChangeListener {
 					.filter(e -> mapper.deobfuscate(e).equals(deobf))
 					.findAny().orElse(deobf);
 
-			this.controller.rename(vc, new EntryReference<>(obf, obf.getFullName()), ((ClassEntry) data).getFullName(), false);
-			if (!vc.canProceed()) return;
-			this.controller.sendPacket(new RenameC2SPacket(obf, ((ClassEntry) data).getFullName(), false));
+			this.controller.applyChange(vc, EntryChange.modify(obf).withDeobfName(((ClassEntry) data).getFullName()));
+		} else {
+			throw new IllegalStateException(String.format("unhandled rename object data: '%s'", data));
 		}
 	}
 

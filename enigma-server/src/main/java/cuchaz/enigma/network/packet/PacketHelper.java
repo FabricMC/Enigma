@@ -1,17 +1,16 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+
+import cuchaz.enigma.translation.mapping.AccessModifier;
+import cuchaz.enigma.translation.mapping.EntryChange;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.utils.TristateChange;
 
 public class PacketHelper {
 
@@ -37,35 +36,40 @@ public class PacketHelper {
 		}
 
 		switch (type) {
-		case ENTRY_CLASS: {
-			if (parent != null && !(parent instanceof ClassEntry)) {
-				throw new IOException("Class requires class parent");
+			case ENTRY_CLASS: {
+				if (parent != null && !(parent instanceof ClassEntry)) {
+					throw new IOException("Class requires class parent");
+				}
+
+				return new ClassEntry((ClassEntry) parent, name, javadocs);
 			}
-			return new ClassEntry((ClassEntry) parent, name, javadocs);
-		}
-		case ENTRY_FIELD: {
-			if (!(parent instanceof ClassEntry)) {
-				throw new IOException("Field requires class parent");
+			case ENTRY_FIELD: {
+				if (!(parent instanceof ClassEntry parentClass)) {
+					throw new IOException("Field requires class parent");
+				}
+
+				TypeDescriptor desc = new TypeDescriptor(readString(input));
+				return new FieldEntry(parentClass, name, desc, javadocs);
 			}
-			TypeDescriptor desc = new TypeDescriptor(readString(input));
-			return new FieldEntry((ClassEntry) parent, name, desc, javadocs);
-		}
-		case ENTRY_METHOD: {
-			if (!(parent instanceof ClassEntry)) {
-				throw new IOException("Method requires class parent");
+			case ENTRY_METHOD: {
+				if (!(parent instanceof ClassEntry parentClass)) {
+					throw new IOException("Method requires class parent");
+				}
+
+				MethodDescriptor desc = new MethodDescriptor(readString(input));
+				return new MethodEntry(parentClass, name, desc, javadocs);
 			}
-			MethodDescriptor desc = new MethodDescriptor(readString(input));
-			return new MethodEntry((ClassEntry) parent, name, desc, javadocs);
-		}
-		case ENTRY_LOCAL_VAR: {
-			if (!(parent instanceof MethodEntry)) {
-				throw new IOException("Local variable requires method parent");
+			case ENTRY_LOCAL_VAR: {
+				if (!(parent instanceof MethodEntry parentMethod)) {
+					throw new IOException("Local variable requires method parent");
+				}
+
+				int index = input.readUnsignedShort();
+				boolean parameter = input.readBoolean();
+				return new LocalVariableEntry(parentMethod, index, name, parameter, javadocs);
 			}
-			int index = input.readUnsignedShort();
-			boolean parameter = input.readBoolean();
-			return new LocalVariableEntry((MethodEntry) parent, index, name, parameter, javadocs);
-		}
-		default: throw new IOException("Received unknown entry type " + type);
+			default:
+				throw new IOException("Received unknown entry type " + type);
 		}
 	}
 
@@ -130,6 +134,66 @@ public class PacketHelper {
 		}
 		output.writeShort(bytes.length);
 		output.write(bytes);
+	}
+
+	public static EntryChange<?> readEntryChange(DataInput input) throws IOException {
+		Entry<?> e = readEntry(input);
+		EntryChange<?> change = EntryChange.modify(e);
+
+		int flags = input.readUnsignedByte();
+		TristateChange.Type deobfNameT = TristateChange.Type.values()[flags & 0x3];
+		TristateChange.Type accessT = TristateChange.Type.values()[flags >> 2 & 0x3];
+		TristateChange.Type javadocT = TristateChange.Type.values()[flags >> 4 & 0x3];
+
+		switch (deobfNameT) {
+			case RESET:
+				change = change.clearDeobfName();
+				break;
+			case SET:
+				change = change.withDeobfName(readString(input));
+				break;
+		}
+
+		switch (accessT) {
+			case RESET:
+				change = change.clearAccess();
+				break;
+			case SET:
+				change = change.withAccess(AccessModifier.values()[flags >> 6 & 0x3]);
+				break;
+		}
+
+		switch (javadocT) {
+			case RESET:
+				change = change.clearJavadoc();
+				break;
+			case SET:
+				change = change.withJavadoc(readString(input));
+				break;
+		}
+
+		return change;
+	}
+
+	public static void writeEntryChange(DataOutput output, EntryChange<?> change) throws IOException {
+		writeEntry(output, change.getTarget());
+		int flags = change.getDeobfName().getType().ordinal() |
+				change.getAccess().getType().ordinal() << 2 |
+				change.getJavadoc().getType().ordinal() << 4;
+
+		if (change.getAccess().isSet()) {
+			flags |= change.getAccess().getNewValue().ordinal() << 6;
+		}
+
+		output.writeByte(flags);
+
+		if (change.getDeobfName().isSet()) {
+			writeString(output, change.getDeobfName().getNewValue());
+		}
+
+		if (change.getJavadoc().isSet()) {
+			writeString(output, change.getJavadoc().getNewValue());
+		}
 	}
 
 }

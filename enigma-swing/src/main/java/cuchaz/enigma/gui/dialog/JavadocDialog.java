@@ -29,23 +29,22 @@ import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.elements.ValidatableTextArea;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.network.packet.ChangeDocsC2SPacket;
+import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class JavadocDialog {
 
 	private final JDialog ui;
 	private final GuiController controller;
-	private final EntryReference<Entry<?>, Entry<?>> entry;
+	private final Entry<?> entry;
 
 	private final ValidatableTextArea text;
 
 	private final ValidationContext vc = new ValidationContext();
 
-	private JavadocDialog(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry, String preset) {
+	private JavadocDialog(JFrame parent, GuiController controller, Entry<?> entry, String preset) {
 		this.ui = new JDialog(parent, I18n.translate("javadocs.edit"));
 		this.controller = controller;
 		this.entry = entry;
@@ -161,28 +160,21 @@ public class JavadocDialog {
 	public void validate() {
 		vc.setActiveElement(text);
 
-		if (text.getText().contains("*/")) {
-			vc.raise(Message.ILLEGAL_DOC_COMMENT_END);
-		}
-
-		controller.changeDocs(vc, entry, text.getText(), true);
+		controller.validateChange(vc, EntryChange.modify(entry).withJavadoc(text.getText()));
 	}
 
 	public void save() {
 		vc.setActiveElement(text);
-		controller.changeDocs(vc, entry, text.getText().trim().isEmpty() ? null : text.getText());
 
-		if (!vc.canProceed()) return;
-
-		controller.sendPacket(new ChangeDocsC2SPacket(entry.getNameableEntry(), text.getText()));
+		controller.applyChange(vc, EntryChange.modify(entry).withJavadoc(text.getText()));
 	}
 
 	public static void show(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry) {
 		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(entry);
 		String text = Strings.nullToEmpty(translatedReference.entry.getJavadocs());
 
-		JavadocDialog dialog = new JavadocDialog(parent, controller, entry, text);
-		dialog.ui.doLayout();
+		JavadocDialog dialog = new JavadocDialog(parent, controller, entry.getNameableEntry(), text);
+		//dialog.ui.doLayout();
 		dialog.ui.setVisible(true);
 		dialog.text.grabFocus();
 	}

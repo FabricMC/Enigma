@@ -62,6 +62,20 @@ public class ValidationContext {
 		return messages.stream().noneMatch(m -> m.message.type == Type.ERROR);
 	}
 
+	/**
+	 * If this validation context has at least one error, throw an exception.
+	 *
+	 * @throws IllegalStateException if errors are present
+	 */
+	public void throwOnError() {
+		if (!this.canProceed()) {
+			for (ParameterizedMessage message : this.messages) {
+				PrintValidatable.formatMessage(System.err, message);
+			}
+			throw new IllegalStateException("Errors encountered; cannot continue! Check error log for details.");
+		}
+	}
+
 	public List<ParameterizedMessage> getMessages() {
 		return Collections.unmodifiableList(messages);
 	}
