@@ -84,8 +84,6 @@ public class Gui {
 
 	private final EditorTabbedPane editorTabbedPane;
 
-	private final JPanel centerPanel = new JPanel(new BorderLayout());
-
 	private final DefaultListModel<String> userModel = new DefaultListModel<>();
 	private final DefaultListModel<Message> messageModel = new DefaultListModel<>();
 	private final JList<String> users = new JList<>(userModel);
@@ -141,9 +139,8 @@ public class Gui {
 		// layout controls
 		Container workArea = this.mainWindow.workArea();
 		workArea.setLayout(new BorderLayout());
-
-		centerPanel.add(infoPanel.getUi(), BorderLayout.NORTH);
-		centerPanel.add(this.editorTabbedPane.getUi(), BorderLayout.CENTER);
+		workArea.add(infoPanel.getUi(), BorderLayout.NORTH);
+		workArea.add(this.editorTabbedPane.getUi(), BorderLayout.CENTER);
 
 		// left.getUi().setPreferredSize(ScaleUtil.getDimension(300, 0));
 		// right.getUi().setPreferredSize(ScaleUtil.getDimension(250, 0));
@@ -167,9 +164,6 @@ public class Gui {
 		messagePanel.getContentPane().add(messageScrollPane, BorderLayout.CENTER);
 		messagePanel.getContentPane().add(chatPanel, BorderLayout.SOUTH);
 
-		this.workspace.setWorkArea(centerPanel);
-		workArea.add(this.workspace.getUi(), BorderLayout.CENTER);
-
 		// restore state
 		int[] layout = UiConfig.getLayout();
 		if (layout.length >= 4) {
@@ -179,23 +173,24 @@ public class Gui {
 			// this.logSplit.setDividerLocation(layout[3]);
 		}
 
-		this.workspace.getRightTop().attach(structurePanel.getPanel());
-		this.workspace.getRightTop().attach(inheritanceTree.getPanel());
-		this.workspace.getRightTop().attach(implementationsTree.getPanel());
-		this.workspace.getRightTop().attach(callsTree.getPanel());
-		this.workspace.getLeftTop().attach(obfPanel.getPanel());
-		this.workspace.getLeftBottom().attach(deobfPanel.getPanel());
-		this.workspace.getRightTop().attach(messagePanel);
-		this.workspace.getRightBottom().attach(userPanel);
+		WorkspaceRPanelContainer workspace = this.mainWindow.workspace();
+		workspace.getRightTop().attach(structurePanel.getPanel());
+		workspace.getRightTop().attach(inheritanceTree.getPanel());
+		workspace.getRightTop().attach(implementationsTree.getPanel());
+		workspace.getRightTop().attach(callsTree.getPanel());
+		workspace.getLeftTop().attach(obfPanel.getPanel());
+		workspace.getLeftBottom().attach(deobfPanel.getPanel());
+		workspace.getRightTop().attach(messagePanel);
+		workspace.getRightBottom().attach(userPanel);
 
-		this.workspace.addDragTarget(structurePanel.getPanel());
-		this.workspace.addDragTarget(inheritanceTree.getPanel());
-		this.workspace.addDragTarget(implementationsTree.getPanel());
-		this.workspace.addDragTarget(callsTree.getPanel());
-		this.workspace.addDragTarget(obfPanel.getPanel());
-		this.workspace.addDragTarget(deobfPanel.getPanel());
-		this.workspace.addDragTarget(messagePanel);
-		this.workspace.addDragTarget(userPanel);
+		workspace.addDragTarget(structurePanel.getPanel());
+		workspace.addDragTarget(inheritanceTree.getPanel());
+		workspace.addDragTarget(implementationsTree.getPanel());
+		workspace.addDragTarget(callsTree.getPanel());
+		workspace.addDragTarget(obfPanel.getPanel());
+		workspace.addDragTarget(deobfPanel.getPanel());
+		workspace.addDragTarget(messagePanel);
+		workspace.addDragTarget(userPanel);
 
 		this.mainWindow.statusBar().addPermanentComponent(this.connectionStatusLabel);
 

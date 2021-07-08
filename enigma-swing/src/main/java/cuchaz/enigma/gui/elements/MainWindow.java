@@ -5,11 +5,12 @@ import java.awt.Container;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
-import javax.swing.JPanel;
+
+import cuchaz.enigma.gui.elements.rpanel.WorkspaceRPanelContainer;
 
 public class MainWindow {
 	private final JFrame frame;
-	private final JPanel workArea = new JPanel();
+	private final WorkspaceRPanelContainer workspace = new WorkspaceRPanelContainer();
 
 	private final JMenuBar menuBar = new JMenuBar();
 	private final StatusBar statusBar = new StatusBar();
@@ -20,12 +21,16 @@ public class MainWindow {
 
 		Container contentPane = this.frame.getContentPane();
 		contentPane.setLayout(new BorderLayout());
-		contentPane.add(this.workArea, BorderLayout.CENTER);
+		contentPane.add(workspace.getUi(), BorderLayout.CENTER);
 		contentPane.add(this.statusBar.getUi(), BorderLayout.SOUTH);
 	}
 
 	public void setVisible(boolean visible) {
 		this.frame.setVisible(visible);
+	}
+
+	public WorkspaceRPanelContainer workspace() {
+		return this.workspace;
 	}
 
 	public JMenuBar menuBar() {
@@ -37,7 +42,7 @@ public class MainWindow {
 	}
 
 	public Container workArea() {
-		return this.workArea;
+		return this.workspace.getWorkArea();
 	}
 
 	public JFrame frame() {
