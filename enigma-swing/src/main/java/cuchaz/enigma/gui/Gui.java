@@ -68,8 +68,6 @@ public class Gui {
 	private final Set<EditableType> editableTypes;
 	private boolean singleClassTree;
 
-	private final WorkspaceRPanelContainer workspace = new WorkspaceRPanelContainer();
-
 	private final RPanel messagePanel = new RPanel();
 	private final RPanel userPanel = new RPanel();
 
@@ -132,9 +130,6 @@ public class Gui {
 		this.exportSourceFileChooser.setAcceptAllFileFilterUsed(false);
 
 		this.exportJarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-
-		this.workspace.getLeftTop().attach(obfPanel.getPanel());
-		this.workspace.getLeftBottom().attach(deobfPanel.getPanel());
 
 		// layout controls
 		Container workArea = this.mainWindow.workArea();
