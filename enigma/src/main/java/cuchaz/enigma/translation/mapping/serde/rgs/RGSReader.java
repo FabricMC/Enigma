@@ -10,6 +10,7 @@ import cuchaz.enigma.translation.mapping.serde.MappingsReader;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
@@ -34,7 +35,7 @@ public enum RGSReader implements MappingsReader {
             progress.step(i, "");
             String line = lines.get(i).trim().replaceAll("\n\n+", "");
 
-            if (line.equals("") || line.startsWith("#") || line.startsWith(".option")) continue;
+            if (line.equals("") || line.startsWith("#") || line.startsWith(".option") || line.startsWith(".class ")) continue;
 
             try {
                 MappingPair<?, EntryMapping> mapping = parseLine(line);
@@ -75,10 +76,10 @@ public enum RGSReader implements MappingsReader {
 
         int lastIndex = obfuscatedClassAndFieldName.lastIndexOf('/');
         String obfuscatedClass = obfuscatedClassAndFieldName.substring(0, lastIndex);
-        String obfuscatedField = obfuscatedClassAndFieldName.substring(lastIndex);
+        String obfuscatedField = obfuscatedClassAndFieldName.substring(lastIndex + 1);
 
         ClassEntry ownerClass = new ClassEntry(obfuscatedClass);
-        FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, obfuscatedField, null);
+        FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, obfuscatedField, new TypeDescriptor("LStepSound;"));
         String mapping = tokens[2];
 
         return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping));
@@ -90,12 +91,12 @@ public enum RGSReader implements MappingsReader {
 
         int lastIndex = obfuscatedClassAndMethodName.lastIndexOf('/');
         String obfuscatedClass = obfuscatedClassAndMethodName.substring(0, lastIndex);
-        String obfuscatedMethod = obfuscatedClassAndMethodName.substring(lastIndex);
+        String obfuscatedMethod = obfuscatedClassAndMethodName.substring(lastIndex + 1);
 
         ClassEntry ownerClass = new ClassEntry(obfuscatedClass);
         MethodDescriptor ownerDescriptor = new MethodDescriptor(tokens[2]);
         MethodEntry ownerMethod = new MethodEntry(ownerClass, obfuscatedMethod, ownerDescriptor);
         String mapping = tokens[3];
-        return new MappingPair<>(null, new EntryMapping(mapping));
+        return new MappingPair<>(ownerMethod, new EntryMapping(mapping));
     }
 }
