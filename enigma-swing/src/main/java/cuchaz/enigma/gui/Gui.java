@@ -75,6 +75,7 @@ public class Gui implements LanguageChangeListener {
 	private ConnectionState connectionState;
 	private boolean isJarOpen;
 	private final Set<EditableType> editableTypes;
+	private boolean singleClassTree;
 
 	public JFileChooser jarFileChooser;
 	public JFileChooser tinyMappingsFileChooser;
@@ -424,7 +425,19 @@ public class Gui implements LanguageChangeListener {
 	public GuiController getController() {
 		return this.controller;
 	}
-
+	
+	public void setSingleClassTree(boolean singleClassTree) {
+		this.singleClassTree = singleClassTree;
+		this.classesPanel.removeAll();
+		this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
+		getController().refreshClasses();
+		retranslateUi();
+	}
+	
+	public boolean isSingleClassTree() {
+		return singleClassTree;
+	}
+	
 	public void onStartOpenJar() {
 		this.classesPanel.removeAll();
 		redraw();
@@ -434,7 +447,7 @@ public class Gui implements LanguageChangeListener {
 		// update gui
 		this.frame.setTitle(Enigma.NAME + " - " + jarName);
 		this.classesPanel.removeAll();
-		this.classesPanel.add(splitClasses);
+		this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
 		closeAllEditorTabs();
 
 		// update menu
@@ -816,8 +829,6 @@ public class Gui implements LanguageChangeListener {
 		} else if (data instanceof ClassEntry) {
 			// class rename
 
-			// assume this is deobf since the obf tree doesn't allow renaming in
-			// the first place
 			// TODO optimize reverse class lookup, although it looks like it's
 			//      fast enough for now
 			EntryRemapper mapper = this.controller.project.getMapper();
@@ -826,7 +837,7 @@ public class Gui implements LanguageChangeListener {
 					.filter(e -> e instanceof ClassEntry)
 					.map(e -> (ClassEntry) e)
 					.filter(e -> mapper.deobfuscate(e).equals(deobf))
-					.findAny().get();
+					.findAny().orElse(deobf);
 
 			this.controller.rename(vc, new EntryReference<>(obf, obf.getFullName()), ((ClassEntry) data).getFullName(), false);
 			if (!vc.canProceed()) return;

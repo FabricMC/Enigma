@@ -359,7 +359,9 @@ public class GuiController implements ClientPacketHandler {
 		openReference(reference);
 	}
 
-	private void refreshClasses() {
+	public void refreshClasses() {
+		if (project == null) return;
+		
 		List<ClassEntry> obfClasses = Lists.newArrayList();
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
 		this.addSeparatedClasses(obfClasses, deobfClasses);
@@ -375,6 +377,11 @@ public class GuiController implements ClientPacketHandler {
 				.filter(entry -> !entry.isInnerClass());
 
 		visibleClasses.forEach(entry -> {
+			if (gui.isSingleClassTree()) {
+				deobfClasses.add(entry);
+				return;
+			}
+
 			ClassEntry deobfEntry = mapper.deobfuscate(entry);
 
 			List<ObfuscationTestService> obfService = enigma.getServices().get(ObfuscationTestService.TYPE);
