@@ -81,12 +81,16 @@ public enum RGSWriter implements MappingsWriter {
         }
 
         Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
-        if (entry instanceof ClassEntry) {
-            classes.add(generateClassLine((ClassEntry) entry, translator));
-        } else if (entry instanceof FieldEntry) {
-            fields.add(generateFieldLine((FieldEntry) entry, translator));
-        } else if (entry instanceof MethodEntry) {
-            methods.add(generateMethodLine((MethodEntry) entry, translator));
+        if (entry instanceof ClassEntry classEntry) {
+            if (!classEntry.getFullName().contains("paulscode") && !classEntry.getName().equals("net/minecraft/client/MinecraftApplet") && !classEntry.getName().equals("net/minecraft/isom/IsomPreviewApplet") && !classEntry.getName().equals("net/minecraft/client/Minecraft")) {
+                classes.add(generateClassLine(classEntry, translator));
+            }
+        } else if (entry instanceof FieldEntry fieldEntry) {
+            fields.add(generateFieldLine(fieldEntry, translator));
+        } else if (entry instanceof MethodEntry methodEntry) {
+            if (!entry.getName().contains("<init>")) {
+                methods.add(generateMethodLine(methodEntry, translator));
+            }
         }
 
         for (Entry<?> child : sorted(node.getChildren())) {
