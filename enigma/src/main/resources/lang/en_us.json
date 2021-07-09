@@ -151,6 +151,8 @@
 	"progress.mappings.tiny_v2.loading": "Loading mapping file",
 	"progress.mappings.srg_file.generating": "Generating mappings",
 	"progress.mappings.srg_file.writing": "Writing mappings",
+	"progress.mappings.rgs_file.generating": "Generating mappings",
+	"progress.mappings.rgs_file.writing": "Writing mappings",
 	"progress.stats": "Generating stats",
 	"progress.stats.data": "Generating data",
 

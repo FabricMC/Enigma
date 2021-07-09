@@ -18,10 +18,16 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public enum RGSReader implements MappingsReader {
     INSTANCE;
+
+    // Key: obfuscated name, Value: Remapped name
+    private final Map<String, String> remappedFields = new HashMap<>();
+    private boolean isGeneratedIntermediaries = false;
 
     @Override
     public EntryTree<EntryMapping> read(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws MappingParseException, IOException {
@@ -57,12 +63,16 @@ public enum RGSReader implements MappingsReader {
             case ".class_map" -> { return parseClass(tokens); }
             case ".field_map" -> { return parseField(tokens); }
             case ".method_map" -> { return parseMethod(tokens); }
+            case "### GENERATED MAPPINGS:" -> {
+                this.isGeneratedIntermediaries = true;
+                return parseField(tokens);
+            }
             default -> throw new RuntimeException("Unknown token '" + key + "'!");
         }
     }
 
     private MappingPair<ClassEntry, EntryMapping> parseClass(String[] tokens) {
-        // .class_map a PathPoint
+        // .class_map ClassA RemappedClassA
         ClassEntry obfuscatedEntry = new ClassEntry(tokens[1]);
         String mapping = tokens[2];
 
@@ -71,7 +81,7 @@ public enum RGSReader implements MappingsReader {
     }
 
     private MappingPair<FieldEntry, EntryMapping> parseField(String[] tokens) {
-        // .field_map ad/e dataFolder
+        // .field_map ClassA/FieldA RemappedFieldA
         String obfuscatedClassAndFieldName = tokens[1];
 
         int lastIndex = obfuscatedClassAndFieldName.lastIndexOf('/');
@@ -82,11 +92,19 @@ public enum RGSReader implements MappingsReader {
         FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, obfuscatedField, new TypeDescriptor("LStepSound;"));
         String mapping = tokens[2];
 
+        if (isGeneratedIntermediaries) {
+            return new MappingPair<>(
+                    new FieldEntry(ownerClass, obfuscatedField, new TypeDescriptor("LStepSound;")),
+                    new EntryMapping(this.remappedFields.get(obfuscatedClass))
+            );
+        }
+
+        this.remappedFields.put(obfuscatedClass, obfuscatedField);
         return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping));
     }
 
     private MappingPair<MethodEntry, EntryMapping> parseMethod(String[] tokens) {
-        // .method_map a/a ()Z func_1179_a
+        // .method_map ClassA/MethodA ()Z RemappedMethodA
         String obfuscatedClassAndMethodName = tokens[1];
 
         int lastIndex = obfuscatedClassAndMethodName.lastIndexOf('/');
