@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 dependencies {
@@ -22,8 +22,7 @@ jar.manifest.attributes 'Main-Class': mainClassName
 publishing {
     publications {
         shadow(MavenPublication) { publication ->
-            publication.from components.java
-            publication.artifact shadowJar
+            project.shadow.component publication
         }
     }
 }
