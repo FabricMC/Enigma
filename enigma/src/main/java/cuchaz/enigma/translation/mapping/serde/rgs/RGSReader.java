@@ -39,8 +39,10 @@ public enum RGSReader implements MappingsReader {
 
         for (int i = 0; i < lines.size(); i++) {
             progress.step(i, "");
+            // This mainly removes empty lines which cause our reader to freak
             String line = lines.get(i).trim().replaceAll("\n\n+", "");
 
+            // This is needed to avoid preprocessor arguments, maybe there is a way to fix this?
             if (line.equals("") || line.startsWith("#") || line.startsWith(".option") || line.startsWith(".class ")) continue;
 
             try {
@@ -63,9 +65,12 @@ public enum RGSReader implements MappingsReader {
             case ".class_map" -> { return parseClass(tokens); }
             case ".field_map" -> { return parseField(tokens); }
             case ".method_map" -> { return parseMethod(tokens); }
+            // This is for JADs/RetroguardSrc version of intermediary (I.E. func_), our mappings will be a direct translation
+            // so everything else will have to be obfuscated, I could possibly "generate" intermediaries, but that's a
+            // feature as for now.
             case "### GENERATED MAPPINGS:" -> {
                 this.isGeneratedIntermediaries = true;
-                return parseField(tokens);
+                return null;
             }
             default -> throw new RuntimeException("Unknown token '" + key + "'!");
         }

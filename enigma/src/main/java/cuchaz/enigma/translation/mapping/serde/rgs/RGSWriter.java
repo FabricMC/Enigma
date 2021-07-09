@@ -62,6 +62,13 @@ public enum RGSWriter implements MappingsWriter {
 
         progress.init(3, I18n.translate("progress.mappings.rgs_file.writing"));
         try (PrintWriter writer = new LfPrintWriter(Files.newBufferedWriter(path))) {
+            // Preprocessor arguments, Alpha 1.1.2_01 RGS parser freaks if these do not exist
+            writer.write(".option Application\n");
+            writer.write(".class paulscode/sound/** protected\n");
+            writer.write(".class com/jcraft/** protected\n");
+            writer.write(".class *\n");
+            writer.write(".class net/minecraft/**\n");
+
             progress.step(0, I18n.translate("type.classes"));
             classLines.forEach(writer::println);
             progress.step(1, I18n.translate("type.fields"));
@@ -82,12 +89,14 @@ public enum RGSWriter implements MappingsWriter {
 
         Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
         if (entry instanceof ClassEntry classEntry) {
+            // RGS parser freaks if any of these classes are in the output.
             if (!classEntry.getFullName().contains("paulscode") && !classEntry.getName().equals("net/minecraft/client/MinecraftApplet") && !classEntry.getName().equals("net/minecraft/isom/IsomPreviewApplet") && !classEntry.getName().equals("net/minecraft/client/Minecraft")) {
                 classes.add(generateClassLine(classEntry, translator));
             }
         } else if (entry instanceof FieldEntry fieldEntry) {
             fields.add(generateFieldLine(fieldEntry, translator));
         } else if (entry instanceof MethodEntry methodEntry) {
+            // RGS parser doesn't like constructors being mapped like methods as <init>
             if (!entry.getName().contains("<init>")) {
                 methods.add(generateMethodLine(methodEntry, translator));
             }
