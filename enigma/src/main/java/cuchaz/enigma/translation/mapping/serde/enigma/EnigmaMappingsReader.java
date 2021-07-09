@@ -247,7 +247,6 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		TypeDescriptor descriptor;
 
 		if (tokens.length == 3) {
-			mapping = tokens[1];
 			descriptor = new TypeDescriptor(tokens[2]);
 		} else if (tokens.length == 4) {
 			AccessModifier parsedModifier = parseModifier(tokens[3]);
