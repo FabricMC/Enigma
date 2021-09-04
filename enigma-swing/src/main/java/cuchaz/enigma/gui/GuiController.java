@@ -536,6 +536,7 @@ public class GuiController implements ClientPacketHandler {
 	public void setDecompiler(DecompilerService service) {
 		if (chp != null) {
 			chp.setDecompilerService(service);
+			chp.setDecompilerRemoveImports(!UiConfig.shouldShowImports());
 		}
 	}
 
