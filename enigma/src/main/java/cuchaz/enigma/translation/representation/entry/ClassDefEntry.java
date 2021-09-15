@@ -75,6 +75,10 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 		return interfaces;
 	}
 
+	public boolean isRecord() {
+		return superClass.getName().equals("java/lang/Record");
+	}
+
 	@Override
 	public TranslateResult<ClassDefEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
 		Signature translatedSignature = translator.translate(signature);
