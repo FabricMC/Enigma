@@ -2,10 +2,13 @@ package cuchaz.enigma.classprovider;
 
 import com.google.common.collect.ImmutableSet;
 import cuchaz.enigma.utils.AsmUtil;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -51,9 +54,25 @@ public class JarClassProvider implements AutoCloseable, ClassProvider {
         }
 
         try {
-            return AsmUtil.bytesToNode(Files.readAllBytes(fileSystem.getPath(name + ".class")));
+            ClassNode classNode = AsmUtil.bytesToNode(Files.readAllBytes(fileSystem.getPath(name + ".class")));
+            fixRecordComponents(classNode);
+            return classNode;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void fixRecordComponents(ClassNode classNode) {
+        if (classNode.superName.equals("java/lang/Record") && classNode.recordComponents == null) {
+            for (FieldNode field : classNode.fields) {
+                if (Modifier.isStatic(field.access)) {
+                    continue;
+                }
+
+                classNode.visitRecordComponent(field.name, field.desc, field.signature);
+            }
+
+            classNode.access |= Opcodes.ACC_RECORD;
         }
     }
 
