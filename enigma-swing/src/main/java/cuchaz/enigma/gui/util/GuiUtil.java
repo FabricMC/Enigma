@@ -20,6 +20,7 @@ import javax.swing.tree.TreePath;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.collect.Lists;
 
+import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -119,7 +120,8 @@ public class GuiUtil {
     }
 
     public static Icon getClassIcon(Gui gui, ClassEntry entry) {
-        AccessFlags access = gui.getController().project.getJarIndex().getEntryIndex().getClassAccess(entry);
+        EntryIndex entryIndex = gui.getController().project.getJarIndex().getEntryIndex();
+        AccessFlags access = entryIndex.getClassAccess(entry);
 
         if (access != null) {
             if (access.isAnnotation()) {
@@ -128,7 +130,7 @@ public class GuiUtil {
                 return INTERFACE_ICON;
             } else if (access.isEnum()) {
                 return ENUM_ICON;
-            } else if (access.isRecord()) {
+            } else if (entryIndex.getDefinition(entry).isRecord()) {
                 return RECORD_ICON;
             }
         }

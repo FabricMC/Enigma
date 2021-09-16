@@ -39,10 +39,6 @@ public class AccessFlags {
 		return (flags & Opcodes.ACC_ENUM) != 0;
 	}
 
-	public boolean isRecord() {
-		return (flags & Opcodes.ACC_RECORD) != 0;
-	}
-
 	public boolean isBridge() {
 		return (flags & Opcodes.ACC_BRIDGE) != 0;
 	}

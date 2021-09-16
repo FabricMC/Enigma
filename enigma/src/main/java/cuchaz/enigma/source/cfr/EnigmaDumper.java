@@ -150,7 +150,7 @@ public class EnigmaDumper extends StringStreamDumper {
 
                     String javaDoc = mapping.javadoc();
                     if (javaDoc != null) {
-                        recordComponentDocs.add(String.format("@param %s %s", field.getFieldName(), javaDoc));
+                        recordComponentDocs.add(String.format("@param %s %s", mapping.targetName(), javaDoc));
                     }
                 }
             }

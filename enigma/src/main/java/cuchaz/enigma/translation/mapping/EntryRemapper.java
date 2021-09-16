@@ -88,9 +88,9 @@ public class EntryRemapper {
 		}
 	}
 
-	// A little bit of a hack to also map the getter method for record fields/components.
+	// A little bit of a hack to also map the getter method for record fields.
 	private void mapRecordComponentGetter(ValidationContext vc, ClassEntry classEntry, FieldEntry fieldEntry, EntryMapping fieldMapping) {
-		if (!jarIndex.getEntryIndex().getClassAccess(classEntry).isRecord() || jarIndex.getEntryIndex().getFieldAccess(fieldEntry).isStatic()) {
+		if (!jarIndex.getEntryIndex().getDefinition(classEntry).isRecord() || jarIndex.getEntryIndex().getFieldAccess(fieldEntry).isStatic()) {
 			return;
 		}
 
@@ -102,7 +102,7 @@ public class EntryRemapper {
 		MethodEntry methodEntry = null;
 
 		for (MethodEntry method : classMethods) {
-			// Find the matching record component getter via matching the names. My understanding is this is safe, failing this it may need to be a bit more intelligent
+			// Find the matching record component getter via matching the names. TODO: Support when the record field and method names do not match
 			if (method.getName().equals(fieldEntry.getName()) && method.getDesc().toString().equals("()" + fieldEntry.getDesc())) {
 				methodEntry = method;
 				break;
@@ -114,7 +114,8 @@ public class EntryRemapper {
 			return;
 		}
 
-		putMapping(vc, methodEntry, fieldMapping != null ? new EntryMapping(fieldMapping.targetName()) : null);
+		// Also remap the associated method, without the javadoc.
+		doPutMapping(vc, methodEntry, new EntryMapping(fieldMapping.targetName()), false);
 	}
 
 	@Nonnull
