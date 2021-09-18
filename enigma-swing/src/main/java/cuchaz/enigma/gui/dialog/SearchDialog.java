@@ -17,6 +17,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -207,7 +208,31 @@ public class SearchDialog {
 		this.classListModel = classListModel;
 		classList.setModel(classListModel);
 
-		currentSearch = su.asyncSearch(searchField.getText(), (idx, e) -> SwingUtilities.invokeLater(() -> classListModel.insertElementAt(e, idx)));
+		// handle these search result like minecraft scheduled tasks to prevent
+		// flooding swing buttons inputs etc with tons of (possibly outdated) invocations
+		record Order(int idx, SearchEntryImpl e) {}
+		Queue<Order> queue = new ConcurrentLinkedQueue<>();
+		Runnable updater = new Runnable() {
+			@Override
+			public void run() {
+				if (SearchDialog.this.classListModel != classListModel || !SearchDialog.this.dialog.isVisible()) {
+					return;
+				}
+
+				// too large count may increase delay for key and input handling, etc.
+				int count = 100;
+				while (count > 0 && !queue.isEmpty()) {
+					var o = queue.remove();
+					classListModel.insertElementAt(o.e, o.idx);
+					count--;
+				}
+
+				SwingUtilities.invokeLater(this);
+			}
+		};
+
+		currentSearch = su.asyncSearch(searchField.getText(), (idx, e) -> queue.add(new Order(idx, e)));
+		SwingUtilities.invokeLater(updater);
 	}
 
 	public void dispose() {
