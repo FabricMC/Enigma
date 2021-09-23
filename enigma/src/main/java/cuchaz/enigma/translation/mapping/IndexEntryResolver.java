@@ -1,6 +1,9 @@
 package cuchaz.enigma.translation.mapping;
 
-import com.google.common.collect.Sets;
+import java.util.*;
+
+import javax.annotation.Nullable;
+
 import cuchaz.enigma.analysis.IndexTreeBuilder;
 import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
@@ -13,9 +16,6 @@ import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 public class IndexEntryResolver implements EntryResolver {
 	private final EntryIndex entryIndex;
@@ -155,18 +155,23 @@ public class IndexEntryResolver implements EntryResolver {
 
 	@Override
 	public Set<MethodEntry> resolveEquivalentMethods(MethodEntry methodEntry) {
+		Set<MethodEntry> set = new HashSet<>();
+		resolveEquivalentMethods(set, methodEntry);
+		return set;
+	}
+
+	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodEntry methodEntry) {
 		AccessFlags access = entryIndex.getMethodAccess(methodEntry);
 		if (access == null) {
 			throw new IllegalArgumentException("Could not find method " + methodEntry);
 		}
 
 		if (!canInherit(methodEntry, access)) {
-			return Collections.singleton(methodEntry);
+			methodEntries.add(methodEntry);
+			return;
 		}
 
-		Set<MethodEntry> methodEntries = Sets.newHashSet();
 		resolveEquivalentMethods(methodEntries, treeBuilder.buildMethodInheritance(VoidTranslator.INSTANCE, methodEntry));
-		return methodEntries;
 	}
 
 	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
@@ -184,7 +189,7 @@ public class IndexEntryResolver implements EntryResolver {
 		// look at bridge methods!
 		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(methodEntry);
 		while (bridgedMethod != null) {
-			methodEntries.addAll(resolveEquivalentMethods(bridgedMethod));
+			resolveEquivalentMethods(methodEntries, bridgedMethod);
 			bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(bridgedMethod);
 		}
 
@@ -210,7 +215,7 @@ public class IndexEntryResolver implements EntryResolver {
 		// look at bridge methods!
 		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(methodEntry);
 		while (bridgedMethod != null) {
-			methodEntries.addAll(resolveEquivalentMethods(bridgedMethod));
+			resolveEquivalentMethods(methodEntries, bridgedMethod);
 			bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(bridgedMethod);
 		}
 
