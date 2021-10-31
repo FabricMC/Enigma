@@ -66,6 +66,7 @@
 	"menu.help.github": "Github Page",
 
 	"popup_menu.rename": "Rename",
+	"popup_menu.paste": "Paste text",
 	"popup_menu.javadoc": "Edit Javadoc",
 	"popup_menu.inheritance": "Show Inheritance",
 	"popup_menu.implementations": "Show Implementations",

@@ -12,6 +12,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.net.URI;
@@ -83,6 +85,14 @@ public class GuiUtil {
 	 */
 	public static void copyToClipboard(String text) {
 		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
+	}
+
+	public static String getClipboard() {
+		try {
+			return (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+		} catch (UnsupportedFlavorException | IOException e) {
+			return "";
+		}
 	}
 
 	public static void showPopup(JComponent component, String text, int x, int y) {
