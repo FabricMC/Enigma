@@ -12,6 +12,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.net.URI;
@@ -85,16 +87,24 @@ public class GuiUtil {
 		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
 	}
 
-	public static void showPopup(JComponent component, String text, int x, int y) {
-		// from https://stackoverflow.com/questions/39955015/java-swing-show-tooltip-as-a-message-dialog
-		JToolTip tooltip = new JToolTip();
-		tooltip.setTipText(text);
-		Popup p = PopupFactory.getSharedInstance().getPopup(component, tooltip, x + 10, y);
-		p.show();
-		Timer t = new Timer(1000, e -> p.hide());
-		t.setRepeats(false);
-		t.start();
-	}
+    public static String getClipboard() {
+        try {
+            return (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+        } catch (UnsupportedFlavorException | IOException e) {
+            return "";
+        }
+    }
+
+    public static void showPopup(JComponent component, String text, int x, int y) {
+        // from https://stackoverflow.com/questions/39955015/java-swing-show-tooltip-as-a-message-dialog
+        JToolTip tooltip = new JToolTip();
+        tooltip.setTipText(text);
+        Popup p = PopupFactory.getSharedInstance().getPopup(component, tooltip, x + 10, y);
+        p.show();
+        Timer t = new Timer(1000, e -> p.hide());
+        t.setRepeats(false);
+        t.start();
+    }
 
 	public static void showToolTipNow(JComponent component) {
 		// HACKHACK: trick the tooltip manager into showing the tooltip right now
