@@ -106,6 +106,7 @@
 	"info_panel.identifier.method": "Method",
 	"info_panel.identifier.constructor": "Constructor",
 	"info_panel.identifier.class": "Class",
+	"info_panel.identifier.original_name": "Original Name",
 	"info_panel.identifier.type_descriptor": "Type Descriptor",
 	"info_panel.identifier.method_descriptor": "Method Descriptor",
 	"info_panel.identifier.modifier": "Modifier",
