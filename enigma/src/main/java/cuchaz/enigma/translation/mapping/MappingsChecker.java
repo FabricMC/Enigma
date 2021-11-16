@@ -67,8 +67,29 @@ public class MappingsChecker {
 		if (!index.getEntryIndex().hasEntry(entry)) {
 			return true;
 		}
+
+		if (entry instanceof LocalVariableEntry localVariableEntry) {
+			// Drop local variables only if the method entry is to be dropped
+			return shouldDropEntry(localVariableEntry.getParent());
+		}
+
 		Collection<Entry<?>> resolvedEntries = index.getEntryResolver().resolveEntry(entry, ResolutionStrategy.RESOLVE_ROOT);
-		return !resolvedEntries.contains(entry);
+
+		if (resolvedEntries.isEmpty()) {
+			// Entry doesn't exist at all, drop it.
+			return true;
+		} else if (resolvedEntries.contains(entry)) {
+			// Entry is the root, don't drop it.
+			return false;
+		}
+
+		if (entry instanceof MethodEntry && mappings.getChildren(entry).size() > 0) {
+			// Method entry has parameter names, keep it even though it's not the root.
+			return false;
+		}
+
+		// Entry is not the root, and is not a method with params
+		return true;
 	}
 
 	public static class Dropped {
