@@ -9,9 +9,9 @@ dependencies {
     implementation 'org.ow2.asm:asm-util:9.2'
 
     implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
-    implementation 'net.fabricmc:cfr:0.0.8'
+    implementation 'net.fabricmc:cfr:0.0.9'
 
-    proGuard 'com.guardsquare:proguard-base:7.2.0-beta1'
+    proGuard 'com.guardsquare:proguard-base:7.2.0-beta2'
 }
 
 // Generate "version.txt" file
@@ -47,7 +47,7 @@ file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
 
         task("${theFile.name}TestObf", type: JavaExec,
                 dependsOn: "${theFile.name}TestJar") {
-            main 'proguard.ProGuard'
+            mainClass = 'proguard.ProGuard'
             classpath configurations.proGuard
 
             args '@src/test/resources/proguard-test.conf', '-injars', file('build/test-inputs/' +
