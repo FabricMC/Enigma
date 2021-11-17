@@ -4,7 +4,7 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [16-jdk]
+        java: [17-jdk]
     runs-on: ubuntu-20.04
     container:
       image: openjdk:${{ matrix.java }}
@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: gradle/wrapper-validation-action@v1
-      - run: ./gradlew build --stacktrace
+      - run: ./gradlew build --stacktrace --warning-mode fail
