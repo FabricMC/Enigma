@@ -1,16 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    width="16"
    height="16"
    viewBox="0 0 4.2333332 4.2333332"
    version="1.1"
-   id="svg8">
+   id="svg8"
+   sodipodi:docname="constructor.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <sodipodi:namedview
+     id="namedview21"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="44.9375"
+     inkscape:cx="7.6884562"
+     inkscape:cy="8"
+     inkscape:window-width="1920"
+     inkscape:window-height="1137"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
   <defs
      id="defs2">
     <linearGradient
@@ -38,7 +60,11 @@
        gradientUnits="userSpaceOnUse" />
     <filter
        style="color-interpolation-filters:sRGB;"
-       id="filter1135">
+       id="filter1135"
+       x="-0.096794256"
+       y="-0.068040278"
+       width="1.1935885"
+       height="1.1927808">
       <feFlood
          flood-opacity="0.498039"
          flood-color="rgb(0,0,0)"
@@ -76,14 +102,14 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
      id="layer1">
     <rect
-       style="fill:#1976d2;fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:#d21928;fill-opacity:1;fill-rule:evenodd;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect18"
        width="4.2333331"
        height="4.2333331"
@@ -91,7 +117,7 @@
        y="0"
        ry="1.0583333" />
     <rect
-       style="fill:#2196f3;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#f3213f;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect847"
        width="3.7041667"
        height="3.7041667"
