@@ -71,6 +71,28 @@ public abstract class Command {
 		throw exception;
 	}
 
+	protected static void writeMappings(EntryTree<EntryMapping> mappings, Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws Exception {
+		List<Exception> suppressed = new ArrayList<>();
+		if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
+			MappingFormat.ENIGMA_ZIP.write(mappings, path, progress, saveParameters);
+		} else {
+			for (MappingFormat format : MappingFormat.getWritableFormats()) {
+				try {
+					format.write(mappings, path, progress, saveParameters);
+					return;
+				} catch (Exception e) {
+					suppressed.add(e);
+				}
+			}
+		}
+
+		RuntimeException exception = new RuntimeException("Unable to write mappings!");
+		for (Exception supressedException : suppressed) {
+			exception.addSuppressed(supressedException);
+		}
+		throw exception;
+	}
+
 	protected static File getWritableFile(String path) {
 		if (path == null) {
 			return null;

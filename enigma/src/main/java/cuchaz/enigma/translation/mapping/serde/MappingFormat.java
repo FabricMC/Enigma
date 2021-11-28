@@ -73,8 +73,19 @@ public enum MappingFormat {
 				ENIGMA_FILE,
 				TINY_V2,
 				TINY_FILE,
-				SRG_FILE,
-				ENIGMA_ZIP
+				ENIGMA_ZIP,
+				PROGUARD
+		};
+	}
+
+	public static MappingFormat[] getWritableFormats() {
+		return new MappingFormat[] {
+				ENIGMA_DIRECTORY,
+				ENIGMA_FILE,
+				TINY_V2,
+				TINY_FILE,
+				ENIGMA_ZIP,
+				SRG_FILE
 		};
 	}
 }
