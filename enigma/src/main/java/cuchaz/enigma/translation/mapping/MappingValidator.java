@@ -8,6 +8,7 @@ import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.validation.Message;
@@ -46,7 +47,10 @@ public class MappingValidator {
 			Entry<?> relatedEntry = entry.replaceAncestor(containingClass, relatedClass);
 			Entry<?> translatedEntry = deobfuscator.translate(relatedEntry);
 
-			List<? extends Entry<?>> translatedSiblings = obfToDeobf.getSiblings(relatedEntry).stream().map(deobfuscator::translate).toList();
+			List<? extends Entry<?>> translatedSiblings = obfToDeobf.getSiblings(relatedEntry).stream()
+					.filter(e -> !isStatic(e)) // TODO: Improve this
+					.map(deobfuscator::translate)
+					.toList();
 
 			if (!isUnique(translatedEntry, translatedSiblings, name)) {
 				Entry<?> parent = translatedEntry.getParent();
@@ -83,5 +87,10 @@ public class MappingValidator {
 		}
 
 		return true;
+	}
+
+	private boolean isStatic(Entry<?> entry) {
+		AccessFlags accessFlags = index.getEntryIndex().getEntryAccess(entry);
+		return accessFlags != null && accessFlags.isStatic();
 	}
 }
