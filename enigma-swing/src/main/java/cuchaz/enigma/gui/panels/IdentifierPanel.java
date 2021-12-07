@@ -146,7 +146,7 @@ public class IdentifierPanel {
 
 				this.nameField = th.addRenameTextField(type, lve.getName());
 				th.addStringRow(I18n.translate("info_panel.identifier.class"), lve.getContainingClass().getFullName());
-				th.addStringRow(I18n.translate("info_panel.identifier.method"), lve.getParent().getName());
+				th.addCopiableStringRow(I18n.translate("info_panel.identifier.method"), lve.getParent().getName());
 				th.addStringRow(I18n.translate("info_panel.identifier.index"), Integer.toString(lve.getIndex()));
 			} else {
 				throw new IllegalStateException("unreachable");
