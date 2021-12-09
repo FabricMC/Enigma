@@ -55,14 +55,20 @@ public class StatsGenerator {
 
 		Map<String, Integer> counts = new HashMap<>();
 
-		int numDone = 0;
+		String topLevelPackageSlash = topLevelPackage.replace(".", "/");
 
+		int numDone = 0;
 		if (includedMembers.contains(StatsMember.METHODS) || includedMembers.contains(StatsMember.PARAMETERS)) {
 			for (MethodEntry method : entryIndex.getMethods()) {
 				progress.step(numDone++, I18n.translate("type.methods"));
-				MethodEntry root = entryResolver.resolveEntry(method, ResolutionStrategy.RESOLVE_ROOT).stream().findFirst().orElseThrow(AssertionError::new);
+				MethodEntry root = entryResolver
+						.resolveEntry(method, ResolutionStrategy.RESOLVE_ROOT)
+						.stream()
+						.findFirst()
+						.orElseThrow(AssertionError::new);
 
-				if (root == method) {
+				ClassEntry clazz = root.getParent();
+				if (root == method && this.mapper.deobfuscate(clazz).getPackageName().startsWith(topLevelPackageSlash)) {
 					if (includedMembers.contains(StatsMember.METHODS) && !((MethodDefEntry) method).getAccess().isSynthetic()) {
 						update(counts, method);
 						totalMappable++;
@@ -70,13 +76,33 @@ public class StatsGenerator {
 
 					if (includedMembers.contains(StatsMember.PARAMETERS) && (!((MethodDefEntry) method).getAccess().isSynthetic() || includeSynthetic)) {
 						int index = ((MethodDefEntry) method).getAccess().isStatic() ? 0 : 1;
-
 						for (TypeDescriptor argument : method.getDesc().getArgumentDescs()) {
 							update(counts, new LocalVariableEntry(method, index, "", true, null));
 							index += argument.getSize();
 							totalMappable++;
 						}
 					}
+				}
+			}
+		}
+
+		if (includedMembers.contains(StatsMember.FIELDS)) {
+			for (FieldEntry field : entryIndex.getFields()) {
+				progress.step(numDone++, I18n.translate("type.fields"));
+				ClassEntry clazz = field.getParent();
+				if (!((FieldDefEntry) field).getAccess().isSynthetic() && this.mapper.deobfuscate(clazz).getPackageName().startsWith(topLevelPackageSlash)) {
+					update(counts, field);
+					totalMappable++;
+				}
+			}
+		}
+
+		if (includedMembers.contains(StatsMember.CLASSES)) {
+			for (ClassEntry clazz : entryIndex.getClasses()) {
+				progress.step(numDone++, I18n.translate("type.classes"));
+				if (this.mapper.deobfuscate(clazz).getPackageName().startsWith(topLevelPackageSlash)) {
+					update(counts, clazz);
+					totalMappable++;
 				}
 			}
 		}
