@@ -150,7 +150,7 @@ public class JavadocDialog {
 		contentPane.add(tagsMenu, BorderLayout.NORTH);
 
 		// show the frame
-		this.ui.setSize(ScaleUtil.getDimension(600, 400));
+		this.ui.setSize(ScaleUtil.getDimension(630, 400));
 		this.ui.setLocationRelativeTo(parent);
 		this.ui.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
@@ -204,6 +204,7 @@ public class JavadocDialog {
 		CODE(true),
 		LINK(true),
 		LINKPLAIN(true),
+		VALUE(true),
 		RETURN(false),
 		SEE(false),
 		THROWS(false);
