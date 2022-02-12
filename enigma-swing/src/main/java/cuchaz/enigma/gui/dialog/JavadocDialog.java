@@ -208,6 +208,7 @@ public class JavadocDialog {
 		CODE(true),
 		LINK(true),
 		LINKPLAIN(true),
+		VALUE(true),
 		RETURN(false),
 		SEE(false),
 		THROWS(false);
