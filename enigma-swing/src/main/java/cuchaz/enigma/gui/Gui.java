@@ -666,4 +666,9 @@ public class Gui {
 	public boolean isEditable(EditableType t) {
 		return this.editableTypes.contains(t);
 	}
+
+	public void reloadKeyBinds() {
+		this.menuBar.setKeyBinds();
+		this.editorTabbedPane.reloadKeyBinds();
+	}
 }

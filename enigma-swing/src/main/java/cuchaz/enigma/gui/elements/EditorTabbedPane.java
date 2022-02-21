@@ -15,6 +15,7 @@ import com.google.common.collect.HashBiMap;
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.gui.Gui;
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.panels.ClosableTabTitlePane;
 import cuchaz.enigma.gui.panels.EditorPanel;
@@ -76,7 +77,7 @@ public class EditorTabbedPane {
 			ed.getEditor().addKeyListener(new KeyAdapter() {
 				@Override
 				public void keyPressed(KeyEvent e) {
-					if (e.getKeyCode() == KeyEvent.VK_4 && (e.getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) != 0) {
+					if (KeyBinds.EDITOR_CLOSE_TAB.matches(e)) {
 						closeEditor(ed);
 					}
 				}
@@ -161,5 +162,9 @@ public class EditorTabbedPane {
 
 	public Component getUi() {
 		return this.openFiles;
+	}
+
+	public void reloadKeyBinds() {
+		this.editors.values().forEach(EditorPanel::reloadKeyBinds);
 	}
 }

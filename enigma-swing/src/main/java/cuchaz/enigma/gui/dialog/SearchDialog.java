@@ -43,6 +43,7 @@ import javax.swing.event.DocumentListener;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 import cuchaz.enigma.gui.search.SearchEntry;
 import cuchaz.enigma.gui.search.SearchUtil;
 import cuchaz.enigma.gui.util.AbstractListCellRenderer;
@@ -94,15 +95,15 @@ public class SearchDialog {
 		searchField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+				if (KeyBinds.SEARCH_DIALOG_NEXT.matches(e)) {
 					int next = classList.isSelectionEmpty() ? 0 : classList.getSelectedIndex() + 1;
 					classList.setSelectedIndex(next);
 					classList.ensureIndexIsVisible(next);
-				} else if (e.getKeyCode() == KeyEvent.VK_UP) {
+				} else if (KeyBinds.SEARCH_DIALOG_PREVIOUS.matches(e)) {
 					int prev = classList.isSelectionEmpty() ? classList.getModel().getSize() : classList.getSelectedIndex() - 1;
 					classList.setSelectedIndex(prev);
 					classList.ensureIndexIsVisible(prev);
-				} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+				} else if (KeyBinds.EXIT.matches(e)) {
 					close();
 				}
 			}
