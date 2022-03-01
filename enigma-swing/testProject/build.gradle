@@ -1,0 +1,45 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.2.1'
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+var outputJar = file('output/out.jar')
+var parent = project(':enigma-swing')
+var mappings = file('mappings')
+
+task testEnigma(type: JavaExec, dependsOn: "obfuscate") {
+    mainClass = parent.mainClassName
+    classpath = parent.sourceSets.main.runtimeClasspath
+
+    args('-jar', outputJar, '-mappings', mappings.getAbsolutePath())
+    doFirst {
+        mappings.mkdirs()
+    }
+}
+
+task obfuscate(type: proguard.gradle.ProGuardTask) {
+    injars jar
+    outjars outputJar
+
+    libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+
+    dontshrink()
+    dontoptimize()
+    keepclasseswithmembers 'public class * { \
+          public static void main(java.lang.String[]); \
+    }'
+    keepattributes 'SourceFile'
+    keepattributes '*Annotation*'
+    renamesourcefileattribute 'SourceFile'
+    printmapping 'output/out.mapping'
+    flattenpackagehierarchy('com.example')
+}
+
