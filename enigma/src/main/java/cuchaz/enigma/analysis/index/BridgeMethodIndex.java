@@ -72,7 +72,14 @@ public class BridgeMethodIndex implements JarIndexer {
 
 		if (access.isBridge() || isPotentialBridge(syntheticMethod, specializedMethod)) {
 			bridgeToSpecialized.put(syntheticMethod, specializedMethod);
-			specializedToBridge.put(specializedMethod, syntheticMethod);
+			if (specializedToBridge.containsKey(specializedMethod)) {
+				// we already have a bridge for this method, so we keep the one higher in the hierarchy
+				// can happen with a class inheriting from a superclass with one or more bridge method(s)
+				MethodEntry bridgeMethod = specializedToBridge.get(specializedMethod);
+				specializedToBridge.put(specializedMethod, getHigherMethod(syntheticMethod, bridgeMethod));
+			} else {
+				specializedToBridge.put(specializedMethod, syntheticMethod);
+			}
 		}
 	}
 
@@ -135,6 +142,13 @@ public class BridgeMethodIndex implements JarIndexer {
 		}
 
 		return false;
+	}
+
+	// Get the method higher in the hierarchy
+	private MethodEntry getHigherMethod(MethodEntry bridgeMethod1, MethodEntry bridgeMethod2) {
+		ClassEntry parent1 = bridgeMethod1.getParent();
+		ClassEntry parent2 = bridgeMethod2.getParent();
+		return inheritanceIndex.getDescendants(parent1).contains(parent2) ? bridgeMethod1 : bridgeMethod2;
 	}
 
 	public boolean isBridgeMethod(MethodEntry entry) {

@@ -33,7 +33,8 @@ public class SourceFixVisitor extends ClassVisitor {
 		if (bridgeIndex.isBridgeMethod(methodEntry)) {
 			access |= Opcodes.ACC_BRIDGE;
 		} else if (bridgeIndex.isSpecializedMethod(methodEntry)) {
-			name = bridgeIndex.getBridgeFromSpecialized(methodEntry).getName();
+			// TODO: why this? seems to only cause issues
+			// name = bridgeIndex.getBridgeFromSpecialized(methodEntry).getName();
 		}
 
 		return super.visitMethod(access, name, descriptor, signature, exceptions);
