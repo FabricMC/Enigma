@@ -87,6 +87,8 @@ public class EntryIndex implements JarIndexer {
 			return getFieldAccess(fieldEntry);
 		} else if (entry instanceof LocalVariableEntry localVariableEntry) {
 			return getMethodAccess(localVariableEntry.getParent());
+		} else if (entry instanceof ClassEntry classEntry) {
+			return getClassAccess(classEntry);
 		}
 
 		return null;

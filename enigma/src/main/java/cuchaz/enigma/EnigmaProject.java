@@ -22,7 +22,9 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.index.InnerClassIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.analysis.index.JarIndexer;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
@@ -153,6 +155,17 @@ public class EnigmaProject {
 			}
 		} else if (obfEntry instanceof LocalVariableEntry && !((LocalVariableEntry) obfEntry).isArgument()) {
 			return false;
+		} else if (obfEntry instanceof ClassEntry classEntry) {
+			InnerClassIndex innerClassIndex = jarIndex.getInnerClassIndex();
+
+			if (innerClassIndex.isInnerClass(classEntry) && innerClassIndex.hasOuterClassData(classEntry)) {
+				JarIndexer.InnerClassData innerClassData = innerClassIndex.getInnerClassData(classEntry);
+
+				if (!innerClassData.hasInnerName() && !innerClassData.hasOuterName()) {
+					// Anonymous classes don't have inner or outer names
+					return false;
+				}
+			}
 		}
 
 		return this.jarIndex.getEntryIndex().hasEntry(obfEntry);
@@ -192,6 +205,10 @@ public class EnigmaProject {
 		}
 
 		return true;
+	}
+
+	public boolean isSynthetic(Entry<?> entry) {
+		return jarIndex.getEntryIndex().hasEntry(entry) && jarIndex.getEntryIndex().getEntryAccess(entry).isSynthetic();
 	}
 
 	public JarExport exportRemappedJar(ProgressListener progress) {
