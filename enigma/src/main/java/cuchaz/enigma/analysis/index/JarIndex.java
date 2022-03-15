@@ -44,6 +44,7 @@ public class JarIndex implements JarIndexer {
 	private final ReferenceIndex referenceIndex;
 	private final BridgeMethodIndex bridgeMethodIndex;
 	private final PackageVisibilityIndex packageVisibilityIndex;
+	private final InnerClassIndex innerClassIndex;
 	private final EntryResolver entryResolver;
 
 	private final Collection<JarIndexer> indexers;
@@ -51,13 +52,14 @@ public class JarIndex implements JarIndexer {
 	private final Multimap<String, MethodDefEntry> methodImplementations = HashMultimap.create();
 	private final ListMultimap<ClassEntry, ParentedEntry> childrenByClass;
 
-	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex, PackageVisibilityIndex packageVisibilityIndex) {
+	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex, PackageVisibilityIndex packageVisibilityIndex, InnerClassIndex innerClassIndex) {
 		this.entryIndex = entryIndex;
 		this.inheritanceIndex = inheritanceIndex;
 		this.referenceIndex = referenceIndex;
 		this.bridgeMethodIndex = bridgeMethodIndex;
 		this.packageVisibilityIndex = packageVisibilityIndex;
-		this.indexers = List.of(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
+		this.innerClassIndex = innerClassIndex;
+		this.indexers = List.of(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex, innerClassIndex);
 		this.entryResolver = new IndexEntryResolver(this);
 		this.childrenByClass = ArrayListMultimap.create();
 	}
@@ -68,7 +70,8 @@ public class JarIndex implements JarIndexer {
 		ReferenceIndex referenceIndex = new ReferenceIndex();
 		BridgeMethodIndex bridgeMethodIndex = new BridgeMethodIndex(entryIndex, inheritanceIndex, referenceIndex);
 		PackageVisibilityIndex packageVisibilityIndex = new PackageVisibilityIndex();
-		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
+		InnerClassIndex innerClassIndex = new InnerClassIndex();
+		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex, innerClassIndex);
 	}
 
 	public void indexJar(Set<String> classNames, ClassProvider classProvider, ProgressListener progress) {
@@ -180,6 +183,24 @@ public class JarIndex implements JarIndexer {
 		indexers.forEach(indexer -> indexer.indexLambda(callerEntry, lambda, targetType));
 	}
 
+	@Override
+	public void indexInnerClass(ClassDefEntry classEntry, InnerClassData innerClassData) {
+		if (classEntry.isJre()) {
+			return;
+		}
+
+		indexers.forEach(indexer -> indexer.indexInnerClass(classEntry, innerClassData));
+	}
+
+	@Override
+	public void indexOuterClass(ClassDefEntry classEntry, OuterClassData outerClassData) {
+		if (classEntry.isJre()) {
+			return;
+		}
+
+		indexers.forEach(indexer -> indexer.indexOuterClass(classEntry, outerClassData));
+	}
+
 	public EntryIndex getEntryIndex() {
 		return entryIndex;
 	}
@@ -198,6 +219,10 @@ public class JarIndex implements JarIndexer {
 
 	public PackageVisibilityIndex getPackageVisibilityIndex() {
 		return packageVisibilityIndex;
+	}
+
+	public InnerClassIndex getInnerClassIndex() {
+		return innerClassIndex;
 	}
 
 	public EntryResolver getEntryResolver() {

@@ -27,6 +27,28 @@ public interface JarIndexer {
 	default void indexLambda(MethodDefEntry callerEntry, Lambda lambda, ReferenceTargetType targetType) {
 	}
 
+	default void indexInnerClass(ClassDefEntry classEntry, InnerClassData innerClassData) {
+	}
+
+	default void indexOuterClass(ClassDefEntry classEntry, OuterClassData outerClassData) {
+	}
+
 	default void processIndex(JarIndex index) {
+	}
+
+	record InnerClassData(String name, String innerName, String outerName, int access) {
+		public boolean hasInnerName() {
+			return innerName != null;
+		}
+
+		public boolean hasOuterName() {
+			return outerName != null;
+		}
+	}
+
+	record OuterClassData(String owner, String name, String descriptor) {
+		public boolean hasEnclosingMethod() {
+			return name != null && descriptor != null;
+		}
 	}
 }

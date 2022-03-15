@@ -26,6 +26,20 @@ public class IndexClassVisitor extends ClassVisitor {
 	}
 
 	@Override
+	public void visitInnerClass(String name, String outerName, String innerName, int access) {
+		indexer.indexInnerClass(classEntry, new JarIndexer.InnerClassData(name, outerName, innerName, access));
+
+		super.visitInnerClass(name, outerName, innerName, access);
+	}
+
+	@Override
+	public void visitOuterClass(String owner, String name, String descriptor) {
+		indexer.indexOuterClass(classEntry, new JarIndexer.OuterClassData(owner, name, descriptor));
+
+		super.visitOuterClass(owner, name, descriptor);
+	}
+
+	@Override
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
 		indexer.indexField(FieldDefEntry.parse(classEntry, access, name, desc, signature));
 

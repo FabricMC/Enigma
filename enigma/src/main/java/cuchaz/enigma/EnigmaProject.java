@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import cuchaz.enigma.analysis.index.InnerClassIndex;
+import cuchaz.enigma.analysis.index.JarIndexer;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
@@ -177,6 +179,15 @@ public class EnigmaProject {
 			}
 		} else if (obfEntry instanceof LocalVariableEntry && !((LocalVariableEntry) obfEntry).isArgument()) {
 			return false;
+		} else if (obfEntry instanceof ClassEntry classEntry) {
+			InnerClassIndex innerClassIndex = jarIndex.getInnerClassIndex();
+			if (innerClassIndex.isInnerClass(classEntry) && innerClassIndex.hasOuterClassData(classEntry)) {
+				JarIndexer.InnerClassData innerClassData = innerClassIndex.getInnerClassData(classEntry);
+				if (!innerClassData.hasInnerName() && !innerClassData.hasOuterName()) {
+					// Anonymous classes don't have inner or outer names
+					return false;
+				}
+			}
 		}
 
 		return this.jarIndex.getEntryIndex().hasEntry(obfEntry);
@@ -216,6 +227,10 @@ public class EnigmaProject {
 		}
 
 		return true;
+	}
+
+	public boolean isSynthetic(Entry<?> entry) {
+		return jarIndex.getEntryIndex().hasEntry(entry) && jarIndex.getEntryIndex().getEntryAccess(entry).isSynthetic();
 	}
 
 	public JarExport exportRemappedJar(ProgressListener progress) {
