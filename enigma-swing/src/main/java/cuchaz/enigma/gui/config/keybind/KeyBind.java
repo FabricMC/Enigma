@@ -52,6 +52,10 @@ public record KeyBind(String name, String category, List<Combination> combinatio
         return toKeyStroke(0);
     }
 
+    public int getKeyCode() {
+        return isEmpty() ? -1 : combinations.get(0).keyCode;
+    }
+
     public boolean isEmpty() {
         return combinations.isEmpty();
     }

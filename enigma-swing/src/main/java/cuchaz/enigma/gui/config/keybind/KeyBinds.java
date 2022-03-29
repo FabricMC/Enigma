@@ -18,6 +18,9 @@ public final class KeyBinds {
     public static final KeyBind EXIT = KeyBind.builder("close").key(KeyEvent.VK_ESCAPE).build();
     public static final KeyBind DIALOG_SAVE = KeyBind.builder("dialog_save").key(KeyEvent.VK_ENTER).build();
 
+    public static final KeyBind QUICK_FIND_DIALOG_IGNORE_CASE = KeyBind.builder("ignore_case", QUICK_FIND_DIALOG_CATEGORY).key(KeyEvent.VK_C).build();
+    public static final KeyBind QUICK_FIND_DIALOG_REGEX = KeyBind.builder("regex", QUICK_FIND_DIALOG_CATEGORY).key(KeyEvent.VK_R).build();
+    public static final KeyBind QUICK_FIND_DIALOG_WRAP = KeyBind.builder("wrap", QUICK_FIND_DIALOG_CATEGORY).key(KeyEvent.VK_W).build();
     public static final KeyBind QUICK_FIND_DIALOG_NEXT = KeyBind.builder("next", QUICK_FIND_DIALOG_CATEGORY).key(KeyEvent.VK_ENTER).build();
     public static final KeyBind QUICK_FIND_DIALOG_PREVIOUS = KeyBind.builder("previous", QUICK_FIND_DIALOG_CATEGORY).mod(KeyEvent.SHIFT_DOWN_MASK).key(KeyEvent.VK_ENTER).build();
     public static final KeyBind SEARCH_DIALOG_NEXT = KeyBind.builder("next", SEARCH_DIALOG_CATEGORY).key(KeyEvent.VK_DOWN).build();
