@@ -1,5 +1,7 @@
 package cuchaz.enigma.source.bytecode;
 
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.bytecode.translators.TranslationClassVisitor;
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
@@ -11,9 +13,11 @@ import java.io.StringWriter;
 
 public class BytecodeSource implements Source {
     private final ClassNode classNode;
+    private final EntryRemapper remapper;
 
-    public BytecodeSource(ClassNode classNode) {
+    public BytecodeSource(ClassNode classNode, EntryRemapper remapper) {
         this.classNode = classNode;
+        this.remapper = remapper;
     }
 
     @Override
@@ -23,8 +27,7 @@ public class BytecodeSource implements Source {
 
     @Override
     public Source withJavadocs(EntryRemapper remapper) {
-        // TODO
-        return this;
+        return new BytecodeSource(classNode, remapper);
     }
 
     @Override
@@ -36,8 +39,16 @@ public class BytecodeSource implements Source {
         PrintWriter writer = new PrintWriter(out);
 
         TraceClassVisitor traceClassVisitor = new TraceClassVisitor(null, textifier, writer);
-        classNode.accept(traceClassVisitor);
 
+        ClassNode node = this.classNode;
+
+        if (remapper != null) {
+            ClassNode translatedNode = new ClassNode();
+            node.accept(new TranslationClassVisitor(remapper.getDeobfuscator(), Enigma.ASM_VERSION, translatedNode));
+            node = translatedNode;
+        }
+
+        node.accept(traceClassVisitor);
         index.setSource(out.toString());
 
         return index;
