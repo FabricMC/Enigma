@@ -4,10 +4,10 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.source.SourceIndex;
 import org.objectweb.asm.util.Textifier;
 
-public class EngimaTextifier extends Textifier {
+public class EnigmaTextifier extends Textifier {
     private final SourceIndex sourceIndex;
 
-    public EngimaTextifier(SourceIndex sourceIndex) {
+    public EnigmaTextifier(SourceIndex sourceIndex) {
         super(Enigma.ASM_VERSION);
         this.sourceIndex = sourceIndex;
     }

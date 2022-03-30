@@ -34,7 +34,7 @@ public class BytecodeSource implements Source {
     public SourceIndex index() {
         SourceIndex index = new SourceIndex();
 
-        EngimaTextifier textifier = new EngimaTextifier(index);
+        EnigmaTextifier textifier = new EnigmaTextifier(index);
         StringWriter out = new StringWriter();
         PrintWriter writer = new PrintWriter(out);
 
