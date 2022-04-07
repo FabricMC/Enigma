@@ -105,7 +105,7 @@ public class GuiController implements ClientPacketHandler {
 				.setProfile(profile)
 				.build();
 
-		autoSaveExecutor.scheduleAtFixedRate(this::autoSave, 0, 5, TimeUnit.SECONDS);
+		autoSaveExecutor.scheduleAtFixedRate(this::autoSave, 0, 60, TimeUnit.SECONDS);
 	}
 
 	public boolean isDirty() {
