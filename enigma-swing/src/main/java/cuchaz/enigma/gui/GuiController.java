@@ -15,13 +15,21 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import javax.swing.JOptionPane;
@@ -32,11 +40,13 @@ import com.google.common.collect.Lists;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.*;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
+import cuchaz.enigma.config.ConfigPaths;
 import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
@@ -87,11 +97,15 @@ public class GuiController implements ClientPacketHandler {
 
 	private History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
 
+	private ScheduledExecutorService autoSaveExecutor = Executors.newScheduledThreadPool(1);
+
 	public GuiController(Gui gui, EnigmaProfile profile) {
 		this.gui = gui;
 		this.enigma = Enigma.builder()
 				.setProfile(profile)
 				.build();
+
+		autoSaveExecutor.scheduleAtFixedRate(this::autoSave, 0, 5, TimeUnit.SECONDS);
 	}
 
 	public boolean isDirty() {
@@ -117,6 +131,51 @@ public class GuiController implements ClientPacketHandler {
 		this.chp = null;
 		this.project = null;
 		this.gui.onCloseJar();
+	}
+
+	public void close() {
+		autoSaveExecutor.shutdown();
+	}
+
+	private synchronized void autoSave() {
+		if (!UiConfig.autoSave() || project == null) {
+			return;
+		}
+
+		final EntryRemapper mapper = project.getMapper();
+		final Path autoSaveDir = ConfigPaths.getConfigPathRoot().resolve("enigma").resolve("autosave");
+
+		try {
+			final Path autoSavePath = autoSaveDir.resolve(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss").format(LocalDateTime.now()) + ".mappings");
+
+			if (Files.notExists(autoSaveDir)) {
+				Files.createDirectories(autoSaveDir);
+			} else {
+				List<Path> existingAutoSaveFiles = Files.list(autoSaveDir).filter(path -> path.toString().endsWith(".mappings"))
+					.sorted(Comparator.comparing(Path::toString)) // Sort by creation date
+					.toList();
+
+				if (existingAutoSaveFiles.size() > UiConfig.autoSaveCount()) {
+					// Delete the oldest x autosaves
+					existingAutoSaveFiles.stream()
+						.limit(existingAutoSaveFiles.size() - UiConfig.autoSaveCount())
+						.forEach(path -> {
+							try {
+								System.out.println("Removing previous auto save: " + path);
+								Files.delete(path);
+							} catch (IOException e) {
+								throw new UncheckedIOException(e);
+							}
+						});
+				}
+			}
+
+			System.out.println("Auto saving to " + autoSavePath);
+			MappingFormat.ENIGMA_FILE.write(mapper.getObfToDeobf(), autoSavePath, ProgressListener.none(), EnigmaProfile.DEFAULT_MAPPING_SAVE_PARAMETERS);
+		} catch (Exception e)	{
+			System.err.println("Failed to auto save:");
+			e.printStackTrace();
+		}
 	}
 
 	public CompletableFuture<Void> openMappings(MappingFormat format, Path path) {

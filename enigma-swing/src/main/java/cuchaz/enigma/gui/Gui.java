@@ -440,6 +440,7 @@ public class Gui {
 			searchDialog.dispose();
 		}
 		this.mainWindow.frame().dispose();
+		this.controller.close();
 		System.exit(0);
 	}
 
