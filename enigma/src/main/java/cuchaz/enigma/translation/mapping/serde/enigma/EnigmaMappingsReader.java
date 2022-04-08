@@ -104,7 +104,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
 			String line = lines.get(lineNumber);
-			int indentation = countIndentation(line);
+			int indentation = countIndentation(line, path, lineNumber);
 
 			line = formatLine(line);
 			if (line == null) {
@@ -120,7 +120,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 				}
 			} catch (Throwable t) {
 				t.printStackTrace();
-				throw new MappingParseException(path::toString, lineNumber, t.toString());
+				throw new MappingParseException(path::toString, lineNumber + 1, t.toString());
 			}
 		}
 
@@ -162,9 +162,13 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		return line;
 	}
 
-	private static int countIndentation(String line) {
+	private static int countIndentation(String line, Path path, int lineNumber) throws MappingParseException {
 		int indent = 0;
 		for (int i = 0; i < line.length(); i++) {
+			if (line.charAt(i) == ' ') {
+				throw new MappingParseException(path::toString, lineNumber + 1, "Spaces must not be used to indent lines!");
+			}
+
 			if (line.charAt(i) != '\t') {
 				break;
 			}
