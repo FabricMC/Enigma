@@ -11,6 +11,7 @@ import java.util.Locale;
 public record KeyBind(String name, String category, List<Combination> combinations) {
     public record Combination(int keyCode, int keyModifiers) {
         public static final Combination EMPTY = new Combination(-1, 0);
+
         public boolean matches(KeyEvent e) {
             return e.getKeyCode() == keyCode && e.getModifiersEx() == keyModifiers;
         }
