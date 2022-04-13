@@ -214,6 +214,8 @@
 	"validation.message.illegal_doc_comment_end": "Javadoc comment cannot contain the character sequence '*/'.",
 	"validation.message.reserved_identifier": "'%s' is a reserved identifier.",
 	"validation.message.unknown_record_getter": "Could not find a matching record component getter for %s",
+	"validation.message.shadowed_name_class": "Name '%s' shadows another in '%s'.",
+	"validation.message.shadowed_name": "Name '%s' shadows another in '%s'.",
 
 	"crash.title": "%s - Crash Report",
 	"crash.summary": "%s has crashed! =(",

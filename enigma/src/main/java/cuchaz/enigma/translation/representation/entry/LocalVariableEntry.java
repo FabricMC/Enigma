@@ -85,6 +85,11 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	}
 
 	@Override
+	public boolean canShadow(Entry<?> entry) {
+		return false;
+	}
+
+	@Override
 	public String toString() {
 		return this.parent + "(" + this.index + ":" + this.name + ")";
 	}

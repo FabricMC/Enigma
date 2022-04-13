@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
@@ -11,8 +13,6 @@ import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
@@ -44,6 +44,7 @@ public class MappingValidator {
 		Collection<ClassEntry> relatedClasses = getRelatedClasses(containingClass);
 
 		boolean error = false;
+		Entry<?> shadowedEntry;
 
 		for (ClassEntry relatedClass : relatedClasses) {
 			if (isStatic(entry) && relatedClass != containingClass) {
@@ -68,6 +69,14 @@ public class MappingValidator {
 				}
 
 				error = true;
+			} else if ((shadowedEntry = getShadowedEntry(translatedEntry, translatedSiblings, name)) != null) {
+				Entry<?> parent = shadowedEntry.getParent();
+
+				if (parent != null) {
+					vc.raise(Message.SHADOWED_NAME_CLASS, name, parent);
+				} else {
+					vc.raise(Message.SHADOWED_NAME, name);
+				}
 			}
 		}
 
@@ -97,6 +106,21 @@ public class MappingValidator {
 
 	private boolean canConflict(Entry<?> entry, Entry<?> sibling) {
 		return entry.canConflictWith(sibling);
+	}
+
+	@Nullable
+	private Entry<?> getShadowedEntry(Entry<?> entry, List<? extends Entry<?>> siblings, String name) {
+		for (Entry<?> sibling : siblings) {
+			if (canShadow(entry, sibling) && sibling.getName().equals(name)) {
+				return sibling;
+			}
+		}
+
+		return null;
+	}
+
+	private boolean canShadow(Entry<?> entry, Entry<?> sibling) {
+		return entry.canShadow(sibling);
 	}
 
 	private boolean isStatic(Entry<?> entry) {
