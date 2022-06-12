@@ -1,6 +1,5 @@
 {
 	"language": "日本語",
-
 	"mapping_format.enigma_file": "Enigma ファイル",
 	"mapping_format.enigma_directory": "Enigma ディレクトリ",
 	"mapping_format.enigma_zip": "Enigma ZIP",
@@ -8,11 +7,11 @@
 	"mapping_format.tiny_file": "Tiny ファイル",
 	"mapping_format.srg_file": "SRG ファイル",
 	"mapping_format.proguard": "Proguard",
+	"mapping_format.recaf": "Recaf",
 	"type.methods": "メソッド",
 	"type.fields": "フィールド",
 	"type.parameters": "パラメータ",
 	"type.classes": "クラス",
-
 	"menu.file": "ファイル",
 	"menu.file.jar.open": "Jarを開く...",
 	"menu.file.jar.close": "Jarを閉じる",

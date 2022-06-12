@@ -1,6 +1,5 @@
 {
 	"language": "English",
-
 	"mapping_format.enigma_file": "Enigma File",
 	"mapping_format.enigma_directory": "Enigma Directory",
 	"mapping_format.enigma_zip": "Enigma ZIP",
@@ -8,11 +7,11 @@
 	"mapping_format.tiny_file": "Tiny File",
 	"mapping_format.srg_file": "SRG File",
 	"mapping_format.proguard": "Proguard",
+	"mapping_format.recaf": "Recaf",
 	"type.methods": "Methods",
 	"type.fields": "Fields",
 	"type.parameters": "Parameters",
 	"type.classes": "Classes",
-
 	"menu.file": "File",
 	"menu.file.jar.open": "Open Jar...",
 	"menu.file.jar.close": "Close Jar",
