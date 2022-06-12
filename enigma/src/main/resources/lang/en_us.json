@@ -1,5 +1,6 @@
 {
 	"language": "English",
+
 	"mapping_format.enigma_file": "Enigma File",
 	"mapping_format.enigma_directory": "Enigma Directory",
 	"mapping_format.enigma_zip": "Enigma ZIP",
@@ -12,6 +13,7 @@
 	"type.fields": "Fields",
 	"type.parameters": "Parameters",
 	"type.classes": "Classes",
+
 	"menu.file": "File",
 	"menu.file.jar.open": "Open Jar...",
 	"menu.file.jar.close": "Close Jar",

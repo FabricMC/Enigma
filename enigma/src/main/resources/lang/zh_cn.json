@@ -1,5 +1,6 @@
 {
 	"language": "简体中文",
+
 	"mapping_format.enigma_file": "Enigma 文件",
 	"mapping_format.enigma_directory": "Enigma 目录",
 	"mapping_format.enigma_zip": "Enigma ZIP",
@@ -12,6 +13,7 @@
 	"type.fields": "字段",
 	"type.parameters": "参数",
 	"type.classes": "类",
+
 	"menu.file": "文件",
 	"menu.file.jar.open": "打开 Jar...",
 	"menu.file.jar.close": "关闭 Jar",

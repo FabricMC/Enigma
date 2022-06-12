@@ -1,5 +1,6 @@
 {
 	"language": "Français",
+
 	"mapping_format.enigma_file": "Fichier Enigma",
 	"mapping_format.enigma_directory": "Répertoire Enigma",
 	"mapping_format.enigma_zip": "ZIP Enigma",
@@ -12,6 +13,7 @@
 	"type.fields": "Champs",
 	"type.parameters": "Paramètres",
 	"type.classes": "Classes",
+
 	"menu.file": "Fichier",
 	"menu.file.jar.open": "Ouvrir le jar...",
 	"menu.file.jar.close": "Fermer le jar",
