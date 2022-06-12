@@ -8,6 +8,7 @@
 	"mapping_format.tiny_file": "Tiny 文件",
 	"mapping_format.srg_file": "SRG 文件",
 	"mapping_format.proguard": "Proguard 文件",
+	"mapping_format.recaf": "Recaf 文件",
 	"type.methods": "方法",
 	"type.fields": "字段",
 	"type.parameters": "参数",

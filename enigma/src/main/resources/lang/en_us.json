@@ -8,6 +8,7 @@
 	"mapping_format.tiny_file": "Tiny File",
 	"mapping_format.srg_file": "SRG File",
 	"mapping_format.proguard": "Proguard",
+	"mapping_format.recaf": "Recaf",
 	"type.methods": "Methods",
 	"type.fields": "Fields",
 	"type.parameters": "Parameters",
