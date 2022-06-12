@@ -37,11 +37,11 @@ public enum MappingFormat {
 		this.reader = reader;
 	}
 
-	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
+	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters)  {
 		write(mappings, MappingDelta.added(mappings), path, progressListener, saveParameters);
 	}
 
-	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
+	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters)  {
 		if (writer == null) {
 			throw new IllegalStateException(name() + " does not support writing");
 		}
