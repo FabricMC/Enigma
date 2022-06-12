@@ -12,6 +12,8 @@ dependencies {
     implementation 'net.fabricmc:cfr:0.1.0'
 
     proGuard 'com.guardsquare:proguard-base:7.2.0-beta2'
+
+    testImplementation 'com.google.jimfs:jimfs:1.2'
 }
 
 // Generate "version.txt" file
