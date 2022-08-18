@@ -12,7 +12,7 @@ dependencies {
     implementation 'com.formdev:flatlaf-extras:1.6.1' // for SVG icons
     implementation 'de.sciss:syntaxpane:1.2.0'
     implementation 'com.github.lukeu:swing-dpi:0.9'
-    implementation 'org.drjekyll:fontchooser:2.4'
+    implementation 'org.drjekyll:fontchooser:2.5.2'
 }
 
 mainClassName = 'cuchaz.enigma.gui.Main'
