@@ -52,6 +52,14 @@ public final class UiConfig {
 		return ui.data().section("General").setIfAbsentString("Language", I18n.DEFAULT_LANGUAGE);
 	}
 
+	public static boolean autoSave() {
+		return ui.data().section("General").setIfAbsentBool("AutoSave", true);
+	}
+
+	public static int autoSaveCount() {
+		return ui.data().section("General").setIfAbsentInt("AutoSaveAmount", 5);
+	}
+
 	public static void setLanguage(String language) {
 		ui.data().section("General").setString("Language", language);
 	}
