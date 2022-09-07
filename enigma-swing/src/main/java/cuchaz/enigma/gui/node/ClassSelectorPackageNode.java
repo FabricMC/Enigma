@@ -11,6 +11,8 @@
 
 package cuchaz.enigma.gui.node;
 
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
@@ -39,7 +41,7 @@ public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
 
 	@Override
 	public String toString() {
-		return !packageName.equals("(none)") ? this.packageName : "(none)";
+		return !packageName.equals("(none)") ? ClassEntry.getNameInPackage(this.packageName) : "(none)";
 	}
 
 	@Override

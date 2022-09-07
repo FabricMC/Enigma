@@ -492,20 +492,20 @@ public class Gui {
 	public void moveClassTree(Entry<?> obfEntry, boolean isOldOb, boolean isNewOb) {
 		ClassEntry classEntry = obfEntry.getContainingClass();
 
-		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
-		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
+		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState();
+		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState();
 
 		// Ob -> deob
 		if (!isNewOb) {
 			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
-			this.obfPanel.obfClasses.moveClassOut(classEntry);
+			this.obfPanel.obfClasses.removeEntry(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
 		// Deob -> ob
 		else if (!isOldOb) {
 			this.obfPanel.obfClasses.moveClassIn(classEntry);
-			this.deobfPanel.deobfClasses.moveClassOut(classEntry);
+			this.deobfPanel.deobfClasses.removeEntry(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
@@ -518,8 +518,8 @@ public class Gui {
 			this.deobfPanel.deobfClasses.reload();
 		}
 
-		this.deobfPanel.deobfClasses.restoreExpansionState(this.deobfPanel.deobfClasses, stateDeobf);
-		this.obfPanel.obfClasses.restoreExpansionState(this.obfPanel.obfClasses, stateObf);
+		this.deobfPanel.deobfClasses.restoreExpansionState(stateDeobf);
+		this.obfPanel.obfClasses.restoreExpansionState(stateObf);
 	}
 
 	public ObfPanel getObfPanel() {
