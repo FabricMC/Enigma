@@ -2,7 +2,7 @@ package cuchaz.enigma.gui;
 
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
 import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
-import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -20,11 +20,11 @@ public class NestedPackages {
 	private final DefaultMutableTreeNode root = new DefaultMutableTreeNode();
 	private final Map<String, DefaultMutableTreeNode> packageToNode = new HashMap<>();
 	private final Map<ClassEntry, ClassSelectorClassNode> classToNode = new HashMap<>();
-	private final Translator translator;
+	private final EntryRemapper remapper;
 	private final Comparator<TreeNode> comparator;
 
-	public NestedPackages(Iterable<ClassEntry> entries, Comparator<ClassEntry> entryComparator, Translator translator) {
-		this.translator = translator;
+	public NestedPackages(Iterable<ClassEntry> entries, Comparator<ClassEntry> entryComparator, EntryRemapper remapper) {
+		this.remapper = remapper;
 		this.comparator = (a, b) -> {
 			if (a instanceof ClassSelectorPackageNode pA) {
 				if (b instanceof ClassSelectorPackageNode pB) {
@@ -49,10 +49,10 @@ public class NestedPackages {
 	}
 
 	public void addEntry(ClassEntry entry) {
-		var parent = getPackage(entry.getPackageName());
-		var me = new ClassSelectorClassNode(entry, translator.translate(entry));
+		var translated = remapper.deobfuscate(entry);
+		var me = new ClassSelectorClassNode(entry, translated);
 		classToNode.put(entry, me);
-		insert(parent, me);
+		insert(getPackage(translated.getPackageName()), me);
 	}
 
 	public DefaultMutableTreeNode getPackage(String packageName) {
@@ -96,6 +96,10 @@ public class NestedPackages {
 				var theNode = packageNode;
 				packageNode = (DefaultMutableTreeNode) packageNode.getParent();
 				theNode.removeFromParent();
+
+				if (theNode instanceof ClassSelectorPackageNode pn) {
+					packageToNode.remove(pn.getPackageName());
+				}
 			}
 		}
 	}

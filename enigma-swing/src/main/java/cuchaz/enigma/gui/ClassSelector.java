@@ -152,7 +152,7 @@ public class ClassSelector extends JTree {
 		}
 
 		// update the tree control
-		packageManager = new NestedPackages(classEntries, comparator, controller.project.getMapper().getDeobfuscator());
+		packageManager = new NestedPackages(classEntries, comparator, controller.project.getMapper());
 		setModel(new DefaultTreeModel(packageManager.getRoot()));
 
 		restoreExpansionState(state);
