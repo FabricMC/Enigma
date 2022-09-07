@@ -52,6 +52,7 @@ import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.Token;
+import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.*;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -381,10 +382,11 @@ public class GuiController implements ClientPacketHandler {
 				return;
 			}
 
-			ClassEntry deobfEntry = mapper.deobfuscate(entry);
+			TranslateResult<ClassEntry> result = mapper.extendedDeobfuscate(entry);
+			ClassEntry deobfEntry = result.getValue();
 
 			List<ObfuscationTestService> obfService = enigma.getServices().get(ObfuscationTestService.TYPE);
-			boolean obfuscated = deobfEntry.equals(entry);
+			boolean obfuscated = result.isObfuscated() && deobfEntry.equals(entry);
 
 			if (obfuscated && !obfService.isEmpty()) {
 				if (obfService.stream().anyMatch(service -> service.testDeobfuscated(entry))) {
