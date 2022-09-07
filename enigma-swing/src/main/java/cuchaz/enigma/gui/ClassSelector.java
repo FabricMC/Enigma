@@ -11,21 +11,20 @@
 
 package cuchaz.enigma.gui;
 
-import java.awt.Component;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.*;
-
-import javax.swing.JTree;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.tree.*;
-
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
-import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.validation.ValidationContext;
+
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.tree.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.*;
 
 public class ClassSelector extends JTree {
 
@@ -213,13 +212,13 @@ public class ClassSelector extends JTree {
 	}
 
 	public void expandAll() {
-		for (ClassSelectorPackageNode packageNode : packageManager.getPackageNodes()) {
+		for (DefaultMutableTreeNode packageNode : packageManager.getPackageNodes()) {
 			expandPath(new TreePath(packageNode.getPath()));
 		}
 	}
 
 	public void collapseAll() {
-		for (ClassSelectorPackageNode packageNode : packageManager.getPackageNodes()) {
+		for (DefaultMutableTreeNode packageNode : packageManager.getPackageNodes()) {
 			collapsePath(new TreePath(packageNode.getPath()));
 		}
 	}

@@ -9,11 +9,10 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class NestedPackages {
 
@@ -104,16 +103,12 @@ public class NestedPackages {
 		}
 	}
 
-	public List<ClassSelectorPackageNode> getPackageNodes() {
-		return packageToNode.values().stream()
-				.filter(x -> x instanceof ClassSelectorPackageNode)
-				.map(ClassSelectorPackageNode.class::cast)
-				.collect(Collectors.toList());
+	public Collection<DefaultMutableTreeNode> getPackageNodes() {
+		return packageToNode.values();
 	}
 
 	private void insert(DefaultMutableTreeNode parent, MutableTreeNode child) {
 		var index = 0;
-
 		var children = parent.children();
 
 		while (children.hasMoreElements()) {
