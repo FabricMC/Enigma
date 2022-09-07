@@ -376,23 +376,15 @@ public class Gui {
 		if (cursorReference == null) return;
 
 		Entry<?> obfEntry = cursorReference.entry;
+		toggleMappingFromEntry(obfEntry);
+	}
 
+	public void toggleMappingFromEntry(Entry<?> obfEntry) {
 		if (this.controller.project.getMapper().getDeobfMapping(obfEntry).targetName() != null) {
 			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).clearDeobfName()));
 		} else {
 			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).withDefaultDeobfName(this.getController().project)));
 		}
-	}
-
-	private TreePath getPathToRoot(TreeNode node) {
-		List<TreeNode> nodes = Lists.newArrayList();
-		TreeNode n = node;
-		do {
-			nodes.add(n);
-			n = n.getParent();
-		} while (n != null);
-		Collections.reverse(nodes);
-		return new TreePath(nodes.toArray());
 	}
 
 	public void showDiscardDiag(Function<Integer, Void> callback, String... options) {

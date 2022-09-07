@@ -21,6 +21,8 @@ import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.tree.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -56,6 +58,22 @@ public class ClassSelector extends JTree {
 					TreePath path = getSelectionPath();
 					if (path != null && path.getLastPathComponent() instanceof ClassSelectorClassNode node) {
 						selectionListener.onSelectClass(node.getObfEntry());
+					}
+				}
+			}
+		});
+		addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				TreePath[] paths = getSelectionPaths();
+
+				if (paths != null) {
+					for (TreePath path : paths) {
+						if (path.getLastPathComponent() instanceof ClassSelectorClassNode node) {
+							if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_O) {
+								gui.toggleMappingFromEntry(node.getObfEntry());
+							}
+						}
 					}
 				}
 			}
