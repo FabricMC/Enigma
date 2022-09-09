@@ -68,10 +68,18 @@ public class ClassSelector extends JTree {
 				TreePath[] paths = getSelectionPaths();
 
 				if (paths != null) {
-					for (TreePath path : paths) {
-						if (path.getLastPathComponent() instanceof ClassSelectorClassNode node) {
-							if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_O) {
+					if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_O) {
+						for (TreePath path : paths) {
+							if (path.getLastPathComponent() instanceof ClassSelectorClassNode node) {
 								gui.toggleMappingFromEntry(node.getObfEntry());
+							}
+						}
+					}
+
+					if (selectionListener != null && e.getKeyCode() == KeyEvent.VK_ENTER) {
+						for (TreePath path : paths) {
+							if (path.getLastPathComponent() instanceof ClassSelectorClassNode node) {
+								selectionListener.onSelectClass(node.getObfEntry());
 							}
 						}
 					}
