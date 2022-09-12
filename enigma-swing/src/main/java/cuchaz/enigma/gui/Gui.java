@@ -376,23 +376,15 @@ public class Gui {
 		if (cursorReference == null) return;
 
 		Entry<?> obfEntry = cursorReference.entry;
+		toggleMappingFromEntry(obfEntry);
+	}
 
+	public void toggleMappingFromEntry(Entry<?> obfEntry) {
 		if (this.controller.project.getMapper().getDeobfMapping(obfEntry).targetName() != null) {
 			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).clearDeobfName()));
 		} else {
 			validateImmediateAction(vc -> this.controller.applyChange(vc, EntryChange.modify(obfEntry).withDefaultDeobfName(this.getController().project)));
 		}
-	}
-
-	private TreePath getPathToRoot(TreeNode node) {
-		List<TreeNode> nodes = Lists.newArrayList();
-		TreeNode n = node;
-		do {
-			nodes.add(n);
-			n = n.getParent();
-		} while (n != null);
-		Collections.reverse(nodes);
-		return new TreePath(nodes.toArray());
 	}
 
 	public void showDiscardDiag(Function<Integer, Void> callback, String... options) {
@@ -492,20 +484,20 @@ public class Gui {
 	public void moveClassTree(Entry<?> obfEntry, boolean isOldOb, boolean isNewOb) {
 		ClassEntry classEntry = obfEntry.getContainingClass();
 
-		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState(this.deobfPanel.deobfClasses);
-		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState(this.obfPanel.obfClasses);
+		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState();
+		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState();
 
 		// Ob -> deob
 		if (!isNewOb) {
 			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
-			this.obfPanel.obfClasses.moveClassOut(classEntry);
+			this.obfPanel.obfClasses.removeEntry(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
 		// Deob -> ob
 		else if (!isOldOb) {
 			this.obfPanel.obfClasses.moveClassIn(classEntry);
-			this.deobfPanel.deobfClasses.moveClassOut(classEntry);
+			this.deobfPanel.deobfClasses.removeEntry(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
 		}
@@ -518,8 +510,8 @@ public class Gui {
 			this.deobfPanel.deobfClasses.reload();
 		}
 
-		this.deobfPanel.deobfClasses.restoreExpansionState(this.deobfPanel.deobfClasses, stateDeobf);
-		this.obfPanel.obfClasses.restoreExpansionState(this.obfPanel.obfClasses, stateObf);
+		this.deobfPanel.deobfClasses.restoreExpansionState(stateDeobf);
+		this.obfPanel.obfClasses.restoreExpansionState(stateObf);
 	}
 
 	public ObfPanel getObfPanel() {

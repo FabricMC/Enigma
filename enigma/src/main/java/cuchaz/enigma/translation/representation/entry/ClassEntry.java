@@ -11,12 +11,6 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import java.util.List;
-import java.util.Objects;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
@@ -24,6 +18,11 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.IdentifierValidation;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.utils.validation.ValidationContext;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Objects;
 
 public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<ClassEntry> {
 	private final String fullName;
@@ -141,7 +140,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	public String getPackageName() {
-		return getPackageName(fullName);
+		return getParentPackage(fullName);
 	}
 
 	/**
@@ -187,12 +186,26 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return packageName != null && (packageName.startsWith("java/") || packageName.startsWith("javax/"));
 	}
 
-	public static String getPackageName(String name) {
+	public static String getParentPackage(String name) {
 		int pos = name.lastIndexOf('/');
 		if (pos > 0) {
 			return name.substring(0, pos);
 		}
 		return null;
+	}
+
+	public static String getNameInPackage(String name) {
+		int pos = name.lastIndexOf('/');
+
+		if (pos == name.length() - 1) {
+			return "(empty)";
+		}
+
+		if (pos > 0) {
+			return name.substring(pos + 1);
+		}
+
+		return name;
 	}
 
 	@Nullable
