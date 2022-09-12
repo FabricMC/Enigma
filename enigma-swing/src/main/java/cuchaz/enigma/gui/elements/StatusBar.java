@@ -54,7 +54,7 @@ public class StatusBar {
 	 *
 	 * @param message the message to display
 	 * @param timeout the timeout in milliseconds to wait until clearing the
-	 *                message; if 0, the message is not automatically cleared
+	 * message; if 0, the message is not automatically cleared
 	 */
 	public void showMessage(String message, int timeout) {
 		this.timer.stop();

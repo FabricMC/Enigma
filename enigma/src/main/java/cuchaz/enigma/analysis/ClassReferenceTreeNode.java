@@ -1,17 +1,23 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.analysis;
 
+import java.util.Set;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
+
 import com.google.common.collect.Sets;
+
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.analysis.index.ReferenceIndex;
 import cuchaz.enigma.translation.Translator;
@@ -19,13 +25,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
-import java.util.Set;
-
-public class ClassReferenceTreeNode extends DefaultMutableTreeNode
-	implements ReferenceTreeNode<ClassEntry, MethodDefEntry> {
-
+public class ClassReferenceTreeNode extends DefaultMutableTreeNode implements ReferenceTreeNode<ClassEntry, MethodDefEntry> {
 	private Translator deobfuscatingTranslator;
 	private ClassEntry entry;
 	private EntryReference<ClassEntry, MethodDefEntry> reference;
@@ -57,6 +57,7 @@ public class ClassReferenceTreeNode extends DefaultMutableTreeNode
 		if (this.reference != null) {
 			return String.format("%s", this.deobfuscatingTranslator.translate(this.reference.context));
 		}
+
 		return this.deobfuscatingTranslator.translate(this.entry).getFullName();
 	}
 
@@ -71,16 +72,18 @@ public class ClassReferenceTreeNode extends DefaultMutableTreeNode
 		if (recurse && this.children != null) {
 			for (Object child : this.children) {
 				if (child instanceof ClassReferenceTreeNode node) {
-
 					// don't recurse into ancestor
 					Set<Entry<?>> ancestors = Sets.newHashSet();
 					TreeNode n = node;
+
 					while (n.getParent() != null) {
 						n = n.getParent();
+
 						if (n instanceof ClassReferenceTreeNode) {
 							ancestors.add(((ClassReferenceTreeNode) n).getEntry());
 						}
 					}
+
 					if (ancestors.contains(node.getEntry())) {
 						continue;
 					}

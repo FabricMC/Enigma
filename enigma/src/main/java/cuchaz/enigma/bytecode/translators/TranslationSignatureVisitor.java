@@ -29,17 +29,23 @@ public class TranslationSignatureVisitor extends SignatureVisitor {
 	@Override
 	public void visitInnerClassType(String name) {
 		String lastClass = classStack.pop();
-		if (!name.startsWith(lastClass+"$")){//todo see if there's a way to base this on whether there were type params or not
-			name = lastClass+"$"+name;
+
+		if (!name.startsWith(lastClass + "$")) {
+			//todo see if there's a way to base this on whether there were type params or not
+			name = lastClass + "$" + name;
 		}
+
 		classStack.push(name);
 		String translatedEntry = this.remapper.apply(name);
-		if (translatedEntry.contains("/")){
-			translatedEntry = translatedEntry.substring(translatedEntry.lastIndexOf("/")+1);
+
+		if (translatedEntry.contains("/")) {
+			translatedEntry = translatedEntry.substring(translatedEntry.lastIndexOf("/") + 1);
 		}
-		if (translatedEntry.contains("$")){
-			translatedEntry = translatedEntry.substring(translatedEntry.lastIndexOf("$")+1);
+
+		if (translatedEntry.contains("$")) {
+			translatedEntry = translatedEntry.substring(translatedEntry.lastIndexOf("$") + 1);
 		}
+
 		this.sv.visitInnerClassType(translatedEntry);
 	}
 
@@ -120,8 +126,10 @@ public class TranslationSignatureVisitor extends SignatureVisitor {
 	@Override
 	public void visitEnd() {
 		this.sv.visitEnd();
-		if (!classStack.empty())
+
+		if (!classStack.empty()) {
 			classStack.pop();
+		}
 	}
 
 	@Override

@@ -1,7 +1,8 @@
 package cuchaz.enigma.source;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import cuchaz.enigma.translation.mapping.EntryRemapper;
 
 public interface Decompiler {
 	@Deprecated // use remapper specific one for easy doc inclusion

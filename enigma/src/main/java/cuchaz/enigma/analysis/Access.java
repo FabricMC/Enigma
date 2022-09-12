@@ -1,23 +1,25 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.translation.representation.AccessFlags;
-
 import java.lang.reflect.Modifier;
 
-public enum Access {
+import cuchaz.enigma.translation.representation.AccessFlags;
 
-	PUBLIC, PROTECTED, PACKAGE, PRIVATE;
+public enum Access {
+	PUBLIC,
+	PROTECTED,
+	PACKAGE,
+	PRIVATE;
 
 	public static Access get(AccessFlags flags) {
 		return get(flags.getFlags());
@@ -37,6 +39,7 @@ public enum Access {
 		} else if (!isPublic && !isProtected && !isPrivate) {
 			return PACKAGE;
 		}
+
 		// assume public by default
 		return PUBLIC;
 	}

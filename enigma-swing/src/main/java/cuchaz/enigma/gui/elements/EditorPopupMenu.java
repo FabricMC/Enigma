@@ -19,7 +19,6 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
 public class EditorPopupMenu {
-
 	private final JPopupMenu ui = new JPopupMenu();
 
 	private final JMenuItem renameItem = new JMenuItem();
@@ -105,39 +104,41 @@ public class EditorPopupMenu {
 	public boolean handleKeyEvent(KeyEvent event) {
 		if (event.isControlDown()) {
 			switch (event.getKeyCode()) {
-				case KeyEvent.VK_I:
-					this.showInheritanceItem.doClick();
-					return true;
-				case KeyEvent.VK_M:
-					this.showImplementationsItem.doClick();
-					return true;
-				case KeyEvent.VK_N:
-					this.openEntryItem.doClick();
-					return true;
-				case KeyEvent.VK_P:
-					this.openPreviousItem.doClick();
-					return true;
-				case KeyEvent.VK_E:
-					this.openNextItem.doClick();
-					return true;
-				case KeyEvent.VK_C:
-					if (event.isShiftDown()) {
-						this.showCallsSpecificItem.doClick();
-					} else {
-						this.showCallsItem.doClick();
-					}
-					return true;
-				case KeyEvent.VK_O:
-					this.toggleMappingItem.doClick();
-					return true;
-				case KeyEvent.VK_R:
-					this.renameItem.doClick();
-					return true;
-				case KeyEvent.VK_D:
-					this.editJavadocItem.doClick();
-					return true;
+			case KeyEvent.VK_I:
+				this.showInheritanceItem.doClick();
+				return true;
+			case KeyEvent.VK_M:
+				this.showImplementationsItem.doClick();
+				return true;
+			case KeyEvent.VK_N:
+				this.openEntryItem.doClick();
+				return true;
+			case KeyEvent.VK_P:
+				this.openPreviousItem.doClick();
+				return true;
+			case KeyEvent.VK_E:
+				this.openNextItem.doClick();
+				return true;
+			case KeyEvent.VK_C:
+				if (event.isShiftDown()) {
+					this.showCallsSpecificItem.doClick();
+				} else {
+					this.showCallsItem.doClick();
+				}
+
+				return true;
+			case KeyEvent.VK_O:
+				this.toggleMappingItem.doClick();
+				return true;
+			case KeyEvent.VK_R:
+				this.renameItem.doClick();
+				return true;
+			case KeyEvent.VK_D:
+				this.editJavadocItem.doClick();
+				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -191,5 +192,4 @@ public class EditorPopupMenu {
 	public JPopupMenu getUi() {
 		return ui;
 	}
-
 }

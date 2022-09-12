@@ -1,19 +1,19 @@
 configurations {
-    proGuard
+	proGuard
 }
 
 dependencies {
-    implementation 'org.ow2.asm:asm:9.3'
-    implementation 'org.ow2.asm:asm-commons:9.3'
-    implementation 'org.ow2.asm:asm-tree:9.3'
-    implementation 'org.ow2.asm:asm-util:9.3'
+	implementation 'org.ow2.asm:asm:9.3'
+	implementation 'org.ow2.asm:asm-commons:9.3'
+	implementation 'org.ow2.asm:asm-tree:9.3'
+	implementation 'org.ow2.asm:asm-util:9.3'
 
-    implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
-    implementation 'net.fabricmc:cfr:0.1.0'
+	implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
+	implementation 'net.fabricmc:cfr:0.1.0'
 
-    proGuard 'com.guardsquare:proguard-base:7.2.0-beta2'
+	proGuard 'com.guardsquare:proguard-base:7.2.0-beta2'
 
-    testImplementation 'com.google.jimfs:jimfs:1.2'
+	testImplementation 'com.google.jimfs:jimfs:1.2'
 }
 
 // Generate "version.txt" file
@@ -21,11 +21,11 @@ dependencies {
 ext.genOutputDir = file("$buildDir/generated-resources")
 
 task generateVersionFile {
-    ext.outputFile = file("$genOutputDir/version.txt")
-    outputs.file(outputFile)
-    doLast {
-        outputFile.text = "${project.version}"
-    }
+	ext.outputFile = file("$genOutputDir/version.txt")
+	outputs.file(outputFile)
+	doLast {
+		outputFile.text = "${project.version}"
+	}
 }
 
 sourceSets.main.output.dir genOutputDir, builtBy: generateVersionFile
@@ -35,30 +35,30 @@ sourceSets.main.output.dir genOutputDir, builtBy: generateVersionFile
 def libraryJarsArg = "<java.home>/jmods"
 
 // If your test fails for class file version problem with proguard, run gradle with -Dorg.gradle.java.home="<older jdk>" flag
-file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
-    if (theFile.directory) {
-        task("${theFile.name}TestJar", type: Jar) {
-            from(sourceSets.test.output) {
-                include "cuchaz/enigma/inputs/$theFile.name/**/*.class"
-                include 'cuchaz/enigma/inputs/Keep.class'
-            }
+file('src/test/java/cuchaz/enigma/inputs').listFiles().each {theFile ->
+	if (theFile.directory) {
+		task("${theFile.name}TestJar", type: Jar) {
+			from(sourceSets.test.output) {
+				include "cuchaz/enigma/inputs/$theFile.name/**/*.class"
+				include 'cuchaz/enigma/inputs/Keep.class'
+			}
 
-            archiveFileName = theFile.name + '.jar'
-            destinationDirectory = file('build/test-inputs')
-        }
+			archiveFileName = theFile.name + '.jar'
+			destinationDirectory = file('build/test-inputs')
+		}
 
-        task("${theFile.name}TestObf", type: JavaExec,
-                dependsOn: "${theFile.name}TestJar") {
-            mainClass = 'proguard.ProGuard'
-            classpath configurations.proGuard
+		task("${theFile.name}TestObf", type: JavaExec,
+				dependsOn: "${theFile.name}TestJar") {
+			mainClass = 'proguard.ProGuard'
+			classpath configurations.proGuard
 
-            args '@src/test/resources/proguard-test.conf', '-injars', file('build/test-inputs/' +
-                    "${theFile.name}.jar"), '-libraryjars', libraryJarsArg,
-                    '-outjars', file('build/test-obf/' + "${theFile.name}.jar")
-        }
+			args '@src/test/resources/proguard-test.conf', '-injars', file('build/test-inputs/' +
+					"${theFile.name}.jar"), '-libraryjars', libraryJarsArg,
+					'-outjars', file('build/test-obf/' + "${theFile.name}.jar")
+		}
 
-        test.dependsOn "${theFile.name}TestObf"
-    }
+		test.dependsOn "${theFile.name}TestObf"
+	}
 }
 
 test.dependsOn 'translationTestObf'

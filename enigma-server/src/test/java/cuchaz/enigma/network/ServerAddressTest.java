@@ -1,12 +1,11 @@
 package cuchaz.enigma.network;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class ServerAddressTest {
+import org.junit.Test;
 
+public class ServerAddressTest {
 	@Test
 	public void validAddresses() {
 		assertEquals(ServerAddress.of("127.0.0.1", 22), ServerAddress.from("127.0.0.1", 22));
@@ -24,5 +23,4 @@ public class ServerAddressTest {
 		assertNull(ServerAddress.from("127.0.0.1:100000000", 22));
 		assertNull(ServerAddress.from("127.0.0.1:lmao", 22));
 	}
-
 }

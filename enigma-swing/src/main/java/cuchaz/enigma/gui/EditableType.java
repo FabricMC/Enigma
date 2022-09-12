@@ -2,7 +2,11 @@ package cuchaz.enigma.gui;
 
 import javax.annotation.Nullable;
 
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public enum EditableType {
 	CLASS,
@@ -10,8 +14,7 @@ public enum EditableType {
 	FIELD,
 	PARAMETER,
 	LOCAL_VARIABLE,
-	JAVADOC,
-	;
+	JAVADOC;
 
 	@Nullable
 	public static EditableType fromEntry(Entry<?> entry) {

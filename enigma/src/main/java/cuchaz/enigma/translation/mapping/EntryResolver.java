@@ -1,12 +1,13 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.Collection;
+import java.util.Set;
+
 import com.google.common.collect.Streams;
+
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
-import java.util.Collection;
-import java.util.Set;
 
 public interface EntryResolver {
 	<E extends Entry<?>> Collection<E> resolveEntry(E entry, ResolutionStrategy strategy);
@@ -17,14 +18,12 @@ public interface EntryResolver {
 
 	default <E extends Entry<?>, C extends Entry<?>> Collection<EntryReference<E, C>> resolveReference(EntryReference<E, C> reference, ResolutionStrategy strategy) {
 		Collection<E> entry = resolveEntry(reference.entry, strategy);
+
 		if (reference.context != null) {
 			Collection<C> context = resolveEntry(reference.context, strategy);
-			return Streams.zip(entry.stream(), context.stream(), (e, c) -> new EntryReference<>(e, c, reference))
-					.toList();
+			return Streams.zip(entry.stream(), context.stream(), (e, c) -> new EntryReference<>(e, c, reference)).toList();
 		} else {
-			return entry.stream()
-					.map(e -> new EntryReference<>(e, null, reference))
-					.toList();
+			return entry.stream().map(e -> new EntryReference<>(e, null, reference)).toList();
 		}
 	}
 

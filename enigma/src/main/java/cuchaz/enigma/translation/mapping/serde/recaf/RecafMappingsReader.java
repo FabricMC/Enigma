@@ -1,5 +1,12 @@
 package cuchaz.enigma.translation.mapping.serde.recaf;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
@@ -13,15 +20,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class RecafMappingsReader implements MappingsReader {
-
 	public static final RecafMappingsReader INSTANCE = new RecafMappingsReader();
 	private static final Pattern METHOD_PATTERN = Pattern.compile("(.*?)\\.(.*?)(\\(.*?) (.*)");
 	private static final Pattern FIELD_PATTERN = Pattern.compile("(.*?)\\.(.*?) (.*?) (.*)");
@@ -34,6 +33,7 @@ public class RecafMappingsReader implements MappingsReader {
 
 		for (String line : lines) {
 			Matcher methodMatcher = METHOD_PATTERN.matcher(line);
+
 			if (methodMatcher.find()) {
 				ClassEntry owner = new ClassEntry(methodMatcher.group(1));
 				String name = methodMatcher.group(2);
@@ -43,6 +43,7 @@ public class RecafMappingsReader implements MappingsReader {
 			}
 
 			Matcher fieldMatcher = FIELD_PATTERN.matcher(line);
+
 			if (fieldMatcher.find()) {
 				ClassEntry owner = new ClassEntry(fieldMatcher.group(1));
 				String name = fieldMatcher.group(2);
@@ -52,10 +53,12 @@ public class RecafMappingsReader implements MappingsReader {
 			}
 
 			Matcher classMatcher = CLASS_PATTERN.matcher(line);
+
 			if (classMatcher.find()) {
 				mappings.insert(new ClassEntry(classMatcher.group(1)), new EntryMapping(classMatcher.group(2)));
 			}
 		}
+
 		return mappings;
 	}
 }

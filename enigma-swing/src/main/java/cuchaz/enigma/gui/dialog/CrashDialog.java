@@ -1,31 +1,42 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui.dialog;
 
-import cuchaz.enigma.Enigma;
-import cuchaz.enigma.gui.util.GuiUtil;
-import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.gui.util.ScaleUtil;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.FileWriter;
-import java.io.File;
-import java.io.IOException;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.WindowConstants;
+
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.gui.util.GuiUtil;
+import cuchaz.enigma.gui.util.ScaleUtil;
+import cuchaz.enigma.utils.I18n;
 
 public class CrashDialog {
-
 	private static CrashDialog instance = null;
 
 	private JFrame frame;
@@ -53,6 +64,7 @@ public class CrashDialog {
 		exportButton.addActionListener(event -> {
 			JFileChooser chooser = new JFileChooser();
 			chooser.setSelectedFile(new File("enigma_crash.log"));
+
 			if (chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
 				try {
 					File file = chooser.getSelectedFile();

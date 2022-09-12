@@ -6,7 +6,6 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class EntryUtil {
-
 	public static EntryMapping applyChange(ValidationContext vc, EntryRemapper remapper, EntryChange<?> change) {
 		Entry<?> target = change.getTarget();
 		EntryMapping prev = remapper.getDeobfMapping(target);
@@ -38,5 +37,4 @@ public class EntryUtil {
 
 		return self;
 	}
-
 }

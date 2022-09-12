@@ -1,11 +1,21 @@
 package cuchaz.enigma.bytecode.translators;
 
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.TypePath;
+
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.Signature;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.*;
-import org.objectweb.asm.*;
+import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class TranslationMethodVisitor extends MethodVisitor {
 	private final MethodDefEntry methodEntry;
@@ -55,13 +65,16 @@ public class TranslationMethodVisitor extends MethodVisitor {
 		if (array == null) {
 			return null;
 		}
+
 		for (int i = 0; i < count; i++) {
 			Object object = array[i];
+
 			if (object instanceof String) {
 				String type = (String) object;
 				array[i] = translator.translate(new ClassEntry(type)).getFullName();
 			}
 		}
+
 		return array;
 	}
 
@@ -96,9 +109,11 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
 		MethodDescriptor translatedMethodDesc = translator.translate(new MethodDescriptor(desc));
 		Object[] translatedBsmArgs = new Object[bsmArgs.length];
+
 		for (int i = 0; i < bsmArgs.length; i++) {
 			translatedBsmArgs[i] = AsmObjectTranslator.translateValue(translator, bsmArgs[i]);
 		}
+
 		super.visitInvokeDynamicInsn(name, translatedMethodDesc.toString(), AsmObjectTranslator.translateHandle(translator, bsm), translatedBsmArgs);
 	}
 
@@ -132,7 +147,7 @@ public class TranslationMethodVisitor extends MethodVisitor {
 	}
 
 	private String translateVariableName(int index, String name) {
-		LocalVariableEntry entry = new LocalVariableEntry(methodEntry, index, "", true,null);
+		LocalVariableEntry entry = new LocalVariableEntry(methodEntry, index, "", true, null);
 		LocalVariableEntry translatedEntry = translator.translate(entry);
 		String translatedName = translatedEntry.getName();
 

@@ -1,8 +1,8 @@
 package cuchaz.enigma.translation.mapping;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -18,7 +18,6 @@ import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
-
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -77,7 +76,9 @@ public class EntryRemapper {
 			}
 		}
 
-		if (validateOnly || !vc.canProceed()) return;
+		if (validateOnly || !vc.canProceed()) {
+			return;
+		}
 
 		for (Entry<?> resolvedEntry : resolvedEntries) {
 			if (deobfMapping.equals(EntryMapping.DEFAULT)) {
@@ -95,9 +96,7 @@ public class EntryRemapper {
 		}
 
 		// Find all the methods in this record class
-		List<MethodEntry> classMethods = jarIndex.getEntryIndex().getMethods().stream()
-				.filter(entry -> classEntry.equals(entry.getParent()))
-				.toList();
+		List<MethodEntry> classMethods = jarIndex.getEntryIndex().getMethods().stream().filter(entry -> classEntry.equals(entry.getParent())).toList();
 
 		MethodEntry methodEntry = null;
 
@@ -163,5 +162,4 @@ public class EntryRemapper {
 	public MappingValidator getValidator() {
 		return validator;
 	}
-
 }

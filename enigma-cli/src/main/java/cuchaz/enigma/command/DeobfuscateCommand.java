@@ -1,12 +1,11 @@
 package cuchaz.enigma.command;
 
+import java.nio.file.Path;
+
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 
-import java.nio.file.Path;
-
 public class DeobfuscateCommand extends Command {
-
 	public DeobfuscateCommand() {
 		super("deobfuscate");
 	}

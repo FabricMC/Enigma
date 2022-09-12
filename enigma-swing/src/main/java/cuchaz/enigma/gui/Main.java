@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui;
 
@@ -20,7 +20,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.io.MoreFiles;
-import joptsimple.*;
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+import joptsimple.ValueConverter;
 
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.gui.config.Themes;
@@ -30,21 +34,14 @@ import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
 
 public class Main {
-
 	public static void main(String[] args) throws IOException {
 		OptionParser parser = new OptionParser();
 
-		OptionSpec<Path> jar = parser.accepts("jar", "Jar file to open at startup")
-				.withRequiredArg()
-				.withValuesConvertedBy(PathConverter.INSTANCE);
+		OptionSpec<Path> jar = parser.accepts("jar", "Jar file to open at startup").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
 
-		OptionSpec<Path> mappings = parser.accepts("mappings", "Mappings file to open at startup")
-				.withRequiredArg()
-				.withValuesConvertedBy(PathConverter.INSTANCE);
+		OptionSpec<Path> mappings = parser.accepts("mappings", "Mappings file to open at startup").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
 
-		OptionSpec<Path> profile = parser.accepts("profile", "Profile json to apply at startup")
-				.withRequiredArg()
-				.withValuesConvertedBy(PathConverter.INSTANCE);
+		OptionSpec<Path> profile = parser.accepts("profile", "Profile json to apply at startup").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
 
 		parser.acceptsAll(List.of("edit-all", "e"), "Enable editing everything");
 		parser.acceptsAll(List.of("no-edit-all", "E"), "Disable editing everything");
@@ -78,26 +75,26 @@ public class Main {
 			for (OptionSpec<?> spec : options.specs()) {
 				for (String s : spec.options()) {
 					switch (s) {
-						case "edit-all" -> editables.addAll(List.of(EditableType.values()));
-						case "no-edit-all" -> editables.clear();
-						case "edit-classes" -> editables.add(EditableType.CLASS);
-						case "no-edit-classes" -> editables.remove(EditableType.CLASS);
-						case "edit-methods" -> editables.add(EditableType.METHOD);
-						case "no-edit-methods" -> editables.remove(EditableType.METHOD);
-						case "edit-fields" -> editables.add(EditableType.FIELD);
-						case "no-edit-fields" -> editables.remove(EditableType.FIELD);
-						case "edit-parameters" -> editables.add(EditableType.PARAMETER);
-						case "no-edit-parameters" -> editables.remove(EditableType.PARAMETER);
-						case "edit-locals" -> {
-							editables.add(EditableType.LOCAL_VARIABLE);
-							System.err.println("warning: --edit-locals has no effect as local variables are currently not editable");
-						}
-						case "no-edit-locals" -> {
-							editables.remove(EditableType.LOCAL_VARIABLE);
-							System.err.println("warning: --no-edit-locals has no effect as local variables are currently not editable");
-						}
-						case "edit-javadocs" -> editables.add(EditableType.JAVADOC);
-						case "no-edit-javadocs" -> editables.remove(EditableType.JAVADOC);
+					case "edit-all" -> editables.addAll(List.of(EditableType.values()));
+					case "no-edit-all" -> editables.clear();
+					case "edit-classes" -> editables.add(EditableType.CLASS);
+					case "no-edit-classes" -> editables.remove(EditableType.CLASS);
+					case "edit-methods" -> editables.add(EditableType.METHOD);
+					case "no-edit-methods" -> editables.remove(EditableType.METHOD);
+					case "edit-fields" -> editables.add(EditableType.FIELD);
+					case "no-edit-fields" -> editables.remove(EditableType.FIELD);
+					case "edit-parameters" -> editables.add(EditableType.PARAMETER);
+					case "no-edit-parameters" -> editables.remove(EditableType.PARAMETER);
+					case "edit-locals" -> {
+						editables.add(EditableType.LOCAL_VARIABLE);
+						System.err.println("warning: --edit-locals has no effect as local variables are currently not editable");
+					}
+					case "no-edit-locals" -> {
+						editables.remove(EditableType.LOCAL_VARIABLE);
+						System.err.println("warning: --no-edit-locals has no effect as local variables are currently not editable");
+					}
+					case "edit-javadocs" -> editables.add(EditableType.JAVADOC);
+					case "no-edit-javadocs" -> editables.remove(EditableType.JAVADOC);
 					}
 				}
 			}
@@ -110,7 +107,7 @@ public class Main {
 
 			Gui gui = new Gui(parsedProfile, editables);
 			GuiController controller = gui.getController();
-			
+
 			if (options.has("single-class-tree")) {
 				gui.setSingleClassTree(true);
 			}
@@ -120,6 +117,7 @@ public class Main {
 				CrashDialog.init(gui.getFrame());
 				Thread.setDefaultUncaughtExceptionHandler((thread, t) -> {
 					t.printStackTrace(System.err);
+
 					if (!ExceptionIgnorer.shouldIgnore(t)) {
 						CrashDialog.show(t);
 					}
@@ -128,19 +126,19 @@ public class Main {
 
 			if (options.has(jar)) {
 				Path jarPath = options.valueOf(jar);
-				controller.openJar(jarPath)
-						.whenComplete((v, t) -> {
-							if (options.has(mappings)) {
-								Path mappingsPath = options.valueOf(mappings);
-								if (Files.isDirectory(mappingsPath)) {
-									controller.openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsPath);
-								} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(mappingsPath))) {
-									controller.openMappings(MappingFormat.ENIGMA_ZIP, mappingsPath);
-								} else {
-									controller.openMappings(MappingFormat.ENIGMA_FILE, mappingsPath);
-								}
-							}
-						});
+				controller.openJar(jarPath).whenComplete((v, t) -> {
+					if (options.has(mappings)) {
+						Path mappingsPath = options.valueOf(mappings);
+
+						if (Files.isDirectory(mappingsPath)) {
+							controller.openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsPath);
+						} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(mappingsPath))) {
+							controller.openMappings(MappingFormat.ENIGMA_ZIP, mappingsPath);
+						} else {
+							controller.openMappings(MappingFormat.ENIGMA_FILE, mappingsPath);
+						}
+					}
+				});
 			}
 		} catch (OptionException e) {
 			System.out.println("Invalid arguments: " + e.getMessage());

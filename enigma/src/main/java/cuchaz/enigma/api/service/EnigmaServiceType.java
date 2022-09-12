@@ -18,7 +18,9 @@ public final class EnigmaServiceType<T extends EnigmaService> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == this) return true;
+		if (obj == this) {
+			return true;
+		}
 
 		if (obj instanceof EnigmaServiceType) {
 			return ((EnigmaServiceType) obj).key.equals(key);

@@ -9,12 +9,17 @@ import java.awt.event.MouseEvent;
 
 import javax.accessibility.AccessibleContext;
 import javax.annotation.Nullable;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeListener;
 
 public class ClosableTabTitlePane {
-
 	private final JPanel ui;
 	private final JButton closeButton;
 	private final JLabel label;
@@ -66,19 +71,7 @@ public class ClosableTabTitlePane {
 				if (parent != null) {
 					Point pt = new Point(e.getXOnScreen(), e.getYOnScreen());
 					SwingUtilities.convertPointFromScreen(pt, parent);
-					MouseEvent e1 = new MouseEvent(
-							parent,
-							e.getID(),
-							e.getWhen(),
-							e.getModifiersEx(),
-							(int) pt.getX(),
-							(int) pt.getY(),
-							e.getXOnScreen(),
-							e.getYOnScreen(),
-							e.getClickCount(),
-							e.isPopupTrigger(),
-							e.getButton()
-					);
+					MouseEvent e1 = new MouseEvent(parent, e.getID(), e.getWhen(), e.getModifiersEx(), (int) pt.getX(), (int) pt.getY(), e.getXOnScreen(), e.getYOnScreen(), e.getClickCount(), e.isPopupTrigger(), e.getButton());
 					parent.dispatchEvent(e1);
 				}
 			}
@@ -91,11 +84,13 @@ public class ClosableTabTitlePane {
 		if (this.parent != null) {
 			pane.removeChangeListener(cachedChangeListener);
 		}
+
 		if (pane != null) {
 			updateState(pane);
 			cachedChangeListener = e -> updateState(pane);
 			pane.addChangeListener(cachedChangeListener);
 		}
+
 		this.parent = pane;
 	}
 
@@ -123,11 +118,12 @@ public class ClosableTabTitlePane {
 	public static ClosableTabTitlePane byUi(Component c) {
 		if (c instanceof JComponent) {
 			Object prop = ((JComponent) c).getClientProperty(ClosableTabTitlePane.class);
+
 			if (prop instanceof ClosableTabTitlePane) {
 				return (ClosableTabTitlePane) prop;
 			}
 		}
+
 		return null;
 	}
-
 }

@@ -8,7 +8,6 @@ import java.util.Deque;
 import java.util.LinkedList;
 
 public class ConfigContainer {
-
 	private Path configPath;
 	private boolean existsOnDisk;
 
@@ -19,7 +18,10 @@ public class ConfigContainer {
 	}
 
 	public void save() {
-		if (this.configPath == null) throw new IllegalStateException("File has no config path set!");
+		if (this.configPath == null) {
+			throw new IllegalStateException("File has no config path set!");
+		}
+
 		try {
 			Files.createDirectories(this.configPath.getParent());
 			Files.write(this.configPath, this.serialize().getBytes(StandardCharsets.UTF_8));
@@ -52,6 +54,7 @@ public class ConfigContainer {
 
 	public static ConfigContainer getOrCreate(Path path) {
 		ConfigContainer cc = null;
+
 		try {
 			if (Files.exists(path)) {
 				String s = String.join("\n", Files.readAllLines(path));
@@ -93,5 +96,4 @@ public class ConfigContainer {
 		});
 		return cc;
 	}
-
 }

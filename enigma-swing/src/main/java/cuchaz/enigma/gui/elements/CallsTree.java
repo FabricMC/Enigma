@@ -5,7 +5,12 @@ import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTree;
+import javax.swing.ListSelectionModel;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -47,12 +52,7 @@ public class CallsTree {
 		this.tokens.setPreferredSize(ScaleUtil.getDimension(0, 200));
 		this.tokens.setMinimumSize(ScaleUtil.getDimension(0, 200));
 
-		JSplitPane contentPane = new JSplitPane(
-				JSplitPane.VERTICAL_SPLIT,
-				true,
-				new JScrollPane(this.callsTree),
-				new JScrollPane(this.tokens)
-		);
+		JSplitPane contentPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, new JScrollPane(this.callsTree), new JScrollPane(this.tokens));
 
 		contentPane.setResizeWeight(1); // let the top side take all the slack
 		contentPane.resetToPreferredSizes();
@@ -109,6 +109,7 @@ public class CallsTree {
 	private void onTokenClicked(MouseEvent event) {
 		if (event.getClickCount() == 2) {
 			Token selected = this.tokens.getSelectedValue();
+
 			if (selected != null) {
 				this.gui.openClass(this.gui.getController().getTokenHandle().getRef()).navigateToToken(selected);
 			}
@@ -116,7 +117,6 @@ public class CallsTree {
 	}
 
 	public void retranslateUi() {
-
 	}
 
 	public JPanel getPanel() {

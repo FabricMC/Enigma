@@ -6,21 +6,27 @@ public final class MappingHelper {
 
 	public static String escape(String raw) {
 		StringBuilder builder = new StringBuilder(raw.length() + 1);
+
 		for (int i = 0; i < raw.length(); i++) {
 			final char c = raw.charAt(i);
 			final int r = TO_ESCAPE.indexOf(c);
+
 			if (r < 0) {
 				builder.append(c);
 			} else {
 				builder.append('\\').append(ESCAPED.charAt(r));
 			}
 		}
+
 		return builder.toString();
 	}
 
 	public static String unescape(String str) {
 		int pos = str.indexOf('\\');
-		if (pos < 0) return str;
+
+		if (pos < 0) {
+			return str;
+		}
 
 		StringBuilder ret = new StringBuilder(str.length() - 1);
 		int start = 0;

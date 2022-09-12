@@ -1,14 +1,14 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsReader;
 import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Writer;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public final class TestV2Main {
 	public static void main(String... args) throws Exception {

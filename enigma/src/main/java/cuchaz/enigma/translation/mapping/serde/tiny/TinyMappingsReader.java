@@ -1,10 +1,16 @@
 package cuchaz.enigma.translation.mapping.serde.tiny;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
 import com.google.common.base.Charsets;
+
 import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
+import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.MappingsReader;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -16,11 +22,6 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 
 public enum TinyMappingsReader implements MappingsReader {
 	INSTANCE;
@@ -62,26 +63,28 @@ public enum TinyMappingsReader implements MappingsReader {
 
 		String key = tokens[0];
 		switch (key) {
-			case "CLASS":
-				return parseClass(tokens);
-			case "FIELD":
-				return parseField(tokens);
-			case "METHOD":
-				return parseMethod(tokens);
-			case "MTH-ARG":
-				return parseArgument(tokens);
-			default:
-				throw new RuntimeException("Unknown token '" + key + "'!");
+		case "CLASS":
+			return parseClass(tokens);
+		case "FIELD":
+			return parseField(tokens);
+		case "METHOD":
+			return parseMethod(tokens);
+		case "MTH-ARG":
+			return parseArgument(tokens);
+		default:
+			throw new RuntimeException("Unknown token '" + key + "'!");
 		}
 	}
 
 	private MappingPair<ClassEntry, EntryMapping> parseClass(String[] tokens) {
 		ClassEntry obfuscatedEntry = new ClassEntry(tokens[1]);
 		String mapping = tokens[2];
+
 		if (mapping.indexOf('$') > 0) {
 			// inner classes should map to only the final part
 			mapping = mapping.substring(mapping.lastIndexOf('$') + 1);
 		}
+
 		return new MappingPair<>(obfuscatedEntry, new EntryMapping(mapping));
 	}
 

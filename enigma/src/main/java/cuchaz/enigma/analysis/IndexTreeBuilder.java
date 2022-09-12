@@ -1,15 +1,16 @@
 package cuchaz.enigma.analysis;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.google.common.collect.Lists;
+
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
-import java.util.Collection;
-import java.util.List;
 
 public class IndexTreeBuilder {
 	private final JarIndex index;
@@ -22,6 +23,7 @@ public class IndexTreeBuilder {
 		// get the root node
 		List<String> ancestry = Lists.newArrayList();
 		ancestry.add(obfClassEntry.getFullName());
+
 		for (ClassEntry classEntry : index.getInheritanceIndex().getAncestors(obfClassEntry)) {
 			ancestry.add(classEntry.getFullName());
 		}
@@ -40,6 +42,7 @@ public class IndexTreeBuilder {
 			node.load(index);
 			return node;
 		}
+
 		return null;
 	}
 
@@ -47,10 +50,7 @@ public class IndexTreeBuilder {
 		MethodEntry resolvedEntry = index.getEntryResolver().resolveFirstEntry(obfMethodEntry, ResolutionStrategy.RESOLVE_ROOT);
 
 		// make a root node at the base
-		MethodInheritanceTreeNode rootNode = new MethodInheritanceTreeNode(
-				translator, resolvedEntry,
-				index.getEntryIndex().hasMethod(resolvedEntry)
-		);
+		MethodInheritanceTreeNode rootNode = new MethodInheritanceTreeNode(translator, resolvedEntry, index.getEntryIndex().hasMethod(resolvedEntry));
 
 		// expand the full tree
 		rootNode.load(index);
@@ -63,6 +63,7 @@ public class IndexTreeBuilder {
 		Collection<MethodEntry> resolvedEntries = resolver.resolveEntry(obfMethodEntry, ResolutionStrategy.RESOLVE_ROOT);
 
 		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
+
 		for (MethodEntry resolvedEntry : resolvedEntries) {
 			MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(translator, resolvedEntry);
 			node.load(index);

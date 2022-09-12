@@ -1,14 +1,13 @@
 package cuchaz.enigma.gui.stats;
 
-import com.google.gson.GsonBuilder;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class StatsResult {
+import com.google.gson.GsonBuilder;
 
+public final class StatsResult {
 	private final int total;
 	private final int unmapped;
 	private final Tree<Integer> tree;
@@ -101,5 +100,4 @@ public final class StatsResult {
 			}
 		}
 	}
-
 }

@@ -18,7 +18,6 @@ import cuchaz.enigma.utils.Result;
  * @see ClassHandleProvider
  */
 public interface ClassHandle extends AutoCloseable {
-
 	/**
 	 * Gets the reference to this class. This is always obfuscated, for example
 	 * {@code net/minecraft/class_1000}.
@@ -104,5 +103,4 @@ public interface ClassHandle extends AutoCloseable {
 	 */
 	@Override
 	void close();
-
 }

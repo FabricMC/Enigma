@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui;
 
@@ -17,7 +17,6 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -25,12 +24,23 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
-
-import com.google.common.collect.Lists;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
@@ -39,8 +49,19 @@ import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
-import cuchaz.enigma.gui.elements.*;
-import cuchaz.enigma.gui.panels.*;
+import cuchaz.enigma.gui.elements.CallsTree;
+import cuchaz.enigma.gui.elements.CollapsibleTabbedPane;
+import cuchaz.enigma.gui.elements.EditorTabbedPane;
+import cuchaz.enigma.gui.elements.ImplementationsTree;
+import cuchaz.enigma.gui.elements.InheritanceTree;
+import cuchaz.enigma.gui.elements.MainWindow;
+import cuchaz.enigma.gui.elements.MenuBar;
+import cuchaz.enigma.gui.elements.ValidatableUi;
+import cuchaz.enigma.gui.panels.DeobfPanel;
+import cuchaz.enigma.gui.panels.EditorPanel;
+import cuchaz.enigma.gui.panels.IdentifierPanel;
+import cuchaz.enigma.gui.panels.ObfPanel;
+import cuchaz.enigma.gui.panels.StructurePanel;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
@@ -57,7 +78,6 @@ import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class Gui {
-
 	private final MainWindow mainWindow = new MainWindow(Enigma.NAME);
 	private final GuiController controller;
 
@@ -179,6 +199,7 @@ public class Gui {
 
 		// restore state
 		int[] layout = UiConfig.getLayout();
+
 		if (layout.length >= 4) {
 			this.splitClasses.setDividerLocation(layout[0]);
 			this.splitCenter.setDividerLocation(layout[1]);
@@ -200,6 +221,7 @@ public class Gui {
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
 		Point windowPos = UiConfig.getWindowPos("Main Window", null);
+
 		if (windowPos != null) {
 			frame.setLocation(windowPos);
 		} else {
@@ -327,18 +349,26 @@ public class Gui {
 
 	public void startDocChange(EditorPanel editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-		if (cursorReference == null || !this.isEditable(EditableType.JAVADOC)) return;
+
+		if (cursorReference == null || !this.isEditable(EditableType.JAVADOC)) {
+			return;
+		}
+
 		JavadocDialog.show(mainWindow.frame(), getController(), cursorReference);
 	}
 
 	public void startRename(EditorPanel editor, String text) {
-		if (editor != this.editorTabbedPane.getActiveEditor()) return;
+		if (editor != this.editorTabbedPane.getActiveEditor()) {
+			return;
+		}
 
 		infoPanel.startRenaming(text);
 	}
 
 	public void startRename(EditorPanel editor) {
-		if (editor != this.editorTabbedPane.getActiveEditor()) return;
+		if (editor != this.editorTabbedPane.getActiveEditor()) {
+			return;
+		}
 
 		infoPanel.startRenaming();
 	}
@@ -349,7 +379,10 @@ public class Gui {
 
 	public void showInheritance(EditorPanel editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-		if (cursorReference == null) return;
+
+		if (cursorReference == null) {
+			return;
+		}
 
 		this.inheritanceTree.display(cursorReference.entry);
 		tabs.setSelectedIndex(1);
@@ -357,7 +390,10 @@ public class Gui {
 
 	public void showImplementations(EditorPanel editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-		if (cursorReference == null) return;
+
+		if (cursorReference == null) {
+			return;
+		}
 
 		this.implementationsTree.display(cursorReference.entry);
 		tabs.setSelectedIndex(2);
@@ -365,7 +401,10 @@ public class Gui {
 
 	public void showCalls(EditorPanel editor, boolean recurse) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-		if (cursorReference == null) return;
+
+		if (cursorReference == null) {
+			return;
+		}
 
 		this.callsTree.showCalls(cursorReference.entry, recurse);
 		tabs.setSelectedIndex(3);
@@ -373,7 +412,10 @@ public class Gui {
 
 	public void toggleMapping(EditorPanel editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
-		if (cursorReference == null) return;
+
+		if (cursorReference == null) {
+			return;
+		}
 
 		Entry<?> obfEntry = cursorReference.entry;
 		toggleMappingFromEntry(obfEntry);
@@ -388,14 +430,15 @@ public class Gui {
 	}
 
 	public void showDiscardDiag(Function<Integer, Void> callback, String... options) {
-		int response = JOptionPane.showOptionDialog(this.mainWindow.frame(), I18n.translate("prompt.close.summary"), I18n.translate("prompt.close.title"), JOptionPane.YES_NO_CANCEL_OPTION,
-				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+		int response = JOptionPane.showOptionDialog(this.mainWindow.frame(), I18n.translate("prompt.close.summary"), I18n.translate("prompt.close.title"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
 		callback.apply(response);
 	}
 
 	public CompletableFuture<Void> saveMapping() {
-		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.mainWindow.frame()) == JFileChooser.APPROVE_OPTION)
+		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.mainWindow.frame()) == JFileChooser.APPROVE_OPTION) {
 			return this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile().toPath());
+		}
+
 		return CompletableFuture.completedFuture(null);
 	}
 
@@ -421,16 +464,13 @@ public class Gui {
 	private void exit() {
 		UiConfig.setWindowPos("Main Window", this.mainWindow.frame().getLocationOnScreen());
 		UiConfig.setWindowSize("Main Window", this.mainWindow.frame().getSize());
-		UiConfig.setLayout(
-				this.splitClasses.getDividerLocation(),
-				this.splitCenter.getDividerLocation(),
-				this.splitRight.getDividerLocation(),
-				this.logSplit.getDividerLocation());
+		UiConfig.setLayout(this.splitClasses.getDividerLocation(), this.splitCenter.getDividerLocation(), this.splitRight.getDividerLocation(), this.logSplit.getDividerLocation());
 		UiConfig.save();
 
 		if (searchDialog != null) {
 			searchDialog.dispose();
 		}
+
 		this.mainWindow.frame().dispose();
 		System.exit(0);
 	}
@@ -452,6 +492,7 @@ public class Gui {
 
 				onRenameFromClassTree(vc, prevDataChild, dataChild, node);
 			}
+
 			node.setUserObject(data);
 			// Ob package will never be modified, just reload deob view
 			this.deobfPanel.deobfClasses.reload();
@@ -462,11 +503,7 @@ public class Gui {
 			//      fast enough for now
 			EntryRemapper mapper = this.controller.project.getMapper();
 			ClassEntry deobf = (ClassEntry) prevData;
-			ClassEntry obf = mapper.getObfToDeobf().getAllEntries()
-					.filter(e -> e instanceof ClassEntry)
-					.map(e -> (ClassEntry) e)
-					.filter(e -> mapper.deobfuscate(e).equals(deobf))
-					.findAny().orElse(deobf);
+			ClassEntry obf = mapper.getObfToDeobf().getAllEntries().filter(e -> e instanceof ClassEntry).map(e -> (ClassEntry) e).filter(e -> mapper.deobfuscate(e).equals(deobf)).findAny().orElse(deobf);
 
 			this.controller.applyChange(vc, EntryChange.modify(obf).withDeobfName(((ClassEntry) data).getFullName()));
 		} else {
@@ -493,16 +530,12 @@ public class Gui {
 			this.obfPanel.obfClasses.removeEntry(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
-		}
-		// Deob -> ob
-		else if (!isOldOb) {
+		} else if (!isOldOb) { // Deob -> ob
 			this.obfPanel.obfClasses.moveClassIn(classEntry);
 			this.deobfPanel.deobfClasses.removeEntry(classEntry);
 			this.deobfPanel.deobfClasses.reload();
 			this.obfPanel.obfClasses.reload();
-		}
-		// Local move
-		else if (isOldOb) {
+		} else if (isOldOb) { // Local move
 			this.obfPanel.obfClasses.moveClassIn(classEntry);
 			this.obfPanel.obfClasses.reload();
 		} else {
@@ -526,6 +559,7 @@ public class Gui {
 		if (searchDialog == null) {
 			searchDialog = new SearchDialog(this);
 		}
+
 		return searchDialog;
 	}
 
@@ -549,9 +583,11 @@ public class Gui {
 
 	private void sendMessage() {
 		String text = chatBox.getText().trim();
+
 		if (!text.isEmpty()) {
 			getController().sendPacket(new MessageC2SPacket(text));
 		}
+
 		chatBox.setText("");
 	}
 
@@ -617,16 +653,17 @@ public class Gui {
 	public boolean validateImmediateAction(Consumer<ValidationContext> op) {
 		ValidationContext vc = new ValidationContext();
 		op.accept(vc);
+
 		if (!vc.canProceed()) {
 			List<ParameterizedMessage> messages = vc.getMessages();
 			String text = ValidatableUi.formatMessages(messages);
 			JOptionPane.showMessageDialog(this.getFrame(), text, String.format("%d message(s)", messages.size()), JOptionPane.ERROR_MESSAGE);
 		}
+
 		return vc.canProceed();
 	}
 
 	public boolean isEditable(EditableType t) {
 		return this.editableTypes.contains(t);
 	}
-
 }

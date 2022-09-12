@@ -28,6 +28,7 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 	public void read(DataInput input) throws IOException {
 		mappings = new HashEntryTree<>();
 		int size = input.readInt();
+
 		for (int i = 0; i < size; i++) {
 			readEntryTreeNode(input, null);
 		}
@@ -40,6 +41,7 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 		EntryMapping mapping = new EntryMapping(!name.isEmpty() ? name : null, !javadoc.isEmpty() ? javadoc : null);
 		mappings.insert(entry, mapping);
 		int size = input.readUnsignedShort();
+
 		for (int i = 0; i < size; i++) {
 			readEntryTreeNode(input, entry);
 		}
@@ -49,6 +51,7 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 	public void write(DataOutput output) throws IOException {
 		List<EntryTreeNode<EntryMapping>> roots = mappings.getRootNodes().toList();
 		output.writeInt(roots.size());
+
 		for (EntryTreeNode<EntryMapping> node : roots) {
 			writeEntryTreeNode(output, node);
 		}
@@ -57,12 +60,16 @@ public class SyncMappingsS2CPacket implements Packet<ClientPacketHandler> {
 	private static void writeEntryTreeNode(DataOutput output, EntryTreeNode<EntryMapping> node) throws IOException {
 		PacketHelper.writeEntry(output, node.getEntry(), false);
 		EntryMapping value = node.getValue();
-		if (value == null) value = EntryMapping.DEFAULT;
+
+		if (value == null) {
+			value = EntryMapping.DEFAULT;
+		}
 
 		PacketHelper.writeString(output, value.targetName() != null ? value.targetName() : "");
 		PacketHelper.writeString(output, value.javadoc() != null ? value.javadoc() : "");
 		Collection<? extends EntryTreeNode<EntryMapping>> children = node.getChildNodes();
 		output.writeShort(children.size());
+
 		for (EntryTreeNode<EntryMapping> child : children) {
 			writeEntryTreeNode(output, child);
 		}

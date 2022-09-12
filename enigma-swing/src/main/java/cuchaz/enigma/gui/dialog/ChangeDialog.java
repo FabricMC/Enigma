@@ -14,7 +14,6 @@ import javax.swing.JPanel;
 import cuchaz.enigma.utils.I18n;
 
 public class ChangeDialog {
-
 	public static void show(Window parent) {
 		// init frame
 		JDialog frame = new JDialog(parent, I18n.translate("menu.view.change.title"), Dialog.DEFAULT_MODALITY_TYPE);
@@ -48,5 +47,4 @@ public class ChangeDialog {
 		frame.setLocationRelativeTo(parent);
 		frame.setVisible(true);
 	}
-
 }

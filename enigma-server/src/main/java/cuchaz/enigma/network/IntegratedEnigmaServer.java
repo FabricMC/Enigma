@@ -1,8 +1,8 @@
 package cuchaz.enigma.network;
 
-import cuchaz.enigma.translation.mapping.EntryRemapper;
+import javax.swing.SwingUtilities;
 
-import javax.swing.*;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
 
 public class IntegratedEnigmaServer extends EnigmaServer {
 	public IntegratedEnigmaServer(byte[] jarChecksum, char[] password, EntryRemapper mappings, int port) {

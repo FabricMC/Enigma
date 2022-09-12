@@ -1,17 +1,23 @@
 package cuchaz.enigma.analysis.index;
 
+import java.util.Collection;
+import java.util.Map;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.ReferenceTargetType;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.*;
-
-import java.util.Collection;
-import java.util.Map;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldDefEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class ReferenceIndex implements JarIndexer {
 	private Multimap<MethodEntry, MethodEntry> methodReferences = HashMultimap.create();
@@ -24,13 +30,14 @@ public class ReferenceIndex implements JarIndexer {
 
 	@Override
 	public void indexMethod(MethodDefEntry methodEntry) {
-	    indexMethodDescriptor(methodEntry, methodEntry.getDesc());
+		indexMethodDescriptor(methodEntry, methodEntry.getDesc());
 	}
 
 	private void indexMethodDescriptor(MethodDefEntry entry, MethodDescriptor descriptor) {
 		for (TypeDescriptor typeDescriptor : descriptor.getArgumentDescs()) {
 			indexMethodTypeDescriptor(entry, typeDescriptor);
 		}
+
 		indexMethodTypeDescriptor(entry, descriptor.getReturnDesc());
 	}
 
@@ -45,7 +52,7 @@ public class ReferenceIndex implements JarIndexer {
 
 	@Override
 	public void indexField(FieldDefEntry fieldEntry) {
-	    indexFieldTypeDescriptor(fieldEntry, fieldEntry.getDesc());
+		indexFieldTypeDescriptor(fieldEntry, fieldEntry.getDesc());
 	}
 
 	private void indexFieldTypeDescriptor(FieldDefEntry field, TypeDescriptor typeDescriptor) {
@@ -53,7 +60,7 @@ public class ReferenceIndex implements JarIndexer {
 			ClassEntry referencedClass = typeDescriptor.getTypeEntry();
 			fieldTypeReferences.put(referencedClass, new EntryReference<>(referencedClass, referencedClass.getName(), field));
 		} else if (typeDescriptor.isArray()) {
-		    indexFieldTypeDescriptor(field, typeDescriptor.getArrayType());
+			indexFieldTypeDescriptor(field, typeDescriptor.getArrayType());
 		}
 	}
 
@@ -99,18 +106,22 @@ public class ReferenceIndex implements JarIndexer {
 	private <K extends Entry<?>, V extends Entry<?>> Multimap<K, V> remapReferences(JarIndex index, Multimap<K, V> multimap) {
 		final int keySetSize = multimap.keySet().size();
 		Multimap<K, V> resolved = HashMultimap.create(multimap.keySet().size(), keySetSize == 0 ? 0 : multimap.size() / keySetSize);
+
 		for (Map.Entry<K, V> entry : multimap.entries()) {
 			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
 		}
+
 		return resolved;
 	}
 
 	private <E extends Entry<?>, C extends Entry<?>> Multimap<E, EntryReference<E, C>> remapReferencesTo(JarIndex index, Multimap<E, EntryReference<E, C>> multimap) {
 		final int keySetSize = multimap.keySet().size();
 		Multimap<E, EntryReference<E, C>> resolved = HashMultimap.create(keySetSize, keySetSize == 0 ? 0 : multimap.size() / keySetSize);
+
 		for (Map.Entry<E, EntryReference<E, C>> entry : multimap.entries()) {
 			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
 		}
+
 		return resolved;
 	}
 

@@ -1,11 +1,12 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.FieldDefEntry;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.TypePath;
+
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.FieldDefEntry;
 
 public class TranslationFieldVisitor extends FieldVisitor {
 	private final FieldDefEntry fieldEntry;

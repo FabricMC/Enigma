@@ -1,20 +1,35 @@
 package cuchaz.enigma.network;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import cuchaz.enigma.network.packet.*;
+import cuchaz.enigma.network.packet.EntryChangeS2CPacket;
+import cuchaz.enigma.network.packet.KickS2CPacket;
+import cuchaz.enigma.network.packet.MessageS2CPacket;
+import cuchaz.enigma.network.packet.Packet;
+import cuchaz.enigma.network.packet.PacketRegistry;
+import cuchaz.enigma.network.packet.UserListS2CPacket;
 import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
 public abstract class EnigmaServer {
-
 	// https://discordapp.com/channels/507304429255393322/566418023372816394/700292322918793347
 	public static final int DEFAULT_PORT = 34712;
 	public static final int PROTOCOL_VERSION = 1;
@@ -71,17 +86,22 @@ public abstract class EnigmaServer {
 		Thread thread = new Thread(() -> {
 			try {
 				DataInput input = new DataInputStream(client.getInputStream());
+
 				while (true) {
 					int packetId;
+
 					try {
 						packetId = input.readUnsignedByte();
 					} catch (EOFException | SocketException e) {
 						break;
 					}
+
 					Packet<ServerPacketHandler> packet = PacketRegistry.createC2SPacket(packetId);
+
 					if (packet == null) {
 						throw new IOException("Received invalid packet id " + packetId);
 					}
+
 					packet.read(input);
 					runOnThread(() -> packet.handle(new ServerPacketHandler(client, this)));
 				}
@@ -90,6 +110,7 @@ public abstract class EnigmaServer {
 				e.printStackTrace();
 				return;
 			}
+
 			kick(client, "disconnect.disconnected");
 		});
 		thread.setName("Server I/O thread #" + (nextIoId++));
@@ -103,6 +124,7 @@ public abstract class EnigmaServer {
 				for (Socket client : clients) {
 					kick(client, "disconnect.server_closed");
 				}
+
 				try {
 					socket.close();
 				} catch (IOException e) {
@@ -114,7 +136,9 @@ public abstract class EnigmaServer {
 	}
 
 	public void kick(Socket client, String reason) {
-		if (!clients.remove(client)) return;
+		if (!clients.remove(client)) {
+			return;
+		}
 
 		sendPacket(client, new KickS2CPacket(reason));
 
@@ -123,6 +147,7 @@ public abstract class EnigmaServer {
 			return list.isEmpty();
 		});
 		String username = usernames.remove(client);
+
 		try {
 			client.close();
 		} catch (IOException e) {
@@ -134,6 +159,7 @@ public abstract class EnigmaServer {
 			System.out.println("Kicked " + username + " because " + reason);
 			sendMessage(Message.disconnect(username));
 		}
+
 		sendUsernamePacket();
 	}
 
@@ -159,6 +185,7 @@ public abstract class EnigmaServer {
 	public void sendPacket(Socket client, Packet<ClientPacketHandler> packet) {
 		if (!client.isClosed()) {
 			int packetId = PacketRegistry.getS2CId(packet);
+
 			try {
 				DataOutput output = new DataOutputStream(client.getOutputStream());
 				output.writeByte(packetId);
@@ -192,9 +219,11 @@ public abstract class EnigmaServer {
 		}
 
 		Integer syncId = syncIds.get(entry);
+
 		if (syncId == null) {
 			return true;
 		}
+
 		Set<Socket> clients = clientsNeedingConfirmation.get(syncId);
 		return clients == null || !clients.contains(client);
 	}
@@ -202,14 +231,18 @@ public abstract class EnigmaServer {
 	public int lockEntry(Socket exception, Entry<?> entry) {
 		int syncId = nextSyncId;
 		nextSyncId++;
+
 		// sync id is sent as an unsigned short, can't have more than 65536
 		if (nextSyncId == 65536) {
 			nextSyncId = DUMMY_SYNC_ID + 1;
 		}
+
 		Integer oldSyncId = syncIds.get(entry);
+
 		if (oldSyncId != null) {
 			clientsNeedingConfirmation.remove(oldSyncId);
 		}
+
 		syncIds.put(entry, syncId);
 		inverseSyncIds.put(syncId, entry);
 		Set<Socket> clients = new HashSet<>(this.clients);
@@ -224,8 +257,10 @@ public abstract class EnigmaServer {
 		}
 
 		Set<Socket> clients = clientsNeedingConfirmation.get(syncId);
+
 		if (clients != null) {
 			clients.remove(client);
+
 			if (clients.isEmpty()) {
 				clientsNeedingConfirmation.remove(syncId);
 				syncIds.remove(inverseSyncIds.remove(syncId));
@@ -236,6 +271,7 @@ public abstract class EnigmaServer {
 	public void sendCorrectMapping(Socket client, Entry<?> entry, boolean refreshClassTree) {
 		EntryMapping oldMapping = mappings.getDeobfMapping(entry);
 		String oldName = oldMapping.targetName();
+
 		if (oldName == null) {
 			sendPacket(client, new EntryChangeS2CPacket(DUMMY_SYNC_ID, EntryChange.modify(entry).clearDeobfName()));
 		} else {
@@ -269,5 +305,4 @@ public abstract class EnigmaServer {
 		log(String.format("[MSG] %s", message.translate()));
 		sendToAll(new MessageS2CPacket(message));
 	}
-
 }

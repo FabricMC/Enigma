@@ -1,15 +1,19 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- *
- * Contributors:
- *     Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+*     Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma;
+
+import static cuchaz.enigma.TestEntryFactory.newClass;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,10 +26,6 @@ import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
-
-import static cuchaz.enigma.TestEntryFactory.newClass;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class TestDeobfed {
 	public static final Path OBF = Paths.get("build/test-obf/translation.jar");
@@ -45,31 +45,9 @@ public class TestDeobfed {
 
 	@Test
 	public void obfEntries() {
-		assertThat(deobfProject.getJarIndex().getEntryIndex().getClasses(), containsInAnyOrder(
-			newClass("cuchaz/enigma/inputs/Keep"),
-			newClass("a"),
-			newClass("b"),
-			newClass("c"),
-			newClass("d"),
-			newClass("d$1"),
-			newClass("e"),
-			newClass("f"),
-			newClass("g"),
-			newClass("g$a"),
-			newClass("g$a$a"),
-			newClass("g$b"),
-			newClass("g$b$a"),
-			newClass("h"),
-			newClass("h$a"),
-			newClass("h$a$a"),
-			newClass("h$b"),
-			newClass("h$b$a"),
-			newClass("h$b$a$a"),
-			newClass("h$b$a$b"),
-			newClass("i"),
-			newClass("i$a"),
-			newClass("i$b")
-		));
+		assertThat(deobfProject.getJarIndex().getEntryIndex().getClasses(),
+					containsInAnyOrder(newClass("cuchaz/enigma/inputs/Keep"), newClass("a"), newClass("b"), newClass("c"), newClass("d"), newClass("d$1"), newClass("e"), newClass("f"), newClass("g"), newClass("g$a"), newClass("g$a$a"), newClass("g$b"), newClass("g$b$a"), newClass("h"),
+										newClass("h$a"), newClass("h$a$a"), newClass("h$b"), newClass("h$b$a"), newClass("h$b$a$a"), newClass("h$b$a$b"), newClass("i"), newClass("i$a"), newClass("i$b")));
 	}
 
 	@Test

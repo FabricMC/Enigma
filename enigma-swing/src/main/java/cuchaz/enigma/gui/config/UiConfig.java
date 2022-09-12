@@ -1,6 +1,10 @@
 package cuchaz.enigma.gui.config;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -10,7 +14,6 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 
 public final class UiConfig {
-
 	private UiConfig() {
 	}
 
@@ -82,11 +85,11 @@ public final class UiConfig {
 	 * @return an integer array composed of these 4 dimensions
 	 */
 	public static int[] getLayout() {
-		return swing.data().section("Main Window").getIntArray("Layout").orElseGet(() -> new int[] { -1, -1, -1, -1 });
+		return swing.data().section("Main Window").getIntArray("Layout").orElseGet(() -> new int[]{-1, -1, -1, -1});
 	}
 
 	public static void setLayout(int leftV, int left, int right, int rightH) {
-		swing.data().section("Main Window").setIntArray("Layout", new int[] { leftV, left, right, rightH });
+		swing.data().section("Main Window").setIntArray("Layout", new int[]{leftV, left, right, rightH});
 	}
 
 	public static LookAndFeel getLookAndFeel() {
@@ -287,6 +290,7 @@ public final class UiConfig {
 		ConfigSection section = swing.data().section(window);
 		OptionalInt width = section.getInt(String.format("Width %s", screenSize.width));
 		OptionalInt height = section.getInt(String.format("Height %s", screenSize.height));
+
 		if (width.isPresent() && height.isPresent()) {
 			return new Dimension(width.getAsInt(), height.getAsInt());
 		} else {
@@ -306,6 +310,7 @@ public final class UiConfig {
 		ConfigSection section = swing.data().section(window);
 		OptionalInt x = section.getInt(String.format("X %s", screenSize.width));
 		OptionalInt y = section.getInt(String.format("Y %s", screenSize.height));
+
 		if (x.isPresent() && y.isPresent()) {
 			int ix = x.getAsInt();
 			int iy = y.getAsInt();
@@ -354,6 +359,7 @@ public final class UiConfig {
 
 	public static void setLookAndFeelDefaults(LookAndFeel laf, boolean isDark) {
 		ConfigSection s = swing.data().section("Themes").section(laf.name()).section("Colors");
+
 		if (!isDark) {
 			// Defaults found here: https://github.com/Sciss/SyntaxPane/blob/122da367ff7a5d31627a70c62a48a9f0f4f85a0a/src/main/resources/de/sciss/syntaxpane/defaultsyntaxkit/config.properties#L139
 			s.setIfAbsentRgbColor("Line Numbers Foreground", 0x333300);
@@ -412,5 +418,4 @@ public final class UiConfig {
 			s.setIfAbsentRgbColor("Text", 0xF8F8F2);
 		}
 	}
-
 }

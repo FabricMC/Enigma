@@ -1,27 +1,33 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- *
- * Contributors:
- *     Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+*     Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma;
-
-import com.google.common.collect.Lists;
-import cuchaz.enigma.analysis.EntryReference;
-import cuchaz.enigma.classprovider.CachingClassProvider;
-import cuchaz.enigma.classprovider.JarClassProvider;
-import cuchaz.enigma.source.*;
-import cuchaz.enigma.translation.representation.entry.Entry;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+
+import com.google.common.collect.Lists;
+
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.JarClassProvider;
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.Decompilers;
+import cuchaz.enigma.source.Source;
+import cuchaz.enigma.source.SourceIndex;
+import cuchaz.enigma.source.SourceSettings;
+import cuchaz.enigma.source.Token;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public class TokenChecker {
 	private final Decompiler decompiler;
@@ -41,9 +47,11 @@ public class TokenChecker {
 
 		// get the token value
 		Token token = index.getDeclarationToken(entry);
+
 		if (token == null) {
 			return null;
 		}
+
 		return string.substring(token.start, token.end);
 	}
 
@@ -56,9 +64,11 @@ public class TokenChecker {
 
 		// get the token values
 		List<String> values = Lists.newArrayList();
+
 		for (Token token : index.getReferenceTokens((EntryReference<Entry<?>, Entry<?>>) reference)) {
 			values.add(string.substring(token.start, token.end));
 		}
+
 		return values;
 	}
 }

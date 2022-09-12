@@ -1,10 +1,11 @@
 package cuchaz.enigma.gui;
 
-import de.sciss.syntaxpane.SyntaxDocument;
-import de.sciss.syntaxpane.actions.DefaultSyntaxAction;
+import java.awt.event.ActionEvent;
 
 import javax.swing.text.JTextComponent;
-import java.awt.event.ActionEvent;
+
+import de.sciss.syntaxpane.SyntaxDocument;
+import de.sciss.syntaxpane.actions.DefaultSyntaxAction;
 
 public final class QuickFindAction extends DefaultSyntaxAction {
 	public QuickFindAction() {
@@ -26,6 +27,7 @@ public final class QuickFindAction extends DefaultSyntaxAction {
 
 		public static Data get(JTextComponent target) {
 			Object o = target.getDocument().getProperty(KEY);
+
 			if (o instanceof Data) {
 				return (Data) o;
 			}
@@ -39,6 +41,7 @@ public final class QuickFindAction extends DefaultSyntaxAction {
 			if (findDialog == null) {
 				findDialog = new EnigmaQuickFindDialog(target);
 			}
+
 			findDialog.showFor(target);
 		}
 	}

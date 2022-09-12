@@ -21,7 +21,6 @@ import de.sciss.syntaxpane.DefaultSyntaxKit;
 import cuchaz.enigma.gui.config.UiConfig;
 
 public class ScaleUtil {
-
 	private static List<ScaleChangeListener> listeners = new ArrayList<>();
 
 	public static void setScaleFactor(float scaleFactor) {
@@ -110,15 +109,19 @@ public class ScaleUtil {
 
 	private static BasicTweaker createTweakerForCurrentLook(float dpiScaling) {
 		String testString = UIManager.getLookAndFeel().getName().toLowerCase();
+
 		if (testString.contains("windows")) {
 			return new WindowsTweaker(dpiScaling, testString.contains("classic"));
 		}
+
 		if (testString.contains("metal")) {
 			return new MetalTweaker(dpiScaling);
 		}
+
 		if (testString.contains("nimbus")) {
 			return new NimbusTweaker(dpiScaling);
 		}
+
 		return new BasicTweaker(dpiScaling);
 	}
 }

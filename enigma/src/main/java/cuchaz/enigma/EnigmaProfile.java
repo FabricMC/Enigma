@@ -1,20 +1,5 @@
 package cuchaz.enigma;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
-import cuchaz.enigma.api.service.EnigmaServiceType;
-import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
-import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
-
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,13 +13,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
+
+import cuchaz.enigma.api.service.EnigmaServiceType;
+import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
+
 public final class EnigmaProfile {
 	public static final EnigmaProfile EMPTY = new EnigmaProfile(new ServiceContainer(ImmutableMap.of()));
 
 	private static final MappingSaveParameters DEFAULT_MAPPING_SAVE_PARAMETERS = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
-	private static final Gson GSON = new GsonBuilder()
-			.registerTypeAdapter(ServiceContainer.class, (JsonDeserializer<ServiceContainer>) EnigmaProfile::loadServiceContainer)
-			.create();
+	private static final Gson GSON = new GsonBuilder().registerTypeAdapter(ServiceContainer.class, (JsonDeserializer<ServiceContainer>) EnigmaProfile::loadServiceContainer).create();
 	private static final Type SERVICE_LIST_TYPE = new TypeToken<List<Service>>() {
 	}.getType();
 
@@ -78,6 +78,7 @@ public final class EnigmaProfile {
 
 		for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
 			JsonElement value = entry.getValue();
+
 			if (value.isJsonObject()) {
 				builder.put(entry.getKey(), Collections.singletonList(GSON.fromJson(value, Service.class)));
 			} else if (value.isJsonArray()) {

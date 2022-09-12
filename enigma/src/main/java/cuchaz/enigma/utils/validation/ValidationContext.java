@@ -1,6 +1,10 @@
 package cuchaz.enigma.utils.validation;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -15,7 +19,6 @@ import cuchaz.enigma.utils.validation.Message.Type;
  * multiple errors and displaying them to the user at the same time.
  */
 public class ValidationContext {
-
 	private Validatable activeElement = null;
 	private final Set<Validatable> elements = new HashSet<>();
 	private final List<ParameterizedMessage> messages = new ArrayList<>();
@@ -30,6 +33,7 @@ public class ValidationContext {
 		if (v != null) {
 			elements.add(v);
 		}
+
 		activeElement = v;
 	}
 
@@ -38,14 +42,16 @@ public class ValidationContext {
 	 * that element about the message.
 	 *
 	 * @param message the message to raise
-	 * @param args    the arguments used when formatting the message text
+	 * @param args the arguments used when formatting the message text
 	 */
 	public void raise(Message message, Object... args) {
 		ParameterizedMessage pm = new ParameterizedMessage(message, args, this.activeElement);
+
 		if (!this.messages.contains(pm)) {
 			if (activeElement != null) {
 				activeElement.addMessage(pm);
 			}
+
 			messages.add(pm);
 		}
 	}
@@ -72,6 +78,7 @@ public class ValidationContext {
 			for (ParameterizedMessage message : this.messages) {
 				PrintValidatable.formatMessage(System.err, message);
 			}
+
 			throw new IllegalStateException("Errors encountered; cannot continue! Check error log for details.");
 		}
 	}
@@ -90,5 +97,4 @@ public class ValidationContext {
 		elements.clear();
 		messages.clear();
 	}
-
 }

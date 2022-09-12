@@ -1,9 +1,16 @@
 package cuchaz.enigma.gui.panels;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.MouseEvent;
 
-import javax.swing.*;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
@@ -23,144 +30,144 @@ import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 import cuchaz.enigma.utils.I18n;
 
 public class StructurePanel {
-    private final Gui gui;
+	private final Gui gui;
 
-    private final JPanel panel = new JPanel(new BorderLayout());
+	private final JPanel panel = new JPanel(new BorderLayout());
 
-    private final JPanel optionsPanel;
+	private final JPanel optionsPanel;
 
-    private final JLabel obfuscationVisibilityLabel = new JLabel();
-    private final JLabel documentationVisibilityLabel = new JLabel();
-    private final JLabel sortingOrderLabel = new JLabel();
+	private final JLabel obfuscationVisibilityLabel = new JLabel();
+	private final JLabel documentationVisibilityLabel = new JLabel();
+	private final JLabel sortingOrderLabel = new JLabel();
 
-    private final JComboBox<StructureTreeOptions.ObfuscationVisibility> obfuscationVisibility;
-    private final JComboBox<StructureTreeOptions.DocumentationVisibility> documentationVisibility;
-    private final JComboBox<StructureTreeOptions.SortingOrder> sortingOrder;
+	private final JComboBox<StructureTreeOptions.ObfuscationVisibility> obfuscationVisibility;
+	private final JComboBox<StructureTreeOptions.DocumentationVisibility> documentationVisibility;
+	private final JComboBox<StructureTreeOptions.SortingOrder> sortingOrder;
 
-    private final JTree structureTree;
+	private final JTree structureTree;
 
-    public StructurePanel(Gui gui) {
-        this.gui = gui;
+	public StructurePanel(Gui gui) {
+		this.gui = gui;
 
-        this.optionsPanel = new JPanel(new GridBagLayout());
-        this.optionsPanel.setVisible(false);
+		this.optionsPanel = new JPanel(new GridBagLayout());
+		this.optionsPanel.setVisible(false);
 
-        GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(5).fill(GridBagConstraints.HORIZONTAL);
+		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(5).fill(GridBagConstraints.HORIZONTAL);
 
-        this.optionsPanel.add(this.obfuscationVisibilityLabel, cb.pos(0, 0).build());
-        this.obfuscationVisibility = new JComboBox<>(StructureTreeOptions.ObfuscationVisibility.values());
-        this.obfuscationVisibility.setRenderer(new StructureOptionListCellRenderer());
-        this.obfuscationVisibility.addActionListener(event -> this.showStructure(gui.getActiveEditor()));
-        this.optionsPanel.add(this.obfuscationVisibility, cb.pos(1, 0).build());
+		this.optionsPanel.add(this.obfuscationVisibilityLabel, cb.pos(0, 0).build());
+		this.obfuscationVisibility = new JComboBox<>(StructureTreeOptions.ObfuscationVisibility.values());
+		this.obfuscationVisibility.setRenderer(new StructureOptionListCellRenderer());
+		this.obfuscationVisibility.addActionListener(event -> this.showStructure(gui.getActiveEditor()));
+		this.optionsPanel.add(this.obfuscationVisibility, cb.pos(1, 0).build());
 
-        this.optionsPanel.add(this.documentationVisibilityLabel, cb.pos(0, 1).build());
-        this.documentationVisibility = new JComboBox<>(StructureTreeOptions.DocumentationVisibility.values());
-        this.documentationVisibility.setRenderer(new StructureOptionListCellRenderer());
-        this.documentationVisibility.addActionListener(event -> this.showStructure(gui.getActiveEditor()));
-        this.optionsPanel.add(this.documentationVisibility, cb.pos(1, 1).build());
+		this.optionsPanel.add(this.documentationVisibilityLabel, cb.pos(0, 1).build());
+		this.documentationVisibility = new JComboBox<>(StructureTreeOptions.DocumentationVisibility.values());
+		this.documentationVisibility.setRenderer(new StructureOptionListCellRenderer());
+		this.documentationVisibility.addActionListener(event -> this.showStructure(gui.getActiveEditor()));
+		this.optionsPanel.add(this.documentationVisibility, cb.pos(1, 1).build());
 
-        this.optionsPanel.add(this.sortingOrderLabel, cb.pos(0, 2).build());
-        this.sortingOrder = new JComboBox<>(StructureTreeOptions.SortingOrder.values());
-        this.sortingOrder.setRenderer(new StructureOptionListCellRenderer());
-        this.sortingOrder.addActionListener(event -> this.showStructure(gui.getActiveEditor()));
-        this.optionsPanel.add(this.sortingOrder, cb.pos(1, 2).build());
+		this.optionsPanel.add(this.sortingOrderLabel, cb.pos(0, 2).build());
+		this.sortingOrder = new JComboBox<>(StructureTreeOptions.SortingOrder.values());
+		this.sortingOrder.setRenderer(new StructureOptionListCellRenderer());
+		this.sortingOrder.addActionListener(event -> this.showStructure(gui.getActiveEditor()));
+		this.optionsPanel.add(this.sortingOrder, cb.pos(1, 2).build());
 
-        this.structureTree = new JTree();
-        this.structureTree.setModel(null);
-        this.structureTree.setCellRenderer(new StructureTreeCellRenderer(gui));
-        this.structureTree.setSelectionModel(new SingleTreeSelectionModel());
-        this.structureTree.setShowsRootHandles(true);
-        this.structureTree.addMouseListener(GuiUtil.onMouseClick(this::onClick));
+		this.structureTree = new JTree();
+		this.structureTree.setModel(null);
+		this.structureTree.setCellRenderer(new StructureTreeCellRenderer(gui));
+		this.structureTree.setSelectionModel(new SingleTreeSelectionModel());
+		this.structureTree.setShowsRootHandles(true);
+		this.structureTree.addMouseListener(GuiUtil.onMouseClick(this::onClick));
 
-        this.retranslateUi();
+		this.retranslateUi();
 
-        this.panel.add(this.optionsPanel, BorderLayout.NORTH);
-        this.panel.add(new JScrollPane(this.structureTree));
-    }
+		this.panel.add(this.optionsPanel, BorderLayout.NORTH);
+		this.panel.add(new JScrollPane(this.structureTree));
+	}
 
-    public void showStructure(EditorPanel editor) {
-        structureTree.setModel(null);
+	public void showStructure(EditorPanel editor) {
+		structureTree.setModel(null);
 
-        if (editor == null) {
-            this.optionsPanel.setVisible(false);
-            return;
-        }
+		if (editor == null) {
+			this.optionsPanel.setVisible(false);
+			return;
+		}
 
-        ClassEntry classEntry = editor.getClassHandle().getRef();
-        if (classEntry == null) return;
+		ClassEntry classEntry = editor.getClassHandle().getRef();
 
-        this.optionsPanel.setVisible(true);
+		if (classEntry == null) {
+			return;
+		}
 
-        // get the class structure
-        StructureTreeNode node = this.gui.getController().getClassStructure(classEntry, this.getOptions());
+		this.optionsPanel.setVisible(true);
 
-        // show the tree at the root
-        TreePath path = GuiUtil.getPathToRoot(node);
-        structureTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
-        structureTree.expandPath(path);
-        structureTree.setSelectionRow(structureTree.getRowForPath(path));
-    }
+		// get the class structure
+		StructureTreeNode node = this.gui.getController().getClassStructure(classEntry, this.getOptions());
 
-    private void onClick(MouseEvent event) {
-        if (event.getClickCount() >= 2 && event.getButton() == MouseEvent.BUTTON1) {
-            // get the selected node
-            TreePath path = structureTree.getSelectionPath();
-            if (path == null) {
-                return;
-            }
+		// show the tree at the root
+		TreePath path = GuiUtil.getPathToRoot(node);
+		structureTree.setModel(new DefaultTreeModel((TreeNode) path.getPathComponent(0)));
+		structureTree.expandPath(path);
+		structureTree.setSelectionRow(structureTree.getRowForPath(path));
+	}
 
-            Object node = path.getLastPathComponent();
+	private void onClick(MouseEvent event) {
+		if (event.getClickCount() >= 2 && event.getButton() == MouseEvent.BUTTON1) {
+			// get the selected node
+			TreePath path = structureTree.getSelectionPath();
 
-            if (node instanceof StructureTreeNode) {
-                this.gui.getController().navigateTo(((StructureTreeNode) node).getEntry());
-            }
-        }
-    }
+			if (path == null) {
+				return;
+			}
 
-    /**
-     * Creates and returns the options of this structure panel.
-     */
-    private StructureTreeOptions getOptions() {
-        return new StructureTreeOptions(
-                (StructureTreeOptions.ObfuscationVisibility) this.obfuscationVisibility.getSelectedItem(),
-                (StructureTreeOptions.DocumentationVisibility) this.documentationVisibility.getSelectedItem(),
-                (StructureTreeOptions.SortingOrder) this.sortingOrder.getSelectedItem()
-        );
-    }
+			Object node = path.getLastPathComponent();
 
-    public void retranslateUi() {
-        this.obfuscationVisibilityLabel.setText(I18n.translate("structure.options.obfuscation"));
-        this.documentationVisibilityLabel.setText(I18n.translate("structure.options.documentation"));
-        this.sortingOrderLabel.setText(I18n.translate("structure.options.sorting"));
-    }
+			if (node instanceof StructureTreeNode) {
+				this.gui.getController().navigateTo(((StructureTreeNode) node).getEntry());
+			}
+		}
+	}
 
-    public JPanel getPanel() {
-        return this.panel;
-    }
+	/**
+	 * Creates and returns the options of this structure panel.
+	 */
+	private StructureTreeOptions getOptions() {
+		return new StructureTreeOptions((StructureTreeOptions.ObfuscationVisibility) this.obfuscationVisibility.getSelectedItem(), (StructureTreeOptions.DocumentationVisibility) this.documentationVisibility.getSelectedItem(), (StructureTreeOptions.SortingOrder) this.sortingOrder.getSelectedItem());
+	}
 
-    private static class StructureTreeCellRenderer extends DefaultTreeCellRenderer {
-        private final Gui gui;
+	public void retranslateUi() {
+		this.obfuscationVisibilityLabel.setText(I18n.translate("structure.options.obfuscation"));
+		this.documentationVisibilityLabel.setText(I18n.translate("structure.options.documentation"));
+		this.sortingOrderLabel.setText(I18n.translate("structure.options.sorting"));
+	}
 
-        StructureTreeCellRenderer(Gui gui) {
-            this.gui = gui;
-        }
+	public JPanel getPanel() {
+		return this.panel;
+	}
 
-        @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-            Component c = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-            ParentedEntry<?> entry = ((StructureTreeNode) value).getEntry();
+	private static class StructureTreeCellRenderer extends DefaultTreeCellRenderer {
+		private final Gui gui;
 
-            if (entry instanceof ClassEntry classEntry) {
-                this.setIcon(GuiUtil.getClassIcon(gui, classEntry));
-            } else if (entry instanceof MethodEntry methodEntry) {
-                this.setIcon(GuiUtil.getMethodIcon(methodEntry));
-            } else if (entry instanceof FieldEntry) {
-                this.setIcon(GuiUtil.FIELD_ICON);
-            }
+		StructureTreeCellRenderer(Gui gui) {
+			this.gui = gui;
+		}
 
-            this.setText("<html>" + ((StructureTreeNode) value).toHtml());
+		@Override
+		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+			Component c = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+			ParentedEntry<?> entry = ((StructureTreeNode) value).getEntry();
 
-            return c;
-        }
-    }
+			if (entry instanceof ClassEntry classEntry) {
+				this.setIcon(GuiUtil.getClassIcon(gui, classEntry));
+			} else if (entry instanceof MethodEntry methodEntry) {
+				this.setIcon(GuiUtil.getMethodIcon(methodEntry));
+			} else if (entry instanceof FieldEntry) {
+				this.setIcon(GuiUtil.FIELD_ICON);
+			}
+
+			this.setText("<html>" + ((StructureTreeNode) value).toHtml());
+
+			return c;
+		}
+	}
 }

@@ -1,89 +1,95 @@
 plugins {
-    id 'maven-publish'
+	id 'maven-publish'
 }
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven-publish'
+	apply plugin: 'java'
+	apply plugin: 'maven-publish'
+	apply plugin: 'checkstyle'
 
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven { url 'https://maven.fabricmc.net/' }
-    }
+	repositories {
+		mavenLocal()
+		mavenCentral()
+		maven {url 'https://maven.fabricmc.net/'}
+	}
 
-    dependencies {
-        implementation 'com.google.guava:guava:30.1.1-jre'
-        implementation 'com.google.code.gson:gson:2.8.7'
+	dependencies {
+		implementation 'com.google.guava:guava:30.1.1-jre'
+		implementation 'com.google.code.gson:gson:2.8.7'
 
-        testImplementation 'junit:junit:4.13.2'
-        testImplementation 'org.hamcrest:hamcrest:2.2'
-    }
+		testImplementation 'junit:junit:4.13.2'
+		testImplementation 'org.hamcrest:hamcrest:2.2'
+	}
 
-    group = 'cuchaz'
-    version = '2.1.0'
+	group = 'cuchaz'
+	version = '2.1.1'
 
-    version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
+	version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
+	task sourcesJar(type: Jar, dependsOn: classes) {
+		classifier = 'sources'
+		from sourceSets.main.allSource
+	}
 
-    java {
-        withSourcesJar()
-    }
+	java {
+		withSourcesJar()
+	}
 
-    tasks.withType(JavaCompile).configureEach {
-        it.options.encoding = "UTF-8"
+	tasks.withType(JavaCompile).configureEach {
+		it.options.encoding = "UTF-8"
 
-        it.options.release = 17
-    }
+		it.options.release = 17
+	}
 
-    publishing {
-        publications {
-            "$project.name"(MavenPublication) {
-                groupId project.group
-                artifactId project.name
-                version project.version
-                from components.java
-            }
-        }
-    }
+	checkstyle {
+		configFile = rootProject.file('checkstyle.xml')
+		toolVersion = '10.3.3'
+	}
+
+	publishing {
+		publications {
+			"$project.name"(MavenPublication) {
+				groupId project.group
+				artifactId project.name
+				version project.version
+				from components.java
+			}
+		}
+	}
 }
 
 allprojects {
-    publishing {
-        repositories {
-            mavenLocal()
+	publishing {
+		repositories {
+			mavenLocal()
 
-            def ENV = System.getenv()
-            if (ENV.MAVEN_URL) {
-                maven {
-                    url ENV.MAVEN_URL
-                    credentials {
-                        username ENV.MAVEN_USERNAME
-                        password ENV.MAVEN_PASSWORD
-                    }
-                }
-            }
-        }
-    }
+			def ENV = System.getenv()
+			if (ENV.MAVEN_URL) {
+				maven {
+					url ENV.MAVEN_URL
+					credentials {
+						username ENV.MAVEN_USERNAME
+						password ENV.MAVEN_PASSWORD
+					}
+				}
+			}
+		}
+	}
 }
 
 // A task to ensure that the version being released has not already been released.
 task checkVersion {
-    doFirst {
-        def xml = new URL("https://maven.fabricmc.net/cuchaz/enigma/maven-metadata.xml").text
-        def metadata = new XmlSlurper().parseText(xml)
-        def versions = metadata.versioning.versions.version*.text();
-        if (versions.contains(version)) {
-            throw new RuntimeException("${version} has already been released!")
-        }
-    }
+	doFirst {
+		def xml = new URL("https://maven.fabricmc.net/cuchaz/enigma/maven-metadata.xml").text
+		def metadata = new XmlSlurper().parseText(xml)
+		def versions = metadata.versioning.versions.version*.text();
+		if (versions.contains(version)) {
+			throw new RuntimeException("${version} has already been released!")
+		}
+	}
 }
 
 publish.mustRunAfter checkVersion

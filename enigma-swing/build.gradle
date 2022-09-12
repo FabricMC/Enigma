@@ -1,18 +1,18 @@
 plugins {
-    id 'application'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
+	id 'application'
+	id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 dependencies {
-    implementation project(':enigma')
-    implementation project(':enigma-server')
+	implementation project(':enigma')
+	implementation project(':enigma-server')
 
-    implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
-    implementation 'com.formdev:flatlaf:1.6.1'
-    implementation 'com.formdev:flatlaf-extras:1.6.1' // for SVG icons
-    implementation 'de.sciss:syntaxpane:1.2.0'
-    implementation 'com.github.lukeu:swing-dpi:0.9'
-    implementation 'org.drjekyll:fontchooser:2.5.2'
+	implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+	implementation 'com.formdev:flatlaf:1.6.1'
+	implementation 'com.formdev:flatlaf-extras:1.6.1' // for SVG icons
+	implementation 'de.sciss:syntaxpane:1.2.0'
+	implementation 'com.github.lukeu:swing-dpi:0.9'
+	implementation 'org.drjekyll:fontchooser:2.5.2'
 }
 
 mainClassName = 'cuchaz.enigma.gui.Main'
@@ -20,9 +20,9 @@ mainClassName = 'cuchaz.enigma.gui.Main'
 jar.manifest.attributes 'Main-Class': mainClassName
 
 publishing {
-    publications {
-        shadow(MavenPublication) { publication ->
-            publication.from components.java
-        }
-    }
+	publications {
+		shadow(MavenPublication) {publication ->
+			publication.from components.java
+		}
+	}
 }

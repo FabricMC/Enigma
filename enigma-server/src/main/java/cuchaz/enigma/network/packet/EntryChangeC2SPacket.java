@@ -12,7 +12,6 @@ import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class EntryChangeC2SPacket implements Packet<ServerPacketHandler> {
-
 	private EntryChange<?> change;
 
 	EntryChangeC2SPacket() {
@@ -62,5 +61,4 @@ public class EntryChangeC2SPacket implements Packet<ServerPacketHandler> {
 			handler.getServer().sendMessage(Message.editDocs(handler.getServer().getUsername(handler.getClient()), this.change.getTarget()));
 		}
 	}
-
 }

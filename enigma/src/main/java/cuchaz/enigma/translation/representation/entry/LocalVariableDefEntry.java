@@ -34,10 +34,7 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 		TypeDescriptor translatedDesc = translator.translate(desc);
 		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
 		String javadoc = mapping.javadoc();
-		return TranslateResult.of(
-				mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
-				new LocalVariableDefEntry(parent, index, translatedName, parameter, translatedDesc, javadoc)
-		);
+		return TranslateResult.of(mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED, new LocalVariableDefEntry(parent, index, translatedName, parameter, translatedDesc, javadoc));
 	}
 
 	@Override

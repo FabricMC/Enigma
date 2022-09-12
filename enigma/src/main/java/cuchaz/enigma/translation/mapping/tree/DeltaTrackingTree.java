@@ -1,16 +1,17 @@
 package cuchaz.enigma.translation.mapping.tree;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.representation.entry.Entry;
-
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.stream.Stream;
 
 public class DeltaTrackingTree<T> implements EntryTree<T> {
 	private final EntryTree<T> delegate;

@@ -1,27 +1,28 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- *
- * Contributors:
- *     Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+*     Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.translation.representation.entry.Entry;
+import static cuchaz.enigma.TestEntryFactory.newClass;
+import static cuchaz.enigma.TestEntryFactory.newField;
+import static cuchaz.enigma.TestEntryFactory.newMethod;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static cuchaz.enigma.TestEntryFactory.*;
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public class TestTranslator {
-
 	@BeforeClass
-	public static void beforeClass()
-		throws Exception {
+	public static void beforeClass() throws Exception {
 		//TODO FIx
 		//deobfuscator = new Enigma(new JarFile("build/test-obf/translation.jar"));
 		//try (InputStream in = TestTranslator.class.getResourceAsStream("/cuchaz/enigma/resources/translation.mappings")) {
@@ -94,7 +95,6 @@ public class TestTranslator {
 
 	@Test
 	public void innerClasses() {
-
 		// classes
 		assertMapping(newClass("g"), newClass("deobf/G_OuterClass"));
 		assertMapping(newClass("g$a"), newClass("deobf/G_OuterClass$A_InnerClass"));
@@ -120,7 +120,6 @@ public class TestTranslator {
 
 	@Test
 	public void testGenerics() {
-
 		// classes
 		assertMapping(newClass("i"), newClass("deobf/I_Generics"));
 		assertMapping(newClass("i$a"), newClass("deobf/I_Generics$A_Type"));

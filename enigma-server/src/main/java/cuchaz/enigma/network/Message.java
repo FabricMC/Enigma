@@ -10,9 +10,8 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.I18n;
 
 public abstract class Message {
-
 	public final String user;
-	
+
 	public static Chat chat(String user, String message) {
 		return new Chat(user, message);
 	}
@@ -47,34 +46,37 @@ public abstract class Message {
 
 	public static Message read(DataInput input) throws IOException {
 		byte typeId = input.readByte();
+
 		if (typeId < 0 || typeId >= Type.values().length) {
 			throw new IOException(String.format("Invalid message type ID %d", typeId));
 		}
+
 		Type type = Type.values()[typeId];
 		String user = input.readUTF();
+
 		switch (type) {
-			case CHAT:
-				String message = input.readUTF();
-				return chat(user, message);
-			case CONNECT:
-				return connect(user);
-			case DISCONNECT:
-				return disconnect(user);
-			case EDIT_DOCS:
-				Entry<?> entry = PacketHelper.readEntry(input);
-				return editDocs(user, entry);
-			case MARK_DEOBF:
-				entry = PacketHelper.readEntry(input);
-				return markDeobf(user, entry);
-			case REMOVE_MAPPING:
-				entry = PacketHelper.readEntry(input);
-				return removeMapping(user, entry);
-			case RENAME:
-				entry = PacketHelper.readEntry(input);
-				String newName = input.readUTF();
-				return rename(user, entry, newName);
-			default:
-				throw new IllegalStateException("unreachable");
+		case CHAT:
+			String message = input.readUTF();
+			return chat(user, message);
+		case CONNECT:
+			return connect(user);
+		case DISCONNECT:
+			return disconnect(user);
+		case EDIT_DOCS:
+			Entry<?> entry = PacketHelper.readEntry(input);
+			return editDocs(user, entry);
+		case MARK_DEOBF:
+			entry = PacketHelper.readEntry(input);
+			return markDeobf(user, entry);
+		case REMOVE_MAPPING:
+			entry = PacketHelper.readEntry(input);
+			return removeMapping(user, entry);
+		case RENAME:
+			entry = PacketHelper.readEntry(input);
+			String newName = input.readUTF();
+			return rename(user, entry, newName);
+		default:
+			throw new IllegalStateException("unreachable");
 		}
 	}
 
@@ -89,8 +91,14 @@ public abstract class Message {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
 		Message message = (Message) o;
 		return Objects.equals(user, message.user);
 	}
@@ -111,7 +119,6 @@ public abstract class Message {
 	}
 
 	public static final class Chat extends Message {
-
 		public final String message;
 
 		private Chat(String user, String message) {
@@ -137,9 +144,18 @@ public abstract class Message {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
+			if (this == o) {
+				return true;
+			}
+
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			if (!super.equals(o)) {
+				return false;
+			}
+
 			Chat chat = (Chat) o;
 			return Objects.equals(message, chat.message);
 		}
@@ -153,11 +169,9 @@ public abstract class Message {
 		public String toString() {
 			return String.format("Message.Chat { user: '%s', message: '%s' }", user, message);
 		}
-
 	}
 
 	public static final class Connect extends Message {
-
 		private Connect(String user) {
 			super(user);
 		}
@@ -176,11 +190,9 @@ public abstract class Message {
 		public String toString() {
 			return String.format("Message.Connect { user: '%s' }", user);
 		}
-
 	}
 
 	public static final class Disconnect extends Message {
-
 		private Disconnect(String user) {
 			super(user);
 		}
@@ -199,11 +211,9 @@ public abstract class Message {
 		public String toString() {
 			return String.format("Message.Disconnect { user: '%s' }", user);
 		}
-
 	}
 
-	public static  final class EditDocs extends Message {
-
+	public static final class EditDocs extends Message {
 		public final Entry<?> entry;
 
 		private EditDocs(String user, Entry<?> entry) {
@@ -229,9 +239,18 @@ public abstract class Message {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
+			if (this == o) {
+				return true;
+			}
+
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			if (!super.equals(o)) {
+				return false;
+			}
+
 			EditDocs editDocs = (EditDocs) o;
 			return Objects.equals(entry, editDocs.entry);
 		}
@@ -245,11 +264,9 @@ public abstract class Message {
 		public String toString() {
 			return String.format("Message.EditDocs { user: '%s', entry: %s }", user, entry);
 		}
-
 	}
 
 	public static final class MarkDeobf extends Message {
-
 		public final Entry<?> entry;
 
 		private MarkDeobf(String user, Entry<?> entry) {
@@ -275,9 +292,18 @@ public abstract class Message {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
+			if (this == o) {
+				return true;
+			}
+
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			if (!super.equals(o)) {
+				return false;
+			}
+
 			MarkDeobf markDeobf = (MarkDeobf) o;
 			return Objects.equals(entry, markDeobf.entry);
 		}
@@ -291,11 +317,9 @@ public abstract class Message {
 		public String toString() {
 			return String.format("Message.MarkDeobf { user: '%s', entry: %s }", user, entry);
 		}
-
 	}
 
 	public static final class RemoveMapping extends Message {
-
 		public final Entry<?> entry;
 
 		private RemoveMapping(String user, Entry<?> entry) {
@@ -321,9 +345,18 @@ public abstract class Message {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
+			if (this == o) {
+				return true;
+			}
+
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			if (!super.equals(o)) {
+				return false;
+			}
+
 			RemoveMapping that = (RemoveMapping) o;
 			return Objects.equals(entry, that.entry);
 		}
@@ -337,11 +370,9 @@ public abstract class Message {
 		public String toString() {
 			return String.format("Message.RemoveMapping { user: '%s', entry: %s }", user, entry);
 		}
-
 	}
 
 	public static final class Rename extends Message {
-
 		public final Entry<?> entry;
 		public final String newName;
 
@@ -370,12 +401,20 @@ public abstract class Message {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			if (!super.equals(o)) return false;
+			if (this == o) {
+				return true;
+			}
+
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			if (!super.equals(o)) {
+				return false;
+			}
+
 			Rename rename = (Rename) o;
-			return Objects.equals(entry, rename.entry) &&
-					Objects.equals(newName, rename.newName);
+			return Objects.equals(entry, rename.entry) && Objects.equals(newName, rename.newName);
 		}
 
 		@Override
@@ -387,7 +426,5 @@ public abstract class Message {
 		public String toString() {
 			return String.format("Message.Rename { user: '%s', entry: %s, newName: '%s' }", user, entry, newName);
 		}
-
 	}
-
 }

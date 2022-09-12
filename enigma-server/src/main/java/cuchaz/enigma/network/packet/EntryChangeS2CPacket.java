@@ -8,7 +8,6 @@ import cuchaz.enigma.network.ClientPacketHandler;
 import cuchaz.enigma.translation.mapping.EntryChange;
 
 public class EntryChangeS2CPacket implements Packet<ClientPacketHandler> {
-
 	private int syncId;
 	private EntryChange<?> change;
 
@@ -38,5 +37,4 @@ public class EntryChangeS2CPacket implements Packet<ClientPacketHandler> {
 			handler.sendPacket(new ConfirmChangeC2SPacket(this.syncId));
 		}
 	}
-
 }

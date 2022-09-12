@@ -1,35 +1,43 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui;
+
+import java.awt.Component;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.EventObject;
+import java.util.List;
+
+import javax.swing.JTree;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellEditor;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.tree.*;
-import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
-import java.util.*;
-
 public class ClassSelector extends JTree {
-
 	public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = Comparator.comparing(ClassEntry::getFullName);
 
 	private final Comparator<ClassEntry> comparator;
@@ -56,6 +64,7 @@ public class ClassSelector extends JTree {
 				if (selectionListener != null && event.getClickCount() == 2) {
 					// get the selected node
 					TreePath path = getSelectionPath();
+
 					if (path != null && path.getLastPathComponent() instanceof ClassSelectorClassNode node) {
 						selectionListener.onSelectClass(node.getObfEntry());
 					}
@@ -121,23 +130,31 @@ public class ClassSelector extends JTree {
 				TreePath path = getSelectionPath();
 
 				Object realPath = path.getLastPathComponent();
+
 				if (realPath instanceof DefaultMutableTreeNode node && data != null) {
 					TreeNode parentNode = node.getParent();
-					if (parentNode == null)
+
+					if (parentNode == null) {
 						return;
+					}
+
 					boolean allowEdit = true;
+
 					for (int i = 0; i < parentNode.getChildCount(); i++) {
 						TreeNode childNode = parentNode.getChildAt(i);
+
 						if (childNode != null && childNode.toString().equals(data) && childNode != node) {
 							allowEdit = false;
 							break;
 						}
 					}
+
 					if (allowEdit && renameSelectionListener != null) {
 						Object prevData = node.getUserObject();
 						Object objectData = node.getUserObject() instanceof ClassEntry ? new ClassEntry(((ClassEntry) prevData).getPackageName() + "/" + data) : data;
 						gui.validateImmediateAction(vc -> {
 							renameSelectionListener.onSelectionRename(vc, node.getUserObject(), objectData, node);
+
 							if (vc.canProceed()) {
 								node.setUserObject(objectData); // Make sure that it's modified
 							} else {
@@ -206,15 +223,19 @@ public class ClassSelector extends JTree {
 	public List<StateEntry> getExpansionState() {
 		List<StateEntry> state = new ArrayList<>();
 		int rowCount = getRowCount();
+
 		for (int i = 0; i < rowCount; i++) {
 			TreePath path = getPathForRow(i);
+
 			if (isPathSelected(path)) {
 				state.add(new StateEntry(State.SELECTED, path));
 			}
+
 			if (isExpanded(path)) {
 				state.add(new StateEntry(State.EXPANDED, path));
 			}
 		}
+
 		return state;
 	}
 
@@ -223,8 +244,8 @@ public class ClassSelector extends JTree {
 
 		for (StateEntry entry : expansionState) {
 			switch (entry.state) {
-				case SELECTED -> addSelectionPath(entry.path);
-				case EXPANDED -> expandPath(entry.path);
+			case SELECTED -> addSelectionPath(entry.path);
+			case EXPANDED -> expandPath(entry.path);
 			}
 		}
 	}

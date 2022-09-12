@@ -3,7 +3,6 @@ package cuchaz.enigma.gui.search;
 import java.util.List;
 
 public interface SearchEntry {
-
 	List<String> getSearchableNames();
 
 	/**
@@ -13,5 +12,4 @@ public interface SearchEntry {
 	 * @return a unique identifier for this search entry
 	 */
 	String getIdentifier();
-
 }

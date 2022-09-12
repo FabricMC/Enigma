@@ -1,10 +1,11 @@
 package cuchaz.enigma.bytecode.translators;
 
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.RecordComponentVisitor;
 import org.objectweb.asm.TypePath;
+
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
 
 public class TranslationRecordComponentVisitor extends RecordComponentVisitor {
 	private final Translator translator;

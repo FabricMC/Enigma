@@ -1,22 +1,21 @@
 package cuchaz.enigma.command;
 
+import java.nio.file.Path;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
-import java.nio.file.Path;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 public class CheckMappingsCommand extends Command {
-
 	public CheckMappingsCommand() {
 		super("checkmappings");
 	}
@@ -55,19 +54,11 @@ public class CheckMappingsCommand extends Command {
 		boolean error = false;
 
 		for (Set<ClassEntry> partition : idx.getPackageVisibilityIndex().getPartitions()) {
-			long packages = partition.stream()
-					.map(project.getMapper()::deobfuscate)
-					.map(ClassEntry::getPackageName)
-					.distinct()
-					.count();
+			long packages = partition.stream().map(project.getMapper()::deobfuscate).map(ClassEntry::getPackageName).distinct().count();
+
 			if (packages > 1) {
 				error = true;
-				System.err.println("ERROR: Must be in one package:\n" + partition.stream()
-						.map(project.getMapper()::deobfuscate)
-						.map(ClassEntry::toString)
-						.sorted()
-						.collect(Collectors.joining("\n"))
-				);
+				System.err.println("ERROR: Must be in one package:\n" + partition.stream().map(project.getMapper()::deobfuscate).map(ClassEntry::toString).sorted().collect(Collectors.joining("\n")));
 			}
 		}
 

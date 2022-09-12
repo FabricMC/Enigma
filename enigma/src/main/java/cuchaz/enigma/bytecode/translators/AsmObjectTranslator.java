@@ -1,32 +1,34 @@
 package cuchaz.enigma.bytecode.translators;
 
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
 public class AsmObjectTranslator {
 	public static Type translateType(Translator translator, Type type) {
 		String descString = type.getDescriptor();
 		switch (type.getSort()) {
-			case Type.OBJECT: {
-				ClassEntry classEntry = new ClassEntry(type.getInternalName());
-				return Type.getObjectType(translator.translate(classEntry).getFullName());
-			}
-			case Type.ARRAY: {
-				TypeDescriptor descriptor = new TypeDescriptor(descString);
-				return Type.getType(translator.translate(descriptor).toString());
-			}
-			case Type.METHOD: {
-				MethodDescriptor descriptor = new MethodDescriptor(descString);
-				return Type.getMethodType(translator.translate(descriptor).toString());
-			}
+		case Type.OBJECT: {
+			ClassEntry classEntry = new ClassEntry(type.getInternalName());
+			return Type.getObjectType(translator.translate(classEntry).getFullName());
 		}
+		case Type.ARRAY: {
+			TypeDescriptor descriptor = new TypeDescriptor(descString);
+			return Type.getType(translator.translate(descriptor).toString());
+		}
+		case Type.METHOD: {
+			MethodDescriptor descriptor = new MethodDescriptor(descString);
+			return Type.getMethodType(translator.translate(descriptor).toString());
+		}
+		}
+
 		return type;
 	}
 
@@ -55,6 +57,7 @@ public class AsmObjectTranslator {
 		} else if (value instanceof Handle) {
 			return translateHandle(translator, (Handle) value);
 		}
+
 		return value;
 	}
 }

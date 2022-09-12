@@ -1,7 +1,12 @@
 package cuchaz.enigma.gui.elements;
 
 import java.awt.GridLayout;
-import java.awt.event.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,7 +26,6 @@ import cuchaz.enigma.utils.validation.Validatable;
  * A label that converts into an editable text field when you click it.
  */
 public class ConvertingTextField implements Validatable {
-
 	private final JPanel ui;
 	private final ValidatableTextField textField;
 	private final JLabel label;
@@ -69,7 +73,9 @@ public class ConvertingTextField implements Validatable {
 	}
 
 	public void startEditing() {
-		if (this.editing || !this.editable) return;
+		if (this.editing || !this.editable) {
+			return;
+		}
 
 		this.ui.removeAll();
 		this.ui.add(this.textField);
@@ -82,9 +88,13 @@ public class ConvertingTextField implements Validatable {
 	}
 
 	public void stopEditing(boolean abort) {
-		if (!editing) return;
+		if (!editing) {
+			return;
+		}
 
-		if (!listeners.stream().allMatch(l -> l.tryStopEditing(this, abort))) return;
+		if (!listeners.stream().allMatch(l -> l.tryStopEditing(this, abort))) {
+			return;
+		}
 
 		if (abort) {
 			this.textField.setText(this.label.getText());
@@ -107,7 +117,9 @@ public class ConvertingTextField implements Validatable {
 	}
 
 	public void setEditText(String text) {
-		if (!editing) return;
+		if (!editing) {
+			return;
+		}
 
 		this.textField.setText(text);
 	}
@@ -122,22 +134,29 @@ public class ConvertingTextField implements Validatable {
 	}
 
 	public void selectAll() {
-		if (!editing) return;
+		if (!editing) {
+			return;
+		}
 
 		this.textField.selectAll();
 	}
 
 	public void selectSubstring(int startIndex) {
-		if (!editing) return;
+		if (!editing) {
+			return;
+		}
 
 		Document doc = this.textField.getDocument();
+
 		if (doc != null) {
 			this.selectSubstring(startIndex, doc.getLength());
 		}
 	}
 
 	public void selectSubstring(int startIndex, int endIndex) {
-		if (!editing) return;
+		if (!editing) {
+			return;
+		}
 
 		this.textField.select(startIndex, endIndex);
 	}
@@ -155,7 +174,10 @@ public class ConvertingTextField implements Validatable {
 	}
 
 	public boolean hasChanges() {
-		if (!editing) return false;
+		if (!editing) {
+			return false;
+		}
+
 		return !this.textField.getText().equals(this.label.getText());
 	}
 
@@ -180,5 +202,4 @@ public class ConvertingTextField implements Validatable {
 	public JPanel getUi() {
 		return ui;
 	}
-
 }

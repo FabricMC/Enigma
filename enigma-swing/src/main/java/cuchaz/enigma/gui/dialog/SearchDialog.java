@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui.dialog;
 
@@ -15,17 +15,36 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
+import cuchaz.enigma.gui.search.SearchEntry;
+import cuchaz.enigma.gui.search.SearchUtil;
 import cuchaz.enigma.gui.util.AbstractListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -34,11 +53,8 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 import cuchaz.enigma.utils.I18n;
-import cuchaz.enigma.gui.search.SearchEntry;
-import cuchaz.enigma.gui.search.SearchUtil;
 
 public class SearchDialog {
-
 	private final JTextField searchField;
 	private DefaultListModel<SearchEntryImpl> classListModel;
 	private final JList<SearchEntryImpl> classList;
@@ -60,7 +76,6 @@ public class SearchDialog {
 
 		searchField = new JTextField();
 		searchField.getDocument().addDocumentListener(new DocumentListener() {
-
 			@Override
 			public void insertUpdate(DocumentEvent e) {
 				updateList();
@@ -75,7 +90,6 @@ public class SearchDialog {
 			public void changedUpdate(DocumentEvent e) {
 				updateList();
 			}
-
 		});
 		searchField.addKeyListener(new KeyAdapter() {
 			@Override
@@ -143,23 +157,9 @@ public class SearchDialog {
 		final EntryIndex entryIndex = parent.getController().project.getJarIndex().getEntryIndex();
 
 		switch (type) {
-			case CLASS -> entryIndex.getClasses().parallelStream()
-					.filter(e -> !e.isInnerClass())
-					.map(e -> SearchEntryImpl.from(e, parent.getController()))
-					.map(SearchUtil.Entry::from)
-					.sequential()
-					.forEach(su::add);
-			case METHOD -> entryIndex.getMethods().parallelStream()
-					.filter(e -> !e.isConstructor() && !entryIndex.getMethodAccess(e).isSynthetic())
-					.map(e -> SearchEntryImpl.from(e, parent.getController()))
-					.map(SearchUtil.Entry::from)
-					.sequential()
-					.forEach(su::add);
-			case FIELD -> entryIndex.getFields().parallelStream()
-					.map(e -> SearchEntryImpl.from(e, parent.getController()))
-					.map(SearchUtil.Entry::from)
-					.sequential()
-					.forEach(su::add);
+		case CLASS -> entryIndex.getClasses().parallelStream().filter(e -> !e.isInnerClass()).map(e -> SearchEntryImpl.from(e, parent.getController())).map(SearchUtil.Entry::from).sequential().forEach(su::add);
+		case METHOD -> entryIndex.getMethods().parallelStream().filter(e -> !e.isConstructor() && !entryIndex.getMethodAccess(e).isSynthetic()).map(e -> SearchEntryImpl.from(e, parent.getController())).map(SearchUtil.Entry::from).sequential().forEach(su::add);
+		case FIELD -> entryIndex.getFields().parallelStream().map(e -> SearchEntryImpl.from(e, parent.getController())).map(SearchUtil.Entry::from).sequential().forEach(su::add);
 		}
 
 		updateList();
@@ -172,6 +172,7 @@ public class SearchDialog {
 
 	private void openSelected() {
 		SearchEntryImpl selectedValue = classList.getSelectedValue();
+
 		if (selectedValue != null) {
 			openEntry(selectedValue);
 		}
@@ -181,6 +182,7 @@ public class SearchDialog {
 		close();
 		su.hit(e);
 		parent.getController().navigateTo(e.obf);
+
 		if (e.obf instanceof ClassEntry) {
 			if (e.deobf != null) {
 				parent.getDeobfPanel().deobfClasses.setSelectionClass((ClassEntry) e.deobf);
@@ -202,7 +204,9 @@ public class SearchDialog {
 
 	// Updates the list of class names
 	private void updateList() {
-		if (currentSearch != null) currentSearch.stop();
+		if (currentSearch != null) {
+			currentSearch.stop();
+		}
 
 		DefaultListModel<SearchEntryImpl> classListModel = new DefaultListModel<>();
 		this.classListModel = classListModel;
@@ -210,7 +214,9 @@ public class SearchDialog {
 
 		// handle these search result like minecraft scheduled tasks to prevent
 		// flooding swing buttons inputs etc with tons of (possibly outdated) invocations
-		record Order(int idx, SearchEntryImpl e) {}
+		record Order(int idx, SearchEntryImpl e) {
+		}
+
 		Queue<Order> queue = new ConcurrentLinkedQueue<>();
 		Runnable updater = new Runnable() {
 			@Override
@@ -221,8 +227,9 @@ public class SearchDialog {
 
 				// too large count may increase delay for key and input handling, etc.
 				int count = 100;
+
 				while (count > 0 && !queue.isEmpty()) {
-					var o = queue.remove();
+					Order o = queue.remove();
 					classListModel.insertElementAt(o.e, o.idx);
 					count--;
 				}
@@ -240,7 +247,6 @@ public class SearchDialog {
 	}
 
 	private static final class SearchEntryImpl implements SearchEntry {
-
 		public final ParentedEntry<?> obf;
 		public final ParentedEntry<?> deobf;
 
@@ -270,10 +276,13 @@ public class SearchDialog {
 
 		public static SearchEntryImpl from(ParentedEntry<?> e, GuiController controller) {
 			ParentedEntry<?> deobf = controller.project.getMapper().deobfuscate(e);
-			if (deobf.equals(e)) deobf = null;
+
+			if (deobf.equals(e)) {
+				deobf = null;
+			}
+
 			return new SearchEntryImpl(e, deobf);
 		}
-
 	}
 
 	private static final class ListCellRendererImpl extends AbstractListCellRenderer<SearchEntryImpl> {
@@ -281,7 +290,7 @@ public class SearchDialog {
 		private final JLabel mainName;
 		private final JLabel secondaryName;
 
-		public ListCellRendererImpl(Gui gui) {
+		ListCellRendererImpl(Gui gui) {
 			this.setLayout(new BorderLayout());
 			this.gui = gui;
 
@@ -316,7 +325,6 @@ public class SearchDialog {
 				mainName.setIcon(GuiUtil.FIELD_ICON);
 			}
 		}
-
 	}
 
 	public enum Type {

@@ -4,7 +4,6 @@ import java.io.PrintStream;
 import java.util.Arrays;
 
 public class PrintValidatable implements Validatable {
-
 	public static final PrintValidatable INSTANCE = new PrintValidatable();
 
 	@Override
@@ -16,9 +15,9 @@ public class PrintValidatable implements Validatable {
 		String text = message.getText();
 		String longText = message.getLongText();
 		String type = switch (message.message.type) {
-			case INFO -> "info";
-			case WARNING -> "warning";
-			case ERROR -> "error";
+		case INFO -> "info";
+		case WARNING -> "warning";
+		case ERROR -> "error";
 		};
 		w.printf("%s: %s\n", type, text);
 
@@ -30,5 +29,4 @@ public class PrintValidatable implements Validatable {
 	@Override
 	public void clearMessages() {
 	}
-
 }

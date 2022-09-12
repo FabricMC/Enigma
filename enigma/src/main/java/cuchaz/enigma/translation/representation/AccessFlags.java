@@ -1,9 +1,10 @@
 package cuchaz.enigma.translation.representation;
 
-import cuchaz.enigma.analysis.Access;
+import java.lang.reflect.Modifier;
+
 import org.objectweb.asm.Opcodes;
 
-import java.lang.reflect.Modifier;
+import cuchaz.enigma.analysis.Access;
 
 public class AccessFlags {
 	public static final AccessFlags PRIVATE = new AccessFlags(Opcodes.ACC_PRIVATE);
@@ -110,15 +111,19 @@ public class AccessFlags {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder(Access.get(this).toString().toLowerCase());
+
 		if (isStatic()) {
 			builder.append(" static");
 		}
+
 		if (isSynthetic()) {
 			builder.append(" synthetic");
 		}
+
 		if (isBridge()) {
 			builder.append(" bridge");
 		}
+
 		return builder.toString();
 	}
 }

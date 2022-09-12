@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.analysis;
 
@@ -26,7 +26,6 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements Translatable {
-
 	private static final List<String> CONSTRUCTOR_NON_NAMES = Arrays.asList("this", "super", "static");
 	public final E entry;
 	public final C context;
@@ -60,8 +59,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 		this.targetType = targetType;
 		this.declaration = declaration;
 
-		this.sourceName = sourceName != null && !sourceName.isEmpty() &&
-				!(entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor() && CONSTRUCTOR_NON_NAMES.contains(sourceName));
+		this.sourceName = sourceName != null && !sourceName.isEmpty() && !(entry instanceof MethodEntry && ((MethodEntry) entry).isConstructor() && CONSTRUCTOR_NON_NAMES.contains(sourceName));
 	}
 
 	public EntryReference(E entry, C context, EntryReference<E, C> other) {
@@ -76,6 +74,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 		if (context != null) {
 			return context.getContainingClass();
 		}
+
 		return entry.getContainingClass();
 	}
 
@@ -95,6 +94,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 			// renaming a constructor really means renaming the class
 			return entry.getContainingClass();
 		}
+
 		return entry;
 	}
 
@@ -107,6 +107,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 		if (context != null) {
 			return Objects.hash(entry.hashCode(), context.hashCode());
 		}
+
 		return entry.hashCode() ^ Boolean.hashCode(this.declaration);
 	}
 
@@ -116,10 +117,7 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	}
 
 	public boolean equals(EntryReference<?, ?> other) {
-		return other != null
-				&& Objects.equals(entry, other.entry)
-				&& Objects.equals(context, other.context)
-				&& declaration == other.declaration;
+		return other != null && Objects.equals(entry, other.entry) && Objects.equals(context, other.context) && declaration == other.declaration;
 	}
 
 	@Override
@@ -149,5 +147,4 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	public TranslateResult<EntryReference<E, C>> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		return translator.extendedTranslate(this.entry).map(e -> new EntryReference<>(e, translator.translate(context), this));
 	}
-
 }

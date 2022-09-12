@@ -12,9 +12,11 @@ public class LocalNameGenerator {
 		String translatedName;
 		int nameIndex = index + 1;
 		StringBuilder nameBuilder = new StringBuilder(getTypeName(desc));
+
 		if (!uniqueType || IdentifierValidation.isReservedMethodName(nameBuilder.toString())) {
 			nameBuilder.append(nameIndex);
 		}
+
 		translatedName = nameBuilder.toString();
 		return translatedName;
 	}

@@ -1,23 +1,5 @@
 package cuchaz.enigma.translation.mapping.serde.srg;
 
-import com.google.common.collect.Lists;
-import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.translation.MappingTranslator;
-import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.MappingDelta;
-import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
-import cuchaz.enigma.translation.mapping.VoidEntryResolver;
-import cuchaz.enigma.translation.mapping.serde.LfPrintWriter;
-import cuchaz.enigma.translation.mapping.serde.MappingsWriter;
-import cuchaz.enigma.translation.mapping.tree.EntryTree;
-import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import cuchaz.enigma.utils.I18n;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -26,6 +8,25 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+
+import com.google.common.collect.Lists;
+
+import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.translation.MappingTranslator;
+import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.VoidEntryResolver;
+import cuchaz.enigma.translation.mapping.serde.LfPrintWriter;
+import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
+import cuchaz.enigma.translation.mapping.serde.MappingsWriter;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 
 public enum SrgMappingsWriter implements MappingsWriter {
 	INSTANCE;
@@ -43,18 +44,18 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		List<String> fieldLines = new ArrayList<>();
 		List<String> methodLines = new ArrayList<>();
 
-		List<? extends Entry<?>> rootEntries = Lists.newArrayList(mappings).stream()
-				.map(EntryTreeNode::getEntry)
-				.toList();
+		List<? extends Entry<?>> rootEntries = Lists.newArrayList(mappings).stream().map(EntryTreeNode::getEntry).toList();
 		progress.init(rootEntries.size(), I18n.translate("progress.mappings.srg_file.generating"));
 
 		int steps = 0;
+
 		for (Entry<?> entry : sorted(rootEntries)) {
 			progress.step(steps++, entry.getName());
 			writeEntry(classLines, fieldLines, methodLines, mappings, entry);
 		}
 
 		progress.init(3, I18n.translate("progress.mappings.srg_file.writing"));
+
 		try (PrintWriter writer = new LfPrintWriter(Files.newBufferedWriter(path))) {
 			progress.step(0, I18n.translate("type.classes"));
 			classLines.forEach(writer::println);
@@ -69,11 +70,13 @@ public enum SrgMappingsWriter implements MappingsWriter {
 
 	private void writeEntry(List<String> classes, List<String> fields, List<String> methods, EntryTree<EntryMapping> mappings, Entry<?> entry) {
 		EntryTreeNode<EntryMapping> node = mappings.findNode(entry);
+
 		if (node == null) {
 			return;
 		}
 
 		Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);
+
 		if (entry instanceof ClassEntry) {
 			classes.add(generateClassLine((ClassEntry) entry, translator));
 		} else if (entry instanceof FieldEntry) {

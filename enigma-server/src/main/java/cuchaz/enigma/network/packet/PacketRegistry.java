@@ -8,7 +8,6 @@ import cuchaz.enigma.network.ClientPacketHandler;
 import cuchaz.enigma.network.ServerPacketHandler;
 
 public class PacketRegistry {
-
 	private static final Map<Class<? extends Packet<ServerPacketHandler>>, Integer> c2sPacketIds = new HashMap<>();
 	private static final Map<Integer, Supplier<? extends Packet<ServerPacketHandler>>> c2sPacketCreators = new HashMap<>();
 	private static final Map<Class<? extends Packet<ClientPacketHandler>>, Integer> s2cPacketIds = new HashMap<>();
@@ -54,5 +53,4 @@ public class PacketRegistry {
 		Supplier<? extends Packet<ClientPacketHandler>> creator = s2cPacketCreators.get(id);
 		return creator == null ? null : creator.get();
 	}
-
 }

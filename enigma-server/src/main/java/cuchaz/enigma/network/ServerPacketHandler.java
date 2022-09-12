@@ -3,7 +3,6 @@ package cuchaz.enigma.network;
 import java.net.Socket;
 
 public class ServerPacketHandler {
-
 	private final Socket client;
 	private final EnigmaServer server;
 

@@ -1,20 +1,20 @@
 package cuchaz.enigma.command;
 
-import cuchaz.enigma.Enigma;
-import cuchaz.enigma.EnigmaProject;
-import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
-import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.translation.mapping.tree.EntryTree;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.google.common.io.MoreFiles;
+
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.EnigmaProject;
+import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
+import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 public abstract class Command {
 	public final String name;
@@ -63,15 +63,19 @@ public abstract class Command {
 		if (path == null) {
 			return null;
 		}
+
 		File file = new File(path).getAbsoluteFile();
 		File dir = file.getParentFile();
+
 		if (dir == null) {
 			throw new IllegalArgumentException("Cannot write file: " + path);
 		}
+
 		// quick fix to avoid stupid stuff in Gradle code
 		if (!dir.isDirectory()) {
 			dir.mkdirs();
 		}
+
 		return file;
 	}
 
@@ -79,10 +83,13 @@ public abstract class Command {
 		if (path == null) {
 			return null;
 		}
+
 		File dir = new File(path).getAbsoluteFile();
+
 		if (!dir.exists()) {
 			throw new IllegalArgumentException("Cannot write to folder: " + dir);
 		}
+
 		return dir;
 	}
 
@@ -90,10 +97,13 @@ public abstract class Command {
 		if (path == null) {
 			return null;
 		}
+
 		File file = new File(path).getAbsoluteFile();
+
 		if (!file.exists()) {
 			throw new IllegalArgumentException("Cannot find file: " + file.getAbsolutePath());
 		}
+
 		return file;
 	}
 
@@ -101,10 +111,13 @@ public abstract class Command {
 		if (path == null) {
 			return null;
 		}
+
 		Path file = Paths.get(path).toAbsolutePath();
+
 		if (!Files.exists(file)) {
 			throw new IllegalArgumentException("Cannot find file: " + file.toString());
 		}
+
 		return file;
 	}
 
@@ -116,11 +129,11 @@ public abstract class Command {
 				return null;
 			}
 		}
+
 		return args[i];
 	}
 
 	public static class ConsoleProgressListener implements ProgressListener {
-
 		private static final int ReportTime = 5000; // 5s
 
 		private int totalWork;
@@ -146,6 +159,7 @@ public abstract class Command {
 				System.out.println(String.format("\tProgress: %3d%%", percent));
 				this.lastReportTime = now;
 			}
+
 			if (isLastUpdate) {
 				double elapsedSeconds = (now - this.startTime) / 1000.0;
 				System.out.println(String.format("Finished in %.1f seconds", elapsedSeconds));

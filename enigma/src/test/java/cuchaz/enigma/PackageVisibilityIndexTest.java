@@ -1,29 +1,30 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- *
- * Contributors:
- *     Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+*     Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma;
-
-import cuchaz.enigma.analysis.index.JarIndex;
-import cuchaz.enigma.analysis.index.PackageVisibilityIndex;
-import cuchaz.enigma.classprovider.JarClassProvider;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import org.junit.Test;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.junit.Test;
+
+import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.analysis.index.PackageVisibilityIndex;
+import cuchaz.enigma.classprovider.JarClassProvider;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 public class PackageVisibilityIndexTest {
 	public static final Path JAR = Paths.get("build/test-obf/packageAccess.jar");
@@ -46,10 +47,6 @@ public class PackageVisibilityIndexTest {
 		PackageVisibilityIndex visibilityIndex = jarIndex.getPackageVisibilityIndex();
 		assertThat(visibilityIndex.getPartition(BASE), containsInAnyOrder(BASE, SAME_PACKAGE_CHILD, SAME_PACKAGE_CHILD_INNER));
 		System.out.println(visibilityIndex.getPartitions());
-		assertThat(visibilityIndex.getPartitions(), containsInAnyOrder(
-				containsInAnyOrder(BASE, SAME_PACKAGE_CHILD, SAME_PACKAGE_CHILD_INNER),
-				containsInAnyOrder(OTHER_PACKAGE_CHILD, OTHER_PACKAGE_CHILD_INNER),
-				contains(KEEP)
-		));
+		assertThat(visibilityIndex.getPartitions(), containsInAnyOrder(containsInAnyOrder(BASE, SAME_PACKAGE_CHILD, SAME_PACKAGE_CHILD_INNER), containsInAnyOrder(OTHER_PACKAGE_CHILD, OTHER_PACKAGE_CHILD_INNER), contains(KEEP)));
 	}
 }

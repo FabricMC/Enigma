@@ -40,11 +40,11 @@ public enum LookAndFeel {
 
 		try {
 			switch (this) {
-				case NONE -> UIManager.setLookAndFeel(NONE_LAF);
-				case DEFAULT -> UIManager.setLookAndFeel(new FlatLightLaf());
-				case METAL -> UIManager.setLookAndFeel(new MetalLookAndFeel());
-				case DARCULA -> UIManager.setLookAndFeel(new FlatDarkLaf());
-				case SYSTEM -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			case NONE -> UIManager.setLookAndFeel(NONE_LAF);
+			case DEFAULT -> UIManager.setLookAndFeel(new FlatLightLaf());
+			case METAL -> UIManager.setLookAndFeel(new MetalLookAndFeel());
+			case DARCULA -> UIManager.setLookAndFeel(new FlatDarkLaf());
+			case SYSTEM -> UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			}
 		} catch (Exception e) {
 			throw new Error("Failed to set global look and feel", e);
@@ -66,5 +66,4 @@ public enum LookAndFeel {
 		int b = (int) (0.3 * c.getRed() + 0.59 * c.getGreen() + 0.11 * c.getBlue());
 		return b < 85;
 	}
-
 }

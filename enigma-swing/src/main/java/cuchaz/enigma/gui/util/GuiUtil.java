@@ -1,8 +1,17 @@
 package cuchaz.enigma.gui.util;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Desktop;
+import java.awt.Font;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.net.URI;
@@ -13,7 +22,14 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JToolTip;
+import javax.swing.Popup;
+import javax.swing.PopupFactory;
+import javax.swing.Timer;
+import javax.swing.ToolTipManager;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
@@ -28,160 +44,160 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.Os;
 
 public class GuiUtil {
-    public static final Icon CLASS_ICON = loadIcon("class");
-    public static final Icon INTERFACE_ICON = loadIcon("interface");
-    public static final Icon ENUM_ICON = loadIcon("enum");
-    public static final Icon ANNOTATION_ICON = loadIcon("annotation");
-    public static final Icon RECORD_ICON = loadIcon("record");
-    public static final Icon METHOD_ICON = loadIcon("method");
-    public static final Icon FIELD_ICON = loadIcon("field");
-    public static final Icon CONSTRUCTOR_ICON = loadIcon("constructor");
+	public static final Icon CLASS_ICON = loadIcon("class");
+	public static final Icon INTERFACE_ICON = loadIcon("interface");
+	public static final Icon ENUM_ICON = loadIcon("enum");
+	public static final Icon ANNOTATION_ICON = loadIcon("annotation");
+	public static final Icon RECORD_ICON = loadIcon("record");
+	public static final Icon METHOD_ICON = loadIcon("method");
+	public static final Icon FIELD_ICON = loadIcon("field");
+	public static final Icon CONSTRUCTOR_ICON = loadIcon("constructor");
 
-    public static void openUrl(String url) {
-        try {
-            switch (Os.getOs()) {
-                case LINUX:
-                    new ProcessBuilder("/usr/bin/env", "xdg-open", url).start();
-                    break;
-                default:
-                    if (Desktop.isDesktopSupported()) {
-                        Desktop desktop = Desktop.getDesktop();
-                        desktop.browse(new URI(url));
-                    }
-            }
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } catch (URISyntaxException ex) {
-            throw new IllegalArgumentException(ex);
-        }
-    }
+	public static void openUrl(String url) {
+		try {
+			switch (Os.getOs()) {
+			case LINUX:
+				new ProcessBuilder("/usr/bin/env", "xdg-open", url).start();
+				break;
+			default:
+				if (Desktop.isDesktopSupported()) {
+					Desktop desktop = Desktop.getDesktop();
+					desktop.browse(new URI(url));
+				}
+			}
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		} catch (URISyntaxException ex) {
+			throw new IllegalArgumentException(ex);
+		}
+	}
 
-    public static JLabel unboldLabel(JLabel label) {
-        Font font = label.getFont();
-        label.setFont(font.deriveFont(font.getStyle() & ~Font.BOLD));
-        return label;
-    }
+	public static JLabel unboldLabel(JLabel label) {
+		Font font = label.getFont();
+		label.setFont(font.deriveFont(font.getStyle() & ~Font.BOLD));
+		return label;
+	}
 
-    /**
-     * Puts the provided {@code text} in the system clipboard.
-     */
-    public static void copyToClipboard(String text) {
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
-    }
+	/**
+	 * Puts the provided {@code text} in the system clipboard.
+	 */
+	public static void copyToClipboard(String text) {
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
+	}
 
-    public static void showPopup(JComponent component, String text, int x, int y) {
-        // from https://stackoverflow.com/questions/39955015/java-swing-show-tooltip-as-a-message-dialog
-        JToolTip tooltip = new JToolTip();
-        tooltip.setTipText(text);
-        Popup p = PopupFactory.getSharedInstance().getPopup(component, tooltip, x + 10, y);
-        p.show();
-        Timer t = new Timer(1000, e -> p.hide());
-        t.setRepeats(false);
-        t.start();
-    }
+	public static void showPopup(JComponent component, String text, int x, int y) {
+		// from https://stackoverflow.com/questions/39955015/java-swing-show-tooltip-as-a-message-dialog
+		JToolTip tooltip = new JToolTip();
+		tooltip.setTipText(text);
+		Popup p = PopupFactory.getSharedInstance().getPopup(component, tooltip, x + 10, y);
+		p.show();
+		Timer t = new Timer(1000, e -> p.hide());
+		t.setRepeats(false);
+		t.start();
+	}
 
-    public static void showToolTipNow(JComponent component) {
-        // HACKHACK: trick the tooltip manager into showing the tooltip right now
-        ToolTipManager manager = ToolTipManager.sharedInstance();
-        int oldDelay = manager.getInitialDelay();
-        manager.setInitialDelay(0);
-        manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
-        manager.setInitialDelay(oldDelay);
-    }
+	public static void showToolTipNow(JComponent component) {
+		// HACKHACK: trick the tooltip manager into showing the tooltip right now
+		ToolTipManager manager = ToolTipManager.sharedInstance();
+		int oldDelay = manager.getInitialDelay();
+		manager.setInitialDelay(0);
+		manager.mouseMoved(new MouseEvent(component, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 0, 0, 0, false));
+		manager.setInitialDelay(oldDelay);
+	}
 
-    public static JLabel createLink(String text, Runnable action) {
-        JLabel link = new JLabel(text);
-        link.setForeground(Color.BLUE.darker());
-        link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        @SuppressWarnings("unchecked")
-        Map<TextAttribute, Object> attributes = (Map<TextAttribute, Object>) link.getFont().getAttributes();
-        attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-        link.setFont(link.getFont().deriveFont(attributes));
-        link.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                action.run();
-            }
-        });
-        return link;
-    }
+	public static JLabel createLink(String text, Runnable action) {
+		JLabel link = new JLabel(text);
+		link.setForeground(Color.BLUE.darker());
+		link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		@SuppressWarnings("unchecked") Map<TextAttribute, Object> attributes = (Map<TextAttribute, Object>) link.getFont().getAttributes();
+		attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+		link.setFont(link.getFont().deriveFont(attributes));
+		link.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				action.run();
+			}
+		});
+		return link;
+	}
 
-    public static Icon loadIcon(String name) {
-        String path = "icons/" + name + ".svg";
+	public static Icon loadIcon(String name) {
+		String path = "icons/" + name + ".svg";
 
-        // Do an eager check for a missing icon since FlatSVGIcon does it later at render time
-        if (GuiUtil.class.getResource('/' + path) == null) {
-            throw new NoSuchElementException("Missing icon: '" + name + "' at " + path);
-        }
+		// Do an eager check for a missing icon since FlatSVGIcon does it later at render time
+		if (GuiUtil.class.getResource('/' + path) == null) {
+			throw new NoSuchElementException("Missing icon: '" + name + "' at " + path);
+		}
 
-        // Note: the width and height are scaled automatically because the FlatLaf UI scale
-        // is set in LookAndFeel.setGlobalLAF()
-        return new FlatSVGIcon(path, 16, 16, GuiUtil.class.getClassLoader());
-    }
+		// Note: the width and height are scaled automatically because the FlatLaf UI scale
+		// is set in LookAndFeel.setGlobalLAF()
+		return new FlatSVGIcon(path, 16, 16, GuiUtil.class.getClassLoader());
+	}
 
-    public static Icon getClassIcon(Gui gui, ClassEntry entry) {
-        EntryIndex entryIndex = gui.getController().project.getJarIndex().getEntryIndex();
-        AccessFlags access = entryIndex.getClassAccess(entry);
+	public static Icon getClassIcon(Gui gui, ClassEntry entry) {
+		EntryIndex entryIndex = gui.getController().project.getJarIndex().getEntryIndex();
+		AccessFlags access = entryIndex.getClassAccess(entry);
 
-        if (access != null) {
-            if (access.isAnnotation()) {
-                return ANNOTATION_ICON;
-            } else if (access.isInterface()) {
-                return INTERFACE_ICON;
-            } else if (access.isEnum()) {
-                return ENUM_ICON;
-            } else if (entryIndex.getDefinition(entry).isRecord()) {
-                return RECORD_ICON;
-            }
-        }
+		if (access != null) {
+			if (access.isAnnotation()) {
+				return ANNOTATION_ICON;
+			} else if (access.isInterface()) {
+				return INTERFACE_ICON;
+			} else if (access.isEnum()) {
+				return ENUM_ICON;
+			} else if (entryIndex.getDefinition(entry).isRecord()) {
+				return RECORD_ICON;
+			}
+		}
 
-        return CLASS_ICON;
-    }
+		return CLASS_ICON;
+	}
 
-    public static Icon getMethodIcon(MethodEntry entry) {
-        if (entry.isConstructor()) {
-            return CONSTRUCTOR_ICON;
-        }
-        return METHOD_ICON;
-    }
+	public static Icon getMethodIcon(MethodEntry entry) {
+		if (entry.isConstructor()) {
+			return CONSTRUCTOR_ICON;
+		}
 
-    public static TreePath getPathToRoot(TreeNode node) {
-        List<TreeNode> nodes = Lists.newArrayList();
-        TreeNode n = node;
+		return METHOD_ICON;
+	}
 
-        do {
-            nodes.add(n);
-            n = n.getParent();
-        } while (n != null);
+	public static TreePath getPathToRoot(TreeNode node) {
+		List<TreeNode> nodes = Lists.newArrayList();
+		TreeNode n = node;
 
-        Collections.reverse(nodes);
-        return new TreePath(nodes.toArray());
-    }
+		do {
+			nodes.add(n);
+			n = n.getParent();
+		} while (n != null);
 
-    public static MouseListener onMouseClick(Consumer<MouseEvent> op) {
-        return new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                op.accept(e);
-            }
-        };
-    }
+		Collections.reverse(nodes);
+		return new TreePath(nodes.toArray());
+	}
 
-    public static MouseListener onMousePress(Consumer<MouseEvent> op) {
-        return new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                op.accept(e);
-            }
-        };
-    }
+	public static MouseListener onMouseClick(Consumer<MouseEvent> op) {
+		return new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				op.accept(e);
+			}
+		};
+	}
 
-    public static WindowListener onWindowClose(Consumer<WindowEvent> op) {
-        return new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                op.accept(e);
-            }
-        };
-    }
+	public static MouseListener onMousePress(Consumer<MouseEvent> op) {
+		return new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				op.accept(e);
+			}
+		};
+	}
+
+	public static WindowListener onWindowClose(Consumer<WindowEvent> op) {
+		return new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				op.accept(e);
+			}
+		};
+	}
 }
