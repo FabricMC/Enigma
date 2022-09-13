@@ -35,7 +35,7 @@ sourceSets.main.output.dir genOutputDir, builtBy: generateVersionFile
 def libraryJarsArg = "<java.home>/jmods"
 
 // If your test fails for class file version problem with proguard, run gradle with -Dorg.gradle.java.home="<older jdk>" flag
-file('src/test/java/cuchaz/enigma/inputs').listFiles().each {theFile ->
+file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
 	if (theFile.directory) {
 		task("${theFile.name}TestJar", type: Jar) {
 			from(sourceSets.test.output) {
