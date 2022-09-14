@@ -3,7 +3,6 @@ package cuchaz.enigma.utils;
 import java.util.Objects;
 
 public final class TristateChange<T> {
-
 	private static final TristateChange<?> UNCHANGED = new TristateChange<>(Type.UNCHANGED, null);
 	private static final TristateChange<?> RESET = new TristateChange<>(Type.RESET, null);
 
@@ -46,17 +45,25 @@ public final class TristateChange<T> {
 	}
 
 	public T getNewValue() {
-		if (this.type != Type.SET) throw new IllegalStateException(String.format("No concrete value in %s", this));
+		if (this.type != Type.SET) {
+			throw new IllegalStateException(String.format("No concrete value in %s", this));
+		}
+
 		return this.val;
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
 		TristateChange<?> that = (TristateChange<?>) o;
-		return type == that.type &&
-				Objects.equals(val, that.val);
+		return type == that.type && Objects.equals(val, that.val);
 	}
 
 	@Override
@@ -74,5 +81,4 @@ public final class TristateChange<T> {
 		RESET,
 		SET,
 	}
-
 }

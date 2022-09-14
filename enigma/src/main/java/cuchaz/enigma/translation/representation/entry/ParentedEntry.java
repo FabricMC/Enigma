@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.translation.representation.entry;
 
@@ -80,9 +80,11 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	public TranslateResult<? extends ParentedEntry<P>> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		P parent = getParent();
 		EntryMapping mapping = resolveMapping(resolver, mappings);
+
 		if (parent == null) {
 			return this.extendedTranslate(translator, mapping);
 		}
+
 		P translatedParent = translator.translate(parent);
 		return this.withParent(translatedParent).extendedTranslate(translator, mapping);
 	}
@@ -90,10 +92,12 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	private EntryMapping resolveMapping(EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		for (ParentedEntry<P> entry : resolver.resolveEntry(this, ResolutionStrategy.RESOLVE_ROOT)) {
 			EntryMapping mapping = mappings.get(entry);
+
 			if (mapping != null) {
 				return mapping;
 			}
 		}
+
 		return EntryMapping.DEFAULT;
 	}
 }

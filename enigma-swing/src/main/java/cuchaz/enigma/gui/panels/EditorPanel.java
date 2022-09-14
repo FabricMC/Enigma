@@ -1,14 +1,35 @@
 package cuchaz.enigma.gui.panels;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Highlighter.HighlightPainter;
@@ -46,7 +67,6 @@ import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Result;
 
 public class EditorPanel {
-
 	private final JPanel ui = new JPanel();
 	private final JEditorPane editor = new JEditorPane();
 	private final JScrollPane editorScrollPane = new JScrollPane(this.editor);
@@ -123,18 +143,19 @@ public class EditorPanel {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				switch (e.getButton()) {
-					case MouseEvent.BUTTON3: // Right click
-						EditorPanel.this.editor.setCaretPosition(EditorPanel.this.editor.viewToModel(e.getPoint()));
-						break;
+				case MouseEvent.BUTTON3: // Right click
+					EditorPanel.this.editor.setCaretPosition(EditorPanel.this.editor.viewToModel(e.getPoint()));
+					break;
 
-					case 4: // Back navigation
-						gui.getController().openPreviousReference();
-						break;
+				case 4: // Back navigation
+					gui.getController().openPreviousReference();
+					break;
 
-					case 5: // Forward navigation
-						gui.getController().openNextReference();
-						break;
+				case 5: // Forward navigation
+					gui.getController().openNextReference();
+					break;
 				}
+
 				EditorPanel.this.mouseIsPressed = false;
 			}
 		});
@@ -143,31 +164,36 @@ public class EditorPanel {
 			public void keyPressed(KeyEvent event) {
 				if (event.isControlDown()) {
 					EditorPanel.this.shouldNavigateOnClick = false;
-					if (EditorPanel.this.popupMenu.handleKeyEvent(event)) return;
+
+					if (EditorPanel.this.popupMenu.handleKeyEvent(event)) {
+						return;
+					}
+
 					switch (event.getKeyCode()) {
-						case KeyEvent.VK_F5:
-							if (EditorPanel.this.classHandle != null) {
-								EditorPanel.this.classHandle.invalidate();
-							}
-							break;
+					case KeyEvent.VK_F5:
+						if (EditorPanel.this.classHandle != null) {
+							EditorPanel.this.classHandle.invalidate();
+						}
 
-						case KeyEvent.VK_F:
-							// prevent navigating on click when quick find activated
-							break;
+						break;
 
-						case KeyEvent.VK_ADD:
-						case KeyEvent.VK_EQUALS:
-						case KeyEvent.VK_PLUS:
-							offsetEditorZoom(2);
-							break;
-						case KeyEvent.VK_SUBTRACT:
-						case KeyEvent.VK_MINUS:
-							offsetEditorZoom(-2);
-							break;
+					case KeyEvent.VK_F:
+						// prevent navigating on click when quick find activated
+						break;
 
-						default:
-							EditorPanel.this.shouldNavigateOnClick = true; // CTRL
-							break;
+					case KeyEvent.VK_ADD:
+					case KeyEvent.VK_EQUALS:
+					case KeyEvent.VK_PLUS:
+						offsetEditorZoom(2);
+						break;
+					case KeyEvent.VK_SUBTRACT:
+					case KeyEvent.VK_MINUS:
+						offsetEditorZoom(-2);
+						break;
+
+					default:
+						EditorPanel.this.shouldNavigateOnClick = true; // CTRL
+						break;
 					}
 				}
 			}
@@ -175,8 +201,14 @@ public class EditorPanel {
 			@Override
 			public void keyTyped(KeyEvent event) {
 				EntryReference<Entry<?>, Entry<?>> ref = EditorPanel.this.getCursorReference();
-				if (ref == null) return;
-				if (!EditorPanel.this.controller.project.isRenamable(ref)) return;
+
+				if (ref == null) {
+					return;
+				}
+
+				if (!EditorPanel.this.controller.project.isRenamable(ref)) {
+					return;
+				}
 
 				if (!event.isControlDown() && !event.isAltDown() && Character.isJavaIdentifierPart(event.getKeyChar())) {
 					EnigmaProject project = gui.getController().project;
@@ -184,8 +216,10 @@ public class EditorPanel {
 					Entry<?> entry = reference.getNameableEntry();
 
 					String name = String.valueOf(event.getKeyChar());
+
 					if (entry instanceof ClassEntry && ((ClassEntry) entry).getParent() == null) {
 						String packageName = ((ClassEntry) entry).getPackageName();
+
 						if (packageName != null) {
 							name = packageName + "/" + name;
 						}
@@ -207,12 +241,14 @@ public class EditorPanel {
 			if ((this.editorLaf == null || this.editorLaf != laf)) {
 				this.editor.updateUI();
 				this.editor.setBackground(UiConfig.getEditorBackgroundColor());
+
 				if (this.editorLaf != null) {
 					this.classHandle.invalidateMapped();
 				}
 
 				this.editorLaf = laf;
 			}
+
 			this.boxHighlightPainters = boxHighlightPainters;
 		};
 
@@ -223,19 +259,23 @@ public class EditorPanel {
 	public static EditorPanel byUi(Component ui) {
 		if (ui instanceof JComponent) {
 			Object prop = ((JComponent) ui).getClientProperty(EditorPanel.class);
+
 			if (prop instanceof EditorPanel) {
 				return (EditorPanel) prop;
 			}
 		}
+
 		return null;
 	}
 
 	public void setClassHandle(ClassHandle handle) {
 		ClassEntry old = null;
+
 		if (this.classHandle != null) {
 			old = this.classHandle.getRef();
 			this.classHandle.close();
 		}
+
 		setClassHandle0(old, handle);
 	}
 
@@ -299,53 +339,61 @@ public class EditorPanel {
 			} else {
 				this.displayError(res.unwrapErr());
 			}
+
 			this.nextReference = null;
 		});
 	}
 
 	public void displayError(ClassHandleError t) {
 		this.setDisplayMode(DisplayMode.ERRORED);
+
 		String str = switch (t.type) {
-			case DECOMPILE -> "editor.decompile_error";
-			case REMAP -> "editor.remap_error";
+		case DECOMPILE -> "editor.decompile_error";
+		case REMAP -> "editor.remap_error";
 		};
+
 		this.errorLabel.setText(I18n.translate(str));
 		this.errorTextArea.setText(t.getStackTrace());
 		this.errorTextArea.setCaretPosition(0);
 	}
 
 	public void setDisplayMode(DisplayMode mode) {
-		if (this.mode == mode) return;
-		this.ui.removeAll();
-		switch (mode) {
-			case INACTIVE:
-				break;
-			case IN_PROGRESS: {
-				// make progress bar start from the left every time
-				this.decompilingProgressBar.setIndeterminate(false);
-				this.decompilingProgressBar.setIndeterminate(true);
-
-				this.ui.setLayout(new GridBagLayout());
-				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2);
-				this.ui.add(this.decompilingLabel, cb.pos(0, 0).anchor(GridBagConstraints.SOUTH).build());
-				this.ui.add(this.decompilingProgressBar, cb.pos(0, 1).anchor(GridBagConstraints.NORTH).build());
-				break;
-			}
-			case SUCCESS: {
-				this.ui.setLayout(new GridLayout(1, 1, 0, 0));
-				this.ui.add(this.editorScrollPane);
-				break;
-			}
-			case ERRORED: {
-				this.ui.setLayout(new GridBagLayout());
-				GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2).weight(1.0, 0.0).anchor(GridBagConstraints.WEST);
-				this.ui.add(this.errorLabel, cb.pos(0, 0).build());
-				this.ui.add(new JSeparator(JSeparator.HORIZONTAL), cb.pos(0, 1).fill(GridBagConstraints.HORIZONTAL).build());
-				this.ui.add(this.errorScrollPane, cb.pos(0, 2).weight(1.0, 1.0).fill(GridBagConstraints.BOTH).build());
-				this.ui.add(this.retryButton, cb.pos(0, 3).weight(0.0, 0.0).anchor(GridBagConstraints.EAST).build());
-				break;
-			}
+		if (this.mode == mode) {
+			return;
 		}
+
+		this.ui.removeAll();
+
+		switch (mode) {
+		case INACTIVE:
+			break;
+		case IN_PROGRESS: {
+			// make progress bar start from the left every time
+			this.decompilingProgressBar.setIndeterminate(false);
+			this.decompilingProgressBar.setIndeterminate(true);
+
+			this.ui.setLayout(new GridBagLayout());
+			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2);
+			this.ui.add(this.decompilingLabel, cb.pos(0, 0).anchor(GridBagConstraints.SOUTH).build());
+			this.ui.add(this.decompilingProgressBar, cb.pos(0, 1).anchor(GridBagConstraints.NORTH).build());
+			break;
+		}
+		case SUCCESS: {
+			this.ui.setLayout(new GridLayout(1, 1, 0, 0));
+			this.ui.add(this.editorScrollPane);
+			break;
+		}
+		case ERRORED: {
+			this.ui.setLayout(new GridBagLayout());
+			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2).weight(1.0, 0.0).anchor(GridBagConstraints.WEST);
+			this.ui.add(this.errorLabel, cb.pos(0, 0).build());
+			this.ui.add(new JSeparator(JSeparator.HORIZONTAL), cb.pos(0, 1).fill(GridBagConstraints.HORIZONTAL).build());
+			this.ui.add(this.errorScrollPane, cb.pos(0, 2).weight(1.0, 1.0).fill(GridBagConstraints.BOTH).build());
+			this.ui.add(this.retryButton, cb.pos(0, 3).weight(0.0, 0.0).anchor(GridBagConstraints.EAST).build());
+			break;
+		}
+		}
+
 		this.ui.validate();
 		this.ui.repaint();
 		this.mode = mode;
@@ -353,6 +401,7 @@ public class EditorPanel {
 
 	public void offsetEditorZoom(int zoomAmount) {
 		int newResult = this.fontSize + zoomAmount;
+
 		if (newResult > 8 && newResult < 72) {
 			this.fontSize = newResult;
 			this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
@@ -365,8 +414,13 @@ public class EditorPanel {
 	}
 
 	public void onCaretMove(int pos, boolean fromClick) {
-		if (this.settingSource) return;
-		if (this.controller.project == null) return;
+		if (this.settingSource) {
+			return;
+		}
+
+		if (this.controller.project == null) {
+			return;
+		}
 
 		EntryRemapper mapper = this.controller.project.getMapper();
 		Token token = getToken(pos);
@@ -378,10 +432,12 @@ public class EditorPanel {
 		if (referenceEntry != null && this.shouldNavigateOnClick && fromClick) {
 			this.shouldNavigateOnClick = false;
 			Entry<?> navigationEntry = referenceEntry;
+
 			if (this.cursorReference.context == null) {
 				EntryResolver resolver = mapper.getObfResolver();
 				navigationEntry = resolver.resolveFirstEntry(referenceEntry, ResolutionStrategy.RESOLVE_ROOT);
 			}
+
 			this.controller.navigateTo(navigationEntry);
 		}
 	}
@@ -398,6 +454,7 @@ public class EditorPanel {
 		if (this.source == null) {
 			return null;
 		}
+
 		return this.source.getIndex().getReferenceToken(pos);
 	}
 
@@ -406,16 +463,22 @@ public class EditorPanel {
 		if (this.source == null) {
 			return null;
 		}
+
 		return this.source.getIndex().getReference(token);
 	}
 
 	public void setSource(DecompiledClassSource source) {
 		this.setDisplayMode(DisplayMode.SUCCESS);
-		if (source == null) return;
+
+		if (source == null) {
+			return;
+		}
+
 		try {
 			this.settingSource = true;
 
 			int newCaretPos = 0;
+
 			if (this.source != null && this.source.getEntry().equals(source.getEntry())) {
 				int caretPos = this.editor.getCaretPosition();
 
@@ -441,9 +504,11 @@ public class EditorPanel {
 			this.source = source;
 			this.editor.getHighlighter().removeAllHighlights();
 			this.editor.setText(source.toString());
+
 			if (this.source != null) {
 				this.editor.setCaretPosition(newCaretPos);
 			}
+
 			setHighlightedTokens(source.getHighlightedTokens());
 			setCursorReference(getReference(getToken(this.editor.getCaretPosition())));
 		} finally {
@@ -515,10 +580,16 @@ public class EditorPanel {
 	 * @param reference
 	 */
 	private void showReference0(EntryReference<Entry<?>, Entry<?>> reference) {
-		if (this.source == null) return;
-		if (reference == null) return;
+		if (this.source == null) {
+			return;
+		}
+
+		if (reference == null) {
+			return;
+		}
 
 		List<Token> tokens = this.controller.getTokensForReference(this.source, reference);
+
 		if (tokens.isEmpty()) {
 			// DEBUG
 			System.err.println(String.format("WARNING: no tokens found for %s in %s", reference, this.classHandle.getRef()));
@@ -531,6 +602,7 @@ public class EditorPanel {
 		if (token == null) {
 			throw new IllegalArgumentException("Token cannot be null!");
 		}
+
 		navigateToToken(token, SelectionHighlightPainter.INSTANCE);
 	}
 
@@ -546,9 +618,11 @@ public class EditorPanel {
 			// make sure the token is visible in the scroll window
 			Rectangle start = this.editor.modelToView(token.start);
 			Rectangle end = this.editor.modelToView(token.end);
+
 			if (start == null || end == null) {
 				return;
 			}
+
 			Rectangle show = start.union(end);
 			show.grow(start.width * 10, start.height * 6);
 			SwingUtilities.invokeLater(() -> this.editor.scrollRectToVisible(show));
@@ -625,5 +699,4 @@ public class EditorPanel {
 		SUCCESS,
 		ERRORED,
 	}
-
 }

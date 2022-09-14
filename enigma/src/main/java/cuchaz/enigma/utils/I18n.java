@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,12 +37,16 @@ public class I18n {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 		return Collections.emptyMap();
 	}
 
 	public static String translateOrNull(String key) {
 		String value = translations.get(key);
-		if (value != null) return value;
+
+		if (value != null) {
+			return value;
+		}
 
 		return defaultTranslations.get(key);
 	}
@@ -50,6 +58,7 @@ public class I18n {
 
 	public static String translateOrEmpty(String key, Object... args) {
 		String text = translateOrNull(key);
+
 		if (text != null) {
 			return String.format(text, args);
 		} else {
@@ -59,6 +68,7 @@ public class I18n {
 
 	public static String translateFormatted(String key, Object... args) {
 		String text = translateOrNull(key);
+
 		if (text != null) {
 			return String.format(text, args);
 		} else if (args.length == 0) {
@@ -84,6 +94,7 @@ public class I18n {
 			Stream<ResourceInfo> dirStream = resources.stream();
 			dirStream.forEach(context -> {
 				String file = context.getResourceName();
+
 				if (file.startsWith("lang/") && file.endsWith(".json")) {
 					String fileName = file.substring(5, file.length() - 5);
 					list.add(fileName);
@@ -93,6 +104,7 @@ public class I18n {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 		return list;
 	}
 

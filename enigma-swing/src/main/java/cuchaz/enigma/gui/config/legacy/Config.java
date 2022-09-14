@@ -6,7 +6,15 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 import com.google.common.io.Files;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import cuchaz.enigma.gui.config.Decompiler;
 import cuchaz.enigma.utils.I18n;
@@ -28,7 +36,7 @@ public class Config {
 			}
 
 			Color baseColor = new Color(rgb);
-			return new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), (int)(255 * alpha));
+			return new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), (int) (255 * alpha));
 		}
 	}
 
@@ -73,12 +81,7 @@ public class Config {
 	public Decompiler decompiler = Decompiler.CFR;
 
 	public Config() {
-		gson = new GsonBuilder()
-			.registerTypeAdapter(Integer.class, new IntSerializer())
-			.registerTypeAdapter(Integer.class, new IntDeserializer())
-			.registerTypeAdapter(Config.class, (InstanceCreator<Config>) type -> this)
-			.setPrettyPrinting()
-			.create();
+		gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).registerTypeAdapter(Config.class, (InstanceCreator<Config>) type -> this).setPrettyPrinting().create();
 		this.loadConfig();
 	}
 
@@ -105,5 +108,4 @@ public class Config {
 			return (int) Long.parseLong(json.getAsString().replace("#", ""), 16);
 		}
 	}
-
 }

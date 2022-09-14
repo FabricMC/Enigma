@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class LanguageUtil {
-
 	private static final List<LanguageChangeListener> listeners = new ArrayList<>();
 
 	public LanguageUtil() {
@@ -21,5 +20,4 @@ public final class LanguageUtil {
 	public static void dispatchLanguageChange() {
 		listeners.forEach(LanguageChangeListener::retranslateUi);
 	}
-
 }

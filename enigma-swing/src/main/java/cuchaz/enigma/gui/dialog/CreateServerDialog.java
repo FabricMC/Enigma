@@ -16,7 +16,6 @@ import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.StandardValidation;
 
 public class CreateServerDialog extends AbstractDialog {
-
 	private ValidatableTextField portField;
 	private ValidatablePasswordField passwordField;
 
@@ -38,10 +37,7 @@ public class CreateServerDialog extends AbstractDialog {
 		portField.addActionListener(event -> confirm());
 		passwordField.addActionListener(event -> confirm());
 
-		return Arrays.asList(
-				new Pair<>("prompt.create_server.port", portField),
-				new Pair<>("prompt.password", passwordField)
-		);
+		return Arrays.asList(new Pair<>("prompt.create_server.port", portField), new Pair<>("prompt.password", passwordField));
 	}
 
 	@Override
@@ -49,20 +45,25 @@ public class CreateServerDialog extends AbstractDialog {
 		vc.setActiveElement(portField);
 		StandardValidation.isIntInRange(vc, portField.getText(), 0, 65535);
 		vc.setActiveElement(passwordField);
+
 		if (passwordField.getPassword().length > EnigmaServer.MAX_PASSWORD_LENGTH) {
 			vc.raise(Message.FIELD_LENGTH_OUT_OF_RANGE, EnigmaServer.MAX_PASSWORD_LENGTH);
 		}
 	}
 
 	public Result getResult() {
-		if (!isActionConfirm()) return null;
+		if (!isActionConfirm()) {
+			return null;
+		}
+
 		vc.reset();
 		validateInputs();
-		if (!vc.canProceed()) return null;
-		return new Result(
-				Integer.parseInt(portField.getText()),
-				passwordField.getPassword()
-		);
+
+		if (!vc.canProceed()) {
+			return null;
+		}
+
+		return new Result(Integer.parseInt(portField.getText()), passwordField.getPassword());
 	}
 
 	public static Result show(Frame parent) {
@@ -92,5 +93,4 @@ public class CreateServerDialog extends AbstractDialog {
 			return password;
 		}
 	}
-
 }

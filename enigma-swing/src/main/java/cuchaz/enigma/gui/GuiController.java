@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui;
 
@@ -32,7 +32,17 @@ import com.google.common.collect.Lists;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
-import cuchaz.enigma.analysis.*;
+import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
+import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.ClassReferenceTreeNode;
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.FieldReferenceTreeNode;
+import cuchaz.enigma.analysis.IndexTreeBuilder;
+import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
+import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
+import cuchaz.enigma.analysis.MethodReferenceTreeNode;
+import cuchaz.enigma.analysis.StructureTreeNode;
+import cuchaz.enigma.analysis.StructureTreeOptions;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
@@ -44,7 +54,12 @@ import cuchaz.enigma.gui.newabstraction.EntryValidation;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
-import cuchaz.enigma.network.*;
+import cuchaz.enigma.network.ClientPacketHandler;
+import cuchaz.enigma.network.EnigmaClient;
+import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.network.IntegratedEnigmaServer;
+import cuchaz.enigma.network.Message;
+import cuchaz.enigma.network.ServerPacketHandler;
 import cuchaz.enigma.network.packet.EntryChangeC2SPacket;
 import cuchaz.enigma.network.packet.LoginC2SPacket;
 import cuchaz.enigma.network.packet.Packet;
@@ -54,7 +69,12 @@ import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
-import cuchaz.enigma.translation.mapping.*;
+import cuchaz.enigma.translation.mapping.EntryChange;
+import cuchaz.enigma.translation.mapping.EntryMapping;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.mapping.EntryUtil;
+import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
@@ -90,9 +110,7 @@ public class GuiController implements ClientPacketHandler {
 
 	public GuiController(Gui gui, EnigmaProfile profile) {
 		this.gui = gui;
-		this.enigma = Enigma.builder()
-				.setProfile(profile)
-				.build();
+		this.enigma = Enigma.builder().setProfile(profile).build();
 	}
 
 	public boolean isDirty() {
@@ -121,7 +139,9 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public CompletableFuture<Void> openMappings(MappingFormat format, Path path) {
-		if (project == null) return CompletableFuture.completedFuture(null);
+		if (project == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		gui.setMappingsFile(path);
 
@@ -145,7 +165,9 @@ public class GuiController implements ClientPacketHandler {
 
 	@Override
 	public void openMappings(EntryTree<EntryMapping> mappings) {
-		if (project == null) return;
+		if (project == null) {
+			return;
+		}
 
 		project.setMappings(mappings);
 		refreshClasses();
@@ -168,7 +190,9 @@ public class GuiController implements ClientPacketHandler {
 	 * @return the future of saving
 	 */
 	public CompletableFuture<Void> saveMappings(Path path, MappingFormat format) {
-		if (project == null) return CompletableFuture.completedFuture(null);
+		if (project == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EntryRemapper mapper = project.getMapper();
@@ -189,7 +213,9 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public void closeMappings() {
-		if (project == null) return;
+		if (project == null) {
+			return;
+		}
 
 		project.setMappings(null);
 
@@ -202,9 +228,11 @@ public class GuiController implements ClientPacketHandler {
 		Path jarPath = this.project.getJarPath();
 		MappingFormat loadedMappingFormat = this.loadedMappingFormat;
 		Path loadedMappingPath = this.loadedMappingPath;
+
 		if (jarPath != null) {
 			this.closeJar();
 			CompletableFuture<Void> f = this.openJar(jarPath);
+
 			if (loadedMappingFormat != null && loadedMappingPath != null) {
 				f.whenComplete((v, t) -> this.openMappings(loadedMappingFormat, loadedMappingPath));
 			}
@@ -214,6 +242,7 @@ public class GuiController implements ClientPacketHandler {
 	public void reloadMappings() {
 		MappingFormat loadedMappingFormat = this.loadedMappingFormat;
 		Path loadedMappingPath = this.loadedMappingPath;
+
 		if (loadedMappingFormat != null && loadedMappingPath != null) {
 			this.closeMappings();
 			this.openMappings(loadedMappingFormat, loadedMappingPath);
@@ -221,29 +250,34 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public CompletableFuture<Void> dropMappings() {
-		if (project == null) return CompletableFuture.completedFuture(null);
+		if (project == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> project.dropMappings(progress));
 	}
 
 	public CompletableFuture<Void> exportSource(final Path path) {
-		if (project == null) return CompletableFuture.completedFuture(null);
+		if (project == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-			jar.decompileStream(progress, chp.getDecompilerService(), EnigmaProject.DecompileErrorStrategy.TRACE_AS_SOURCE)
-					.forEach(source -> {
-						try {
-							source.writeTo(source.resolvePath(path));
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					});
+			jar.decompileStream(progress, chp.getDecompilerService(), EnigmaProject.DecompileErrorStrategy.TRACE_AS_SOURCE).forEach(source -> {
+				try {
+					source.writeTo(source.resolvePath(path));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
 		});
 	}
 
 	public CompletableFuture<Void> exportJar(final Path path) {
-		if (project == null) return CompletableFuture.completedFuture(null);
+		if (project == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
@@ -269,20 +303,14 @@ public class GuiController implements ClientPacketHandler {
 		}
 
 		try {
-			return tokenHandle.getSource().get()
-					.map(DecompiledClassSource::getIndex)
-					.map(index -> new ReadableToken(
-							index.getLineNumber(token.start),
-							index.getColumnNumber(token.start),
-							index.getColumnNumber(token.end)))
-					.unwrapOr(null);
+			return tokenHandle.getSource().get().map(DecompiledClassSource::getIndex).map(index -> new ReadableToken(index.getLineNumber(token.start), index.getColumnNumber(token.start), index.getColumnNumber(token.end))).unwrapOr(null);
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	/**
-	 * Navigates to the declaration with respect to navigation history
+	 * Navigates to the declaration with respect to navigation history.
 	 *
 	 * @param entry the entry whose declaration will be navigated to
 	 */
@@ -290,11 +318,12 @@ public class GuiController implements ClientPacketHandler {
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
+
 		openReference(EntryReference.declaration(entry, entry.getName()));
 	}
 
 	/**
-	 * Navigates to the reference with respect to navigation history
+	 * Navigates to the reference with respect to navigation history.
 	 *
 	 * @param reference the reference
 	 */
@@ -302,6 +331,7 @@ public class GuiController implements ClientPacketHandler {
 		if (reference == null) {
 			throw new IllegalArgumentException("Reference cannot be null!");
 		}
+
 		if (this.referenceHistory == null) {
 			this.referenceHistory = new History<>(reference);
 		} else {
@@ -317,11 +347,7 @@ public class GuiController implements ClientPacketHandler {
 		EntryRemapper mapper = this.project.getMapper();
 
 		SourceIndex index = source.getIndex();
-		return mapper.getObfResolver().resolveReference(reference, ResolutionStrategy.RESOLVE_CLOSEST)
-				.stream()
-				.flatMap(r -> index.getReferenceTokens(r).stream())
-				.sorted()
-				.toList();
+		return mapper.getObfResolver().resolveReference(reference, ResolutionStrategy.RESOLVE_CLOSEST).stream().flatMap(r -> index.getReferenceTokens(r).stream()).sorted().toList();
 	}
 
 	public void openPreviousReference() {
@@ -349,6 +375,7 @@ public class GuiController implements ClientPacketHandler {
 			// entry is not in the jar. Ignore it
 			return;
 		}
+
 		openDeclaration(entry);
 	}
 
@@ -356,12 +383,15 @@ public class GuiController implements ClientPacketHandler {
 		if (!project.isRenamable(reference.getLocationClassEntry())) {
 			return;
 		}
+
 		openReference(reference);
 	}
 
 	public void refreshClasses() {
-		if (project == null) return;
-		
+		if (project == null) {
+			return;
+		}
+
 		List<ClassEntry> obfClasses = Lists.newArrayList();
 		List<ClassEntry> deobfClasses = Lists.newArrayList();
 		this.addSeparatedClasses(obfClasses, deobfClasses);
@@ -373,8 +403,7 @@ public class GuiController implements ClientPacketHandler {
 		EntryRemapper mapper = project.getMapper();
 
 		Collection<ClassEntry> classes = project.getJarIndex().getEntryIndex().getClasses();
-		Stream<ClassEntry> visibleClasses = classes.stream()
-				.filter(entry -> !entry.isInnerClass());
+		Stream<ClassEntry> visibleClasses = classes.stream().filter(entry -> !entry.isInnerClass());
 
 		visibleClasses.forEach(entry -> {
 			if (gui.isSingleClassTree()) {
@@ -428,12 +457,15 @@ public class GuiController implements ClientPacketHandler {
 	public MethodImplementationsTreeNode getMethodImplementations(MethodEntry entry) {
 		Translator translator = project.getMapper().getDeobfuscator();
 		List<MethodImplementationsTreeNode> rootNodes = indexTreeBuilder.buildMethodImplementations(translator, entry);
+
 		if (rootNodes.isEmpty()) {
 			return null;
 		}
+
 		if (rootNodes.size() > 1) {
 			System.err.println("WARNING: Method " + entry + " implements multiple interfaces. Only showing first one.");
 		}
+
 		return MethodImplementationsTreeNode.findNode(rootNodes.get(0), entry);
 	}
 
@@ -481,13 +513,20 @@ public class GuiController implements ClientPacketHandler {
 	public void applyChange(ValidationContext vc, EntryChange<?> change) {
 		this.applyChange0(vc, change);
 		gui.showStructure(gui.getActiveEditor());
-		if (!vc.canProceed()) return;
+
+		if (!vc.canProceed()) {
+			return;
+		}
+
 		this.sendPacket(new EntryChangeC2SPacket(change));
 	}
 
 	private void applyChange0(ValidationContext vc, EntryChange<?> change) {
 		validateChange(vc, change);
-		if (!vc.canProceed()) return;
+
+		if (!vc.canProceed()) {
+			return;
+		}
 
 		Entry<?> target = change.getTarget();
 		EntryMapping prev = this.project.getMapper().getDeobfMapping(target);
@@ -506,6 +545,7 @@ public class GuiController implements ClientPacketHandler {
 		if (!Objects.equals(prev.javadoc(), mapping.javadoc())) {
 			this.chp.invalidateJavadoc(target.getTopLevelClass());
 		}
+
 		gui.showStructure(gui.getActiveEditor());
 	}
 
@@ -517,10 +557,7 @@ public class GuiController implements ClientPacketHandler {
 				File statsFile = File.createTempFile("stats", ".html");
 
 				try (FileWriter w = new FileWriter(statsFile)) {
-					w.write(
-							Utils.readResourceToString("/stats.html")
-									.replace("/*data*/", data)
-					);
+					w.write(Utils.readResourceToString("/stats.html").replace("/*data*/", data));
 				}
 
 				Desktop.getDesktop().open(statsFile);
@@ -573,15 +610,18 @@ public class GuiController implements ClientPacketHandler {
 		if (client != null) {
 			client.disconnect();
 		}
+
 		if (server != null) {
 			server.stop();
 		}
+
 		client = null;
 		server = null;
 		SwingUtilities.invokeLater(() -> {
 			if (reason != null) {
 				JOptionPane.showMessageDialog(gui.getFrame(), I18n.translate(reason), I18n.translate("disconnect.disconnected"), JOptionPane.INFORMATION_MESSAGE);
 			}
+
 			gui.setConnectionState(ConnectionState.NOT_CONNECTED);
 		});
 	}
@@ -602,5 +642,4 @@ public class GuiController implements ClientPacketHandler {
 	public void updateUserList(List<String> users) {
 		gui.setUserList(users);
 	}
-
 }

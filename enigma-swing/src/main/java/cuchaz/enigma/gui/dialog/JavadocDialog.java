@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui.dialog;
 
@@ -18,7 +18,15 @@ import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
 import javax.swing.text.html.HTML;
 
 import com.google.common.base.Strings;
@@ -35,7 +43,6 @@ import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class JavadocDialog {
-
 	private final JDialog ui;
 	private final GuiController controller;
 	private final Entry<?> entry;
@@ -62,19 +69,21 @@ public class JavadocDialog {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				switch (event.getKeyCode()) {
-					case KeyEvent.VK_ENTER:
-						if (event.isControlDown()) {
-							doSave();
-							if (vc.canProceed()) {
-								close();
-							}
+				case KeyEvent.VK_ENTER:
+					if (event.isControlDown()) {
+						doSave();
+
+						if (vc.canProceed()) {
+							close();
 						}
-						break;
-					case KeyEvent.VK_ESCAPE:
-						close();
-						break;
-					default:
-						break;
+					}
+
+					break;
+				case KeyEvent.VK_ESCAPE:
+					close();
+					break;
+				default:
+					break;
 				}
 			}
 		});
@@ -108,6 +117,7 @@ public class JavadocDialog {
 					} else {
 						tagText = tag.getText() + " " + text.getSelectedText();
 					}
+
 					text.replaceSelection(tagText);
 				} else {
 					text.insert(tagText, text.getCaretPosition());
@@ -116,6 +126,7 @@ public class JavadocDialog {
 				if (tag.isInline()) {
 					text.setCaretPosition(text.getCaretPosition() - 1);
 				}
+
 				text.grabFocus();
 			});
 			tagsMenu.add(tagButton);
@@ -124,9 +135,11 @@ public class JavadocDialog {
 		// add html tags
 		JComboBox<String> htmlList = new JComboBox<String>();
 		htmlList.setPreferredSize(new Dimension());
+
 		for (HTML.Tag htmlTag : HTML.getAllTags()) {
 			htmlList.addItem(htmlTag.toString());
 		}
+
 		htmlList.addActionListener(action -> {
 			String tagText = "<" + htmlList.getSelectedItem().toString() + ">";
 			text.insert(tagText, text.getCaretPosition());
@@ -146,9 +159,17 @@ public class JavadocDialog {
 	public void doSave() {
 		vc.reset();
 		validate();
-		if (!vc.canProceed()) return;
+
+		if (!vc.canProceed()) {
+			return;
+		}
+
 		save();
-		if (!vc.canProceed()) return;
+
+		if (!vc.canProceed()) {
+			return;
+		}
+
 		close();
 	}
 
@@ -189,7 +210,7 @@ public class JavadocDialog {
 
 		private boolean inline;
 
-		private JavadocTag(boolean inline) {
+		JavadocTag(boolean inline) {
 			this.inline = inline;
 		}
 
@@ -201,5 +222,4 @@ public class JavadocDialog {
 			return this.inline;
 		}
 	}
-
 }

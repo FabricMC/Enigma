@@ -1,13 +1,14 @@
 package cuchaz.enigma.translation.mapping.tree;
 
-import cuchaz.enigma.translation.representation.entry.Entry;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public class HashTreeNode<T> implements EntryTreeNode<T>, Iterable<HashTreeNode<T>> {
 	private final Entry<?> entry;

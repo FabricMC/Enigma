@@ -1,17 +1,41 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- *
- * Contributors:
- *     Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+*     Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma;
 
-import cuchaz.enigma.analysis.*;
+import static cuchaz.enigma.TestEntryFactory.newClass;
+import static cuchaz.enigma.TestEntryFactory.newField;
+import static cuchaz.enigma.TestEntryFactory.newFieldReferenceByMethod;
+import static cuchaz.enigma.TestEntryFactory.newMethod;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.List;
+
+import org.junit.Test;
+
+import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
+import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.analysis.IndexTreeBuilder;
+import cuchaz.enigma.analysis.MethodImplementationsTreeNode;
+import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -23,19 +47,8 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import org.junit.Test;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-
-import static cuchaz.enigma.TestEntryFactory.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 public class TestJarIndexLoneClass {
-
 	public static final Path JAR = Paths.get("build/test-obf/loneClass.jar");
 	private JarIndex index;
 
@@ -47,10 +60,7 @@ public class TestJarIndexLoneClass {
 
 	@Test
 	public void obfEntries() {
-		assertThat(index.getEntryIndex().getClasses(), containsInAnyOrder(
-				newClass("cuchaz/enigma/inputs/Keep"),
-				newClass("a")
-		));
+		assertThat(index.getEntryIndex().getClasses(), containsInAnyOrder(newClass("cuchaz/enigma/inputs/Keep"), newClass("a")));
 	}
 
 	@Test
@@ -112,9 +122,7 @@ public class TestJarIndexLoneClass {
 	@Test
 	public void relatedMethodImplementations() {
 		Collection<MethodEntry> entries = index.getEntryResolver().resolveEquivalentMethods(newMethod("a", "a", "()Ljava/lang/String;"));
-		assertThat(entries, containsInAnyOrder(
-				newMethod("a", "a", "()Ljava/lang/String;")
-		));
+		assertThat(entries, containsInAnyOrder(newMethod("a", "a", "()Ljava/lang/String;")));
 	}
 
 	@Test
@@ -122,10 +130,7 @@ public class TestJarIndexLoneClass {
 	public void fieldReferences() {
 		FieldEntry source = newField("a", "a", "Ljava/lang/String;");
 		Collection<EntryReference<FieldEntry, MethodDefEntry>> references = index.getReferenceIndex().getReferencesToField(source);
-		assertThat(references, containsInAnyOrder(
-				newFieldReferenceByMethod(source, "a", "<init>", "(Ljava/lang/String;)V"),
-				newFieldReferenceByMethod(source, "a", "a", "()Ljava/lang/String;")
-		));
+		assertThat(references, containsInAnyOrder(newFieldReferenceByMethod(source, "a", "<init>", "(Ljava/lang/String;)V"), newFieldReferenceByMethod(source, "a", "a", "()Ljava/lang/String;")));
 	}
 
 	@Test

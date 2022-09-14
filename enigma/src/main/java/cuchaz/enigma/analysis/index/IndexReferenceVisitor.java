@@ -1,5 +1,22 @@
 package cuchaz.enigma.analysis.index;
 
+import java.util.List;
+
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InvokeDynamicInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.analysis.Analyzer;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.objectweb.asm.tree.analysis.BasicValue;
+import org.objectweb.asm.tree.analysis.SourceInterpreter;
+import org.objectweb.asm.tree.analysis.SourceValue;
+
 import cuchaz.enigma.analysis.IndexSimpleVerifier;
 import cuchaz.enigma.analysis.InterpreterPair;
 import cuchaz.enigma.analysis.MethodNodeWithAction;
@@ -8,15 +25,11 @@ import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.Signature;
-import cuchaz.enigma.translation.representation.entry.*;
-import org.objectweb.asm.*;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.analysis.*;
-
-import java.util.List;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 
 public class IndexReferenceVisitor extends ClassVisitor {
 	private final JarIndexer indexer;
@@ -54,7 +67,7 @@ public class IndexReferenceVisitor extends ClassVisitor {
 		private final MethodDefEntry callerEntry;
 		private JarIndexer indexer;
 
-		public MethodInterpreter(MethodDefEntry callerEntry, JarIndexer indexer, EntryIndex entryIndex, InheritanceIndex inheritanceIndex) {
+		MethodInterpreter(MethodDefEntry callerEntry, JarIndexer indexer, EntryIndex entryIndex, InheritanceIndex inheritanceIndex) {
 			super(new IndexSimpleVerifier(entryIndex, inheritanceIndex), new SourceInterpreter());
 			this.callerEntry = callerEntry;
 			this.indexer = indexer;
@@ -84,7 +97,6 @@ public class IndexReferenceVisitor extends ClassVisitor {
 
 			return super.unaryOperation(insn, value);
 		}
-
 
 		@Override
 		public PairValue<BasicValue, SourceValue> binaryOperation(AbstractInsnNode insn, PairValue<BasicValue, SourceValue> value1, PairValue<BasicValue, SourceValue> value2) throws AnalyzerException {
@@ -119,6 +131,7 @@ public class IndexReferenceVisitor extends ClassVisitor {
 					Type instantiatedMethodType = (Type) invokeDynamicInsn.bsmArgs[2];
 
 					ReferenceTargetType targetType;
+
 					if (implMethod.getTag() != Opcodes.H_GETSTATIC && implMethod.getTag() != Opcodes.H_PUTFIELD && implMethod.getTag() != Opcodes.H_INVOKESTATIC) {
 						if (instantiatedMethodType.getArgumentTypes().length < Type.getArgumentTypes(implMethod.getDesc()).length) {
 							targetType = getReferenceTargetType(values.get(0), insn);
@@ -129,13 +142,7 @@ public class IndexReferenceVisitor extends ClassVisitor {
 						targetType = ReferenceTargetType.none();
 					}
 
-					indexer.indexLambda(callerEntry, new Lambda(
-							invokeDynamicInsn.name,
-							new MethodDescriptor(invokeDynamicInsn.desc),
-							new MethodDescriptor(samMethodType.getDescriptor()),
-							getHandleEntry(implMethod),
-							new MethodDescriptor(instantiatedMethodType.getDescriptor())
-					), targetType);
+					indexer.indexLambda(callerEntry, new Lambda(invokeDynamicInsn.name, new MethodDescriptor(invokeDynamicInsn.desc), new MethodDescriptor(samMethodType.getDescriptor()), getHandleEntry(implMethod), new MethodDescriptor(instantiatedMethodType.getDescriptor())), targetType);
 				}
 			}
 
@@ -160,17 +167,17 @@ public class IndexReferenceVisitor extends ClassVisitor {
 
 		private static ParentedEntry<?> getHandleEntry(Handle handle) {
 			switch (handle.getTag()) {
-				case Opcodes.H_GETFIELD:
-				case Opcodes.H_GETSTATIC:
-				case Opcodes.H_PUTFIELD:
-				case Opcodes.H_PUTSTATIC:
-					return FieldEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
-				case Opcodes.H_INVOKEINTERFACE:
-				case Opcodes.H_INVOKESPECIAL:
-				case Opcodes.H_INVOKESTATIC:
-				case Opcodes.H_INVOKEVIRTUAL:
-				case Opcodes.H_NEWINVOKESPECIAL:
-					return MethodEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
+			case Opcodes.H_GETFIELD:
+			case Opcodes.H_GETSTATIC:
+			case Opcodes.H_PUTFIELD:
+			case Opcodes.H_PUTSTATIC:
+				return FieldEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
+			case Opcodes.H_INVOKEINTERFACE:
+			case Opcodes.H_INVOKESPECIAL:
+			case Opcodes.H_INVOKESTATIC:
+			case Opcodes.H_INVOKEVIRTUAL:
+			case Opcodes.H_NEWINVOKESPECIAL:
+				return MethodEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
 			}
 
 			throw new RuntimeException("Invalid handle tag " + handle.getTag());

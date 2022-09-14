@@ -1,5 +1,11 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
@@ -12,46 +18,25 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.Pair;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Tests that a MappingFormat can write out a fixed set of mappings and read them back without losing any information.
  * Javadoc skipped for Tiny (v1) as it doesn't support them.
  */
 public class TestReadWriteCycle {
-
 	private final MappingSaveParameters parameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
 
-	private final Pair<ClassEntry, EntryMapping> testClazz = new Pair<>(
-			new ClassEntry("a/b/c"),
-			new EntryMapping("alpha/beta/charlie", "this is a test class")
-	);
+	private final Pair<ClassEntry, EntryMapping> testClazz = new Pair<>(new ClassEntry("a/b/c"), new EntryMapping("alpha/beta/charlie", "this is a test class"));
 
-	private final Pair<FieldEntry, EntryMapping> testField1 = new Pair<>(
-			FieldEntry.parse("a/b/c", "field1", "I"),
-			new EntryMapping("mapped1", "this is field 1")
-	);
+	private final Pair<FieldEntry, EntryMapping> testField1 = new Pair<>(FieldEntry.parse("a/b/c", "field1", "I"), new EntryMapping("mapped1", "this is field 1"));
 
-	private final Pair<FieldEntry, EntryMapping> testField2 = new Pair<>(
-			FieldEntry.parse("a/b/c", "field2", "I"),
-			new EntryMapping("mapped2", "this is field 2")
-	);
+	private final Pair<FieldEntry, EntryMapping> testField2 = new Pair<>(FieldEntry.parse("a/b/c", "field2", "I"), new EntryMapping("mapped2", "this is field 2"));
 
-	private final Pair<MethodEntry, EntryMapping> testMethod1 = new Pair<>(
-			MethodEntry.parse("a/b/c", "method1", "()V"),
-			new EntryMapping("mapped3", "this is method1")
-	);
+	private final Pair<MethodEntry, EntryMapping> testMethod1 = new Pair<>(MethodEntry.parse("a/b/c", "method1", "()V"), new EntryMapping("mapped3", "this is method1"));
 
-	private final Pair<MethodEntry, EntryMapping> testMethod2 = new Pair<>(
-			MethodEntry.parse("a/b/c", "method2", "()V"),
-			new EntryMapping("mapped4", "this is method 2")
-	);
+	private final Pair<MethodEntry, EntryMapping> testMethod2 = new Pair<>(MethodEntry.parse("a/b/c", "method2", "()V"), new EntryMapping("mapped4", "this is method 2"));
 
-	private void insertMapping(EntryTree<EntryMapping> mappings, Pair<? extends Entry<?>, EntryMapping> mappingPair){
+	private void insertMapping(EntryTree<EntryMapping> mappings, Pair<? extends Entry<?>, EntryMapping> mappingPair) {
 		mappings.insert(mappingPair.a, mappingPair.b);
 	}
 
@@ -71,8 +56,8 @@ public class TestReadWriteCycle {
 		Assert.assertTrue("Test mapping insertion failed: testMethod2", testMappings.contains(testMethod2.a));
 
 		File tempFile = File.createTempFile("readWriteCycle", tmpNameSuffix);
-		tempFile.delete();//remove the auto created file
-
+		//remove the auto created file
+		tempFile.delete();
 
 		mappingFormat.write(testMappings, tempFile.toPath(), ProgressListener.none(), parameters);
 		Assert.assertTrue("Written file not created", tempFile.exists());

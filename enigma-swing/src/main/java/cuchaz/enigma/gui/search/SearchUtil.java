@@ -1,6 +1,14 @@
 package cuchaz.enigma.gui.search;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,7 +22,6 @@ import java.util.stream.Stream;
 import cuchaz.enigma.utils.Pair;
 
 public class SearchUtil<T extends SearchEntry> {
-
 	private final Map<T, Entry<T>> entries = new HashMap<>();
 	private final Map<String, Integer> hitCount = new HashMap<>();
 	private final Executor searchExecutor = Executors.newWorkStealingPool();
@@ -45,12 +52,7 @@ public class SearchUtil<T extends SearchEntry> {
 	}
 
 	public Stream<T> search(String term) {
-		return entries.values().parallelStream()
-				.map(e -> new Pair<>(e, e.getScore(term, hitCount.getOrDefault(e.searchEntry.getIdentifier(), 0))))
-				.filter(e -> e.b > 0)
-				.sorted(Comparator.comparingDouble(o -> -o.b))
-				.map(e -> e.a.searchEntry)
-				.sequential();
+		return entries.values().parallelStream().map(e -> new Pair<>(e, e.getScore(term, hitCount.getOrDefault(e.searchEntry.getIdentifier(), 0)))).filter(e -> e.b > 0).sorted(Comparator.comparingDouble(o -> -o.b)).map(e -> e.a.searchEntry).sequential();
 	}
 
 	public SearchControl asyncSearch(String term, SearchResultConsumer<T> consumer) {
@@ -61,21 +63,36 @@ public class SearchUtil<T extends SearchEntry> {
 		AtomicInteger size = new AtomicInteger();
 		AtomicBoolean control = new AtomicBoolean(false);
 		AtomicInteger elapsed = new AtomicInteger();
+
 		for (Entry<T> value : entries.values()) {
 			searchExecutor.execute(() -> {
 				try {
-					if (control.get()) return;
+					if (control.get()) {
+						return;
+					}
+
 					float score = value.getScore(term, hitCount.getOrDefault(value.searchEntry.getIdentifier(), 0));
-					if (score <= 0) return;
+
+					if (score <= 0) {
+						return;
+					}
+
 					score = -score; // sort descending
+
 					try {
 						scoresLock.lock();
-						if (control.get()) return;
+
+						if (control.get()) {
+							return;
+						}
+
 						int dataSize = size.getAndIncrement();
 						int index = Arrays.binarySearch(scores, 0, dataSize, score);
+
 						if (index < 0) {
 							index = ~index;
 						}
+
 						System.arraycopy(scores, index, scores, index + 1, dataSize - index);
 						scores[index] = score;
 						consumer.add(index, value.searchEntry);
@@ -113,7 +130,6 @@ public class SearchUtil<T extends SearchEntry> {
 	}
 
 	public static final class Entry<T extends SearchEntry> {
-
 		public final T searchEntry;
 		private final String[][] components;
 
@@ -124,9 +140,7 @@ public class SearchUtil<T extends SearchEntry> {
 
 		public float getScore(String term, int hits) {
 			String ucTerm = term.toUpperCase(Locale.ROOT);
-			float maxScore = (float) Arrays.stream(components)
-					.mapToDouble(name -> getScoreFor(ucTerm, name))
-					.max().orElse(0.0);
+			float maxScore = (float) Arrays.stream(components).mapToDouble(name -> getScoreFor(ucTerm, name)).max().orElse(0.0);
 			return maxScore * (hits + 1);
 		}
 
@@ -156,17 +170,20 @@ public class SearchUtil<T extends SearchEntry> {
 				String component = name[componentIndex];
 				float posMultiplier = (name.length - componentIndex) * 0.3f;
 				Map<String, Float> newSnapshots = new HashMap<>();
+
 				for (Map.Entry<String, Float> snapshot : snapshots.entrySet()) {
 					String remaining = snapshot.getKey();
 					float score = snapshot.getValue();
 					component = component.toUpperCase(Locale.ROOT);
 					int l = compareEqualLength(remaining, component);
+
 					for (int i = 1; i <= l; i++) {
 						float baseScore = scorePerChar * i;
 						float chainBonus = (i - 1) * 0.5f;
 						merge(newSnapshots, Collections.singletonMap(remaining.substring(i), score + baseScore * posMultiplier + chainBonus), Math::max);
 					}
 				}
+
 				merge(snapshots, newSnapshots, Math::max);
 			}
 
@@ -180,24 +197,24 @@ public class SearchUtil<T extends SearchEntry> {
 		}
 
 		public static <T extends SearchEntry> Entry<T> from(T e) {
-			String[][] components = e.getSearchableNames().parallelStream()
-					.map(Entry::wordwiseSplit)
-					.toArray(String[][]::new);
+			String[][] components = e.getSearchableNames().parallelStream().map(Entry::wordwiseSplit).toArray(String[][]::new);
 			return new Entry<>(e, components);
 		}
 
 		private static int compareEqualLength(String s1, String s2) {
 			int len = 0;
+
 			while (len < s1.length() && len < s2.length() && s1.charAt(len) == s2.charAt(len)) {
 				len += 1;
 			}
+
 			return len;
 		}
 
 		/**
 		 * Splits the given input into components, trying to detect word parts.
-		 * <p>
-		 * Example of how words get split (using <code>|</code> as seperator):
+		 *
+		 * <p>Example of how words get split (using <code>|</code> as seperator):
 		 * <p><code>MinecraftClientGame -> Minecraft|Client|Game</code></p>
 		 * <p><code>HTTPInputStream -> HTTP|Input|Stream</code></p>
 		 * <p><code>class_932 -> class|_|932</code></p>
@@ -210,46 +227,57 @@ public class SearchUtil<T extends SearchEntry> {
 		 */
 		private static String[] wordwiseSplit(String input) {
 			List<String> list = new ArrayList<>();
+
 			while (!input.isEmpty()) {
 				int take;
+
 				if (Character.isLetter(input.charAt(0))) {
 					if (input.length() == 1) {
 						take = 1;
 					} else {
 						boolean nextSegmentIsUppercase = Character.isUpperCase(input.charAt(0)) && Character.isUpperCase(input.charAt(1));
+
 						if (nextSegmentIsUppercase) {
 							int nextLowercase = 1;
+
 							while (Character.isUpperCase(input.charAt(nextLowercase))) {
 								nextLowercase += 1;
+
 								if (nextLowercase == input.length()) {
 									nextLowercase += 1;
 									break;
 								}
 							}
+
 							take = nextLowercase - 1;
 						} else {
 							int nextUppercase = 1;
+
 							while (nextUppercase < input.length() && Character.isLowerCase(input.charAt(nextUppercase))) {
 								nextUppercase += 1;
 							}
+
 							take = nextUppercase;
 						}
 					}
 				} else if (Character.isDigit(input.charAt(0))) {
 					int nextNonNum = 1;
+
 					while (nextNonNum < input.length() && Character.isLetter(input.charAt(nextNonNum)) && !Character.isLowerCase(input.charAt(nextNonNum))) {
 						nextNonNum += 1;
 					}
+
 					take = nextNonNum;
 				} else {
 					take = 1;
 				}
+
 				list.add(input.substring(0, take));
 				input = input.substring(take);
 			}
+
 			return list.toArray(new String[0]);
 		}
-
 	}
 
 	@FunctionalInterface
@@ -264,5 +292,4 @@ public class SearchUtil<T extends SearchEntry> {
 
 		float getProgress();
 	}
-
 }

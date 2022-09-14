@@ -10,7 +10,6 @@ import de.sciss.syntaxpane.util.Configuration;
 import cuchaz.enigma.gui.config.UiConfig;
 
 public class EnigmaSyntaxKit extends JavaSyntaxKit {
-
 	private static Configuration configuration = null;
 
 	@Override
@@ -18,23 +17,20 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
 		if (configuration == null) {
 			initConfig(DefaultSyntaxKit.getConfig(JavaSyntaxKit.class));
 		}
+
 		return configuration;
 	}
 
 	public void initConfig(Configuration baseConfig) {
 		configuration = flattenConfiguration(baseConfig, EnigmaSyntaxKit.class);
 
-        // Remove all actions except a select few because they disregard the
-        // editable state of the editor, or at least are useless anyway because
-        // they would try editing the file.
-        // Also includes the Action.insert-date action which is written in
-        // Javascript and causes the editor to freeze on first load for a short
-        // time.
-        configuration.keySet().removeIf(s -> s.startsWith("Action.") &&
-                !(s.startsWith("Action.find") ||
-                        s.startsWith("Action.goto-line") ||
-                        s.startsWith("Action.jump-to-pair") ||
-                        s.startsWith("Action.quick-find")));
+		// Remove all actions except a select few because they disregard the
+		// editable state of the editor, or at least are useless anyway because
+		// they would try editing the file.
+		// Also includes the Action.insert-date action which is written in
+		// Javascript and causes the editor to freeze on first load for a short
+		// time.
+		configuration.keySet().removeIf(s -> s.startsWith("Action.") && !(s.startsWith("Action.find") || s.startsWith("Action.goto-line") || s.startsWith("Action.jump-to-pair") || s.startsWith("Action.quick-find")));
 
 		// See de.sciss.syntaxpane.TokenType
 		configuration.put("Style.KEYWORD", String.format("%d, 0", UiConfig.getHighlightColor().getRGB()));
@@ -59,27 +55,28 @@ public class EnigmaSyntaxKit extends JavaSyntaxKit {
 
 		Font editorFont = UiConfig.activeUseCustomFonts() ? UiConfig.getEditorFont() : UiConfig.getFallbackEditorFont();
 		configuration.put("DefaultFont", UiConfig.encodeFont(editorFont));
-    }
+	}
 
-    /**
-     * Creates a new configuration from the passed configuration so that it has
-		* no parents and all its values are on the same level. This is needed since
-     * there is no way to remove map entries from parent configurations.
-     *
-     * @param source      the configuration to flatten
-		* @param configClass the class for the new configuration
-		* @return a new configuration
-     */
-    private static Configuration flattenConfiguration(Configuration source, Class<?> configClass) {
-        Configuration config = new Configuration(configClass, null);
-        for (String p : source.stringPropertyNames()) {
-            config.put(p, source.getString(p));
-        }
-        return config;
+	/**
+	 * Creates a new configuration from the passed configuration so that it has
+	 * no parents and all its values are on the same level. This is needed since
+	 * there is no way to remove map entries from parent configurations.
+	 *
+	 * @param source the configuration to flatten
+	 * @param configClass the class for the new configuration
+	 * @return a new configuration
+	 */
+	private static Configuration flattenConfiguration(Configuration source, Class<?> configClass) {
+		Configuration config = new Configuration(configClass, null);
+
+		for (String p : source.stringPropertyNames()) {
+			config.put(p, source.getString(p));
+		}
+
+		return config;
 	}
 
 	public static void invalidate() {
 		configuration = null;
 	}
-
 }

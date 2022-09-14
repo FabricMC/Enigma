@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public final class ParameterizedMessage {
-
 	public final Message message;
 	private final Object[] params;
 	private final Validatable target;
@@ -25,11 +24,15 @@ public final class ParameterizedMessage {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof ParameterizedMessage that)) return false;
-		return Objects.equals(message, that.message) &&
-				Arrays.equals(params, that.params) &&
-				Objects.equals(target, that.target);
+		if (this == o) {
+			return true;
+		}
+
+		if (!(o instanceof ParameterizedMessage that)) {
+			return false;
+		}
+
+		return Objects.equals(message, that.message) && Arrays.equals(params, that.params) && Objects.equals(target, that.target);
 	}
 
 	@Override
@@ -43,5 +46,4 @@ public final class ParameterizedMessage {
 	public String toString() {
 		return String.format("ParameterizedMessage { message: %s, params: %s, target: %s }", message, Arrays.toString(params), target);
 	}
-
 }

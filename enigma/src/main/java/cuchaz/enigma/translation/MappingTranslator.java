@@ -22,7 +22,7 @@ public class MappingTranslator implements Translator {
 		if (translatable == null) {
 			return null;
 		}
+
 		return (TranslateResult<T>) translatable.extendedTranslate(this, resolver, mappings);
 	}
-
 }

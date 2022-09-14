@@ -1,6 +1,10 @@
 package cuchaz.enigma.source;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -62,6 +66,7 @@ public class DecompiledClassSource {
 				return translatedEntry.getValue().getSourceRemapName();
 			} else {
 				Optional<String> proposedName = proposeName(project, entry);
+
 				if (proposedName.isPresent()) {
 					target.add(RenamableTokenType.PROPOSED, movedToken);
 					return proposedName.get();
@@ -72,6 +77,7 @@ public class DecompiledClassSource {
 		}
 
 		String defaultName = generateDefaultName(translatedEntry.getValue());
+
 		if (defaultName != null) {
 			return defaultName;
 		}
@@ -86,10 +92,7 @@ public class DecompiledClassSource {
 			EntryRemapper mapper = project.getMapper();
 			Collection<Entry<?>> resolved = mapper.getObfResolver().resolveEntry(entry, ResolutionStrategy.RESOLVE_ROOT);
 
-			return resolved.stream()
-					.map(e -> nameProposalService.proposeName(e, mapper))
-					.filter(Optional::isPresent)
-					.map(Optional::get);
+			return resolved.stream().map(e -> nameProposalService.proposeName(e, mapper)).filter(Optional::isPresent).map(Optional::get);
 		}).findFirst();
 	}
 
@@ -99,6 +102,7 @@ public class DecompiledClassSource {
 			LocalVariableDefEntry localVariable = (LocalVariableDefEntry) entry;
 
 			int index = localVariable.getIndex();
+
 			if (localVariable.isArgument()) {
 				List<TypeDescriptor> arguments = localVariable.getParent().getDesc().getArgumentDescs();
 				return LocalNameGenerator.generateArgumentName(index, localVariable.getDesc(), arguments);
@@ -139,9 +143,11 @@ public class DecompiledClassSource {
 
 		Iterator<Token> fromTokenItr = fromIndex.referenceTokens().iterator();
 		Iterator<Token> toTokenItr = toIndex.referenceTokens().iterator();
+
 		while (fromTokenItr.hasNext() && toTokenItr.hasNext()) {
 			Token fromToken = fromTokenItr.next();
 			Token toToken = toTokenItr.next();
+
 			if (fromToken.end > fromOffset) {
 				break;
 			}

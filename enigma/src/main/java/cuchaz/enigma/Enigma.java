@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma;
 
@@ -35,12 +35,12 @@ import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.utils.Utils;
 
 public class Enigma {
-    public static final String NAME = "Enigma";
+	public static final String NAME = "Enigma";
 	public static final String VERSION;
 	public static final String URL = "https://fabricmc.net";
-    public static final int ASM_VERSION = Opcodes.ASM9;
+	public static final int ASM_VERSION = Opcodes.ASM9;
 
-    private final EnigmaProfile profile;
+	private final EnigmaProfile profile;
 	private final EnigmaServices services;
 
 	private Enigma(EnigmaProfile profile, EnigmaServices services) {
@@ -97,6 +97,7 @@ public class Enigma {
 
 		public Enigma build() {
 			PluginContext pluginContext = new PluginContext(profile);
+
 			for (EnigmaPlugin plugin : plugins) {
 				plugin.init(pluginContext);
 			}

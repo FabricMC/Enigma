@@ -1,15 +1,19 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.translation.mapping;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -20,10 +24,6 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MappingsChecker {
 	private final JarIndex index;
@@ -37,13 +37,12 @@ public class MappingsChecker {
 	public Dropped dropBrokenMappings(ProgressListener progress) {
 		Dropped dropped = new Dropped();
 
-		Collection<Entry<?>> obfEntries = mappings.getAllEntries()
-				.filter(e -> e instanceof ClassEntry || e instanceof MethodEntry || e instanceof FieldEntry || e instanceof LocalVariableEntry)
-				.toList();
+		Collection<Entry<?>> obfEntries = mappings.getAllEntries().filter(e -> e instanceof ClassEntry || e instanceof MethodEntry || e instanceof FieldEntry || e instanceof LocalVariableEntry).toList();
 
 		progress.init(obfEntries.size(), "Checking for dropped mappings");
 
 		int steps = 0;
+
 		for (Entry<?> entry : obfEntries) {
 			progress.step(steps++, entry.toString());
 			tryDropEntry(dropped, entry);
@@ -57,6 +56,7 @@ public class MappingsChecker {
 	private void tryDropEntry(Dropped dropped, Entry<?> entry) {
 		if (shouldDropEntry(entry)) {
 			EntryMapping mapping = mappings.get(entry);
+
 			if (mapping != null) {
 				dropped.drop(entry, mapping);
 			}
@@ -102,6 +102,7 @@ public class MappingsChecker {
 		void apply(EntryTree<EntryMapping> mappings) {
 			for (Entry<?> entry : droppedMappings.keySet()) {
 				EntryTreeNode<EntryMapping> node = mappings.findNode(entry);
+
 				if (node == null) {
 					continue;
 				}

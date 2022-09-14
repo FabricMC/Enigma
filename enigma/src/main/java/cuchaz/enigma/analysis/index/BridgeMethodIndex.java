@@ -1,15 +1,21 @@
 package cuchaz.enigma.analysis.index;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Maps;
+
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 public class BridgeMethodIndex implements JarIndexer {
 	private final EntryIndex entryIndex;
@@ -31,6 +37,7 @@ public class BridgeMethodIndex implements JarIndexer {
 			MethodDefEntry methodDefEntry = (MethodDefEntry) methodEntry;
 
 			AccessFlags access = methodDefEntry.getAccess();
+
 			if (access == null || !access.isSynthetic()) {
 				continue;
 			}
@@ -46,6 +53,7 @@ public class BridgeMethodIndex implements JarIndexer {
 		for (Map.Entry<MethodEntry, MethodEntry> entry : copiedAccessToBridge.entrySet()) {
 			MethodEntry specializedEntry = entry.getKey();
 			MethodEntry bridgeEntry = entry.getValue();
+
 			if (bridgeEntry.getName().equals(specializedEntry.getName())) {
 				continue;
 			}
@@ -57,6 +65,7 @@ public class BridgeMethodIndex implements JarIndexer {
 
 	private void indexSyntheticMethod(MethodDefEntry syntheticMethod, AccessFlags access) {
 		MethodEntry specializedMethod = findSpecializedMethod(syntheticMethod);
+
 		if (specializedMethod == null) {
 			return;
 		}
@@ -84,6 +93,7 @@ public class BridgeMethodIndex implements JarIndexer {
 	private boolean isPotentialBridge(MethodDefEntry bridgeMethod, MethodEntry specializedMethod) {
 		// Bridge methods only exist for inheritance purposes, if we're private, final, or static, we cannot be inherited
 		AccessFlags bridgeAccess = bridgeMethod.getAccess();
+
 		if (bridgeAccess.isPrivate() || bridgeAccess.isFinal() || bridgeAccess.isStatic()) {
 			return false;
 		}

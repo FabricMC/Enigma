@@ -5,7 +5,11 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -15,12 +19,20 @@ import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingPair;
-import cuchaz.enigma.translation.mapping.serde.*;
+import cuchaz.enigma.translation.mapping.serde.MappingHelper;
+import cuchaz.enigma.translation.mapping.serde.MappingParseException;
+import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
+import cuchaz.enigma.translation.mapping.serde.MappingsReader;
+import cuchaz.enigma.translation.mapping.serde.RawEntryMapping;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
 public enum EnigmaMappingsReader implements MappingsReader {
@@ -42,19 +54,18 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		public EntryTree<EntryMapping> read(Path root, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
-			List<Path> files = Files.walk(root)
-					.filter(f -> !Files.isDirectory(f))
-					.filter(f -> f.toString().endsWith(".mapping"))
-					.toList();
+			List<Path> files = Files.walk(root).filter(f -> !Files.isDirectory(f)).filter(f -> f.toString().endsWith(".mapping")).toList();
 
 			progress.init(files.size(), I18n.translate("progress.mappings.enigma_directory.loading"));
 			int step = 0;
 
 			for (Path file : files) {
 				progress.step(step++, root.relativize(file).toString());
+
 				if (Files.isHidden(file)) {
 					continue;
 				}
+
 				readFile(file, mappings);
 			}
 
@@ -74,10 +85,10 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	 * Reads multiple Enigma mapping files.
 	 *
 	 * @param progress the progress listener
-	 * @param paths    the Enigma files to read; cannot be empty
+	 * @param paths the Enigma files to read; cannot be empty
 	 * @return the parsed mappings
-	 * @throws MappingParseException    if a mapping file cannot be parsed
-	 * @throws IOException              if an IO error occurs
+	 * @throws MappingParseException if a mapping file cannot be parsed
+	 * @throws IOException if an IO error occurs
 	 * @throws IllegalArgumentException if there are no paths to read
 	 */
 	public static EntryTree<EntryMapping> readFiles(ProgressListener progress, Path... paths) throws MappingParseException, IOException {
@@ -107,6 +118,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			int indentation = countIndentation(line, path, lineNumber);
 
 			line = formatLine(line);
+
 			if (line == null) {
 				continue;
 			}
@@ -115,6 +127,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 			try {
 				MappingPair<?, RawEntryMapping> pair = parseLine(mappingStack.peek(), line);
+
 				if (pair != null) {
 					mappingStack.push(pair);
 				}
@@ -131,6 +144,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	private static void cleanMappingStack(int indentation, Deque<MappingPair<?, RawEntryMapping>> mappingStack, EntryTree<EntryMapping> mappings) {
 		while (indentation < mappingStack.size()) {
 			MappingPair<?, RawEntryMapping> pair = mappingStack.pop();
+
 			if (pair.getMapping() != null) {
 				mappings.insert(pair.getEntry(), pair.getMapping().bake());
 			}
@@ -156,14 +170,17 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		}
 
 		int commentPos = line.indexOf('#');
+
 		if (commentPos >= 0) {
 			return line.substring(0, commentPos);
 		}
+
 		return line;
 	}
 
 	private static int countIndentation(String line, Path path, int lineNumber) throws MappingParseException {
 		int indent = 0;
+
 		for (int i = 0; i < line.length(); i++) {
 			if (line.charAt(i) == ' ') {
 				throw new MappingParseException(path::toString, lineNumber + 1, "Spaces must not be used to indent lines!");
@@ -172,8 +189,10 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			if (line.charAt(i) != '\t') {
 				break;
 			}
+
 			indent++;
 		}
+
 		return indent;
 	}
 
@@ -183,36 +202,41 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		Entry<?> parentEntry = parent == null ? null : parent.getEntry();
 
 		switch (keyToken) {
-			case EnigmaFormat.CLASS:
-				return parseClass(parentEntry, tokens);
-			case EnigmaFormat.FIELD:
-				return parseField(parentEntry, tokens);
-			case EnigmaFormat.METHOD:
-				return parseMethod(parentEntry, tokens);
-			case EnigmaFormat.PARAMETER:
-				return parseArgument(parentEntry, tokens);
-			case EnigmaFormat.COMMENT:
-				readJavadoc(parent, tokens);
-				return null;
-			default:
-				throw new RuntimeException("Unknown token '" + keyToken + "'");
+		case EnigmaFormat.CLASS:
+			return parseClass(parentEntry, tokens);
+		case EnigmaFormat.FIELD:
+			return parseField(parentEntry, tokens);
+		case EnigmaFormat.METHOD:
+			return parseMethod(parentEntry, tokens);
+		case EnigmaFormat.PARAMETER:
+			return parseArgument(parentEntry, tokens);
+		case EnigmaFormat.COMMENT:
+			readJavadoc(parent, tokens);
+			return null;
+		default:
+			throw new RuntimeException("Unknown token '" + keyToken + "'");
 		}
 	}
 
 	private static void readJavadoc(MappingPair<?, RawEntryMapping> parent, String[] tokens) {
-		if (parent == null)
+		if (parent == null) {
 			throw new IllegalStateException("Javadoc has no parent!");
+		}
+
 		// Empty string to concat
 		String jdLine = tokens.length > 1 ? String.join(" ", Arrays.copyOfRange(tokens, 1, tokens.length)) : "";
+
 		if (parent.getMapping() == null) {
 			parent.setMapping(new RawEntryMapping(parent.getEntry().getName(), AccessModifier.UNCHANGED));
 		}
+
 		parent.getMapping().addJavadocLine(MappingHelper.unescape(jdLine));
 	}
 
 	private static MappingPair<ClassEntry, RawEntryMapping> parseClass(@Nullable Entry<?> parent, String[] tokens) {
 		String obfuscatedName = ClassEntry.getInnerName(tokens[1]);
 		ClassEntry obfuscatedEntry;
+
 		if (parent instanceof ClassEntry) {
 			obfuscatedEntry = new ClassEntry((ClassEntry) parent, obfuscatedName);
 		} else {
@@ -224,6 +248,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 		if (tokens.length == 3) {
 			AccessModifier parsedModifier = parseModifier(tokens[2]);
+
 			if (parsedModifier != null) {
 				modifier = parsedModifier;
 				mapping = obfuscatedName;
@@ -254,6 +279,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			descriptor = new TypeDescriptor(tokens[2]);
 		} else if (tokens.length == 4) {
 			AccessModifier parsedModifier = parseModifier(tokens[3]);
+
 			if (parsedModifier != null) {
 				descriptor = new TypeDescriptor(tokens[2]);
 				modifier = parsedModifier;
@@ -289,6 +315,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			descriptor = new MethodDescriptor(tokens[2]);
 		} else if (tokens.length == 4) {
 			AccessModifier parsedModifier = parseModifier(tokens[3]);
+
 			if (parsedModifier != null) {
 				modifier = parsedModifier;
 				mapping = obfuscatedName;
@@ -326,6 +353,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 		if (token.startsWith("ACC:")) {
 			return AccessModifier.valueOf(token.substring(4));
 		}
+
 		return null;
 	}
 }

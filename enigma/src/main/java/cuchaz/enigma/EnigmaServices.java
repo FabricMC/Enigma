@@ -1,10 +1,11 @@
 package cuchaz.enigma;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableListMultimap;
+
 import cuchaz.enigma.api.service.EnigmaService;
 import cuchaz.enigma.api.service.EnigmaServiceType;
-
-import java.util.List;
 
 public final class EnigmaServices {
 	private final ImmutableListMultimap<EnigmaServiceType<?>, EnigmaService> services;

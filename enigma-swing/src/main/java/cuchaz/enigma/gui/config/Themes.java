@@ -16,7 +16,6 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.source.RenamableTokenType;
 
 public class Themes {
-
 	private static final Set<ThemeChangeListener> listeners = new HashSet<>();
 
 	// Calling this after the UI is initialized (e.g. when the user changes
@@ -87,11 +86,8 @@ public class Themes {
 	}
 
 	public static ImmutableMap<RenamableTokenType, BoxHighlightPainter> getBoxHighlightPainters() {
-		return ImmutableMap.of(
-				RenamableTokenType.OBFUSCATED, BoxHighlightPainter.create(UiConfig.getObfuscatedColor(), UiConfig.getObfuscatedOutlineColor()),
-				RenamableTokenType.PROPOSED, BoxHighlightPainter.create(UiConfig.getProposedColor(), UiConfig.getProposedOutlineColor()),
-				RenamableTokenType.DEOBFUSCATED, BoxHighlightPainter.create(UiConfig.getDeobfuscatedColor(), UiConfig.getDeobfuscatedOutlineColor())
-		);
+		return ImmutableMap.of(RenamableTokenType.OBFUSCATED, BoxHighlightPainter.create(UiConfig.getObfuscatedColor(), UiConfig.getObfuscatedOutlineColor()), RenamableTokenType.PROPOSED, BoxHighlightPainter.create(UiConfig.getProposedColor(), UiConfig.getProposedOutlineColor()),
+								RenamableTokenType.DEOBFUSCATED, BoxHighlightPainter.create(UiConfig.getDeobfuscatedColor(), UiConfig.getDeobfuscatedOutlineColor()));
 	}
 
 	public static void addListener(ThemeChangeListener listener) {
@@ -101,5 +97,4 @@ public class Themes {
 	public static void removeListener(ThemeChangeListener listener) {
 		listeners.remove(listener);
 	}
-
 }

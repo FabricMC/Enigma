@@ -4,7 +4,6 @@ import cuchaz.enigma.config.ConfigContainer;
 import cuchaz.enigma.network.EnigmaServer;
 
 public final class NetConfig {
-
 	private NetConfig() {
 	}
 
@@ -53,5 +52,4 @@ public final class NetConfig {
 	public static void setServerPort(int port) {
 		cfg.data().section("Server").setInt("Port", port);
 	}
-
 }

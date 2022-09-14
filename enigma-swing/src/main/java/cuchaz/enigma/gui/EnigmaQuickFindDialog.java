@@ -1,15 +1,21 @@
 package cuchaz.enigma.gui;
 
-import de.sciss.syntaxpane.actions.DocumentSearchData;
-import de.sciss.syntaxpane.actions.gui.QuickFindDialog;
-
-import javax.swing.*;
-import javax.swing.text.JTextComponent;
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Point;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
+
+import de.sciss.syntaxpane.actions.DocumentSearchData;
+import de.sciss.syntaxpane.actions.gui.QuickFindDialog;
 
 public class EnigmaQuickFindDialog extends QuickFindDialog {
 	public EnigmaQuickFindDialog(JTextComponent target) {
@@ -22,6 +28,7 @@ public class EnigmaQuickFindDialog extends QuickFindDialog {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
+
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					JToolBar toolBar = getToolBar();
 					boolean next = !e.isShiftDown();
@@ -78,13 +85,10 @@ public class EnigmaQuickFindDialog extends QuickFindDialog {
 	}
 
 	private static Stream<Component> components(Container container) {
-		return IntStream.range(0, container.getComponentCount())
-				.mapToObj(container::getComponent);
+		return IntStream.range(0, container.getComponentCount()).mapToObj(container::getComponent);
 	}
 
 	private static <T extends Component> Stream<T> components(Container container, Class<T> type) {
-		return components(container)
-				.filter(type::isInstance)
-				.map(type::cast);
+		return components(container).filter(type::isInstance).map(type::cast);
 	}
 }

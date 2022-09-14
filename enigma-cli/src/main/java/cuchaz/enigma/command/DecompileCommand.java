@@ -1,17 +1,16 @@
 package cuchaz.enigma.command;
 
-import cuchaz.enigma.EnigmaProject;
-import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.EnigmaProject.DecompileErrorStrategy;
-import cuchaz.enigma.source.DecompilerService;
-import cuchaz.enigma.source.Decompilers;
-
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Locale;
 
-public class DecompileCommand extends Command {
+import cuchaz.enigma.EnigmaProject;
+import cuchaz.enigma.EnigmaProject.DecompileErrorStrategy;
+import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.source.DecompilerService;
+import cuchaz.enigma.source.Decompilers;
 
+public class DecompileCommand extends Command {
 	public DecompileCommand() {
 		super("decompile");
 	}

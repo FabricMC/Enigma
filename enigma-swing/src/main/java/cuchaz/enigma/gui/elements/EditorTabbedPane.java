@@ -39,7 +39,11 @@ public class EditorTabbedPane {
 	public EditorPanel openClass(ClassEntry entry) {
 		EditorPanel editorPanel = this.editors.computeIfAbsent(entry, e -> {
 			ClassHandle ch = this.gui.getController().getClassHandleProvider().openClass(entry);
-			if (ch == null) return null;
+
+			if (ch == null) {
+				return null;
+			}
+
 			EditorPanel ed = new EditorPanel(this.gui);
 			ed.setup();
 			ed.setClassHandle(ch);
@@ -125,7 +129,10 @@ public class EditorTabbedPane {
 		int index = this.openFiles.indexOfComponent(ed.getUi());
 
 		for (int i = this.openFiles.getTabCount() - 1; i >= 0; i--) {
-			if (i == index) continue;
+			if (i == index) {
+				continue;
+			}
+
 			closeEditor(EditorPanel.byUi(this.openFiles.getComponentAt(i)));
 		}
 	}

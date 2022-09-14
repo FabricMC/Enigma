@@ -1,11 +1,11 @@
 package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.MethodEntry;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public enum VoidEntryResolver implements EntryResolver {
 	INSTANCE;

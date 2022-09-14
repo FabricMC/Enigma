@@ -12,7 +12,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
 
 import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
@@ -20,7 +27,13 @@ import cuchaz.enigma.gui.config.Decompiler;
 import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
-import cuchaz.enigma.gui.dialog.*;
+import cuchaz.enigma.gui.dialog.AboutDialog;
+import cuchaz.enigma.gui.dialog.ChangeDialog;
+import cuchaz.enigma.gui.dialog.ConnectToServerDialog;
+import cuchaz.enigma.gui.dialog.CreateServerDialog;
+import cuchaz.enigma.gui.dialog.FontDialog;
+import cuchaz.enigma.gui.dialog.SearchDialog;
+import cuchaz.enigma.gui.dialog.StatsDialog;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -29,7 +42,6 @@ import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.Pair;
 
 public class MenuBar {
-
 	private final JMenu fileMenu = new JMenu();
 	private final JMenuItem jarOpenItem = new JMenuItem();
 	private final JMenuItem jarCloseItem = new JMenuItem();
@@ -221,13 +233,16 @@ public class MenuBar {
 		}
 
 		File file = d.getSelectedFile();
+
 		// checks if the file name is not empty
 		if (file != null) {
 			Path path = file.toPath();
+
 			// checks if the file name corresponds to an existing file
 			if (Files.exists(path)) {
 				this.gui.getController().openJar(path);
 			}
+
 			UiConfig.setLastSelectedDir(d.getCurrentDirectory().getAbsolutePath());
 		}
 	}
@@ -241,8 +256,10 @@ public class MenuBar {
 			this.gui.showDiscardDiag((response -> {
 				if (response == JOptionPane.YES_OPTION) {
 					this.gui.saveMapping().thenRun(then);
-				} else if (response == JOptionPane.NO_OPTION)
+				} else if (response == JOptionPane.NO_OPTION) {
 					then.run();
+				}
+
 				return null;
 			}), I18n.translate("prompt.close.save"), I18n.translate("prompt.close.discard"), I18n.translate("prompt.cancel"));
 		} else {
@@ -264,6 +281,7 @@ public class MenuBar {
 
 	private void onExportSourceClicked() {
 		this.gui.exportSourceFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+
 		if (this.gui.exportSourceFileChooser.showSaveDialog(this.gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 			UiConfig.setLastSelectedDir(this.gui.exportSourceFileChooser.getCurrentDirectory().toString());
 			this.gui.getController().exportSource(this.gui.exportSourceFileChooser.getSelectedFile().toPath());
@@ -287,29 +305,35 @@ public class MenuBar {
 	}
 
 	private void onCustomScaleClicked() {
-		String answer = (String) JOptionPane.showInputDialog(this.gui.getFrame(), I18n.translate("menu.view.scale.custom.title"), I18n.translate("menu.view.scale.custom.title"),
-				JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(UiConfig.getScaleFactor() * 100));
-		if (answer == null) return;
+		String answer = (String) JOptionPane.showInputDialog(this.gui.getFrame(), I18n.translate("menu.view.scale.custom.title"), I18n.translate("menu.view.scale.custom.title"), JOptionPane.QUESTION_MESSAGE, null, null, Float.toString(UiConfig.getScaleFactor() * 100));
+
+		if (answer == null) {
+			return;
+		}
+
 		float newScale = 1.0f;
+
 		try {
 			newScale = Float.parseFloat(answer) / 100f;
 		} catch (NumberFormatException ignored) {
+			// ignored
 		}
+
 		ScaleUtil.setScaleFactor(newScale);
 		ChangeDialog.show(this.gui.getFrame());
 	}
 
 	private void onFontClicked(Gui gui) {
-//		FontDialog fd = new FontDialog(gui.getFrame(), "Choose Font", true);
-//		fd.setLocationRelativeTo(gui.getFrame());
-//		fd.setSelectedFont(UiConfig.getEditorFont());
-//		fd.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-//		fd.setVisible(true);
-//
-//		if (!fd.isCancelSelected()) {
-//			UiConfig.setEditorFont(fd.getSelectedFont());
-//			UiConfig.save();
-//		}
+		//		FontDialog fd = new FontDialog(gui.getFrame(), "Choose Font", true);
+		//		fd.setLocationRelativeTo(gui.getFrame());
+		//		fd.setSelectedFont(UiConfig.getEditorFont());
+		//		fd.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		//		fd.setVisible(true);
+		//
+		//		if (!fd.isCancelSelected()) {
+		//			UiConfig.setEditorFont(fd.getSelectedFont());
+		//			UiConfig.save();
+		//		}
 		FontDialog.display(gui.getFrame());
 	}
 
@@ -324,11 +348,15 @@ public class MenuBar {
 			this.gui.getController().disconnectIfConnected(null);
 			return;
 		}
+
 		ConnectToServerDialog.Result result = ConnectToServerDialog.show(this.gui.getFrame());
+
 		if (result == null) {
 			return;
 		}
+
 		this.gui.getController().disconnectIfConnected(null);
+
 		try {
 			this.gui.getController().createClient(result.getUsername(), result.getAddress().address, result.getAddress().port, result.getPassword());
 			NetConfig.setUsername(result.getUsername());
@@ -339,6 +367,7 @@ public class MenuBar {
 			JOptionPane.showMessageDialog(this.gui.getFrame(), e.toString(), I18n.translate("menu.collab.connect.error"), JOptionPane.ERROR_MESSAGE);
 			this.gui.getController().disconnectIfConnected(null);
 		}
+
 		Arrays.fill(result.getPassword(), (char) 0);
 	}
 
@@ -347,11 +376,15 @@ public class MenuBar {
 			this.gui.getController().disconnectIfConnected(null);
 			return;
 		}
+
 		CreateServerDialog.Result result = CreateServerDialog.show(this.gui.getFrame());
+
 		if (result == null) {
 			return;
 		}
+
 		this.gui.getController().disconnectIfConnected(null);
+
 		try {
 			this.gui.getController().createServer(result.getPort(), result.getPassword());
 			NetConfig.setServerPort(result.getPort());
@@ -373,6 +406,7 @@ public class MenuBar {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 				item.addActionListener(event -> {
 					gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+
 					if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
 						gui.getController().openMappings(format, selectedFile.toPath());
@@ -411,9 +445,11 @@ public class MenuBar {
 		for (Decompiler decompiler : Decompiler.values()) {
 			JRadioButtonMenuItem decompilerButton = new JRadioButtonMenuItem(decompiler.name);
 			decompilerGroup.add(decompilerButton);
+
 			if (decompiler.equals(UiConfig.getDecompiler())) {
 				decompilerButton.setSelected(true);
 			}
+
 			decompilerButton.addActionListener(event -> {
 				gui.getController().setDecompiler(decompiler.service);
 
@@ -426,12 +462,15 @@ public class MenuBar {
 
 	private static void prepareThemesMenu(JMenu themesMenu, Gui gui) {
 		ButtonGroup themeGroup = new ButtonGroup();
+
 		for (LookAndFeel lookAndFeel : LookAndFeel.values()) {
 			JRadioButtonMenuItem themeButton = new JRadioButtonMenuItem(I18n.translate("menu.view.themes." + lookAndFeel.name().toLowerCase(Locale.ROOT)));
 			themeGroup.add(themeButton);
+
 			if (lookAndFeel.equals(UiConfig.getLookAndFeel())) {
 				themeButton.setSelected(true);
 			}
+
 			themeButton.addActionListener(_e -> {
 				UiConfig.setLookAndFeel(lookAndFeel);
 				UiConfig.save();
@@ -443,12 +482,15 @@ public class MenuBar {
 
 	private static void prepareLanguagesMenu(JMenu languagesMenu) {
 		ButtonGroup languageGroup = new ButtonGroup();
+
 		for (String lang : I18n.getAvailableLanguages()) {
 			JRadioButtonMenuItem languageButton = new JRadioButtonMenuItem(I18n.getLanguageName(lang));
 			languageGroup.add(languageButton);
+
 			if (lang.equals(UiConfig.getLanguage())) {
 				languageButton.setSelected(true);
 			}
+
 			languageButton.addActionListener(event -> {
 				UiConfig.setLanguage(lang);
 				I18n.setLanguage(lang);
@@ -461,25 +503,25 @@ public class MenuBar {
 
 	private static void prepareScaleMenu(JMenu scaleMenu, Gui gui) {
 		ButtonGroup scaleGroup = new ButtonGroup();
-		Map<Float, JRadioButtonMenuItem> scaleButtons = IntStream.of(100, 125, 150, 175, 200)
-				.mapToObj(scaleFactor -> {
-					float realScaleFactor = scaleFactor / 100f;
-					JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
-					menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
-					menuItem.addActionListener(event -> ChangeDialog.show(gui.getFrame()));
-					scaleGroup.add(menuItem);
-					scaleMenu.add(menuItem);
-					return new Pair<>(realScaleFactor, menuItem);
-				})
-				.collect(Collectors.toMap(x -> x.a, x -> x.b));
+		Map<Float, JRadioButtonMenuItem> scaleButtons = IntStream.of(100, 125, 150, 175, 200).mapToObj(scaleFactor -> {
+			float realScaleFactor = scaleFactor / 100f;
+			JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(String.format("%d%%", scaleFactor));
+			menuItem.addActionListener(event -> ScaleUtil.setScaleFactor(realScaleFactor));
+			menuItem.addActionListener(event -> ChangeDialog.show(gui.getFrame()));
+			scaleGroup.add(menuItem);
+			scaleMenu.add(menuItem);
+			return new Pair<>(realScaleFactor, menuItem);
+		}).collect(Collectors.toMap(x -> x.a, x -> x.b));
 
 		JRadioButtonMenuItem currentScaleButton = scaleButtons.get(UiConfig.getScaleFactor());
+
 		if (currentScaleButton != null) {
 			currentScaleButton.setSelected(true);
 		}
 
 		ScaleUtil.addListener((newScale, _oldScale) -> {
 			JRadioButtonMenuItem mi = scaleButtons.get(newScale);
+
 			if (mi != null) {
 				mi.setSelected(true);
 			} else {
@@ -487,5 +529,4 @@ public class MenuBar {
 			}
 		});
 	}
-
 }

@@ -25,12 +25,15 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class IdentifierPanel {
-
 	private final Gui gui;
 
 	private final JPanel ui = new JPanel();
@@ -57,7 +60,9 @@ public class IdentifierPanel {
 	}
 
 	public boolean startRenaming() {
-		if (this.nameField == null) return false;
+		if (this.nameField == null) {
+			return false;
+		}
 
 		this.nameField.startEditing();
 
@@ -65,7 +70,9 @@ public class IdentifierPanel {
 	}
 
 	public boolean startRenaming(String text) {
-		if (this.nameField == null) return false;
+		if (this.nameField == null) {
+			return false;
+		}
 
 		this.nameField.startEditing();
 		this.nameField.setEditText(text);
@@ -84,6 +91,7 @@ public class IdentifierPanel {
 
 		TableHelper th = new TableHelper(this.ui, this.entry, this.gui);
 		th.begin();
+
 		if (this.entry == null) {
 			this.ui.setEnabled(false);
 		} else {
@@ -102,8 +110,10 @@ public class IdentifierPanel {
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), EditableType.FIELD, this::onModifierChanged);
 			} else if (deobfEntry instanceof MethodEntry) {
 				MethodEntry me = (MethodEntry) deobfEntry;
+
 				if (me.isConstructor()) {
 					ClassEntry ce = me.getParent();
+
 					if (ce != null) {
 						String name = ce.isInnerClass() ? ce.getName() : ce.getFullName();
 						this.nameField = th.addRenameTextField(EditableType.CLASS, name);
@@ -112,6 +122,7 @@ public class IdentifierPanel {
 					this.nameField = th.addRenameTextField(EditableType.METHOD, me.getName());
 					th.addStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
 				}
+
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.method_descriptor"), me.getDesc().toString());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), EditableType.METHOD, this::onModifierChanged);
 			} else if (deobfEntry instanceof LocalVariableEntry) {
@@ -132,6 +143,7 @@ public class IdentifierPanel {
 				throw new IllegalStateException("unreachable");
 			}
 		}
+
 		th.end();
 
 		if (this.nameField != null) {
@@ -139,6 +151,7 @@ public class IdentifierPanel {
 				@Override
 				public void onStartEditing(ConvertingTextField field) {
 					int i = field.getText().lastIndexOf('/');
+
 					if (i != -1) {
 						field.selectSubstring(i + 1);
 					}
@@ -146,7 +159,10 @@ public class IdentifierPanel {
 
 				@Override
 				public boolean tryStopEditing(ConvertingTextField field, boolean abort) {
-					if (abort) return true;
+					if (abort) {
+						return true;
+					}
+
 					vc.reset();
 					vc.setActiveElement(field);
 					validateRename(field.getText());
@@ -162,6 +178,7 @@ public class IdentifierPanel {
 					}
 
 					EditorPanel e = gui.getActiveEditor();
+
 					if (e != null) {
 						e.getEditor().requestFocusInWindow();
 					}
@@ -192,13 +209,12 @@ public class IdentifierPanel {
 	}
 
 	private static final class TableHelper {
-
 		private final Container c;
 		private final Entry<?> e;
 		private final Gui gui;
 		private int row;
 
-		public TableHelper(Container c, Entry<?> e, Gui gui) {
+		TableHelper(Container c, Entry<?> e, Gui gui) {
 			this.c = c;
 			this.e = e;
 			this.gui = gui;
@@ -210,9 +226,7 @@ public class IdentifierPanel {
 		}
 
 		public void addRow(Component c1, Component c2) {
-			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create()
-					.insets(2)
-					.anchor(GridBagConstraints.WEST);
+			GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2).anchor(GridBagConstraints.WEST);
 			c.add(c1, cb.pos(0, this.row).build());
 			c.add(c2, cb.pos(1, this.row).weightX(1.0).fill(GridBagConstraints.HORIZONTAL).build());
 
@@ -239,12 +253,12 @@ public class IdentifierPanel {
 		}
 
 		public ConvertingTextField addRenameTextField(EditableType type, String c2) {
-			String description = switch(type) {
-				case CLASS -> I18n.translate("info_panel.identifier.class");
-				case METHOD -> I18n.translate("info_panel.identifier.method");
-				case FIELD -> I18n.translate("info_panel.identifier.field");
-				case PARAMETER, LOCAL_VARIABLE -> I18n.translate("info_panel.identifier.variable");
-				default -> throw new IllegalStateException("Unexpected value: " + type);
+			String description = switch (type) {
+			case CLASS -> I18n.translate("info_panel.identifier.class");
+			case METHOD -> I18n.translate("info_panel.identifier.method");
+			case FIELD -> I18n.translate("info_panel.identifier.field");
+			case PARAMETER, LOCAL_VARIABLE -> I18n.translate("info_panel.identifier.variable");
+			default -> throw new IllegalStateException("Unexpected value: " + type);
 			};
 
 			if (this.gui.getController().project.isRenamable(e)) {
@@ -296,7 +310,5 @@ public class IdentifierPanel {
 			// Add an empty panel with y-weight=1 so that all the other elements get placed at the top edge
 			c.add(new JPanel(), GridBagConstraintsBuilder.create().pos(0, row).weight(0.0, 1.0).build());
 		}
-
 	}
-
 }

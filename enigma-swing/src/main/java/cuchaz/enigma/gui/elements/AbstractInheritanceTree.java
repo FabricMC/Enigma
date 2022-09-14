@@ -7,7 +7,11 @@ import javax.annotation.Nullable;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
-import javax.swing.tree.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
@@ -40,11 +44,13 @@ public abstract class AbstractInheritanceTree {
 		if (event.getClickCount() >= 2 && event.getButton() == MouseEvent.BUTTON1) {
 			// get the selected node
 			TreePath path = tree.getSelectionPath();
+
 			if (path == null) {
 				return;
 			}
 
 			Object node = path.getLastPathComponent();
+
 			if (node instanceof ClassInheritanceTreeNode classNode) {
 				gui.getController().navigateTo(new ClassEntry(classNode.getObfClassName()));
 			} else if (node instanceof MethodInheritanceTreeNode methodNode) {
@@ -72,7 +78,6 @@ public abstract class AbstractInheritanceTree {
 	}
 
 	public void retranslateUi() {
-
 	}
 
 	@Nullable

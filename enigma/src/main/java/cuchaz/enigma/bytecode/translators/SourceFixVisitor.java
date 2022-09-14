@@ -1,12 +1,13 @@
 package cuchaz.enigma.bytecode.translators;
 
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+
 import cuchaz.enigma.analysis.index.BridgeMethodIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 public class SourceFixVisitor extends ClassVisitor {
 	private final JarIndex index;
@@ -28,6 +29,7 @@ public class SourceFixVisitor extends ClassVisitor {
 		MethodDefEntry methodEntry = MethodDefEntry.parse(ownerEntry, access, name, descriptor, signature);
 
 		BridgeMethodIndex bridgeIndex = index.getBridgeMethodIndex();
+
 		if (bridgeIndex.isBridgeMethod(methodEntry)) {
 			access |= Opcodes.ACC_BRIDGE;
 		} else if (bridgeIndex.isSpecializedMethod(methodEntry)) {

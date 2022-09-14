@@ -12,13 +12,12 @@ import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicToolTipUI;
 
 /**
- * Implements a multi line tooltip for GUI components
+ * Implements a multi line tooltip for GUI components.
  * Copied from http://www.codeguru.com/java/articles/122.shtml
  *
  * @author Zafir Anjum
  */
 public class JMultiLineToolTip extends JToolTip {
-
 	private static final long serialVersionUID = 7813662474312183098L;
 
 	public JMultiLineToolTip() {
@@ -52,10 +51,9 @@ public class JMultiLineToolTip extends JToolTip {
 }
 
 /**
- * UI for multi line tool tip
+ * UI for multi line tool tip.
  */
 class MultiLineToolTipUI extends BasicToolTipUI {
-
 	static MultiLineToolTipUI sharedInstance = new MultiLineToolTipUI();
 	Font smallFont;
 	static JToolTip tip;
@@ -67,7 +65,7 @@ class MultiLineToolTipUI extends BasicToolTipUI {
 		return sharedInstance;
 	}
 
-	public MultiLineToolTipUI() {
+	MultiLineToolTipUI() {
 		super();
 	}
 
@@ -93,7 +91,11 @@ class MultiLineToolTipUI extends BasicToolTipUI {
 
 	public Dimension getPreferredSize(JComponent c) {
 		String tipText = ((JToolTip) c).getTipText();
-		if (tipText == null) return new Dimension(0, 0);
+
+		if (tipText == null) {
+			return new Dimension(0, 0);
+		}
+
 		textArea = new JTextArea(tipText);
 		rendererPane.removeAll();
 		rendererPane.add(textArea);
@@ -112,8 +114,9 @@ class MultiLineToolTipUI extends BasicToolTipUI {
 			d.width = width;
 			d.height++;
 			textArea.setSize(d);
-		} else
+		} else {
 			textArea.setLineWrap(false);
+		}
 
 		Dimension dim = textArea.getPreferredSize();
 

@@ -29,25 +29,14 @@ public class ProposingTranslator implements Translator {
 		TranslateResult<T> deobfuscated = mapper.extendedDeobfuscate(translatable);
 
 		if (translatable instanceof Entry && ((Entry) deobfuscated.getValue()).getName().equals(((Entry<?>) translatable).getName())) {
-			return mapper.getObfResolver()
-					.resolveEntry((Entry<?>) translatable, ResolutionStrategy.RESOLVE_ROOT)
-					.stream()
-					.map(this::proposeName)
-					.filter(Optional::isPresent)
-					.map(Optional::get)
-					.findFirst()
-					.map(newName -> TranslateResult.proposed((T) ((Entry) deobfuscated.getValue()).withName(newName)))
-					.orElse(deobfuscated);
+			return mapper.getObfResolver().resolveEntry((Entry<?>) translatable, ResolutionStrategy.RESOLVE_ROOT).stream().map(this::proposeName).filter(Optional::isPresent).map(Optional::get).findFirst().map(
+					newName -> TranslateResult.proposed((T) ((Entry) deobfuscated.getValue()).withName(newName))).orElse(deobfuscated);
 		}
 
 		return deobfuscated;
 	}
 
 	private Optional<String> proposeName(Entry<?> entry) {
-		return Arrays.stream(nameProposalServices)
-				.map(service -> service.proposeName(entry, mapper))
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.findFirst();
+		return Arrays.stream(nameProposalServices).map(service -> service.proposeName(entry, mapper)).filter(Optional::isPresent).map(Optional::get).findFirst();
 	}
 }

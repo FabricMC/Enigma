@@ -11,7 +11,6 @@ import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.utils.I18n;
 
 public class EditorTabPopupMenu {
-
 	private final JPopupMenu ui;
 	private final JMenuItem close;
 	private final JMenuItem closeAll;

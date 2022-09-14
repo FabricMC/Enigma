@@ -17,10 +17,12 @@ public class SourceRemapper {
 		Map<Token, Token> remappedTokens = new HashMap<>();
 
 		int accumulatedOffset = 0;
+
 		for (Token token : tokens) {
 			Token movedToken = token.move(accumulatedOffset);
 
 			String remappedName = remapper.remap(token, movedToken);
+
 			if (remappedName != null) {
 				accumulatedOffset += movedToken.getRenameOffset(remappedName);
 				movedToken.rename(remappedSource, remappedName);

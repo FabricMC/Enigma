@@ -5,7 +5,6 @@ import java.awt.event.MouseEvent;
 import javax.swing.JTabbedPane;
 
 public class CollapsibleTabbedPane extends JTabbedPane {
-
 	public CollapsibleTabbedPane() {
 	}
 
@@ -20,9 +19,14 @@ public class CollapsibleTabbedPane extends JTabbedPane {
 	@Override
 	protected void processMouseEvent(MouseEvent e) {
 		int id = e.getID();
+
 		if (id == MouseEvent.MOUSE_PRESSED) {
-			if (!isEnabled()) return;
+			if (!isEnabled()) {
+				return;
+			}
+
 			int tabIndex = getUI().tabForCoordinate(this, e.getX(), e.getY());
+
 			if (tabIndex >= 0 && isEnabledAt(tabIndex)) {
 				if (tabIndex == getSelectedIndex()) {
 					if (isFocusOwner() && isRequestFocusEnabled()) {
@@ -30,11 +34,12 @@ public class CollapsibleTabbedPane extends JTabbedPane {
 					} else {
 						setSelectedIndex(-1);
 					}
+
 					return;
 				}
 			}
 		}
+
 		super.processMouseEvent(e);
 	}
-
 }

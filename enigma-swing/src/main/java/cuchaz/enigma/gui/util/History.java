@@ -1,8 +1,8 @@
 package cuchaz.enigma.gui.util;
 
-import com.google.common.collect.Queues;
-
 import java.util.Deque;
+
+import com.google.common.collect.Queues;
 
 public class History<T> {
 	private final Deque<T> previous = Queues.newArrayDeque();

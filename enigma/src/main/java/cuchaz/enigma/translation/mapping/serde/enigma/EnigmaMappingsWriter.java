@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- *
- * Contributors:
- *     Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+*     Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.translation.mapping.serde.enigma;
 
@@ -15,7 +15,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,24 +37,30 @@ import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.VoidEntryResolver;
-import cuchaz.enigma.translation.mapping.serde.*;
+import cuchaz.enigma.translation.mapping.serde.LfPrintWriter;
+import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingHelper;
+import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
+import cuchaz.enigma.translation.mapping.serde.MappingsWriter;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
-import cuchaz.enigma.translation.representation.entry.*;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
+import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
 public enum EnigmaMappingsWriter implements MappingsWriter {
 	FILE {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
-			Collection<ClassEntry> classes = mappings.getRootNodes()
-					.filter(entry -> entry.getEntry() instanceof ClassEntry)
-					.map(entry -> (ClassEntry) entry.getEntry())
-					.toList();
+			Collection<ClassEntry> classes = mappings.getRootNodes().filter(entry -> entry.getEntry() instanceof ClassEntry).map(entry -> (ClassEntry) entry.getEntry()).toList();
 
 			progress.init(classes.size(), I18n.translate("progress.mappings.enigma_file.writing"));
 
 			int steps = 0;
+
 			try (PrintWriter writer = new LfPrintWriter(Files.newBufferedWriter(path))) {
 				for (ClassEntry classEntry : classes) {
 					progress.step(steps++, classEntry.getFullName());
@@ -63,10 +74,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	DIRECTORY {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
-			Collection<ClassEntry> changedClasses = delta.getChangedRoots()
-					.filter(entry -> entry instanceof ClassEntry)
-					.map(entry -> (ClassEntry) entry)
-					.toList();
+			Collection<ClassEntry> changedClasses = delta.getChangedRoots().filter(entry -> entry instanceof ClassEntry).map(entry -> (ClassEntry) entry).toList();
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
 
@@ -80,6 +88,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 				try {
 					ClassEntry fileEntry = classEntry;
+
 					if (saveParameters.getFileNameFormat() == MappingFileNameFormat.BY_DEOBF) {
 						fileEntry = translator.translate(fileEntry);
 					}
@@ -101,8 +110,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		private void applyDeletions(Path root, Collection<ClassEntry> changedClasses, EntryTree<EntryMapping> mappings, EntryTree<EntryMapping> oldMappings, MappingFileNameFormat fileNameFormat) {
 			Translator oldMappingTranslator = new MappingTranslator(oldMappings, VoidEntryResolver.INSTANCE);
 
-			Stream<ClassEntry> deletedClassStream = changedClasses.stream()
-					.filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)));
+			Stream<ClassEntry> deletedClassStream = changedClasses.stream().filter(e -> !Objects.equals(oldMappings.get(e), mappings.get(e)));
 
 			if (fileNameFormat == MappingFileNameFormat.BY_DEOBF) {
 				deletedClassStream = deletedClassStream.map(oldMappingTranslator::translate);
@@ -121,8 +129,10 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 			for (ClassEntry classEntry : deletedClasses) {
 				String packageName = classEntry.getPackageName();
+
 				if (packageName != null) {
 					Path packagePath = Paths.get(packageName);
+
 					try {
 						deleteDeadPackages(root, packagePath);
 					} catch (IOException e) {
@@ -137,6 +147,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			for (int i = packagePath.getNameCount() - 1; i >= 0; i--) {
 				Path subPath = packagePath.subpath(0, i + 1);
 				Path packagePart = root.resolve(subPath.toString());
+
 				if (isEmpty(packagePart)) {
 					Files.deleteIfExists(packagePart);
 				}
@@ -178,6 +189,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		writer.println(writeClass(classEntry, classEntryMapping).trim());
+
 		if (classEntryMapping.javadoc() != null) {
 			writeDocs(writer, classEntryMapping, 0);
 		}
@@ -189,6 +201,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 	private void writeDocs(PrintWriter writer, EntryMapping mapping, int depth) {
 		String jd = mapping.javadoc();
+
 		if (jd != null) {
 			for (String line : jd.split("\\R")) {
 				writer.println(indent(EnigmaFormat.COMMENT + " " + MappingHelper.escape(line), depth + 1));
@@ -198,6 +211,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 	protected void writeEntry(PrintWriter writer, EntryTree<EntryMapping> mappings, Entry<?> entry, int depth) {
 		EntryTreeNode<EntryMapping> node = mappings.findNode(entry);
+
 		if (node == null) {
 			return;
 		}
@@ -209,6 +223,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		String line = null;
+
 		if (entry instanceof ClassEntry classEntry) {
 			line = writeClass(classEntry, mapping);
 		} else if (entry instanceof MethodEntry methodEntry) {
@@ -228,6 +243,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		}
 
 		Collection<Entry<?>> children = groupChildren(node.getChildren());
+
 		for (Entry<?> child : children) {
 			writeEntry(writer, mappings, child, depth + 1);
 		}
@@ -236,25 +252,13 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	private Collection<Entry<?>> groupChildren(Collection<Entry<?>> children) {
 		Collection<Entry<?>> result = new ArrayList<>(children.size());
 
-		children.stream().filter(e -> e instanceof FieldEntry)
-				.map(e -> (FieldEntry) e)
-				.sorted()
-				.forEach(result::add);
+		children.stream().filter(e -> e instanceof FieldEntry).map(e -> (FieldEntry) e).sorted().forEach(result::add);
 
-		children.stream().filter(e -> e instanceof MethodEntry)
-				.map(e -> (MethodEntry) e)
-				.sorted()
-				.forEach(result::add);
+		children.stream().filter(e -> e instanceof MethodEntry).map(e -> (MethodEntry) e).sorted().forEach(result::add);
 
-		children.stream().filter(e -> e instanceof LocalVariableEntry)
-				.map(e -> (LocalVariableEntry) e)
-				.sorted()
-				.forEach(result::add);
+		children.stream().filter(e -> e instanceof LocalVariableEntry).map(e -> (LocalVariableEntry) e).sorted().forEach(result::add);
 
-		children.stream().filter(e -> e instanceof ClassEntry)
-				.map(e -> (ClassEntry) e)
-				.sorted()
-				.forEach(result::add);
+		children.stream().filter(e -> e instanceof ClassEntry).map(e -> (ClassEntry) e).sorted().forEach(result::add);
 
 		return result;
 	}
@@ -294,6 +298,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	private void writeMapping(StringBuilder builder, EntryMapping mapping) {
 		if (mapping.targetName() != null) {
 			builder.append(mapping.targetName()).append(' ');
+
 			if (mapping.accessModifier() != AccessModifier.UNCHANGED) {
 				builder.append(mapping.accessModifier().getFormattedName()).append(' ');
 			}

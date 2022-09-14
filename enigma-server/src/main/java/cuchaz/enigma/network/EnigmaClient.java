@@ -1,15 +1,20 @@
 package cuchaz.enigma.network;
 
-import cuchaz.enigma.network.packet.Packet;
-import cuchaz.enigma.network.packet.PacketRegistry;
-
-import javax.swing.*;
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class EnigmaClient {
+import javax.swing.SwingUtilities;
 
+import cuchaz.enigma.network.packet.Packet;
+import cuchaz.enigma.network.packet.PacketRegistry;
+
+public class EnigmaClient {
 	private final ClientPacketHandler controller;
 
 	private final String ip;
@@ -29,17 +34,22 @@ public class EnigmaClient {
 		Thread thread = new Thread(() -> {
 			try {
 				DataInput input = new DataInputStream(socket.getInputStream());
+
 				while (true) {
 					int packetId;
+
 					try {
 						packetId = input.readUnsignedByte();
 					} catch (EOFException | SocketException e) {
 						break;
 					}
+
 					Packet<ClientPacketHandler> packet = PacketRegistry.createS2CPacket(packetId);
+
 					if (packet == null) {
 						throw new IOException("Received invalid packet id " + packetId);
 					}
+
 					packet.read(input);
 					SwingUtilities.invokeLater(() -> packet.handle(controller));
 				}
@@ -47,6 +57,7 @@ public class EnigmaClient {
 				controller.disconnectIfConnected(e.toString());
 				return;
 			}
+
 			controller.disconnectIfConnected("Disconnected");
 		});
 		thread.setName("Client I/O thread");
@@ -65,7 +76,6 @@ public class EnigmaClient {
 		}
 	}
 
-
 	public void sendPacket(Packet<ServerPacketHandler> packet) {
 		try {
 			output.writeByte(PacketRegistry.getC2SId(packet));
@@ -74,5 +84,4 @@ public class EnigmaClient {
 			controller.disconnectIfConnected(e.toString());
 		}
 	}
-
 }

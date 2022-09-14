@@ -1,4 +1,5 @@
 # Enigma protocol
+
 Enigma uses TCP sockets for communication. Data is sent in each direction as a continuous stream, with packets being
 concatenated one after the other.
 
@@ -10,6 +11,7 @@ use the same modified UTF format as in `DataOutputStream`, I repeat, the normal 
 Strings, see below.
 
 ## Login protocol
+
 ```
 Client     Server
 |               |
@@ -22,6 +24,7 @@ Client     Server
 | ConfirmChange |
 | >>>>>>>>>>>>> |
 ```
+
 1. On connect, the client sends a login packet to the server. This allows the server to test the validity of the client,
    as well as allowing the client to declare metadata about itself, such as the username.
 1. After validating the login packet, the server sends all its mappings to the client, and the client will apply them.
@@ -29,15 +32,18 @@ Client     Server
    has received the mappings and is in sync with the server. Once the server receives this packet, the client will be
    allowed to modify mappings.
 
-The server will not accept any other packets from the client until this entire exchange has been completed. 
+The server will not accept any other packets from the client until this entire exchange has been completed.
 
 ## Kicking clients
+
 When the server kicks a client, it may optionally send a `Kick` packet immediately before closing the connection, which
 contains the reason why the client was kicked (so the client can display it to the user). This is not required though -
 the server may simply terminate the connection.
 
 ## Changing mappings
+
 This section uses the example of renaming, but the same pattern applies to all mapping changes.
+
 ```
 Client A   Server    Client B
 |           |               |
@@ -66,19 +72,23 @@ Client A   Server    Client B
    server will unlock that mapping for that client and allow them to make changes again.
 
 ## Packets
+
 ```c
 struct Packet {
     unsigned short packet_id;
     data[]; // depends on packet_id
 }
 ```
+
 The IDs for client-to-server packets are as follows:
+
 - 0: `Login`
 - 1: `ConfirmChange`
 - 6: `Message`
 - 7: `EntryChange`
 
 The IDs for server-to-client packets are as follows:
+
 - 0: `Kick`
 - 1: `SyncMappings`
 - 6: `Message`
@@ -86,17 +96,20 @@ The IDs for server-to-client packets are as follows:
 - 8: `EntryChange`
 
 ### The utf struct
+
 ```c
 struct utf {
     unsigned short length;
     byte data[length];
 }
 ```
+
 - `length`: The number of bytes in the UTF-8 encoding of the string. Note, this may not be the same as the number of
-            Unicode characters in the string.
-- `data`: A standard UTF-8 encoded byte array representing the string. 
+  Unicode characters in the string.
+- `data`: A standard UTF-8 encoded byte array representing the string.
 
 ### The Entry struct
+
 ```c
 enum EntryType {
     ENTRY_CLASS = 0, ENTRY_FIELD = 1, ENTRY_METHOD = 2, ENTRY_LOCAL_VAR = 3;
@@ -121,9 +134,10 @@ struct Entry {
     }
 }
 ```
+
 - `type`: The type of entry this is. One of `ENTRY_CLASS`, `ENTRY_FIELD`, `ENTRY_METHOD` or `ENTRY_LOCAL_VAR`.
 - `parent`: The parent entry. Only class entries may have no parent. fields, methods and inner classes must have their
-            containing class as their parent. Local variables have a method as a parent.
+  containing class as their parent. Local variables have a method as a parent.
 - `name`: The class/field/method/variable name.
 - `javadoc`: The javadoc of an entry, if present.
 - `descriptor`: The field/method descriptor.
@@ -131,6 +145,7 @@ struct Entry {
 - `parameter`: Whether the local variable is a parameter.
 
 ### The Message struct
+
 ```c
 enum MessageType {
     MESSAGE_CHAT = 0,
@@ -176,8 +191,9 @@ struct Message {
     } data;
 };
 ```
+
 - `type`: The type of message this is. One of `MESSAGE_CHAT`, `MESSAGE_CONNECT`, `MESSAGE_DISCONNECT`,
-    `MESSAGE_EDIT_DOCS`, `MESSAGE_MARK_DEOBF`, `MESSAGE_REMOVE_MAPPING`, `MESSAGE_RENAME`.
+  `MESSAGE_EDIT_DOCS`, `MESSAGE_MARK_DEOBF`, `MESSAGE_REMOVE_MAPPING`, `MESSAGE_RENAME`.
 - `chat`: Chat message. Use in case `type` is `MESSAGE_CHAT`
 - `connect`: Sent when a user connects. Use in case `type` is `MESSAGE_CONNECT`
 - `disconnect`: Sent when a user disconnects. Use in case `type` is `MESSAGE_DISCONNECT`
@@ -191,6 +207,7 @@ struct Message {
 - `new_name`: The new name for the entry.
 
 ### The entry_change struct
+
 ```c
 typedef enum tristate_change {
     TRISTATE_CHANGE_UNCHANGED = 0,
@@ -224,6 +241,7 @@ struct entry_change {
     }
 }
 ```
+
 - `entry`: The entry this change gets applied to.
 - `flags`: See definition of `entry_change_flags`.
 - `deobf_name`: The new deobfuscated name, if deobf_name_change == TRISTATE_CHANGE_SET
@@ -231,6 +249,7 @@ struct entry_change {
 - `access_modifiers`: The new access modifier, if access_change == TRISTATE_CHANGE_SET (otherwise 0)
 
 ### Login (client-to-server)
+
 ```c
 struct LoginC2SPacket {
     unsigned short protocol_version;
@@ -240,47 +259,57 @@ struct LoginC2SPacket {
     utf username;
 }
 ```
+
 - `protocol_version`: the version of the protocol. If the version does not match on the server, then the client will be
-                      kicked immediately. Currently always equal to 0.
+  kicked immediately. Currently always equal to 0.
 - `checksum`: the SHA-1 hash of the JAR file the client has open. If this does not match the SHA-1 hash of the JAR file
-              the server has open, the client will be kicked.
+  the server has open, the client will be kicked.
 - `password`: the password needed to log into the server. Note that each `char` is 2 bytes, as per the Java data type.
-              If this password is incorrect, the client will be kicked.
+  If this password is incorrect, the client will be kicked.
 - `username`: the username of the user logging in. If the username is not unique, the client will be kicked.
 
 ### ConfirmChange (client-to-server)
+
 ```c
 struct ConfirmChangeC2SPacket {
     unsigned short sync_id;
 }
 ```
+
 - `sync_id`: the sync ID to confirm.
 
 ### Message (client-to-server)
+
 ```c
 struct MessageC2SPacket {
     utf message;
 }
 ```
+
 - `message`: The text message the user sent.
 
 ### EntryChange (client-to-server)
+
 ```c
 struct EntryChangeC2SPacket {
     entry_change change;
 }
 ```
+
 - `change`: The change to apply.
 
 ### Kick (server-to-client)
+
 ```c
 struct KickS2CPacket {
     utf reason;
 }
 ```
+
 - `reason`: the reason for the kick, may or may not be a translation key for the client to display to the user.
 
 ### SyncMappings (server-to-client)
+
 ```c
 struct SyncMappingsS2CPacket {
     int num_roots;
@@ -296,6 +325,7 @@ struct MappingNode {
 }
 typedef { Entry but without the has_parent or parent fields } NoParentEntry;
 ```
+
 - `roots`: The root mapping nodes, containing all the entries without parents.
 - `obf_entry`: The value of a node, containing the obfuscated name and descriptor of the entry.
 - `name`: The deobfuscated name of the entry, if it exists, otherwise the empty string.
@@ -303,6 +333,7 @@ typedef { Entry but without the has_parent or parent fields } NoParentEntry;
 - `children`: The children of this node
 
 ### Message (server-to-client)
+
 ```c
 struct MessageS2CPacket {
     Message message;
@@ -310,6 +341,7 @@ struct MessageS2CPacket {
 ```
 
 ### UserList (server-to-client)
+
 ```c
 struct UserListS2CPacket {
     unsigned short len;
@@ -318,11 +350,13 @@ struct UserListS2CPacket {
 ```
 
 ### EntryChange (server-to-client)
+
 ```c
 struct EntryChangeS2CPacket {
     uint16_t sync_id;
     entry_change change;
 }
 ```
+
 - `sync_id`: The sync ID of the change for locking purposes.
 - `change`: The change to apply.

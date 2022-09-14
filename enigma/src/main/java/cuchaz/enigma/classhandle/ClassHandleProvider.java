@@ -1,6 +1,15 @@
 package cuchaz.enigma.classhandle;
 
-import java.util.*;
+import static cuchaz.enigma.utils.Utils.withLock;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,14 +25,16 @@ import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
 import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.events.ClassHandleListener.InvalidationType;
-import cuchaz.enigma.source.*;
+import cuchaz.enigma.source.DecompiledClassSource;
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.DecompilerService;
+import cuchaz.enigma.source.Source;
+import cuchaz.enigma.source.SourceIndex;
+import cuchaz.enigma.source.SourceSettings;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Result;
 
-import static cuchaz.enigma.utils.Utils.withLock;
-
 public final class ClassHandleProvider {
-
 	private final EnigmaProject project;
 
 	private final ExecutorService pool = Executors.newWorkStealingPool();
@@ -50,7 +61,9 @@ public final class ClassHandleProvider {
 	 */
 	@Nullable
 	public ClassHandle openClass(ClassEntry entry) {
-		if (!project.getJarIndex().getEntryIndex().hasClass(entry)) return null;
+		if (!project.getJarIndex().getEntryIndex().hasClass(entry)) {
+			return null;
+		}
 
 		return withLock(lock.writeLock(), () -> {
 			Entry e = handles.computeIfAbsent(entry, entry1 -> new Entry(this, entry1));
@@ -68,7 +81,9 @@ public final class ClassHandleProvider {
 	 * @param ds the decompiler service to use
 	 */
 	public void setDecompilerService(DecompilerService ds) {
-		if (this.ds.equals(ds)) return;
+		if (this.ds.equals(ds)) {
+			return;
+		}
 
 		this.ds = ds;
 		this.decompiler = createDecompiler();
@@ -111,6 +126,7 @@ public final class ClassHandleProvider {
 	public void invalidateMapped(ClassEntry entry) {
 		withLock(lock.readLock(), () -> {
 			Entry e = handles.get(entry);
+
 			if (e != null) {
 				e.invalidateMapped();
 			}
@@ -136,6 +152,7 @@ public final class ClassHandleProvider {
 	public void invalidateJavadoc(ClassEntry entry) {
 		withLock(lock.readLock(), () -> {
 			Entry e = handles.get(entry);
+
 			if (e != null) {
 				e.invalidateJavadoc();
 			}
@@ -163,6 +180,7 @@ public final class ClassHandleProvider {
 	 */
 	public void destroy() {
 		pool.shutdown();
+
 		try {
 			pool.awaitTermination(30, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
@@ -176,7 +194,6 @@ public final class ClassHandleProvider {
 	}
 
 	private static final class Entry {
-
 		private final ClassHandleProvider p;
 		private final ClassEntry entry;
 		private ClassEntry deobfRef;
@@ -216,6 +233,7 @@ public final class ClassHandleProvider {
 
 		private void checkDeobfRefForUpdate() {
 			ClassEntry newDeobf = p.project.getMapper().deobfuscate(entry);
+
 			if (!Objects.equals(deobfRef, newDeobf)) {
 				deobfRef = newDeobf;
 				// copy the list so we don't call event listener code with the lock active
@@ -244,7 +262,9 @@ public final class ClassHandleProvider {
 		private CompletableFuture<Result<Source, ClassHandleError>> decompile() {
 			int v = decompileVersion.incrementAndGet();
 			return CompletableFuture.supplyAsync(() -> {
-				if (decompileVersion.get() != v) return null;
+				if (decompileVersion.get() != v) {
+					return null;
+				}
 
 				Result<Source, ClassHandleError> uncommentedSource = Result.ok(p.decompiler.getSource(entry.getFullName()));
 				Entry.this.uncommentedSource = uncommentedSource;
@@ -258,7 +278,10 @@ public final class ClassHandleProvider {
 		private CompletableFuture<Result<Source, ClassHandleError>> continueInsertJavadoc(CompletableFuture<Result<Source, ClassHandleError>> f) {
 			int v = javadocVersion.incrementAndGet();
 			return f.thenApplyAsync(res -> {
-				if (res == null || javadocVersion.get() != v) return null;
+				if (res == null || javadocVersion.get() != v) {
+					return null;
+				}
+
 				Result<Source, ClassHandleError> jdSource = res.map(s -> s.withJavadocs(p.project.getMapper()));
 				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDocsChanged(jdSource));
 				return jdSource;
@@ -268,7 +291,10 @@ public final class ClassHandleProvider {
 		private CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> continueIndexSource(CompletableFuture<Result<Source, ClassHandleError>> f) {
 			int v = indexVersion.incrementAndGet();
 			return f.thenApplyAsync(res -> {
-				if (res == null || indexVersion.get() != v) return null;
+				if (res == null || indexVersion.get() != v) {
+					return null;
+				}
+
 				return res.andThen(jdSource -> {
 					SourceIndex index = jdSource.index();
 					index.resolveReferences(p.project.getMapper().getObfResolver());
@@ -281,11 +307,20 @@ public final class ClassHandleProvider {
 		private void continueMapSource(CompletableFuture<Result<DecompiledClassSource, ClassHandleError>> f) {
 			int v = mappedVersion.incrementAndGet();
 			f.thenApplyAsync(res -> {
-				if (res == null || mappedVersion.get() != v) return null;
+				if (res == null || mappedVersion.get() != v) {
+					return null;
+				}
+
 				return res.andThen(source -> Result.ok(source.remapSource(p.project, p.project.getMapper().getDeobfuscator())));
 			}, p.pool).whenComplete((res, e) -> {
-				if (e != null) res = Result.err(ClassHandleError.remap(e));
-				if (res == null) return;
+				if (e != null) {
+					res = Result.err(ClassHandleError.remap(e));
+				}
+
+				if (res == null) {
+					return;
+				}
+
 				Entry.this.source = res;
 				Entry.this.waitingSources.forEach(s -> s.complete(source));
 				Entry.this.waitingSources.clear();
@@ -297,6 +332,7 @@ public final class ClassHandleProvider {
 			classHandle.destroy();
 			withLock(lock.writeLock(), () -> {
 				handles.remove(classHandle);
+
 				if (handles.isEmpty()) {
 					p.deleteEntry(this);
 				}
@@ -332,7 +368,6 @@ public final class ClassHandleProvider {
 	}
 
 	private static final class ClassHandleImpl implements ClassHandle {
-
 		private final Entry entry;
 
 		private boolean valid = true;
@@ -425,18 +460,20 @@ public final class ClassHandleProvider {
 
 		@Override
 		public void close() {
-			if (valid) entry.closeHandle(this);
+			if (valid) {
+				entry.closeHandle(this);
+			}
 		}
 
 		private void checkValid() {
-			if (!valid) throw new IllegalStateException("Class handle no longer valid");
+			if (!valid) {
+				throw new IllegalStateException("Class handle no longer valid");
+			}
 		}
 
 		public void destroy() {
 			listeners.forEach(l -> l.onDeleted(this));
 			valid = false;
 		}
-
 	}
-
 }

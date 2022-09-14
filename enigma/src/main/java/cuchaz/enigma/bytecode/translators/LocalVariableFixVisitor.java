@@ -1,18 +1,19 @@
 package cuchaz.enigma.bytecode.translators;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.base.CharMatcher;
-import cuchaz.enigma.translation.LocalNameGenerator;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
-import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import cuchaz.enigma.translation.LocalNameGenerator;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
+import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 
 public class LocalVariableFixVisitor extends ClassVisitor {
 	private ClassDefEntry ownerEntry;
@@ -46,6 +47,7 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 
 			int lvIndex = methodEntry.getAccess().isStatic() ? 0 : 1;
 			List<TypeDescriptor> parameters = methodEntry.getDesc().getArgumentDescs();
+
 			for (int parameterIndex = 0; parameterIndex < parameters.size(); parameterIndex++) {
 				TypeDescriptor param = parameters.get(parameterIndex);
 				parameterIndices.put(lvIndex, parameterIndex);
@@ -81,6 +83,7 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 		public void visitEnd() {
 			if (!hasParameterTable) {
 				List<TypeDescriptor> arguments = methodEntry.getDesc().getArgumentDescs();
+
 				for (int argumentIndex = 0; argumentIndex < arguments.size(); argumentIndex++) {
 					super.visitParameter(fixParameterName(argumentIndex, null), fixParameterAccess(argumentIndex, 0));
 				}

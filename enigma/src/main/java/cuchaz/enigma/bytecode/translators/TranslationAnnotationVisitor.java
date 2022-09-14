@@ -1,10 +1,11 @@
 package cuchaz.enigma.bytecode.translators;
 
+import org.objectweb.asm.AnnotationVisitor;
+
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import org.objectweb.asm.AnnotationVisitor;
 
 public class TranslationAnnotationVisitor extends AnnotationVisitor {
 	private final Translator translator;
@@ -29,6 +30,7 @@ public class TranslationAnnotationVisitor extends AnnotationVisitor {
 	@Override
 	public AnnotationVisitor visitAnnotation(String name, String desc) {
 		TypeDescriptor type = new TypeDescriptor(desc);
+
 		if (name != null) {
 			FieldEntry annotationField = translator.translate(new FieldEntry(annotationEntry, name, type));
 			return super.visitAnnotation(annotationField.getName(), annotationField.getDesc().toString());
@@ -41,6 +43,7 @@ public class TranslationAnnotationVisitor extends AnnotationVisitor {
 	public void visitEnum(String name, String desc, String value) {
 		TypeDescriptor type = new TypeDescriptor(desc);
 		FieldEntry enumField = translator.translate(new FieldEntry(type.getTypeEntry(), value, type));
+
 		if (name != null) {
 			FieldEntry annotationField = translator.translate(new FieldEntry(annotationEntry, name, type));
 			super.visitEnum(annotationField.getName(), annotationField.getDesc().toString(), enumField.getName());

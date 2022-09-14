@@ -4,11 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import cuchaz.enigma.network.ServerPacketHandler;
 import cuchaz.enigma.network.Message;
+import cuchaz.enigma.network.ServerPacketHandler;
 
 public class MessageC2SPacket implements Packet<ServerPacketHandler> {
-
 	private String message;
 
 	MessageC2SPacket() {
@@ -31,9 +30,9 @@ public class MessageC2SPacket implements Packet<ServerPacketHandler> {
 	@Override
 	public void handle(ServerPacketHandler handler) {
 		String message = this.message.trim();
+
 		if (!message.isEmpty()) {
 			handler.getServer().sendMessage(Message.chat(handler.getServer().getUsername(handler.getClient()), message));
 		}
 	}
-
 }

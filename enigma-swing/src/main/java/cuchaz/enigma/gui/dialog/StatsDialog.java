@@ -4,10 +4,19 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.config.UiConfig;
@@ -19,14 +28,15 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 
 public class StatsDialog {
-
 	public static void show(Gui gui) {
 		ProgressDialog.runOffThread(gui.getFrame(), listener -> {
 			final StatsGenerator statsGenerator = new StatsGenerator(gui.getController().project);
 			final Map<StatsMember, StatsResult> results = new HashMap<>();
+
 			for (StatsMember member : StatsMember.values()) {
 				results.put(member, statsGenerator.generate(listener, Collections.singleton(member), "", false));
 			}
+
 			SwingUtilities.invokeLater(() -> show(gui, results));
 		});
 	}
@@ -111,12 +121,7 @@ public class StatsDialog {
 
 	private static void generateStats(Gui gui, Map<StatsMember, JCheckBox> checkboxes, String topLevelPackage, boolean includeSynthetic) {
 		// get members from selected checkboxes
-		Set<StatsMember> includedMembers = checkboxes
-				.entrySet()
-				.stream()
-				.filter(entry -> entry.getValue().isSelected())
-				.map(Map.Entry::getKey)
-				.collect(Collectors.toSet());
+		Set<StatsMember> includedMembers = checkboxes.entrySet().stream().filter(entry -> entry.getValue().isSelected()).map(Map.Entry::getKey).collect(Collectors.toSet());
 
 		// checks if a project is open
 		if (gui.getController().project != null) {

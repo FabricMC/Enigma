@@ -35,6 +35,7 @@ public class Signature implements Translatable {
 		if (signature != null && !signature.isEmpty()) {
 			return new Signature(signature, true);
 		}
+
 		return new Signature(null, true);
 	}
 
@@ -42,6 +43,7 @@ public class Signature implements Translatable {
 		if (signature != null && !signature.isEmpty()) {
 			return new Signature(signature, false);
 		}
+
 		return new Signature(null, false);
 	}
 
@@ -57,13 +59,16 @@ public class Signature implements Translatable {
 		if (signature == null) {
 			return this;
 		}
+
 		SignatureWriter writer = new SignatureWriter();
 		SignatureVisitor visitor = new TranslationSignatureVisitor(remapper, writer);
+
 		if (isType) {
 			new SignatureReader(signature).acceptType(visitor);
 		} else {
 			new SignatureReader(signature).accept(visitor);
 		}
+
 		return new Signature(writer.toString(), isType);
 	}
 
@@ -71,16 +76,16 @@ public class Signature implements Translatable {
 	public boolean equals(Object obj) {
 		if (obj instanceof Signature) {
 			Signature other = (Signature) obj;
-			return (other.signature == null && signature == null || other.signature != null
-					&& signature != null && other.signature.equals(signature))
-					&& other.isType == this.isType;
+			return (other.signature == null && signature == null || other.signature != null && signature != null && other.signature.equals(signature)) && other.isType == this.isType;
 		}
+
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
 		int hash = (isType ? 1 : 0) << 16;
+
 		if (signature != null) {
 			hash |= signature.hashCode();
 		}
@@ -97,5 +102,4 @@ public class Signature implements Translatable {
 	public TranslateResult<Signature> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		return TranslateResult.ungrouped(this.remap(name -> translator.translate(new ClassEntry(name)).getFullName()));
 	}
-
 }

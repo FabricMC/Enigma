@@ -15,7 +15,6 @@ import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.utils.I18n;
 
 public class DeobfPanel extends JPanel {
-
 	public final ClassSelector deobfClasses;
 	private final JLabel title = new JLabel();
 
@@ -44,6 +43,7 @@ public class DeobfPanel extends JPanel {
 		if (SwingUtilities.isRightMouseButton(e)) {
 			deobfClasses.setSelectionRow(deobfClasses.getClosestRowForLocation(e.getX(), e.getY()));
 			int i = deobfClasses.getRowForPath(deobfClasses.getSelectionPath());
+
 			if (i != -1) {
 				deobfPanelPopupMenu.show(deobfClasses, e.getX(), e.getY());
 			}
@@ -54,5 +54,4 @@ public class DeobfPanel extends JPanel {
 		this.title.setText(I18n.translate(gui.isSingleClassTree() ? "info_panel.classes" : "info_panel.classes.deobfuscated"));
 		this.deobfPanelPopupMenu.retranslateUi();
 	}
-
 }

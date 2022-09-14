@@ -1,10 +1,10 @@
 plugins {
-    id 'application'
+	id 'application'
 }
 
 dependencies {
-    implementation project(':enigma')
-    implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+	implementation project(':enigma')
+	implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
 }
 
 mainClassName = 'cuchaz.enigma.network.DedicatedEnigmaServer'

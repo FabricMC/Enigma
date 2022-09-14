@@ -1,0 +1,5 @@
+[*.{gradle,java,kotlin}]
+indent_style = tab
+ij_continuation_indent_size = 8
+ij_java_imports_layout = $*, |, java.**, |, javax.**, |, *, |, cuchaz.enigma.**
+ij_java_class_count_to_use_import_on_demand = 999

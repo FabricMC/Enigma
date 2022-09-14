@@ -3,7 +3,6 @@ package cuchaz.enigma.gui.events;
 import cuchaz.enigma.gui.elements.ConvertingTextField;
 
 public interface ConvertingTextFieldListener {
-
 	default void onStartEditing(ConvertingTextField field) {
 	}
 
@@ -13,5 +12,4 @@ public interface ConvertingTextFieldListener {
 
 	default void onStopEditing(ConvertingTextField field, boolean abort) {
 	}
-
 }

@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.translation.representation;
 
@@ -27,7 +27,6 @@ import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
 public class MethodDescriptor implements Translatable {
-
 	private List<TypeDescriptor> argumentDescs;
 	private TypeDescriptor returnDesc;
 
@@ -35,8 +34,10 @@ public class MethodDescriptor implements Translatable {
 		try {
 			this.argumentDescs = Lists.newArrayList();
 			int i = 0;
+
 			while (i < desc.length()) {
 				char c = desc.charAt(i);
+
 				if (c == '(') {
 					assert (this.argumentDescs.isEmpty());
 					assert (this.returnDesc == null);
@@ -50,6 +51,7 @@ public class MethodDescriptor implements Translatable {
 					i += type.length();
 				}
 			}
+
 			this.returnDesc = new TypeDescriptor(TypeDescriptor.parseFirst(desc.substring(i)));
 		} catch (Exception ex) {
 			throw new IllegalArgumentException("Unable to parse method descriptor: " + desc, ex);
@@ -73,9 +75,11 @@ public class MethodDescriptor implements Translatable {
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		buf.append("(");
+
 		for (TypeDescriptor desc : this.argumentDescs) {
 			buf.append(desc);
 		}
+
 		buf.append(")");
 		buf.append(this.returnDesc);
 		return buf.toString();
@@ -108,23 +112,28 @@ public class MethodDescriptor implements Translatable {
 				return true;
 			}
 		}
+
 		return false;
 	}
 
 	public MethodDescriptor remap(Function<String, String> remapper) {
 		List<TypeDescriptor> argumentDescs = new ArrayList<>(this.argumentDescs.size());
+
 		for (TypeDescriptor desc : this.argumentDescs) {
 			argumentDescs.add(desc.remap(remapper));
 		}
+
 		return new MethodDescriptor(argumentDescs, returnDesc.remap(remapper));
 	}
 
 	@Override
 	public TranslateResult<MethodDescriptor> extendedTranslate(Translator translator, EntryResolver resolver, EntryMap<EntryMapping> mappings) {
 		List<TypeDescriptor> translatedArguments = new ArrayList<>(argumentDescs.size());
+
 		for (TypeDescriptor argument : argumentDescs) {
 			translatedArguments.add(translator.translate(argument));
 		}
+
 		return TranslateResult.ungrouped(new MethodDescriptor(translatedArguments, translator.translate(returnDesc)));
 	}
 

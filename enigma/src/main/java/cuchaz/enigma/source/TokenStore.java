@@ -1,9 +1,14 @@
 package cuchaz.enigma.source;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 public final class TokenStore {
-
 	private static final TokenStore EMPTY = new TokenStore(Collections.emptyNavigableSet(), Collections.emptyMap(), null);
 
 	private final NavigableSet<Token> tokens;
@@ -18,9 +23,11 @@ public final class TokenStore {
 
 	public static TokenStore create(SourceIndex obfuscatedIndex) {
 		EnumMap<RenamableTokenType, NavigableSet<Token>> map = new EnumMap<>(RenamableTokenType.class);
+
 		for (RenamableTokenType value : RenamableTokenType.values()) {
 			map.put(value, new TreeSet<>(Comparator.comparing(t -> t.start)));
 		}
+
 		return new TokenStore(new TreeSet<>(Comparator.comparing(t -> t.start)), Collections.unmodifiableMap(map), obfuscatedIndex.getSource());
 	}
 
@@ -34,22 +41,25 @@ public final class TokenStore {
 	}
 
 	public boolean isCompatible(TokenStore other) {
-		return this.obfSource != null && other.obfSource != null &&
-				this.obfSource.equals(other.obfSource) &&
-				this.tokens.size() == other.tokens.size();
+		return this.obfSource != null && other.obfSource != null && this.obfSource.equals(other.obfSource) && this.tokens.size() == other.tokens.size();
 	}
 
 	public int mapPosition(TokenStore to, int position) {
-		if (!this.isCompatible(to)) return 0;
+		if (!this.isCompatible(to)) {
+			return 0;
+		}
 
 		int newPos = position;
 		Iterator<Token> thisIter = this.tokens.iterator();
 		Iterator<Token> toIter = to.tokens.iterator();
+
 		while (thisIter.hasNext()) {
 			Token token = thisIter.next();
 			Token newToken = toIter.next();
 
-			if (position < token.start) break;
+			if (position < token.start) {
+				break;
+			}
 
 			// if we're inside the token and the text changed,
 			// snap the cursor to the beginning
@@ -67,5 +77,4 @@ public final class TokenStore {
 	public Map<RenamableTokenType, NavigableSet<Token>> getByType() {
 		return byType;
 	}
-
 }

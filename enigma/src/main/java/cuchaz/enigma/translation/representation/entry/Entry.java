@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.translation.representation.entry;
 
@@ -111,34 +111,42 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 	default ClassEntry getContainingClass() {
 		ClassEntry last = null;
 		Entry<?> current = this;
+
 		while (current != null) {
 			if (current instanceof ClassEntry) {
 				last = (ClassEntry) current;
 				break;
 			}
+
 			current = current.getParent();
 		}
+
 		return Objects.requireNonNull(last, () -> String.format("%s has no containing class?", this));
 	}
 
 	default ClassEntry getTopLevelClass() {
 		ClassEntry last = null;
 		Entry<?> current = this;
+
 		while (current != null) {
 			if (current instanceof ClassEntry) {
 				last = (ClassEntry) current;
 			}
+
 			current = current.getParent();
 		}
+
 		return Objects.requireNonNull(last, () -> String.format("%s has no top level class?", this));
 	}
 
 	default List<Entry<?>> getAncestry() {
 		P parent = getParent();
 		List<Entry<?>> entries = new ArrayList<>();
+
 		if (parent != null) {
 			entries.addAll(parent.getAncestry());
 		}
+
 		entries.add(this);
 		return entries;
 	}
@@ -147,12 +155,15 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 	@SuppressWarnings("unchecked")
 	default <E extends Entry<?>> E findAncestor(Class<E> type) {
 		List<Entry<?>> ancestry = getAncestry();
+
 		for (int i = ancestry.size() - 1; i >= 0; i--) {
 			Entry<?> ancestor = ancestry.get(i);
+
 			if (type.isAssignableFrom(ancestor.getClass())) {
 				return (E) ancestor;
 			}
 		}
+
 		return null;
 	}
 
@@ -167,6 +178,7 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 		}
 
 		P parent = getParent();
+
 		if (parent == null) {
 			return this;
 		}
@@ -184,6 +196,7 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 		if (parentType.equals(getParentType())) {
 			return (Entry<C>) this;
 		}
+
 		return null;
 	}
 }

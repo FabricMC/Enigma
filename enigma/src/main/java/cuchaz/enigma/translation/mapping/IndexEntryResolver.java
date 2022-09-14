@@ -1,6 +1,10 @@
 package cuchaz.enigma.translation.mapping;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -40,6 +44,7 @@ public class IndexEntryResolver implements EntryResolver {
 		}
 
 		Entry<ClassEntry> classChild = getClassChild(entry);
+
 		if (classChild != null && !(classChild instanceof ClassEntry)) {
 			AccessFlags access = entryIndex.getEntryAccess(classChild);
 
@@ -50,10 +55,9 @@ public class IndexEntryResolver implements EntryResolver {
 
 			if (access == null || !access.isPrivate()) {
 				Collection<Entry<ClassEntry>> resolvedChildren = resolveChildEntry(classChild, strategy);
+
 				if (!resolvedChildren.isEmpty()) {
-					return resolvedChildren.stream()
-							.map(resolvedChild -> (E) entry.replaceAncestor(classChild, resolvedChild))
-							.toList();
+					return resolvedChildren.stream().map(resolvedChild -> (E) entry.replaceAncestor(classChild, resolvedChild)).toList();
 				}
 			}
 		}
@@ -69,9 +73,11 @@ public class IndexEntryResolver implements EntryResolver {
 
 		// get the entry in the hierarchy that is the child of a class
 		List<Entry<?>> ancestry = entry.getAncestry();
+
 		for (int i = ancestry.size() - 1; i > 0; i--) {
 			Entry<?> child = ancestry.get(i);
 			Entry<ClassEntry> cast = child.castParent(ClassEntry.class);
+
 			if (cast != null && !(cast instanceof ClassEntry)) {
 				// we found the entry which is a child of a class, we are now able to resolve the owner of this entry
 				return cast;
@@ -86,8 +92,10 @@ public class IndexEntryResolver implements EntryResolver {
 
 		if (entry instanceof MethodEntry) {
 			MethodEntry bridgeMethod = bridgeMethodIndex.getBridgeFromSpecialized((MethodEntry) entry);
+
 			if (bridgeMethod != null && ownerClass.equals(bridgeMethod.getParent())) {
 				Set<Entry<ClassEntry>> resolvedBridge = resolveChildEntry(bridgeMethod, strategy);
+
 				if (!resolvedBridge.isEmpty()) {
 					return resolvedBridge;
 				} else {
@@ -117,6 +125,7 @@ public class IndexEntryResolver implements EntryResolver {
 
 		if (parentResolution.isEmpty()) {
 			AccessFlags parentAccess = entryIndex.getEntryAccess(entry);
+
 			if (parentAccess != null && !parentAccess.isPrivate()) {
 				return Collections.singleton(entry);
 			}
@@ -128,6 +137,7 @@ public class IndexEntryResolver implements EntryResolver {
 	private Collection<Entry<ClassEntry>> resolveClosest(Entry<ClassEntry> entry, ResolutionStrategy strategy) {
 		// When resolving closest, we want to first check if we exist before looking further down
 		AccessFlags parentAccess = entryIndex.getEntryAccess(entry);
+
 		if (parentAccess != null && !parentAccess.isPrivate()) {
 			return Collections.singleton(entry);
 		} else {
@@ -138,6 +148,7 @@ public class IndexEntryResolver implements EntryResolver {
 	@Override
 	public Set<Entry<?>> resolveEquivalentEntries(Entry<?> entry) {
 		MethodEntry relevantMethod = entry.findAncestor(MethodEntry.class);
+
 		if (relevantMethod == null || !entryIndex.hasMethod(relevantMethod)) {
 			return Collections.singleton(entry);
 		}
@@ -162,6 +173,7 @@ public class IndexEntryResolver implements EntryResolver {
 
 	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodEntry methodEntry) {
 		AccessFlags access = entryIndex.getMethodAccess(methodEntry);
+
 		if (access == null) {
 			throw new IllegalArgumentException("Could not find method " + methodEntry);
 		}
@@ -176,11 +188,13 @@ public class IndexEntryResolver implements EntryResolver {
 
 	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodInheritanceTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
+
 		if (methodEntries.contains(methodEntry)) {
 			return;
 		}
 
 		AccessFlags flags = entryIndex.getMethodAccess(methodEntry);
+
 		if (flags != null && canInherit(methodEntry, flags)) {
 			// collect the entry
 			methodEntries.add(methodEntry);
@@ -188,6 +202,7 @@ public class IndexEntryResolver implements EntryResolver {
 
 		// look at bridge methods!
 		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(methodEntry);
+
 		while (bridgedMethod != null) {
 			resolveEquivalentMethods(methodEntries, bridgedMethod);
 			bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(bridgedMethod);
@@ -207,6 +222,7 @@ public class IndexEntryResolver implements EntryResolver {
 	private void resolveEquivalentMethods(Set<MethodEntry> methodEntries, MethodImplementationsTreeNode node) {
 		MethodEntry methodEntry = node.getMethodEntry();
 		AccessFlags flags = entryIndex.getMethodAccess(methodEntry);
+
 		if (flags != null && !flags.isPrivate() && !flags.isStatic()) {
 			// collect the entry
 			methodEntries.add(methodEntry);
@@ -214,6 +230,7 @@ public class IndexEntryResolver implements EntryResolver {
 
 		// look at bridge methods!
 		MethodEntry bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(methodEntry);
+
 		while (bridgedMethod != null) {
 			resolveEquivalentMethods(methodEntries, bridgedMethod);
 			bridgedMethod = bridgeMethodIndex.getBridgeFromSpecialized(bridgedMethod);

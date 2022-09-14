@@ -20,7 +20,6 @@ import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.StandardValidation;
 
 public class ConnectToServerDialog extends AbstractDialog {
-
 	private JTextField usernameField;
 	private ValidatableTextField ipField;
 	private JPasswordField passwordField;
@@ -45,16 +44,13 @@ public class ConnectToServerDialog extends AbstractDialog {
 		ipField.addActionListener(event -> confirm());
 		passwordField.addActionListener(event -> confirm());
 
-		return Arrays.asList(
-				new Pair<>("prompt.connect.username", usernameField),
-				new Pair<>("prompt.connect.address", ipField),
-				new Pair<>("prompt.password", passwordField)
-		);
+		return Arrays.asList(new Pair<>("prompt.connect.username", usernameField), new Pair<>("prompt.connect.address", ipField), new Pair<>("prompt.password", passwordField));
 	}
 
 	@Override
 	public void validateInputs() {
 		vc.setActiveElement(ipField);
+
 		if (StandardValidation.notBlank(vc, ipField.getText())) {
 			if (ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT) == null) {
 				vc.raise(Message.INVALID_IP);
@@ -63,16 +59,18 @@ public class ConnectToServerDialog extends AbstractDialog {
 	}
 
 	public Result getResult() {
-		if (!isActionConfirm()) return null;
+		if (!isActionConfirm()) {
+			return null;
+		}
+
 		vc.reset();
 		validateInputs();
-		if (!vc.canProceed()) return null;
-		return new Result(
-				usernameField.getText(),
-				ipField.getText(),
-				Objects.requireNonNull(ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT)),
-				passwordField.getPassword()
-		);
+
+		if (!vc.canProceed()) {
+			return null;
+		}
+
+		return new Result(usernameField.getText(), ipField.getText(), Objects.requireNonNull(ServerAddress.from(ipField.getText(), EnigmaServer.DEFAULT_PORT)), passwordField.getPassword());
 	}
 
 	public static Result show(Frame parent) {
@@ -114,5 +112,4 @@ public class ConnectToServerDialog extends AbstractDialog {
 			return password;
 		}
 	}
-
 }

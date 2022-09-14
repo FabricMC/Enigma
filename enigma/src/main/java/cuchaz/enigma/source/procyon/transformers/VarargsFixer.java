@@ -1,5 +1,8 @@
 package cuchaz.enigma.source.procyon.transformers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MetadataFilters;
 import com.strobel.assembler.metadata.MetadataHelper;
@@ -16,7 +19,6 @@ import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.AstNodeCollection;
 import com.strobel.decompiler.languages.java.ast.CastExpression;
 import com.strobel.decompiler.languages.java.ast.ContextTrackingVisitor;
-import com.strobel.decompiler.languages.java.ast.DepthFirstAstVisitor;
 import com.strobel.decompiler.languages.java.ast.Expression;
 import com.strobel.decompiler.languages.java.ast.InvocationExpression;
 import com.strobel.decompiler.languages.java.ast.JavaResolver;
@@ -25,9 +27,6 @@ import com.strobel.decompiler.languages.java.ast.MemberReferenceExpression;
 import com.strobel.decompiler.languages.java.ast.ObjectCreationExpression;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
 import com.strobel.decompiler.semantics.ResolveResult;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Thiakil on 12/07/2018.
@@ -46,6 +45,7 @@ public class VarargsFixer implements IAstTransform {
 
 	class Visitor extends ContextTrackingVisitor<Void> {
 		private final JavaResolver _resolver;
+
 		protected Visitor(DecompilerContext context) {
 			super(context);
 			_resolver = new JavaResolver(context);
@@ -56,21 +56,26 @@ public class VarargsFixer implements IAstTransform {
 		public Void visitInvocationExpression(InvocationExpression node, Void data) {
 			super.visitInvocationExpression(node, data);
 			MemberReference definition = node.getUserData(Keys.MEMBER_REFERENCE);
-			if (definition instanceof MethodDefinition && ((MethodDefinition) definition).isVarArgs()){
+
+			if (definition instanceof MethodDefinition && ((MethodDefinition) definition).isVarArgs()) {
 				AstNodeCollection<Expression> arguments = node.getArguments();
 				Expression lastParam = arguments.lastOrNullObject();
-				if (!lastParam.isNull() && lastParam instanceof ArrayCreationExpression){
-					ArrayCreationExpression varargArray = (ArrayCreationExpression)lastParam;
-					if (varargArray.getInitializer().isNull() || varargArray.getInitializer().getElements().isEmpty()){
+
+				if (!lastParam.isNull() && lastParam instanceof ArrayCreationExpression) {
+					ArrayCreationExpression varargArray = (ArrayCreationExpression) lastParam;
+
+					if (varargArray.getInitializer().isNull() || varargArray.getInitializer().getElements().isEmpty()) {
 						lastParam.remove();
 					} else {
-						for (Expression e : varargArray.getInitializer().getElements()){
+						for (Expression e : varargArray.getInitializer().getElements()) {
 							arguments.insertBefore(varargArray, e.clone());
 						}
+
 						varargArray.remove();
 					}
 				}
 			}
+
 			return null;
 		}
 
@@ -83,14 +88,11 @@ public class VarargsFixer implements IAstTransform {
 
 			Expression arrayArg = lastArgument;
 
-			if (arrayArg instanceof CastExpression)
+			if (arrayArg instanceof CastExpression) {
 				arrayArg = ((CastExpression) arrayArg).getExpression();
+			}
 
-			if (arrayArg == null ||
-					arrayArg.isNull() ||
-					!(arrayArg instanceof ArrayCreationExpression &&
-							node.getTarget() instanceof MemberReferenceExpression)) {
-
+			if (arrayArg == null || arrayArg.isNull() || !(arrayArg instanceof ArrayCreationExpression && node.getTarget() instanceof MemberReferenceExpression)) {
 				return null;
 			}
 
@@ -117,22 +119,15 @@ public class VarargsFixer implements IAstTransform {
 			final Expression invocationTarget = target.getTarget();
 
 			if (invocationTarget == null || invocationTarget.isNull()) {
-				candidates = MetadataHelper.findMethods(
-						context.getCurrentType(),
-						MetadataFilters.matchName(resolved.getName())
-				);
-			}
-			else {
+				candidates = MetadataHelper.findMethods(context.getCurrentType(), MetadataFilters.matchName(resolved.getName()));
+			} else {
 				final ResolveResult targetResult = _resolver.apply(invocationTarget);
 
 				if (targetResult == null || targetResult.getType() == null) {
 					return null;
 				}
 
-				candidates = MetadataHelper.findMethods(
-						targetResult.getType(),
-						MetadataFilters.matchName(resolved.getName())
-				);
+				candidates = MetadataHelper.findMethods(targetResult.getType(), MetadataFilters.matchName(resolved.getName()));
 			}
 
 			final List<TypeReference> argTypes = new ArrayList<>();
@@ -172,10 +167,7 @@ public class VarargsFixer implements IAstTransform {
 
 			final MethodBinder.BindResult c2 = MethodBinder.selectMethod(candidates, argTypes);
 
-			if (c2.isFailure() ||
-					c2.isAmbiguous() ||
-					!StringUtilities.equals(c2.getMethod().getErasedSignature(), c1.getMethod().getErasedSignature())) {
-
+			if (c2.isFailure() || c2.isAmbiguous() || !StringUtilities.equals(c2.getMethod().getErasedSignature(), c1.getMethod().getErasedSignature())) {
 				return null;
 			}
 

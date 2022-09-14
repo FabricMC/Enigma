@@ -14,12 +14,12 @@ public enum Os {
 	public static Os getOs() {
 		if (os == null) {
 			String osName = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+
 			if (osName.contains("mac") || osName.contains("darwin")) {
 				os = MAC;
 			} else if (osName.contains("win")) {
 				os = WINDOWS;
-			} else if (osName.contains("nix") || osName.contains("nux")
-					|| osName.contains("aix")) {
+			} else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
 				os = LINUX;
 			} else if (osName.contains("sunos")) {
 				os = SOLARIS;
@@ -27,7 +27,7 @@ public enum Os {
 				os = OTHER;
 			}
 		}
+
 		return os;
 	}
-
 }

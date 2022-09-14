@@ -1,13 +1,13 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.network.EnigmaServer;
-import cuchaz.enigma.network.ServerPacketHandler;
-import cuchaz.enigma.network.Message;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
+
+import cuchaz.enigma.network.EnigmaServer;
+import cuchaz.enigma.network.Message;
+import cuchaz.enigma.network.ServerPacketHandler;
 
 public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 	private byte[] jarChecksum;
@@ -28,12 +28,15 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 		if (input.readUnsignedShort() != EnigmaServer.PROTOCOL_VERSION) {
 			throw new IOException("Mismatching protocol");
 		}
+
 		this.jarChecksum = new byte[EnigmaServer.CHECKSUM_SIZE];
 		input.readFully(jarChecksum);
 		this.password = new char[input.readUnsignedByte()];
+
 		for (int i = 0; i < password.length; i++) {
 			password[i] = input.readChar();
 		}
+
 		this.username = PacketHelper.readString(input);
 	}
 
@@ -42,9 +45,11 @@ public class LoginC2SPacket implements Packet<ServerPacketHandler> {
 		output.writeShort(EnigmaServer.PROTOCOL_VERSION);
 		output.write(jarChecksum);
 		output.writeByte(password.length);
+
 		for (char c : password) {
 			output.writeChar(c);
 		}
+
 		PacketHelper.writeString(output, username);
 	}
 

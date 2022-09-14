@@ -1,13 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2015 Jeff Martin.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public
- * License v3.0 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl.html
- * <p>
- * Contributors:
- * Jeff Martin - initial API and implementation
- ******************************************************************************/
+* Copyright (c) 2015 Jeff Martin.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the GNU Lesser General Public
+* License v3.0 which accompanies this distribution, and is available at
+* http://www.gnu.org/licenses/lgpl.html
+*
+* <p>Contributors:
+* Jeff Martin - initial API and implementation
+******************************************************************************/
 
 package cuchaz.enigma.gui.dialog;
 
@@ -17,7 +17,12 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.concurrent.CompletableFuture;
 
-import javax.swing.*;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.ProgressListener;
@@ -27,7 +32,6 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 
 public class ProgressDialog implements ProgressListener, AutoCloseable {
-
 	private final JDialog dialog;
 	private final JLabel labelTitle = new JLabel();
 	private final JLabel labelText = GuiUtil.unboldLabel(new JLabel());
@@ -39,11 +43,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 		Container pane = this.dialog.getContentPane();
 		pane.setLayout(new GridBagLayout());
 
-		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create()
-				.insets(2)
-				.anchor(GridBagConstraints.WEST)
-				.fill(GridBagConstraints.BOTH)
-				.weight(1.0, 0.0);
+		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2).anchor(GridBagConstraints.WEST).fill(GridBagConstraints.BOTH).weight(1.0, 0.0);
 
 		pane.add(this.labelTitle, cb.pos(0, 0).build());
 		pane.add(this.labelText, cb.pos(0, 1).build());
@@ -121,6 +121,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 	public void step(int numDone, String message) {
 		SwingUtilities.invokeLater(() -> {
 			this.labelText.setText(message);
+
 			if (numDone != -1) {
 				this.progress.setValue(numDone);
 				this.progress.setIndeterminate(false);

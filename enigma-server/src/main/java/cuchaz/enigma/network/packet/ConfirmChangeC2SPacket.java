@@ -1,10 +1,10 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.network.ServerPacketHandler;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+
+import cuchaz.enigma.network.ServerPacketHandler;
 
 public class ConfirmChangeC2SPacket implements Packet<ServerPacketHandler> {
 	private int syncId;

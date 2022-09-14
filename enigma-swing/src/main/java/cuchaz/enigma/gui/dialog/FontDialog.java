@@ -1,6 +1,11 @@
 package cuchaz.enigma.gui.dialog;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -16,20 +21,9 @@ import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.utils.I18n;
 
 public class FontDialog extends JDialog {
+	private static final List<String> CATEGORIES = List.of("Default", "Default 2", "Small", "Editor");
 
-	private static final List<String> CATEGORIES = List.of(
-			"Default",
-			"Default 2",
-			"Small",
-			"Editor"
-	);
-
-	private static final List<String> CATEGORY_TEXTS = List.of(
-			"fonts.cat.default",
-			"fonts.cat.default2",
-			"fonts.cat.small",
-			"fonts.cat.editor"
-	);
+	private static final List<String> CATEGORY_TEXTS = List.of("fonts.cat.default", "fonts.cat.default2", "fonts.cat.small", "fonts.cat.editor");
 
 	private final JList<String> entries = new JList<>(CATEGORY_TEXTS.stream().map(I18n::translate).toArray(String[]::new));
 	private final FontChooser chooser = new FontChooser(Font.decode(Font.DIALOG));
@@ -55,8 +49,7 @@ public class FontDialog extends JDialog {
 		Container contentPane = this.getContentPane();
 		contentPane.setLayout(new GridBagLayout());
 
-		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create()
-				.insets(2);
+		GridBagConstraintsBuilder cb = GridBagConstraintsBuilder.create().insets(2);
 
 		contentPane.add(this.entries, cb.pos(0, 0).weight(0.0, 1.0).fill(GridBagConstraints.BOTH).build());
 		contentPane.add(this.chooser, cb.pos(1, 0).weight(1.0, 1.0).fill(GridBagConstraints.BOTH).size(2, 1).build());
@@ -77,6 +70,7 @@ public class FontDialog extends JDialog {
 	private void categoryChanged() {
 		this.updateUiState();
 		int selectedIndex = this.entries.getSelectedIndex();
+
 		if (selectedIndex != -1) {
 			this.chooser.setSelectedFont(this.fonts[selectedIndex]);
 		}
@@ -84,6 +78,7 @@ public class FontDialog extends JDialog {
 
 	private void selectedFontChanged() {
 		int selectedIndex = this.entries.getSelectedIndex();
+
 		if (selectedIndex != -1) {
 			this.fonts[selectedIndex] = this.chooser.getSelectedFont();
 		}
@@ -98,6 +93,7 @@ public class FontDialog extends JDialog {
 		for (int i = 0; i < CATEGORIES.size(); i++) {
 			UiConfig.setFont(CATEGORIES.get(i), this.fonts[i]);
 		}
+
 		UiConfig.setUseCustomFonts(this.customCheckBox.isSelected());
 		UiConfig.save();
 		ChangeDialog.show(this);
@@ -118,8 +114,8 @@ public class FontDialog extends JDialog {
 			for (Component component : ((Container) self).getComponents()) {
 				recursiveSetEnabled(component, enabled);
 			}
+
 			self.setEnabled(enabled);
 		}
 	}
-
 }

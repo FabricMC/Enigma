@@ -14,7 +14,6 @@ import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class MappingValidator {
-
 	private final EntryTree<EntryMapping> obfToDeobf;
 	private final Translator deobfuscator;
 	private final JarIndex index;
@@ -28,10 +27,12 @@ public class MappingValidator {
 	public boolean validateRename(ValidationContext vc, Entry<?> entry, String name) {
 		Collection<Entry<?>> equivalentEntries = index.getEntryResolver().resolveEquivalentEntries(entry);
 		boolean error = false;
+
 		for (Entry<?> equivalentEntry : equivalentEntries) {
 			equivalentEntry.validateName(vc, name);
 			error |= validateUnique(vc, equivalentEntry, name);
 		}
+
 		return error;
 	}
 
@@ -45,17 +46,17 @@ public class MappingValidator {
 			Entry<?> relatedEntry = entry.replaceAncestor(containingClass, relatedClass);
 			Entry<?> translatedEntry = deobfuscator.translate(relatedEntry);
 
-			List<? extends Entry<?>> translatedSiblings = obfToDeobf.getSiblings(relatedEntry).stream()
-					.map(deobfuscator::translate)
-					.toList();
+			List<? extends Entry<?>> translatedSiblings = obfToDeobf.getSiblings(relatedEntry).stream().map(deobfuscator::translate).toList();
 
 			if (!isUnique(translatedEntry, translatedSiblings, name)) {
 				Entry<?> parent = translatedEntry.getParent();
+
 				if (parent != null) {
 					vc.raise(Message.NONUNIQUE_NAME_CLASS, name, parent);
 				} else {
 					vc.raise(Message.NONUNIQUE_NAME, name);
 				}
+
 				error = true;
 			}
 		}
@@ -80,7 +81,7 @@ public class MappingValidator {
 				return false;
 			}
 		}
+
 		return true;
 	}
-
 }

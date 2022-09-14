@@ -34,25 +34,20 @@ public class Lambda implements Translatable {
 		MethodEntry samMethod = new MethodEntry(getInterface(), invokedName, samMethodType);
 		EntryMapping samMethodMapping = resolveMapping(resolver, mappings, samMethod);
 
-		return TranslateResult.of(
-				samMethodMapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
-				new Lambda(
-						samMethodMapping.targetName() != null ? samMethodMapping.targetName() : invokedName,
-						invokedType.extendedTranslate(translator, resolver, mappings).getValue(),
-						samMethodType.extendedTranslate(translator, resolver, mappings).getValue(),
-						implMethod.extendedTranslate(translator, resolver, mappings).getValue(),
-						instantiatedMethodType.extendedTranslate(translator, resolver, mappings).getValue()
-				)
-		);
+		return TranslateResult.of(samMethodMapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED,
+								new Lambda(samMethodMapping.targetName() != null ? samMethodMapping.targetName() : invokedName, invokedType.extendedTranslate(translator, resolver, mappings).getValue(), samMethodType.extendedTranslate(translator, resolver, mappings).getValue(),
+									implMethod.extendedTranslate(translator, resolver, mappings).getValue(), instantiatedMethodType.extendedTranslate(translator, resolver, mappings).getValue()));
 	}
 
 	private EntryMapping resolveMapping(EntryResolver resolver, EntryMap<EntryMapping> mappings, MethodEntry methodEntry) {
 		for (MethodEntry entry : resolver.resolveEntry(methodEntry, ResolutionStrategy.RESOLVE_ROOT)) {
 			EntryMapping mapping = mappings.get(entry);
+
 			if (mapping != null) {
 				return mapping;
 			}
 		}
+
 		return EntryMapping.DEFAULT;
 	}
 
@@ -82,14 +77,16 @@ public class Lambda implements Translatable {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
 		Lambda lambda = (Lambda) o;
-		return Objects.equals(invokedName, lambda.invokedName) &&
-				Objects.equals(invokedType, lambda.invokedType) &&
-				Objects.equals(samMethodType, lambda.samMethodType) &&
-				Objects.equals(implMethod, lambda.implMethod) &&
-				Objects.equals(instantiatedMethodType, lambda.instantiatedMethodType);
+		return Objects.equals(invokedName, lambda.invokedName) && Objects.equals(invokedType, lambda.invokedType) && Objects.equals(samMethodType, lambda.samMethodType) && Objects.equals(implMethod, lambda.implMethod) && Objects.equals(instantiatedMethodType, lambda.instantiatedMethodType);
 	}
 
 	@Override
@@ -99,12 +96,6 @@ public class Lambda implements Translatable {
 
 	@Override
 	public String toString() {
-		return "Lambda{" +
-				"invokedName='" + invokedName + '\'' +
-				", invokedType=" + invokedType +
-				", samMethodType=" + samMethodType +
-				", implMethod=" + implMethod +
-				", instantiatedMethodType=" + instantiatedMethodType +
-				'}';
+		return "Lambda{" + "invokedName='" + invokedName + '\'' + ", invokedType=" + invokedType + ", samMethodType=" + samMethodType + ", implMethod=" + implMethod + ", instantiatedMethodType=" + instantiatedMethodType + '}';
 	}
 }

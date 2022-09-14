@@ -1,6 +1,12 @@
 package cuchaz.enigma.gui.dialog;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -15,7 +21,6 @@ import cuchaz.enigma.utils.Pair;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public abstract class AbstractDialog extends JDialog {
-
 	protected final ValidationContext vc = new ValidationContext();
 
 	private boolean actionConfirm = false;
@@ -38,6 +43,7 @@ public abstract class AbstractDialog extends JDialog {
 			inputContainer.add(label, cb.pos(0, i).weightX(0.0).anchor(GridBagConstraints.LINE_END).fill(GridBagConstraints.NONE).build());
 			inputContainer.add(component, cb.pos(1, i).weightX(1.0).anchor(GridBagConstraints.LINE_END).fill(GridBagConstraints.HORIZONTAL).build());
 		}
+
 		contentPane.add(inputContainer, BorderLayout.CENTER);
 		Container buttonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, ScaleUtil.scale(4), ScaleUtil.scale(4)));
 		JButton connectButton = new JButton(I18n.translate(confirmAction));
@@ -57,6 +63,7 @@ public abstract class AbstractDialog extends JDialog {
 	protected void confirm() {
 		vc.reset();
 		validateInputs();
+
 		if (vc.canProceed()) {
 			actionConfirm = true;
 			setVisible(false);
@@ -74,5 +81,4 @@ public abstract class AbstractDialog extends JDialog {
 
 	public void validateInputs() {
 	}
-
 }

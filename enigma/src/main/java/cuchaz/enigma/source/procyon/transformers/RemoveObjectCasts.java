@@ -22,17 +22,17 @@ public class RemoveObjectCasts implements IAstTransform {
 		compilationUnit.acceptVisitor(new Visitor(_context), null);
 	}
 
-	private final static class Visitor extends ContextTrackingVisitor<Void>{
-
+	private static final class Visitor extends ContextTrackingVisitor<Void> {
 		protected Visitor(DecompilerContext context) {
 			super(context);
 		}
 
 		@Override
 		public Void visitCastExpression(CastExpression node, Void data) {
-			if (node.getType().toTypeReference().equals(BuiltinTypes.Object)){
+			if (node.getType().toTypeReference().equals(BuiltinTypes.Object)) {
 				node.replaceWith(node.getExpression());
 			}
+
 			return super.visitCastExpression(node, data);
 		}
 	}

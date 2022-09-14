@@ -1,9 +1,10 @@
 package cuchaz.enigma.translation.mapping;
 
-import cuchaz.enigma.translation.representation.entry.Entry;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import java.util.stream.Stream;
+
+import cuchaz.enigma.translation.representation.entry.Entry;
 
 public interface EntryMap<T> {
 	void insert(Entry<?> entry, T value);

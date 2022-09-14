@@ -3,7 +3,6 @@ package cuchaz.enigma.gui.util;
 import java.awt.GridBagConstraints;
 
 public final class GridBagConstraintsBuilder {
-
 	private final GridBagConstraints inner;
 
 	private GridBagConstraintsBuilder(GridBagConstraints inner) {
@@ -136,5 +135,4 @@ public final class GridBagConstraintsBuilder {
 	public GridBagConstraints build() {
 		return (GridBagConstraints) this.inner.clone();
 	}
-
 }

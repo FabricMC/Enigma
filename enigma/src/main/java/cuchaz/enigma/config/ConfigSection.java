@@ -1,10 +1,16 @@
 package cuchaz.enigma.config;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 import java.util.function.Function;
 
 public class ConfigSection {
-
 	private final Map<String, String> values;
 	private final Map<String, ConfigSection> sections;
 
@@ -163,11 +169,16 @@ public class ConfigSection {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof ConfigSection)) return false;
+		if (this == o) {
+			return true;
+		}
+
+		if (!(o instanceof ConfigSection)) {
+			return false;
+		}
+
 		ConfigSection that = (ConfigSection) o;
-		return values.equals(that.values) &&
-				sections.equals(that.sections);
+		return values.equals(that.values) && sections.equals(that.sections);
 	}
 
 	@Override
@@ -179,5 +190,4 @@ public class ConfigSection {
 	public String toString() {
 		return String.format("ConfigSection { values: %s, sections: %s }", values, sections);
 	}
-
 }

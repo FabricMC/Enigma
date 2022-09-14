@@ -11,15 +11,23 @@ import com.strobel.decompiler.languages.java.JavaFormattingOptions;
 import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
-import cuchaz.enigma.classprovider.ClassProvider;
-import cuchaz.enigma.source.Source;
-import cuchaz.enigma.source.Decompiler;
-import cuchaz.enigma.source.SourceSettings;
-import cuchaz.enigma.source.procyon.transformers.*;
-import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.utils.AsmUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.objectweb.asm.tree.ClassNode;
+
+import cuchaz.enigma.classprovider.ClassProvider;
+import cuchaz.enigma.source.Decompiler;
+import cuchaz.enigma.source.Source;
+import cuchaz.enigma.source.SourceSettings;
+import cuchaz.enigma.source.procyon.transformers.AddJavadocsAstTransform;
+import cuchaz.enigma.source.procyon.transformers.DropImportAstTransform;
+import cuchaz.enigma.source.procyon.transformers.DropVarModifiersAstTransform;
+import cuchaz.enigma.source.procyon.transformers.InvalidIdentifierFix;
+import cuchaz.enigma.source.procyon.transformers.Java8Generics;
+import cuchaz.enigma.source.procyon.transformers.ObfuscatedEnumSwitchRewriterTransform;
+import cuchaz.enigma.source.procyon.transformers.RemoveObjectCasts;
+import cuchaz.enigma.source.procyon.transformers.VarargsFixer;
+import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.utils.AsmUtil;
 
 public class ProcyonDecompiler implements Decompiler {
 	private final SourceSettings settings;
@@ -63,6 +71,7 @@ public class ProcyonDecompiler implements Decompiler {
 	@Override
 	public Source getSource(String className, @Nullable EntryRemapper remapper) {
 		TypeReference type = metadataSystem.lookupType(className);
+
 		if (type == null) {
 			throw new Error(String.format("Unable to find desc: %s", className));
 		}
@@ -83,8 +92,15 @@ public class ProcyonDecompiler implements Decompiler {
 		new RemoveObjectCasts(context).run(source);
 		new Java8Generics().run(source);
 		new InvalidIdentifierFix().run(source);
-		if (settings.removeImports) DropImportAstTransform.INSTANCE.run(source);
-		if (settings.removeVariableFinal) DropVarModifiersAstTransform.INSTANCE.run(source);
+
+		if (settings.removeImports) {
+			DropImportAstTransform.INSTANCE.run(source);
+		}
+
+		if (settings.removeVariableFinal) {
+			DropVarModifiersAstTransform.INSTANCE.run(source);
+		}
+
 		source.acceptVisitor(new InsertParenthesesVisitor(), null);
 
 		if (remapper != null) {

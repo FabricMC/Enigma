@@ -5,11 +5,7 @@ import java.util.Arrays;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public record EntryMapping(
-		@Nullable String targetName,
-		@Nonnull AccessModifier accessModifier,
-		@Nullable String javadoc
-) {
+public record EntryMapping(@Nullable String targetName, @Nonnull AccessModifier accessModifier, @Nullable String javadoc) {
 	public static final EntryMapping DEFAULT = new EntryMapping(null, AccessModifier.UNCHANGED, null);
 
 	public EntryMapping {

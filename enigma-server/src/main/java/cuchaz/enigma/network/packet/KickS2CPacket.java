@@ -1,10 +1,10 @@
 package cuchaz.enigma.network.packet;
 
-import cuchaz.enigma.network.ClientPacketHandler;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+
+import cuchaz.enigma.network.ClientPacketHandler;
 
 public class KickS2CPacket implements Packet<ClientPacketHandler> {
 	private String reason;

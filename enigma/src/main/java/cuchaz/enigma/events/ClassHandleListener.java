@@ -8,7 +8,6 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.Result;
 
 public interface ClassHandleListener {
-
 	default void onDeobfRefChanged(ClassHandle h, ClassEntry deobfRef) {
 	}
 
@@ -32,5 +31,4 @@ public interface ClassHandleListener {
 		JAVADOC,
 		MAPPINGS,
 	}
-
 }
