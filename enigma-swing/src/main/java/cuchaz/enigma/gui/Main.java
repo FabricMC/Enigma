@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.gui;
 
+import java.awt.Toolkit;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -102,9 +103,16 @@ public class Main {
 			EnigmaProfile parsedProfile = EnigmaProfile.read(options.valueOf(profile));
 
 			I18n.setLanguage(UiConfig.getLanguage());
+			
+			// Use AWT's default anti-aliasing if the system doesn't already provide a style.
+			if (Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints") == null) {
+				setDefaultSystemProperty("awt.useSystemAAFontSettings", "on");
+			}
+			// Not setting "swing.aatext" here because that property has been removed:
+			// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6391267
+
+			// If on MacOS, use the system's menu bar
 			setDefaultSystemProperty("apple.laf.useScreenMenuBar", "true");
-			setDefaultSystemProperty("awt.useSystemAAFontSettings", "on");
-			setDefaultSystemProperty("swing.aatext", "true");
 
 			Themes.setupTheme();
 
