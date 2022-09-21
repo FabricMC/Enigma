@@ -26,6 +26,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.ValueConverter;
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.gui.config.Themes;
@@ -115,6 +116,8 @@ public class Main {
 			setDefaultSystemProperty("apple.laf.useScreenMenuBar", "true");
 
 			Themes.setupTheme();
+
+			KeyBinds.loadConfig();
 
 			Gui gui = new Gui(parsedProfile, editables);
 			GuiController controller = gui.getController();

@@ -11,6 +11,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 import cuchaz.enigma.utils.I18n;
 
 public class ChangeDialog {
@@ -35,7 +36,7 @@ public class ChangeDialog {
 		okButton.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+				if (KeyBinds.EXIT.matches(e)) {
 					frame.dispose();
 				}
 			}

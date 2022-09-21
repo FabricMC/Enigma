@@ -3,6 +3,11 @@ package cuchaz.enigma.gui;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Point;
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
+import de.sciss.syntaxpane.actions.DocumentSearchData;
+import de.sciss.syntaxpane.actions.gui.QuickFindDialog;
+
+import javax.swing.text.JTextComponent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.stream.IntStream;
@@ -12,10 +17,6 @@ import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
-import javax.swing.text.JTextComponent;
-
-import de.sciss.syntaxpane.actions.DocumentSearchData;
-import de.sciss.syntaxpane.actions.gui.QuickFindDialog;
 
 public class EnigmaQuickFindDialog extends QuickFindDialog {
 	public EnigmaQuickFindDialog(JTextComponent target) {
@@ -28,12 +29,12 @@ public class EnigmaQuickFindDialog extends QuickFindDialog {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
-
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				if (KeyBinds.QUICK_FIND_DIALOG_PREVIOUS.matches(e)) {
 					JToolBar toolBar = getToolBar();
-					boolean next = !e.isShiftDown();
-					JButton button = next ? getNextButton(toolBar) : getPrevButton(toolBar);
-					button.doClick();
+					getPrevButton(toolBar).doClick();
+				} else if (KeyBinds.QUICK_FIND_DIALOG_NEXT.matches(e)) {
+					JToolBar toolBar = getToolBar();
+					getNextButton(toolBar).doClick();
 				}
 			}
 		});

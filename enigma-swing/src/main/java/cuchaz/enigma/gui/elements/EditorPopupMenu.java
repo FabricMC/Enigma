@@ -1,16 +1,15 @@
 package cuchaz.enigma.gui.elements;
 
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.KeyStroke;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.EditableType;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -74,20 +73,6 @@ public class EditorPopupMenu {
 		this.openNextItem.setEnabled(false);
 		this.toggleMappingItem.setEnabled(false);
 
-		this.renameItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
-		this.pasteItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
-		this.editJavadocItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK));
-		this.showInheritanceItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK));
-		this.showImplementationsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK));
-		this.showCallsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
-		this.showCallsSpecificItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK + InputEvent.SHIFT_DOWN_MASK));
-		this.openEntryItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
-		this.openPreviousItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK));
-		this.openNextItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
-		this.toggleMappingItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
-		this.zoomInItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, InputEvent.CTRL_DOWN_MASK));
-		this.zoomOutMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK));
-
 		this.renameItem.addActionListener(event -> gui.startRename(editor));
 		this.pasteItem.addActionListener(event -> gui.startRename(editor, GuiUtil.getClipboard()));
 		this.editJavadocItem.addActionListener(event -> gui.startDocChange(editor));
@@ -104,47 +89,59 @@ public class EditorPopupMenu {
 		this.resetZoomItem.addActionListener(event -> editor.resetEditorZoom());
 	}
 
+	public void setKeyBinds() {
+		this.renameItem.setAccelerator(KeyBinds.EDITOR_RENAME.toKeyStroke());
+		this.pasteItem.setAccelerator(KeyBinds.EDITOR_PASTE.toKeyStroke());
+		this.editJavadocItem.setAccelerator(KeyBinds.EDITOR_EDIT_JAVADOC.toKeyStroke());
+		this.showInheritanceItem.setAccelerator(KeyBinds.EDITOR_SHOW_INHERITANCE.toKeyStroke());
+		this.showImplementationsItem.setAccelerator(KeyBinds.EDITOR_SHOW_IMPLEMENTATIONS.toKeyStroke());
+		this.showCallsItem.setAccelerator(KeyBinds.EDITOR_SHOW_CALLS.toKeyStroke());
+		this.showCallsSpecificItem.setAccelerator(KeyBinds.EDITOR_SHOW_CALLS_SPECIFIC.toKeyStroke());
+		this.openEntryItem.setAccelerator(KeyBinds.EDITOR_OPEN_ENTRY.toKeyStroke());
+		this.openPreviousItem.setAccelerator(KeyBinds.EDITOR_OPEN_PREVIOUS.toKeyStroke());
+		this.openNextItem.setAccelerator(KeyBinds.EDITOR_OPEN_NEXT.toKeyStroke());
+		this.toggleMappingItem.setAccelerator(KeyBinds.EDITOR_TOGGLE_MAPPING.toKeyStroke());
+		this.zoomInItem.setAccelerator(KeyBinds.EDITOR_ZOOM_IN.toKeyStroke());
+		this.zoomOutMenu.setAccelerator(KeyBinds.EDITOR_ZOOM_OUT.toKeyStroke());
+	}
+
 	// TODO have editor redirect key event to menu so that the actions get
 	//  	triggered without having to hardcode them here, because this
 	//		is a hack
 	public boolean handleKeyEvent(KeyEvent event) {
-		if (event.isControlDown()) {
-			switch (event.getKeyCode()) {
-				case KeyEvent.VK_I:
-					this.showInheritanceItem.doClick();
-					return true;
-				case KeyEvent.VK_M:
-					this.showImplementationsItem.doClick();
-					return true;
-				case KeyEvent.VK_N:
-					this.openEntryItem.doClick();
-					return true;
-				case KeyEvent.VK_P:
-					this.openPreviousItem.doClick();
-					return true;
-				case KeyEvent.VK_E:
-					this.openNextItem.doClick();
-					return true;
-				case KeyEvent.VK_C:
-					if (event.isShiftDown()) {
-						this.showCallsSpecificItem.doClick();
-					} else {
-						this.showCallsItem.doClick();
-					}
-					return true;
-				case KeyEvent.VK_O:
-					this.toggleMappingItem.doClick();
-					return true;
-				case KeyEvent.VK_R:
-					this.renameItem.doClick();
-					return true;
-				case KeyEvent.VK_D:
-					this.editJavadocItem.doClick();
-					return true;
-				case KeyEvent.VK_V:
-					this.pasteItem.doClick();
-					return true;
-			}
+		if (KeyBinds.EDITOR_SHOW_INHERITANCE.matches(event)) {
+			this.showInheritanceItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_SHOW_IMPLEMENTATIONS.matches(event)) {
+			this.showImplementationsItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_OPEN_ENTRY.matches(event)) {
+			this.openEntryItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_OPEN_PREVIOUS.matches(event)) {
+			this.openPreviousItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_OPEN_NEXT.matches(event)) {
+			this.openNextItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_SHOW_CALLS_SPECIFIC.matches(event)) {
+			this.showCallsSpecificItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_SHOW_CALLS.matches(event)) {
+			this.showCallsItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_TOGGLE_MAPPING.matches(event)) {
+			this.toggleMappingItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_RENAME.matches(event)) {
+			this.renameItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_EDIT_JAVADOC.matches(event)) {
+			this.editJavadocItem.doClick();
+			return true;
+		} else if (KeyBinds.EDITOR_PASTE.matches(event)) {
+			this.pasteItem.doClick();
+			return true;
 		}
 
 		return false;
