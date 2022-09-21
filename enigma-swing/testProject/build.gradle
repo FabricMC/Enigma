@@ -44,6 +44,6 @@ task obfuscate(type: proguard.gradle.ProGuardTask) {
     keepattributes 'Deprecated'
     renamesourcefileattribute 'SourceFile'
     printmapping 'output/out.txt'
-    flattenpackagehierarchy('com.example')
+    flattenpackagehierarchy('tests.quilt')
 }
 

@@ -1,4 +1,9 @@
-package com.example.bridgemethodsissue;
+/*
+ * Class to reproduce issue #9
+ * https://github.com/QuiltMC/enigma/issues/9
+ */
+
+package tests.quilt.issue9;
 
 public class SuperClass {
     private int x;
