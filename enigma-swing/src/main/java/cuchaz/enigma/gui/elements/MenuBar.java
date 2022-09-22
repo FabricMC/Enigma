@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -438,6 +439,28 @@ public class MenuBar {
 				});
 				saveMappingsAsMenu.add(item);
 			}
+		}
+
+		saveMappingsAsMenu.addSeparator();
+
+		List<net.fabricmc.mappingio.format.MappingFormat> writableMappingIoFormats = Arrays.asList(
+				net.fabricmc.mappingio.format.MappingFormat.ENIGMA,
+				net.fabricmc.mappingio.format.MappingFormat.TINY_2);
+		for (net.fabricmc.mappingio.format.MappingFormat format : writableMappingIoFormats) {
+			JMenuItem item = new JMenuItem(format.name + " (via mapping-io, experimental)");
+			item.addActionListener(event -> {
+				// TODO: Use a specific file chooser for it
+				if (gui.enigmaMappingsFileChooser.getCurrentDirectory() == null) {
+					gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+				}
+
+				if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+					gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
+					saveMappingsItem.setEnabled(true);
+					UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
+				}
+			});
+			saveMappingsAsMenu.add(item);
 		}
 	}
 

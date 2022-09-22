@@ -21,21 +21,23 @@ import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Writer;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 public enum MappingFormat {
-	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE),
-	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY),
-	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP),
-	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader()),
-	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE),
-	SRG_FILE(SrgMappingsWriter.INSTANCE, null),
-	PROGUARD(null, ProguardMappingsReader.INSTANCE),
-	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE);
+	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE, null),
+	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY, net.fabricmc.mappingio.format.MappingFormat.ENIGMA),
+	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP, null),
+	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader(), net.fabricmc.mappingio.format.MappingFormat.TINY_2),
+	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE, net.fabricmc.mappingio.format.MappingFormat.TINY),
+	SRG_FILE(SrgMappingsWriter.INSTANCE, null, net.fabricmc.mappingio.format.MappingFormat.SRG),
+	PROGUARD(null, ProguardMappingsReader.INSTANCE, net.fabricmc.mappingio.format.MappingFormat.PROGUARD),
+	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE, null);
 
 	private final MappingsWriter writer;
 	private final MappingsReader reader;
+	private final net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart;
 
-	MappingFormat(MappingsWriter writer, MappingsReader reader) {
+	MappingFormat(MappingsWriter writer, MappingsReader reader, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart) {
 		this.writer = writer;
 		this.reader = reader;
+		this.mappingIoCounterpart = mappingIoCounterpart;
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
@@ -66,5 +68,10 @@ public enum MappingFormat {
 	@Nullable
 	public MappingsReader getReader() {
 		return reader;
+	}
+
+	@Nullable
+	public net.fabricmc.mappingio.format.MappingFormat getMappingIoCounterpart() {
+		return mappingIoCounterpart;
 	}
 }

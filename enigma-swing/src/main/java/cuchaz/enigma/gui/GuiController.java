@@ -29,6 +29,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Lists;
+import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
@@ -77,6 +79,7 @@ import cuchaz.enigma.translation.mapping.EntryUtil;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -210,6 +213,48 @@ public class GuiController implements ClientPacketHandler {
 			} else {
 				format.write(mapper.getObfToDeobf(), delta, path, progress, saveParameters);
 			}
+		});
+	}
+
+	public CompletableFuture<Void> saveMappings(Path path, net.fabricmc.mappingio.format.MappingFormat format) {
+		if (project == null) {
+			return CompletableFuture.completedFuture(null);
+		}
+
+		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
+			EntryRemapper mapper = project.getMapper();
+			MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
+
+			MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
+			boolean saveAll = !path.equals(loadedMappingPath);
+
+			switch (format) {
+			case ENIGMA:
+				loadedMappingFormat = MappingFormat.ENIGMA_DIRECTORY;
+				loadedMappingPath = path;
+				break;
+			case PROGUARD:
+				loadedMappingFormat = MappingFormat.PROGUARD;
+				loadedMappingPath = path;
+				break;
+			case SRG:
+				loadedMappingFormat = MappingFormat.SRG_FILE;
+				loadedMappingPath = path;
+				break;
+			case TINY:
+				loadedMappingFormat = MappingFormat.TINY_FILE;
+				loadedMappingPath = path;
+				break;
+			case TINY_2:
+				loadedMappingFormat = MappingFormat.TINY_V2;
+				loadedMappingPath = path;
+				break;
+			}
+
+			MemoryMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf());
+			MappingWriter writer = MappingWriter.create(path, format);
+			mappingTree.accept(writer);
+			writer.close();
 		});
 	}
 
