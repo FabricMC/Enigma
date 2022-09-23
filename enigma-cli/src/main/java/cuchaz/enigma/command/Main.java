@@ -48,13 +48,13 @@ public class Main {
 				throw new CommandHelpException(cmd, ex);
 			}
 		} catch (CommandHelpException ex) {
-			System.err.println(ex.getMessage());
+			ex.printStackTrace();
 			System.out.println(String.format("%s - %s", Enigma.NAME, Enigma.VERSION));
 			System.out.println("Command " + ex.command.name + " has encountered an error! Usage:");
 			printHelp(ex.command);
 			System.exit(1);
 		} catch (IllegalArgumentException ex) {
-			System.err.println(ex.getMessage());
+			ex.printStackTrace();
 			printHelp();
 			System.exit(1);
 		}
