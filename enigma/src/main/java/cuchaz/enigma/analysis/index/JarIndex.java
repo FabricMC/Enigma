@@ -87,7 +87,7 @@ public class JarIndex implements JarIndexer {
 			try {
 				classProvider.get(className).accept(new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Enigma.ASM_VERSION));
 			} catch (Exception e) {
-				throw new RuntimeException("Exception while indexing class '" + className + "'':\n" + e);
+				throw new RuntimeException("Exception while indexing class: " + className,  e);
 			}
 		}
 
