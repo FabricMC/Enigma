@@ -62,7 +62,7 @@ public class ProguardMappingsReader implements MappingsReader {
 				String targetName = fieldMatcher.group(3);
 
 				if (currentClass == null) {
-					throw new MappingParseException(path.toString(), lineNumber, "field mapping not inside class: " + line);
+					throw new MappingParseException(path, lineNumber, "field mapping not inside class: " + line);
 				}
 
 				mappings.insert(new FieldEntry(currentClass, name, new TypeDescriptor(getDescriptor(type))), new EntryMapping(targetName));
@@ -73,12 +73,12 @@ public class ProguardMappingsReader implements MappingsReader {
 				String targetName = methodMatcher.group(4);
 
 				if (currentClass == null) {
-					throw new MappingParseException(path.toString(), lineNumber, "method mapping not inside class: " + line);
+					throw new MappingParseException(path, lineNumber, "method mapping not inside class: " + line);
 				}
 
 				mappings.insert(new MethodEntry(currentClass, name, new MethodDescriptor(getDescriptor(returnType, parameterTypes))), new EntryMapping(targetName));
 			} else {
-				throw new MappingParseException(path.toString(), lineNumber, "invalid mapping line: " + line);
+				throw new MappingParseException(path, lineNumber, "invalid mapping line: " + line);
 			}
 		}
 

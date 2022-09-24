@@ -50,7 +50,7 @@ public enum TinyMappingsReader implements MappingsReader {
 				MappingPair<?, EntryMapping> mapping = parseLine(line);
 				mappings.insert(mapping.getEntry(), mapping.getMapping());
 			} catch (Throwable t) {
-				throw new MappingParseException(path.toString(), lineNumber, t);
+				throw new MappingParseException(path, lineNumber, t);
 			}
 		}
 

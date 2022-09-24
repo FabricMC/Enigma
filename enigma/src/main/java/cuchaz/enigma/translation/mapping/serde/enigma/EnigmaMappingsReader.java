@@ -56,8 +56,8 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			if (!Files.isDirectory(root)) {
 				throw new NotDirectoryException(root.toString());
 			}
-			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
+			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 			List<Path> files = Files.walk(root).filter(f -> !Files.isDirectory(f)).filter(f -> f.toString().endsWith(".mapping")).toList();
 
 			progress.init(files.size(), I18n.translate("progress.mappings.enigma_directory.loading"));
@@ -136,7 +136,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 					mappingStack.push(pair);
 				}
 			} catch (Throwable t) {
-				throw new MappingParseException(path.toString(), lineNumber + 1, t);
+				throw new MappingParseException(path, lineNumber + 1, t);
 			}
 		}
 
@@ -186,7 +186,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 
 		for (int i = 0; i < line.length(); i++) {
 			if (line.charAt(i) == ' ') {
-				throw new MappingParseException(path.toString(), lineNumber + 1, "Spaces must not be used to indent lines!");
+				throw new MappingParseException(path, lineNumber + 1, "Spaces must not be used to indent lines!");
 			}
 
 			if (line.charAt(i) != '\t') {
