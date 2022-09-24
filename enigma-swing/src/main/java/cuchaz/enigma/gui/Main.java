@@ -11,6 +11,7 @@
 
 package cuchaz.enigma.gui;
 
+import java.awt.Toolkit;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -102,7 +103,18 @@ public class Main {
 			EnigmaProfile parsedProfile = EnigmaProfile.read(options.valueOf(profile));
 
 			I18n.setLanguage(UiConfig.getLanguage());
-			System.setProperty("apple.laf.useScreenMenuBar", "true");
+
+			// Provide fallback anti-aliasing for desktop environments the JRE doesn't recognize
+			if (Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints") == null) {
+				setDefaultSystemProperty("awt.useSystemAAFontSettings", "lcd");
+			}
+
+			// Not setting "swing.aatext" here because that property has been removed:
+			// https://bugs.openjdk.org/browse/JDK-6391267
+
+			// If on MacOS, use the system's menu bar, not the in-app one
+			setDefaultSystemProperty("apple.laf.useScreenMenuBar", "true");
+
 			Themes.setupTheme();
 
 			Gui gui = new Gui(parsedProfile, editables);
@@ -145,6 +157,10 @@ public class Main {
 			System.out.println();
 			parser.printHelpOn(System.out);
 		}
+	}
+
+	private static void setDefaultSystemProperty(String property, String value) {
+		System.setProperty(property, System.getProperty(property, value));
 	}
 
 	public static class PathConverter implements ValueConverter<Path> {
