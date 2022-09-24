@@ -36,6 +36,7 @@ public class StatsDialog {
 			for (StatsMember member : StatsMember.values()) {
 				results.put(member, statsGenerator.generate(listener, Collections.singleton(member), "", false));
 			}
+
 			SwingUtilities.invokeLater(() -> show(gui, results, ""));
 		});
 	}
@@ -89,12 +90,13 @@ public class StatsDialog {
 
 				final StatsGenerator statsGenerator = new StatsGenerator(gui.getController().project);
 				final Map<StatsMember, StatsResult> _results = new HashMap<>();
+
 				for (StatsMember member : StatsMember.values()) {
 					_results.put(member, statsGenerator.generate(listener, Collections.singleton(member), UiConfig.getLastTopLevelPackage(), false));
 				}
+
 				SwingUtilities.invokeLater(() -> show(gui, _results, UiConfig.getLastTopLevelPackage()));
 			});
-
 		});
 		contentPane.add(filterButton, cb1.pos(0, results.size() + 3).anchor(GridBagConstraints.EAST).build());
 
