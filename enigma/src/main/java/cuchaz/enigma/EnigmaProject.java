@@ -18,9 +18,6 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import cuchaz.enigma.api.service.ObfuscationTestService;
-import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
-import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -41,6 +38,7 @@ import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.MappingsChecker;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
@@ -155,6 +153,7 @@ public class EnigmaProject {
 				return false;
 			} else {
 				ClassDefEntry parent = jarIndex.getEntryIndex().getDefinition(obfMethodEntry.getParent());
+
 				if (parent != null && parent.getSuperClass() != null && parent.getSuperClass().getFullName().equals("java/lang/Enum")) {
 					if (name.equals("values") && sig.equals("()[L" + parent.getFullName() + ";")) {
 						return false;
