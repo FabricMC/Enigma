@@ -89,13 +89,13 @@ public class StatsDialog {
 				UiConfig.save();
 
 				final StatsGenerator statsGenerator = new StatsGenerator(gui.getController().project);
-				final Map<StatsMember, StatsResult> _results = new HashMap<>();
+				final Map<StatsMember, StatsResult> filteredResults = new HashMap<>();
 
 				for (StatsMember member : StatsMember.values()) {
-					_results.put(member, statsGenerator.generate(listener, Collections.singleton(member), UiConfig.getLastTopLevelPackage(), false));
+					filteredResults.put(member, statsGenerator.generate(listener, Collections.singleton(member), UiConfig.getLastTopLevelPackage(), false));
 				}
 
-				SwingUtilities.invokeLater(() -> show(gui, _results, UiConfig.getLastTopLevelPackage()));
+				SwingUtilities.invokeLater(() -> show(gui, filteredResults, UiConfig.getLastTopLevelPackage()));
 			});
 		});
 		contentPane.add(filterButton, cb1.pos(0, results.size() + 3).anchor(GridBagConstraints.EAST).build());
