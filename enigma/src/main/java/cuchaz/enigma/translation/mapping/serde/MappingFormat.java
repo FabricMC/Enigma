@@ -2,6 +2,8 @@ package cuchaz.enigma.translation.mapping.serde;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -65,5 +67,19 @@ public enum MappingFormat {
 	@Nullable
 	public MappingsReader getReader() {
 		return reader;
+	}
+
+	public static List<MappingFormat> getWritableFormats() {
+		return Arrays.asList(values())
+				.stream()
+				.filter(format -> format.getWriter() != null)
+				.toList();
+	}
+
+	public static List<MappingFormat> getReadableFormats() {
+		return Arrays.asList(values())
+				.stream()
+				.filter(format -> format.getReader() != null)
+				.toList();
 	}
 }
