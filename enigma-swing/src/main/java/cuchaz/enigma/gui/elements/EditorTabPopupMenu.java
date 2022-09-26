@@ -1,12 +1,11 @@
 package cuchaz.enigma.gui.elements;
 
 import java.awt.Component;
-import java.awt.event.KeyEvent;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.KeyStroke;
 
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.utils.I18n;
 
@@ -24,7 +23,7 @@ public class EditorTabPopupMenu {
 		this.ui = new JPopupMenu();
 
 		this.close = new JMenuItem();
-		this.close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_4, KeyEvent.CTRL_DOWN_MASK));
+		this.close.setAccelerator(KeyBinds.EDITOR_CLOSE_TAB.toKeyStroke());
 		this.close.addActionListener(a -> pane.closeEditor(editor));
 		this.ui.add(this.close);
 

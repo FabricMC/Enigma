@@ -48,6 +48,7 @@ import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 import cuchaz.enigma.gui.elements.EditorPopupMenu;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
@@ -162,39 +163,20 @@ public class EditorPanel {
 		this.editor.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
-				if (event.isControlDown()) {
-					EditorPanel.this.shouldNavigateOnClick = false;
+				if (EditorPanel.this.popupMenu.handleKeyEvent(event)) return;
 
-					if (EditorPanel.this.popupMenu.handleKeyEvent(event)) {
-						return;
+				if (KeyBinds.EDITOR_RELOAD_CLASS.matches(event)) {
+					if (EditorPanel.this.classHandle != null) {
+						EditorPanel.this.classHandle.invalidate();
 					}
-
-					switch (event.getKeyCode()) {
-					case KeyEvent.VK_F5:
-						if (EditorPanel.this.classHandle != null) {
-							EditorPanel.this.classHandle.invalidate();
-						}
-
-						break;
-
-					case KeyEvent.VK_F:
-						// prevent navigating on click when quick find activated
-						break;
-
-					case KeyEvent.VK_ADD:
-					case KeyEvent.VK_EQUALS:
-					case KeyEvent.VK_PLUS:
-						offsetEditorZoom(2);
-						break;
-					case KeyEvent.VK_SUBTRACT:
-					case KeyEvent.VK_MINUS:
-						offsetEditorZoom(-2);
-						break;
-
-					default:
-						EditorPanel.this.shouldNavigateOnClick = true; // CTRL
-						break;
-					}
+				} else if (KeyBinds.EDITOR_QUICK_FIND.matches(event)) {
+					// prevent navigating on click when quick find activated
+				} else if (KeyBinds.EDITOR_ZOOM_IN.matches(event)) {
+					offsetEditorZoom(2);
+				} else if (KeyBinds.EDITOR_ZOOM_OUT.matches(event)) {
+					offsetEditorZoom(-2);
+				} else if (event.isControlDown()) {
+					EditorPanel.this.shouldNavigateOnClick = true; // CTRL
 				}
 			}
 
@@ -691,6 +673,10 @@ public class EditorPanel {
 
 	public void retranslateUi() {
 		this.popupMenu.retranslateUi();
+	}
+
+	public void reloadKeyBinds() {
+		this.popupMenu.setKeyBinds();
 	}
 
 	private enum DisplayMode {

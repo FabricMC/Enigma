@@ -29,6 +29,7 @@ import joptsimple.ValueConverter;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
 import cuchaz.enigma.gui.dialog.CrashDialog;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.utils.I18n;
@@ -104,6 +105,8 @@ public class Main {
 			I18n.setLanguage(UiConfig.getLanguage());
 			System.setProperty("apple.laf.useScreenMenuBar", "true");
 			Themes.setupTheme();
+
+			KeyBinds.loadConfig();
 
 			Gui gui = new Gui(parsedProfile, editables);
 			GuiController controller = gui.getController();

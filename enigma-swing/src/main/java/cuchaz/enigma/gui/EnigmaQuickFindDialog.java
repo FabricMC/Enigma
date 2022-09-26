@@ -17,6 +17,8 @@ import javax.swing.text.JTextComponent;
 import de.sciss.syntaxpane.actions.DocumentSearchData;
 import de.sciss.syntaxpane.actions.gui.QuickFindDialog;
 
+import cuchaz.enigma.gui.config.keybind.KeyBinds;
+
 public class EnigmaQuickFindDialog extends QuickFindDialog {
 	public EnigmaQuickFindDialog(JTextComponent target) {
 		super(target, DocumentSearchData.getFromEditor(target));
@@ -29,11 +31,12 @@ public class EnigmaQuickFindDialog extends QuickFindDialog {
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
 
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				if (KeyBinds.QUICK_FIND_DIALOG_PREVIOUS.matches(e)) {
 					JToolBar toolBar = getToolBar();
-					boolean next = !e.isShiftDown();
-					JButton button = next ? getNextButton(toolBar) : getPrevButton(toolBar);
-					button.doClick();
+					getPrevButton(toolBar).doClick();
+				} else if (KeyBinds.QUICK_FIND_DIALOG_NEXT.matches(e)) {
+					JToolBar toolBar = getToolBar();
+					getNextButton(toolBar).doClick();
 				}
 			}
 		});
