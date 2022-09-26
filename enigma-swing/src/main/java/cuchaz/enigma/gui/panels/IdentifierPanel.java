@@ -131,11 +131,14 @@ public class IdentifierPanel {
 					}
 				} else {
 					this.nameField = th.addRenameTextField(EditableType.METHOD, me.getName());
-					th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
 				}
 
 				if (renamed) {
 					th.addCopiableStringRow(I18n.translate("info_panel.identifier.original_name"), entry.getName());
+				}
+
+				if (!me.isConstructor()) {
+					th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
 				}
 
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.method_descriptor"), me.getDesc().toString());
