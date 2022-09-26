@@ -28,8 +28,6 @@
 	"menu.file.export.jar": "Export Jar...",
 	"menu.file.stats": "Mapping Stats...",
 	"menu.file.stats.title": "Mapping Stats",
-	"menu.file.stats.title_filtered": "Mapping Stats for %s",
-	"menu.file.stats.filter": "Filter",
 	"menu.file.stats.top_level_package": "Top-Level Package:",
 	"menu.file.stats.synthetic_parameters": "Include Synthetic Parameters",
 	"menu.file.stats.generate": "Generate Diagram",
