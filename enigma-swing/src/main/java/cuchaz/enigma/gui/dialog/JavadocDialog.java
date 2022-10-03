@@ -191,7 +191,7 @@ public class JavadocDialog {
 	}
 
 	private EntryChange<?> getEntryChange() {
-		return text.getText().trim().isEmpty() ? EntryChange.modify(entry).clearJavadoc() : EntryChange.modify(entry).withJavadoc(text.getText());
+		return text.getText().isBlank() ? EntryChange.modify(entry).clearJavadoc() : EntryChange.modify(entry).withJavadoc(text.getText());
 	}
 
 	public static void show(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry) {
