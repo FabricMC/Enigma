@@ -53,7 +53,10 @@ public abstract class ClassPanel extends JPanel {
 		updateCounter();
 	};
 
-	public abstract void retranslateUi();
+	public void retranslateUi() {
+		updateCounter();
+		contextMenu.retranslateUi();
+	}
 
 	public abstract void updateCounter();
 }

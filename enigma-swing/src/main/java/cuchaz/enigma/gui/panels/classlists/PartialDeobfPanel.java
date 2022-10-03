@@ -15,12 +15,6 @@ public class PartialDeobfPanel extends ClassPanel {
 	}
 
 	@Override
-	public void retranslateUi() {
-		updateCounter();
-		this.contextMenu.retranslateUi();
-	}
-
-	@Override
 	public void updateCounter() {
 		this.title.setText(String.format("%s (%s)",
 				I18n.translate("info_panel.classes.partially_deobfuscated"),

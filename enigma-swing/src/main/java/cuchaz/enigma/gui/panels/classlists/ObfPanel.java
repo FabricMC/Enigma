@@ -25,18 +25,13 @@ public class ObfPanel extends ClassPanel {
 			return aname.compareTo(bname);
 		};
 
-		return new ClassSelector(this, gui, obfClassComparator, false);
-	}
-
-	@Override
-	public void retranslateUi() {
-		this.title.setText(String.format("%s (%s)",
-				I18n.translate("info_panel.classes.obfuscated"),
-				classes.getClassesCount()));
+		return new ClassSelector(this, gui, obfClassComparator, true);
 	}
 
 	@Override
 	public void updateCounter() {
-		retranslateUi();
+		this.title.setText(String.format("%s (%s)",
+				I18n.translate("info_panel.classes.obfuscated"),
+				classes.getClassesCount()));
 	}
 }

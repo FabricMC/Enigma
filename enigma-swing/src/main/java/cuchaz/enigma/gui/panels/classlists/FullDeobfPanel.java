@@ -15,12 +15,6 @@ public class FullDeobfPanel extends ClassPanel {
 	}
 
 	@Override
-	public void retranslateUi() {
-		updateCounter();
-		this.contextMenu.retranslateUi();
-	}
-
-	@Override
 	public void updateCounter() {
 		this.title.setText(String.format("%s (%s)",
 				I18n.translate(gui.isSingleClassTree() ? "info_panel.classes" : "info_panel.classes.fully_deobfuscated"),
