@@ -84,10 +84,10 @@
 	"popup_menu.editor_tab.close_others": "他を閉じる",
 	"popup_menu.editor_tab.close_left": "左のタブを全て閉じる",
 	"popup_menu.editor_tab.close_right": "右のタブを全て閉じる",
-	"popup_menu.deobf_panel.rename_package": "パッケージをリネーム",
-	"popup_menu.deobf_panel.rename_class": "クラスをリネーム",
-	"popup_menu.deobf_panel.expand_all": "全て展開",
-	"popup_menu.deobf_panel.collapse_all": "全て折りたたむ",
+	"popup_menu.class_panel.rename_package": "パッケージをリネーム",
+	"popup_menu.class_panel.rename_class": "クラスをリネーム",
+	"popup_menu.class_panel.expand_all": "全て展開",
+	"popup_menu.class_panel.collapse_all": "全て折りたたむ",
 
 	"editor.decompiling": "デコンパイル中...",
 	"editor.decompile_error": "デコンパイル中にエラーが発生しました",
@@ -95,7 +95,6 @@
 
 	"info_panel.classes": "クラス一覧",
 	"info_panel.classes.obfuscated": "難読化されたクラス",
-	"info_panel.classes.deobfuscated": "難読化解除されたクラス",
 	"info_panel.identifier": "識別子情報",
 	"info_panel.identifier.none": "識別子が選択されていません",
 	"info_panel.identifier.variable": "変数",

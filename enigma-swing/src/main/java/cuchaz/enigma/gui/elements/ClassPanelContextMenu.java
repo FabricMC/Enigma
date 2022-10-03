@@ -54,9 +54,9 @@ public class ClassPanelContextMenu {
 	}
 
 	public void retranslateUi() {
-		this.renamePackage.setText(I18n.translate("popup_menu.deobf_panel.rename_package"));
-		this.renameClass.setText(I18n.translate("popup_menu.deobf_panel.rename_class"));
-		this.expandAll.setText(I18n.translate("popup_menu.deobf_panel.expand_all"));
-		this.collapseAll.setText(I18n.translate("popup_menu.deobf_panel.collapse_all"));
+		this.renamePackage.setText(I18n.translate("popup_menu.class_panel.rename_package"));
+		this.renameClass.setText(I18n.translate("popup_menu.class_panel.rename_class"));
+		this.expandAll.setText(I18n.translate("popup_menu.class_panel.expand_all"));
+		this.collapseAll.setText(I18n.translate("popup_menu.class_panel.collapse_all"));
 	}
 }
