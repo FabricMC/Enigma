@@ -57,11 +57,13 @@ import cuchaz.enigma.gui.elements.InheritanceTree;
 import cuchaz.enigma.gui.elements.MainWindow;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.ValidatableUi;
-import cuchaz.enigma.gui.panels.DeobfPanel;
 import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.gui.panels.IdentifierPanel;
-import cuchaz.enigma.gui.panels.ObfPanel;
 import cuchaz.enigma.gui.panels.StructurePanel;
+import cuchaz.enigma.gui.panels.classlists.ClassPanel;
+import cuchaz.enigma.gui.panels.classlists.FullDeobfPanel;
+import cuchaz.enigma.gui.panels.classlists.ObfPanel;
+import cuchaz.enigma.gui.panels.classlists.PartialDeobfPanel;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
@@ -73,6 +75,7 @@ import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.utils.I18n;
 import cuchaz.enigma.utils.validation.ParameterizedMessage;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -88,7 +91,8 @@ public class Gui {
 
 	private final MenuBar menuBar;
 	private final ObfPanel obfPanel;
-	private final DeobfPanel deobfPanel;
+	private final PartialDeobfPanel partialDeobfPanel;
+	private final FullDeobfPanel fullDeobfPanel;
 	private final IdentifierPanel infoPanel;
 	private final StructurePanel structurePanel;
 	private final InheritanceTree inheritanceTree;
@@ -98,7 +102,8 @@ public class Gui {
 	private final EditorTabbedPane editorTabbedPane;
 
 	private final JPanel classesPanel = new JPanel(new BorderLayout());
-	private final JSplitPane splitClasses;
+	private final JSplitPane splitObfAndDeobf;
+	private final JSplitPane splitPartialDeobfAndFullDeobf;
 	private final JTabbedPane tabs = new JTabbedPane();
 	private final CollapsibleTabbedPane logTabs = new CollapsibleTabbedPane(JTabbedPane.BOTTOM);
 	private final JSplitPane logSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tabs, logTabs);
@@ -127,15 +132,17 @@ public class Gui {
 		this.editableTypes = editableTypes;
 		this.controller = new GuiController(this, profile);
 		this.structurePanel = new StructurePanel(this);
-		this.deobfPanel = new DeobfPanel(this);
-		this.infoPanel = new IdentifierPanel(this);
 		this.obfPanel = new ObfPanel(this);
+		this.partialDeobfPanel = new PartialDeobfPanel(this);
+		this.fullDeobfPanel = new FullDeobfPanel(this);
+		this.infoPanel = new IdentifierPanel(this);
 		this.menuBar = new MenuBar(this);
 		this.inheritanceTree = new InheritanceTree(this);
 		this.implementationsTree = new ImplementationsTree(this);
 		this.callsTree = new CallsTree(this);
 		this.editorTabbedPane = new EditorTabbedPane(this);
-		this.splitClasses = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, this.obfPanel, this.deobfPanel);
+		this.splitPartialDeobfAndFullDeobf = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, this.partialDeobfPanel, this.fullDeobfPanel);
+		this.splitObfAndDeobf = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, this.obfPanel, this.splitPartialDeobfAndFullDeobf);
 
 		this.setupUi();
 
@@ -157,7 +164,11 @@ public class Gui {
 
 		this.exportJarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		this.splitClasses.setResizeWeight(0.3);
+		// obfPanel gets 33% of screen height
+		this.splitObfAndDeobf.setResizeWeight(0.33);
+		// The two deobfPanels equally share the remaining 66%
+		this.splitPartialDeobfAndFullDeobf.setResizeWeight(0.5);
+
 		this.classesPanel.setPreferredSize(ScaleUtil.getDimension(250, 0));
 
 		// layout controls
@@ -200,11 +211,12 @@ public class Gui {
 		// restore state
 		int[] layout = UiConfig.getLayout();
 
-		if (layout.length >= 4) {
-			this.splitClasses.setDividerLocation(layout[0]);
-			this.splitCenter.setDividerLocation(layout[1]);
-			this.splitRight.setDividerLocation(layout[2]);
-			this.logSplit.setDividerLocation(layout[3]);
+		if (layout.length >= 5) {
+			this.splitObfAndDeobf.setDividerLocation(layout[0]);
+			this.splitPartialDeobfAndFullDeobf.setDividerLocation(layout[1]);
+			this.splitCenter.setDividerLocation(layout[2]);
+			this.splitRight.setDividerLocation(layout[3]);
+			this.logSplit.setDividerLocation(layout[4]);
 		}
 
 		this.mainWindow.statusBar().addPermanentComponent(this.connectionStatusLabel);
@@ -246,7 +258,13 @@ public class Gui {
 	public void setSingleClassTree(boolean singleClassTree) {
 		this.singleClassTree = singleClassTree;
 		this.classesPanel.removeAll();
-		this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
+
+		if (isSingleClassTree()) {
+			this.classesPanel.add(fullDeobfPanel);
+		} else {
+			this.classesPanel.add(splitObfAndDeobf);
+		}
+
 		getController().refreshClasses();
 		retranslateUi();
 	}
@@ -264,7 +282,13 @@ public class Gui {
 		// update gui
 		this.mainWindow.setTitle(Enigma.NAME + " - " + jarName);
 		this.classesPanel.removeAll();
-		this.classesPanel.add(isSingleClassTree() ? deobfPanel : splitClasses);
+
+		if (isSingleClassTree()) {
+			this.classesPanel.add(fullDeobfPanel);
+		} else {
+			this.classesPanel.add(splitObfAndDeobf);
+		}
+
 		this.editorTabbedPane.closeAllEditorTabs();
 
 		// update menu
@@ -278,7 +302,8 @@ public class Gui {
 		// update gui
 		this.mainWindow.setTitle(Enigma.NAME);
 		setObfClasses(null);
-		setDeobfClasses(null);
+		setPartiallyDeobfClasses(null);
+		setFullyDeobfClasses(null);
 		this.editorTabbedPane.closeAllEditorTabs();
 		this.classesPanel.removeAll();
 
@@ -313,11 +338,18 @@ public class Gui {
 	}
 
 	public void setObfClasses(Collection<ClassEntry> obfClasses) {
-		this.obfPanel.obfClasses.setClasses(obfClasses);
+		this.obfPanel.classes.setClasses(obfClasses);
+		this.obfPanel.updateCounter();
 	}
 
-	public void setDeobfClasses(Collection<ClassEntry> deobfClasses) {
-		this.deobfPanel.deobfClasses.setClasses(deobfClasses);
+	public void setPartiallyDeobfClasses(Collection<ClassEntry> partiallyDeobfClasses) {
+		this.partialDeobfPanel.classes.setClasses(partiallyDeobfClasses);
+		this.partialDeobfPanel.updateCounter();
+	}
+
+	public void setFullyDeobfClasses(Collection<ClassEntry> fullyDeobfClasses) {
+		this.fullDeobfPanel.classes.setClasses(fullyDeobfClasses);
+		this.fullDeobfPanel.updateCounter();
 	}
 
 	public void setMappingsFile(Path path) {
@@ -464,7 +496,12 @@ public class Gui {
 	private void exit() {
 		UiConfig.setWindowPos("Main Window", this.mainWindow.frame().getLocationOnScreen());
 		UiConfig.setWindowSize("Main Window", this.mainWindow.frame().getSize());
-		UiConfig.setLayout(this.splitClasses.getDividerLocation(), this.splitCenter.getDividerLocation(), this.splitRight.getDividerLocation(), this.logSplit.getDividerLocation());
+		UiConfig.setLayout(
+				this.splitObfAndDeobf.getDividerLocation(),
+				this.splitPartialDeobfAndFullDeobf.getDividerLocation(),
+				this.splitCenter.getDividerLocation(),
+				this.splitRight.getDividerLocation(),
+				this.logSplit.getDividerLocation());
 		UiConfig.save();
 
 		if (searchDialog != null) {
@@ -482,7 +519,7 @@ public class Gui {
 		frame.repaint();
 	}
 
-	public void onRenameFromClassTree(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node) {
+	public void onRenameFromClassTree(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node, ClassPanel panel) {
 		if (data instanceof String) {
 			// package rename
 			for (int i = 0; i < node.getChildCount(); i++) {
@@ -490,12 +527,11 @@ public class Gui {
 				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
 				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
 
-				onRenameFromClassTree(vc, prevDataChild, dataChild, node);
+				onRenameFromClassTree(vc, prevDataChild, dataChild, node, panel);
 			}
 
 			node.setUserObject(data);
-			// Ob package will never be modified, just reload deob view
-			this.deobfPanel.deobfClasses.reload();
+			panel.reload();
 		} else if (data instanceof ClassEntry) {
 			// class rename
 
@@ -511,48 +547,99 @@ public class Gui {
 		}
 	}
 
-	public void moveClassTree(Entry<?> obfEntry, String newName) {
+	public enum RenameDirection {
+		OBF_TO_DEOBF,
+		OBF_TO_OBF,
+		DEOBF_TO_OBF,
+		DEOBF_TO_DEOBF
+	}
+
+	public void moveClassTreeIfNecessary(Entry<?> obfEntry, String newName) {
 		String oldEntry = obfEntry.getContainingClass().getPackageName();
 		String newEntry = new ClassEntry(newName).getPackageName();
-		moveClassTree(obfEntry, oldEntry == null, newEntry == null);
+		RenameDirection direction = null;
+
+		if (oldEntry == null && newEntry != null) {
+			direction = RenameDirection.OBF_TO_DEOBF;
+		} else if (oldEntry == null && newEntry == null) {
+			direction = RenameDirection.OBF_TO_OBF;
+		} else if (oldEntry != null && newEntry == null) {
+			direction = RenameDirection.DEOBF_TO_OBF;
+		} else if (oldEntry != null && newEntry != null) {
+			direction = RenameDirection.DEOBF_TO_DEOBF;
+		}
+
+		moveClassTreeIfNecessary(obfEntry, direction);
 	}
 
 	// TODO: getExpansionState will *not* actually update itself based on name changes!
-	public void moveClassTree(Entry<?> obfEntry, boolean isOldOb, boolean isNewOb) {
-		ClassEntry classEntry = obfEntry.getContainingClass();
+	public void moveClassTreeIfNecessary(Entry<?> modifiedEntry, RenameDirection entryRenameDirection) {
+		ClassEntry classEntry = modifiedEntry.getTopLevelClass();
 
-		List<ClassSelector.StateEntry> stateDeobf = this.deobfPanel.deobfClasses.getExpansionState();
-		List<ClassSelector.StateEntry> stateObf = this.obfPanel.obfClasses.getExpansionState();
-
-		// Ob -> deob
-		if (!isNewOb) {
-			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
-			this.obfPanel.obfClasses.removeEntry(classEntry);
-			this.deobfPanel.deobfClasses.reload();
-			this.obfPanel.obfClasses.reload();
-		} else if (!isOldOb) { // Deob -> ob
-			this.obfPanel.obfClasses.moveClassIn(classEntry);
-			this.deobfPanel.deobfClasses.removeEntry(classEntry);
-			this.deobfPanel.deobfClasses.reload();
-			this.obfPanel.obfClasses.reload();
-		} else if (isOldOb) { // Local move
-			this.obfPanel.obfClasses.moveClassIn(classEntry);
-			this.obfPanel.obfClasses.reload();
-		} else {
-			this.deobfPanel.deobfClasses.moveClassIn(classEntry);
-			this.deobfPanel.deobfClasses.reload();
+		// Local variables aren't indexed, so them being (de)obfuscated can't be safely checked
+		// in all places. As a workaround, we simply ignore them, so their mapping status
+		// doesn't contribute to the mapped/unmapped status of their parent classes.
+		if (modifiedEntry instanceof LocalVariableEntry) {
+			return;
 		}
 
-		this.deobfPanel.deobfClasses.restoreExpansionState(stateDeobf);
-		this.obfPanel.obfClasses.restoreExpansionState(stateObf);
+		List<ClassSelector.StateEntry> statePartialDeobf = partialDeobfPanel.classes.getExpansionState();
+		List<ClassSelector.StateEntry> stateFullDeobf = fullDeobfPanel.classes.getExpansionState();
+		List<ClassSelector.StateEntry> stateObf = obfPanel.classes.getExpansionState();
+
+		switch (entryRenameDirection) {
+		case OBF_TO_DEOBF:
+			obfPanel.classes.removeEntry(classEntry);
+			obfPanel.reload();
+
+		case DEOBF_TO_DEOBF:
+			if (controller.project.isFullyDeobfuscated(classEntry)) {
+				partialDeobfPanel.classes.removeEntry(classEntry);
+				fullDeobfPanel.classes.moveClassIn(classEntry);
+				fullDeobfPanel.classes.setSelectionClass(classEntry);
+			} else {
+				fullDeobfPanel.classes.removeEntry(classEntry);
+				partialDeobfPanel.classes.moveClassIn(classEntry);
+				partialDeobfPanel.classes.setSelectionClass(classEntry);
+			}
+
+			partialDeobfPanel.reload();
+			fullDeobfPanel.reload();
+			break;
+
+		case DEOBF_TO_OBF:
+			if (controller.project.isAtLeastPartiallyDeobfuscated(classEntry)) {
+				moveClassTreeIfNecessary(modifiedEntry, RenameDirection.DEOBF_TO_DEOBF);
+				break;
+			}
+
+			partialDeobfPanel.classes.removeEntry(classEntry);
+			fullDeobfPanel.classes.removeEntry(classEntry);
+			partialDeobfPanel.reload();
+			fullDeobfPanel.reload();
+
+		case OBF_TO_OBF:
+			obfPanel.classes.moveClassIn(classEntry);
+			obfPanel.classes.setSelectionClass(classEntry);
+			obfPanel.reload();
+			break;
+		}
+
+		obfPanel.classes.restoreExpansionState(stateObf);
+		partialDeobfPanel.classes.restoreExpansionState(statePartialDeobf);
+		fullDeobfPanel.classes.restoreExpansionState(stateFullDeobf);
 	}
 
 	public ObfPanel getObfPanel() {
 		return obfPanel;
 	}
 
-	public DeobfPanel getDeobfPanel() {
-		return deobfPanel;
+	public PartialDeobfPanel getPartialDeobfPanel() {
+		return partialDeobfPanel;
+	}
+
+	public FullDeobfPanel getFullDeobfPanel() {
+		return fullDeobfPanel;
 	}
 
 	public SearchDialog getSearchDialog() {
@@ -627,7 +714,8 @@ public class Gui {
 
 		this.menuBar.retranslateUi();
 		this.obfPanel.retranslateUi();
-		this.deobfPanel.retranslateUi();
+		this.partialDeobfPanel.retranslateUi();
+		this.fullDeobfPanel.retranslateUi();
 		this.infoPanel.retranslateUi();
 		this.structurePanel.retranslateUi();
 		this.editorTabbedPane.retranslateUi();

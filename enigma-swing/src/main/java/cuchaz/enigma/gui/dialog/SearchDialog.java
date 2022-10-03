@@ -184,16 +184,20 @@ public class SearchDialog {
 		parent.getController().navigateTo(e.obf);
 
 		if (e.obf instanceof ClassEntry) {
-			if (e.deobf != null) {
-				parent.getDeobfPanel().deobfClasses.setSelectionClass((ClassEntry) e.deobf);
+			if (e.deobf == null) {
+				parent.getObfPanel().classes.setSelectionClass((ClassEntry) e.obf);
+			} else if (parent.getController().project.isFullyDeobfuscated(e.deobf)) {
+				parent.getFullDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf);
 			} else {
-				parent.getObfPanel().obfClasses.setSelectionClass((ClassEntry) e.obf);
+				parent.getPartialDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf);
 			}
 		} else {
-			if (e.deobf != null) {
-				parent.getDeobfPanel().deobfClasses.setSelectionClass((ClassEntry) e.deobf.getParent());
+			if (e.deobf == null) {
+				parent.getObfPanel().classes.setSelectionClass((ClassEntry) e.obf.getParent());
+			} else if (parent.getController().project.isFullyDeobfuscated(e.deobf)) {
+				parent.getFullDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf.getParent());
 			} else {
-				parent.getObfPanel().obfClasses.setSelectionClass((ClassEntry) e.obf.getParent());
+				parent.getPartialDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf.getParent());
 			}
 		}
 	}

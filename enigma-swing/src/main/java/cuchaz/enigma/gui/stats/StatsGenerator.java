@@ -115,7 +115,7 @@ public class StatsGenerator {
 	}
 
 	private void update(Map<String, Integer> counts, Entry<?> entry) {
-		if (project.isObfuscated(entry)) {
+		if (!project.isAtLeastPartiallyDeobfuscated(entry)) {
 			String parent = mapper.deobfuscate(entry.getAncestry().get(0)).getName().replace('/', '.');
 			counts.put(parent, counts.getOrDefault(parent, 0) + 1);
 		}

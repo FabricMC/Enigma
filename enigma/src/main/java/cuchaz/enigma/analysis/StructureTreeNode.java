@@ -48,12 +48,12 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
 		case ALL -> children;
 		case OBFUSCATED -> children
 				// remove deobfuscated members if only obfuscated, unless it's an inner class
-				.filter(e -> (e instanceof ClassEntry) || (project.isObfuscated(e) && project.isRenamable(e)))
+				.filter(e -> (e instanceof ClassEntry) || (!project.isAtLeastPartiallyDeobfuscated(e) && project.isRenamable(e)))
 				// keep constructor methods if the class is obfuscated
-				.filter(e -> !(e instanceof MethodEntry m && m.isConstructor()) || project.isObfuscated(e.getParent()));
-		case DEOBFUSCATED -> children.filter(e -> (e instanceof ClassEntry) || (!project.isObfuscated(e) && project.isRenamable(e))
+				.filter(e -> !(e instanceof MethodEntry m && m.isConstructor()) || !project.isAtLeastPartiallyDeobfuscated(e.getParent()));
+		case DEOBFUSCATED -> children.filter(e -> (e instanceof ClassEntry) || (project.isAtLeastPartiallyDeobfuscated(e) && project.isRenamable(e))
 				// keep constructor methods if the class is deobfuscated
-				|| (e instanceof MethodEntry m && m.isConstructor()) && !project.isObfuscated(e.getParent()));
+				|| (e instanceof MethodEntry m && m.isConstructor()) && project.isAtLeastPartiallyDeobfuscated(e.getParent()));
 		};
 
 		children = switch (options.documentationVisibility()) {

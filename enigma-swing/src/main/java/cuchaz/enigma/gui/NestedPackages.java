@@ -75,6 +75,14 @@ public class NestedPackages {
 		return root;
 	}
 
+	public Map<String, DefaultMutableTreeNode> getPackageToNodeMap() {
+		return packageToNode;
+	}
+
+	public Map<ClassEntry, ClassSelectorClassNode> getClassToNodeMap() {
+		return classToNode;
+	}
+
 	public TreePath getPackagePath(String packageName) {
 		DefaultMutableTreeNode node = packageToNode.getOrDefault(packageName, root);
 		return new TreePath(node.getPath());

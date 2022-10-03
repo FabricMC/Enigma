@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.EventObject;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JTree;
 import javax.swing.event.CellEditorListener;
@@ -33,6 +34,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import cuchaz.enigma.gui.node.ClassSelectorClassNode;
+import cuchaz.enigma.gui.panels.classlists.ClassPanel;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -40,6 +42,7 @@ import cuchaz.enigma.utils.validation.ValidationContext;
 public class ClassSelector extends JTree {
 	public static final Comparator<ClassEntry> DEOBF_CLASS_COMPARATOR = Comparator.comparing(ClassEntry::getFullName);
 
+	private final ClassPanel parentPanel;
 	private final Comparator<ClassEntry> comparator;
 	private final GuiController controller;
 
@@ -47,9 +50,10 @@ public class ClassSelector extends JTree {
 	private ClassSelectionListener selectionListener;
 	private RenameSelectionListener renameSelectionListener;
 
-	public ClassSelector(Gui gui, Comparator<ClassEntry> comparator, boolean isRenamable) {
-		this.comparator = comparator;
+	public ClassSelector(ClassPanel panel, Gui gui, Comparator<ClassEntry> comparator, boolean isRenamable) {
+		this.parentPanel = panel;
 		this.controller = gui.getController();
+		this.comparator = comparator;
 
 		// configure the tree control
 		setEditable(true);
@@ -153,7 +157,7 @@ public class ClassSelector extends JTree {
 						Object prevData = node.getUserObject();
 						Object objectData = node.getUserObject() instanceof ClassEntry ? new ClassEntry(((ClassEntry) prevData).getPackageName() + "/" + data) : data;
 						gui.validateImmediateAction(vc -> {
-							renameSelectionListener.onSelectionRename(vc, node.getUserObject(), objectData, node);
+							renameSelectionListener.onSelectionRename(vc, node.getUserObject(), objectData, node, parentPanel);
 
 							if (vc.canProceed()) {
 								node.setUserObject(objectData); // Make sure that it's modified
@@ -210,6 +214,13 @@ public class ClassSelector extends JTree {
 		}
 
 		return null;
+	}
+
+	public int getClassesCount() {
+		return packageManager == null ? 0 : Math.toIntExact(packageManager.getClassToNodeMap().entrySet()
+				.stream()
+				.map(Map.Entry::getKey)
+				.count());
 	}
 
 	public enum State {
@@ -300,6 +311,6 @@ public class ClassSelector extends JTree {
 	}
 
 	public interface RenameSelectionListener {
-		void onSelectionRename(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node);
+		void onSelectionRename(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node, ClassPanel panel);
 	}
 }

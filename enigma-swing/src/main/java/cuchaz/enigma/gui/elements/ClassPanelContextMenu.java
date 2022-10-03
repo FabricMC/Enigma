@@ -5,17 +5,17 @@ import javax.swing.JPopupMenu;
 import javax.swing.tree.TreePath;
 
 import cuchaz.enigma.gui.ClassSelector;
-import cuchaz.enigma.gui.panels.DeobfPanel;
+import cuchaz.enigma.gui.panels.classlists.ClassPanel;
 import cuchaz.enigma.utils.I18n;
 
-public class DeobfPanelPopupMenu {
+public class ClassPanelContextMenu {
 	private final JPopupMenu ui;
 	private final JMenuItem renamePackage = new JMenuItem();
 	private final JMenuItem renameClass = new JMenuItem();
 	private final JMenuItem expandAll = new JMenuItem();
 	private final JMenuItem collapseAll = new JMenuItem();
 
-	public DeobfPanelPopupMenu(DeobfPanel panel) {
+	public ClassPanelContextMenu(ClassPanel panel) {
 		this.ui = new JPopupMenu();
 
 		this.ui.add(this.renamePackage);
@@ -24,33 +24,33 @@ public class DeobfPanelPopupMenu {
 		this.ui.add(this.expandAll);
 		this.ui.add(this.collapseAll);
 
-		ClassSelector deobfClasses = panel.deobfClasses;
+		ClassSelector classes = panel.classes;
 
 		this.renamePackage.addActionListener(a -> {
 			TreePath path;
 
-			if (deobfClasses.getSelectedClass() != null) {
+			if (classes.getSelectedClass() != null) {
 				// Rename parent package if selected path is a class
-				path = deobfClasses.getSelectionPath().getParentPath();
+				path = classes.getSelectionPath().getParentPath();
 			} else {
 				// Rename selected path if it's already a package
-				path = deobfClasses.getSelectionPath();
+				path = classes.getSelectionPath();
 			}
 
-			deobfClasses.getUI().startEditingAtPath(deobfClasses, path);
+			classes.getUI().startEditingAtPath(classes, path);
 		});
-		this.renameClass.addActionListener(a -> deobfClasses.getUI().startEditingAtPath(deobfClasses, deobfClasses.getSelectionPath()));
-		this.expandAll.addActionListener(a -> deobfClasses.expandAll());
-		this.collapseAll.addActionListener(a -> deobfClasses.collapseAll());
+		this.renameClass.addActionListener(a -> classes.getUI().startEditingAtPath(classes, classes.getSelectionPath()));
+		this.expandAll.addActionListener(a -> classes.expandAll());
+		this.collapseAll.addActionListener(a -> classes.collapseAll());
 
 		this.retranslateUi();
 	}
 
-	public void show(ClassSelector deobfClasses, int x, int y) {
+	public void show(ClassSelector classes, int x, int y) {
 		// Only enable rename class if selected path is a class
-		this.renameClass.setEnabled(deobfClasses.getSelectedClass() != null);
+		this.renameClass.setEnabled(classes.getSelectedClass() != null);
 
-		this.ui.show(deobfClasses, x, y);
+		this.ui.show(classes, x, y);
 	}
 
 	public void retranslateUi() {

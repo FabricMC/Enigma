@@ -95,7 +95,8 @@
 
 	"info_panel.classes": "Classes",
 	"info_panel.classes.obfuscated": "Obfuscated Classes",
-	"info_panel.classes.deobfuscated": "De-obfuscated Classes",
+	"info_panel.classes.partially_deobfuscated": "Partially Deobfuscated Classes",
+	"info_panel.classes.fully_deobfuscated": "Fully Deobfuscated Classes",
 	"info_panel.identifier": "Identifier Info",
 	"info_panel.identifier.none": "No identifier selected",
 	"info_panel.identifier.variable": "Variable",
