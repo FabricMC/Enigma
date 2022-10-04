@@ -43,12 +43,14 @@ import javax.swing.event.DocumentListener;
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
+import cuchaz.enigma.gui.panels.classlists.ClassPanel;
 import cuchaz.enigma.gui.search.SearchEntry;
 import cuchaz.enigma.gui.search.SearchUtil;
 import cuchaz.enigma.gui.util.AbstractListCellRenderer;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.translation.representation.entry.ParentedEntry;
@@ -183,23 +185,28 @@ public class SearchDialog {
 		su.hit(e);
 		parent.getController().navigateTo(e.obf);
 
+		boolean atLeastPartiallyDeobfuscated;
+		Entry<?> classToSelect;
+		ClassPanel panel;
+
 		if (e.obf instanceof ClassEntry) {
-			if (e.deobf == null) {
-				parent.getObfPanel().classes.setSelectionClass((ClassEntry) e.obf);
-			} else if (parent.getController().project.isFullyDeobfuscated(e.deobf)) {
-				parent.getFullDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf);
-			} else {
-				parent.getPartialDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf);
-			}
+			atLeastPartiallyDeobfuscated = e.deobf != null || parent.getController().project.isAtLeastPartiallyDeobfuscated(e.obf);
+			classToSelect = e.deobf != null && atLeastPartiallyDeobfuscated ? e.deobf : e.obf;
 		} else {
-			if (e.deobf == null) {
-				parent.getObfPanel().classes.setSelectionClass((ClassEntry) e.obf.getParent());
-			} else if (parent.getController().project.isFullyDeobfuscated(e.deobf)) {
-				parent.getFullDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf.getParent());
-			} else {
-				parent.getPartialDeobfPanel().classes.setSelectionClass((ClassEntry) e.deobf.getParent());
-			}
+			atLeastPartiallyDeobfuscated = e.deobf != null || parent.getController().project.isAtLeastPartiallyDeobfuscated(e.obf.getTopLevelClass());
+			classToSelect = e.deobf != null && atLeastPartiallyDeobfuscated ? e.deobf.getTopLevelClass() : e.obf.getTopLevelClass();
 		}
+
+		if (!atLeastPartiallyDeobfuscated) {
+			panel = parent.getObfPanel();
+		} else if (parent.getController().project.isFullyDeobfuscated(classToSelect)) {
+			panel = parent.getFullDeobfPanel();
+		} else {
+			panel = parent.getPartialDeobfPanel();
+		}
+
+		panel.classes.setSelectionClass((ClassEntry) classToSelect);
+		panel.classes.requestFocus();
 	}
 
 	private void close() {
