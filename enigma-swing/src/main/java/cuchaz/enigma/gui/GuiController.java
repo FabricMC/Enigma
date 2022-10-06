@@ -29,6 +29,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Lists;
+import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
@@ -102,6 +103,7 @@ public class GuiController implements ClientPacketHandler {
 
 	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
+	public boolean useMappingIo;
 
 	private ClassHandleProvider chp;
 
@@ -152,8 +154,16 @@ public class GuiController implements ClientPacketHandler {
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			try {
 				MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
+				EntryTree<EntryMapping> mappings;
 
-				EntryTree<EntryMapping> mappings = format.read(path, progress, saveParameters);
+				if (useMappingIo) {
+					MemoryMappingTree mappingTree = new MemoryMappingTree();
+					MappingReader.read(path, format.getMappingIoCounterpart(), mappingTree);
+					mappings = MappingIoConverter.fromMappingIo(mappingTree);
+				} else {
+					mappings = format.read(path, progress, saveParameters);
+				}
+
 				project.setMappings(mappings);
 
 				loadedMappingFormat = format;
@@ -208,53 +218,16 @@ public class GuiController implements ClientPacketHandler {
 			loadedMappingFormat = format;
 			loadedMappingPath = path;
 
-			if (saveAll) {
+			if (useMappingIo) {
+				MemoryMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf());
+				MappingWriter writer = MappingWriter.create(path, format.getMappingIoCounterpart());
+				mappingTree.accept(writer);
+				writer.close();
+			} else if (saveAll) {
 				format.write(mapper.getObfToDeobf(), path, progress, saveParameters);
 			} else {
 				format.write(mapper.getObfToDeobf(), delta, path, progress, saveParameters);
 			}
-		});
-	}
-
-	public CompletableFuture<Void> saveMappings(Path path, net.fabricmc.mappingio.format.MappingFormat format) {
-		if (project == null) {
-			return CompletableFuture.completedFuture(null);
-		}
-
-		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
-			EntryRemapper mapper = project.getMapper();
-			MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
-
-			MappingDelta<EntryMapping> delta = mapper.takeMappingDelta();
-			boolean saveAll = !path.equals(loadedMappingPath);
-
-			switch (format) {
-			case ENIGMA:
-				loadedMappingFormat = MappingFormat.ENIGMA_DIRECTORY;
-				loadedMappingPath = path;
-				break;
-			case PROGUARD:
-				loadedMappingFormat = MappingFormat.PROGUARD;
-				loadedMappingPath = path;
-				break;
-			case SRG:
-				loadedMappingFormat = MappingFormat.SRG_FILE;
-				loadedMappingPath = path;
-				break;
-			case TINY:
-				loadedMappingFormat = MappingFormat.TINY_FILE;
-				loadedMappingPath = path;
-				break;
-			case TINY_2:
-				loadedMappingFormat = MappingFormat.TINY_V2;
-				loadedMappingPath = path;
-				break;
-			}
-
-			MemoryMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf());
-			MappingWriter writer = MappingWriter.create(path, format);
-			mappingTree.accept(writer);
-			writer.close();
 		});
 	}
 
