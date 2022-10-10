@@ -3,6 +3,7 @@ package cuchaz.enigma.translation.mapping.serde;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 import net.fabricmc.mappingio.MappedElementKind;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
@@ -11,6 +12,7 @@ import net.fabricmc.mappingio.tree.MappingTree.FieldMapping;
 import net.fabricmc.mappingio.tree.MappingTree.MethodArgMapping;
 import net.fabricmc.mappingio.tree.MappingTree.MethodMapping;
 
+import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -23,16 +25,23 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
+import cuchaz.enigma.utils.I18n;
 
 public class MappingIoConverter {
-	public static MemoryMappingTree toMappingIo(EntryTree<EntryMapping> mappings) {
+	public static MemoryMappingTree toMappingIo(EntryTree<EntryMapping> mappings, ProgressListener progress) {
+		List<EntryTreeNode<EntryMapping>> classes = StreamSupport.stream(mappings.spliterator(), false)
+				.filter(node -> node.getEntry() instanceof ClassEntry)
+				.toList();
+
+		progress.init(classes.size(), I18n.translate("progress.mappings.converting.to_mappingio"));
+		int steps = 0;
+
 		MemoryMappingTree mappingTree = new MemoryMappingTree();
 		mappingTree.visitNamespaces("intermediary", List.of("named"));
 
-		for (EntryTreeNode<EntryMapping> node : mappings) {
-			if (node.getEntry() instanceof ClassEntry) {
-				writeClass(node, mappings, mappingTree);
-			}
+		for (EntryTreeNode<EntryMapping> classNode : classes) {
+			progress.step(steps++, classNode.getEntry().getFullName());
+			writeClass(classNode, mappings, mappingTree);
 		}
 
 		mappingTree.visitEnd();
@@ -131,10 +140,13 @@ public class MappingIoConverter {
 		mappingTree.visitComment(MappedElementKind.METHOD_ARG, methodArgMapping.javadoc());
 	}
 
-	public static EntryTree<EntryMapping> fromMappingIo(MemoryMappingTree mappingTree) {
+	public static EntryTree<EntryMapping> fromMappingIo(MemoryMappingTree mappingTree, ProgressListener progress) {
 		EntryTree<EntryMapping> dstMappingTree = new HashEntryTree<>();
+		progress.init(mappingTree.getClasses().size(), I18n.translate("progress.mappings.converting.from_mappingio"));
+		int steps = 0;
 
 		for (ClassMapping classMapping : mappingTree.getClasses()) {
+			progress.step(steps++, classMapping.getDstName(0) != null ? classMapping.getDstName(0) : classMapping.getSrcName());
 			readClass(classMapping, dstMappingTree);
 		}
 

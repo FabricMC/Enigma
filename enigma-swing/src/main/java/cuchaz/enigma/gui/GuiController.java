@@ -157,9 +157,18 @@ public class GuiController implements ClientPacketHandler {
 				EntryTree<EntryMapping> mappings;
 
 				if (useMappingIo) {
+					String loadingMessage;
+
+					if (format.getMappingIoCounterpart().hasSingleFile()) {
+						loadingMessage = I18n.translate("progress.mappings.loading_file");
+					} else {
+						loadingMessage = I18n.translate("progress.mappings.loading_directory");
+					}
+
+					progress.init(1, loadingMessage);
 					MemoryMappingTree mappingTree = new MemoryMappingTree();
 					MappingReader.read(path, format.getMappingIoCounterpart(), mappingTree);
-					mappings = MappingIoConverter.fromMappingIo(mappingTree);
+					mappings = MappingIoConverter.fromMappingIo(mappingTree, progress);
 				} else {
 					mappings = format.read(path, progress, saveParameters);
 				}
@@ -219,10 +228,13 @@ public class GuiController implements ClientPacketHandler {
 			loadedMappingPath = path;
 
 			if (useMappingIo) {
-				MemoryMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf());
+				MemoryMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf(), progress);
+
+				progress.init(1, I18n.translate("progress.mappings.writing"));
 				MappingWriter writer = MappingWriter.create(path, format.getMappingIoCounterpart());
 				mappingTree.accept(writer);
 				writer.close();
+				progress.step(1, I18n.translate("progress.done"));
 			} else if (saveAll) {
 				format.write(mapper.getObfToDeobf(), path, progress, saveParameters);
 			} else {
