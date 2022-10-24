@@ -54,7 +54,6 @@ public class StatsGenerator {
 		progress.init(totalWork, I18n.translate("progress.stats"));
 
 		Map<String, Integer> counts = new HashMap<>();
-
 		int numDone = 0;
 
 		if (includedMembers.contains(StatsMember.METHODS) || includedMembers.contains(StatsMember.PARAMETERS)) {
@@ -115,7 +114,7 @@ public class StatsGenerator {
 	}
 
 	private void update(Map<String, Integer> counts, Entry<?> entry) {
-		if (project.isObfuscated(entry)) {
+		if (project.isObfuscated(entry) && project.isRenamable(entry) && !project.isSynthetic(entry)) {
 			String parent = mapper.deobfuscate(entry.getAncestry().get(0)).getName().replace('/', '.');
 			counts.put(parent, counts.getOrDefault(parent, 0) + 1);
 		}
