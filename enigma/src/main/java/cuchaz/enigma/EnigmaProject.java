@@ -38,6 +38,7 @@ import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.MappingsChecker;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
+import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
@@ -150,6 +151,16 @@ public class EnigmaProject {
 				return false;
 			} else if (name.equals("wait") && sig.equals("(JI)V")) {
 				return false;
+			} else {
+				ClassDefEntry parent = jarIndex.getEntryIndex().getDefinition(obfMethodEntry.getParent());
+
+				if (parent != null && parent.getSuperClass() != null && parent.getSuperClass().getFullName().equals("java/lang/Enum")) {
+					if (name.equals("values") && sig.equals("()[L" + parent.getFullName() + ";")) {
+						return false;
+					} else if (name.equals("valueOf") && sig.equals("(Ljava/lang/String;)L" + parent.getFullName() + ";")) {
+						return false;
+					}
+				}
 			}
 		} else if (obfEntry instanceof LocalVariableEntry && !((LocalVariableEntry) obfEntry).isArgument()) {
 			return false;
