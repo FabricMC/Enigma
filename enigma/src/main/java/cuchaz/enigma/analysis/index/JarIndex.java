@@ -84,7 +84,11 @@ public class JarIndex implements JarIndexer {
 		progress.step(2, I18n.translate("progress.jar.indexing.references"));
 
 		for (String className : classNames) {
-			classProvider.get(className).accept(new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Enigma.ASM_VERSION));
+			try {
+				classProvider.get(className).accept(new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Enigma.ASM_VERSION));
+			} catch (Exception e) {
+				throw new RuntimeException("Exception while indexing class: " + className, e);
+			}
 		}
 
 		progress.step(3, I18n.translate("progress.jar.indexing.methods"));

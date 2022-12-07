@@ -12,27 +12,32 @@
 package cuchaz.enigma.translation.mapping.serde;
 
 import java.io.File;
-import java.util.function.Supplier;
+import java.nio.file.Path;
 
 public class MappingParseException extends Exception {
 	private int line;
 	private String message;
-	private String filePath;
+	private Path filePath;
 
 	public MappingParseException(File file, int line, String message) {
-		this.line = line;
-		this.message = message;
-		filePath = file.getAbsolutePath();
+		this(file.toPath(), line, message);
 	}
 
-	public MappingParseException(Supplier<String> filenameProvider, int line, String message) {
+	public MappingParseException(Path filePath, int line, String message) {
 		this.line = line;
 		this.message = message;
-		filePath = filenameProvider.get();
+		this.filePath = filePath;
+	}
+
+	public MappingParseException(Path filePath, int line, Throwable cause) {
+		super(cause);
+		this.line = line;
+		this.message = cause.toString();
+		this.filePath = filePath;
 	}
 
 	@Override
 	public String getMessage() {
-		return "Line " + line + ": " + message + " in file " + filePath;
+		return "Line " + line + ": " + message + " in file " + filePath.toString();
 	}
 }
