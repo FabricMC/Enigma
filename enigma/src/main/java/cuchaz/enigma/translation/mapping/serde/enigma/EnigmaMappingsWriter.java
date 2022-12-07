@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -77,6 +78,8 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			Collection<ClassEntry> changedClasses = delta.getChangedRoots().filter(entry -> entry instanceof ClassEntry).map(entry -> (ClassEntry) entry).toList();
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
+
+			changedClasses = changedClasses.stream().filter(entry -> !isClassEmpty(mappings, entry)).collect(Collectors.toList());
 
 			progress.init(changedClasses.size(), I18n.translate("progress.mappings.enigma_directory.writing"));
 
@@ -312,5 +315,16 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		builder.append("\t".repeat(Math.max(0, depth)));
 		builder.append(line.trim());
 		return builder.toString();
+	}
+
+	protected boolean isClassEmpty(EntryTree<EntryMapping> mappings, ClassEntry classEntry) {
+		Collection<Entry<?>> children = groupChildren(mappings.getChildren(classEntry));
+
+		EntryMapping classEntryMapping = mappings.get(classEntry);
+		return children.isEmpty() && (classEntryMapping == null || isMappingEmpty(classEntryMapping));
+	}
+
+	private boolean isMappingEmpty(EntryMapping mapping) {
+		return mapping.targetName() == null && mapping.accessModifier() == AccessModifier.UNCHANGED && mapping.javadoc() == null;
 	}
 }
