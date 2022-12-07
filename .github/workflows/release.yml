@@ -2,13 +2,12 @@ name: Release
 on: [ workflow_dispatch ] # Manual trigger
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
-      image: openjdk:17-jdk
+      image: openjdk:19-jdk
       options: --user root
     steps:
-      - uses: actions/checkout@v1
-      - uses: gradle/wrapper-validation-action@v1
+      - uses: actions/checkout@v3
       - run: ./gradlew checkVersion build publish --stacktrace
         env:
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
