@@ -26,7 +26,3 @@ publishing {
 		}
 	}
 }
-
-repositories {
-	mavenCentral()
-}
