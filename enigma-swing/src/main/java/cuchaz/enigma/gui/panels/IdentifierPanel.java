@@ -105,7 +105,7 @@ public class IdentifierPanel {
 			} else if (deobfEntry instanceof FieldEntry) {
 				FieldEntry fe = (FieldEntry) deobfEntry;
 				this.nameField = th.addRenameTextField(EditableType.FIELD, fe.getName());
-				th.addStringRow(I18n.translate("info_panel.identifier.class"), fe.getParent().getFullName());
+				th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), fe.getParent().getFullName());
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.type_descriptor"), fe.getDesc().toString());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), EditableType.FIELD, this::onModifierChanged);
 			} else if (deobfEntry instanceof MethodEntry) {
@@ -120,7 +120,7 @@ public class IdentifierPanel {
 					}
 				} else {
 					this.nameField = th.addRenameTextField(EditableType.METHOD, me.getName());
-					th.addStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
+					th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
 				}
 
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.method_descriptor"), me.getDesc().toString());
@@ -136,9 +136,9 @@ public class IdentifierPanel {
 				}
 
 				this.nameField = th.addRenameTextField(type, lve.getName());
-				th.addStringRow(I18n.translate("info_panel.identifier.class"), lve.getContainingClass().getFullName());
-				th.addStringRow(I18n.translate("info_panel.identifier.method"), lve.getParent().getName());
-				th.addStringRow(I18n.translate("info_panel.identifier.index"), Integer.toString(lve.getIndex()));
+				th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), lve.getContainingClass().getFullName());
+				th.addCopiableStringRow(I18n.translate("info_panel.identifier.method"), lve.getParent().getName());
+				th.addCopiableStringRow(I18n.translate("info_panel.identifier.index"), Integer.toString(lve.getIndex()));
 			} else {
 				throw new IllegalStateException("unreachable");
 			}
@@ -266,7 +266,7 @@ public class IdentifierPanel {
 				field.setEditable(this.gui.isEditable(type));
 				return field;
 			} else {
-				addStringRow(description, c2);
+				addCopiableStringRow(description, c2);
 				return null;
 			}
 		}
