@@ -11,7 +11,7 @@ dependencies {
 	implementation 'net.fabricmc:procyon-fabric-compilertools:0.5.35.13'
 	implementation 'net.fabricmc:cfr:0.2.0'
 
-	proGuard 'com.guardsquare:proguard-base:7.2.2'
+	proGuard 'com.guardsquare:proguard-base:7.3.0'
 
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 }
