@@ -46,7 +46,7 @@ public class TestInnerClasses {
 		CachingClassProvider classProvider = new CachingClassProvider(jcp);
 		index = JarIndex.empty();
 		index.indexJar(jcp.getClassNames(), classProvider, ProgressListener.none());
-		decompiler = Decompilers.PROCYON.create(classProvider, new SourceSettings(false, false));
+		decompiler = Decompilers.CFR.create(classProvider, new SourceSettings(false, false));
 	}
 
 	@Test
