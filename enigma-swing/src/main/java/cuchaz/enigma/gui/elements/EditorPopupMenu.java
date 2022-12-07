@@ -12,6 +12,7 @@ import cuchaz.enigma.gui.EditableType;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
 import cuchaz.enigma.gui.panels.EditorPanel;
+import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -22,6 +23,7 @@ public class EditorPopupMenu {
 	private final JPopupMenu ui = new JPopupMenu();
 
 	private final JMenuItem renameItem = new JMenuItem();
+	private final JMenuItem pasteItem = new JMenuItem();
 	private final JMenuItem editJavadocItem = new JMenuItem();
 	private final JMenuItem showInheritanceItem = new JMenuItem();
 	private final JMenuItem showImplementationsItem = new JMenuItem();
@@ -45,6 +47,7 @@ public class EditorPopupMenu {
 		this.retranslateUi();
 
 		this.ui.add(this.renameItem);
+		this.ui.add(this.pasteItem);
 		this.ui.add(this.editJavadocItem);
 		this.ui.add(this.showInheritanceItem);
 		this.ui.add(this.showImplementationsItem);
@@ -60,6 +63,7 @@ public class EditorPopupMenu {
 		this.ui.add(this.resetZoomItem);
 
 		this.renameItem.setEnabled(false);
+		this.pasteItem.setEnabled(false);
 		this.editJavadocItem.setEnabled(false);
 		this.showInheritanceItem.setEnabled(false);
 		this.showImplementationsItem.setEnabled(false);
@@ -71,6 +75,7 @@ public class EditorPopupMenu {
 		this.toggleMappingItem.setEnabled(false);
 
 		this.renameItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
+		this.pasteItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
 		this.editJavadocItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK));
 		this.showInheritanceItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK));
 		this.showImplementationsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK));
@@ -84,6 +89,7 @@ public class EditorPopupMenu {
 		this.zoomOutMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK));
 
 		this.renameItem.addActionListener(event -> gui.startRename(editor));
+		this.pasteItem.addActionListener(event -> gui.startRename(editor, GuiUtil.getClipboard()));
 		this.editJavadocItem.addActionListener(event -> gui.startDocChange(editor));
 		this.showInheritanceItem.addActionListener(event -> gui.showInheritance(editor));
 		this.showImplementationsItem.addActionListener(event -> gui.showImplementations(editor));
@@ -136,6 +142,9 @@ public class EditorPopupMenu {
 			case KeyEvent.VK_D:
 				this.editJavadocItem.doClick();
 				return true;
+			case KeyEvent.VK_V:
+				this.pasteItem.doClick();
+				return true;
 			}
 		}
 
@@ -156,6 +165,7 @@ public class EditorPopupMenu {
 		EditableType type = EditableType.fromEntry(referenceEntry);
 
 		this.renameItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)));
+		this.pasteItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)) && !GuiUtil.getClipboard().equals(""));
 		this.editJavadocItem.setEnabled(isRenamable && this.gui.isEditable(EditableType.JAVADOC));
 		this.showInheritanceItem.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.showImplementationsItem.setEnabled(isClassEntry || isMethodEntry);
@@ -175,6 +185,7 @@ public class EditorPopupMenu {
 
 	public void retranslateUi() {
 		this.renameItem.setText(I18n.translate("popup_menu.rename"));
+		this.pasteItem.setText(I18n.translate("popup_menu.paste"));
 		this.editJavadocItem.setText(I18n.translate("popup_menu.javadoc"));
 		this.showInheritanceItem.setText(I18n.translate("popup_menu.inheritance"));
 		this.showImplementationsItem.setText(I18n.translate("popup_menu.implementations"));
