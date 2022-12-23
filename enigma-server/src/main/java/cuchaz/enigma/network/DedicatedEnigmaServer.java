@@ -96,7 +96,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 			EntryRemapper mappings;
 
 			if (!Files.exists(mappingsFile)) {
-				mappings = EntryRemapper.empty(project.getJarIndex());
+				mappings = EntryRemapper.empty(project.getJarIndex(), project.getClassProvider());
 			} else {
 				System.out.println("Reading mappings...");
 
@@ -108,7 +108,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 					mappingFormat = MappingFormat.ENIGMA_FILE;
 				}
 
-				mappings = EntryRemapper.mapped(project.getJarIndex(), mappingFormat.read(mappingsFile, ProgressListener.none(), profile.getMappingSaveParameters()));
+				mappings = EntryRemapper.mapped(project.getJarIndex(), mappingFormat.read(mappingsFile, ProgressListener.none(), profile.getMappingSaveParameters()), project.getClassProvider());
 			}
 
 			PrintWriter log = new PrintWriter(Files.newBufferedWriter(logFile));
