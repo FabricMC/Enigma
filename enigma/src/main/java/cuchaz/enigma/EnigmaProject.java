@@ -344,6 +344,11 @@ public class EnigmaProject {
 		}
 
 		public void writeTo(Path path) throws IOException {
+			if(!Files.exists(path)) {
+				Files.createDirectories(path.getParent());
+				Files.createFile(path);
+			}
+
 			try (BufferedWriter writer = Files.newBufferedWriter(path)) {
 				writer.write(source);
 			}
