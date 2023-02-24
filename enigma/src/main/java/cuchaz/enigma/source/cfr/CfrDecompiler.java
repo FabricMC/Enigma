@@ -26,7 +26,7 @@ public class CfrDecompiler implements Decompiler {
 	private final ClassFileSource2 classFileSource;
 
 	public CfrDecompiler(ClassProvider classProvider, SourceSettings sourceSettings) {
-		this.options = OptionsImpl.getFactory().create(Map.of("trackbytecodeloc", "true"));
+		this.options = OptionsImpl.getFactory().create(Map.of("trackbytecodeloc", "true", "hideutf", "false"));
 		this.settings = sourceSettings;
 		this.classFileSource = new ClassFileSource(classProvider);
 	}
