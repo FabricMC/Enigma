@@ -108,6 +108,8 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 
 	boolean canConflictWith(Entry<?> entry);
 
+	boolean canShadow(Entry<?> entry);
+
 	default ClassEntry getContainingClass() {
 		ClassEntry last = null;
 		Entry<?> current = this;

@@ -122,6 +122,11 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
+	public boolean canShadow(Entry<?> entry) {
+		return false;
+	}
+
+	@Override
 	public void validateName(ValidationContext vc, String name) {
 		IdentifierValidation.validateClassName(vc, name, this.isInnerClass());
 	}

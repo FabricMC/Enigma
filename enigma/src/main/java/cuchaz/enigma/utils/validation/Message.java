@@ -17,6 +17,8 @@ public class Message {
 	public static final Message UNKNOWN_RECORD_GETTER = create(Type.ERROR, "unknown_record_getter");
 
 	public static final Message STYLE_VIOLATION = create(Type.WARNING, "style_violation");
+	public static final Message SHADOWED_NAME_CLASS = create(Type.WARNING, "shadowed_name_class");
+	public static final Message SHADOWED_NAME = create(Type.WARNING, "shadowed_name");
 
 	public final Type type;
 	public final String textKey;
