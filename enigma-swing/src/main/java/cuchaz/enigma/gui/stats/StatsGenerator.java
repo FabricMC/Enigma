@@ -102,7 +102,9 @@ public class StatsGenerator {
 			for (ClassEntry clazz : entryIndex.getClasses()) {
 				progress.step(numDone++, I18n.translate("type.classes"));
 
-				if (this.mapper.deobfuscate(clazz).getPackageName().startsWith(topLevelPackageSlash)) {
+				final String packageName = this.mapper.deobfuscate(clazz).getPackageName();
+
+				if (packageName != null && packageName.startsWith(topLevelPackageSlash)) {
 					update(counts, clazz);
 					totalMappable++;
 				}
