@@ -66,8 +66,9 @@ public class StatsGenerator {
 						.findFirst()
 						.orElseThrow(AssertionError::new);
 				ClassEntry clazz = root.getParent();
+				final String packageName = this.mapper.deobfuscate(clazz).getPackageName();
 
-				if (root == method && this.mapper.deobfuscate(clazz).getPackageName().startsWith(topLevelPackageSlash)) {
+				if (root == method && packageName != null && packageName.startsWith(topLevelPackageSlash)) {
 					if (includedMembers.contains(StatsMember.METHODS) && !((MethodDefEntry) method).getAccess().isSynthetic()) {
 						update(counts, method);
 						totalMappable++;
@@ -90,8 +91,9 @@ public class StatsGenerator {
 			for (FieldEntry field : entryIndex.getFields()) {
 				progress.step(numDone++, I18n.translate("type.fields"));
 				ClassEntry clazz = field.getParent();
+				final String packageName = this.mapper.deobfuscate(clazz).getPackageName();
 
-				if (!((FieldDefEntry) field).getAccess().isSynthetic() && this.mapper.deobfuscate(clazz).getPackageName().startsWith(topLevelPackageSlash)) {
+				if (!((FieldDefEntry) field).getAccess().isSynthetic() && packageName != null && packageName.startsWith(topLevelPackageSlash)) {
 					update(counts, field);
 					totalMappable++;
 				}
