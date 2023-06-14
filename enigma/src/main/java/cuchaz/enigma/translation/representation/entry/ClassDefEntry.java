@@ -28,7 +28,7 @@ import cuchaz.enigma.translation.representation.Signature;
 public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	private final AccessFlags access;
 	private final Signature signature;
-	private final ClassEntry superClass;
+	private final @Nullable ClassEntry superClass;
 	private final ClassEntry[] interfaces;
 
 	public ClassDefEntry(String className, Signature signature, AccessFlags access, @Nullable ClassEntry superClass, ClassEntry[] interfaces) {
