@@ -75,7 +75,7 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	}
 
 	public boolean isRecord() {
-		return superClass.getName().equals("java/lang/Record");
+		return superClass != null && superClass.getName().equals("java/lang/Record");
 	}
 
 	@Override
