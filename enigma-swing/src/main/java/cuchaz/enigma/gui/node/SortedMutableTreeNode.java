@@ -10,8 +10,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 
-import com.google.common.collect.Iterables;
-
 /**
  * A MutableTreeNode whose contents are always guaranteed to be sorted with the given comparator.
  */
@@ -76,7 +74,15 @@ public class SortedMutableTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public int getIndex(TreeNode node) {
-		return Iterables.indexOf(this.children, other -> this.comparator.compare(node, other) == 0);
+		checkSorted();
+
+		for (int i = 0; i < this.children.size(); i++) {
+			if (this.comparator.compare(node, children.get(i)) == 0) {
+				return i;
+			}
+		}
+
+		return -1;
 	}
 
 	@Override
@@ -91,6 +97,8 @@ public class SortedMutableTreeNode extends DefaultMutableTreeNode {
 
 	@Override
 	public Enumeration<TreeNode> children() {
+		checkSorted();
+
 		Iterator<TreeNode> iter = this.children.iterator();
 
 		return new Enumeration<>() {
