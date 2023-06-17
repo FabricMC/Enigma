@@ -11,6 +11,7 @@ import net.fabricmc.mappingio.tree.MappingTree.ClassMapping;
 import net.fabricmc.mappingio.tree.MappingTree.FieldMapping;
 import net.fabricmc.mappingio.tree.MappingTree.MethodArgMapping;
 import net.fabricmc.mappingio.tree.MappingTree.MethodMapping;
+import net.fabricmc.mappingio.tree.MappingTree.MethodVarMapping;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMap;
@@ -116,28 +117,50 @@ public class MappingIoConverter {
 		for (EntryTreeNode<EntryMapping> child : methodNode.getChildNodes()) {
 			Entry<?> entry = child.getEntry();
 
-			if (entry instanceof LocalVariableEntry) {
-				writeMethodArg(child, mappingTree);
+			if (entry instanceof LocalVariableEntry local) {
+				if (local.isArgument()) {
+					writeMethodArg(child, mappingTree);
+				} else {
+					writeMethodVar(child, mappingTree);
+				}
 			}
 		}
 	}
 
-	private static void writeMethodArg(EntryTreeNode<EntryMapping> methodArgNode, MemoryMappingTree mappingTree) {
-		if (methodArgNode.getValue() == null || methodArgNode.getValue().equals(EntryMapping.DEFAULT)) {
+	private static void writeMethodArg(EntryTreeNode<EntryMapping> argNode, MemoryMappingTree mappingTree) {
+		if (argNode.getValue() == null || argNode.getValue().equals(EntryMapping.DEFAULT)) {
 			return; // Shortcut
 		}
 
-		LocalVariableEntry methodArgEntry = ((LocalVariableEntry) methodArgNode.getEntry());
-		mappingTree.visitMethodArg(-1, methodArgEntry.getIndex(), methodArgEntry.getName());
+		LocalVariableEntry argEntry = ((LocalVariableEntry) argNode.getEntry());
+		mappingTree.visitMethodArg(-1, argEntry.getIndex(), argEntry.getName());
 
-		EntryMapping methodArgMapping = methodArgNode.getValue();
+		EntryMapping argMapping = argNode.getValue();
 
-		if (methodArgMapping == null) {
-			methodArgMapping = EntryMapping.DEFAULT;
+		if (argMapping == null) {
+			argMapping = EntryMapping.DEFAULT;
 		}
 
-		mappingTree.visitDstName(MappedElementKind.METHOD_ARG, 0, methodArgMapping.targetName());
-		mappingTree.visitComment(MappedElementKind.METHOD_ARG, methodArgMapping.javadoc());
+		mappingTree.visitDstName(MappedElementKind.METHOD_ARG, 0, argMapping.targetName());
+		mappingTree.visitComment(MappedElementKind.METHOD_ARG, argMapping.javadoc());
+	}
+
+	private static void writeMethodVar(EntryTreeNode<EntryMapping> varNode, MemoryMappingTree mappingTree) {
+		if (varNode.getValue() == null || varNode.getValue().equals(EntryMapping.DEFAULT)) {
+			return; // Shortcut
+		}
+
+		LocalVariableEntry varEntry = ((LocalVariableEntry) varNode.getEntry());
+		mappingTree.visitMethodVar(-1, varEntry.getIndex(), -1, -1, varEntry.getName());
+
+		EntryMapping varMapping = varNode.getValue();
+
+		if (varMapping == null) {
+			varMapping = EntryMapping.DEFAULT;
+		}
+
+		mappingTree.visitDstName(MappedElementKind.METHOD_VAR, 0, varMapping.targetName());
+		mappingTree.visitComment(MappedElementKind.METHOD_VAR, varMapping.javadoc());
 	}
 
 	public static EntryTree<EntryMapping> fromMappingIo(MemoryMappingTree mappingTree, ProgressListener progress) {
@@ -161,7 +184,7 @@ public class MappingIoConverter {
 			dstName = dstName.substring(dstName.lastIndexOf('$') + 1);
 		}
 
-		mappingTree.insert(currentClass, new EntryMapping(dstName));
+		mappingTree.insert(currentClass, new EntryMapping(dstName, classMapping.getComment()));
 
 		for (FieldMapping fieldMapping : classMapping.getFields()) {
 			readField(fieldMapping, currentClass, mappingTree);
@@ -174,23 +197,36 @@ public class MappingIoConverter {
 
 	private static void readField(FieldMapping fieldMapping, ClassEntry parent, EntryTree<EntryMapping> mappingTree) {
 		mappingTree.insert(new FieldEntry(parent, fieldMapping.getSrcName(), new TypeDescriptor(fieldMapping.getSrcDesc())),
-				new EntryMapping(fieldMapping.getDstName(0)));
+				new EntryMapping(fieldMapping.getDstName(0), fieldMapping.getComment()));
 	}
 
 	private static void readMethod(MethodMapping methodMapping, ClassEntry parent, EntryTree<EntryMapping> mappingTree) {
 		MethodEntry currentMethod;
 		mappingTree.insert(currentMethod = new MethodEntry(parent, methodMapping.getSrcName(), new MethodDescriptor(methodMapping.getSrcDesc())),
-				new EntryMapping(methodMapping.getDstName(0)));
+				new EntryMapping(methodMapping.getDstName(0), methodMapping.getComment()));
 
-		for (MethodArgMapping methodArgMapping : methodMapping.getArgs()) {
-			readMethodArg(methodArgMapping, currentMethod, mappingTree);
+		for (MethodArgMapping argMapping : methodMapping.getArgs()) {
+			readMethodArg(argMapping, currentMethod, mappingTree);
+		}
+
+		for (MethodVarMapping varMapping : methodMapping.getVars()) {
+			readMethodVar(varMapping, currentMethod, mappingTree);
 		}
 	}
 
-	private static void readMethodArg(MethodArgMapping methodArgMapping, MethodEntry parent, EntryTree<EntryMapping> mappingTree) {
-		String methodArgSrcName = methodArgMapping.getSrcName() != null ? methodArgMapping.getSrcName() : "";
+	private static void readMethodArg(MethodArgMapping argMapping, MethodEntry parent, EntryTree<EntryMapping> mappingTree) {
+		String srcName = argMapping.getSrcName() != null ? argMapping.getSrcName() : "";
 
-		mappingTree.insert(new LocalVariableEntry(parent, methodArgMapping.getLvIndex(), methodArgSrcName, true, null),
-				new EntryMapping(methodArgMapping.getDstName(0)));
+		mappingTree.insert(
+				new LocalVariableEntry(parent, argMapping.getLvIndex(), srcName, true, null),
+				new EntryMapping(argMapping.getDstName(0), argMapping.getComment()));
+	}
+
+	private static void readMethodVar(MethodVarMapping varMapping, MethodEntry parent, EntryTree<EntryMapping> mappingTree) {
+		String srcName = varMapping.getSrcName() != null ? varMapping.getSrcName() : "";
+
+		mappingTree.insert(
+				new LocalVariableEntry(parent, varMapping.getLvIndex(), srcName, false, null),
+				new EntryMapping(varMapping.getDstName(0), varMapping.getComment()));
 	}
 }
