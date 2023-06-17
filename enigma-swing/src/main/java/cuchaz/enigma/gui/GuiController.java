@@ -32,6 +32,7 @@ import com.google.common.collect.Lists;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
+import net.fabricmc.mappingio.tree.VisitOrder;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
@@ -232,7 +233,7 @@ public class GuiController implements ClientPacketHandler {
 
 				progress.init(1, I18n.translate("progress.mappings.writing"));
 				MappingWriter writer = MappingWriter.create(path, format.getMappingIoCounterpart());
-				mappingTree.accept(writer);
+				mappingTree.accept(writer, VisitOrder.createByName());
 				writer.close();
 				progress.step(1, I18n.translate("progress.done"));
 			} else if (saveAll) {

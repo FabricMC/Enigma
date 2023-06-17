@@ -21,15 +21,15 @@ import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Writer;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 public enum MappingFormat {
-	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE, null),
-	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY, net.fabricmc.mappingio.format.MappingFormat.ENIGMA),
+	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_FILE),
+	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_DIR),
 	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP, null),
-	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader(), net.fabricmc.mappingio.format.MappingFormat.TINY_2),
-	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE, net.fabricmc.mappingio.format.MappingFormat.TINY),
-	SRG_FILE(SrgMappingsWriter.INSTANCE, null, net.fabricmc.mappingio.format.MappingFormat.SRG),
-	TSRG_FILE(null, null, net.fabricmc.mappingio.format.MappingFormat.TSRG),
-	TSRG_2_FILE(null, null, net.fabricmc.mappingio.format.MappingFormat.TSRG2),
-	PROGUARD(null, ProguardMappingsReader.INSTANCE, net.fabricmc.mappingio.format.MappingFormat.PROGUARD),
+	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader(), net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE),
+	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE),
+	SRG_FILE(SrgMappingsWriter.INSTANCE, null, net.fabricmc.mappingio.format.MappingFormat.SRG_FILE),
+	TSRG_FILE(null, null, net.fabricmc.mappingio.format.MappingFormat.TSRG_FILE),
+	TSRG_2_FILE(null, null, net.fabricmc.mappingio.format.MappingFormat.TSRG_2_FILE),
+	PROGUARD(null, ProguardMappingsReader.INSTANCE, net.fabricmc.mappingio.format.MappingFormat.PROGUARD_FILE),
 	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE, null);
 
 	private final MappingsWriter writer;

@@ -406,6 +406,7 @@ public class MenuBar {
 	private static void prepareOpenMappingsMenu(JMenu openMappingsMenu, Gui gui) {
 		List<MappingFormat> readableMappingIoFormats = Arrays.asList(
 				MappingFormat.ENIGMA_DIRECTORY,
+				MappingFormat.ENIGMA_FILE,
 				MappingFormat.TINY_FILE,
 				MappingFormat.TINY_V2,
 				MappingFormat.SRG_FILE,
@@ -448,7 +449,10 @@ public class MenuBar {
 	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
 		List<MappingFormat> writableMappingIoFormats = Arrays.asList(
 				MappingFormat.ENIGMA_DIRECTORY,
-				MappingFormat.TINY_V2);
+				MappingFormat.ENIGMA_FILE,
+				MappingFormat.TINY_FILE,
+				MappingFormat.TINY_V2,
+				MappingFormat.PROGUARD);
 
 		// Enigma's own writers
 		for (MappingFormat format : MappingFormat.values()) {
