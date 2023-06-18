@@ -1,7 +1,6 @@
 package cuchaz.enigma.source.procyon.transformers;
 
-import javax.lang.model.element.Modifier;
-
+import com.strobel.assembler.metadata.Flags;
 import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.DepthFirstAstVisitor;
 import com.strobel.decompiler.languages.java.ast.EntityDeclaration;
@@ -25,7 +24,7 @@ public final class DropVarModifiersAstTransform implements IAstTransform {
 		@Override
 		public Void visitParameterDeclaration(ParameterDeclaration node, Void data) {
 			for (JavaModifierToken modifierToken : node.getChildrenByRole(EntityDeclaration.MODIFIER_ROLE)) {
-				if (modifierToken.getModifier() == Modifier.FINAL) {
+				if (modifierToken.getModifier() == Flags.Flag.FINAL) {
 					modifierToken.remove();
 				}
 			}
@@ -35,7 +34,7 @@ public final class DropVarModifiersAstTransform implements IAstTransform {
 
 		@Override
 		public Void visitVariableDeclaration(VariableDeclarationStatement node, Void data) {
-			node.removeModifier(Modifier.FINAL);
+			node.removeModifier(Flags.Flag.FINAL);
 			return null;
 		}
 	}
