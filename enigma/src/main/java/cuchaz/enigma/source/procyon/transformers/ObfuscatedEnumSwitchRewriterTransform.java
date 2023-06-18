@@ -89,7 +89,7 @@ public class ObfuscatedEnumSwitchRewriterTransform implements IAstTransform {
 		}
 
 		@Override
-		public Void visitTypeDeclaration(final TypeDeclaration typeDeclaration, final Void p) {
+		public Void visitTypeDeclarationOverride(final TypeDeclaration typeDeclaration, final Void p) {
 			final boolean oldIsSwitchMapWrapper = _isSwitchMapWrapper;
 			final TypeDefinition typeDefinition = typeDeclaration.getUserData(Keys.TYPE_DEFINITION);
 			final boolean isSwitchMapWrapper = isSwitchMapWrapper(typeDefinition);
@@ -109,7 +109,7 @@ public class ObfuscatedEnumSwitchRewriterTransform implements IAstTransform {
 			_isSwitchMapWrapper = isSwitchMapWrapper;
 
 			try {
-				super.visitTypeDeclaration(typeDeclaration, p);
+				super.visitTypeDeclarationOverride(typeDeclaration, p);
 			} finally {
 				_isSwitchMapWrapper = oldIsSwitchMapWrapper;
 			}
