@@ -414,20 +414,20 @@ public class MenuBar {
 				MappingFormat.TSRG_2_FILE,
 				MappingFormat.PROGUARD);
 
-		// Enigma's own readers
-		for (MappingFormat format : MappingFormat.values()) {
-			if (format.getReader() != null) {
-				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)),
-						format, false, openMappingsMenu, gui);
-			}
+		// Mapping-IO readers
+		for (MappingFormat format : readableMappingIoFormats) {
+			addOpenMappingsMenuEntry(I18n.translate(format.getMappingIoCounterpart().name),
+					format, true, openMappingsMenu, gui);
 		}
 
 		openMappingsMenu.addSeparator();
 
-		// Mapping-IO readers
-		for (MappingFormat format : readableMappingIoFormats) {
-			addOpenMappingsMenuEntry(I18n.translate(format.getMappingIoCounterpart().name + " (via Mapping-IO, experimental)"),
-					format, true, openMappingsMenu, gui);
+		// Enigma's own readers
+		for (MappingFormat format : MappingFormat.values()) {
+			if (format.getReader() != null) {
+				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+						format, false, openMappingsMenu, gui);
+			}
 		}
 	}
 
@@ -454,20 +454,20 @@ public class MenuBar {
 				MappingFormat.TINY_V2,
 				MappingFormat.PROGUARD);
 
-		// Enigma's own writers
-		for (MappingFormat format : MappingFormat.values()) {
-			if (format.getWriter() != null) {
-				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)),
-						format, false, saveMappingsAsMenu, saveMappingsItem, gui);
-			}
+		// Mapping-IO writers
+		for (MappingFormat format : writableMappingIoFormats) {
+			addSaveMappingsAsMenuEntry(format.getMappingIoCounterpart().name,
+					format, true, saveMappingsAsMenu, saveMappingsItem, gui);
 		}
 
 		saveMappingsAsMenu.addSeparator();
 
-		// Mapping-IO writers
-		for (MappingFormat format : writableMappingIoFormats) {
-			addSaveMappingsAsMenuEntry(format.getMappingIoCounterpart().name + " (via Mapping-IO, experimental)",
-					format, true, saveMappingsAsMenu, saveMappingsItem, gui);
+		// Enigma's own writers
+		for (MappingFormat format : MappingFormat.values()) {
+			if (format.getWriter() != null) {
+				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+						format, false, saveMappingsAsMenu, saveMappingsItem, gui);
+			}
 		}
 	}
 

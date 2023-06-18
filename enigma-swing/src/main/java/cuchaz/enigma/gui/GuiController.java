@@ -104,7 +104,7 @@ public class GuiController implements ClientPacketHandler {
 
 	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
-	public boolean useMappingIo;
+	public boolean useMappingIo = true;
 
 	private ClassHandleProvider chp;
 
