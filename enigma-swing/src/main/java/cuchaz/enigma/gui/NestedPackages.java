@@ -88,10 +88,10 @@ public class NestedPackages {
 		ClassSelectorClassNode node = classToNode.remove(entry);
 
 		if (node != null) {
+			DefaultMutableTreeNode packageNode = (DefaultMutableTreeNode) node.getParent();
 			node.removeFromParent();
+			
 			// remove dangling packages
-			DefaultMutableTreeNode packageNode = packageToNode.get(entry.getPackageName());
-
 			while (packageNode != null && packageNode.getChildCount() == 0) {
 				DefaultMutableTreeNode theNode = packageNode;
 				packageNode = (DefaultMutableTreeNode) packageNode.getParent();
