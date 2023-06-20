@@ -11,8 +11,6 @@
 
 package cuchaz.enigma.analysis;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import cuchaz.enigma.analysis.index.EntryIndex;
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -20,14 +18,11 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
-	private final Translator translator;
-	private MethodEntry entry;
-	private boolean implemented;
+public class MethodInheritanceTreeNode extends MethodTreeNode {
+	private final boolean implemented;
 
 	public MethodInheritanceTreeNode(Translator translator, MethodEntry entry, boolean implemented) {
-		this.translator = translator;
-		this.entry = entry;
+		super(translator, entry);
 		this.implemented = implemented;
 	}
 
@@ -49,22 +44,17 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 		return null;
 	}
 
-	/**
-	 * Returns the method entry represented by this tree node.
-	 */
-	public MethodEntry getMethodEntry() {
-		return this.entry;
-	}
-
 	public boolean isImplemented() {
 		return this.implemented;
 	}
 
 	@Override
 	public String toString() {
-		MethodEntry translatedEntry = translator.translate(entry);
-
+		MethodEntry translatedEntry = translator.translate(this.getMethodEntry());
+		assert translatedEntry != null;
+		
 		if (!this.implemented) {
+			assert translatedEntry.getParent() != null;
 			return translatedEntry.getParent().getFullName();
 		} else {
 			return translatedEntry.getFullName() + "()";
@@ -81,8 +71,8 @@ public class MethodInheritanceTreeNode extends DefaultMutableTreeNode {
 
 		boolean ret = false;
 
-		for (ClassEntry inheritorEntry : inheritanceIndex.getChildren(this.entry.getParent())) {
-			MethodEntry methodEntry = new MethodEntry(inheritorEntry, this.entry.getName(), this.entry.getDesc());
+		for (ClassEntry inheritorEntry : inheritanceIndex.getChildren(this.getMethodEntry().getParent())) {
+			MethodEntry methodEntry = new MethodEntry(inheritorEntry, this.getMethodEntry().getName(), this.getMethodEntry().getDesc());
 
 			MethodInheritanceTreeNode node = new MethodInheritanceTreeNode(translator, methodEntry, entryIndex.hasMethod(methodEntry));
 			boolean childOverride = node.load(index);

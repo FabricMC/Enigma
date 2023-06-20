@@ -14,8 +14,6 @@ package cuchaz.enigma.analysis;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.analysis.index.EntryIndex;
@@ -25,18 +23,13 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
-	private final Translator translator;
-	private MethodEntry entry;
-
+public class MethodImplementationsTreeNode extends MethodTreeNode {
 	public MethodImplementationsTreeNode(Translator translator, MethodEntry entry) {
-		this.translator = translator;
-
+		super(translator, entry);
+		
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
-
-		this.entry = entry;
 	}
 
 	public static MethodImplementationsTreeNode findNode(MethodImplementationsTreeNode node, MethodEntry entry) {
@@ -57,13 +50,10 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 		return null;
 	}
 
-	public MethodEntry getMethodEntry() {
-		return this.entry;
-	}
-
 	@Override
 	public String toString() {
-		MethodEntry translatedEntry = translator.translate(entry);
+		MethodEntry translatedEntry = translator.translate(this.getMethodEntry());
+		assert translatedEntry != null;
 		return translatedEntry.getFullName() + "()";
 	}
 
@@ -73,10 +63,10 @@ public class MethodImplementationsTreeNode extends DefaultMutableTreeNode {
 		EntryIndex entryIndex = index.getEntryIndex();
 		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
 
-		Collection<ClassEntry> descendants = inheritanceIndex.getDescendants(entry.getParent());
+		Collection<ClassEntry> descendants = inheritanceIndex.getDescendants(this.getMethodEntry().getParent());
 
 		for (ClassEntry inheritor : descendants) {
-			MethodEntry methodEntry = entry.withParent(inheritor);
+			MethodEntry methodEntry = this.getMethodEntry().withParent(inheritor);
 
 			if (entryIndex.hasMethod(methodEntry)) {
 				nodes.add(new MethodImplementationsTreeNode(translator, methodEntry));

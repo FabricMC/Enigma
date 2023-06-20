@@ -24,18 +24,14 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
-	private final Translator translator;
-	private final ClassEntry entry;
-
+public class ClassImplementationsTreeNode extends ClassTreeNode {
 	public ClassImplementationsTreeNode(Translator translator, ClassEntry entry) {
-		this.translator = translator;
-		this.entry = entry;
+		super(translator, entry);
 	}
 
 	public static ClassImplementationsTreeNode findNode(ClassImplementationsTreeNode node, MethodEntry entry) {
 		// is this the node?
-		if (node.entry.equals(entry.getParent())) {
+		if (node.getClassEntry().equals(entry.getParent())) {
 			return node;
 		}
 
@@ -51,13 +47,9 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 		return null;
 	}
 
-	public ClassEntry getClassEntry() {
-		return this.entry;
-	}
-
 	@Override
 	public String toString() {
-		return translator.translate(entry).toString();
+		return translator.translate(this.getClassEntry()).toString();
 	}
 
 	public void load(JarIndex index) {
@@ -65,7 +57,7 @@ public class ClassImplementationsTreeNode extends DefaultMutableTreeNode {
 		List<ClassImplementationsTreeNode> nodes = Lists.newArrayList();
 		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
 
-		Collection<ClassEntry> inheritors = inheritanceIndex.getChildren(entry);
+		Collection<ClassEntry> inheritors = inheritanceIndex.getChildren(this.getClassEntry());
 
 		for (ClassEntry inheritor : inheritors) {
 			nodes.add(new ClassImplementationsTreeNode(translator, inheritor));
