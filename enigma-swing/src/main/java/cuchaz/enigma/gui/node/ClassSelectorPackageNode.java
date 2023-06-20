@@ -11,14 +11,18 @@
 
 package cuchaz.enigma.gui.node;
 
-import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.Comparator;
+
+import javax.swing.tree.TreeNode;
 
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
-public class ClassSelectorPackageNode extends DefaultMutableTreeNode {
+public class ClassSelectorPackageNode extends SortedMutableTreeNode {
 	private String packageName;
 
-	public ClassSelectorPackageNode(String packageName) {
+	public ClassSelectorPackageNode(Comparator<TreeNode> comparator, String packageName) {
+		super(comparator);
+
 		this.packageName = packageName != null ? packageName : "(none)";
 	}
 
