@@ -52,7 +52,7 @@ public class MethodInheritanceTreeNode extends MethodTreeNode {
 	public String toString() {
 		MethodEntry translatedEntry = translator.translate(this.getMethodEntry());
 		assert translatedEntry != null;
-		
+
 		if (!this.implemented) {
 			assert translatedEntry.getParent() != null;
 			return translatedEntry.getParent().getFullName();

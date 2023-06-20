@@ -13,8 +13,6 @@ package cuchaz.enigma.analysis;
 
 import java.util.List;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import com.google.common.collect.Lists;
 
 import cuchaz.enigma.analysis.index.InheritanceIndex;

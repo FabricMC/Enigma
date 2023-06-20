@@ -26,7 +26,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 public class MethodImplementationsTreeNode extends MethodTreeNode {
 	public MethodImplementationsTreeNode(Translator translator, MethodEntry entry) {
 		super(translator, entry);
-		
+
 		if (entry == null) {
 			throw new IllegalArgumentException("Entry cannot be null!");
 		}
