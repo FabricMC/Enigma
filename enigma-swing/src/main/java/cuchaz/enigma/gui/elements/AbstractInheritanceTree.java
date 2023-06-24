@@ -13,8 +13,9 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
+import cuchaz.enigma.analysis.ClassTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
+import cuchaz.enigma.analysis.MethodTreeNode;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.SingleTreeSelectionModel;
@@ -51,12 +52,16 @@ public abstract class AbstractInheritanceTree {
 
 			Object node = path.getLastPathComponent();
 
-			if (node instanceof ClassInheritanceTreeNode classNode) {
-				gui.getController().navigateTo(new ClassEntry(classNode.getObfClassName()));
-			} else if (node instanceof MethodInheritanceTreeNode methodNode) {
-				if (methodNode.isImplemented()) {
-					gui.getController().navigateTo(methodNode.getMethodEntry());
+			if (node instanceof ClassTreeNode classNode) {
+				gui.getController().navigateTo(new ClassEntry(classNode.getClassEntry().getFullName()));
+			} else if (node instanceof MethodTreeNode methodNode) {
+				if (methodNode instanceof MethodInheritanceTreeNode inheritanceMethodNode) {
+					if (!inheritanceMethodNode.isImplemented()) {
+						return;
+					}
 				}
+
+				gui.getController().navigateTo(methodNode.getMethodEntry());
 			}
 		}
 	}
