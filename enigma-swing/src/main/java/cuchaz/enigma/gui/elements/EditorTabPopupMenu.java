@@ -30,6 +30,7 @@ public class EditorTabPopupMenu {
 
 		this.closeAll = new JMenuItem();
 		this.closeAll.addActionListener(a -> pane.closeAllEditorTabs());
+		this.closeAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_4, KeyEvent.CTRL_DOWN_MASK + KeyEvent.SHIFT_DOWN_MASK));
 		this.ui.add(this.closeAll);
 
 		this.closeOthers = new JMenuItem();
