@@ -177,7 +177,7 @@ public class EditorPopupMenu {
 		this.toggleMappingItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)));
 
 		boolean isDeobfuscated = false;
-		
+
 		if (referenceEntry != null) {
 			Entry<?> entryToCheck = !isConstructorEntry ? referenceEntry : ((MethodEntry) referenceEntry).getContainingClass();
 			isDeobfuscated = this.gui.getController().project.getMapper().extendedDeobfuscate(entryToCheck).isDeobfuscated();
