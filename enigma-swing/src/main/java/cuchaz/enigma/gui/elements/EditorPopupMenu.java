@@ -179,7 +179,7 @@ public class EditorPopupMenu {
 		boolean isDeobfuscated = false;
 
 		if (referenceEntry != null) {
-			Entry<?> entryToCheck = !isConstructorEntry ? referenceEntry : ((MethodEntry) referenceEntry).getContainingClass();
+			Entry<?> entryToCheck = !isConstructorEntry ? referenceEntry : referenceEntry.getContainingClass();
 			isDeobfuscated = this.gui.getController().project.getMapper().extendedDeobfuscate(entryToCheck).isDeobfuscated();
 		}
 
