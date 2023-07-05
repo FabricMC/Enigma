@@ -191,12 +191,21 @@ public class IdentifierPanel {
 	}
 
 	private void validateRename(String newName) {
-		gui.getController().validateChange(vc, EntryChange.modify(entry).withDeobfName(newName));
+		gui.getController().validateChange(vc, withDeobfName(newName));
 	}
 
 	private void doRename(String newName) {
-		EntryChange<? extends Entry<?>> change = EntryChange.modify(entry).withDeobfName(newName);
-		gui.getController().applyChange(vc, change);
+		gui.getController().applyChange(vc, withDeobfName(newName));
+	}
+
+	private EntryChange<? extends Entry<?>> withDeobfName(String newName) {
+		Entry<?> entryToRename = entry;
+
+		if (entryToRename instanceof MethodEntry methodEntry && methodEntry.isConstructor()) {
+			entryToRename = methodEntry.getContainingClass();
+		}
+
+		return EntryChange.modify(entryToRename).withDeobfName(newName);
 	}
 
 	public void retranslateUi() {
