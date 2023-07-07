@@ -17,6 +17,7 @@ public class JadxDecompiler implements Decompiler {
 	public JadxDecompiler(ClassProvider classProvider, SourceSettings sourceSettings) {
 		this.settings = sourceSettings;
 		this.classProvider = classProvider;
+		System.getProperties().setProperty("line.separator", "\n");
 	}
 
 	@Override

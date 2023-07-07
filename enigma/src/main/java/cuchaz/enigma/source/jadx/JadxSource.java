@@ -84,8 +84,8 @@ public class JadxSource implements Source {
 
 			JavaClass decompiledClass = jadx.getClasses().get(0);
 			SourceIndex index = new SourceIndex(decompiledClass.getCode());
-			int pos = decompiledClass.getDefPos() - 2;
-			
+			int pos = decompiledClass.getDefPos() - 1;
+
 			Token token = new Token(pos, pos + decompiledClass.getName().length(), decompiledClass.getName());
 			index.addDeclaration(token, parse(decompiledClass));
 			this.index = index;
