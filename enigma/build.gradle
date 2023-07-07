@@ -10,6 +10,8 @@ dependencies {
 
 	implementation 'org.bitbucket.mstrobel:procyon-compilertools:0.6.0'
 	implementation 'net.fabricmc:cfr:0.2.1'
+	implementation 'io.github.skylot:jadx-core:1.4.7'
+	implementation 'io.github.skylot:jadx-java-input:1.4.7'
 
 	proGuard 'com.guardsquare:proguard-base:7.3.0'
 
