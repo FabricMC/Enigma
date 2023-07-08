@@ -2,7 +2,7 @@ package cuchaz.enigma.source.jadx;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import jadx.api.JadxArgs;
-import jadx.api.impl.NoOpCodeCache;
+import jadx.api.impl.InMemoryCodeCache;
 
 import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.source.Decompiler;
@@ -22,15 +22,22 @@ public class JadxDecompiler implements Decompiler {
 
 	@Override
 	public Source getSource(String className, @Nullable EntryRemapper mapper) {
-		return new JadxSource(settings, createJadxArgs(), classProvider.get(className), mapper);
+		return new JadxSource(settings, this::createJadxArgs, classProvider.get(className), mapper);
 	}
 
 	private JadxArgs createJadxArgs() {
 		JadxArgs args = new JadxArgs();
-		args.setCodeCache(NoOpCodeCache.INSTANCE);
+		args.setCodeCache(new InMemoryCodeCache());
 		args.setShowInconsistentCode(true);
+		args.setInlineAnonymousClasses(false);
+		args.setInlineMethods(false);
+		args.setRespectBytecodeAccModifiers(true);
 		args.setRenameValid(false);
-		args.setThreadsCount(Runtime.getRuntime().availableProcessors() / 2);
+
+		if (settings.removeImports) {
+			// Commented out for now, since JADX would use full identifiers everywhere
+			// args.setUseImports(false);
+		}
 
 		return args;
 	}
