@@ -8,25 +8,18 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.benf.cfr.reader.bytecode.analysis.types.JavaTypeInstance;
-import org.benf.cfr.reader.bytecode.analysis.types.MethodPrototype;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.objectweb.asm.tree.ClassNode;
-
 import com.google.common.base.Strings;
-
 import jadx.api.ICodeInfo;
 import jadx.api.JadxArgs;
 import jadx.api.JadxDecompiler;
 import jadx.api.JavaClass;
 import jadx.api.JavaField;
 import jadx.api.JavaMethod;
-import jadx.api.JavaNode;
-import jadx.api.JavaVariable;
+import jadx.api.impl.InMemoryCodeCache;
 import jadx.api.metadata.ICodeAnnotation;
-import jadx.api.metadata.ICodeMetadata;
 import jadx.api.metadata.ICodeNodeRef;
-import jadx.api.metadata.ICodeAnnotation.AnnType;
 import jadx.api.metadata.annotations.NodeDeclareRef;
 import jadx.api.metadata.annotations.VarNode;
 import jadx.api.metadata.annotations.VarRef;
@@ -38,7 +31,6 @@ import jadx.core.codegen.TypeGen;
 import jadx.core.dex.attributes.AType;
 import jadx.core.dex.info.MethodInfo;
 import jadx.core.dex.nodes.FieldNode;
-import jadx.core.dex.nodes.ICodeNode;
 import jadx.core.dex.nodes.MethodNode;
 import jadx.plugins.input.java.JavaClassReader;
 import jadx.plugins.input.java.data.JavaClassData;
@@ -48,11 +40,8 @@ import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.SourceSettings;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.Signature;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
@@ -65,7 +54,6 @@ public class JadxSource implements Source {
 	private final ClassNode classNode;
 	private final EntryRemapper mapper;
 	private SourceIndex index;
-	private MethodEntry currentMethod = null;
 
 	public JadxSource(SourceSettings settings, Supplier<JadxArgs> jadxArgsSupplier, ClassNode classNode, @Nullable EntryRemapper mapper) {
 		this.settings = settings;
@@ -122,23 +110,37 @@ public class JadxSource implements Source {
 			JavaClass cls = jadx.getClasses().get(0);
 
 			// Javadocs
+			// TODO: Make this less hacky
 			if (mapper != null) {
+				int reload = 0;
 				String comment;
 
-				if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(classEntryOf(cls.getClassNode())).javadoc())) != null) {
-					cls.getClassNode().addAttr(AType.CODE_COMMENTS, Strings.emptyToNull(comment));
-				}
-	
 				for (JavaField fld : cls.getFields()) {
 					if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(fieldEntryOf(fld.getFieldNode())).javadoc())) != null) {
-						fld.getFieldNode().addAttr(AType.CODE_COMMENTS, Strings.emptyToNull(comment));
+						fld.getFieldNode().addAttr(AType.CODE_COMMENTS, comment);
+						reload = 1;
 					}
 				}
-				
+
 				for (JavaMethod mth : cls.getMethods()) {
 					if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(methodEntryOf(mth.getMethodNode())).javadoc())) != null) {
-						mth.getMethodNode().addAttr(AType.CODE_COMMENTS, Strings.emptyToNull(comment));
+						mth.getMethodNode().addAttr(AType.CODE_COMMENTS, comment);
+						reload = 1;
 					}
+				}
+
+				if (reload == 1) {
+					jadx.getArgs().setCodeCache(new InMemoryCodeCache());
+					reload = 2;
+				}
+
+				if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(classEntryOf(cls.getClassNode())).javadoc())) != null) {
+					cls.getClassNode().addAttr(AType.CODE_COMMENTS, comment);
+					if (reload != 2) reload = 1;
+				}
+
+				if (reload == 1) {
+					jadx.getArgs().setCodeCache(new InMemoryCodeCache());
 				}
 			}
 
@@ -247,17 +249,22 @@ public class JadxSource implements Source {
 					// Stop at line end
 					return Boolean.TRUE;
 				}
+
 				if (ann instanceof NodeDeclareRef) {
 					ICodeNodeRef declRef = ((NodeDeclareRef) ann).getNode();
+
 					if (declRef instanceof VarNode) {
 						VarNode varNode = (VarNode) declRef;
+
 						if (!varNode.getMth().equals(mth)) {
 							// Stop if we've gone too far and have entered a different method
 							return Boolean.TRUE;
 						}
+
 						args.add(varNode);
 					}
 				}
+
 				return null;
 			});
 
