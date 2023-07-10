@@ -250,19 +250,13 @@ public class JadxSource implements Source {
 					return Boolean.TRUE;
 				}
 
-				if (ann instanceof NodeDeclareRef) {
-					ICodeNodeRef declRef = ((NodeDeclareRef) ann).getNode();
-
-					if (declRef instanceof VarNode) {
-						VarNode varNode = (VarNode) declRef;
-
-						if (!varNode.getMth().equals(mth)) {
-							// Stop if we've gone too far and have entered a different method
-							return Boolean.TRUE;
-						}
-
-						args.add(varNode);
+				if (ann instanceof NodeDeclareRef ref && ref.getNode() instanceof VarNode varNode) {
+					if (!varNode.getMth().equals(mth)) {
+						// Stop if we've gone too far and have entered a different method
+						return Boolean.TRUE;
 					}
+
+					args.add(varNode);
 				}
 
 				return null;
