@@ -15,6 +15,7 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -556,7 +557,7 @@ public class GuiController implements ClientPacketHandler {
 			try {
 				File statsFile = File.createTempFile("stats", ".html");
 
-				try (FileWriter w = new FileWriter(statsFile)) {
+				try (FileWriter w = new FileWriter(statsFile, StandardCharsets.UTF_8)) {
 					w.write(Utils.readResourceToString("/stats.html").replace("/*data*/", data));
 				}
 
