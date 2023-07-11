@@ -19,7 +19,6 @@ import jadx.api.JavaField;
 import jadx.api.JavaMethod;
 import jadx.api.impl.InMemoryCodeCache;
 import jadx.api.metadata.ICodeAnnotation;
-import jadx.api.metadata.ICodeNodeRef;
 import jadx.api.metadata.annotations.NodeDeclareRef;
 import jadx.api.metadata.annotations.VarNode;
 import jadx.api.metadata.annotations.VarRef;
@@ -130,6 +129,7 @@ public class JadxSource implements Source {
 				}
 
 				if (reload == 1) {
+					jadx.getArgs().getCodeCache().close();
 					jadx.getArgs().setCodeCache(new InMemoryCodeCache());
 					reload = 2;
 				}
@@ -140,6 +140,7 @@ public class JadxSource implements Source {
 				}
 
 				if (reload == 1) {
+					jadx.getArgs().getCodeCache().close();
 					jadx.getArgs().setCodeCache(new InMemoryCodeCache());
 				}
 			}
