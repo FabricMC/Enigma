@@ -115,38 +115,38 @@ public class JadxSource implements Source {
 					if (mapper != null) {
 						int reload = 0;
 						String comment;
-		
+
 						for (JavaField fld : cls.getFields()) {
 							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(fieldEntryOf(fld.getFieldNode())).javadoc())) != null) {
 								fld.getFieldNode().addAttr(AType.CODE_COMMENTS, comment);
 								reload = 1;
 							}
 						}
-		
+
 						for (JavaMethod mth : cls.getMethods()) {
 							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(methodEntryOf(mth.getMethodNode())).javadoc())) != null) {
 								mth.getMethodNode().addAttr(AType.CODE_COMMENTS, comment);
 								reload = 1;
 							}
 						}
-		
+
 						if (reload == 1) {
 							jadx.getArgs().getCodeCache().close();
 							jadx.getArgs().setCodeCache(new InMemoryCodeCache());
 							reload = 2;
 						}
-		
+
 						if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(classEntryOf(cls.getClassNode())).javadoc())) != null) {
 							cls.getClassNode().addAttr(AType.CODE_COMMENTS, comment);
 							if (reload != 2) reload = 1;
 						}
-		
+
 						if (reload == 1) {
 							jadx.getArgs().getCodeCache().close();
 							jadx.getArgs().setCodeCache(new InMemoryCodeCache());
 						}
 					}
-		
+
 					index = new SourceIndex(cls.getCode());
 				} catch (Exception e) {
 					throw new RuntimeException(e);
