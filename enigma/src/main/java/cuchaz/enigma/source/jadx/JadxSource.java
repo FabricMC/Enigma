@@ -108,44 +108,50 @@ public class JadxSource implements Source {
 			jadx.load();
 			JavaClass cls = jadx.getClasses().get(0);
 
-			// Javadocs
-			// TODO: Make this less hacky
-			if (mapper != null) {
-				int reload = 0;
-				String comment;
-
-				for (JavaField fld : cls.getFields()) {
-					if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(fieldEntryOf(fld.getFieldNode())).javadoc())) != null) {
-						fld.getFieldNode().addAttr(AType.CODE_COMMENTS, comment);
-						reload = 1;
+			runWithFixedLineSeparator(() -> {
+				try {
+					// Javadocs
+					// TODO: Make this less hacky
+					if (mapper != null) {
+						int reload = 0;
+						String comment;
+		
+						for (JavaField fld : cls.getFields()) {
+							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(fieldEntryOf(fld.getFieldNode())).javadoc())) != null) {
+								fld.getFieldNode().addAttr(AType.CODE_COMMENTS, comment);
+								reload = 1;
+							}
+						}
+		
+						for (JavaMethod mth : cls.getMethods()) {
+							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(methodEntryOf(mth.getMethodNode())).javadoc())) != null) {
+								mth.getMethodNode().addAttr(AType.CODE_COMMENTS, comment);
+								reload = 1;
+							}
+						}
+		
+						if (reload == 1) {
+							jadx.getArgs().getCodeCache().close();
+							jadx.getArgs().setCodeCache(new InMemoryCodeCache());
+							reload = 2;
+						}
+		
+						if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(classEntryOf(cls.getClassNode())).javadoc())) != null) {
+							cls.getClassNode().addAttr(AType.CODE_COMMENTS, comment);
+							if (reload != 2) reload = 1;
+						}
+		
+						if (reload == 1) {
+							jadx.getArgs().getCodeCache().close();
+							jadx.getArgs().setCodeCache(new InMemoryCodeCache());
+						}
 					}
+		
+					index = new SourceIndex(cls.getCode());
+				} catch (Exception e) {
+					throw new RuntimeException(e);
 				}
-
-				for (JavaMethod mth : cls.getMethods()) {
-					if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(methodEntryOf(mth.getMethodNode())).javadoc())) != null) {
-						mth.getMethodNode().addAttr(AType.CODE_COMMENTS, comment);
-						reload = 1;
-					}
-				}
-
-				if (reload == 1) {
-					jadx.getArgs().getCodeCache().close();
-					jadx.getArgs().setCodeCache(new InMemoryCodeCache());
-					reload = 2;
-				}
-
-				if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(classEntryOf(cls.getClassNode())).javadoc())) != null) {
-					cls.getClassNode().addAttr(AType.CODE_COMMENTS, comment);
-					if (reload != 2) reload = 1;
-				}
-
-				if (reload == 1) {
-					jadx.getArgs().getCodeCache().close();
-					jadx.getArgs().setCodeCache(new InMemoryCodeCache());
-				}
-			}
-
-			index = new SourceIndex(cls.getCode());
+			});
 
 			// Tokens
 			cls.getCodeInfo().getCodeMetadata().searchDown(0, (pos, ann) -> {
@@ -155,6 +161,23 @@ public class JadxSource implements Source {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * JADX uses the system default line ending, but JEditorPane does not (seems to be hardcoded to \n).
+	 * This causes tokens to be offset by one char per preceding line, since Windows' \r\n is one char longer than plain \r or \n.
+	 * Unfortunately, the only way of making JADX use a different value is by changing the system property, which may cause issues
+	 * elsewhere in the program. That's why we immediately reset it to the default after the runnable has been executed.
+	 * TODO: Remove once https://github.com/skylot/jadx/issues/1948 is addressed.
+	 */
+	private void runWithFixedLineSeparator(Runnable runnable) {
+		String propertyKey = "line.separator";
+		String oldLineSeparator = System.getProperty(propertyKey);
+		System.setProperty(propertyKey, "\n");
+
+		runnable.run();
+
+		System.getProperties().setProperty(propertyKey, oldLineSeparator);
 	}
 
 	private void processAnnotatedElement(int pos, ICodeAnnotation ann, ICodeInfo codeInfo) {
