@@ -77,19 +77,28 @@ public final class UiConfig {
 	 *
 	 * <ul>
 	 *     <li>[0] - The height of the obfuscated classes panel</li>
-	 *     <li>[1] - The width of the classes panel</li>
-	 *     <li>[2] - The width of the center panel</li>
-	 *     <li>[3] - The height of the tabs panel. Only used if the logs panel should appear</li>
+	 *     <li>[1] - The height of the partially deobfuscated classes panel</li>
+	 *     <li>[2] - The width of the classes panel</li>
+	 *     <li>[3] - The width of the center panel</li>
+	 *     <li>[4] - The height of the tabs panel. Only used if the logs panel should appear</li>
 	 * </ul>
 	 *
-	 * @return an integer array composed of these 4 dimensions
+	 * @return an integer array composed of these 5 dimensions
 	 */
 	public static int[] getLayout() {
-		return swing.data().section("Main Window").getIntArray("Layout").orElseGet(() -> new int[]{-1, -1, -1, -1});
+		Optional<int[]> savedData = swing.data().section("Main Window").getIntArray("Layout");
+
+		// In older versions of Enigma, only four array entries were present.
+		// If such an old config is loaded, discard it (not worth the effort of converting)
+		if (savedData.isPresent() && savedData.get().length == 5) {
+			return savedData.get();
+		} else {
+			return new int[] { -1, -1, -1, -1, -1 };
+		}
 	}
 
-	public static void setLayout(int leftV, int left, int right, int rightH) {
-		swing.data().section("Main Window").setIntArray("Layout", new int[]{leftV, left, right, rightH});
+	public static void setLayout(int obfV, int partialObfV, int left, int right, int rightH) {
+		swing.data().section("Main Window").setIntArray("Layout", new int[] { obfV, partialObfV, left, right, rightH });
 	}
 
 	public static LookAndFeel getLookAndFeel() {

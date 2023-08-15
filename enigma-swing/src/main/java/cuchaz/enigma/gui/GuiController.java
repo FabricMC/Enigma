@@ -44,10 +44,10 @@ import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.MethodReferenceTreeNode;
 import cuchaz.enigma.analysis.StructureTreeNode;
 import cuchaz.enigma.analysis.StructureTreeOptions;
-import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
+import cuchaz.enigma.gui.Gui.RenameDirection;
 import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
@@ -68,7 +68,6 @@ import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.Token;
-import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -394,40 +393,30 @@ public class GuiController implements ClientPacketHandler {
 		}
 
 		List<ClassEntry> obfClasses = Lists.newArrayList();
-		List<ClassEntry> deobfClasses = Lists.newArrayList();
-		this.addSeparatedClasses(obfClasses, deobfClasses);
+		List<ClassEntry> partiallyDeobfClasses = Lists.newArrayList();
+		List<ClassEntry> fullyDeobfClasses = Lists.newArrayList();
+		this.addSeparatedClasses(obfClasses, partiallyDeobfClasses, fullyDeobfClasses);
 		this.gui.setObfClasses(obfClasses);
-		this.gui.setDeobfClasses(deobfClasses);
+		this.gui.setPartiallyDeobfClasses(partiallyDeobfClasses);
+		this.gui.setFullyDeobfClasses(fullyDeobfClasses);
 	}
 
-	public void addSeparatedClasses(List<ClassEntry> obfClasses, List<ClassEntry> deobfClasses) {
-		EntryRemapper mapper = project.getMapper();
-
+	public void addSeparatedClasses(List<ClassEntry> obfClasses, List<ClassEntry> partiallyDeobfClasses, List<ClassEntry> fullyDeobfClasses) {
 		Collection<ClassEntry> classes = project.getJarIndex().getEntryIndex().getClasses();
 		Stream<ClassEntry> visibleClasses = classes.stream().filter(entry -> !entry.isInnerClass());
 
 		visibleClasses.forEach(entry -> {
 			if (gui.isSingleClassTree()) {
-				deobfClasses.add(entry);
+				fullyDeobfClasses.add(entry);
 				return;
 			}
 
-			TranslateResult<ClassEntry> result = mapper.extendedDeobfuscate(entry);
-			ClassEntry deobfEntry = result.getValue();
-
-			List<ObfuscationTestService> obfService = enigma.getServices().get(ObfuscationTestService.TYPE);
-			boolean obfuscated = result.isObfuscated() && deobfEntry.equals(entry);
-
-			if (obfuscated && !obfService.isEmpty()) {
-				if (obfService.stream().anyMatch(service -> service.testDeobfuscated(entry))) {
-					obfuscated = false;
-				}
-			}
-
-			if (obfuscated) {
+			if (!project.isAtLeastPartiallyDeobfuscated(entry)) {
 				obfClasses.add(entry);
+			} else if (project.isFullyDeobfuscated(entry)) {
+				fullyDeobfClasses.add(entry);
 			} else {
-				deobfClasses.add(entry);
+				partiallyDeobfClasses.add(entry);
 			}
 		});
 	}
@@ -534,9 +523,20 @@ public class GuiController implements ClientPacketHandler {
 		EntryMapping mapping = EntryUtil.applyChange(vc, this.project.getMapper(), change);
 
 		boolean renamed = !change.getDeobfName().isUnchanged();
+		RenameDirection direction = null;
 
-		if (renamed && target instanceof ClassEntry && !((ClassEntry) target).isInnerClass()) {
-			this.gui.moveClassTree(target, prev.targetName() == null, mapping.targetName() == null);
+		if (renamed) {
+			if (prev.targetName() == null && mapping.targetName() != null) {
+				direction = RenameDirection.OBF_TO_DEOBF;
+			} else if (prev.targetName() == null && mapping.targetName() == null) {
+				direction = RenameDirection.OBF_TO_OBF;
+			} else if (prev.targetName() != null && mapping.targetName() == null) {
+				direction = RenameDirection.DEOBF_TO_OBF;
+			} else if (prev.targetName() != null && mapping.targetName() != null) {
+				direction = RenameDirection.DEOBF_TO_DEOBF;
+			}
+
+			this.gui.moveClassTreeIfNecessary(target, direction);
 		}
 
 		if (!Objects.equals(prev.targetName(), mapping.targetName())) {

@@ -57,7 +57,6 @@
 	"popup_menu.reset_obfuscated": "重置混淆",
 
 	"info_panel.classes.obfuscated": "混淆类",
-	"info_panel.classes.deobfuscated": "反混淆类",
 	"info_panel.identifier": "标识符信息",
 	"info_panel.identifier.none": "未选择标识符",
 	"info_panel.identifier.variable": "变量",
