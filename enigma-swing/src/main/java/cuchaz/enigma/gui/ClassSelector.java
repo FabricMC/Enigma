@@ -265,7 +265,12 @@ public class ClassSelector extends JTree {
 	}
 
 	public void collapseAll() {
-		for (DefaultMutableTreeNode packageNode : packageManager.getPackageNodes()) {
+		// sort the package nodes by depth, so we collapse the deepest nodes first
+		List<DefaultMutableTreeNode> packageNodes = new ArrayList<>(packageManager.getPackageNodes());
+		packageNodes.sort(Comparator.comparingInt(DefaultMutableTreeNode::getDepth));
+
+		// collapse the nodes
+		for (DefaultMutableTreeNode packageNode : packageNodes) {
 			collapsePath(new TreePath(packageNode.getPath()));
 		}
 	}
