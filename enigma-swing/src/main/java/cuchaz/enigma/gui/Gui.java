@@ -418,7 +418,7 @@ public class Gui {
 			return;
 		}
 
-		Entry<?> obfEntry = cursorReference.entry;
+		Entry<?> obfEntry = cursorReference.getNameableEntry();
 		toggleMappingFromEntry(obfEntry);
 	}
 
