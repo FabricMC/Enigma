@@ -56,6 +56,7 @@ public class MappingValidator {
 			Entry<?> translatedEntry = deobfuscator.translate(relatedEntry);
 
 			List<? extends Entry<?>> translatedSiblings = obfToDeobf.getSiblings(relatedEntry).stream()
+					.filter(sibling -> !sibling.equals(entry)) // Don't check against yourself
 					.map(deobfuscator::translate)
 					.toList();
 
