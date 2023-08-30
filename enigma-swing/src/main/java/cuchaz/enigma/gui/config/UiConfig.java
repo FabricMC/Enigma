@@ -333,6 +333,14 @@ public final class UiConfig {
 		section.setInt(String.format("Y %s", screenSize.height), rect.y);
 	}
 
+	public static boolean isFullscreen(String window) {
+		return swing.data().section(window).setIfAbsentBool("Fullscreen", false);
+	}
+
+	public static void setFullscreen(String window, boolean fullscreen) {
+		swing.data().section(window).setBool("Fullscreen", fullscreen);
+	}
+
 	public static String getLastSelectedDir() {
 		return swing.data().section("File Dialog").getString("Selected").orElse("");
 	}
