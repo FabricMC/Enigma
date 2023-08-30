@@ -217,6 +217,7 @@ public class Gui {
 		frame.addWindowListener(GuiUtil.onWindowClose(e -> this.close()));
 
 		frame.setSize(UiConfig.getWindowSize("Main Window", ScaleUtil.getDimension(1024, 576)));
+		frame.setExtendedState(UiConfig.isFullscreen("Main Window") ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
 		frame.setMinimumSize(ScaleUtil.getDimension(640, 480));
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
@@ -464,6 +465,7 @@ public class Gui {
 	private void exit() {
 		UiConfig.setWindowPos("Main Window", this.mainWindow.frame().getLocationOnScreen());
 		UiConfig.setWindowSize("Main Window", this.mainWindow.frame().getSize());
+		UiConfig.setFullscreen("Main Window", this.mainWindow.frame().getExtendedState() == JFrame.MAXIMIZED_BOTH);
 		UiConfig.setLayout(this.splitClasses.getDividerLocation(), this.splitCenter.getDividerLocation(), this.splitRight.getDividerLocation(), this.logSplit.getDividerLocation());
 		UiConfig.save();
 
