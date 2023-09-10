@@ -27,16 +27,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -55,7 +46,9 @@ import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 import cuchaz.enigma.utils.I18n;
 
 public class SearchDialog {
+	private final JPanel inputPanel;
 	private final JTextField searchField;
+	private final JCheckBox onlyExactMatchesCheckbox;
 	private DefaultListModel<SearchEntryImpl> classListModel;
 	private final JList<SearchEntryImpl> classList;
 	private final JDialog dialog;
@@ -73,6 +66,10 @@ public class SearchDialog {
 		JPanel contentPane = new JPanel();
 		contentPane.setBorder(ScaleUtil.createEmptyBorder(4, 4, 4, 4));
 		contentPane.setLayout(new BorderLayout(ScaleUtil.scale(4), ScaleUtil.scale(4)));
+
+		inputPanel = new JPanel();
+		inputPanel.setLayout(new BorderLayout(ScaleUtil.scale(4), ScaleUtil.scale(4)));
+		contentPane.add(inputPanel, BorderLayout.NORTH);
 
 		searchField = new JTextField();
 		searchField.getDocument().addDocumentListener(new DocumentListener() {
@@ -108,7 +105,11 @@ public class SearchDialog {
 			}
 		});
 		searchField.addActionListener(e -> openSelected());
-		contentPane.add(searchField, BorderLayout.NORTH);
+		inputPanel.add(searchField, BorderLayout.NORTH);
+
+		onlyExactMatchesCheckbox = new JCheckBox(I18n.translate("menu.search.only_exact_matches"));
+		onlyExactMatchesCheckbox.addActionListener(e -> updateList());
+		inputPanel.add(onlyExactMatchesCheckbox, BorderLayout.SOUTH);
 
 		classListModel = new DefaultListModel<>();
 		classList = new JList<>();
@@ -238,7 +239,7 @@ public class SearchDialog {
 			}
 		};
 
-		currentSearch = su.asyncSearch(searchField.getText(), (idx, e) -> queue.add(new Order(idx, e)));
+		currentSearch = su.asyncSearch(searchField.getText(), (idx, e) -> queue.add(new Order(idx, e)), onlyExactMatchesCheckbox.isSelected());
 		SwingUtilities.invokeLater(updater);
 	}
 

@@ -55,7 +55,7 @@ public class SearchUtil<T extends SearchEntry> {
 		return entries.values().parallelStream().map(e -> new Pair<>(e, e.getScore(term, hitCount.getOrDefault(e.searchEntry.getIdentifier(), 0)))).filter(e -> e.b > 0).sorted(Comparator.comparingDouble(o -> -o.b)).map(e -> e.a.searchEntry).sequential();
 	}
 
-	public SearchControl asyncSearch(String term, SearchResultConsumer<T> consumer) {
+	public SearchControl asyncSearch(String term, SearchResultConsumer<T> consumer, boolean onlyExactMatches) {
 		Map<String, Integer> hitCount = new HashMap<>(this.hitCount);
 		Map<T, Entry<T>> entries = new HashMap<>(this.entries);
 		float[] scores = new float[entries.size()];
@@ -68,6 +68,11 @@ public class SearchUtil<T extends SearchEntry> {
 			searchExecutor.execute(() -> {
 				try {
 					if (control.get()) {
+						return;
+					}
+
+					// if onlyExactMatches is true, don't add any entries that don't have an exact match
+					if (onlyExactMatches && value.searchEntry.getSearchableNames().stream().noneMatch(name -> name.equalsIgnoreCase(term))) {
 						return;
 					}
 
@@ -141,6 +146,10 @@ public class SearchUtil<T extends SearchEntry> {
 		public float getScore(String term, int hits) {
 			String ucTerm = term.toUpperCase(Locale.ROOT);
 			float maxScore = (float) Arrays.stream(components).mapToDouble(name -> getScoreFor(ucTerm, name)).max().orElse(0.0);
+			// if exact match, make sure it's at the top of the list
+			if (searchEntry.getSearchableNames().stream().anyMatch(name -> name.equalsIgnoreCase(term))) {
+				maxScore = Float.MAX_VALUE / 2;
+			}
 			return maxScore * (hits + 1);
 		}
 
