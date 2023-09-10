@@ -146,10 +146,12 @@ public class SearchUtil<T extends SearchEntry> {
 		public float getScore(String term, int hits) {
 			String ucTerm = term.toUpperCase(Locale.ROOT);
 			float maxScore = (float) Arrays.stream(components).mapToDouble(name -> getScoreFor(ucTerm, name)).max().orElse(0.0);
+
 			// if exact match, make sure it's at the top of the list
 			if (searchEntry.getSearchableNames().stream().anyMatch(name -> name.equalsIgnoreCase(term))) {
 				maxScore = Float.MAX_VALUE / 2;
 			}
+
 			return maxScore * (hits + 1);
 		}
 
