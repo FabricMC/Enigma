@@ -198,7 +198,7 @@ public class JavadocDialog {
 		EntryReference<Entry<?>, Entry<?>> translatedReference = controller.project.getMapper().deobfuscate(entry);
 		String text = Strings.nullToEmpty(translatedReference.entry.getJavadocs());
 
-		JavadocDialog dialog = new JavadocDialog(parent, controller, entry.getNameableEntry(), text);
+		JavadocDialog dialog = new JavadocDialog(parent, controller, entry.entry, text);
 		//dialog.ui.doLayout();
 		dialog.ui.setVisible(true);
 		dialog.text.grabFocus();
