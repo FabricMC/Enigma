@@ -72,7 +72,7 @@ public class SearchDialog {
 
 		su = new SearchUtil<>();
 
-		dialog = new JDialog(parent.getFrame(), I18n.translate("menu.search"), true);
+		dialog = new JDialog(parent.getFrame(), true);
 		JPanel contentPane = new JPanel();
 		contentPane.setBorder(ScaleUtil.createEmptyBorder(4, 4, 4, 4));
 		contentPane.setLayout(new BorderLayout(ScaleUtil.scale(4), ScaleUtil.scale(4)));
@@ -178,6 +178,7 @@ public class SearchDialog {
 		searchField.requestFocus();
 		searchField.selectAll();
 
+		dialog.setTitle(I18n.translate(type.getTranslationKey()));
 		dialog.setVisible(true);
 	}
 
@@ -339,8 +340,18 @@ public class SearchDialog {
 	}
 
 	public enum Type {
-		CLASS,
-		METHOD,
-		FIELD
+		CLASS("menu.search.class"),
+		METHOD("menu.search.method"),
+		FIELD("menu.search.field");
+
+		private final String translationKey;
+
+		Type(String translationKey) {
+			this.translationKey = translationKey;
+		}
+
+		public String getTranslationKey() {
+			return translationKey;
+		}
 	}
 }
