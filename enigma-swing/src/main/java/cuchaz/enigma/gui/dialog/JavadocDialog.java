@@ -196,9 +196,12 @@ public class JavadocDialog {
 	}
 
 	public static void show(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry) {
+		// Get the existing text through the mapping as it works for all entries, including constructors.
 		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry.entry);
 		String text = Strings.nullToEmpty(mapping.javadoc());
 
+		// Note: entry.entry is used instead of getNameableEntry() to include constructors,
+		// which can be documented.
 		JavadocDialog dialog = new JavadocDialog(parent, controller, entry.entry, text);
 		//dialog.ui.doLayout();
 		dialog.ui.setVisible(true);
