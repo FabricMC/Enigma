@@ -84,6 +84,7 @@ public class IndexReferenceVisitor extends ClassVisitor {
 
 			if (insn.getOpcode() == Opcodes.LDC) {
 				LdcInsnNode ldc = (LdcInsnNode) insn;
+
 				if (ldc.getType() == Type.ARRAY && ldc.cst instanceof Type type) {
 					String className = type.getClassName().replace(".", "/");
 					indexer.indexClassReference(callerEntry, ClassEntry.parse(className), ReferenceTargetType.none());
