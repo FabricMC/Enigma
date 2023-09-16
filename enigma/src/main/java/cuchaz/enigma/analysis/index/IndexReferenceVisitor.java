@@ -10,7 +10,9 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
+import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.BasicValue;
@@ -65,7 +67,7 @@ public class IndexReferenceVisitor extends ClassVisitor {
 
 	private static class MethodInterpreter extends InterpreterPair<BasicValue, SourceValue> {
 		private final MethodDefEntry callerEntry;
-		private JarIndexer indexer;
+		private final JarIndexer indexer;
 
 		MethodInterpreter(MethodDefEntry callerEntry, JarIndexer indexer, EntryIndex entryIndex, InheritanceIndex inheritanceIndex) {
 			super(new IndexSimpleVerifier(entryIndex, inheritanceIndex), new SourceInterpreter());
@@ -78,6 +80,14 @@ public class IndexReferenceVisitor extends ClassVisitor {
 			if (insn.getOpcode() == Opcodes.GETSTATIC) {
 				FieldInsnNode field = (FieldInsnNode) insn;
 				indexer.indexFieldReference(callerEntry, FieldEntry.parse(field.owner, field.name, field.desc), ReferenceTargetType.none());
+			}
+
+			if (insn.getOpcode() == Opcodes.LDC) {
+				LdcInsnNode ldc = (LdcInsnNode) insn;
+				if (ldc.getType() == Type.ARRAY && ldc.cst instanceof Type type) {
+					String className = type.getClassName().replace(".", "/");
+					indexer.indexClassReference(callerEntry, ClassEntry.parse(className), ReferenceTargetType.none());
+				}
 			}
 
 			return super.newOperation(insn);
@@ -93,6 +103,12 @@ public class IndexReferenceVisitor extends ClassVisitor {
 			if (insn.getOpcode() == Opcodes.GETFIELD) {
 				FieldInsnNode field = (FieldInsnNode) insn;
 				indexer.indexFieldReference(callerEntry, FieldEntry.parse(field.owner, field.name, field.desc), getReferenceTargetType(value, insn));
+			}
+
+			if (insn.getOpcode() == Opcodes.INSTANCEOF) {
+				TypeInsnNode type = (TypeInsnNode) insn;
+				// Note: type.desc is actually the name
+				indexer.indexClassReference(callerEntry, ClassEntry.parse(type.desc), ReferenceTargetType.none());
 			}
 
 			return super.unaryOperation(insn, value);

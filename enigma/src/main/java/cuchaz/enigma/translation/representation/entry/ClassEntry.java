@@ -50,6 +50,10 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		}
 	}
 
+	public static ClassEntry parse(String name) {
+		return new ClassEntry(name);
+	}
+
 	@Override
 	public Class<ClassEntry> getParentType() {
 		return ClassEntry.class;
