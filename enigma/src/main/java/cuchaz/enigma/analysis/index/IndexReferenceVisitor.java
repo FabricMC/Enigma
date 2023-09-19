@@ -112,6 +112,11 @@ public class IndexReferenceVisitor extends ClassVisitor {
 				indexer.indexClassReference(callerEntry, ClassEntry.parse(type.desc), ReferenceTargetType.none());
 			}
 
+			if (insn.getOpcode() == Opcodes.CHECKCAST) {
+				TypeInsnNode type = (TypeInsnNode) insn;
+				indexer.indexClassReference(callerEntry, ClassEntry.parse(type.desc), ReferenceTargetType.none());
+			}
+
 			return super.unaryOperation(insn, value);
 		}
 
