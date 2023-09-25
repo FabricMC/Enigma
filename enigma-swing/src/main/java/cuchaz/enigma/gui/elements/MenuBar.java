@@ -138,7 +138,9 @@ public class MenuBar {
 		ui.add(this.helpMenu);
 
 		this.saveMappingsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-		this.searchClassItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_DOWN_MASK));
+		this.searchClassItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, InputEvent.CTRL_DOWN_MASK));
+		this.searchMethodItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, InputEvent.CTRL_DOWN_MASK));
+		this.searchFieldItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_3, InputEvent.CTRL_DOWN_MASK));
 
 		this.jarOpenItem.addActionListener(_e -> this.onOpenJarClicked());
 		this.jarCloseItem.addActionListener(_e -> this.gui.getController().closeJar());

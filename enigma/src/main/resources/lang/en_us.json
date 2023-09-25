@@ -53,6 +53,7 @@
 	"menu.search.class": "Search Classes",
 	"menu.search.method": "Search Methods",
 	"menu.search.field": "Search Fields",
+	"menu.search.only_exact_matches": "Only show exact matches",
 	"menu.collab": "Collab",
 	"menu.collab.connect": "Connect to Server",
 	"menu.collab.connect.error": "Error connecting to server",
