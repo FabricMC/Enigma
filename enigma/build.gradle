@@ -11,7 +11,7 @@ dependencies {
 	implementation 'org.bitbucket.mstrobel:procyon-compilertools:0.6.0'
 	implementation 'net.fabricmc:cfr:0.2.1'
 
-	proGuard 'com.guardsquare:proguard-base:7.3.2'
+	proGuard 'com.guardsquare:proguard-base:7.4.0-beta02'
 
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 }
