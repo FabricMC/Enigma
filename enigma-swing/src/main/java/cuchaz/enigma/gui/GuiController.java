@@ -175,6 +175,10 @@ public class GuiController implements ClientPacketHandler {
 		chp.invalidateJavadoc();
 	}
 
+	public MappingFormat getLoadedMappingFormat() {
+		return loadedMappingFormat;
+	}
+
 	public CompletableFuture<Void> saveMappings(Path path) {
 		return saveMappings(path, loadedMappingFormat);
 	}

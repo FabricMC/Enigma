@@ -1,6 +1,7 @@
 package cuchaz.enigma.gui.util;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringJoiner;
@@ -78,5 +79,40 @@ public final class ExtensionFileFilter extends FileFilter {
 			// ...and choose it as the default.
 			fileChooser.setFileFilter(filter);
 		}
+	}
+
+	/**
+	 * Fixes a missing file extension in a save file path when the selected filter
+	 * is an {@code ExtensionFileFilter}.
+	 *
+	 * @param fileChooser the file chooser to check
+	 * @return the fixed path
+	 */
+	public static Path getSavePath(JFileChooser fileChooser) {
+		Path savePath = fileChooser.getSelectedFile().toPath();
+
+		if (fileChooser.getFileFilter() instanceof ExtensionFileFilter extensionFilter) {
+			// Check that the file name ends with the extension.
+			String fileName = savePath.getFileName().toString();
+			boolean hasExtension = false;
+
+			for (String extension : extensionFilter.getExtensions()) {
+				if (fileName.endsWith(extension)) {
+					hasExtension = true;
+					break;
+				}
+			}
+
+			if (!hasExtension) {
+				String defaultExtension = extensionFilter.getExtensions().get(0);
+				// If not, add the extension.
+				savePath = savePath.resolveSibling(fileName + defaultExtension);
+				// Store the adjusted file, so that it shows up properly
+				// the next time this dialog is used.
+				fileChooser.setSelectedFile(savePath.toFile());
+			}
+		}
+
+		return savePath;
 	}
 }

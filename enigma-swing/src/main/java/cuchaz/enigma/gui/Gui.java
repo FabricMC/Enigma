@@ -63,6 +63,7 @@ import cuchaz.enigma.gui.panels.IdentifierPanel;
 import cuchaz.enigma.gui.panels.ObfPanel;
 import cuchaz.enigma.gui.panels.StructurePanel;
 import cuchaz.enigma.gui.renderer.MessageListCellRenderer;
+import cuchaz.enigma.gui.util.ExtensionFileFilter;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -71,6 +72,7 @@ import cuchaz.enigma.network.packet.MessageC2SPacket;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
+import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.I18n;
@@ -117,8 +119,7 @@ public class Gui {
 	private final JLabel connectionStatusLabel = new JLabel();
 
 	public final JFileChooser jarFileChooser = new JFileChooser();
-	public final JFileChooser enigmaMappingsFileChooser = new JFileChooser();
-	public final JFileChooser saveMappingsAsFileChooser = new JFileChooser();
+	public final JFileChooser mappingsFileChooser = new JFileChooser();
 	public final JFileChooser exportSourceFileChooser = new JFileChooser();
 	public final JFileChooser exportJarFileChooser = new JFileChooser();
 	public SearchDialog searchDialog;
@@ -318,7 +319,7 @@ public class Gui {
 	}
 
 	public void setMappingsFile(Path path) {
-		this.enigmaMappingsFileChooser.setSelectedFile(path != null ? path.toFile() : null);
+		this.mappingsFileChooser.setSelectedFile(path != null ? path.toFile() : null);
 		updateUiState();
 	}
 
@@ -432,8 +433,10 @@ public class Gui {
 	}
 
 	public CompletableFuture<Void> saveMapping() {
-		if (this.enigmaMappingsFileChooser.getSelectedFile() != null || this.enigmaMappingsFileChooser.showSaveDialog(this.mainWindow.frame()) == JFileChooser.APPROVE_OPTION) {
-			return this.controller.saveMappings(this.enigmaMappingsFileChooser.getSelectedFile().toPath());
+		ExtensionFileFilter.setupFileChooser(this.mappingsFileChooser, this.controller.getLoadedMappingFormat());
+
+		if (this.mappingsFileChooser.getSelectedFile() != null || this.mappingsFileChooser.showSaveDialog(this.mainWindow.frame()) == JFileChooser.APPROVE_OPTION) {
+			return this.controller.saveMappings(ExtensionFileFilter.getSavePath(this.mappingsFileChooser));
 		}
 
 		return CompletableFuture.completedFuture(null);
