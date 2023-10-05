@@ -117,7 +117,6 @@ public class Gui {
 	private final JLabel connectionStatusLabel = new JLabel();
 
 	public final JFileChooser jarFileChooser = new JFileChooser();
-	public final JFileChooser tinyMappingsFileChooser = new JFileChooser();
 	public final JFileChooser enigmaMappingsFileChooser = new JFileChooser();
 	public final JFileChooser saveMappingsAsFileChooser = new JFileChooser();
 	public final JFileChooser exportSourceFileChooser = new JFileChooser();
@@ -148,7 +147,6 @@ public class Gui {
 
 	private void setupUi() {
 		this.jarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		this.tinyMappingsFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		this.exportSourceFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		this.exportSourceFileChooser.setAcceptAllFileFilterUsed(false);
