@@ -4,7 +4,7 @@ plugins {
 }
 
 def flatLafNatives = [
-        "windows-arm64@dll",
+		"windows-arm64@dll",
 		"windows-x86@dll",
 		"windows-x86_64@dll",
 		"linux-x86_64@so",
