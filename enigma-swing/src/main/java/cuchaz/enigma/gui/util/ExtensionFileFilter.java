@@ -22,9 +22,9 @@ public final class ExtensionFileFilter extends FileFilter {
 	 * @param formatName the human-readable name of the file format
 	 * @param extensions the file extensions with their leading dots (e.g. {@code .txt})
 	 */
-	public ExtensionFileFilter(String formatName, String... extensions) {
+	public ExtensionFileFilter(String formatName, List<String> extensions) {
 		this.formatName = formatName;
-		this.extensions = List.of(extensions);
+		this.extensions = extensions;
 	}
 
 	public List<String> getExtensions() {
@@ -73,7 +73,7 @@ public final class ExtensionFileFilter extends FileFilter {
 		} else {
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			String formatName = I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT));
-			var filter = new ExtensionFileFilter(formatName, format.getFileType().extension());
+			var filter = new ExtensionFileFilter(formatName, format.getFileType().extensions());
 			// Add our new filter to the list...
 			fileChooser.addChoosableFileFilter(filter);
 			// ...and choose it as the default.
