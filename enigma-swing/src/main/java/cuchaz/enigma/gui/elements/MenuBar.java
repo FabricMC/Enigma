@@ -20,6 +20,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import javax.swing.filechooser.FileFilter;
 
 import cuchaz.enigma.gui.ConnectionState;
 import cuchaz.enigma.gui.Gui;
@@ -34,6 +35,7 @@ import cuchaz.enigma.gui.dialog.CreateServerDialog;
 import cuchaz.enigma.gui.dialog.FontDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.dialog.StatsDialog;
+import cuchaz.enigma.gui.util.ExtensionFileFilter;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -423,17 +425,50 @@ public class MenuBar {
 	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getWriter() != null) {
-				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
+				String formatName = I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT));
+				JMenuItem item = new JMenuItem(formatName);
 				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (gui.enigmaMappingsFileChooser.getCurrentDirectory() == null) {
-						gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+					JFileChooser fileChooser = gui.saveMappingsAsFileChooser;
+					// Remove previous custom filters.
+					fileChooser.resetChoosableFileFilters();
+					FileFilter filter;
+
+					if (format.getFileType().isDirectory()) {
+						fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+						filter = null;
+					} else {
+						fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+						filter = new ExtensionFileFilter(formatName, format.getFileType().extension());
+						// Add our new filter to the list...
+						fileChooser.addChoosableFileFilter(filter);
+						// ...and choose it as the default.
+						fileChooser.setFileFilter(filter);
 					}
 
-					if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
+					if (fileChooser.getCurrentDirectory() == null) {
+						fileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+					}
+
+					if (fileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+						Path savePath = fileChooser.getSelectedFile().toPath();
+
+						if (!format.getFileType().isDirectory() && fileChooser.getFileFilter() == filter) {
+							// Check that the file name ends with the extension.
+							String fileName = savePath.getFileName().toString();
+							String extension = format.getFileType().extension();
+
+							if (!fileName.endsWith("." + extension)) {
+								// If not, add the extension.
+								savePath = savePath.resolveSibling(fileName + "." + extension);
+								// Store the adjusted file, so that it shows up properly
+								// the next time this dialog is used.
+								fileChooser.setSelectedFile(savePath.toFile());
+							}
+						}
+
+						gui.getController().saveMappings(savePath, format);
 						saveMappingsItem.setEnabled(true);
-						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
+						UiConfig.setLastSelectedDir(fileChooser.getCurrentDirectory().toString());
 					}
 				});
 				saveMappingsAsMenu.add(item);

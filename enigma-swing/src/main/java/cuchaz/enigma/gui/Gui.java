@@ -119,6 +119,7 @@ public class Gui {
 	public final JFileChooser jarFileChooser = new JFileChooser();
 	public final JFileChooser tinyMappingsFileChooser = new JFileChooser();
 	public final JFileChooser enigmaMappingsFileChooser = new JFileChooser();
+	public final JFileChooser saveMappingsAsFileChooser = new JFileChooser();
 	public final JFileChooser exportSourceFileChooser = new JFileChooser();
 	public final JFileChooser exportJarFileChooser = new JFileChooser();
 	public SearchDialog searchDialog;
