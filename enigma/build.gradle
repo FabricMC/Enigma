@@ -3,15 +3,15 @@ configurations {
 }
 
 dependencies {
-	implementation 'org.ow2.asm:asm:9.4'
-	implementation 'org.ow2.asm:asm-commons:9.4'
-	implementation 'org.ow2.asm:asm-tree:9.4'
-	implementation 'org.ow2.asm:asm-util:9.4'
+	implementation 'org.ow2.asm:asm:9.6'
+	implementation 'org.ow2.asm:asm-commons:9.6'
+	implementation 'org.ow2.asm:asm-tree:9.6'
+	implementation 'org.ow2.asm:asm-util:9.6'
 
 	implementation 'org.bitbucket.mstrobel:procyon-compilertools:0.6.0'
 	implementation 'net.fabricmc:cfr:0.2.1'
 
-	proGuard 'com.guardsquare:proguard-base:7.3.0'
+	proGuard 'com.guardsquare:proguard-base:7.3.2'
 
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 }
