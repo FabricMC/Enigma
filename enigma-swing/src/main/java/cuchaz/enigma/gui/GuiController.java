@@ -98,7 +98,7 @@ public class GuiController implements ClientPacketHandler {
 	private IndexTreeBuilder indexTreeBuilder;
 
 	private Path loadedMappingPath;
-	private MappingFormat loadedMappingFormat;
+	private MappingFormat loadedMappingFormat = MappingFormat.ENIGMA_DIRECTORY;
 
 	private ClassHandleProvider chp;
 
