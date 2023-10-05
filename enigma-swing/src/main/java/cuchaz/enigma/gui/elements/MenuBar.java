@@ -456,10 +456,11 @@ public class MenuBar {
 							// Check that the file name ends with the extension.
 							String fileName = savePath.getFileName().toString();
 							String extension = format.getFileType().extension();
+							assert extension != null;
 
-							if (!fileName.endsWith("." + extension)) {
+							if (!fileName.endsWith(extension)) {
 								// If not, add the extension.
-								savePath = savePath.resolveSibling(fileName + "." + extension);
+								savePath = savePath.resolveSibling(fileName + extension);
 								// Store the adjusted file, so that it shows up properly
 								// the next time this dialog is used.
 								fileChooser.setSelectedFile(savePath.toFile());

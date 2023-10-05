@@ -12,6 +12,12 @@ public final class ExtensionFileFilter extends FileFilter {
 	private final String formatName;
 	private final List<String> extensions;
 
+	/**
+	 * Constructs an {@code ExtensionFileFilter}.
+	 *
+	 * @param formatName the human-readable name of the file format
+	 * @param extensions the file extensions with their leading dots (e.g. {@code .txt})
+	 */
 	public ExtensionFileFilter(String formatName, String... extensions) {
 		this.formatName = formatName;
 		this.extensions = List.of(extensions);
@@ -25,7 +31,7 @@ public final class ExtensionFileFilter extends FileFilter {
 		}
 
 		for (String extension : extensions) {
-			if (f.getName().endsWith("." + extension)) {
+			if (f.getName().endsWith(extension)) {
 				return true;
 			}
 		}
@@ -38,7 +44,7 @@ public final class ExtensionFileFilter extends FileFilter {
 		var joiner = new StringJoiner(", ");
 
 		for (String extension : extensions) {
-			joiner.add("*." + extension);
+			joiner.add("*" + extension);
 		}
 
 		return I18n.translateFormatted("menu.file.mappings.file_filter", formatName, joiner.toString());

@@ -78,15 +78,15 @@ public enum MappingFormat {
 	 * A file type. It can be either a single file with an extension, or a directory
 	 * with a {@code null} extension.
 	 *
-	 * @param extension the file extension without the trailing dot {@code .}, or {@code null} for a directory
+	 * @param extension the file extension with the leading dot {@code .}, or {@code null} for a directory
 	 */
 	public record FileType(@Nullable String extension) {
 		public static final FileType DIRECTORY = new FileType(null);
-		public static final FileType MAPPING = new FileType("mapping");
-		public static final FileType SRG = new FileType("srg");
-		public static final FileType TINY = new FileType("tiny");
-		public static final FileType TXT = new FileType("txt");
-		public static final FileType ZIP = new FileType("zip");
+		public static final FileType MAPPING = new FileType(".mapping");
+		public static final FileType SRG = new FileType(".srg");
+		public static final FileType TINY = new FileType(".tiny");
+		public static final FileType TXT = new FileType(".txt");
+		public static final FileType ZIP = new FileType(".zip");
 
 		public boolean isDirectory() {
 			return extension == null;
