@@ -150,9 +150,6 @@ public class Gui {
 		this.jarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		this.tinyMappingsFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		this.enigmaMappingsFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		this.enigmaMappingsFileChooser.setAcceptAllFileFilterUsed(false);
-
 		this.exportSourceFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		this.exportSourceFileChooser.setAcceptAllFileFilterUsed(false);
 

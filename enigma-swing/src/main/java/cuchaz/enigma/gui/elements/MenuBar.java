@@ -409,6 +409,7 @@ public class MenuBar {
 			if (format.getReader() != null) {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 				item.addActionListener(event -> {
+					ExtensionFileFilter.setupFileChooser(gui.enigmaMappingsFileChooser, format);
 					gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 
 					if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
@@ -429,21 +430,7 @@ public class MenuBar {
 				JMenuItem item = new JMenuItem(formatName);
 				item.addActionListener(event -> {
 					JFileChooser fileChooser = gui.saveMappingsAsFileChooser;
-					// Remove previous custom filters.
-					fileChooser.resetChoosableFileFilters();
-					FileFilter filter;
-
-					if (format.getFileType().isDirectory()) {
-						fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-						filter = null;
-					} else {
-						fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-						filter = new ExtensionFileFilter(formatName, format.getFileType().extension());
-						// Add our new filter to the list...
-						fileChooser.addChoosableFileFilter(filter);
-						// ...and choose it as the default.
-						fileChooser.setFileFilter(filter);
-					}
+					ExtensionFileFilter.setupFileChooser(fileChooser, format);
 
 					if (fileChooser.getCurrentDirectory() == null) {
 						fileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
@@ -452,15 +439,22 @@ public class MenuBar {
 					if (fileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 						Path savePath = fileChooser.getSelectedFile().toPath();
 
-						if (!format.getFileType().isDirectory() && fileChooser.getFileFilter() == filter) {
+						if (fileChooser.getFileFilter() instanceof ExtensionFileFilter extensionFilter) {
 							// Check that the file name ends with the extension.
 							String fileName = savePath.getFileName().toString();
-							String extension = format.getFileType().extension();
-							assert extension != null;
+							boolean hasExtension = false;
 
-							if (!fileName.endsWith(extension)) {
+							for (String extension : extensionFilter.getExtensions()) {
+								if (fileName.endsWith(extension)) {
+									hasExtension = true;
+									break;
+								}
+							}
+
+							if (!hasExtension) {
+								String defaultExtension = extensionFilter.getExtensions().get(0);
 								// If not, add the extension.
-								savePath = savePath.resolveSibling(fileName + extension);
+								savePath = savePath.resolveSibling(fileName + defaultExtension);
 								// Store the adjusted file, so that it shows up properly
 								// the next time this dialog is used.
 								fileChooser.setSelectedFile(savePath.toFile());
