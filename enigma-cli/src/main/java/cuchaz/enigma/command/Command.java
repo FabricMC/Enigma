@@ -1,11 +1,15 @@
 package cuchaz.enigma.command;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.google.common.io.MoreFiles;
+import net.fabricmc.mappingio.MappingReader;
+import net.fabricmc.mappingio.tree.MemoryMappingTree;
+import net.fabricmc.mappingio.tree.VisitableMappingTree;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
@@ -13,6 +17,8 @@ import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
+import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
@@ -41,7 +47,7 @@ public abstract class Command {
 			System.out.println("Reading mappings...");
 
 			MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
-			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, progress, saveParameters);
+			EntryTree<EntryMapping> mappings = readMappings(fileMappings, progress, saveParameters);
 
 			project.setMappings(mappings);
 		}
@@ -49,14 +55,18 @@ public abstract class Command {
 		return project;
 	}
 
-	protected static MappingFormat chooseEnigmaFormat(Path path) {
-		if (Files.isDirectory(path)) {
-			return MappingFormat.ENIGMA_DIRECTORY;
-		} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
-			return MappingFormat.ENIGMA_ZIP;
-		} else {
-			return MappingFormat.ENIGMA_FILE;
+	protected static EntryTree<EntryMapping> readMappings(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
+		// Legacy
+		if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
+			return MappingFormat.ENIGMA_ZIP.read(path, progress, saveParameters);
 		}
+
+		net.fabricmc.mappingio.format.MappingFormat format = MappingReader.detectFormat(path);
+		if (format == null) throw new IllegalArgumentException("Unknown mapping format!");
+
+		VisitableMappingTree tree = new MemoryMappingTree();
+		MappingReader.read(path, format, tree);
+		return MappingIoConverter.fromMappingIo(tree, progress);
 	}
 
 	protected static File getWritableFile(String path) {

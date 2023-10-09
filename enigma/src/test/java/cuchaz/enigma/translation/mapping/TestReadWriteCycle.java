@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import cuchaz.enigma.ProgressListener;
@@ -85,6 +86,11 @@ public class TestReadWriteCycle {
 		}
 
 		tempFile.delete();
+	}
+
+	@BeforeClass
+	public static void setup() {
+		System.getProperties().setProperty("enigma.use_mappingio", "false");
 	}
 
 	@Test

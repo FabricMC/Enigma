@@ -29,11 +29,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Lists;
-import net.fabricmc.mappingio.MappingReader;
-import net.fabricmc.mappingio.MappingWriter;
-import net.fabricmc.mappingio.tree.MemoryMappingTree;
-import net.fabricmc.mappingio.tree.VisitOrder;
-import net.fabricmc.mappingio.tree.VisitableMappingTree;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
@@ -82,7 +77,6 @@ import cuchaz.enigma.translation.mapping.EntryUtil;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
-import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -105,7 +99,6 @@ public class GuiController implements ClientPacketHandler {
 
 	private Path loadedMappingPath;
 	private MappingFormat loadedMappingFormat;
-	public boolean useMappingIo = true;
 
 	private ClassHandleProvider chp;
 
@@ -146,6 +139,11 @@ public class GuiController implements ClientPacketHandler {
 		this.gui.onCloseJar();
 	}
 
+	public CompletableFuture<Void> openMappings(MappingFormat format, Path path, boolean useMappingIo) {
+		System.getProperties().setProperty("enigma.use_mappingio", useMappingIo ? "true" : "false");
+		return openMappings(format, path);
+	}
+
 	public CompletableFuture<Void> openMappings(MappingFormat format, Path path) {
 		if (project == null) {
 			return CompletableFuture.completedFuture(null);
@@ -156,26 +154,7 @@ public class GuiController implements ClientPacketHandler {
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			try {
 				MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
-				EntryTree<EntryMapping> mappings;
-
-				if (useMappingIo) {
-					String loadingMessage;
-
-					if (format.getMappingIoCounterpart().hasSingleFile()) {
-						loadingMessage = I18n.translate("progress.mappings.loading_file");
-					} else {
-						loadingMessage = I18n.translate("progress.mappings.loading_directory");
-					}
-
-					progress.init(1, loadingMessage);
-					VisitableMappingTree mappingTree = new MemoryMappingTree();
-					MappingReader.read(path, format.getMappingIoCounterpart(), mappingTree);
-					mappings = MappingIoConverter.fromMappingIo(mappingTree, progress);
-				} else {
-					mappings = format.read(path, progress, saveParameters);
-				}
-
-				project.setMappings(mappings);
+				project.setMappings(format.read(path, progress, saveParameters));
 
 				loadedMappingFormat = format;
 				loadedMappingPath = path;
@@ -201,6 +180,11 @@ public class GuiController implements ClientPacketHandler {
 
 	public CompletableFuture<Void> saveMappings(Path path) {
 		return saveMappings(path, loadedMappingFormat);
+	}
+
+	public CompletableFuture<Void> saveMappings(Path path, MappingFormat format, boolean useMappingIo) {
+		System.getProperties().setProperty("enigma.use_mappingio", useMappingIo ? "true" : "false");
+		return saveMappings(path, format);
 	}
 
 	/**
@@ -229,15 +213,7 @@ public class GuiController implements ClientPacketHandler {
 			loadedMappingFormat = format;
 			loadedMappingPath = path;
 
-			if (useMappingIo) {
-				VisitableMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf(), progress);
-
-				progress.init(1, I18n.translate("progress.mappings.writing"));
-				MappingWriter writer = MappingWriter.create(path, format.getMappingIoCounterpart());
-				mappingTree.accept(writer, VisitOrder.createByName());
-				writer.close();
-				progress.step(1, I18n.translate("progress.done"));
-			} else if (saveAll) {
+			if (saveAll) {
 				format.write(mapper.getObfToDeobf(), path, progress, saveParameters);
 			} else {
 				format.write(mapper.getObfToDeobf(), delta, path, progress, saveParameters);

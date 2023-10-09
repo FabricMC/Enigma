@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -404,22 +403,11 @@ public class MenuBar {
 	}
 
 	private static void prepareOpenMappingsMenu(JMenu openMappingsMenu, Gui gui) {
-		List<MappingFormat> readableMappingIoFormats = Arrays.asList(
-				MappingFormat.ENIGMA_DIRECTORY,
-				MappingFormat.ENIGMA_FILE,
-				MappingFormat.TINY_FILE,
-				MappingFormat.TINY_V2,
-				MappingFormat.SRG_FILE,
-				MappingFormat.TSRG_FILE,
-				MappingFormat.TSRG_2_FILE,
-				MappingFormat.PROGUARD);
-
 		// Mapping-IO readers
-		for (MappingFormat format : readableMappingIoFormats) {
-			addOpenMappingsMenuEntry(I18n.translate(format.getMappingIoCounterpart().name),
-					format, true, openMappingsMenu, gui);
-		}
-
+		MappingFormat.getReadableFormats().stream()
+				.filter(format -> format.getMappingIoCounterpart() != null)
+				.forEach(format -> addOpenMappingsMenuEntry(I18n.translate(format.getMappingIoCounterpart().name),
+					format, true, openMappingsMenu, gui));
 		openMappingsMenu.addSeparator();
 
 		// Enigma's own readers
@@ -438,8 +426,7 @@ public class MenuBar {
 
 			if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
 				File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
-				gui.getController().useMappingIo = mappingIo;
-				gui.getController().openMappings(format, selectedFile.toPath());
+				gui.getController().openMappings(format, selectedFile.toPath(), mappingIo);
 				UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
 			}
 		});
@@ -447,19 +434,11 @@ public class MenuBar {
 	}
 
 	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
-		List<MappingFormat> writableMappingIoFormats = Arrays.asList(
-				MappingFormat.ENIGMA_DIRECTORY,
-				MappingFormat.ENIGMA_FILE,
-				MappingFormat.TINY_FILE,
-				MappingFormat.TINY_V2,
-				MappingFormat.PROGUARD);
-
 		// Mapping-IO writers
-		for (MappingFormat format : writableMappingIoFormats) {
-			addSaveMappingsAsMenuEntry(format.getMappingIoCounterpart().name,
-					format, true, saveMappingsAsMenu, saveMappingsItem, gui);
-		}
-
+		MappingFormat.getWritableFormats().stream()
+				.filter(format -> format.hasMappingIoWriter())
+				.forEach(format -> addSaveMappingsAsMenuEntry(format.getMappingIoCounterpart().name,
+							format, true, saveMappingsAsMenu, saveMappingsItem, gui));
 		saveMappingsAsMenu.addSeparator();
 
 		// Enigma's own writers
@@ -480,8 +459,7 @@ public class MenuBar {
 			}
 
 			if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-				gui.getController().useMappingIo = mappingIo;
-				gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
+				gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format, mappingIo);
 				saveMappingsItem.setEnabled(true);
 				UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
 			}

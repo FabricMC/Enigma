@@ -33,19 +33,23 @@ import cuchaz.enigma.utils.I18n;
 
 public class MappingIoConverter {
 	public static VisitableMappingTree toMappingIo(EntryTree<EntryMapping> mappings, ProgressListener progress) {
+		return toMappingIo(mappings, progress, "intermediary", "named");
+	}
+
+	public static VisitableMappingTree toMappingIo(EntryTree<EntryMapping> mappings, ProgressListener progress, String fromNs, String toNs) {
 		try {
 			List<EntryTreeNode<EntryMapping>> classes = StreamSupport.stream(mappings.spliterator(), false)
 					.filter(node -> node.getEntry() instanceof ClassEntry)
 					.toList();
 
 			progress.init(classes.size(), I18n.translate("progress.mappings.converting.to_mappingio"));
-			int steps = 0;
+			int stepsDone = 0;
 
 			MemoryMappingTree mappingTree = new MemoryMappingTree();
-			mappingTree.visitNamespaces("intermediary", List.of("named"));
+			mappingTree.visitNamespaces(fromNs, List.of(toNs));
 
 			for (EntryTreeNode<EntryMapping> classNode : classes) {
-				progress.step(steps++, classNode.getEntry().getFullName());
+				progress.step(++stepsDone, classNode.getEntry().getFullName());
 				writeClass(classNode, mappings, mappingTree);
 			}
 
