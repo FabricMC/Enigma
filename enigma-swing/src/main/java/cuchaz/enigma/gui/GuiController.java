@@ -33,6 +33,7 @@ import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.mappingio.tree.VisitOrder;
+import net.fabricmc.mappingio.tree.VisitableMappingTree;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
@@ -167,7 +168,7 @@ public class GuiController implements ClientPacketHandler {
 					}
 
 					progress.init(1, loadingMessage);
-					MemoryMappingTree mappingTree = new MemoryMappingTree();
+					VisitableMappingTree mappingTree = new MemoryMappingTree();
 					MappingReader.read(path, format.getMappingIoCounterpart(), mappingTree);
 					mappings = MappingIoConverter.fromMappingIo(mappingTree, progress);
 				} else {
@@ -229,7 +230,7 @@ public class GuiController implements ClientPacketHandler {
 			loadedMappingPath = path;
 
 			if (useMappingIo) {
-				MemoryMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf(), progress);
+				VisitableMappingTree mappingTree = MappingIoConverter.toMappingIo(mapper.getObfToDeobf(), progress);
 
 				progress.init(1, I18n.translate("progress.mappings.writing"));
 				MappingWriter writer = MappingWriter.create(path, format.getMappingIoCounterpart());

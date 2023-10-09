@@ -1,5 +1,7 @@
 package cuchaz.enigma.translation.mapping.serde;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.stream.StreamSupport;
 
 import net.fabricmc.mappingio.MappedElementKind;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
+import net.fabricmc.mappingio.tree.VisitableMappingTree;
 import net.fabricmc.mappingio.tree.MappingTree.ClassMapping;
 import net.fabricmc.mappingio.tree.MappingTree.FieldMapping;
 import net.fabricmc.mappingio.tree.MappingTree.MethodArgMapping;
@@ -29,27 +32,31 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
 public class MappingIoConverter {
-	public static MemoryMappingTree toMappingIo(EntryTree<EntryMapping> mappings, ProgressListener progress) {
-		List<EntryTreeNode<EntryMapping>> classes = StreamSupport.stream(mappings.spliterator(), false)
-				.filter(node -> node.getEntry() instanceof ClassEntry)
-				.toList();
+	public static VisitableMappingTree toMappingIo(EntryTree<EntryMapping> mappings, ProgressListener progress) {
+		try {
+			List<EntryTreeNode<EntryMapping>> classes = StreamSupport.stream(mappings.spliterator(), false)
+					.filter(node -> node.getEntry() instanceof ClassEntry)
+					.toList();
 
-		progress.init(classes.size(), I18n.translate("progress.mappings.converting.to_mappingio"));
-		int steps = 0;
+			progress.init(classes.size(), I18n.translate("progress.mappings.converting.to_mappingio"));
+			int steps = 0;
 
-		MemoryMappingTree mappingTree = new MemoryMappingTree();
-		mappingTree.visitNamespaces("intermediary", List.of("named"));
+			MemoryMappingTree mappingTree = new MemoryMappingTree();
+			mappingTree.visitNamespaces("intermediary", List.of("named"));
 
-		for (EntryTreeNode<EntryMapping> classNode : classes) {
-			progress.step(steps++, classNode.getEntry().getFullName());
-			writeClass(classNode, mappings, mappingTree);
+			for (EntryTreeNode<EntryMapping> classNode : classes) {
+				progress.step(steps++, classNode.getEntry().getFullName());
+				writeClass(classNode, mappings, mappingTree);
+			}
+
+			mappingTree.visitEnd();
+			return mappingTree;
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
-
-		mappingTree.visitEnd();
-		return mappingTree;
 	}
 
-	private static void writeClass(EntryTreeNode<EntryMapping> classNode, EntryMap<EntryMapping> oldMappingTree, MemoryMappingTree newMappingTree) {
+	private static void writeClass(EntryTreeNode<EntryMapping> classNode, EntryMap<EntryMapping> oldMappingTree, VisitableMappingTree newMappingTree) throws IOException {
 		ClassEntry classEntry = (ClassEntry) classNode.getEntry();
 		EntryMapping mapping = oldMappingTree.get(classEntry);
 		Deque<String> parts = new LinkedList<>();
@@ -83,7 +90,7 @@ public class MappingIoConverter {
 		}
 	}
 
-	private static void writeField(EntryTreeNode<EntryMapping> fieldNode, MemoryMappingTree mappingTree) {
+	private static void writeField(EntryTreeNode<EntryMapping> fieldNode, VisitableMappingTree mappingTree) throws IOException {
 		if (fieldNode.getValue() == null || fieldNode.getValue().equals(EntryMapping.DEFAULT)) {
 			return; // Shortcut
 		}
@@ -101,7 +108,7 @@ public class MappingIoConverter {
 		mappingTree.visitComment(MappedElementKind.FIELD, fieldMapping.javadoc());
 	}
 
-	private static void writeMethod(EntryTreeNode<EntryMapping> methodNode, MemoryMappingTree mappingTree) {
+	private static void writeMethod(EntryTreeNode<EntryMapping> methodNode, VisitableMappingTree mappingTree) throws IOException {
 		MethodEntry methodEntry = ((MethodEntry) methodNode.getEntry());
 		mappingTree.visitMethod(methodEntry.getName(), methodEntry.getDesc().toString());
 
@@ -127,7 +134,7 @@ public class MappingIoConverter {
 		}
 	}
 
-	private static void writeMethodArg(EntryTreeNode<EntryMapping> argNode, MemoryMappingTree mappingTree) {
+	private static void writeMethodArg(EntryTreeNode<EntryMapping> argNode, VisitableMappingTree mappingTree) throws IOException {
 		if (argNode.getValue() == null || argNode.getValue().equals(EntryMapping.DEFAULT)) {
 			return; // Shortcut
 		}
@@ -145,7 +152,7 @@ public class MappingIoConverter {
 		mappingTree.visitComment(MappedElementKind.METHOD_ARG, argMapping.javadoc());
 	}
 
-	private static void writeMethodVar(EntryTreeNode<EntryMapping> varNode, MemoryMappingTree mappingTree) {
+	private static void writeMethodVar(EntryTreeNode<EntryMapping> varNode, VisitableMappingTree mappingTree) throws IOException {
 		if (varNode.getValue() == null || varNode.getValue().equals(EntryMapping.DEFAULT)) {
 			return; // Shortcut
 		}
@@ -163,7 +170,7 @@ public class MappingIoConverter {
 		mappingTree.visitComment(MappedElementKind.METHOD_VAR, varMapping.javadoc());
 	}
 
-	public static EntryTree<EntryMapping> fromMappingIo(MemoryMappingTree mappingTree, ProgressListener progress) {
+	public static EntryTree<EntryMapping> fromMappingIo(VisitableMappingTree mappingTree, ProgressListener progress) {
 		EntryTree<EntryMapping> dstMappingTree = new HashEntryTree<>();
 		progress.init(mappingTree.getClasses().size(), I18n.translate("progress.mappings.converting.from_mappingio"));
 		int steps = 0;
