@@ -7,6 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
+import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.ApiStatus;
 import net.fabricmc.mappingio.MappedElementKind;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
@@ -17,6 +20,7 @@ import net.fabricmc.mappingio.tree.MappingTree.MethodMapping;
 import net.fabricmc.mappingio.tree.MappingTree.MethodVarMapping;
 
 import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -31,6 +35,7 @@ import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
+@ApiStatus.Internal
 public class MappingIoConverter {
 	public static VisitableMappingTree toMappingIo(EntryTree<EntryMapping> mappings, ProgressListener progress) {
 		return toMappingIo(mappings, progress, "intermediary", "named");
@@ -174,20 +179,20 @@ public class MappingIoConverter {
 		mappingTree.visitComment(MappedElementKind.METHOD_VAR, varMapping.javadoc());
 	}
 
-	public static EntryTree<EntryMapping> fromMappingIo(VisitableMappingTree mappingTree, ProgressListener progress) {
+	public static EntryTree<EntryMapping> fromMappingIo(VisitableMappingTree mappingTree, ProgressListener progress, @Nullable JarIndex index) {
 		EntryTree<EntryMapping> dstMappingTree = new HashEntryTree<>();
 		progress.init(mappingTree.getClasses().size(), I18n.translate("progress.mappings.converting.from_mappingio"));
 		int steps = 0;
 
 		for (ClassMapping classMapping : mappingTree.getClasses()) {
 			progress.step(steps++, classMapping.getDstName(0) != null ? classMapping.getDstName(0) : classMapping.getSrcName());
-			readClass(classMapping, dstMappingTree);
+			readClass(classMapping, dstMappingTree, index);
 		}
 
 		return dstMappingTree;
 	}
 
-	private static void readClass(ClassMapping classMapping, EntryTree<EntryMapping> mappingTree) {
+	private static void readClass(ClassMapping classMapping, EntryTree<EntryMapping> mappingTree, JarIndex index) {
 		ClassEntry currentClass = new ClassEntry(classMapping.getSrcName());
 		String dstName = classMapping.getDstName(0);
 
@@ -198,7 +203,7 @@ public class MappingIoConverter {
 		mappingTree.insert(currentClass, new EntryMapping(dstName, classMapping.getComment()));
 
 		for (FieldMapping fieldMapping : classMapping.getFields()) {
-			readField(fieldMapping, currentClass, mappingTree);
+			readField(fieldMapping, currentClass, mappingTree, index);
 		}
 
 		for (MethodMapping methodMapping : classMapping.getMethods()) {
@@ -206,9 +211,40 @@ public class MappingIoConverter {
 		}
 	}
 
-	private static void readField(FieldMapping fieldMapping, ClassEntry parent, EntryTree<EntryMapping> mappingTree) {
-		mappingTree.insert(new FieldEntry(parent, fieldMapping.getSrcName(), new TypeDescriptor(fieldMapping.getSrcDesc())),
-				new EntryMapping(fieldMapping.getDstName(0), fieldMapping.getComment()));
+	private static void readField(FieldMapping fieldMapping, ClassEntry parent, EntryTree<EntryMapping> mappingTree, JarIndex index) {
+		String srcDesc = fieldMapping.getSrcDesc();
+		FieldEntry[] fieldEntries;
+
+		if (srcDesc != null) {
+			fieldEntries = new FieldEntry[] { new FieldEntry(parent, fieldMapping.getSrcName(), new TypeDescriptor(fieldMapping.getSrcDesc())) };
+		} else {
+			if (index == null) return; // Enigma requires source descriptors, and without an index we can't look them up
+
+			fieldEntries = index.getChildrenByClass().get(parent).stream()
+					.filter(entry -> entry instanceof FieldEntry)
+					.filter(entry -> entry.getName().equals(fieldMapping.getSrcName()))
+					.toArray(FieldEntry[]::new);
+
+			if (fieldEntries.length == 0) { // slow path for synthetics
+				fieldEntries = index.getEntryIndex().getFields().stream()
+						.filter(entry -> entry.getParent().getFullName().equals(parent.getFullName()))
+						.filter(entry -> {
+							if (entry.getName().equals(fieldMapping.getSrcName())) {
+								return true;
+							} else {
+								System.out.println("Entry name: " + entry.getName() + ", mapping name: " + fieldMapping.getSrcName());
+								return false;
+							}
+						})
+						.toArray(FieldEntry[]::new);
+			}
+
+			if (fieldEntries.length == 0) return; // No target found, invalid mapping
+		}
+
+		for (FieldEntry fieldEntry : fieldEntries) {
+			mappingTree.insert(fieldEntry, new EntryMapping(fieldMapping.getDstName(0), fieldMapping.getComment()));
+		}
 	}
 
 	private static void readMethod(MethodMapping methodMapping, ClassEntry parent, EntryTree<EntryMapping> mappingTree) {

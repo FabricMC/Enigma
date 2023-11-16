@@ -154,7 +154,7 @@ public class GuiController implements ClientPacketHandler {
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			try {
 				MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
-				project.setMappings(format.read(path, progress, saveParameters));
+				project.setMappings(format.read(path, progress, saveParameters, project.getJarIndex()));
 
 				loadedMappingFormat = format;
 				loadedMappingPath = path;

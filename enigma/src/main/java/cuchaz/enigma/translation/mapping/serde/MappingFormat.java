@@ -15,6 +15,7 @@ import net.fabricmc.mappingio.tree.VisitOrder;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
 
 import cuchaz.enigma.ProgressListener;
+import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsReader;
@@ -82,7 +83,12 @@ public enum MappingFormat {
 		}
 	}
 
+	@Deprecated
 	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
+		return read(path, progressListener, saveParameters, null);
+	}
+
+	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener, MappingSaveParameters saveParameters, JarIndex index) throws IOException, MappingParseException {
 		if (!useMappingIo()) {
 			if (reader == null) {
 				throw new IllegalStateException(name() + " does not support reading");
@@ -103,7 +109,7 @@ public enum MappingFormat {
 
 		VisitableMappingTree mappingTree = new MemoryMappingTree();
 		MappingReader.read(path, mappingIoCounterpart, mappingTree);
-		return MappingIoConverter.fromMappingIo(mappingTree, progressListener);
+		return MappingIoConverter.fromMappingIo(mappingTree, progressListener, index);
 	}
 
 	@Nullable

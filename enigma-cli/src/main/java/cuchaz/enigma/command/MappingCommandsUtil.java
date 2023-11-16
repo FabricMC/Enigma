@@ -23,11 +23,11 @@ public final class MappingCommandsUtil {
 
 	public static EntryTree<EntryMapping> read(String type, Path path, MappingSaveParameters saveParameters) throws MappingParseException, IOException {
 		if (type.equals("enigma")) {
-			return (Files.isDirectory(path) ? MappingFormat.ENIGMA_DIRECTORY : MappingFormat.ENIGMA_ZIP).read(path, ProgressListener.none(), saveParameters);
+			return (Files.isDirectory(path) ? MappingFormat.ENIGMA_DIRECTORY : MappingFormat.ENIGMA_ZIP).read(path, ProgressListener.none(), saveParameters, null);
 		}
 
 		if (type.equals("tiny")) {
-			return MappingFormat.TINY_FILE.read(path, ProgressListener.none(), saveParameters);
+			return MappingFormat.TINY_FILE.read(path, ProgressListener.none(), saveParameters, null);
 		}
 
 		MappingFormat format = null;
@@ -41,7 +41,7 @@ public final class MappingCommandsUtil {
 		}
 
 		if (format != null) {
-			return format.read(path, ProgressListener.none(), saveParameters);
+			return format.read(path, ProgressListener.none(), saveParameters, null);
 		}
 
 		throw new IllegalArgumentException("no reader for " + type);

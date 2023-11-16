@@ -58,7 +58,7 @@ public abstract class Command {
 	protected static EntryTree<EntryMapping> readMappings(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 		// Legacy
 		if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
-			return MappingFormat.ENIGMA_ZIP.read(path, progress, saveParameters);
+			return MappingFormat.ENIGMA_ZIP.read(path, progress, saveParameters, null);
 		}
 
 		net.fabricmc.mappingio.format.MappingFormat format = MappingReader.detectFormat(path);
@@ -66,7 +66,7 @@ public abstract class Command {
 
 		VisitableMappingTree tree = new MemoryMappingTree();
 		MappingReader.read(path, format, tree);
-		return MappingIoConverter.fromMappingIo(tree, progress);
+		return MappingIoConverter.fromMappingIo(tree, progress, null);
 	}
 
 	protected static File getWritableFile(String path) {
