@@ -1,6 +1,7 @@
 package cuchaz.enigma.command;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -47,7 +48,7 @@ public final class MappingCommandsUtil {
 		throw new IllegalArgumentException("no reader for " + type);
 	}
 
-	public static void write(EntryTree<EntryMapping> mappings, String type, Path path, MappingSaveParameters saveParameters) throws IOException {
+	public static void write(EntryTree<EntryMapping> mappings, String type, Path path, MappingSaveParameters saveParameters) {
 		if (type.equals("enigma")) {
 			MappingFormat.ENIGMA_DIRECTORY.write(mappings, path, ProgressListener.none(), saveParameters);
 			return;
@@ -64,9 +65,14 @@ public final class MappingCommandsUtil {
 				new TinyV2Writer(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
 				return;
 			}
+			
+			try {
+				VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, ProgressListener.none(), split[1], split[2]);
+				tree.accept(MappingWriter.create(path, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE));
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
 
-			VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, ProgressListener.none(), split[1], split[2]);
-			tree.accept(MappingWriter.create(path, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE));
 			return;
 		}
 
@@ -82,8 +88,13 @@ public final class MappingCommandsUtil {
 				return;
 			}
 
-			VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, ProgressListener.none(), split[1], split[2]);
-			tree.accept(MappingWriter.create(path, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE));
+			try {
+				VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, ProgressListener.none(), split[1], split[2]);
+				tree.accept(MappingWriter.create(path, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE));
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+
 			return;
 		}
 
