@@ -65,7 +65,7 @@ public final class MappingCommandsUtil {
 				new TinyV2Writer(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
 				return;
 			}
-			
+
 			try {
 				VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, ProgressListener.none(), split[1], split[2]);
 				tree.accept(MappingWriter.create(path, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE));
