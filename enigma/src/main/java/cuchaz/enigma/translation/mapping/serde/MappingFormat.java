@@ -13,6 +13,7 @@ import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.mappingio.tree.VisitOrder;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
+import org.jetbrains.annotations.ApiStatus;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -126,10 +127,12 @@ public enum MappingFormat {
 	}
 
 	@Nullable
+	@ApiStatus.Internal
 	public net.fabricmc.mappingio.format.MappingFormat getMappingIoCounterpart() {
 		return mappingIoCounterpart;
 	}
 
+	@ApiStatus.Internal
 	public boolean hasMappingIoWriter() {
 		return hasMappingIoWriter;
 	}
@@ -142,6 +145,7 @@ public enum MappingFormat {
 		return writer != null || hasMappingIoWriter;
 	}
 
+	@ApiStatus.Internal
 	private boolean useMappingIo() {
 		if (mappingIoCounterpart == null) return false;
 		return System.getProperty("enigma.use_mappingio", "true").equals("true");
