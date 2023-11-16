@@ -49,6 +49,7 @@ public enum MappingFormat {
 	private final MappingsReader reader;
 	private final net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart;
 	private final boolean hasMappingIoWriter;
+	private boolean lastUsedMappingIoWriter;
 
 	MappingFormat(MappingsWriter writer, MappingsReader reader, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart, boolean hasMappingIoWriter) {
 		this.writer = writer;
@@ -67,7 +68,8 @@ public enum MappingFormat {
 				throw new IllegalStateException(name() + " does not support writing");
 			}
 
-			writer.write(mappings, delta, path, progressListener, saveParameters);
+			writer.write(mappings, lastUsedMappingIoWriter ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters);
+			lastUsedMappingIoWriter = false;
 			return;
 		}
 
@@ -78,6 +80,7 @@ public enum MappingFormat {
 
 			tree.accept(MappingWriter.create(path, mappingIoCounterpart), VisitOrder.createByName());
 			progressListener.step(1, I18n.translate("progress.done"));
+			lastUsedMappingIoWriter = true;
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
