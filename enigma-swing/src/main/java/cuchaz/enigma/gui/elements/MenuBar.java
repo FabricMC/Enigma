@@ -34,6 +34,7 @@ import cuchaz.enigma.gui.dialog.CreateServerDialog;
 import cuchaz.enigma.gui.dialog.FontDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.dialog.StatsDialog;
+import cuchaz.enigma.gui.util.ExtensionFileFilter;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -175,7 +176,7 @@ public class MenuBar {
 
 		this.jarCloseItem.setEnabled(jarOpen);
 		this.openMenu.setEnabled(jarOpen);
-		this.saveMappingsItem.setEnabled(jarOpen && this.gui.enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
+		this.saveMappingsItem.setEnabled(jarOpen && this.gui.mappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
 		this.saveMappingsAsMenu.setEnabled(jarOpen);
 		this.closeMappingsItem.setEnabled(jarOpen);
 		this.reloadMappingsItem.setEnabled(jarOpen);
@@ -250,7 +251,7 @@ public class MenuBar {
 	}
 
 	private void onSaveMappingsClicked() {
-		this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+		this.gui.getController().saveMappings(this.gui.mappingsFileChooser.getSelectedFile().toPath());
 	}
 
 	private void openMappingsDiscardPrompt(Runnable then) {
@@ -407,12 +408,13 @@ public class MenuBar {
 			if (format.getReader() != null) {
 				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
 				item.addActionListener(event -> {
-					gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+					ExtensionFileFilter.setupFileChooser(gui.mappingsFileChooser, format);
+					gui.mappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 
-					if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
+					if (gui.mappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+						File selectedFile = gui.mappingsFileChooser.getSelectedFile();
 						gui.getController().openMappings(format, selectedFile.toPath());
-						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
+						UiConfig.setLastSelectedDir(gui.mappingsFileChooser.getCurrentDirectory().toString());
 					}
 				});
 				openMenu.add(item);
@@ -423,17 +425,21 @@ public class MenuBar {
 	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getWriter() != null) {
-				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
+				String formatName = I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT));
+				JMenuItem item = new JMenuItem(formatName);
 				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (gui.enigmaMappingsFileChooser.getCurrentDirectory() == null) {
-						gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+					JFileChooser fileChooser = gui.mappingsFileChooser;
+					ExtensionFileFilter.setupFileChooser(fileChooser, format);
+
+					if (fileChooser.getCurrentDirectory() == null) {
+						fileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 					}
 
-					if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
+					if (fileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+						Path savePath = ExtensionFileFilter.getSavePath(fileChooser);
+						gui.getController().saveMappings(savePath, format);
 						saveMappingsItem.setEnabled(true);
-						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
+						UiConfig.setLastSelectedDir(fileChooser.getCurrentDirectory().toString());
 					}
 				});
 				saveMappingsAsMenu.add(item);

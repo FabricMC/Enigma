@@ -22,6 +22,7 @@
 	"menu.file.mappings.save_as": "Save Mappings As...",
 	"menu.file.mappings.close": "Close Mappings",
 	"menu.file.mappings.drop": "Drop Invalid Mappings",
+	"menu.file.mappings.file_filter": "%s (%s)",
 	"menu.file.reload_mappings": "Reload Mappings",
 	"menu.file.reload_all": "Reload Jar/Mappings",
 	"menu.file.export.source": "Export Source...",

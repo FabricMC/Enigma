@@ -2,6 +2,7 @@ package cuchaz.enigma.translation.mapping.serde;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -21,21 +22,23 @@ import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Writer;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 
 public enum MappingFormat {
-	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE),
-	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY),
-	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP),
-	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader()),
-	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE),
-	SRG_FILE(SrgMappingsWriter.INSTANCE, null),
-	PROGUARD(null, ProguardMappingsReader.INSTANCE),
-	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE);
+	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE, FileType.MAPPING),
+	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY, FileType.DIRECTORY),
+	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP, FileType.ZIP),
+	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader(), FileType.TINY),
+	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE, FileType.TINY),
+	SRG_FILE(SrgMappingsWriter.INSTANCE, null, FileType.SRG),
+	PROGUARD(null, ProguardMappingsReader.INSTANCE, FileType.TXT),
+	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE, FileType.TXT);
 
 	private final MappingsWriter writer;
 	private final MappingsReader reader;
+	private final FileType fileType;
 
-	MappingFormat(MappingsWriter writer, MappingsReader reader) {
+	MappingFormat(MappingsWriter writer, MappingsReader reader, FileType fileType) {
 		this.writer = writer;
 		this.reader = reader;
+		this.fileType = fileType;
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
@@ -66,5 +69,34 @@ public enum MappingFormat {
 	@Nullable
 	public MappingsReader getReader() {
 		return reader;
+	}
+
+	public FileType getFileType() {
+		return fileType;
+	}
+
+	/**
+	 * A file type. It can be either a single file with an extension, or a directory
+	 * with a {@code null} extension.
+	 *
+	 * <p>If a file type has multiple extensions, the default for saving will be the first one.
+	 *
+	 * @param extensions the file extensions with the leading dot {@code .}, or an empty list for a directory
+	 */
+	public record FileType(List<String> extensions) {
+		public static final FileType DIRECTORY = new FileType();
+		public static final FileType MAPPING = new FileType(".mapping", ".mappings");
+		public static final FileType SRG = new FileType(".srg");
+		public static final FileType TINY = new FileType(".tiny");
+		public static final FileType TXT = new FileType(".txt");
+		public static final FileType ZIP = new FileType(".zip");
+
+		public FileType(String... extensions) {
+			this(List.of(extensions));
+		}
+
+		public boolean isDirectory() {
+			return extensions.isEmpty();
+		}
 	}
 }
