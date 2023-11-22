@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -111,15 +112,26 @@ public class EnigmaProject {
 	private Collection<Entry<?>> dropMappings(EntryTree<EntryMapping> mappings, ProgressListener progress) {
 		// drop mappings that don't match the jar
 		MappingsChecker checker = new MappingsChecker(jarIndex, mappings);
-		MappingsChecker.Dropped dropped = checker.dropBrokenMappings(progress);
+		MappingsChecker.Dropped droppedBroken = checker.dropBrokenMappings(progress);
 
-		Map<Entry<?>, String> droppedMappings = dropped.getDroppedMappings();
+		Map<Entry<?>, String> droppedBrokenMappings = droppedBroken.getDroppedMappings();
 
-		for (Map.Entry<Entry<?>, String> mapping : droppedMappings.entrySet()) {
+		for (Map.Entry<Entry<?>, String> mapping : droppedBrokenMappings.entrySet()) {
 			System.out.println("WARNING: Couldn't find " + mapping.getKey() + " (" + mapping.getValue() + ") in jar. Mapping was dropped.");
 		}
 
-		return droppedMappings.keySet();
+		MappingsChecker.Dropped droppedEmpty = checker.dropEmptyMappings(progress);
+
+		Map<Entry<?>, String> droppedEmptyMappings = droppedEmpty.getDroppedMappings();
+
+		for (Map.Entry<Entry<?>, String> mapping : droppedEmptyMappings.entrySet()) {
+			System.out.println("WARNING: " + mapping.getKey() + " (" + mapping.getValue() + ") was empty. Mapping was dropped.");
+		}
+
+		Collection<Entry<?>> droppedMappings = new HashSet<>();
+		droppedMappings.addAll(droppedBrokenMappings.keySet());
+		droppedMappings.addAll(droppedEmptyMappings.keySet());
+		return droppedMappings;
 	}
 
 	public boolean isRenamable(Entry<?> obfEntry) {

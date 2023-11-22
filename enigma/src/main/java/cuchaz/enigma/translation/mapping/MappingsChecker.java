@@ -14,6 +14,9 @@ package cuchaz.enigma.translation.mapping;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -34,10 +37,14 @@ public class MappingsChecker {
 		this.mappings = mappings;
 	}
 
-	public Dropped dropBrokenMappings(ProgressListener progress) {
+	private Dropped dropMappings(ProgressListener progress, BiConsumer<Dropped, Entry<?>> dropper) {
 		Dropped dropped = new Dropped();
 
-		Collection<Entry<?>> obfEntries = mappings.getAllEntries().filter(e -> e instanceof ClassEntry || e instanceof MethodEntry || e instanceof FieldEntry || e instanceof LocalVariableEntry).toList();
+		// HashEntryTree#getAllEntries filters out empty classes
+		Stream<Entry<?>> allEntries = StreamSupport.stream(mappings.spliterator(), false).map(EntryTreeNode::getEntry);
+		Collection<Entry<?>> obfEntries = allEntries
+				.filter(e -> e instanceof ClassEntry || e instanceof MethodEntry || e instanceof FieldEntry || e instanceof LocalVariableEntry)
+				.toList();
 
 		progress.init(obfEntries.size(), "Checking for dropped mappings");
 
@@ -45,7 +52,7 @@ public class MappingsChecker {
 
 		for (Entry<?> entry : obfEntries) {
 			progress.step(steps++, entry.toString());
-			tryDropEntry(dropped, entry);
+			dropper.accept(dropped, entry);
 		}
 
 		dropped.apply(mappings);
@@ -53,8 +60,12 @@ public class MappingsChecker {
 		return dropped;
 	}
 
-	private void tryDropEntry(Dropped dropped, Entry<?> entry) {
-		if (shouldDropEntry(entry)) {
+	public Dropped dropBrokenMappings(ProgressListener progress) {
+		return dropMappings(progress, this::tryDropBrokenEntry);
+	}
+
+	private void tryDropBrokenEntry(Dropped dropped, Entry<?> entry) {
+		if (shouldDropBrokenEntry(entry)) {
 			EntryMapping mapping = mappings.get(entry);
 
 			if (mapping != null) {
@@ -63,14 +74,9 @@ public class MappingsChecker {
 		}
 	}
 
-	private boolean shouldDropEntry(Entry<?> entry) {
+	private boolean shouldDropBrokenEntry(Entry<?> entry) {
 		if (!index.getEntryIndex().hasEntry(entry)) {
 			return true;
-		}
-
-		if (entry instanceof LocalVariableEntry localVariableEntry) {
-			// Drop local variables only if the method entry is to be dropped
-			return shouldDropEntry(localVariableEntry.getParent());
 		}
 
 		Collection<Entry<?>> resolvedEntries = index.getEntryResolver().resolveEntry(entry, ResolutionStrategy.RESOLVE_ROOT);
@@ -90,6 +96,34 @@ public class MappingsChecker {
 
 		// Entry is not the root, and is not a method with params
 		return true;
+	}
+
+	public Dropped dropEmptyMappings(ProgressListener progress) {
+		return dropMappings(progress, this::tryDropEmptyEntry);
+	}
+
+	private void tryDropEmptyEntry(Dropped dropped, Entry<?> entry) {
+		if (shouldDropEmptyMapping(entry)) {
+			EntryMapping mapping = mappings.get(entry);
+
+			if (mapping != null) {
+				dropped.drop(entry, mapping);
+			}
+		}
+	}
+
+	private boolean shouldDropEmptyMapping(Entry<?> entry) {
+		EntryMapping mapping = mappings.get(entry);
+
+		if (mapping != null) {
+			boolean isEmpty = mapping.targetName() == null && mapping.javadoc() == null && mapping.accessModifier() == AccessModifier.UNCHANGED;
+
+			if (isEmpty) {
+				return mappings.getChildren(entry).isEmpty();
+			}
+		}
+
+		return false;
 	}
 
 	public static class Dropped {

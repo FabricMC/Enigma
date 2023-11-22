@@ -53,7 +53,7 @@ public class IndexEntryResolver implements EntryResolver {
 				return Collections.singleton(entry);
 			}
 
-			if (access == null || !access.isPrivate()) {
+			if (access == null || (!access.isPrivate() && !access.isStatic())) {
 				Collection<Entry<ClassEntry>> resolvedChildren = resolveChildEntry(classChild, strategy);
 
 				if (!resolvedChildren.isEmpty()) {

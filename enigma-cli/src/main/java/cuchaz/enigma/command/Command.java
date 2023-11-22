@@ -4,6 +4,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.common.io.MoreFiles;
 
@@ -41,7 +43,7 @@ public abstract class Command {
 			System.out.println("Reading mappings...");
 
 			MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
-			EntryTree<EntryMapping> mappings = chooseEnigmaFormat(fileMappings).read(fileMappings, progress, saveParameters);
+			EntryTree<EntryMapping> mappings = readMappings(fileMappings, progress, saveParameters);
 
 			project.setMappings(mappings);
 		}
@@ -49,14 +51,53 @@ public abstract class Command {
 		return project;
 	}
 
-	protected static MappingFormat chooseEnigmaFormat(Path path) {
-		if (Files.isDirectory(path)) {
-			return MappingFormat.ENIGMA_DIRECTORY;
-		} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
-			return MappingFormat.ENIGMA_ZIP;
+	protected static EntryTree<EntryMapping> readMappings(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws Exception {
+		List<Exception> suppressed = new ArrayList<>();
+
+		if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
+			return MappingFormat.ENIGMA_ZIP.read(path, progress, saveParameters);
 		} else {
-			return MappingFormat.ENIGMA_FILE;
+			for (MappingFormat format : MappingFormat.getReadableFormats()) {
+				try {
+					return format.read(path, progress, saveParameters);
+				} catch (Exception e) {
+					suppressed.add(e);
+				}
+			}
 		}
+
+		RuntimeException exception = new RuntimeException("Unable to parse mappings!");
+
+		for (Exception suppressedException : suppressed) {
+			exception.addSuppressed(suppressedException);
+		}
+
+		throw exception;
+	}
+
+	protected static void writeMappings(EntryTree<EntryMapping> mappings, Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws Exception {
+		List<Exception> suppressed = new ArrayList<>();
+
+		if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
+			MappingFormat.ENIGMA_ZIP.write(mappings, path, progress, saveParameters);
+		} else {
+			for (MappingFormat format : MappingFormat.getWritableFormats()) {
+				try {
+					format.write(mappings, path, progress, saveParameters);
+					return;
+				} catch (Exception e) {
+					suppressed.add(e);
+				}
+			}
+		}
+
+		RuntimeException exception = new RuntimeException("Unable to write mappings!");
+
+		for (Exception suppressedException : suppressed) {
+			exception.addSuppressed(suppressedException);
+		}
+
+		throw exception;
 	}
 
 	protected static File getWritableFile(String path) {
