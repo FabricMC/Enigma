@@ -1,13 +1,20 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.TranslateResult;
@@ -15,9 +22,11 @@ import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.tree.DeltaTrackingTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
+import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.validation.Message;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -28,26 +37,28 @@ public class EntryRemapper {
 	private final EntryResolver obfResolver;
 	private final Translator deobfuscator;
 	private final JarIndex jarIndex;
+	private final ClassProvider classProvider;
 
 	private final MappingValidator validator;
 
-	private EntryRemapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf) {
+	private EntryRemapper(JarIndex jarIndex, EntryTree<EntryMapping> obfToDeobf, ClassProvider classProvider) {
 		this.obfToDeobf = new DeltaTrackingTree<>(obfToDeobf);
 
 		this.obfResolver = jarIndex.getEntryResolver();
 
 		this.deobfuscator = new MappingTranslator(obfToDeobf, obfResolver);
 		this.jarIndex = jarIndex;
+		this.classProvider = classProvider;
 
 		this.validator = new MappingValidator(obfToDeobf, deobfuscator, jarIndex);
 	}
 
-	public static EntryRemapper mapped(JarIndex index, EntryTree<EntryMapping> obfToDeobf) {
-		return new EntryRemapper(index, obfToDeobf);
+	public static EntryRemapper mapped(JarIndex index, EntryTree<EntryMapping> obfToDeobf, ClassProvider classProvider) {
+		return new EntryRemapper(index, obfToDeobf, classProvider);
 	}
 
-	public static EntryRemapper empty(JarIndex index) {
-		return new EntryRemapper(index, new HashEntryTree<>());
+	public static EntryRemapper empty(JarIndex index, ClassProvider classProvider) {
+		return new EntryRemapper(index, new HashEntryTree<>(), classProvider);
 	}
 
 	public void validatePutMapping(ValidationContext vc, Entry<?> obfuscatedEntry, @Nonnull EntryMapping deobfMapping) {
@@ -63,7 +74,10 @@ public class EntryRemapper {
 			FieldEntry fieldEntry = (FieldEntry) obfuscatedEntry;
 			ClassEntry classEntry = fieldEntry.getParent();
 
-			mapRecordComponentGetter(vc, classEntry, fieldEntry, deobfMapping);
+			if (jarIndex.getEntryIndex().getDefinition(classEntry).isRecord()) {
+				mapRecordComponentGetter(vc, classEntry, fieldEntry, deobfMapping);
+				mapRecordCanonicalConstructor(vc, classEntry, fieldEntry, deobfMapping);
+			}
 		}
 
 		boolean renaming = !Objects.equals(getDeobfMapping(obfuscatedEntry).targetName(), deobfMapping.targetName());
@@ -91,7 +105,7 @@ public class EntryRemapper {
 
 	// A little bit of a hack to also map the getter method for record fields.
 	private void mapRecordComponentGetter(ValidationContext vc, ClassEntry classEntry, FieldEntry fieldEntry, EntryMapping fieldMapping) {
-		if (!jarIndex.getEntryIndex().getDefinition(classEntry).isRecord() || jarIndex.getEntryIndex().getFieldAccess(fieldEntry).isStatic()) {
+		if (jarIndex.getEntryIndex().getFieldAccess(fieldEntry).isStatic()) {
 			return;
 		}
 
@@ -115,6 +129,46 @@ public class EntryRemapper {
 
 		// Also remap the associated method, without the javadoc.
 		doPutMapping(vc, methodEntry, new EntryMapping(fieldMapping.targetName()), false);
+	}
+
+	// Map a record's canonical constructor params
+	private void mapRecordCanonicalConstructor(ValidationContext vc, ClassEntry classEntry, FieldEntry fieldEntry, EntryMapping fieldMapping) {
+		final ClassNode classNode = classProvider.get(classEntry.getName());
+
+		final List<FieldNode> recordFields = classNode.fields.stream()
+				.filter(fieldNode -> !Modifier.isStatic(fieldNode.access))
+				.toList();
+
+		assert !recordFields.isEmpty();
+
+		final String recordDesc = "(%s)V".formatted(
+				recordFields.stream()
+						.map(entry -> entry.desc.toString())
+						.collect(Collectors.joining())
+		);
+
+		final MethodEntry canonicalConstructor = new MethodEntry(classEntry, "<init>", new MethodDescriptor(recordDesc));
+
+		if (!jarIndex.getEntryIndex().hasMethod(canonicalConstructor)) {
+			// Record does not have a canonicalConstructor
+			return;
+		}
+
+		// Compute the LVT index
+		int lvtIndex = 0;
+
+		for (FieldNode recordField : recordFields) {
+			lvtIndex += Type.getType(recordField.desc).getSize();
+
+			if (recordField.name.equals(fieldEntry.getName()) && recordField.desc.equals(fieldEntry.getDesc().toString())) {
+				break;
+			}
+		}
+
+		final String name = fieldMapping.targetName();
+		final LocalVariableEntry localVariableEntry = new LocalVariableEntry(canonicalConstructor, lvtIndex, name, true, null);
+
+		doPutMapping(vc, localVariableEntry, new EntryMapping(name), false);
 	}
 
 	@Nonnull

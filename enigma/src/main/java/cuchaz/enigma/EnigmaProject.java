@@ -63,14 +63,14 @@ public class EnigmaProject {
 		this.jarIndex = jarIndex;
 		this.jarChecksum = jarChecksum;
 
-		this.mapper = EntryRemapper.empty(jarIndex);
+		this.mapper = EntryRemapper.empty(jarIndex, classProvider);
 	}
 
 	public void setMappings(EntryTree<EntryMapping> mappings) {
 		if (mappings != null) {
-			mapper = EntryRemapper.mapped(jarIndex, mappings);
+			mapper = EntryRemapper.mapped(jarIndex, mappings, classProvider);
 		} else {
-			mapper = EntryRemapper.empty(jarIndex);
+			mapper = EntryRemapper.empty(jarIndex, classProvider);
 		}
 	}
 

@@ -594,7 +594,7 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public void createServer(int port, char[] password) throws IOException {
-		server = new IntegratedEnigmaServer(project.getJarChecksum(), password, EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf())), port);
+		server = new IntegratedEnigmaServer(project.getJarChecksum(), password, EntryRemapper.mapped(project.getJarIndex(), new HashEntryTree<>(project.getMapper().getObfToDeobf()), project.getClassProvider()), port);
 		server.start();
 		client = new EnigmaClient(this, "127.0.0.1", port);
 		client.connect();
