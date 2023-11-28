@@ -17,6 +17,9 @@ subprojects {
 	dependencies {
 		implementation 'com.google.guava:guava:32.1.2-jre'
 		implementation 'com.google.code.gson:gson:2.10.1'
+		implementation 'net.fabricmc:mapping-io:0.5.0'
+		
+		compileOnly 'org.jetbrains:annotations:24.0.1'
 
 		testImplementation 'junit:junit:4.13.2'
 		testImplementation 'org.hamcrest:hamcrest:2.2'
