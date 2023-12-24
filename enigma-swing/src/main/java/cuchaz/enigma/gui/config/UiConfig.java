@@ -276,7 +276,7 @@ public final class UiConfig {
 	 * @return the fallback editor font
 	 */
 	public static Font getFallbackEditorFont() {
-		return ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED));
+		return ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED).deriveFont(12f));
 	}
 
 	public static String encodeFont(Font font) {

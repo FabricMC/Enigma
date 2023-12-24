@@ -111,7 +111,6 @@ public class EditorPanel {
 		this.editor.setEditable(false);
 		this.editor.setSelectionColor(new Color(31, 46, 90));
 		this.editor.setCaret(new BrowserCaret());
-		this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
 		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
 		this.editor.setCaretColor(UiConfig.getCaretColor());
 		this.editor.setContentType("text/enigma-sources");
