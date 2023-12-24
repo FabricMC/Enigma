@@ -3,9 +3,9 @@ package cuchaz.enigma.gui.util;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.swing.BorderFactory;
 import javax.swing.UIManager;
@@ -16,7 +16,6 @@ import com.github.swingdpi.plaf.BasicTweaker;
 import com.github.swingdpi.plaf.MetalTweaker;
 import com.github.swingdpi.plaf.NimbusTweaker;
 import com.github.swingdpi.plaf.WindowsTweaker;
-import de.sciss.syntaxpane.DefaultSyntaxKit;
 
 import cuchaz.enigma.gui.config.UiConfig;
 
@@ -95,33 +94,52 @@ public class ScaleUtil {
 		if (UiConfig.getActiveLookAndFeel().needsScaling()) {
 			UiDefaultsScaler.updateAndApplyGlobalScaling((int) (100 * scale), true);
 		}
-
-		try {
-			Field defaultFontField = DefaultSyntaxKit.class.getDeclaredField("DEFAULT_FONT");
-			defaultFontField.setAccessible(true);
-			Font font = (Font) defaultFontField.get(null);
-			font = font.deriveFont(12 * scale);
-			defaultFontField.set(null, font);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
 	}
 
+	@SuppressWarnings("null")
 	private static BasicTweaker createTweakerForCurrentLook(float dpiScaling) {
 		String testString = UIManager.getLookAndFeel().getName().toLowerCase();
 
 		if (testString.contains("windows")) {
-			return new WindowsTweaker(dpiScaling, testString.contains("classic"));
+			return new WindowsTweaker(dpiScaling, testString.contains("classic")) {
+				@Override
+				public Font modifyFont(Object key, Font original) {
+					return ScaleUtil.fallbackModifyFont(key, original, super.modifyFont(key, original), scaleFactor, BasicTweaker::isUnscaled);
+				}
+			};
 		}
 
 		if (testString.contains("metal")) {
-			return new MetalTweaker(dpiScaling);
+			return new MetalTweaker(dpiScaling) {
+				@Override
+				public Font modifyFont(Object key, Font original) {
+					return ScaleUtil.fallbackModifyFont(key, original, super.modifyFont(key, original), scaleFactor, BasicTweaker::isUnscaled);
+				}
+			};
 		}
 
 		if (testString.contains("nimbus")) {
-			return new NimbusTweaker(dpiScaling);
+			return new NimbusTweaker(dpiScaling) {
+				@Override
+				public Font modifyFont(Object key, Font original) {
+					return ScaleUtil.fallbackModifyFont(key, original, super.modifyFont(key, original), scaleFactor, BasicTweaker::isUnscaled);
+				}
+			};
 		}
 
-		return new BasicTweaker(dpiScaling);
+		return new BasicTweaker(dpiScaling) {
+			@Override
+			public Font modifyFont(Object key, Font original) {
+				return ScaleUtil.fallbackModifyFont(key, original, super.modifyFont(key, original), scaleFactor, BasicTweaker::isUnscaled);
+			}
+		};
+	}
+
+	private static Font fallbackModifyFont(Object key, Font original, Font modified, float scaleFactor, Predicate<Float> unscaledCheck) {
+		if (modified == original && !unscaledCheck.test(scaleFactor)) {
+			return original.deriveFont(original.getSize() * scaleFactor);
+		}
+
+		return modified;
 	}
 }

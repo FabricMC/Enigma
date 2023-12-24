@@ -21,6 +21,7 @@ import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 
 import cuchaz.enigma.gui.config.UiConfig;
+import cuchaz.enigma.gui.util.ScaleUtil;
 
 public class SelectionHighlightPainter implements Highlighter.HighlightPainter {
 	public static final SelectionHighlightPainter INSTANCE = new SelectionHighlightPainter();
@@ -31,7 +32,9 @@ public class SelectionHighlightPainter implements Highlighter.HighlightPainter {
 		Graphics2D g2d = (Graphics2D) g;
 		Rectangle bounds = BoxHighlightPainter.getBounds(text, start, end);
 		g2d.setColor(UiConfig.getSelectionHighlightColor());
-		g2d.setStroke(new BasicStroke(2.0f));
-		g2d.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4, 4);
+		g2d.setStroke(new BasicStroke(ScaleUtil.scale(2.0f)));
+
+		int arcSize = ScaleUtil.scale(4);
+		g2d.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, arcSize, arcSize);
 	}
 }
