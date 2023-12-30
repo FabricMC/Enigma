@@ -5,6 +5,7 @@ import cuchaz.enigma.source.Decompilers;
 
 public enum Decompiler {
 	CFR("CFR", Decompilers.CFR),
+	JADX("JADX", Decompilers.JADX),
 	PROCYON("Procyon", Decompilers.PROCYON),
 	BYTECODE("Bytecode", Decompilers.BYTECODE);
 
