@@ -71,7 +71,10 @@ public class MappingIoConverter {
 		Deque<String> parts = new LinkedList<>();
 
 		newMappingTree.visitClass(classEntry.getFullName());
-		newMappingTree.visitComment(MappedElementKind.CLASS, mapping.javadoc());
+
+		if (mapping != null) {
+			newMappingTree.visitComment(MappedElementKind.CLASS, mapping.javadoc());
+		}
 
 		do {
 			mapping = oldMappingTree.get(classEntry);
