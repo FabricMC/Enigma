@@ -19,14 +19,14 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-class EnigmaTextTokenCollector extends TextTokenVisitor {
+class VineflowerTextTokenCollector extends TextTokenVisitor {
 	private final Map<Token, Entry<?>> declarations = new HashMap<>();
 	private final Map<Token, Pair<Entry<?>, Entry<?>>> references = new HashMap<>();
 	private final Set<Token> tokens = new LinkedHashSet<>();
 	private String content;
 	private MethodEntry currentMethod;
 
-	EnigmaTextTokenCollector(TextTokenVisitor next) {
+	VineflowerTextTokenCollector(TextTokenVisitor next) {
 		super(next);
 	}
 

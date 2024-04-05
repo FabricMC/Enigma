@@ -19,6 +19,6 @@ public class VineflowerDecompiler implements Decompiler {
 
 	@Override
 	public Source getSource(String className, @Nullable EntryRemapper remapper) {
-		return new VineflowerSource(new EnigmaContextSource(classProvider, className), remapper, settings);
+		return new VineflowerSource(new VineflowerContextSource(classProvider, className), remapper, settings);
 	}
 }

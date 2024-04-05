@@ -19,10 +19,10 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-class EnigmaJavadocProvider implements IFabricJavadocProvider {
+class VineflowerJavadocProvider implements IFabricJavadocProvider {
 	private final EntryRemapper remapper;
 
-	EnigmaJavadocProvider(EntryRemapper remapper) {
+	VineflowerJavadocProvider(EntryRemapper remapper) {
 		this.remapper = remapper;
 	}
 

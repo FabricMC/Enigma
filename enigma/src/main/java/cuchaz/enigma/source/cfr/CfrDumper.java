@@ -40,7 +40,7 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class EnigmaDumper extends StringStreamDumper {
+public class CfrDumper extends StringStreamDumper {
 	private final StringBuilder sb;
 	private final SourceSettings sourceSettings;
 	private final SourceIndex index;
@@ -51,11 +51,11 @@ public class EnigmaDumper extends StringStreamDumper {
 	private boolean muteLine = false;
 	private MethodEntry contextMethod = null;
 
-	public EnigmaDumper(StringBuilder sb, SourceSettings sourceSettings, TypeUsageInformation typeUsage, Options options, @Nullable EntryRemapper mapper) {
+	public CfrDumper(StringBuilder sb, SourceSettings sourceSettings, TypeUsageInformation typeUsage, Options options, @Nullable EntryRemapper mapper) {
 		this(sb, sourceSettings, typeUsage, options, mapper, new SourceIndex(), new MovableDumperContext());
 	}
 
-	protected EnigmaDumper(StringBuilder sb, SourceSettings sourceSettings, TypeUsageInformation typeUsage, Options options, @Nullable EntryRemapper mapper, SourceIndex index, MovableDumperContext context) {
+	protected CfrDumper(StringBuilder sb, SourceSettings sourceSettings, TypeUsageInformation typeUsage, Options options, @Nullable EntryRemapper mapper, SourceIndex index, MovableDumperContext context) {
 		super((m, e) -> {
 		}, sb, typeUsage, options, IllegalIdentifierDump.Nop.getInstance(), context);
 		this.sb = sb;
@@ -393,7 +393,7 @@ public class EnigmaDumper extends StringStreamDumper {
 	 */
 	@Override
 	public Dumper withTypeUsageInformation(TypeUsageInformation innerclassTypeUsageInformation) {
-		return new EnigmaDumper(this.sb, sourceSettings, innerclassTypeUsageInformation, options, mapper, index, dumperContext);
+		return new CfrDumper(this.sb, sourceSettings, innerclassTypeUsageInformation, options, mapper, index, dumperContext);
 	}
 
 	@Override

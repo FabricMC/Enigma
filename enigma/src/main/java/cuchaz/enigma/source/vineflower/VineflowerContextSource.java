@@ -13,13 +13,13 @@ import org.objectweb.asm.tree.ClassNode;
 import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.utils.AsmUtil;
 
-class EnigmaContextSource implements IContextSource {
+class VineflowerContextSource implements IContextSource {
 	private final IContextSource classpathSource = new ClasspathSource();
 	private final ClassProvider classProvider;
 	private final String className;
 	private Entries entries;
 
-	EnigmaContextSource(ClassProvider classProvider, String className) {
+	VineflowerContextSource(ClassProvider classProvider, String className) {
 		this.classProvider = classProvider;
 		this.className = className;
 	}
@@ -87,7 +87,7 @@ class EnigmaContextSource implements IContextSource {
 
 			@Override
 			public void acceptClass(String qualifiedName, String fileName, String content, int[] mapping) {
-				if (qualifiedName.equals(EnigmaContextSource.this.className)) {
+				if (qualifiedName.equals(VineflowerContextSource.this.className)) {
 					saver.saveClassFile(null, qualifiedName, fileName, content, mapping);
 				}
 			}
@@ -106,7 +106,7 @@ class EnigmaContextSource implements IContextSource {
 	public class ClasspathSource implements IContextSource {
 		@Override
 		public String getName() {
-			return "Enigma-provided classpath context for " + EnigmaContextSource.this.className;
+			return "Enigma-provided classpath context for " + VineflowerContextSource.this.className;
 		}
 
 		@Override
@@ -121,7 +121,7 @@ class EnigmaContextSource implements IContextSource {
 
 		@Override
 		public InputStream getInputStream(String resource) {
-			return EnigmaContextSource.this.getInputStream(resource);
+			return VineflowerContextSource.this.getInputStream(resource);
 		}
 	}
 }

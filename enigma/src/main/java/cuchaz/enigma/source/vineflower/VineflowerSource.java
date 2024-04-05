@@ -26,7 +26,7 @@ class VineflowerSource implements Source {
 	private EntryRemapper remapper;
 	private SourceIndex index;
 
-	VineflowerSource(EnigmaContextSource contextSource, EntryRemapper remapper, SourceSettings settings) {
+	VineflowerSource(VineflowerContextSource contextSource, EntryRemapper remapper, SourceSettings settings) {
 		this.contextSource = contextSource;
 		this.librarySource = contextSource.getClasspath();
 		this.remapper = remapper;
@@ -61,7 +61,7 @@ class VineflowerSource implements Source {
 		preferences.put(IFernflowerPreferences.INDENT_STRING, "\t");
 		preferences.put(IFernflowerPreferences.LOG_LEVEL, IFernflowerLogger.Severity.WARN.name());
 		preferences.put(IFernflowerPreferences.THREADS, String.valueOf(Math.max(1, Runtime.getRuntime().availableProcessors() - 2)));
-		preferences.put(IFabricJavadocProvider.PROPERTY_NAME, new EnigmaJavadocProvider(remapper));
+		preferences.put(IFabricJavadocProvider.PROPERTY_NAME, new VineflowerJavadocProvider(remapper));
 
 		if (settings.removeImports) {
 			preferences.put(IFernflowerPreferences.REMOVE_IMPORTS, "1");
@@ -72,9 +72,9 @@ class VineflowerSource implements Source {
 		IFernflowerLogger logger = new PrintStreamLogger(System.out);
 		BaseDecompiler decompiler = new BaseDecompiler(saver, preferences, logger);
 
-		AtomicReference<EnigmaTextTokenCollector> tokenCollector = new AtomicReference<>();
+		AtomicReference<VineflowerTextTokenCollector> tokenCollector = new AtomicReference<>();
 		TextTokenVisitor.addVisitor(next -> {
-			tokenCollector.set(new EnigmaTextTokenCollector(next));
+			tokenCollector.set(new VineflowerTextTokenCollector(next));
 			return tokenCollector.get();
 		});
 
