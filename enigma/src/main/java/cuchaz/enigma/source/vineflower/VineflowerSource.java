@@ -85,7 +85,7 @@ class VineflowerSource implements Source {
 		}
 
 		decompiler.decompileContext();
-		tokenCollector.get().addTokensToIndex(index);
+		tokenCollector.get().accept(index);
 	}
 
 	private class ResultSaver implements IResultSaver {

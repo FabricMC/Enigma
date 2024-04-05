@@ -138,7 +138,7 @@ class VineflowerTextTokenCollector extends TextTokenVisitor {
 		tokens.add(token);
 	}
 
-	public void addTokensToIndex(SourceIndex index) {
+	public void accept(SourceIndex index) {
 		for (Token token : tokens) {
 			if (declarations.get(token) != null) {
 				index.addDeclaration(token, declarations.get(token));
