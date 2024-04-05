@@ -149,21 +149,15 @@ public class EnigmaDumper extends StringStreamDumper {
 					}
 
 					EntryMapping mapping = mapper.getDeobfMapping(getFieldEntry(owner, field.getFieldName(), field.getField().getDescriptor()));
+					String javadoc = mapping.javadoc();
 
-					if (mapping == null) {
-						continue;
-					}
-
-					String javaDoc = mapping.javadoc();
-
-					if (javaDoc != null) {
-						recordComponentDocs.add(String.format("@param %s %s", mapping.targetName(), javaDoc));
+					if (javadoc != null) {
+						recordComponentDocs.add(String.format("@param %s %s", mapping.targetName(), javadoc));
 					}
 				}
 			}
 
 			EntryMapping mapping = mapper.getDeobfMapping(getClassEntry(owner));
-
 			String javadoc = null;
 
 			if (mapping != null) {

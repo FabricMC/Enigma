@@ -41,6 +41,7 @@ public class JarClassProvider implements AutoCloseable, ClassProvider {
 		return classNames.build();
 	}
 
+	@Override
 	public Set<String> getClassNames() {
 		return classNames;
 	}
