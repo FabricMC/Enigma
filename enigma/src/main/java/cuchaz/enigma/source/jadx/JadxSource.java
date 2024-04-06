@@ -1,11 +1,9 @@
 package cuchaz.enigma.source.jadx;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,17 +20,12 @@ import jadx.api.metadata.ICodeAnnotation;
 import jadx.api.metadata.annotations.NodeDeclareRef;
 import jadx.api.metadata.annotations.VarNode;
 import jadx.api.metadata.annotations.VarRef;
-import jadx.api.plugins.input.data.IClassData;
-import jadx.api.plugins.input.data.ILoadResult;
-import jadx.api.plugins.input.data.IResourceData;
 import jadx.api.utils.CodeUtils;
 import jadx.core.codegen.TypeGen;
-import jadx.core.dex.attributes.AType;
 import jadx.core.dex.info.MethodInfo;
 import jadx.core.dex.nodes.FieldNode;
 import jadx.core.dex.nodes.MethodNode;
-import jadx.plugins.input.java.JavaClassReader;
-import jadx.plugins.input.java.data.JavaClassData;
+import jadx.plugins.input.java.JavaInputPlugin;
 
 import cuchaz.enigma.source.Source;
 import cuchaz.enigma.source.SourceIndex;
@@ -84,27 +77,7 @@ public class JadxSource implements Source {
 		}
 
 		try (JadxDecompiler jadx = new JadxDecompiler(jadxArgsSupplier.get())) {
-			jadx.addCustomLoad(new ILoadResult() {
-				@Override
-				public void close() throws IOException {
-					return;
-				}
-
-				@Override
-				public void visitClasses(Consumer<IClassData> consumer) {
-					consumer.accept(new JavaClassData(new JavaClassReader(0, classNode.name + ".class", AsmUtil.nodeToBytes(classNode))));
-				}
-
-				@Override
-				public void visitResources(Consumer<IResourceData> consumer) {
-					return;
-				}
-
-				@Override
-				public boolean isEmpty() {
-					return false;
-				}
-			});
+			jadx.addCustomCodeLoader(JavaInputPlugin.loadSingleClass(AsmUtil.nodeToBytes(classNode), classNode.name));
 			jadx.load();
 			JavaClass cls = jadx.getClasses().get(0);
 
@@ -118,14 +91,14 @@ public class JadxSource implements Source {
 
 						for (JavaField fld : cls.getFields()) {
 							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(fieldEntryOf(fld.getFieldNode())).javadoc())) != null) {
-								fld.getFieldNode().addAttr(AType.CODE_COMMENTS, comment);
+								fld.getFieldNode().addCodeComment(comment);
 								reload = 1;
 							}
 						}
 
 						for (JavaMethod mth : cls.getMethods()) {
 							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(methodEntryOf(mth.getMethodNode())).javadoc())) != null) {
-								mth.getMethodNode().addAttr(AType.CODE_COMMENTS, comment);
+								mth.getMethodNode().addCodeComment(comment);
 								reload = 1;
 							}
 						}
@@ -137,7 +110,7 @@ public class JadxSource implements Source {
 						}
 
 						if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(classEntryOf(cls.getClassNode())).javadoc())) != null) {
-							cls.getClassNode().addAttr(AType.CODE_COMMENTS, comment);
+							cls.getClassNode().addCodeComment(comment);
 							if (reload != 2) reload = 1;
 						}
 
