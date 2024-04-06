@@ -2,6 +2,8 @@ package cuchaz.enigma.classprovider;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.annotation.Nullable;
 
@@ -12,6 +14,11 @@ import org.objectweb.asm.tree.ClassNode;
  * Provides classes by loading them from the classpath.
  */
 public class ClasspathClassProvider implements ClassProvider {
+	@Override
+	public Collection<String> getClassNames() {
+		return Collections.emptyList();
+	}
+
 	@Nullable
 	@Override
 	public ClassNode get(String name) {

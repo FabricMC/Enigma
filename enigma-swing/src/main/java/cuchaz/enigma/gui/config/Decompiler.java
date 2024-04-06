@@ -4,6 +4,7 @@ import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.Decompilers;
 
 public enum Decompiler {
+	VINEFLOWER("Vineflower", Decompilers.VINEFLOWER),
 	CFR("CFR", Decompilers.CFR),
 	PROCYON("Procyon", Decompilers.PROCYON),
 	BYTECODE("Bytecode", Decompilers.BYTECODE);

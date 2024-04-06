@@ -55,8 +55,9 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 	}
 
 	private void registerDecompilerServices(EnigmaPluginContext ctx) {
-		ctx.registerService("enigma:procyon", DecompilerService.TYPE, ctx1 -> Decompilers.PROCYON);
+		ctx.registerService("enigma:vineflower", DecompilerService.TYPE, ctx1 -> Decompilers.VINEFLOWER);
 		ctx.registerService("enigma:cfr", DecompilerService.TYPE, ctx1 -> Decompilers.CFR);
+		ctx.registerService("enigma:procyon", DecompilerService.TYPE, ctx1 -> Decompilers.PROCYON);
 		ctx.registerService("enigma:bytecode", DecompilerService.TYPE, ctx1 -> Decompilers.BYTECODE);
 	}
 
