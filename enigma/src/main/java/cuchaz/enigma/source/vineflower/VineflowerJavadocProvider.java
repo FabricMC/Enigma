@@ -116,7 +116,7 @@ class VineflowerJavadocProvider implements IFabricJavadocProvider {
 
 		javadoc = builder.toString();
 
-		return javadoc == null || javadoc.isBlank() ? null : javadoc.trim();
+		return javadoc.isBlank() ? null : javadoc.trim();
 	}
 
 	private boolean isRecord(StructClass cls) {
