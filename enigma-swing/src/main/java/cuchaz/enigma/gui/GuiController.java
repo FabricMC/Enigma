@@ -99,7 +99,7 @@ public class GuiController implements ClientPacketHandler {
 	private IndexTreeBuilder indexTreeBuilder;
 
 	private Path loadedMappingPath;
-	private MappingFormat loadedMappingFormat;
+	private MappingFormat loadedMappingFormat = MappingFormat.ENIGMA_DIRECTORY;
 
 	private ClassHandleProvider chp;
 
@@ -178,6 +178,10 @@ public class GuiController implements ClientPacketHandler {
 		project.setMappings(mappings);
 		refreshClasses();
 		chp.invalidateJavadoc();
+	}
+
+	public MappingFormat getLoadedMappingFormat() {
+		return loadedMappingFormat;
 	}
 
 	public CompletableFuture<Void> saveMappings(Path path) {

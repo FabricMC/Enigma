@@ -34,6 +34,7 @@ import cuchaz.enigma.gui.dialog.CreateServerDialog;
 import cuchaz.enigma.gui.dialog.FontDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.dialog.StatsDialog;
+import cuchaz.enigma.gui.util.ExtensionFileFilter;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -175,7 +176,7 @@ public class MenuBar {
 
 		this.jarCloseItem.setEnabled(jarOpen);
 		this.openMappingsMenu.setEnabled(jarOpen);
-		this.saveMappingsItem.setEnabled(jarOpen && this.gui.enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
+		this.saveMappingsItem.setEnabled(jarOpen && this.gui.mappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
 		this.saveMappingsAsMenu.setEnabled(jarOpen);
 		this.closeMappingsItem.setEnabled(jarOpen);
 		this.reloadMappingsItem.setEnabled(jarOpen);
@@ -250,7 +251,7 @@ public class MenuBar {
 	}
 
 	private void onSaveMappingsClicked() {
-		this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+		this.gui.getController().saveMappings(this.gui.mappingsFileChooser.getSelectedFile().toPath());
 	}
 
 	private void openMappingsDiscardPrompt(Runnable then) {
@@ -422,12 +423,13 @@ public class MenuBar {
 	private static void addOpenMappingsMenuEntry(String text, MappingFormat format, boolean mappingIo, JMenu openMappingsMenu, Gui gui) {
 		JMenuItem item = new JMenuItem(text);
 		item.addActionListener(event -> {
-			gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+			ExtensionFileFilter.setupFileChooser(gui.mappingsFileChooser, format);
+			gui.mappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 
-			if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-				File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
+			if (gui.mappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+				File selectedFile = gui.mappingsFileChooser.getSelectedFile();
 				gui.getController().openMappings(format, selectedFile.toPath(), mappingIo);
-				UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
+				UiConfig.setLastSelectedDir(gui.mappingsFileChooser.getCurrentDirectory().toString());
 			}
 		});
 		openMappingsMenu.add(item);
@@ -453,15 +455,18 @@ public class MenuBar {
 	private static void addSaveMappingsAsMenuEntry(String text, MappingFormat format, boolean mappingIo, JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
 		JMenuItem item = new JMenuItem(text);
 		item.addActionListener(event -> {
-			// TODO: Use a specific file chooser for it
-			if (gui.enigmaMappingsFileChooser.getCurrentDirectory() == null) {
-				gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+			JFileChooser fileChooser = gui.mappingsFileChooser;
+			ExtensionFileFilter.setupFileChooser(fileChooser, format);
+
+			if (fileChooser.getCurrentDirectory() == null) {
+				fileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
 			}
 
-			if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-				gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format, mappingIo);
+			if (fileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+				Path savePath = ExtensionFileFilter.getSavePath(fileChooser);
+				gui.getController().saveMappings(savePath, format, mappingIo);
 				saveMappingsItem.setEnabled(true);
-				UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
+				UiConfig.setLastSelectedDir(fileChooser.getCurrentDirectory().toString());
 			}
 		});
 		saveMappingsAsMenu.add(item);
