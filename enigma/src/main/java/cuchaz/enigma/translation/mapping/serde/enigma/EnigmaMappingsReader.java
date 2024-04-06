@@ -40,12 +40,12 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	FILE {
 		@Override
 		public EntryTree<EntryMapping> read(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
-			progress.init(1, I18n.translate("progress.mappings.enigma_file.loading"));
+			progress.init(1, I18n.translate("progress.mappings.loading_file"));
 
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 			readFile(path, mappings);
 
-			progress.step(1, I18n.translate("progress.mappings.enigma_file.done"));
+			progress.step(1, I18n.translate("progress.done"));
 
 			return mappings;
 		}
@@ -60,7 +60,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 			List<Path> files = Files.walk(root).filter(f -> !Files.isDirectory(f)).filter(f -> f.toString().endsWith(".mapping")).toList();
 
-			progress.init(files.size(), I18n.translate("progress.mappings.enigma_directory.loading"));
+			progress.init(files.size(), I18n.translate("progress.mappings.loading_directory"));
 			int step = 0;
 
 			for (Path file : files) {
@@ -102,7 +102,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 			throw new IllegalArgumentException("No paths to read mappings from");
 		}
 
-		progress.init(paths.length, I18n.translate("progress.mappings.enigma_directory.loading"));
+		progress.init(paths.length, I18n.translate("progress.mappings.loading_directory"));
 		int step = 0;
 
 		for (Path file : paths) {

@@ -108,7 +108,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 					mappingFormat = MappingFormat.ENIGMA_FILE;
 				}
 
-				mappings = EntryRemapper.mapped(project.getJarIndex(), mappingFormat.read(mappingsFile, ProgressListener.none(), profile.getMappingSaveParameters()));
+				mappings = EntryRemapper.mapped(project.getJarIndex(), mappingFormat.read(mappingsFile, ProgressListener.none(), profile.getMappingSaveParameters(), project.getJarIndex()));
 			}
 
 			PrintWriter log = new PrintWriter(Files.newBufferedWriter(logFile));

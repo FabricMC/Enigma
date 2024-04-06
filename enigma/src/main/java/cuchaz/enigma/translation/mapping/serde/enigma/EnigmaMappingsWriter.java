@@ -58,7 +58,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
 			Collection<ClassEntry> classes = mappings.getRootNodes().filter(entry -> entry.getEntry() instanceof ClassEntry).map(entry -> (ClassEntry) entry.getEntry()).toList();
 
-			progress.init(classes.size(), I18n.translate("progress.mappings.enigma_file.writing"));
+			progress.init(classes.size(), I18n.translate("progress.mappings.writing"));
 
 			int steps = 0;
 
@@ -78,11 +78,9 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 			Collection<ClassEntry> changedClasses = delta.getChangedRoots().filter(entry -> entry instanceof ClassEntry).map(entry -> (ClassEntry) entry).toList();
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
-
 			changedClasses = changedClasses.stream().filter(entry -> !isClassEmpty(mappings, entry)).collect(Collectors.toList());
 
-			progress.init(changedClasses.size(), I18n.translate("progress.mappings.enigma_directory.writing"));
-
+			progress.init(changedClasses.size(), I18n.translate("progress.mappings.writing"));
 			AtomicInteger steps = new AtomicInteger();
 
 			Translator translator = new MappingTranslator(mappings, VoidEntryResolver.INSTANCE);

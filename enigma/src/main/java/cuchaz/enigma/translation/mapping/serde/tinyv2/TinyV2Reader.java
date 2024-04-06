@@ -46,7 +46,7 @@ public final class TinyV2Reader implements MappingsReader {
 	private EntryTree<EntryMapping> read(Path path, List<String> lines, ProgressListener progress) throws MappingParseException {
 		EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 
-		progress.init(lines.size(), "progress.mappings.tiny_v2.loading");
+		progress.init(lines.size(), "progress.mappings.loading_file");
 
 		BitSet state = new BitSet(STATE_SIZE);
 		@SuppressWarnings({"unchecked", "rawtypes"}) MappingPair<? extends Entry<?>, RawEntryMapping>[] holds = new MappingPair[STATE_SIZE];
