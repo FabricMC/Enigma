@@ -1,6 +1,5 @@
 package cuchaz.enigma.source.jadx;
 
-import java.util.List;
 import java.util.function.Function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -133,7 +132,7 @@ public class JadxSource implements Source {
 				index.addReference(token, methodEntryOf(mth), classEntryOf(mth.getParentClass()));
 			}
 		} else if (ann instanceof VarNode var) {
-			if (!getMethodArgs(var.getMth(), codeInfo).contains(var)) return;
+			if (!var.getMth().collectArgsWithoutLoading().contains(var)) return;
 			Token token = new Token(pos, pos + var.getName().length(), var.getName());
 
 			if (pos == var.getDefPosition()) {
@@ -160,9 +159,5 @@ public class JadxSource implements Source {
 
 	private LocalVariableEntry paramEntryOf(VarNode param, ICodeInfo codeInfo) {
 		return jadxHelper.paramEntryOf(param, codeInfo);
-	}
-
-	private List<VarNode> getMethodArgs(MethodNode mth, ICodeInfo codeInfo) {
-		return jadxHelper.getMethodArgs(mth, codeInfo);
 	}
 }
