@@ -1,17 +1,19 @@
 package cuchaz.enigma.command;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.tree.VisitableMappingTree;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
+import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
-import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsReader;
-import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsWriter;
-import cuchaz.enigma.translation.mapping.serde.tiny.TinyMappingsReader;
 import cuchaz.enigma.translation.mapping.serde.tiny.TinyMappingsWriter;
 import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Writer;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
@@ -22,11 +24,11 @@ public final class MappingCommandsUtil {
 
 	public static EntryTree<EntryMapping> read(String type, Path path, MappingSaveParameters saveParameters) throws MappingParseException, IOException {
 		if (type.equals("enigma")) {
-			return (Files.isDirectory(path) ? EnigmaMappingsReader.DIRECTORY : EnigmaMappingsReader.ZIP).read(path, ProgressListener.none(), saveParameters);
+			return (Files.isDirectory(path) ? MappingFormat.ENIGMA_DIRECTORY : MappingFormat.ENIGMA_ZIP).read(path, ProgressListener.none(), saveParameters, null);
 		}
 
 		if (type.equals("tiny")) {
-			return TinyMappingsReader.INSTANCE.read(path, ProgressListener.none(), saveParameters);
+			return MappingFormat.TINY_FILE.read(path, ProgressListener.none(), saveParameters, null);
 		}
 
 		MappingFormat format = null;
@@ -40,7 +42,7 @@ public final class MappingCommandsUtil {
 		}
 
 		if (format != null) {
-			return format.getReader().read(path, ProgressListener.none(), saveParameters);
+			return format.read(path, ProgressListener.none(), saveParameters, null);
 		}
 
 		throw new IllegalArgumentException("no reader for " + type);
@@ -48,7 +50,7 @@ public final class MappingCommandsUtil {
 
 	public static void write(EntryTree<EntryMapping> mappings, String type, Path path, MappingSaveParameters saveParameters) {
 		if (type.equals("enigma")) {
-			EnigmaMappingsWriter.DIRECTORY.write(mappings, path, ProgressListener.none(), saveParameters);
+			MappingFormat.ENIGMA_DIRECTORY.write(mappings, path, ProgressListener.none(), saveParameters);
 			return;
 		}
 
@@ -59,7 +61,18 @@ public final class MappingCommandsUtil {
 				throw new IllegalArgumentException("specify column names as 'tinyv2:from_namespace:to_namespace'");
 			}
 
-			new TinyV2Writer(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
+			if (!System.getProperty("enigma.use_mappingio", "true").equals("true")) {
+				new TinyV2Writer(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
+				return;
+			}
+
+			try {
+				VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, ProgressListener.none(), split[1], split[2]);
+				tree.accept(MappingWriter.create(path, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE));
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+
 			return;
 		}
 
@@ -70,7 +83,18 @@ public final class MappingCommandsUtil {
 				throw new IllegalArgumentException("specify column names as 'tiny:from_column:to_column'");
 			}
 
-			new TinyMappingsWriter(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
+			if (!System.getProperty("enigma.use_mappingio", "true").equals("true")) {
+				new TinyMappingsWriter(split[1], split[2]).write(mappings, path, ProgressListener.none(), saveParameters);
+				return;
+			}
+
+			try {
+				VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, ProgressListener.none(), split[1], split[2]);
+				tree.accept(MappingWriter.create(path, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE));
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+
 			return;
 		}
 
@@ -83,7 +107,7 @@ public final class MappingCommandsUtil {
 		}
 
 		if (format != null) {
-			format.getWriter().write(mappings, path, ProgressListener.none(), saveParameters);
+			format.write(mappings, path, ProgressListener.none(), saveParameters);
 			return;
 		}
 

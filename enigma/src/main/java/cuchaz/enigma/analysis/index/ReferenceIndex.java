@@ -65,6 +65,11 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	@Override
+	public void indexClassReference(MethodDefEntry callerEntry, ClassEntry referencedEntry, ReferenceTargetType targetType) {
+		referencesToClasses.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
+	}
+
+	@Override
 	public void indexMethodReference(MethodDefEntry callerEntry, MethodEntry referencedEntry, ReferenceTargetType targetType) {
 		referencesToMethods.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
 		methodReferences.put(callerEntry, referencedEntry);

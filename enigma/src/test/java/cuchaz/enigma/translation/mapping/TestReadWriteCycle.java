@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import cuchaz.enigma.ProgressListener;
@@ -62,7 +63,7 @@ public class TestReadWriteCycle {
 		mappingFormat.write(testMappings, tempFile.toPath(), ProgressListener.none(), parameters);
 		Assert.assertTrue("Written file not created", tempFile.exists());
 
-		EntryTree<EntryMapping> loadedMappings = mappingFormat.read(tempFile.toPath(), ProgressListener.none(), parameters);
+		EntryTree<EntryMapping> loadedMappings = mappingFormat.read(tempFile.toPath(), ProgressListener.none(), parameters, null);
 
 		Assert.assertTrue("Loaded mappings don't contain testClazz", loadedMappings.contains(testClazz.a));
 		Assert.assertTrue("Loaded mappings don't contain testField1", loadedMappings.contains(testField1.a));
@@ -85,6 +86,11 @@ public class TestReadWriteCycle {
 		}
 
 		tempFile.delete();
+	}
+
+	@BeforeClass
+	public static void setup() {
+		System.getProperties().setProperty("enigma.use_mappingio", "false");
 	}
 
 	@Test

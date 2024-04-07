@@ -34,6 +34,7 @@ import cuchaz.enigma.gui.dialog.CreateServerDialog;
 import cuchaz.enigma.gui.dialog.FontDialog;
 import cuchaz.enigma.gui.dialog.SearchDialog;
 import cuchaz.enigma.gui.dialog.StatsDialog;
+import cuchaz.enigma.gui.util.ExtensionFileFilter;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.LanguageUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
@@ -45,7 +46,7 @@ public class MenuBar {
 	private final JMenu fileMenu = new JMenu();
 	private final JMenuItem jarOpenItem = new JMenuItem();
 	private final JMenuItem jarCloseItem = new JMenuItem();
-	private final JMenu openMenu = new JMenu();
+	private final JMenu openMappingsMenu = new JMenu();
 	private final JMenuItem saveMappingsItem = new JMenuItem();
 	private final JMenu saveMappingsAsMenu = new JMenu();
 	private final JMenuItem closeMappingsItem = new JMenuItem();
@@ -88,7 +89,7 @@ public class MenuBar {
 
 		this.retranslateUi();
 
-		prepareOpenMenu(this.openMenu, gui);
+		prepareOpenMappingsMenu(this.openMappingsMenu, gui);
 		prepareSaveMappingsAsMenu(this.saveMappingsAsMenu, this.saveMappingsItem, gui);
 		prepareDecompilerMenu(this.decompilerMenu, gui);
 		prepareThemesMenu(this.themesMenu, gui);
@@ -98,7 +99,7 @@ public class MenuBar {
 		this.fileMenu.add(this.jarOpenItem);
 		this.fileMenu.add(this.jarCloseItem);
 		this.fileMenu.addSeparator();
-		this.fileMenu.add(this.openMenu);
+		this.fileMenu.add(this.openMappingsMenu);
 		this.fileMenu.add(this.saveMappingsItem);
 		this.fileMenu.add(this.saveMappingsAsMenu);
 		this.fileMenu.add(this.closeMappingsItem);
@@ -138,7 +139,9 @@ public class MenuBar {
 		ui.add(this.helpMenu);
 
 		this.saveMappingsItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-		this.searchClassItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.SHIFT_DOWN_MASK));
+		this.searchClassItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, InputEvent.CTRL_DOWN_MASK));
+		this.searchMethodItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, InputEvent.CTRL_DOWN_MASK));
+		this.searchFieldItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_3, InputEvent.CTRL_DOWN_MASK));
 
 		this.jarOpenItem.addActionListener(_e -> this.onOpenJarClicked());
 		this.jarCloseItem.addActionListener(_e -> this.gui.getController().closeJar());
@@ -172,8 +175,8 @@ public class MenuBar {
 		this.startServerItem.setText(I18n.translate(connectionState != ConnectionState.HOSTING ? "menu.collab.server.start" : "menu.collab.server.stop"));
 
 		this.jarCloseItem.setEnabled(jarOpen);
-		this.openMenu.setEnabled(jarOpen);
-		this.saveMappingsItem.setEnabled(jarOpen && this.gui.enigmaMappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
+		this.openMappingsMenu.setEnabled(jarOpen);
+		this.saveMappingsItem.setEnabled(jarOpen && this.gui.mappingsFileChooser.getSelectedFile() != null && connectionState != ConnectionState.CONNECTED);
 		this.saveMappingsAsMenu.setEnabled(jarOpen);
 		this.closeMappingsItem.setEnabled(jarOpen);
 		this.reloadMappingsItem.setEnabled(jarOpen);
@@ -187,7 +190,7 @@ public class MenuBar {
 		this.fileMenu.setText(I18n.translate("menu.file"));
 		this.jarOpenItem.setText(I18n.translate("menu.file.jar.open"));
 		this.jarCloseItem.setText(I18n.translate("menu.file.jar.close"));
-		this.openMenu.setText(I18n.translate("menu.file.mappings.open"));
+		this.openMappingsMenu.setText(I18n.translate("menu.file.mappings.open"));
 		this.saveMappingsItem.setText(I18n.translate("menu.file.mappings.save"));
 		this.saveMappingsAsMenu.setText(I18n.translate("menu.file.mappings.save_as"));
 		this.closeMappingsItem.setText(I18n.translate("menu.file.mappings.close"));
@@ -248,7 +251,7 @@ public class MenuBar {
 	}
 
 	private void onSaveMappingsClicked() {
-		this.gui.getController().saveMappings(this.gui.enigmaMappingsFileChooser.getSelectedFile().toPath());
+		this.gui.getController().saveMappings(this.gui.mappingsFileChooser.getSelectedFile().toPath());
 	}
 
 	private void openMappingsDiscardPrompt(Runnable then) {
@@ -400,43 +403,73 @@ public class MenuBar {
 		GuiUtil.openUrl("https://github.com/FabricMC/Enigma");
 	}
 
-	private static void prepareOpenMenu(JMenu openMenu, Gui gui) {
+	private static void prepareOpenMappingsMenu(JMenu openMappingsMenu, Gui gui) {
+		// Mapping-IO readers
+		MappingFormat.getReadableFormats().stream()
+				.filter(format -> format.getMappingIoCounterpart() != null)
+				.forEach(format -> addOpenMappingsMenuEntry(I18n.translate(format.getMappingIoCounterpart().name),
+					format, true, openMappingsMenu, gui));
+		openMappingsMenu.addSeparator();
+
+		// Enigma's own readers
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getReader() != null) {
-				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
-				item.addActionListener(event -> {
-					gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
-
-					if (gui.enigmaMappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						File selectedFile = gui.enigmaMappingsFileChooser.getSelectedFile();
-						gui.getController().openMappings(format, selectedFile.toPath());
-						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
-					}
-				});
-				openMenu.add(item);
+				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+						format, false, openMappingsMenu, gui);
 			}
 		}
 	}
 
+	private static void addOpenMappingsMenuEntry(String text, MappingFormat format, boolean mappingIo, JMenu openMappingsMenu, Gui gui) {
+		JMenuItem item = new JMenuItem(text);
+		item.addActionListener(event -> {
+			ExtensionFileFilter.setupFileChooser(gui.mappingsFileChooser, format);
+			gui.mappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+
+			if (gui.mappingsFileChooser.showOpenDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+				File selectedFile = gui.mappingsFileChooser.getSelectedFile();
+				gui.getController().openMappings(format, selectedFile.toPath(), mappingIo);
+				UiConfig.setLastSelectedDir(gui.mappingsFileChooser.getCurrentDirectory().toString());
+			}
+		});
+		openMappingsMenu.add(item);
+	}
+
 	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
+		// Mapping-IO writers
+		MappingFormat.getWritableFormats().stream()
+				.filter(format -> format.hasMappingIoWriter())
+				.forEach(format -> addSaveMappingsAsMenuEntry(format.getMappingIoCounterpart().name,
+							format, true, saveMappingsAsMenu, saveMappingsItem, gui));
+		saveMappingsAsMenu.addSeparator();
+
+		// Enigma's own writers
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getWriter() != null) {
-				JMenuItem item = new JMenuItem(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)));
-				item.addActionListener(event -> {
-					// TODO: Use a specific file chooser for it
-					if (gui.enigmaMappingsFileChooser.getCurrentDirectory() == null) {
-						gui.enigmaMappingsFileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
-					}
-
-					if (gui.enigmaMappingsFileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
-						gui.getController().saveMappings(gui.enigmaMappingsFileChooser.getSelectedFile().toPath(), format);
-						saveMappingsItem.setEnabled(true);
-						UiConfig.setLastSelectedDir(gui.enigmaMappingsFileChooser.getCurrentDirectory().toString());
-					}
-				});
-				saveMappingsAsMenu.add(item);
+				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+						format, false, saveMappingsAsMenu, saveMappingsItem, gui);
 			}
 		}
+	}
+
+	private static void addSaveMappingsAsMenuEntry(String text, MappingFormat format, boolean mappingIo, JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
+		JMenuItem item = new JMenuItem(text);
+		item.addActionListener(event -> {
+			JFileChooser fileChooser = gui.mappingsFileChooser;
+			ExtensionFileFilter.setupFileChooser(fileChooser, format);
+
+			if (fileChooser.getCurrentDirectory() == null) {
+				fileChooser.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
+			}
+
+			if (fileChooser.showSaveDialog(gui.getFrame()) == JFileChooser.APPROVE_OPTION) {
+				Path savePath = ExtensionFileFilter.getSavePath(fileChooser);
+				gui.getController().saveMappings(savePath, format, mappingIo);
+				saveMappingsItem.setEnabled(true);
+				UiConfig.setLastSelectedDir(fileChooser.getCurrentDirectory().toString());
+			}
+		});
+		saveMappingsAsMenu.add(item);
 	}
 
 	private static void prepareDecompilerMenu(JMenu decompilerMenu, Gui gui) {

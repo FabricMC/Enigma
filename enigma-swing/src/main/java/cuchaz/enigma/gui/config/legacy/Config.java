@@ -78,7 +78,7 @@ public class Config {
 
 	public float scaleFactor = 1.0f;
 
-	public Decompiler decompiler = Decompiler.CFR;
+	public Decompiler decompiler = Decompiler.VINEFLOWER;
 
 	public Config() {
 		gson = new GsonBuilder().registerTypeAdapter(Integer.class, new IntSerializer()).registerTypeAdapter(Integer.class, new IntDeserializer()).registerTypeAdapter(Config.class, (InstanceCreator<Config>) type -> this).setPrettyPrinting().create();

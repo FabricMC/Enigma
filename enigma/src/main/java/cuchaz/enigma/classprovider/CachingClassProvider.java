@@ -1,5 +1,6 @@
 package cuchaz.enigma.classprovider;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,11 @@ public class CachingClassProvider implements ClassProvider {
 
 	public CachingClassProvider(ClassProvider classProvider) {
 		this.classProvider = classProvider;
+	}
+
+	@Override
+	public Collection<String> getClassNames() {
+		return classProvider.getClassNames();
 	}
 
 	@Override

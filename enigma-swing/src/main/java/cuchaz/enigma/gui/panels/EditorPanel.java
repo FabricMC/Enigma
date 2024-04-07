@@ -35,6 +35,7 @@ import javax.swing.text.Document;
 import javax.swing.text.Highlighter.HighlightPainter;
 
 import de.sciss.syntaxpane.DefaultSyntaxKit;
+import de.sciss.syntaxpane.SyntaxDocument;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
@@ -111,7 +112,6 @@ public class EditorPanel {
 		this.editor.setEditable(false);
 		this.editor.setSelectionColor(new Color(31, 46, 90));
 		this.editor.setCaret(new BrowserCaret());
-		this.editor.setFont(ScaleUtil.getFont(this.editor.getFont().getFontName(), Font.PLAIN, this.fontSize));
 		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
 		this.editor.setCaretColor(UiConfig.getCaretColor());
 		this.editor.setContentType("text/enigma-sources");
@@ -504,6 +504,11 @@ public class EditorPanel {
 			this.source = source;
 			this.editor.getHighlighter().removeAllHighlights();
 			this.editor.setText(source.toString());
+
+			// We don't care about the undo/redo history of the syntax pane, any change history would be stored separately
+			if (this.editor.getDocument() instanceof SyntaxDocument syntaxDocument) {
+				syntaxDocument.clearUndos();
+			}
 
 			if (this.source != null) {
 				this.editor.setCaretPosition(newCaretPos);

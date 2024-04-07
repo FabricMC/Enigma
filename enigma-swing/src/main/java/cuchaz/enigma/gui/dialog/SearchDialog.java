@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -55,7 +56,9 @@ import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 import cuchaz.enigma.utils.I18n;
 
 public class SearchDialog {
+	private final JPanel inputPanel;
 	private final JTextField searchField;
+	private final JCheckBox onlyExactMatchesCheckbox;
 	private DefaultListModel<SearchEntryImpl> classListModel;
 	private final JList<SearchEntryImpl> classList;
 	private final JDialog dialog;
@@ -69,10 +72,14 @@ public class SearchDialog {
 
 		su = new SearchUtil<>();
 
-		dialog = new JDialog(parent.getFrame(), I18n.translate("menu.search"), true);
+		dialog = new JDialog(parent.getFrame(), true);
 		JPanel contentPane = new JPanel();
 		contentPane.setBorder(ScaleUtil.createEmptyBorder(4, 4, 4, 4));
 		contentPane.setLayout(new BorderLayout(ScaleUtil.scale(4), ScaleUtil.scale(4)));
+
+		inputPanel = new JPanel();
+		inputPanel.setLayout(new BorderLayout(ScaleUtil.scale(4), ScaleUtil.scale(4)));
+		contentPane.add(inputPanel, BorderLayout.NORTH);
 
 		searchField = new JTextField();
 		searchField.getDocument().addDocumentListener(new DocumentListener() {
@@ -108,7 +115,11 @@ public class SearchDialog {
 			}
 		});
 		searchField.addActionListener(e -> openSelected());
-		contentPane.add(searchField, BorderLayout.NORTH);
+		inputPanel.add(searchField, BorderLayout.NORTH);
+
+		onlyExactMatchesCheckbox = new JCheckBox(I18n.translate("menu.search.only_exact_matches"));
+		onlyExactMatchesCheckbox.addActionListener(e -> updateList());
+		inputPanel.add(onlyExactMatchesCheckbox, BorderLayout.SOUTH);
 
 		classListModel = new DefaultListModel<>();
 		classList = new JList<>();
@@ -167,6 +178,7 @@ public class SearchDialog {
 		searchField.requestFocus();
 		searchField.selectAll();
 
+		dialog.setTitle(I18n.translate(type.getTranslationKey()));
 		dialog.setVisible(true);
 	}
 
@@ -238,7 +250,7 @@ public class SearchDialog {
 			}
 		};
 
-		currentSearch = su.asyncSearch(searchField.getText(), (idx, e) -> queue.add(new Order(idx, e)));
+		currentSearch = su.asyncSearch(searchField.getText(), (idx, e) -> queue.add(new Order(idx, e)), onlyExactMatchesCheckbox.isSelected());
 		SwingUtilities.invokeLater(updater);
 	}
 
@@ -328,8 +340,18 @@ public class SearchDialog {
 	}
 
 	public enum Type {
-		CLASS,
-		METHOD,
-		FIELD
+		CLASS("menu.search.class"),
+		METHOD("menu.search.method"),
+		FIELD("menu.search.field");
+
+		private final String translationKey;
+
+		Type(String translationKey) {
+			this.translationKey = translationKey;
+		}
+
+		public String getTranslationKey() {
+			return translationKey;
+		}
 	}
 }

@@ -15,6 +15,7 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +29,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Lists;
+import org.jetbrains.annotations.ApiStatus;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
@@ -97,7 +99,7 @@ public class GuiController implements ClientPacketHandler {
 	private IndexTreeBuilder indexTreeBuilder;
 
 	private Path loadedMappingPath;
-	private MappingFormat loadedMappingFormat;
+	private MappingFormat loadedMappingFormat = MappingFormat.ENIGMA_DIRECTORY;
 
 	private ClassHandleProvider chp;
 
@@ -138,6 +140,12 @@ public class GuiController implements ClientPacketHandler {
 		this.gui.onCloseJar();
 	}
 
+	@ApiStatus.Internal
+	public CompletableFuture<Void> openMappings(MappingFormat format, Path path, boolean useMappingIo) {
+		System.getProperties().setProperty("enigma.use_mappingio", useMappingIo ? "true" : "false");
+		return openMappings(format, path);
+	}
+
 	public CompletableFuture<Void> openMappings(MappingFormat format, Path path) {
 		if (project == null) {
 			return CompletableFuture.completedFuture(null);
@@ -148,9 +156,7 @@ public class GuiController implements ClientPacketHandler {
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			try {
 				MappingSaveParameters saveParameters = enigma.getProfile().getMappingSaveParameters();
-
-				EntryTree<EntryMapping> mappings = format.read(path, progress, saveParameters);
-				project.setMappings(mappings);
+				project.setMappings(format.read(path, progress, saveParameters, project.getJarIndex()));
 
 				loadedMappingFormat = format;
 				loadedMappingPath = path;
@@ -174,8 +180,18 @@ public class GuiController implements ClientPacketHandler {
 		chp.invalidateJavadoc();
 	}
 
+	public MappingFormat getLoadedMappingFormat() {
+		return loadedMappingFormat;
+	}
+
 	public CompletableFuture<Void> saveMappings(Path path) {
 		return saveMappings(path, loadedMappingFormat);
+	}
+
+	@ApiStatus.Internal
+	public CompletableFuture<Void> saveMappings(Path path, MappingFormat format, boolean useMappingIo) {
+		System.getProperties().setProperty("enigma.use_mappingio", useMappingIo ? "true" : "false");
+		return saveMappings(path, format);
 	}
 
 	/**
@@ -556,7 +572,7 @@ public class GuiController implements ClientPacketHandler {
 			try {
 				File statsFile = File.createTempFile("stats", ".html");
 
-				try (FileWriter w = new FileWriter(statsFile)) {
+				try (FileWriter w = new FileWriter(statsFile, StandardCharsets.UTF_8)) {
 					w.write(Utils.readResourceToString("/stats.html").replace("/*data*/", data));
 				}
 

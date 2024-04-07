@@ -45,7 +45,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		List<String> methodLines = new ArrayList<>();
 
 		List<? extends Entry<?>> rootEntries = Lists.newArrayList(mappings).stream().map(EntryTreeNode::getEntry).toList();
-		progress.init(rootEntries.size(), I18n.translate("progress.mappings.srg_file.generating"));
+		progress.init(rootEntries.size(), I18n.translate("progress.mappings.converting"));
 
 		int steps = 0;
 
@@ -54,7 +54,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 			writeEntry(classLines, fieldLines, methodLines, mappings, entry);
 		}
 
-		progress.init(3, I18n.translate("progress.mappings.srg_file.writing"));
+		progress.init(3, I18n.translate("progress.mappings.writing"));
 
 		try (PrintWriter writer = new LfPrintWriter(Files.newBufferedWriter(path))) {
 			progress.step(0, I18n.translate("type.classes"));

@@ -3,13 +3,14 @@ configurations {
 }
 
 dependencies {
-	implementation 'org.ow2.asm:asm:9.4'
-	implementation 'org.ow2.asm:asm-commons:9.4'
-	implementation 'org.ow2.asm:asm-tree:9.4'
-	implementation 'org.ow2.asm:asm-util:9.4'
+	implementation 'org.ow2.asm:asm:9.6'
+	implementation 'org.ow2.asm:asm-commons:9.6'
+	implementation 'org.ow2.asm:asm-tree:9.6'
+	implementation 'org.ow2.asm:asm-util:9.6'
 
 	implementation 'org.bitbucket.mstrobel:procyon-compilertools:0.6.0'
-	implementation 'net.fabricmc:cfr:0.2.1'
+	implementation 'net.fabricmc:cfr:0.2.2'
+	implementation 'org.vineflower:vineflower:1.10.0'
 
 	implementation ('io.github.skylot:jadx-core:1.5.0-20240227.173751-9') {
 		exclude group: 'com.android.tools.build', module: 'aapt2-proto'
@@ -21,7 +22,7 @@ dependencies {
 	}
 	implementation 'io.github.skylot:jadx-input-api:1.5.0-20240227.173751-9' // Pin version (would pull 1.5.0-SNAPSHOT otherwise)
 
-	proGuard 'com.guardsquare:proguard-base:7.3.0'
+	proGuard 'com.guardsquare:proguard-base:7.4.0-beta02'
 
 	testImplementation 'com.google.jimfs:jimfs:1.2'
 }

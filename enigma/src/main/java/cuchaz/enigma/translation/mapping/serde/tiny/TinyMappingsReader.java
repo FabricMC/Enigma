@@ -35,7 +35,7 @@ public enum TinyMappingsReader implements MappingsReader {
 		EntryTree<EntryMapping> mappings = new HashEntryTree<>();
 		lines.remove(0);
 
-		progress.init(lines.size(), I18n.translate("progress.mappings.tiny_file.loading"));
+		progress.init(lines.size(), I18n.translate("progress.mappings.loading_file"));
 
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
 			progress.step(lineNumber, "");

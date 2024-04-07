@@ -49,7 +49,7 @@ public class IdentifierPanel {
 		this.gui = gui;
 
 		this.ui.setLayout(new GridBagLayout());
-		this.ui.setPreferredSize(ScaleUtil.getDimension(0, 120));
+		this.ui.setPreferredSize(ScaleUtil.getDimension(0, 135));
 		this.ui.setBorder(BorderFactory.createTitledBorder(I18n.translate("info_panel.identifier")));
 		this.ui.setEnabled(false);
 	}
@@ -96,15 +96,26 @@ public class IdentifierPanel {
 			this.ui.setEnabled(false);
 		} else {
 			this.ui.setEnabled(true);
+			boolean renamed = gui.getController().project.getMapper().getDeobfMapping(entry).targetName() != null;
 
 			if (deobfEntry instanceof ClassEntry) {
 				ClassEntry ce = (ClassEntry) deobfEntry;
 				String name = ce.isInnerClass() ? ce.getName() : ce.getFullName();
 				this.nameField = th.addRenameTextField(EditableType.CLASS, name);
+
+				if (renamed) {
+					th.addCopiableStringRow(I18n.translate("info_panel.identifier.original_name"), entry.getName());
+				}
+
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), EditableType.CLASS, this::onModifierChanged);
 			} else if (deobfEntry instanceof FieldEntry) {
 				FieldEntry fe = (FieldEntry) deobfEntry;
 				this.nameField = th.addRenameTextField(EditableType.FIELD, fe.getName());
+
+				if (renamed) {
+					th.addCopiableStringRow(I18n.translate("info_panel.identifier.original_name"), entry.getName());
+				}
+
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), fe.getParent().getFullName());
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.type_descriptor"), fe.getDesc().toString());
 				th.addModifierRow(I18n.translate("info_panel.identifier.modifier"), EditableType.FIELD, this::onModifierChanged);
@@ -120,6 +131,13 @@ public class IdentifierPanel {
 					}
 				} else {
 					this.nameField = th.addRenameTextField(EditableType.METHOD, me.getName());
+				}
+
+				if (renamed) {
+					th.addCopiableStringRow(I18n.translate("info_panel.identifier.original_name"), entry.getName());
+				}
+
+				if (!me.isConstructor()) {
 					th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), me.getParent().getFullName());
 				}
 
@@ -136,6 +154,11 @@ public class IdentifierPanel {
 				}
 
 				this.nameField = th.addRenameTextField(type, lve.getName());
+
+				if (renamed) {
+					th.addCopiableStringRow(I18n.translate("info_panel.identifier.original_name"), entry.getName());
+				}
+
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.class"), lve.getContainingClass().getFullName());
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.method"), lve.getParent().getName());
 				th.addCopiableStringRow(I18n.translate("info_panel.identifier.index"), Integer.toString(lve.getIndex()));
@@ -191,12 +214,21 @@ public class IdentifierPanel {
 	}
 
 	private void validateRename(String newName) {
-		gui.getController().validateChange(vc, EntryChange.modify(entry).withDeobfName(newName));
+		gui.getController().validateChange(vc, withDeobfName(newName));
 	}
 
 	private void doRename(String newName) {
-		EntryChange<? extends Entry<?>> change = EntryChange.modify(entry).withDeobfName(newName);
-		gui.getController().applyChange(vc, change);
+		gui.getController().applyChange(vc, withDeobfName(newName));
+	}
+
+	private EntryChange<? extends Entry<?>> withDeobfName(String newName) {
+		Entry<?> entryToRename = entry;
+
+		if (entryToRename instanceof MethodEntry methodEntry && methodEntry.isConstructor()) {
+			entryToRename = methodEntry.getContainingClass();
+		}
+
+		return EntryChange.modify(entryToRename).withDeobfName(newName);
 	}
 
 	public void retranslateUi() {

@@ -105,7 +105,7 @@ public final class UiConfig {
 	}
 
 	public static Decompiler getDecompiler() {
-		return ui.data().section("Decompiler").setIfAbsentEnum(Decompiler::valueOf, "Current", Decompiler.CFR);
+		return ui.data().section("Decompiler").setIfAbsentEnum(Decompiler::valueOf, "Current", Decompiler.VINEFLOWER);
 	}
 
 	public static void setDecompiler(Decompiler d) {
@@ -276,7 +276,7 @@ public final class UiConfig {
 	 * @return the fallback editor font
 	 */
 	public static Font getFallbackEditorFont() {
-		return ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED));
+		return ScaleUtil.scaleFont(Font.decode(Font.MONOSPACED).deriveFont(12f));
 	}
 
 	public static String encodeFont(Font font) {
@@ -331,6 +331,14 @@ public final class UiConfig {
 		ConfigSection section = swing.data().section(window);
 		section.setInt(String.format("X %s", screenSize.width), rect.x);
 		section.setInt(String.format("Y %s", screenSize.height), rect.y);
+	}
+
+	public static boolean isFullscreen(String window) {
+		return swing.data().section(window).setIfAbsentBool("Fullscreen", false);
+	}
+
+	public static void setFullscreen(String window, boolean fullscreen) {
+		swing.data().section(window).setBool("Fullscreen", fullscreen);
 	}
 
 	public static String getLastSelectedDir() {
