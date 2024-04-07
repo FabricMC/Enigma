@@ -38,10 +38,10 @@ public class JadxSource implements Source {
 
 	/*
 	 * JADX uses the system default line ending, but JEditorPane does not (seems to be hardcoded to \n).
-	 * This causes tokens to be offset by one char per preceding line, since Windows' \r\n is one char longer than plain \r or \n.
-	 * Unfortunately, the only way of making JADX use a different value is by changing the corresponding system property,
-	 * which we can't leave changed as it may cause issues elsewhere in the program.
-	 * Thus, we force a ICodeWriter class load here so the NL constant gets initialized to \n.
+	 * This causes tokens to be offset by one char per preceding line, since Windows' \r\n is one char longer than plain \n.
+	 * Unfortunately, the only way of making JADX use a different value is by adjusting the corresponding system property,
+	 * which we can't leave in a modified as it may cause issues elsewhere in the program.
+	 * Thus, we force-load the NL constant now to initialize it to \n and immediately reset the system property again.
 	 * TODO: Remove once https://github.com/skylot/jadx/issues/1948 is addressed.
 	 */
 	static {
