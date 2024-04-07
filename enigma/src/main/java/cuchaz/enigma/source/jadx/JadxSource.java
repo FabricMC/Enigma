@@ -5,6 +5,7 @@ import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.objectweb.asm.tree.ClassNode;
 import jadx.api.ICodeInfo;
+import jadx.api.ICodeWriter;
 import jadx.api.JadxArgs;
 import jadx.api.JadxDecompiler;
 import jadx.api.JavaClass;
@@ -34,6 +35,26 @@ public class JadxSource implements Source {
 	private final EntryRemapper mapper;
 	private final JadxHelper jadxHelper;
 	private SourceIndex index;
+
+	/*
+	 * JADX uses the system default line ending, but JEditorPane does not (seems to be hardcoded to \n).
+	 * This causes tokens to be offset by one char per preceding line, since Windows' \r\n is one char longer than plain \r or \n.
+	 * Unfortunately, the only way of making JADX use a different value is by changing the corresponding system property,
+	 * which we can't leave changed as it may cause issues elsewhere in the program.
+	 * Thus, we force a ICodeWriter class load here so the NL constant gets initialized to \n.
+	 * TODO: Remove once https://github.com/skylot/jadx/issues/1948 is addressed.
+	 */
+	static {
+		String propertyKey = "line.separator";
+		String oldLineSeparator = System.getProperty(propertyKey);
+		System.setProperty(propertyKey, "\n");
+
+		if (!ICodeWriter.NL.equals("\n")) {
+			throw new AssertionError("NL constant not initialized to \\n");
+		}
+
+		System.getProperties().setProperty(propertyKey, oldLineSeparator);
+	}
 
 	public JadxSource(SourceSettings settings, Function<EntryRemapper, JadxArgs> jadxArgsFactory, ClassNode classNode, @Nullable EntryRemapper mapper, JadxHelper jadxHelper) {
 		this.settings = settings;
@@ -70,33 +91,16 @@ public class JadxSource implements Source {
 			jadx.load();
 			JavaClass cls = jadx.getClasses().get(0);
 
-			runWithFixedLineSeparator(() -> {
-				index = new SourceIndex(cls.getCode());
-			});
+			// Cache decompilation result to prevent https://github.com/skylot/jadx/issues/2141
+			ICodeInfo codeInfo = cls.getCodeInfo();
+			index = new SourceIndex(codeInfo.getCodeStr());
 
 			// Tokens
-			cls.getCodeInfo().getCodeMetadata().searchDown(0, (pos, ann) -> {
+			codeInfo.getCodeMetadata().searchDown(0, (pos, ann) -> {
 				processAnnotatedElement(pos, ann, cls.getCodeInfo());
 				return null;
 			});
 		}
-	}
-
-	/**
-	 * JADX uses the system default line ending, but JEditorPane does not (seems to be hardcoded to \n).
-	 * This causes tokens to be offset by one char per preceding line, since Windows' \r\n is one char longer than plain \r or \n.
-	 * Unfortunately, the only way of making JADX use a different value is by changing the system property, which may cause issues
-	 * elsewhere in the program. That's why we immediately reset it to the default after the runnable has been executed.
-	 * TODO: Remove once https://github.com/skylot/jadx/issues/1948 is addressed.
-	 */
-	private void runWithFixedLineSeparator(Runnable runnable) {
-		String propertyKey = "line.separator";
-		String oldLineSeparator = System.getProperty(propertyKey);
-		System.setProperty(propertyKey, "\n");
-
-		runnable.run();
-
-		System.getProperties().setProperty(propertyKey, oldLineSeparator);
 	}
 
 	private void processAnnotatedElement(int pos, ICodeAnnotation ann, ICodeInfo codeInfo) {
