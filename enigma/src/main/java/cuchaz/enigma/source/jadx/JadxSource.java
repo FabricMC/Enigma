@@ -1,28 +1,18 @@
 package cuchaz.enigma.source.jadx;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.objectweb.asm.tree.ClassNode;
-import com.google.common.base.Strings;
 import jadx.api.ICodeInfo;
 import jadx.api.JadxArgs;
 import jadx.api.JadxDecompiler;
 import jadx.api.JavaClass;
-import jadx.api.JavaField;
-import jadx.api.JavaMethod;
-import jadx.api.impl.InMemoryCodeCache;
 import jadx.api.metadata.ICodeAnnotation;
 import jadx.api.metadata.annotations.NodeDeclareRef;
 import jadx.api.metadata.annotations.VarNode;
 import jadx.api.metadata.annotations.VarRef;
-import jadx.api.utils.CodeUtils;
-import jadx.core.codegen.TypeGen;
-import jadx.core.dex.info.MethodInfo;
 import jadx.core.dex.nodes.FieldNode;
 import jadx.core.dex.nodes.MethodNode;
 import jadx.plugins.input.java.JavaInputPlugin;
@@ -32,8 +22,6 @@ import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.SourceSettings;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
-import cuchaz.enigma.translation.representation.MethodDescriptor;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
@@ -42,21 +30,23 @@ import cuchaz.enigma.utils.AsmUtil;
 
 public class JadxSource implements Source {
 	private final SourceSettings settings;
-	private final Supplier<JadxArgs> jadxArgsSupplier;
+	private final Function<EntryRemapper, JadxArgs> jadxArgsFactory;
 	private final ClassNode classNode;
 	private final EntryRemapper mapper;
+	private final JadxHelper jadxHelper;
 	private SourceIndex index;
 
-	public JadxSource(SourceSettings settings, Supplier<JadxArgs> jadxArgsSupplier, ClassNode classNode, @Nullable EntryRemapper mapper) {
+	public JadxSource(SourceSettings settings, Function<EntryRemapper, JadxArgs> jadxArgsFactory, ClassNode classNode, @Nullable EntryRemapper mapper, JadxHelper jadxHelper) {
 		this.settings = settings;
-		this.jadxArgsSupplier = jadxArgsSupplier;
+		this.jadxArgsFactory = jadxArgsFactory;
 		this.classNode = classNode;
 		this.mapper = mapper;
+		this.jadxHelper = jadxHelper;
 	}
 
 	@Override
 	public Source withJavadocs(EntryRemapper mapper) {
-		return new JadxSource(settings, jadxArgsSupplier, classNode, mapper);
+		return new JadxSource(settings, jadxArgsFactory, classNode, mapper, jadxHelper);
 	}
 
 	@Override
@@ -76,54 +66,13 @@ public class JadxSource implements Source {
 			return;
 		}
 
-		try (JadxDecompiler jadx = new JadxDecompiler(jadxArgsSupplier.get())) {
+		try (JadxDecompiler jadx = new JadxDecompiler(jadxArgsFactory.apply(mapper))) {
 			jadx.addCustomCodeLoader(JavaInputPlugin.loadSingleClass(AsmUtil.nodeToBytes(classNode), classNode.name));
 			jadx.load();
 			JavaClass cls = jadx.getClasses().get(0);
 
 			runWithFixedLineSeparator(() -> {
-				try {
-					// Javadocs
-					// TODO: Make this less hacky
-					if (mapper != null) {
-						int reload = 0;
-						String comment;
-
-						for (JavaField fld : cls.getFields()) {
-							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(fieldEntryOf(fld.getFieldNode())).javadoc())) != null) {
-								fld.getFieldNode().addCodeComment(comment);
-								reload = 1;
-							}
-						}
-
-						for (JavaMethod mth : cls.getMethods()) {
-							if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(methodEntryOf(mth.getMethodNode())).javadoc())) != null) {
-								mth.getMethodNode().addCodeComment(comment);
-								reload = 1;
-							}
-						}
-
-						if (reload == 1) {
-							jadx.getArgs().getCodeCache().close();
-							jadx.getArgs().setCodeCache(new InMemoryCodeCache());
-							reload = 2;
-						}
-
-						if ((comment = Strings.emptyToNull(mapper.getDeobfMapping(classEntryOf(cls.getClassNode())).javadoc())) != null) {
-							cls.getClassNode().addCodeComment(comment);
-							if (reload != 2) reload = 1;
-						}
-
-						if (reload == 1) {
-							jadx.getArgs().getCodeCache().close();
-							jadx.getArgs().setCodeCache(new InMemoryCodeCache());
-						}
-					}
-
-					index = new SourceIndex(cls.getCode());
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
+				index = new SourceIndex(cls.getCode());
 			});
 
 			// Tokens
@@ -131,8 +80,6 @@ public class JadxSource implements Source {
 				processAnnotatedElement(pos, ann, cls.getCodeInfo());
 				return null;
 			});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
 		}
 	}
 
@@ -199,67 +146,23 @@ public class JadxSource implements Source {
 		}
 	}
 
-	private Map<jadx.core.dex.nodes.ClassNode, String> internalNames = new HashMap<>();
-	private Map<jadx.core.dex.nodes.ClassNode, ClassEntry> classMap = new HashMap<>();
-	private Map<FieldNode, FieldEntry> fieldMap = new HashMap<>();
-	private Map<MethodNode, MethodEntry> methodMap = new HashMap<>();
-	private Map<VarNode, LocalVariableEntry> varMap = new HashMap<>();
-	private Map<MethodNode, List<VarNode>> argMap = new HashMap<>();
-
-	private String internalNameOf(jadx.core.dex.nodes.ClassNode cls) {
-		return internalNames.computeIfAbsent(cls, (unused) -> cls.getClassInfo().makeRawFullName().replace('.', '/'));
-	}
-
 	private ClassEntry classEntryOf(jadx.core.dex.nodes.ClassNode cls) {
-		if (cls == null) return null;
-		return classMap.computeIfAbsent(cls, (unused) -> new ClassEntry(internalNameOf(cls)));
+		return jadxHelper.classEntryOf(cls);
 	}
 
 	private FieldEntry fieldEntryOf(FieldNode fld) {
-		return fieldMap.computeIfAbsent(fld, (unused) ->
-				new FieldEntry(classEntryOf(fld.getParentClass()), fld.getName(), new TypeDescriptor(TypeGen.signature(fld.getType()))));
+		return jadxHelper.fieldEntryOf(fld);
 	}
 
 	private MethodEntry methodEntryOf(MethodNode mth) {
-		return methodMap.computeIfAbsent(mth, (unused) -> {
-			MethodInfo mthInfo = mth.getMethodInfo();
-			MethodDescriptor desc = new MethodDescriptor(mthInfo.getShortId().substring(mthInfo.getName().length()));
-			return new MethodEntry(classEntryOf(mth.getParentClass()), mthInfo.getName(), desc);
-		});
+		return jadxHelper.methodEntryOf(mth);
 	}
 
 	private LocalVariableEntry paramEntryOf(VarNode param, ICodeInfo codeInfo) {
-		return varMap.computeIfAbsent(param, (unused) -> {
-			MethodEntry owner = methodEntryOf(param.getMth());
-			int index = getMethodArgs(param.getMth(), codeInfo).indexOf(param);
-			return new LocalVariableEntry(owner, index, param.getName(), true, null);
-		});
+		return jadxHelper.paramEntryOf(param, codeInfo);
 	}
 
 	private List<VarNode> getMethodArgs(MethodNode mth, ICodeInfo codeInfo) {
-		return argMap.computeIfAbsent(mth, (unused) -> {
-			int mthDefPos = mth.getDefPosition();
-			int lineEndPos = CodeUtils.getLineEndForPos(codeInfo.getCodeStr(), mthDefPos);
-			List<VarNode> args = new ArrayList<>();
-			codeInfo.getCodeMetadata().searchDown(mthDefPos, (pos, ann) -> {
-				if (pos > lineEndPos) {
-					// Stop at line end
-					return Boolean.TRUE;
-				}
-
-				if (ann instanceof NodeDeclareRef ref && ref.getNode() instanceof VarNode varNode) {
-					if (!varNode.getMth().equals(mth)) {
-						// Stop if we've gone too far and have entered a different method
-						return Boolean.TRUE;
-					}
-
-					args.add(varNode);
-				}
-
-				return null;
-			});
-
-			return args;
-		});
+		return jadxHelper.getMethodArgs(mth, codeInfo);
 	}
 }
