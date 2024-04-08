@@ -126,10 +126,10 @@ public enum MappingFormat {
 	}
 
 	/**
+	 * @return Enigma's native writer for the format, or {@code null} if none exists.
+	 *
 	 * @deprecated Use {@link #isWritable()} and {@link #write(EntryTree, Path, ProgressListener, MappingSaveParameters)} instead,
 	 * which take the new Mapping-IO equivalents (and eventual replacements) into account.
-	 * 
-	 * @return Enigma's native writer for the format, or {@code null} if none exists.
 	 */
 	@Nullable
 	@Deprecated
@@ -138,10 +138,10 @@ public enum MappingFormat {
 	}
 
 	/**
+	 * @return Enigma's native reader for the format, or {@code null} if none exists.
+	 *
 	 * @deprecated Use {@link #isReadable()} and {@link #read(Path, ProgressListener, MappingSaveParameters, JarIndex)} instead,
 	 * which take the new Mapping-IO equivalents (and eventual replacements) into account.
-	 * 
-	 * @return Enigma's native reader for the format, or {@code null} if none exists.
 	 */
 	@Nullable
 	@Deprecated
