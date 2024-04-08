@@ -12,15 +12,15 @@ dependencies {
 	implementation 'net.fabricmc:cfr:0.2.2'
 	implementation 'org.vineflower:vineflower:1.10.0'
 
-	implementation ('io.github.skylot:jadx-core:1.5.0-20240227.173751-9') {
+	implementation ('io.github.skylot:jadx-core:1.5.0-20240408.212728-12') {
 		exclude group: 'com.android.tools.build', module: 'aapt2-proto'
 		exclude group: 'com.google.protobuf', module: 'protobuf-java'
 	}
-	implementation ('io.github.skylot:jadx-java-input:1.5.0-20240227.173751-9') {
+	implementation ('io.github.skylot:jadx-java-input:1.5.0-20240408.212728-12') {
 		exclude group: 'com.android.tools.build', module: 'aapt2-proto'
 		exclude group: 'io.github.skylot', module: 'raung-disasm'
 	}
-	implementation 'io.github.skylot:jadx-input-api:1.5.0-20240227.173751-9' // Pin version (would pull 1.5.0-SNAPSHOT otherwise)
+	implementation 'io.github.skylot:jadx-input-api:1.5.0-20240408.212728-12' // Pin version (would pull 1.5.0-SNAPSHOT otherwise)
 
 	proGuard 'com.guardsquare:proguard-base:7.4.0-beta02'
 

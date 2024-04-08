@@ -2,12 +2,14 @@ package cuchaz.enigma.source.jadx;
 
 import java.util.Collection;
 
+import jadx.api.data.CommentStyle;
 import jadx.api.plugins.JadxPlugin;
 import jadx.api.plugins.JadxPluginContext;
 import jadx.api.plugins.JadxPluginInfo;
 import jadx.api.plugins.pass.JadxPassInfo;
 import jadx.api.plugins.pass.impl.OrderedJadxPassInfo;
 import jadx.api.plugins.pass.types.JadxPreparePass;
+import jadx.core.dex.attributes.nodes.NotificationAttrNode;
 import jadx.core.dex.nodes.ClassNode;
 import jadx.core.dex.nodes.FieldNode;
 import jadx.core.dex.nodes.MethodNode;
@@ -68,7 +70,7 @@ public class JadxJavadocProvider implements JadxPlugin {
 
 			if (mapping.javadoc() != null && !mapping.javadoc().isBlank()) {
 				// TODO: Once JADX supports records, add @param tags for components
-				cls.addCodeComment(mapping.javadoc().trim());
+				attachJavadoc(cls, mapping.javadoc());
 			}
 
 			for (FieldNode field : cls.getFields()) {
@@ -84,7 +86,7 @@ public class JadxJavadocProvider implements JadxPlugin {
 			EntryMapping mapping = mapper.getDeobfMapping(jadxHelper.fieldEntryOf(field));
 
 			if (mapping.javadoc() != null && !mapping.javadoc().isBlank()) {
-				field.addCodeComment(mapping.javadoc().trim());
+				attachJavadoc(field, mapping.javadoc());
 			}
 		}
 
@@ -119,11 +121,15 @@ public class JadxJavadocProvider implements JadxPlugin {
 				}
 			}
 
-			javadoc = builder.toString().trim();
+			javadoc = builder.toString();
 
 			if (!javadoc.isBlank()) {
-				method.addCodeComment(javadoc);
+				attachJavadoc(method, javadoc);
 			}
+		}
+
+		private void attachJavadoc(NotificationAttrNode target, String javadoc) {
+			target.addCodeComment(javadoc.trim(), CommentStyle.JAVADOC);
 		}
 	}
 }

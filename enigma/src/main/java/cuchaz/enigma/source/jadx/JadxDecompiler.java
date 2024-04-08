@@ -34,6 +34,8 @@ public class JadxDecompiler implements Decompiler {
 		args.setInlineMethods(false);
 		args.setRespectBytecodeAccModifiers(true);
 		args.setRenameValid(false);
+		args.setCodeIndentStr("\t");
+		args.setCodeNewLineStr("\n"); // JEditorPane is hardcoded to \n
 		args.mapper = mapper;
 		args.jadxHelper = jadxHelper;
 
