@@ -19,6 +19,7 @@ import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
+import cuchaz.enigma.translation.mapping.MappingOperations;
 import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsReader;
 import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsWriter;
 import cuchaz.enigma.translation.mapping.serde.proguard.ProguardMappingsReader;
@@ -77,6 +78,10 @@ public enum MappingFormat {
 		}
 
 		try {
+			if (this == PROGUARD) {
+				mappings = MappingOperations.invert(mappings);
+			}
+
 			VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, progressListener);
 			progressListener.init(1, I18n.translate("progress.mappings.writing"));
 			progressListener.step(1, null); // Reset message
@@ -115,15 +120,31 @@ public enum MappingFormat {
 
 		VisitableMappingTree mappingTree = new MemoryMappingTree();
 		MappingReader.read(path, mappingIoCounterpart, mappingTree);
-		return MappingIoConverter.fromMappingIo(mappingTree, progressListener, index);
+		EntryTree<EntryMapping> mappings = MappingIoConverter.fromMappingIo(mappingTree, progressListener, index);
+
+		return this == PROGUARD ? MappingOperations.invert(mappings) : mappings;
 	}
 
+	/**
+	 * @return Enigma's native writer for the format, or {@code null} if none exists.
+	 *
+	 * @deprecated Use {@link #isWritable()} and {@link #write(EntryTree, Path, ProgressListener, MappingSaveParameters)} instead,
+	 * which take the new Mapping-IO equivalents (and eventual replacements) into account.
+	 */
 	@Nullable
+	@Deprecated
 	public MappingsWriter getWriter() {
 		return writer;
 	}
 
+	/**
+	 * @return Enigma's native reader for the format, or {@code null} if none exists.
+	 *
+	 * @deprecated Use {@link #isReadable()} and {@link #read(Path, ProgressListener, MappingSaveParameters, JarIndex)} instead,
+	 * which take the new Mapping-IO equivalents (and eventual replacements) into account.
+	 */
 	@Nullable
+	@Deprecated
 	public MappingsReader getReader() {
 		return reader;
 	}
