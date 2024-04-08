@@ -139,8 +139,8 @@ public class JadxSource implements Source {
 			if (!var.getMth().collectArgsWithoutLoading().contains(var)) return;
 			Token token = new Token(pos, pos + var.getName().length(), var.getName());
 
-				if (pos == var.getDefPosition()) {
-					index.addDeclaration(token, paramEntryOf(var, codeInfo));
+			if (pos == var.getDefPosition()) {
+				index.addDeclaration(token, paramEntryOf(var, codeInfo));
 			} else {
 				index.addReference(token, paramEntryOf(var, codeInfo), methodEntryOf(var.getMth()));
 			}
