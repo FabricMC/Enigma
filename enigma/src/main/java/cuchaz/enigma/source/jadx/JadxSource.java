@@ -97,7 +97,7 @@ public class JadxSource implements Source {
 
 			// Tokens
 			codeInfo.getCodeMetadata().searchDown(0, (pos, ann) -> {
-				processAnnotatedElement(pos, ann, cls.getCodeInfo());
+				processAnnotatedElement(pos, ann, codeInfo);
 				return null;
 			});
 		}
@@ -139,8 +139,8 @@ public class JadxSource implements Source {
 			if (!var.getMth().collectArgsWithoutLoading().contains(var)) return;
 			Token token = new Token(pos, pos + var.getName().length(), var.getName());
 
-			if (pos == var.getDefPosition()) {
-				index.addDeclaration(token, paramEntryOf(var, codeInfo));
+				if (pos == var.getDefPosition()) {
+					index.addDeclaration(token, paramEntryOf(var, codeInfo));
 			} else {
 				index.addReference(token, paramEntryOf(var, codeInfo), methodEntryOf(var.getMth()));
 			}
@@ -161,7 +161,7 @@ public class JadxSource implements Source {
 		return jadxHelper.methodEntryOf(mth);
 	}
 
-	private LocalVariableEntry paramEntryOf(VarNode param, ICodeInfo codeInfo) {
+		private LocalVariableEntry paramEntryOf(VarNode param, ICodeInfo codeInfo) {
 		return jadxHelper.paramEntryOf(param, codeInfo);
 	}
 }
