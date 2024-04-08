@@ -161,7 +161,7 @@ public class JadxSource implements Source {
 		return jadxHelper.methodEntryOf(mth);
 	}
 
-		private LocalVariableEntry paramEntryOf(VarNode param, ICodeInfo codeInfo) {
+	private LocalVariableEntry paramEntryOf(VarNode param, ICodeInfo codeInfo) {
 		return jadxHelper.paramEntryOf(param, codeInfo);
 	}
 }
