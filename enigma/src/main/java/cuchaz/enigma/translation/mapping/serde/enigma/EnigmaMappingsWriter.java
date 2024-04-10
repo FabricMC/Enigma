@@ -24,12 +24,20 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
+
+import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.format.MappingFormat;
+import net.fabricmc.mappingio.tree.VisitOrder;
+import net.fabricmc.mappingio.tree.VisitableMappingTree;
+import org.jetbrains.annotations.ApiStatus;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
@@ -41,10 +49,12 @@ import cuchaz.enigma.translation.mapping.VoidEntryResolver;
 import cuchaz.enigma.translation.mapping.serde.LfPrintWriter;
 import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingHelper;
+import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.MappingsWriter;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
+import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.FieldEntry;
@@ -75,6 +85,12 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 	DIRECTORY {
 		@Override
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
+			write(mappings, delta, path, progress, saveParameters, false);
+		}
+
+		@Override
+		@ApiStatus.Internal
+		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters, boolean useMio) {
 			Collection<ClassEntry> changedClasses = delta.getChangedRoots().filter(entry -> entry instanceof ClassEntry).map(entry -> (ClassEntry) entry).toList();
 
 			applyDeletions(path, changedClasses, mappings, delta.getBaseMappings(), saveParameters.getFileNameFormat());
@@ -98,8 +114,26 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 					Files.createDirectories(classPath.getParent());
 					Files.deleteIfExists(classPath);
 
-					try (PrintWriter writer = new LfPrintWriter(Files.newBufferedWriter(classPath))) {
-						writeRoot(writer, mappings, classEntry);
+					if (useMio) {
+						EntryTree<EntryMapping> currentMappings = new HashEntryTree<>();
+						Set<Entry<?>> children = new HashSet<>();
+						children.add(classEntry);
+
+						while (!children.isEmpty()) {
+							Entry<?> child = children.stream().findFirst().get();
+							children.remove(child);
+							children.addAll(mappings.getChildren(child));
+
+							EntryMapping mapping = mappings.get(child);
+							currentMappings.insert(child, mapping != null ? mapping : EntryMapping.DEFAULT);
+						}
+
+						VisitableMappingTree tree = MappingIoConverter.toMappingIo(currentMappings, ProgressListener.none());
+						tree.accept(MappingWriter.create(classPath, MappingFormat.ENIGMA_FILE), VisitOrder.createByName());
+					} else {
+						try (PrintWriter writer = new LfPrintWriter(Files.newBufferedWriter(classPath))) {
+							writeRoot(writer, mappings, classEntry);
+						}
 					}
 				} catch (Throwable t) {
 					System.err.println("Failed to write class '" + classEntry.getFullName() + "'");
@@ -324,5 +358,11 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 	private boolean isMappingEmpty(EntryMapping mapping) {
 		return mapping.targetName() == null && mapping.accessModifier() == AccessModifier.UNCHANGED && mapping.javadoc() == null;
+	}
+
+	@ApiStatus.Internal
+	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> mappingDelta, Path path,
+			ProgressListener progressListener, MappingSaveParameters saveParameters, boolean useMio) {
+		throw new UnsupportedOperationException("Not implemented");
 	}
 }
