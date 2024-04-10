@@ -78,16 +78,21 @@ public enum MappingFormat {
 		}
 
 		try {
-			if (this == PROGUARD) {
-				mappings = MappingOperations.invert(mappings);
+			if (this == ENIGMA_DIRECTORY) { // TODO: Remove once MIO supports deltas
+				EnigmaMappingsWriter.DIRECTORY.write(mappings, lastUsedMappingIoWriter ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters, true);
+			} else {
+				if (this == PROGUARD) {
+					mappings = MappingOperations.invert(mappings);
+				}
+
+				VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, progressListener);
+				progressListener.init(1, I18n.translate("progress.mappings.writing"));
+				progressListener.step(1, null); // Reset message
+
+				tree.accept(MappingWriter.create(path, mappingIoCounterpart), VisitOrder.createByName());
+				progressListener.step(1, I18n.translate("progress.done"));
 			}
 
-			VisitableMappingTree tree = MappingIoConverter.toMappingIo(mappings, progressListener);
-			progressListener.init(1, I18n.translate("progress.mappings.writing"));
-			progressListener.step(1, null); // Reset message
-
-			tree.accept(MappingWriter.create(path, mappingIoCounterpart), VisitOrder.createByName());
-			progressListener.step(1, I18n.translate("progress.done"));
 			lastUsedMappingIoWriter = true;
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
