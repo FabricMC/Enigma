@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
 	implementation project(':enigma')
-	implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
+	implementation "net.sf.jopt-simple:jopt-simple:${jopt_simple_version}"
 }
 
 application {

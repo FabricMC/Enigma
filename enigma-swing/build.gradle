@@ -14,15 +14,15 @@ dependencies {
 	implementation project(':enigma')
 	implementation project(':enigma-server')
 
-	implementation 'net.sf.jopt-simple:jopt-simple:6.0-alpha-3'
-	implementation 'com.formdev:flatlaf:3.2.5'
-	implementation 'com.formdev:flatlaf-extras:3.2.5' // for SVG icons
-	implementation 'de.sciss:syntaxpane:1.2.1'
-	implementation 'com.github.lukeu:swing-dpi:0.10'
-	implementation 'org.drjekyll:fontchooser:2.5.2'
+	implementation "net.sf.jopt-simple:jopt-simple:${jopt_simple_version}"
+	implementation "com.formdev:flatlaf:${flatlaf_version}"
+	implementation "com.formdev:flatlaf-extras:${flatlaf_version}" // for SVG icons
+	implementation "de.sciss:syntaxpane:${syntaxpane_version}"
+	implementation "com.github.lukeu:swing-dpi:${swing_dpi_version}"
+	implementation "org.drjekyll:fontchooser:${fontchooser_version}"
 
 	flatLafNatives.forEach {
-		implementation 'com.formdev:flatlaf:3.2.5:' + it
+		implementation "com.formdev:flatlaf:${flatlaf_version}:" + it
 	}
 }
 
