@@ -94,7 +94,6 @@ public enum MappingFormat {
 				progressListener.step(1, I18n.translate("progress.done"));
 				lastUsedMappingIoWriter = true;
 			}
-
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
