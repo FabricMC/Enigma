@@ -80,6 +80,7 @@ public enum MappingFormat {
 		try {
 			if (this == ENIGMA_DIRECTORY) { // TODO: Remove once MIO supports deltas
 				EnigmaMappingsWriter.DIRECTORY.write(mappings, lastUsedMappingIoWriter ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters, true);
+				lastUsedMappingIoWriter = false;
 			} else {
 				if (this == PROGUARD) {
 					mappings = MappingOperations.invert(mappings);
@@ -91,9 +92,9 @@ public enum MappingFormat {
 
 				tree.accept(MappingWriter.create(path, mappingIoCounterpart), VisitOrder.createByName());
 				progressListener.step(1, I18n.translate("progress.done"));
+				lastUsedMappingIoWriter = true;
 			}
 
-			lastUsedMappingIoWriter = true;
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
