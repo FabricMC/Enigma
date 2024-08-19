@@ -52,7 +52,7 @@ public enum MappingFormat {
 	private final FileType fileType;
 	private final net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart;
 	private final boolean hasMappingIoWriter;
-	private boolean lastUsedMappingIoWriter;
+	private boolean usedMappingIoWriterLast;
 
 	MappingFormat(MappingsWriter writer, MappingsReader reader, FileType fileType, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart, boolean hasMappingIoWriter) {
 		this.writer = writer;
@@ -72,15 +72,15 @@ public enum MappingFormat {
 				throw new IllegalStateException(name() + " does not support writing");
 			}
 
-			writer.write(mappings, lastUsedMappingIoWriter ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters);
-			lastUsedMappingIoWriter = false;
+			writer.write(mappings, usedMappingIoWriterLast ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters);
+			usedMappingIoWriterLast = false;
 			return;
 		}
 
 		try {
 			if (this == ENIGMA_DIRECTORY) { // TODO: Remove once MIO supports deltas
-				EnigmaMappingsWriter.DIRECTORY.write(mappings, lastUsedMappingIoWriter ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters, true);
-				lastUsedMappingIoWriter = false;
+				EnigmaMappingsWriter.DIRECTORY.write(mappings, usedMappingIoWriterLast ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters, true);
+				usedMappingIoWriterLast = false;
 			} else {
 				if (this == PROGUARD) {
 					mappings = MappingOperations.invert(mappings);
@@ -92,7 +92,7 @@ public enum MappingFormat {
 
 				tree.accept(MappingWriter.create(path, mappingIoCounterpart), VisitOrder.createByName());
 				progressListener.step(1, I18n.translate("progress.done"));
-				lastUsedMappingIoWriter = true;
+				usedMappingIoWriterLast = true;
 			}
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
