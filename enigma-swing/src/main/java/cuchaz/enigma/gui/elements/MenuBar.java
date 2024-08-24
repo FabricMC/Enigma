@@ -415,9 +415,11 @@ public class MenuBar {
 		openMappingsMenu.addSeparator();
 
 		// Enigma's own readers
+		String legacySuffix = " (" + I18n.translate("legacy") + ")";
+
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getReader() != null) {
-				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + legacySuffix,
 						format, false, openMappingsMenu, gui);
 			}
 		}
@@ -450,9 +452,11 @@ public class MenuBar {
 		saveMappingsAsMenu.addSeparator();
 
 		// Enigma's own writers
+		String legacySuffix = " (" + I18n.translate("legacy") + ")";
+
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getWriter() != null) {
-				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + legacySuffix,
 						format, false, saveMappingsAsMenu, saveMappingsItem, gui);
 			}
 		}
