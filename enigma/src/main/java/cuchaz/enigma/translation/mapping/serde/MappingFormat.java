@@ -69,11 +69,7 @@ public enum MappingFormat {
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
-		if (!hasMappingIoWriter || !useMappingIo()) {
-			if (writer == null) {
-				throw new IllegalStateException(name() + " does not support writing");
-			}
-
+		if (!hasMappingIoWriter || (!useMappingIo() && writer != null)) {
 			writer.write(mappings, usedMappingIoWriterLast ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters);
 			usedMappingIoWriterLast = false;
 			return;
@@ -107,11 +103,7 @@ public enum MappingFormat {
 	}
 
 	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener, MappingSaveParameters saveParameters, JarIndex index) throws IOException, MappingParseException {
-		if (!useMappingIo()) {
-			if (reader == null) {
-				throw new IllegalStateException(name() + " does not support reading");
-			}
-
+		if (mappingIoCounterpart == null || (!useMappingIo() && reader != null)) {
 			return reader.read(path, progressListener, saveParameters);
 		}
 
@@ -180,9 +172,7 @@ public enum MappingFormat {
 		return writer != null || hasMappingIoWriter;
 	}
 
-	@ApiStatus.Internal
 	private boolean useMappingIo() {
-		if (mappingIoCounterpart == null) return false;
 		return System.getProperty("enigma.use_mappingio", "true").equals("true");
 	}
 
