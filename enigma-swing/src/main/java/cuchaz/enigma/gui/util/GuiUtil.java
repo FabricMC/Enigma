@@ -5,7 +5,9 @@ import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -87,7 +89,22 @@ public class GuiUtil {
 		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
 	}
 
+	public static boolean hasClipboardText() {
+		Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		Transferable contents = systemClipboard.getContents(null);
+
+		if (contents != null) {
+			return contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+		}
+
+		return false;
+	}
+
 	public static String getClipboard() {
+		if (!hasClipboardText()) {
+			return "";
+		}
+
 		try {
 			return (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
 		} catch (UnsupportedFlavorException | IOException e) {
