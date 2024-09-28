@@ -165,7 +165,7 @@ public class EditorPopupMenu {
 		EditableType type = EditableType.fromEntry(referenceEntry);
 
 		this.renameItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)));
-		this.pasteItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)) && !GuiUtil.getClipboard().equals(""));
+		this.pasteItem.setEnabled(isRenamable && (type != null && this.gui.isEditable(type)) && GuiUtil.hasClipboardText());
 		this.editJavadocItem.setEnabled(isRenamable && this.gui.isEditable(EditableType.JAVADOC));
 		this.showInheritanceItem.setEnabled(isClassEntry || isMethodEntry || isConstructorEntry);
 		this.showImplementationsItem.setEnabled(isClassEntry || isMethodEntry);
