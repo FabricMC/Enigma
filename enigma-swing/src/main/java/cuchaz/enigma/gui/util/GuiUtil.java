@@ -57,6 +57,8 @@ public class GuiUtil {
 	public static final Icon FIELD_ICON = loadIcon("field");
 	public static final Icon CONSTRUCTOR_ICON = loadIcon("constructor");
 
+	private static final boolean DISABLE_CLIPBOARD = System.getenv("ENIGMA_DISABLE_CLIPBOARD") != null;
+
 	public static void openUrl(String url) {
 		try {
 			switch (Os.getOs()) {
@@ -90,6 +92,10 @@ public class GuiUtil {
 	}
 
 	public static boolean hasClipboardText() {
+		if (DISABLE_CLIPBOARD) {
+			return false;
+		}
+
 		Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		Transferable contents = systemClipboard.getContents(null);
 
