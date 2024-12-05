@@ -16,6 +16,7 @@ import java.awt.Container;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +58,8 @@ import cuchaz.enigma.gui.elements.InheritanceTree;
 import cuchaz.enigma.gui.elements.MainWindow;
 import cuchaz.enigma.gui.elements.MenuBar;
 import cuchaz.enigma.gui.elements.ValidatableUi;
+import cuchaz.enigma.gui.node.ClassSelectorClassNode;
+import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
 import cuchaz.enigma.gui.panels.DeobfPanel;
 import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.gui.panels.IdentifierPanel;
@@ -482,32 +485,47 @@ public class Gui {
 		frame.repaint();
 	}
 
-	public void onRenameFromClassTree(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node) {
-		if (data instanceof String) {
-			// package rename
+	public void onRenameFromClassTree(ValidationContext vc, String targetName, DefaultMutableTreeNode node) {
+		List<EntryChange<ClassEntry>> task = new ArrayList<>();
+		onRenameFromClassTree(targetName, node, task);
+		this.controller.applyChanges(vc, task);
+	}
+
+	private void onRenameFromClassTree(String targetName, DefaultMutableTreeNode node, List<EntryChange<ClassEntry>> entryOps) {
+		if (targetName.startsWith("/")) {
+			targetName = targetName.substring(1);
+		}
+
+		if (node instanceof ClassSelectorPackageNode) {
 			for (int i = 0; i < node.getChildCount(); i++) {
-				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
-				ClassEntry prevDataChild = (ClassEntry) childNode.getUserObject();
-				ClassEntry dataChild = new ClassEntry(data + "/" + prevDataChild.getSimpleName());
+				String childName;
+				DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
 
-				onRenameFromClassTree(vc, prevDataChild, dataChild, node);
+				if (child instanceof ClassSelectorPackageNode packageNode) {
+					String[] parts = packageNode.getPackageName().split("/");
+					childName = targetName + "/" + parts[parts.length - 1];
+				} else if (child instanceof ClassSelectorClassNode classNode) {
+					childName = targetName + "/" + classNode.getClassEntry().getSimpleName();
+				} else {
+					throw new IllegalStateException(String.format("unhandled rename object type: '%s'",
+							child.getClass()));
+				}
+
+				onRenameFromClassTree(childName, child, entryOps);
 			}
-
-			node.setUserObject(data);
-			// Ob package will never be modified, just reload deob view
-			this.deobfPanel.deobfClasses.reload();
-		} else if (data instanceof ClassEntry) {
-			// class rename
-
-			// TODO optimize reverse class lookup, although it looks like it's
-			//      fast enough for now
+		} else if (node instanceof ClassSelectorClassNode classSelectorClassNode) {
 			EntryRemapper mapper = this.controller.project.getMapper();
-			ClassEntry deobf = (ClassEntry) prevData;
-			ClassEntry obf = mapper.getObfToDeobf().getAllEntries().filter(e -> e instanceof ClassEntry).map(e -> (ClassEntry) e).filter(e -> mapper.deobfuscate(e).equals(deobf)).findAny().orElse(deobf);
+			ClassEntry deobf = classSelectorClassNode.getClassEntry();
+			ClassEntry obf = mapper.getObfToDeobf().getAllEntries()
+					.filter(e -> e instanceof ClassEntry)
+					.map(e -> (ClassEntry) e)
+					.filter(e -> mapper.deobfuscate(e).equals(deobf))
+					.findAny()
+					.orElse(deobf);
 
-			this.controller.applyChange(vc, EntryChange.modify(obf).withDeobfName(((ClassEntry) data).getFullName()));
+			entryOps.add(EntryChange.modify(obf).withDeobfName(targetName));
 		} else {
-			throw new IllegalStateException(String.format("unhandled rename object data: '%s'", data));
+			throw new IllegalStateException(String.format("unhandled rename object type: '%s'", node.getClass()));
 		}
 	}
 
