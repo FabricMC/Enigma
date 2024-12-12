@@ -488,7 +488,14 @@ public class Gui {
 	public void onRenameFromClassTree(ValidationContext vc, String targetName, DefaultMutableTreeNode node) {
 		List<EntryChange<ClassEntry>> task = new ArrayList<>();
 		onRenameFromClassTree(targetName, node, task);
-		this.controller.applyChanges(vc, task);
+
+		task.forEach(c -> this.controller.validateChange(vc, c));
+
+		if (!vc.canProceed()) {
+			return;
+		}
+
+		task.forEach(c -> this.controller.applyChange(vc, c));
 	}
 
 	private void onRenameFromClassTree(String targetName, DefaultMutableTreeNode node, List<EntryChange<ClassEntry>> entryOps) {

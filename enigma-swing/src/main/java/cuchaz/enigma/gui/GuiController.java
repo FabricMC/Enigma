@@ -510,7 +510,9 @@ public class GuiController implements ClientPacketHandler {
 	public boolean applyChangeFromServer(EntryChange<?> change) {
 		ValidationContext vc = new ValidationContext();
 		vc.setActiveElement(PrintValidatable.INSTANCE);
-		this.applyChanges0(vc, List.of(change));
+		this.applyChange0(vc, change);
+		gui.showStructure(gui.getActiveEditor());
+
 		return vc.canProceed();
 	}
 
@@ -525,46 +527,39 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public void applyChange(ValidationContext vc, EntryChange<?> change) {
-		applyChanges(vc, List.of(change));
-	}
-
-	public void applyChanges(ValidationContext vc, Iterable<? extends EntryChange<?>> changes) {
-		applyChanges0(vc, changes);
+		this.applyChange0(vc, change);
+		gui.showStructure(gui.getActiveEditor());
 
 		if (!vc.canProceed()) {
 			return;
 		}
 
-		for (EntryChange<?> change : changes) {
-			this.sendPacket(new EntryChangeC2SPacket(change));
-		}
+		this.sendPacket(new EntryChangeC2SPacket(change));
 	}
 
-	private void applyChanges0(ValidationContext vc, Iterable<? extends EntryChange<?>> changes) {
-		for (EntryChange<?> change : changes) {
-			validateChange(vc, change);
+	private void applyChange0(ValidationContext vc, EntryChange<?> change) {
+		validateChange(vc, change);
 
-			if (!vc.canProceed()) {
-				return;
-			}
+		if (!vc.canProceed()) {
+			return;
+		}
 
-			Entry<?> target = change.getTarget();
-			EntryMapping prev = this.project.getMapper().getDeobfMapping(target);
-			EntryMapping mapping = EntryUtil.applyChange(vc, this.project.getMapper(), change);
+		Entry<?> target = change.getTarget();
+		EntryMapping prev = this.project.getMapper().getDeobfMapping(target);
+		EntryMapping mapping = EntryUtil.applyChange(vc, this.project.getMapper(), change);
 
-			boolean renamed = !change.getDeobfName().isUnchanged();
+		boolean renamed = !change.getDeobfName().isUnchanged();
 
-			if (renamed && target instanceof ClassEntry && !((ClassEntry) target).isInnerClass()) {
-				this.gui.moveClassTree(target, prev.targetName() == null, mapping.targetName() == null);
-			}
+		if (renamed && target instanceof ClassEntry && !((ClassEntry) target).isInnerClass()) {
+			this.gui.moveClassTree(target, prev.targetName() == null, mapping.targetName() == null);
+		}
 
-			if (!Objects.equals(prev.targetName(), mapping.targetName())) {
-				this.chp.invalidateMapped();
-			}
+		if (!Objects.equals(prev.targetName(), mapping.targetName())) {
+			this.chp.invalidateMapped();
+		}
 
-			if (!Objects.equals(prev.javadoc(), mapping.javadoc())) {
-				this.chp.invalidateJavadoc(target.getTopLevelClass());
-			}
+		if (!Objects.equals(prev.javadoc(), mapping.javadoc())) {
+			this.chp.invalidateJavadoc(target.getTopLevelClass());
 		}
 
 		gui.showStructure(gui.getActiveEditor());
