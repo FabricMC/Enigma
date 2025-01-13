@@ -34,32 +34,35 @@ import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.utils.I18n;
 
 public enum MappingFormat {
-	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE, FileType.MAPPING, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_FILE, true),
-	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY, FileType.DIRECTORY, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_DIR, true),
-	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP, FileType.ZIP, null, false),
-	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader(), FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE, true),
-	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE, FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE, true),
-	SRG_FILE(SrgMappingsWriter.INSTANCE, null, FileType.SRG, net.fabricmc.mappingio.format.MappingFormat.SRG_FILE, true),
-	XSRG_FILE(null, null, FileType.XSRG, net.fabricmc.mappingio.format.MappingFormat.XSRG_FILE, true),
-	CSRG_FILE(null, null, FileType.CSRG, net.fabricmc.mappingio.format.MappingFormat.CSRG_FILE, false),
-	TSRG_FILE(null, null, FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_FILE, false),
-	TSRG_2_FILE(null, null, FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_2_FILE, false),
-	PROGUARD(null, ProguardMappingsReader.INSTANCE, FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.PROGUARD_FILE, true),
-	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE, FileType.TXT, null, false);
+	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE, FileType.MAPPING, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_FILE),
+	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY, FileType.DIRECTORY, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_DIR),
+	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP, FileType.ZIP, null),
+	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader(), FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE),
+	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE, FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE),
+	SRG_FILE(SrgMappingsWriter.INSTANCE, null, FileType.SRG, net.fabricmc.mappingio.format.MappingFormat.SRG_FILE),
+	XSRG_FILE(null, null, FileType.XSRG, net.fabricmc.mappingio.format.MappingFormat.XSRG_FILE),
+	JAM_FILE(null, null, FileType.JAM, net.fabricmc.mappingio.format.MappingFormat.JAM_FILE),
+	CSRG_FILE(null, null, FileType.CSRG, net.fabricmc.mappingio.format.MappingFormat.CSRG_FILE),
+	TSRG_FILE(null, null, FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_FILE),
+	TSRG_2_FILE(null, null, FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_2_FILE),
+	PROGUARD(null, ProguardMappingsReader.INSTANCE, FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.PROGUARD_FILE),
+	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE, FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.RECAF_SIMPLE_FILE),
+	JOBF_FILE(null, null, FileType.JOBF, net.fabricmc.mappingio.format.MappingFormat.JOBF_FILE),
+	INTELLIJ_MIGRATION_MAP_FILE(null, null, FileType.XML, net.fabricmc.mappingio.format.MappingFormat.INTELLIJ_MIGRATION_MAP_FILE);
 
 	private final MappingsWriter writer;
 	private final MappingsReader reader;
 	private final FileType fileType;
 	private final net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart;
 	private final boolean hasMappingIoWriter;
-	private boolean lastUsedMappingIoWriter;
+	private boolean usedMappingIoWriterLast;
 
-	MappingFormat(MappingsWriter writer, MappingsReader reader, FileType fileType, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart, boolean hasMappingIoWriter) {
+	MappingFormat(MappingsWriter writer, MappingsReader reader, FileType fileType, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart) {
 		this.writer = writer;
 		this.reader = reader;
 		this.fileType = fileType;
 		this.mappingIoCounterpart = mappingIoCounterpart;
-		this.hasMappingIoWriter = hasMappingIoWriter;
+		this.hasMappingIoWriter = mappingIoCounterpart == null ? false : mappingIoCounterpart.hasWriter;
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
@@ -67,19 +70,16 @@ public enum MappingFormat {
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
-		if (!hasMappingIoWriter || !useMappingIo()) {
-			if (writer == null) {
-				throw new IllegalStateException(name() + " does not support writing");
-			}
-
-			writer.write(mappings, lastUsedMappingIoWriter ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters);
-			lastUsedMappingIoWriter = false;
+		if (!hasMappingIoWriter || (!useMappingIo() && writer != null)) {
+			writer.write(mappings, usedMappingIoWriterLast ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters);
+			usedMappingIoWriterLast = false;
 			return;
 		}
 
 		try {
 			if (this == ENIGMA_DIRECTORY) { // TODO: Remove once MIO supports deltas
-				EnigmaMappingsWriter.DIRECTORY.write(mappings, lastUsedMappingIoWriter ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters, true);
+				EnigmaMappingsWriter.DIRECTORY.write(mappings, usedMappingIoWriterLast ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters, true);
+				usedMappingIoWriterLast = false;
 			} else {
 				if (this == PROGUARD) {
 					mappings = MappingOperations.invert(mappings);
@@ -91,9 +91,8 @@ public enum MappingFormat {
 
 				tree.accept(MappingWriter.create(path, mappingIoCounterpart), VisitOrder.createByName());
 				progressListener.step(1, I18n.translate("progress.done"));
+				usedMappingIoWriterLast = true;
 			}
-
-			lastUsedMappingIoWriter = true;
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -105,11 +104,7 @@ public enum MappingFormat {
 	}
 
 	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener, MappingSaveParameters saveParameters, JarIndex index) throws IOException, MappingParseException {
-		if (!useMappingIo()) {
-			if (reader == null) {
-				throw new IllegalStateException(name() + " does not support reading");
-			}
-
+		if (mappingIoCounterpart == null || (!useMappingIo() && reader != null)) {
 			return reader.read(path, progressListener, saveParameters);
 		}
 
@@ -178,22 +173,18 @@ public enum MappingFormat {
 		return writer != null || hasMappingIoWriter;
 	}
 
-	@ApiStatus.Internal
 	private boolean useMappingIo() {
-		if (mappingIoCounterpart == null) return false;
 		return System.getProperty("enigma.use_mappingio", "true").equals("true");
 	}
 
 	public static List<MappingFormat> getReadableFormats() {
-		return Arrays.asList(values())
-				.stream()
+		return Arrays.stream(values())
 				.filter(MappingFormat::isReadable)
 				.toList();
 	}
 
 	public static List<MappingFormat> getWritableFormats() {
-		return Arrays.asList(values())
-				.stream()
+		return Arrays.stream(values())
 				.filter(MappingFormat::isWritable)
 				.toList();
 	}
@@ -209,14 +200,17 @@ public enum MappingFormat {
 	@ApiStatus.Internal
 	public record FileType(List<String> extensions) {
 		public static final FileType DIRECTORY = new FileType();
+		public static final FileType ZIP = new FileType(".zip");
 		public static final FileType MAPPING = new FileType(".mapping", ".mappings");
+		public static final FileType TINY = new FileType(".tiny");
 		public static final FileType SRG = new FileType(".srg");
 		public static final FileType XSRG = new FileType(".xsrg");
+		public static final FileType JAM = new FileType(".jam");
 		public static final FileType CSRG = new FileType(".csrg");
 		public static final FileType TSRG = new FileType(".tsrg");
-		public static final FileType TINY = new FileType(".tiny");
 		public static final FileType TXT = new FileType(".txt");
-		public static final FileType ZIP = new FileType(".zip");
+		public static final FileType JOBF = new FileType(".jobf");
+		public static final FileType XML = new FileType(".xml");
 
 		public FileType(String... extensions) {
 			this(List.of(extensions));

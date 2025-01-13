@@ -405,16 +405,21 @@ public class MenuBar {
 
 	private static void prepareOpenMappingsMenu(JMenu openMappingsMenu, Gui gui) {
 		// Mapping-IO readers
-		MappingFormat.getReadableFormats().stream()
-				.filter(format -> format.getMappingIoCounterpart() != null)
-				.forEach(format -> addOpenMappingsMenuEntry(I18n.translate(format.getMappingIoCounterpart().name),
-					format, true, openMappingsMenu, gui));
+		for (MappingFormat format : MappingFormat.values()) {
+			if (format.getMappingIoCounterpart() != null) {
+				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)),
+						format, true, openMappingsMenu, gui);
+			}
+		}
+
 		openMappingsMenu.addSeparator();
 
 		// Enigma's own readers
+		String legacySuffix = " (" + I18n.translate("legacy") + ")";
+
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getReader() != null) {
-				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+				addOpenMappingsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + legacySuffix,
 						format, false, openMappingsMenu, gui);
 			}
 		}
@@ -437,16 +442,21 @@ public class MenuBar {
 
 	private static void prepareSaveMappingsAsMenu(JMenu saveMappingsAsMenu, JMenuItem saveMappingsItem, Gui gui) {
 		// Mapping-IO writers
-		MappingFormat.getWritableFormats().stream()
-				.filter(format -> format.hasMappingIoWriter())
-				.forEach(format -> addSaveMappingsAsMenuEntry(format.getMappingIoCounterpart().name,
-							format, true, saveMappingsAsMenu, saveMappingsItem, gui));
+		for (MappingFormat format : MappingFormat.values()) {
+			if (format.hasMappingIoWriter()) {
+				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)),
+						format, true, saveMappingsAsMenu, saveMappingsItem, gui);
+			}
+		}
+
 		saveMappingsAsMenu.addSeparator();
 
 		// Enigma's own writers
+		String legacySuffix = " (" + I18n.translate("legacy") + ")";
+
 		for (MappingFormat format : MappingFormat.values()) {
 			if (format.getWriter() != null) {
-				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + " (legacy)",
+				addSaveMappingsAsMenuEntry(I18n.translate("mapping_format." + format.name().toLowerCase(Locale.ROOT)) + legacySuffix,
 						format, false, saveMappingsAsMenu, saveMappingsItem, gui);
 			}
 		}
