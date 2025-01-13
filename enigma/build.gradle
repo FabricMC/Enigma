@@ -3,14 +3,14 @@ configurations {
 }
 
 dependencies {
-	implementation 'org.ow2.asm:asm:9.6'
-	implementation 'org.ow2.asm:asm-commons:9.6'
-	implementation 'org.ow2.asm:asm-tree:9.6'
-	implementation 'org.ow2.asm:asm-util:9.6'
+	implementation 'org.ow2.asm:asm:9.7.1'
+	implementation 'org.ow2.asm:asm-commons:9.7.1'
+	implementation 'org.ow2.asm:asm-tree:9.7.1'
+	implementation 'org.ow2.asm:asm-util:9.7.1'
 
 	implementation 'org.bitbucket.mstrobel:procyon-compilertools:0.6.0'
 	implementation 'net.fabricmc:cfr:0.2.2'
-	implementation 'org.vineflower:vineflower:1.10.0'
+	implementation 'org.vineflower:vineflower:1.10.1'
 
 	proGuard 'com.guardsquare:proguard-base:7.4.0-beta02'
 
