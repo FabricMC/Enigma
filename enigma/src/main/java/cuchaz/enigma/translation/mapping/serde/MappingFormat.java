@@ -47,7 +47,8 @@ public enum MappingFormat {
 	TSRG_2_FILE(null, null, FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_2_FILE),
 	PROGUARD(null, ProguardMappingsReader.INSTANCE, FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.PROGUARD_FILE),
 	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE, FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.RECAF_SIMPLE_FILE),
-	JOBF_FILE(null, null, FileType.JOBF, net.fabricmc.mappingio.format.MappingFormat.JOBF_FILE);
+	JOBF_FILE(null, null, FileType.JOBF, net.fabricmc.mappingio.format.MappingFormat.JOBF_FILE),
+	INTELLIJ_MIGRATION_MAP_FILE(null, null, FileType.XML, net.fabricmc.mappingio.format.MappingFormat.INTELLIJ_MIGRATION_MAP_FILE);
 
 	private final MappingsWriter writer;
 	private final MappingsReader reader;
@@ -209,6 +210,7 @@ public enum MappingFormat {
 		public static final FileType TSRG = new FileType(".tsrg");
 		public static final FileType TXT = new FileType(".txt");
 		public static final FileType JOBF = new FileType(".jobf");
+		public static final FileType XML = new FileType(".xml");
 
 		public FileType(String... extensions) {
 			this(List.of(extensions));

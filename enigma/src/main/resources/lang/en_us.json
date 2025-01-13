@@ -15,6 +15,7 @@
 	"mapping_format.proguard": "ProGuard File",
 	"mapping_format.recaf": "Recaf Simple File",
 	"mapping_format.jobf_file": "JOBF File",
+	"mapping_format.intellij_migration_map_file": "IntelliJ Migration Map File",
 	"legacy": "legacy",
 
 	"type.methods": "Methods",
