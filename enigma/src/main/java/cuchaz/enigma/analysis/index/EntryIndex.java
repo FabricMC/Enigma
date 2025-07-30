@@ -1,8 +1,8 @@
 package cuchaz.enigma.analysis.index;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
@@ -17,10 +17,10 @@ import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class EntryIndex implements JarIndexer {
-	private Map<ClassEntry, AccessFlags> classes = new HashMap<>();
-	private Map<FieldEntry, AccessFlags> fields = new HashMap<>();
-	private Map<MethodEntry, AccessFlags> methods = new HashMap<>();
-	private Map<ClassEntry, ClassDefEntry> definitions = new HashMap<>();
+	private final ConcurrentMap<ClassEntry, AccessFlags> classes = new ConcurrentHashMap<>();
+	private final ConcurrentMap<FieldEntry, AccessFlags> fields = new ConcurrentHashMap<>();
+	private final ConcurrentMap<MethodEntry, AccessFlags> methods = new ConcurrentHashMap<>();
+	private final ConcurrentMap<ClassEntry, ClassDefEntry> definitions = new ConcurrentHashMap<>();
 
 	@Override
 	public void indexClass(ClassDefEntry classEntry) {

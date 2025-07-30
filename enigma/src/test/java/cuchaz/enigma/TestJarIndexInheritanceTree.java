@@ -11,11 +11,11 @@
 
 package cuchaz.enigma;
 
+import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByMethod;
 import static cuchaz.enigma.TestEntryFactory.newClass;
 import static cuchaz.enigma.TestEntryFactory.newField;
-import static cuchaz.enigma.TestEntryFactory.newMethod;
 import static cuchaz.enigma.TestEntryFactory.newFieldReferenceByMethod;
-import static cuchaz.enigma.TestEntryFactory.newBehaviorReferenceByMethod;
+import static cuchaz.enigma.TestEntryFactory.newMethod;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;

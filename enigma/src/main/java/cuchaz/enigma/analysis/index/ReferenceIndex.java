@@ -1,10 +1,10 @@
 package cuchaz.enigma.analysis.index;
 
 import java.util.Collection;
-import java.util.Map;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.ReferenceTargetType;
@@ -20,13 +20,13 @@ import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class ReferenceIndex implements JarIndexer {
-	private Multimap<MethodEntry, MethodEntry> methodReferences = HashMultimap.create();
+	private ConcurrentMap<MethodEntry, List<MethodEntry>> methodReferences = new ConcurrentHashMap<>();
 
-	private Multimap<MethodEntry, EntryReference<MethodEntry, MethodDefEntry>> referencesToMethods = HashMultimap.create();
-	private Multimap<ClassEntry, EntryReference<ClassEntry, MethodDefEntry>> referencesToClasses = HashMultimap.create();
-	private Multimap<FieldEntry, EntryReference<FieldEntry, MethodDefEntry>> referencesToFields = HashMultimap.create();
-	private Multimap<ClassEntry, EntryReference<ClassEntry, FieldDefEntry>> fieldTypeReferences = HashMultimap.create();
-	private Multimap<ClassEntry, EntryReference<ClassEntry, MethodDefEntry>> methodTypeReferences = HashMultimap.create();
+	private ConcurrentMap<MethodEntry, List<EntryReference<MethodEntry, MethodDefEntry>>> referencesToMethods = new ConcurrentHashMap<>();
+	private ConcurrentMap<ClassEntry, List<EntryReference<ClassEntry, MethodDefEntry>>> referencesToClasses = new ConcurrentHashMap<>();
+	private ConcurrentMap<FieldEntry, List<EntryReference<FieldEntry, MethodDefEntry>>> referencesToFields = new ConcurrentHashMap<>();
+	private ConcurrentMap<ClassEntry, List<EntryReference<ClassEntry, FieldDefEntry>>> fieldTypeReferences = new ConcurrentHashMap<>();
+	private ConcurrentMap<ClassEntry, List<EntryReference<ClassEntry, MethodDefEntry>>> methodTypeReferences = new ConcurrentHashMap<>();
 
 	@Override
 	public void indexMethod(MethodDefEntry methodEntry) {
@@ -44,7 +44,7 @@ public class ReferenceIndex implements JarIndexer {
 	private void indexMethodTypeDescriptor(MethodDefEntry method, TypeDescriptor typeDescriptor) {
 		if (typeDescriptor.isType()) {
 			ClassEntry referencedClass = typeDescriptor.getTypeEntry();
-			methodTypeReferences.put(referencedClass, new EntryReference<>(referencedClass, referencedClass.getName(), method));
+			JarIndex.synchronizedAdd(methodTypeReferences, referencedClass, new EntryReference<>(referencedClass, referencedClass.getName(), method));
 		} else if (typeDescriptor.isArray()) {
 			indexMethodTypeDescriptor(method, typeDescriptor.getArrayType());
 		}
@@ -58,7 +58,7 @@ public class ReferenceIndex implements JarIndexer {
 	private void indexFieldTypeDescriptor(FieldDefEntry field, TypeDescriptor typeDescriptor) {
 		if (typeDescriptor.isType()) {
 			ClassEntry referencedClass = typeDescriptor.getTypeEntry();
-			fieldTypeReferences.put(referencedClass, new EntryReference<>(referencedClass, referencedClass.getName(), field));
+			JarIndex.synchronizedAdd(fieldTypeReferences, referencedClass, new EntryReference<>(referencedClass, referencedClass.getName(), field));
 		} else if (typeDescriptor.isArray()) {
 			indexFieldTypeDescriptor(field, typeDescriptor.getArrayType());
 		}
@@ -66,23 +66,23 @@ public class ReferenceIndex implements JarIndexer {
 
 	@Override
 	public void indexClassReference(MethodDefEntry callerEntry, ClassEntry referencedEntry, ReferenceTargetType targetType) {
-		referencesToClasses.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
+		JarIndex.synchronizedAdd(referencesToClasses, referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
 	}
 
 	@Override
 	public void indexMethodReference(MethodDefEntry callerEntry, MethodEntry referencedEntry, ReferenceTargetType targetType) {
-		referencesToMethods.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
-		methodReferences.put(callerEntry, referencedEntry);
+		JarIndex.synchronizedAdd(referencesToMethods, referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
+		JarIndex.synchronizedAdd(methodReferences, callerEntry, referencedEntry);
 
 		if (referencedEntry.isConstructor()) {
 			ClassEntry referencedClass = referencedEntry.getParent();
-			referencesToClasses.put(referencedClass, new EntryReference<>(referencedClass, referencedEntry.getName(), callerEntry, targetType));
+			JarIndex.synchronizedAdd(referencesToClasses, referencedClass, new EntryReference<>(referencedClass, referencedEntry.getName(), callerEntry, targetType));
 		}
 	}
 
 	@Override
 	public void indexFieldReference(MethodDefEntry callerEntry, FieldEntry referencedEntry, ReferenceTargetType targetType) {
-		referencesToFields.put(referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
+		JarIndex.synchronizedAdd(referencesToFields, referencedEntry, new EntryReference<>(referencedEntry, referencedEntry.getName(), callerEntry, targetType));
 	}
 
 	@Override
@@ -108,24 +108,26 @@ public class ReferenceIndex implements JarIndexer {
 		methodTypeReferences = remapReferencesTo(index, methodTypeReferences);
 	}
 
-	private <K extends Entry<?>, V extends Entry<?>> Multimap<K, V> remapReferences(JarIndex index, Multimap<K, V> multimap) {
-		final int keySetSize = multimap.keySet().size();
-		Multimap<K, V> resolved = HashMultimap.create(multimap.keySet().size(), keySetSize == 0 ? 0 : multimap.size() / keySetSize);
+	private <K extends Entry<?>, V extends Entry<?>> ConcurrentMap<K, List<V>> remapReferences(JarIndex index, ConcurrentMap<K, List<V>> multimap) {
+		ConcurrentMap<K, List<V>> resolved = new ConcurrentHashMap<>();
 
-		for (Map.Entry<K, V> entry : multimap.entries()) {
-			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
-		}
+		multimap.entrySet().parallelStream().forEach(entry -> {
+			for (V value : entry.getValue()) {
+				JarIndex.synchronizedAdd(resolved, remap(index, entry.getKey()), remap(index, value));
+			}
+		});
 
 		return resolved;
 	}
 
-	private <E extends Entry<?>, C extends Entry<?>> Multimap<E, EntryReference<E, C>> remapReferencesTo(JarIndex index, Multimap<E, EntryReference<E, C>> multimap) {
-		final int keySetSize = multimap.keySet().size();
-		Multimap<E, EntryReference<E, C>> resolved = HashMultimap.create(keySetSize, keySetSize == 0 ? 0 : multimap.size() / keySetSize);
+	private <E extends Entry<?>, C extends Entry<?>> ConcurrentMap<E, List<EntryReference<E, C>>> remapReferencesTo(JarIndex index, ConcurrentMap<E, List<EntryReference<E, C>>> multimap) {
+		ConcurrentMap<E, List<EntryReference<E, C>>> resolved = new ConcurrentHashMap<>();
 
-		for (Map.Entry<E, EntryReference<E, C>> entry : multimap.entries()) {
-			resolved.put(remap(index, entry.getKey()), remap(index, entry.getValue()));
-		}
+		multimap.entrySet().parallelStream().forEach(entry -> {
+			for (EntryReference<E, C> value : entry.getValue()) {
+				JarIndex.synchronizedAdd(resolved, remap(index, entry.getKey()), remap(index, value));
+			}
+		});
 
 		return resolved;
 	}
@@ -139,26 +141,26 @@ public class ReferenceIndex implements JarIndexer {
 	}
 
 	public Collection<MethodEntry> getMethodsReferencedBy(MethodEntry entry) {
-		return methodReferences.get(entry);
+		return methodReferences.getOrDefault(entry, Collections.emptyList());
 	}
 
 	public Collection<EntryReference<FieldEntry, MethodDefEntry>> getReferencesToField(FieldEntry entry) {
-		return referencesToFields.get(entry);
+		return referencesToFields.getOrDefault(entry, Collections.emptyList());
 	}
 
 	public Collection<EntryReference<ClassEntry, MethodDefEntry>> getReferencesToClass(ClassEntry entry) {
-		return referencesToClasses.get(entry);
+		return referencesToClasses.getOrDefault(entry, Collections.emptyList());
 	}
 
 	public Collection<EntryReference<MethodEntry, MethodDefEntry>> getReferencesToMethod(MethodEntry entry) {
-		return referencesToMethods.get(entry);
+		return referencesToMethods.getOrDefault(entry, Collections.emptyList());
 	}
 
 	public Collection<EntryReference<ClassEntry, FieldDefEntry>> getFieldTypeReferencesToClass(ClassEntry entry) {
-		return fieldTypeReferences.get(entry);
+		return fieldTypeReferences.getOrDefault(entry, Collections.emptyList());
 	}
 
 	public Collection<EntryReference<ClassEntry, MethodDefEntry>> getMethodTypeReferencesToClass(ClassEntry entry) {
-		return methodTypeReferences.get(entry);
+		return methodTypeReferences.getOrDefault(entry, Collections.emptyList());
 	}
 }

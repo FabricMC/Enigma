@@ -5,10 +5,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
-
-import com.google.common.collect.Maps;
 
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
@@ -22,8 +22,8 @@ public class BridgeMethodIndex implements JarIndexer {
 	private final InheritanceIndex inheritanceIndex;
 	private final ReferenceIndex referenceIndex;
 
-	private final Map<MethodEntry, MethodEntry> bridgeToSpecialized = Maps.newHashMap();
-	private final Map<MethodEntry, MethodEntry> specializedToBridge = Maps.newHashMap();
+	private final ConcurrentMap<MethodEntry, MethodEntry> bridgeToSpecialized = new ConcurrentHashMap<>();
+	private final ConcurrentMap<MethodEntry, MethodEntry> specializedToBridge = new ConcurrentHashMap<>();
 
 	public BridgeMethodIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex) {
 		this.entryIndex = entryIndex;
@@ -50,17 +50,17 @@ public class BridgeMethodIndex implements JarIndexer {
 	public void processIndex(JarIndex index) {
 		Map<MethodEntry, MethodEntry> copiedAccessToBridge = new HashMap<>(specializedToBridge);
 
-		for (Map.Entry<MethodEntry, MethodEntry> entry : copiedAccessToBridge.entrySet()) {
+		copiedAccessToBridge.entrySet().parallelStream().forEach(entry -> {
 			MethodEntry specializedEntry = entry.getKey();
 			MethodEntry bridgeEntry = entry.getValue();
 
 			if (bridgeEntry.getName().equals(specializedEntry.getName())) {
-				continue;
+				return;
 			}
 
 			MethodEntry renamedSpecializedEntry = specializedEntry.withName(bridgeEntry.getName());
-			specializedToBridge.put(renamedSpecializedEntry, specializedToBridge.get(specializedEntry));
-		}
+			specializedToBridge.put(renamedSpecializedEntry, copiedAccessToBridge.get(specializedEntry));
+		});
 	}
 
 	private void indexSyntheticMethod(MethodDefEntry syntheticMethod, AccessFlags access) {

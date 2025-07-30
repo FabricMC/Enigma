@@ -11,15 +11,14 @@
 
 package cuchaz.enigma.analysis.index;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.ProgressListener;
@@ -48,8 +47,7 @@ public class JarIndex implements JarIndexer {
 
 	private final Collection<JarIndexer> indexers;
 
-	private final Multimap<String, MethodDefEntry> methodImplementations = HashMultimap.create();
-	private final ListMultimap<ClassEntry, ParentedEntry> childrenByClass;
+	private final ConcurrentMap<ClassEntry, List<ParentedEntry<?>>> childrenByClass;
 
 	public JarIndex(EntryIndex entryIndex, InheritanceIndex inheritanceIndex, ReferenceIndex referenceIndex, BridgeMethodIndex bridgeMethodIndex, PackageVisibilityIndex packageVisibilityIndex) {
 		this.entryIndex = entryIndex;
@@ -59,7 +57,7 @@ public class JarIndex implements JarIndexer {
 		this.packageVisibilityIndex = packageVisibilityIndex;
 		this.indexers = List.of(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 		this.entryResolver = new IndexEntryResolver(this);
-		this.childrenByClass = ArrayListMultimap.create();
+		this.childrenByClass = new ConcurrentHashMap<>();
 	}
 
 	public static JarIndex empty() {
@@ -77,19 +75,19 @@ public class JarIndex implements JarIndexer {
 
 		progress.step(1, I18n.translate("progress.jar.indexing.entries"));
 
-		for (String className : classNames) {
+		classNames.parallelStream().forEach(className -> {
 			classProvider.get(className).accept(new IndexClassVisitor(this, Enigma.ASM_VERSION));
-		}
+		});
 
 		progress.step(2, I18n.translate("progress.jar.indexing.references"));
 
-		for (String className : classNames) {
+		classNames.parallelStream().forEach(className -> {
 			try {
 				classProvider.get(className).accept(new IndexReferenceVisitor(this, entryIndex, inheritanceIndex, Enigma.ASM_VERSION));
 			} catch (Exception e) {
 				throw new RuntimeException("Exception while indexing class: " + className, e);
 			}
-		}
+		});
 
 		progress.step(3, I18n.translate("progress.jar.indexing.methods"));
 		bridgeMethodIndex.findBridgeMethods();
@@ -118,7 +116,7 @@ public class JarIndex implements JarIndexer {
 		indexers.forEach(indexer -> indexer.indexClass(classEntry));
 
 		if (classEntry.isInnerClass() && !classEntry.getAccess().isSynthetic()) {
-			childrenByClass.put(classEntry.getParent(), classEntry);
+			synchronizedAdd(childrenByClass, classEntry.getParent(), classEntry);
 		}
 	}
 
@@ -131,7 +129,7 @@ public class JarIndex implements JarIndexer {
 		indexers.forEach(indexer -> indexer.indexField(fieldEntry));
 
 		if (!fieldEntry.getAccess().isSynthetic()) {
-			childrenByClass.put(fieldEntry.getParent(), fieldEntry);
+			synchronizedAdd(childrenByClass, fieldEntry.getParent(), fieldEntry);
 		}
 	}
 
@@ -144,11 +142,7 @@ public class JarIndex implements JarIndexer {
 		indexers.forEach(indexer -> indexer.indexMethod(methodEntry));
 
 		if (!methodEntry.getAccess().isSynthetic() && !methodEntry.getName().equals("<clinit>")) {
-			childrenByClass.put(methodEntry.getParent(), methodEntry);
-		}
-
-		if (!methodEntry.isConstructor()) {
-			methodImplementations.put(methodEntry.getParent().getFullName(), methodEntry);
+			synchronizedAdd(childrenByClass, methodEntry.getParent(), methodEntry);
 		}
 	}
 
@@ -212,11 +206,18 @@ public class JarIndex implements JarIndexer {
 		return entryResolver;
 	}
 
-	public ListMultimap<ClassEntry, ParentedEntry> getChildrenByClass() {
+	public Map<ClassEntry, List<ParentedEntry<?>>> getChildrenByClass() {
 		return this.childrenByClass;
 	}
 
 	public boolean isIndexed(String internalName) {
 		return indexedClasses.contains(internalName);
+	}
+
+	static <K, V> void synchronizedAdd(ConcurrentMap<K, List<V>> map, K key, V value) {
+		List<V> list = map.computeIfAbsent(key, k -> new ArrayList<>());
+		synchronized (list) {
+			list.add(value);
+		}
 	}
 }
