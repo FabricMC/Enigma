@@ -115,6 +115,10 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 		}
 
 		private void collectResults() throws Exception {
+			if (enumFields.isEmpty()) {
+				return;
+			}
+
 			String owner = className;
 			Analyzer<SourceValue> analyzer = new Analyzer<>(new SourceInterpreter());
 
