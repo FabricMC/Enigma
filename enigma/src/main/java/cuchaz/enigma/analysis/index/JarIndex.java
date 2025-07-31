@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentMap;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.ReferenceTargetType;
+import cuchaz.enigma.classprovider.AddFramesIfNecessaryClassProvider;
+import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.IndexEntryResolver;
@@ -69,7 +71,7 @@ public class JarIndex implements JarIndexer {
 		return new JarIndex(entryIndex, inheritanceIndex, referenceIndex, bridgeMethodIndex, packageVisibilityIndex);
 	}
 
-	public void indexJar(Set<String> classNames, ClassProvider classProvider, ProgressListener progress) {
+	public ClassProvider indexJar(Set<String> classNames, ClassProvider classProvider, ProgressListener progress) {
 		indexedClasses.addAll(classNames);
 		progress.init(4, I18n.translate("progress.jar.indexing"));
 
@@ -79,11 +81,13 @@ public class JarIndex implements JarIndexer {
 			classProvider.get(className).accept(new IndexClassVisitor(this, Enigma.ASM_VERSION));
 		});
 
+		ClassProvider classProviderWithFrames = new CachingClassProvider(new AddFramesIfNecessaryClassProvider(classProvider, entryIndex));
+
 		progress.step(2, I18n.translate("progress.jar.indexing.references"));
 
 		classNames.parallelStream().forEach(className -> {
 			try {
-				classProvider.get(className).accept(new IndexReferenceVisitor(this, Enigma.ASM_VERSION));
+				classProviderWithFrames.get(className).accept(new IndexReferenceVisitor(this, Enigma.ASM_VERSION));
 			} catch (Exception e) {
 				throw new RuntimeException("Exception while indexing class: " + className, e);
 			}
@@ -94,6 +98,8 @@ public class JarIndex implements JarIndexer {
 
 		progress.step(4, I18n.translate("progress.jar.indexing.process"));
 		processIndex(this);
+
+		return classProviderWithFrames;
 	}
 
 	@Override
