@@ -95,7 +95,7 @@ public class ProgressDialog implements ProgressListener, AutoCloseable {
 		}, SwingUtilities::invokeLater).thenAcceptAsync(progress -> {
 			try (progress) {
 				runnable.run(progress);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				CrashDialog.show(e);
 				throw new RuntimeException(e);
 			}

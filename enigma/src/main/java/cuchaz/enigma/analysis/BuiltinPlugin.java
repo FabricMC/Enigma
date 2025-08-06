@@ -48,9 +48,9 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 
 	private void registerEnumNamingService(EnigmaPluginContext ctx) {
 		final Map<Entry<?>, String> names = new HashMap<>();
-		final EnumFieldNameFindingVisitor visitor = new EnumFieldNameFindingVisitor(names);
+		JarIndexerService indexerService = JarIndexerService.fromVisitorsInParallel(EnumFieldNameFindingVisitor::new, visitors -> visitors.forEach(visitor -> names.putAll(visitor.mappings)));
 
-		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, ctx1 -> JarIndexerService.fromVisitor(visitor));
+		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, ctx1 -> indexerService);
 		ctx.registerService("enigma:enum_name_proposer", NameProposalService.TYPE, ctx1 -> (obfEntry, remapper) -> Optional.ofNullable(names.get(obfEntry)));
 	}
 
@@ -64,13 +64,12 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 	private static final class EnumFieldNameFindingVisitor extends ClassVisitor {
 		private ClassEntry clazz;
 		private String className;
-		private final Map<Entry<?>, String> mappings;
+		private final Map<Entry<?>, String> mappings = new HashMap<>();
 		private final Set<Pair<String, String>> enumFields = new HashSet<>();
 		private final List<MethodNode> classInits = new ArrayList<>();
 
-		EnumFieldNameFindingVisitor(Map<Entry<?>, String> mappings) {
+		EnumFieldNameFindingVisitor() {
 			super(Enigma.ASM_VERSION);
-			this.mappings = mappings;
 		}
 
 		@Override
@@ -116,6 +115,10 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 		}
 
 		private void collectResults() throws Exception {
+			if (enumFields.isEmpty()) {
+				return;
+			}
+
 			String owner = className;
 			Analyzer<SourceValue> analyzer = new Analyzer<>(new SourceInterpreter());
 

@@ -62,8 +62,8 @@ public class Enigma {
 		Set<String> scope = jarClassProvider.getClassNames();
 
 		JarIndex index = JarIndex.empty();
-		index.indexJar(scope, classProvider, progress);
-		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(scope, classProvider, index));
+		ClassProvider classProviderWithFrames = index.indexJar(scope, classProvider, progress);
+		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(scope, classProviderWithFrames, index));
 
 		return new EnigmaProject(this, path, classProvider, index, Utils.zipSha1(path));
 	}

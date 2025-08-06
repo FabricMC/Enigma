@@ -11,13 +11,16 @@
 
 package cuchaz.enigma.analysis.index;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
@@ -26,8 +29,8 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 public class InheritanceIndex implements JarIndexer {
 	private final EntryIndex entryIndex;
 
-	private Multimap<ClassEntry, ClassEntry> classParents = HashMultimap.create();
-	private Multimap<ClassEntry, ClassEntry> classChildren = HashMultimap.create();
+	private final ConcurrentMap<ClassEntry, List<ClassEntry>> classParents = new ConcurrentHashMap<>();
+	private final ConcurrentMap<ClassEntry, List<ClassEntry>> classChildren = new ConcurrentHashMap<>();
 
 	public InheritanceIndex(EntryIndex entryIndex) {
 		this.entryIndex = entryIndex;
@@ -51,16 +54,18 @@ public class InheritanceIndex implements JarIndexer {
 	}
 
 	private void indexParent(ClassEntry childEntry, ClassEntry parentEntry) {
-		classParents.put(childEntry, parentEntry);
-		classChildren.put(parentEntry, childEntry);
+		// No need to add to classParents in a synchronized way, as we'll be the only ones adding to the corresponding childEntry
+		classParents.computeIfAbsent(childEntry, k -> new ArrayList<>()).add(parentEntry);
+
+		JarIndex.synchronizedAdd(classChildren, parentEntry, childEntry);
 	}
 
 	public Collection<ClassEntry> getParents(ClassEntry classEntry) {
-		return classParents.get(classEntry);
+		return classParents.getOrDefault(classEntry, Collections.emptyList());
 	}
 
 	public Collection<ClassEntry> getChildren(ClassEntry classEntry) {
-		return classChildren.get(classEntry);
+		return classChildren.getOrDefault(classEntry, Collections.emptyList());
 	}
 
 	public Collection<ClassEntry> getDescendants(ClassEntry classEntry) {

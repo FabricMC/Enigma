@@ -1,12 +1,14 @@
 plugins {
 	id 'maven-publish'
 	id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+	id 'com.diffplug.spotless' version '7.2.1'
 }
 
 subprojects {
 	apply plugin: 'java'
 	apply plugin: 'maven-publish'
 	apply plugin: 'checkstyle'
+	apply plugin: "com.diffplug.spotless"
 
 	repositories {
 		mavenLocal()
@@ -45,6 +47,15 @@ subprojects {
 	checkstyle {
 		configFile = rootProject.file('checkstyle.xml')
 		toolVersion = '10.12.4'
+	}
+
+	spotless {
+		lineEndings = com.diffplug.spotless.LineEnding.UNIX
+
+		java {
+			removeUnusedImports()
+			importOrder('java', 'javax', '', 'cuchaz.enigma')
+		}
 	}
 
 	publishing {

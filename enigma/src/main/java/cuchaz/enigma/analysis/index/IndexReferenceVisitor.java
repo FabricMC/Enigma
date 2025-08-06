@@ -4,24 +4,12 @@ import java.util.List;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Handle;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.LdcInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.TypeInsnNode;
-import org.objectweb.asm.tree.analysis.Analyzer;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicValue;
-import org.objectweb.asm.tree.analysis.SourceInterpreter;
-import org.objectweb.asm.tree.analysis.SourceValue;
 
-import cuchaz.enigma.analysis.IndexSimpleVerifier;
-import cuchaz.enigma.analysis.InterpreterPair;
-import cuchaz.enigma.analysis.MethodNodeWithAction;
+import cuchaz.enigma.analysis.BetterAnalyzerAdapter;
 import cuchaz.enigma.analysis.ReferenceTargetType;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.Lambda;
@@ -35,16 +23,12 @@ import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 
 public class IndexReferenceVisitor extends ClassVisitor {
 	private final JarIndexer indexer;
-	private final EntryIndex entryIndex;
-	private final InheritanceIndex inheritanceIndex;
 	private ClassEntry classEntry;
 	private String className;
 
-	public IndexReferenceVisitor(JarIndexer indexer, EntryIndex entryIndex, InheritanceIndex inheritanceIndex, int api) {
+	public IndexReferenceVisitor(JarIndexer indexer, int api) {
 		super(api);
 		this.indexer = indexer;
-		this.entryIndex = entryIndex;
-		this.inheritanceIndex = inheritanceIndex;
 	}
 
 	@Override
@@ -56,153 +40,161 @@ public class IndexReferenceVisitor extends ClassVisitor {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		MethodDefEntry entry = new MethodDefEntry(classEntry, name, new MethodDescriptor(desc), Signature.createSignature(signature), new AccessFlags(access));
-		return new MethodNodeWithAction(api, access, name, desc, signature, exceptions, methodNode -> {
-			try {
-				new Analyzer<>(new MethodInterpreter(entry, indexer, entryIndex, inheritanceIndex)).analyze(className, methodNode);
-			} catch (AnalyzerException e) {
-				throw new RuntimeException(e);
-			}
-		});
+		return new IndexReferenceMethodVisitor(api, className, access, name, desc, entry, indexer);
 	}
 
-	private static class MethodInterpreter extends InterpreterPair<BasicValue, SourceValue> {
+	private static class IndexReferenceMethodVisitor extends BetterAnalyzerAdapter {
 		private final MethodDefEntry callerEntry;
 		private final JarIndexer indexer;
 
-		MethodInterpreter(MethodDefEntry callerEntry, JarIndexer indexer, EntryIndex entryIndex, InheritanceIndex inheritanceIndex) {
-			super(new IndexSimpleVerifier(entryIndex, inheritanceIndex), new SourceInterpreter());
+		IndexReferenceMethodVisitor(int api, String owner, int access, String name, String descriptor, MethodDefEntry callerEntry, JarIndexer indexer) {
+			super(api, owner, access, name, descriptor, null);
 			this.callerEntry = callerEntry;
 			this.indexer = indexer;
 		}
 
 		@Override
-		public PairValue<BasicValue, SourceValue> newOperation(AbstractInsnNode insn) throws AnalyzerException {
-			if (insn.getOpcode() == Opcodes.GETSTATIC) {
-				FieldInsnNode field = (FieldInsnNode) insn;
-				indexer.indexFieldReference(callerEntry, FieldEntry.parse(field.owner, field.name, field.desc), ReferenceTargetType.none());
+		public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
+			switch (opcode) {
+			case Opcodes.GETSTATIC, Opcodes.PUTSTATIC -> indexer.indexFieldReference(callerEntry, FieldEntry.parse(owner, name, descriptor), ReferenceTargetType.none());
+			case Opcodes.GETFIELD -> indexer.indexFieldReference(callerEntry, FieldEntry.parse(owner, name, descriptor), getReferenceTargetType(0));
+			case Opcodes.PUTFIELD -> indexer.indexFieldReference(callerEntry, FieldEntry.parse(owner, name, descriptor), getReferenceTargetType(Type.getType(descriptor).getSize()));
 			}
 
-			if (insn.getOpcode() == Opcodes.LDC) {
-				LdcInsnNode ldc = (LdcInsnNode) insn;
+			super.visitFieldInsn(opcode, owner, name, descriptor);
+		}
 
-				if (ldc.getType() == Type.ARRAY && ldc.cst instanceof Type type) {
-					String className = type.getClassName().replace(".", "/");
-					indexer.indexClassReference(callerEntry, ClassEntry.parse(className), ReferenceTargetType.none());
+		@Override
+		public void visitLdcInsn(Object value) {
+			if (value instanceof Type type && (type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY)) {
+				if (type.getSort() == Type.ARRAY) {
+					type = type.getElementType();
 				}
+
+				indexer.indexClassReference(callerEntry, ClassEntry.parse(type.getInternalName()), ReferenceTargetType.none());
 			}
 
-			return super.newOperation(insn);
+			super.visitLdcInsn(value);
 		}
 
 		@Override
-		public PairValue<BasicValue, SourceValue> unaryOperation(AbstractInsnNode insn, PairValue<BasicValue, SourceValue> value) throws AnalyzerException {
-			if (insn.getOpcode() == Opcodes.PUTSTATIC) {
-				FieldInsnNode field = (FieldInsnNode) insn;
-				indexer.indexFieldReference(callerEntry, FieldEntry.parse(field.owner, field.name, field.desc), ReferenceTargetType.none());
+		public void visitTypeInsn(int opcode, String type) {
+			if (opcode == Opcodes.INSTANCEOF || opcode == Opcodes.CHECKCAST) {
+				Type classType = Type.getObjectType(type);
+
+				if (classType.getSort() == Type.ARRAY) {
+					classType = classType.getElementType();
+				}
+
+				indexer.indexClassReference(callerEntry, ClassEntry.parse(classType.getInternalName()), ReferenceTargetType.none());
 			}
 
-			if (insn.getOpcode() == Opcodes.GETFIELD) {
-				FieldInsnNode field = (FieldInsnNode) insn;
-				indexer.indexFieldReference(callerEntry, FieldEntry.parse(field.owner, field.name, field.desc), getReferenceTargetType(value, insn));
-			}
-
-			if (insn.getOpcode() == Opcodes.INSTANCEOF) {
-				TypeInsnNode type = (TypeInsnNode) insn;
-				// Note: type.desc is actually the name
-				indexer.indexClassReference(callerEntry, ClassEntry.parse(type.desc), ReferenceTargetType.none());
-			}
-
-			if (insn.getOpcode() == Opcodes.CHECKCAST) {
-				TypeInsnNode type = (TypeInsnNode) insn;
-				indexer.indexClassReference(callerEntry, ClassEntry.parse(type.desc), ReferenceTargetType.none());
-			}
-
-			return super.unaryOperation(insn, value);
+			super.visitTypeInsn(opcode, type);
 		}
 
 		@Override
-		public PairValue<BasicValue, SourceValue> binaryOperation(AbstractInsnNode insn, PairValue<BasicValue, SourceValue> value1, PairValue<BasicValue, SourceValue> value2) throws AnalyzerException {
-			if (insn.getOpcode() == Opcodes.PUTFIELD) {
-				FieldInsnNode field = (FieldInsnNode) insn;
-				FieldEntry fieldEntry = FieldEntry.parse(field.owner, field.name, field.desc);
-				indexer.indexFieldReference(callerEntry, fieldEntry, ReferenceTargetType.none());
+		public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+			ReferenceTargetType targetType;
+
+			if (opcode == Opcodes.INVOKESTATIC) {
+				targetType = ReferenceTargetType.none();
+			} else {
+				int argSize = (Type.getArgumentsAndReturnSizes(descriptor) >> 2) - 1;
+				targetType = getReferenceTargetType(argSize);
 			}
 
-			return super.binaryOperation(insn, value1, value2);
+			indexer.indexMethodReference(callerEntry, MethodEntry.parse(owner, name, descriptor), targetType);
+
+			super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
 		}
 
 		@Override
-		public PairValue<BasicValue, SourceValue> naryOperation(AbstractInsnNode insn, List<? extends PairValue<BasicValue, SourceValue>> values) throws AnalyzerException {
-			if (insn.getOpcode() == Opcodes.INVOKEINTERFACE || insn.getOpcode() == Opcodes.INVOKESPECIAL || insn.getOpcode() == Opcodes.INVOKEVIRTUAL) {
-				MethodInsnNode methodInsn = (MethodInsnNode) insn;
-				indexer.indexMethodReference(callerEntry, MethodEntry.parse(methodInsn.owner, methodInsn.name, methodInsn.desc), getReferenceTargetType(values.get(0), insn));
-			}
+		public void visitInvokeDynamicInsn(String name, String descriptor, Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
+			if ("java/lang/invoke/LambdaMetafactory".equals(bootstrapMethodHandle.getOwner()) && ("metafactory".equals(bootstrapMethodHandle.getName()) || "altMetafactory".equals(bootstrapMethodHandle.getName()))) {
+				Type samMethodType = (Type) bootstrapMethodArguments[0];
+				Handle implMethod = (Handle) bootstrapMethodArguments[1];
+				Type instantiatedMethodType = (Type) bootstrapMethodArguments[2];
 
-			if (insn.getOpcode() == Opcodes.INVOKESTATIC) {
-				MethodInsnNode methodInsn = (MethodInsnNode) insn;
-				indexer.indexMethodReference(callerEntry, MethodEntry.parse(methodInsn.owner, methodInsn.name, methodInsn.desc), ReferenceTargetType.none());
-			}
+				ReferenceTargetType targetType;
 
-			if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC) {
-				InvokeDynamicInsnNode invokeDynamicInsn = (InvokeDynamicInsnNode) insn;
-				List<AbstractInsnNode> args = values.stream().map(v -> v.right.insns.stream().findFirst().orElseThrow(AssertionError::new)).toList();
-
-				if ("java/lang/invoke/LambdaMetafactory".equals(invokeDynamicInsn.bsm.getOwner()) && "metafactory".equals(invokeDynamicInsn.bsm.getName())) {
-					Type samMethodType = (Type) invokeDynamicInsn.bsmArgs[0];
-					Handle implMethod = (Handle) invokeDynamicInsn.bsmArgs[1];
-					Type instantiatedMethodType = (Type) invokeDynamicInsn.bsmArgs[2];
-
-					ReferenceTargetType targetType;
-
-					if (implMethod.getTag() != Opcodes.H_GETSTATIC && implMethod.getTag() != Opcodes.H_PUTFIELD && implMethod.getTag() != Opcodes.H_INVOKESTATIC) {
-						if (instantiatedMethodType.getArgumentTypes().length < Type.getArgumentTypes(implMethod.getDesc()).length) {
-							targetType = getReferenceTargetType(values.get(0), insn);
+				if (implMethod.getTag() != Opcodes.H_GETSTATIC && implMethod.getTag() != Opcodes.H_PUTFIELD && implMethod.getTag() != Opcodes.H_INVOKESTATIC) {
+					if (instantiatedMethodType.getArgumentCount() < Type.getArgumentCount(implMethod.getDesc())) {
+						if (descriptor.startsWith("(L")) { // is the first parameter of the indy an object type?
+							int argSize = (Type.getArgumentsAndReturnSizes(descriptor) >> 2) - 1;
+							targetType = getReferenceTargetType(argSize - 1);
 						} else {
-							targetType = ReferenceTargetType.none(); // no "this" argument
+							targetType = ReferenceTargetType.none();
 						}
 					} else {
-						targetType = ReferenceTargetType.none();
+						targetType = ReferenceTargetType.none(); // no "this" argument
 					}
-
-					indexer.indexLambda(callerEntry, new Lambda(invokeDynamicInsn.name, new MethodDescriptor(invokeDynamicInsn.desc), new MethodDescriptor(samMethodType.getDescriptor()), getHandleEntry(implMethod), new MethodDescriptor(instantiatedMethodType.getDescriptor())), targetType);
+				} else {
+					targetType = ReferenceTargetType.none();
 				}
+
+				indexer.indexLambda(callerEntry, new Lambda(name, new MethodDescriptor(descriptor), new MethodDescriptor(samMethodType.getDescriptor()), getHandleEntry(implMethod), new MethodDescriptor(instantiatedMethodType.getDescriptor())), targetType);
 			}
 
-			return super.naryOperation(insn, values);
+			super.visitInvokeDynamicInsn(name, descriptor, bootstrapMethodHandle, bootstrapMethodArguments);
 		}
 
-		private ReferenceTargetType getReferenceTargetType(PairValue<BasicValue, SourceValue> target, AbstractInsnNode insn) throws AnalyzerException {
-			if (target.left == BasicValue.UNINITIALIZED_VALUE) {
+		private ReferenceTargetType getReferenceTargetType(int stackDepth) {
+			if (stackDepth >= stack.size()) {
+				throw new IllegalStateException("Stack depth " + stackDepth + " is higher than the stack: " + stackValuesToString(stack) + " in method " + callerEntry);
+			}
+
+			Object stackValue = stack.get(stack.size() - 1 - stackDepth);
+
+			if (stackValue.equals(Opcodes.UNINITIALIZED_THIS) || stackValue instanceof Label) {
 				return ReferenceTargetType.uninitialized();
 			}
 
-			if (target.left.getType().getSort() == Type.OBJECT) {
-				return ReferenceTargetType.classType(new ClassEntry(target.left.getType().getInternalName()));
+			if (!(stackValue instanceof String type)) {
+				throw new IllegalStateException("Illegal stack value in method " + callerEntry + ": " + stackValuesToString(List.of(stackValue)));
 			}
 
-			if (target.left.getType().getSort() == Type.ARRAY) {
+			if (type.startsWith("[")) {
+				// array type
 				return ReferenceTargetType.classType(new ClassEntry("java/lang/Object"));
+			} else {
+				return ReferenceTargetType.classType(new ClassEntry(type));
+			}
+		}
+
+		private static String stackValuesToString(List<Object> stack) {
+			StringBuilder result = new StringBuilder("[");
+			boolean first = true;
+
+			for (Object stackValue : stack) {
+				if (first) {
+					first = false;
+				} else {
+					result.append(", ");
+				}
+
+				if (stackValue instanceof String str) {
+					result.append(str);
+				} else if (stackValue instanceof Integer i) {
+					result.append("TIFDJNU".charAt(i));
+				} else if (stackValue instanceof Label) {
+					result.append('U');
+				} else {
+					throw new AssertionError("Illegal stack value type: " + stackValue.getClass().getName());
+				}
 			}
 
-			throw new AnalyzerException(insn, "called method on or accessed field of non-object type");
+			return result.append(']').toString();
 		}
 
 		private static ParentedEntry<?> getHandleEntry(Handle handle) {
-			switch (handle.getTag()) {
-			case Opcodes.H_GETFIELD:
-			case Opcodes.H_GETSTATIC:
-			case Opcodes.H_PUTFIELD:
-			case Opcodes.H_PUTSTATIC:
-				return FieldEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
-			case Opcodes.H_INVOKEINTERFACE:
-			case Opcodes.H_INVOKESPECIAL:
-			case Opcodes.H_INVOKESTATIC:
-			case Opcodes.H_INVOKEVIRTUAL:
-			case Opcodes.H_NEWINVOKESPECIAL:
-				return MethodEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
-			}
-
-			throw new RuntimeException("Invalid handle tag " + handle.getTag());
+			return switch (handle.getTag()) {
+			case Opcodes.H_GETFIELD, Opcodes.H_GETSTATIC, Opcodes.H_PUTFIELD, Opcodes.H_PUTSTATIC ->
+					FieldEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
+			case Opcodes.H_INVOKEINTERFACE, Opcodes.H_INVOKESPECIAL, Opcodes.H_INVOKESTATIC,
+				Opcodes.H_INVOKEVIRTUAL, Opcodes.H_NEWINVOKESPECIAL ->
+					MethodEntry.parse(handle.getOwner(), handle.getName(), handle.getDesc());
+			default -> throw new RuntimeException("Invalid handle tag " + handle.getTag());
+			};
 		}
 	}
 }

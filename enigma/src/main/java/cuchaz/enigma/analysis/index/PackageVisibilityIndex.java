@@ -6,8 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -46,19 +47,25 @@ public class PackageVisibilityIndex implements JarIndexer {
 		return true;
 	}
 
-	private final HashMultimap<ClassEntry, ClassEntry> connections = HashMultimap.create();
+	private final ConcurrentMap<ClassEntry, List<ClassEntry>> connections = new ConcurrentHashMap<>();
 	private final List<Set<ClassEntry>> partitions = Lists.newArrayList();
 	private final Map<ClassEntry, Set<ClassEntry>> classPartitions = Maps.newHashMap();
 
 	private void addConnection(ClassEntry classA, ClassEntry classB) {
 		if (classA != classB) {
-			connections.put(classA, classB);
-			connections.put(classB, classA);
+			JarIndex.synchronizedAdd(connections, classA, classB);
+			JarIndex.synchronizedAdd(connections, classB, classA);
 		}
 	}
 
 	private void buildPartition(Set<ClassEntry> unassignedClasses, Set<ClassEntry> partition, ClassEntry member) {
-		for (ClassEntry connected : connections.get(member)) {
+		List<ClassEntry> memberConnections = connections.get(member);
+
+		if (memberConnections == null) {
+			return;
+		}
+
+		for (ClassEntry connected : memberConnections) {
 			if (unassignedClasses.remove(connected)) {
 				partition.add(connected);
 				buildPartition(unassignedClasses, partition, connected);
@@ -67,7 +74,7 @@ public class PackageVisibilityIndex implements JarIndexer {
 	}
 
 	private void addConnections(EntryIndex entryIndex, ReferenceIndex referenceIndex, InheritanceIndex inheritanceIndex) {
-		for (FieldEntry entry : entryIndex.getFields()) {
+		entryIndex.getFields().parallelStream().forEach(entry -> {
 			AccessFlags entryAcc = entryIndex.getFieldAccess(entry);
 
 			if (!entryAcc.isPublic() && !entryAcc.isPrivate()) {
@@ -77,9 +84,9 @@ public class PackageVisibilityIndex implements JarIndexer {
 					}
 				}
 			}
-		}
+		});
 
-		for (MethodEntry entry : entryIndex.getMethods()) {
+		entryIndex.getMethods().parallelStream().forEach(entry -> {
 			AccessFlags entryAcc = entryIndex.getMethodAccess(entry);
 
 			if (!entryAcc.isPublic() && !entryAcc.isPrivate()) {
@@ -89,9 +96,9 @@ public class PackageVisibilityIndex implements JarIndexer {
 					}
 				}
 			}
-		}
+		});
 
-		for (ClassEntry entry : entryIndex.getClasses()) {
+		entryIndex.getClasses().parallelStream().forEach(entry -> {
 			AccessFlags entryAcc = entryIndex.getClassAccess(entry);
 
 			if (!entryAcc.isPublic() && !entryAcc.isPrivate()) {
@@ -121,7 +128,7 @@ public class PackageVisibilityIndex implements JarIndexer {
 			if (outerClass != null) {
 				addConnection(entry, outerClass);
 			}
-		}
+		});
 	}
 
 	private void addPartitions(EntryIndex entryIndex) {
