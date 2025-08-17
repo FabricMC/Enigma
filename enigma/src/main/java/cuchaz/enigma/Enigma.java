@@ -57,15 +57,33 @@ public class Enigma {
 	}
 
 	public EnigmaProject openJar(Path path, ClassProvider libraryClassProvider, ProgressListener progress) throws IOException {
-		JarClassProvider jarClassProvider = new JarClassProvider(path);
+		return openJars(List.of(path), libraryClassProvider, progress);
+	}
+
+	public EnigmaProject openJars(List<Path> paths, ClassProvider libraryClassProvider, ProgressListener progress) throws IOException {
+		ClassProvider jarClassProvider = getJarClassProvider(paths);
 		ClassProvider classProvider = new CachingClassProvider(new CombiningClassProvider(jarClassProvider, libraryClassProvider));
-		Set<String> scope = jarClassProvider.getClassNames();
+		Set<String> scope = Set.copyOf(jarClassProvider.getClassNames());
 
 		JarIndex index = JarIndex.empty();
 		ClassProvider classProviderWithFrames = index.indexJar(scope, classProvider, progress);
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(scope, classProviderWithFrames, index));
 
-		return new EnigmaProject(this, path, classProvider, index, Utils.zipSha1(path));
+		return new EnigmaProject(this, paths, classProvider, index, Utils.zipSha1(paths.toArray(new Path[0])));
+	}
+
+	private ClassProvider getJarClassProvider(List<Path> jars) throws IOException {
+		if (jars.size() == 1) {
+			return new JarClassProvider(jars.get(0));
+		}
+
+		var classProviders = new ClassProvider[jars.size()];
+
+		for (int i = 0; i < jars.size(); i++) {
+			classProviders[i] = new JarClassProvider(jars.get(i));
+		}
+
+		return new CombiningClassProvider(classProviders);
 	}
 
 	public EnigmaProfile getProfile() {

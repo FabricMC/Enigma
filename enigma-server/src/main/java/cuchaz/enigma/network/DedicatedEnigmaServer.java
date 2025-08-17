@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -55,7 +56,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 	public static void main(String[] args) {
 		OptionParser parser = new OptionParser();
 
-		OptionSpec<Path> jarOpt = parser.accepts("jar", "Jar file to open at startup").withRequiredArg().required().withValuesConvertedBy(PathConverter.INSTANCE);
+		OptionSpec<Path> jarOpt = parser.accepts("jar", "Jar file to open at startup; if there are multiple jars, the order must be the same between the server and all clients").withRequiredArg().required().withValuesConvertedBy(PathConverter.INSTANCE);
 
 		OptionSpec<Path> mappingsOpt = parser.accepts("mappings", "Mappings file to open at startup").withRequiredArg().required().withValuesConvertedBy(PathConverter.INSTANCE);
 
@@ -68,7 +69,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 		OptionSpec<Path> logFileOpt = parser.accepts("log", "The log file to write to").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE).defaultsTo(Paths.get("log.txt"));
 
 		OptionSet parsedArgs = parser.parse(args);
-		Path jar = parsedArgs.valueOf(jarOpt);
+		List<Path> jars = parsedArgs.valuesOf(jarOpt);
 		Path mappingsFile = parsedArgs.valueOf(mappingsOpt);
 		Path profileFile = parsedArgs.valueOf(profileOpt);
 		int port = parsedArgs.valueOf(portOpt);
@@ -85,12 +86,12 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 		DedicatedEnigmaServer server;
 
 		try {
-			byte[] checksum = Utils.zipSha1(parsedArgs.valueOf(jarOpt));
+			byte[] checksum = Utils.zipSha1(jars.toArray(new Path[0]));
 
 			EnigmaProfile profile = EnigmaProfile.read(profileFile);
 			Enigma enigma = Enigma.builder().setProfile(profile).build();
 			System.out.println("Indexing Jar...");
-			EnigmaProject project = enigma.openJar(jar, new ClasspathClassProvider(), ProgressListener.none());
+			EnigmaProject project = enigma.openJars(jars, new ClasspathClassProvider(), ProgressListener.none());
 
 			MappingFormat mappingFormat = MappingFormat.ENIGMA_DIRECTORY;
 			EntryRemapper mappings;

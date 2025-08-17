@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.swing.JOptionPane;
@@ -119,18 +120,25 @@ public class GuiController implements ClientPacketHandler {
 		return project != null && project.getMapper().isDirty();
 	}
 
-	public CompletableFuture<Void> openJar(final Path jarPath) {
+	public CompletableFuture<Void> openJar(final List<Path> jarPaths) {
 		this.gui.onStartOpenJar();
 
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
-			project = enigma.openJar(jarPath, new ClasspathClassProvider(), progress);
+			project = enigma.openJars(jarPaths, new ClasspathClassProvider(), progress);
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
 			chp = new ClassHandleProvider(project, UiConfig.getDecompiler().service);
 			SwingUtilities.invokeLater(() -> {
-				gui.onFinishOpenJar(jarPath.getFileName().toString());
+				gui.onFinishOpenJar(getFileNames(jarPaths));
 				refreshClasses();
 			});
 		});
+	}
+
+	private static String getFileNames(List<Path> jarPaths) {
+		return jarPaths.stream()
+				.map(Path::getFileName)
+				.map(Object::toString)
+				.collect(Collectors.joining(", "));
 	}
 
 	public void closeJar() {
@@ -241,13 +249,13 @@ public class GuiController implements ClientPacketHandler {
 	}
 
 	public void reloadAll() {
-		Path jarPath = this.project.getJarPath();
+		List<Path> jarPaths = this.project.getJarPaths();
 		MappingFormat loadedMappingFormat = this.loadedMappingFormat;
 		Path loadedMappingPath = this.loadedMappingPath;
 
-		if (jarPath != null) {
+		if (jarPaths != null) { // TODO (Multi-jar): when would this ever be null?
 			this.closeJar();
-			CompletableFuture<Void> f = this.openJar(jarPath);
+			CompletableFuture<Void> f = this.openJar(jarPaths);
 
 			if (loadedMappingFormat != null && loadedMappingPath != null) {
 				f.whenComplete((v, t) -> this.openMappings(loadedMappingFormat, loadedMappingPath));

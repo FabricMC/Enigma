@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 
 public class Utils {
@@ -53,7 +54,8 @@ public class Utils {
 		}
 	}
 
-	public static byte[] zipSha1(Path path) throws IOException {
+	public static byte[] zipSha1(Path... paths) throws IOException {
+		Preconditions.checkArgument(paths.length >= 1, "Must provide at least one zip");
 		MessageDigest digest;
 
 		try {
@@ -63,6 +65,14 @@ public class Utils {
 			throw new RuntimeException(e);
 		}
 
+		for (Path path : paths) {
+			appendZipSha1(digest, path);
+		}
+
+		return digest.digest();
+	}
+
+	private static void appendZipSha1(MessageDigest digest, Path path) throws IOException {
 		try (ZipFile zip = new ZipFile(path.toFile())) {
 			List<? extends ZipEntry> entries = Collections.list(zip.entries());
 			// only compare classes (some implementations may not generate directory entries)
@@ -83,8 +93,6 @@ public class Utils {
 				}
 			}
 		}
-
-		return digest.digest();
 	}
 
 	public static void withLock(Lock l, Runnable op) {
