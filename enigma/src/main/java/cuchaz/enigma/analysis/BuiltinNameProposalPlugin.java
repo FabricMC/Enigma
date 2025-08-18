@@ -1,15 +1,12 @@
 package cuchaz.enigma.analysis;
 
-import cuchaz.enigma.Enigma;
-import cuchaz.enigma.api.EnigmaPlugin;
-import cuchaz.enigma.api.EnigmaPluginContext;
-import cuchaz.enigma.api.service.JarIndexerService;
-import cuchaz.enigma.api.service.NameProposalService;
-import cuchaz.enigma.translation.representation.TypeDescriptor;
-import cuchaz.enigma.translation.representation.entry.ClassEntry;
-import cuchaz.enigma.translation.representation.entry.Entry;
-import cuchaz.enigma.translation.representation.entry.FieldEntry;
-import cuchaz.enigma.utils.Pair;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -26,13 +23,16 @@ import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import cuchaz.enigma.Enigma;
+import cuchaz.enigma.api.EnigmaPlugin;
+import cuchaz.enigma.api.EnigmaPluginContext;
+import cuchaz.enigma.api.service.JarIndexerService;
+import cuchaz.enigma.api.service.NameProposalService;
+import cuchaz.enigma.translation.representation.TypeDescriptor;
+import cuchaz.enigma.translation.representation.entry.ClassEntry;
+import cuchaz.enigma.translation.representation.entry.Entry;
+import cuchaz.enigma.translation.representation.entry.FieldEntry;
+import cuchaz.enigma.utils.Pair;
 
 public class BuiltinNameProposalPlugin implements EnigmaPlugin {
 	@Override

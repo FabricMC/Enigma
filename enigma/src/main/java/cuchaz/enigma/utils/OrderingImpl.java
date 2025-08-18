@@ -24,6 +24,7 @@ public sealed interface OrderingImpl extends Ordering {
 
 			boolean isFirst = false;
 			boolean isLast = false;
+
 			for (Ordering ordering : orderings) {
 				if (ordering instanceof First) {
 					isFirst = true;
@@ -73,6 +74,7 @@ public sealed interface OrderingImpl extends Ordering {
 						inDegree.merge(id, 1, Integer::sum);
 					}
 				}
+
 				if (isLast) {
 					for (String aMiddle : middle) {
 						if (graph.get(aMiddle).add(id)) {
@@ -84,6 +86,7 @@ public sealed interface OrderingImpl extends Ordering {
 		});
 
 		Deque<String> queue = new ArrayDeque<>();
+
 		for (String id : idToOrderings.keySet()) {
 			if (inDegree.get(id) == 0) {
 				queue.add(id);
