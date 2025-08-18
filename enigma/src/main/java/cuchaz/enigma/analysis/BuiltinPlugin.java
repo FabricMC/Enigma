@@ -50,15 +50,15 @@ public final class BuiltinPlugin implements EnigmaPlugin {
 		final Map<Entry<?>, String> names = new HashMap<>();
 		JarIndexerService indexerService = JarIndexerService.fromVisitorsInParallel(EnumFieldNameFindingVisitor::new, visitors -> visitors.forEach(visitor -> names.putAll(visitor.mappings)));
 
-		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, ctx1 -> indexerService);
-		ctx.registerService("enigma:enum_name_proposer", NameProposalService.TYPE, ctx1 -> (obfEntry, remapper) -> Optional.ofNullable(names.get(obfEntry)));
+		ctx.registerService("enigma:enum_initializer_indexer", JarIndexerService.TYPE, () -> indexerService);
+		ctx.registerService("enigma:enum_name_proposer", NameProposalService.TYPE, () -> (obfEntry, remapper) -> Optional.ofNullable(names.get(obfEntry)));
 	}
 
 	private void registerDecompilerServices(EnigmaPluginContext ctx) {
-		ctx.registerService("enigma:vineflower", DecompilerService.TYPE, ctx1 -> Decompilers.VINEFLOWER);
-		ctx.registerService("enigma:cfr", DecompilerService.TYPE, ctx1 -> Decompilers.CFR);
-		ctx.registerService("enigma:procyon", DecompilerService.TYPE, ctx1 -> Decompilers.PROCYON);
-		ctx.registerService("enigma:bytecode", DecompilerService.TYPE, ctx1 -> Decompilers.BYTECODE);
+		ctx.registerService("enigma:vineflower", DecompilerService.TYPE, () -> Decompilers.VINEFLOWER);
+		ctx.registerService("enigma:cfr", DecompilerService.TYPE, () -> Decompilers.CFR);
+		ctx.registerService("enigma:procyon", DecompilerService.TYPE, () -> Decompilers.PROCYON);
+		ctx.registerService("enigma:bytecode", DecompilerService.TYPE, () -> Decompilers.BYTECODE);
 	}
 
 	private static final class EnumFieldNameFindingVisitor extends ClassVisitor {
