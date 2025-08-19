@@ -33,7 +33,6 @@ import javax.swing.SwingUtilities;
 import org.jetbrains.annotations.ApiStatus;
 
 import cuchaz.enigma.Enigma;
-import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.ClassImplementationsTreeNode;
 import cuchaz.enigma.analysis.ClassInheritanceTreeNode;
@@ -111,9 +110,9 @@ public class GuiController implements ClientPacketHandler {
 
 	private History<EntryReference<Entry<?>, Entry<?>>> referenceHistory;
 
-	public GuiController(Gui gui, EnigmaProfile profile) {
+	public GuiController(Gui gui, Enigma enigma) {
 		this.gui = gui;
-		this.enigma = Enigma.builder().setProfile(profile).build();
+		this.enigma = enigma;
 	}
 
 	public boolean isDirty() {

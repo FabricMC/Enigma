@@ -524,7 +524,7 @@ public class MenuBar {
 		}
 	}
 
-	private static void prepareLanguagesMenu(JMenu languagesMenu) {
+	private void prepareLanguagesMenu(JMenu languagesMenu) {
 		ButtonGroup languageGroup = new ButtonGroup();
 
 		for (String lang : I18n.getAvailableLanguages()) {
@@ -537,7 +537,7 @@ public class MenuBar {
 
 			languageButton.addActionListener(event -> {
 				UiConfig.setLanguage(lang);
-				I18n.setLanguage(lang);
+				I18n.setLanguage(lang, gui.getController().enigma.getServices());
 				LanguageUtil.dispatchLanguageChange();
 				UiConfig.save();
 			});

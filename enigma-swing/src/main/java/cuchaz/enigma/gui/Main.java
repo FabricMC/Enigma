@@ -27,6 +27,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.ValueConverter;
 
+import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
@@ -101,8 +102,9 @@ public class Main {
 			}
 
 			EnigmaProfile parsedProfile = EnigmaProfile.read(options.valueOf(profile));
+			Enigma enigma = Enigma.builder().setProfile(parsedProfile).build();
 
-			I18n.setLanguage(UiConfig.getLanguage());
+			I18n.setLanguage(UiConfig.getLanguage(), enigma.getServices());
 
 			// Provide fallback anti-aliasing for desktop environments the JRE doesn't recognize
 			if (Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints") == null) {
@@ -117,7 +119,7 @@ public class Main {
 
 			Themes.setupTheme();
 
-			Gui gui = new Gui(parsedProfile, editables);
+			Gui gui = new Gui(enigma, editables);
 			GuiController controller = gui.getController();
 
 			if (options.has("single-class-tree")) {
