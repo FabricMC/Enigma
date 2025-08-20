@@ -48,17 +48,17 @@ import cuchaz.enigma.utils.I18n;
 public class EnigmaProject {
 	private final Enigma enigma;
 
-	private final Path jarPath;
+	private final List<Path> jarPaths;
 	private final ClassProvider classProvider;
 	private final JarIndex jarIndex;
 	private final byte[] jarChecksum;
 
 	private EntryRemapper mapper;
 
-	public EnigmaProject(Enigma enigma, Path jarPath, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
+	public EnigmaProject(Enigma enigma, List<Path> jarPaths, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
 		Preconditions.checkArgument(jarChecksum.length == 20);
 		this.enigma = enigma;
-		this.jarPath = jarPath;
+		this.jarPaths = List.copyOf(jarPaths);
 		this.classProvider = classProvider;
 		this.jarIndex = jarIndex;
 		this.jarChecksum = jarChecksum;
@@ -78,8 +78,8 @@ public class EnigmaProject {
 		return enigma;
 	}
 
-	public Path getJarPath() {
-		return jarPath;
+	public List<Path> getJarPaths() {
+		return jarPaths;
 	}
 
 	public ClassProvider getClassProvider() {

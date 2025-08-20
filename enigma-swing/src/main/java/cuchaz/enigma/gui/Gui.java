@@ -147,6 +147,7 @@ public class Gui {
 
 	private void setupUi() {
 		this.jarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		this.jarFileChooser.setMultiSelectionEnabled(true);
 
 		this.exportSourceFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		this.exportSourceFileChooser.setAcceptAllFileFilterUsed(false);

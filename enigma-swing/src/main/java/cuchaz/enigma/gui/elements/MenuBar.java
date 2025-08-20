@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -235,15 +236,15 @@ public class MenuBar {
 			return;
 		}
 
-		File file = d.getSelectedFile();
+		File[] files = d.getSelectedFiles();
 
 		// checks if the file name is not empty
-		if (file != null) {
-			Path path = file.toPath();
+		if (files.length >= 1) {
+			List<Path> paths = Arrays.stream(files).map(File::toPath).toList();
 
 			// checks if the file name corresponds to an existing file
-			if (Files.exists(path)) {
-				this.gui.getController().openJar(path);
+			if (paths.stream().allMatch(Files::exists)) {
+				this.gui.getController().openJar(paths);
 			}
 
 			UiConfig.setLastSelectedDir(d.getCurrentDirectory().getAbsolutePath());
