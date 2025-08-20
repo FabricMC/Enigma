@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
+import cuchaz.enigma.api.view.entry.LocalVariableEntryView;
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
@@ -14,7 +15,7 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
  * Created by Thog
  * 19/10/2016
  */
-public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Comparable<LocalVariableEntry> {
+public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Comparable<LocalVariableEntry>, LocalVariableEntryView {
 	protected final int index;
 	protected final boolean parameter;
 
@@ -34,10 +35,12 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 		return MethodEntry.class;
 	}
 
+	@Override
 	public boolean isArgument() {
 		return this.parameter;
 	}
 
+	@Override
 	public int getIndex() {
 		return index;
 	}

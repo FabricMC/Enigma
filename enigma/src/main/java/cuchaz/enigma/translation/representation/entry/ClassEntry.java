@@ -17,6 +17,7 @@ import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import cuchaz.enigma.api.view.entry.ClassEntryView;
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
@@ -25,7 +26,7 @@ import cuchaz.enigma.translation.mapping.IdentifierValidation;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<ClassEntry> {
+public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<ClassEntry>, ClassEntryView {
 	private final String fullName;
 
 	public ClassEntry(String className) {
