@@ -253,13 +253,11 @@ public class GuiController implements ClientPacketHandler {
 		MappingFormat loadedMappingFormat = this.loadedMappingFormat;
 		Path loadedMappingPath = this.loadedMappingPath;
 
-		if (jarPaths != null) { // TODO (Multi-jar): when would this ever be null?
-			this.closeJar();
-			CompletableFuture<Void> f = this.openJar(jarPaths);
+		this.closeJar();
+		CompletableFuture<Void> f = this.openJar(jarPaths);
 
-			if (loadedMappingFormat != null && loadedMappingPath != null) {
-				f.whenComplete((v, t) -> this.openMappings(loadedMappingFormat, loadedMappingPath));
-			}
+		if (loadedMappingFormat != null && loadedMappingPath != null) {
+			f.whenComplete((v, t) -> this.openMappings(loadedMappingFormat, loadedMappingPath));
 		}
 	}
 
