@@ -13,7 +13,12 @@ package cuchaz.enigma;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 
@@ -24,6 +29,7 @@ import org.objectweb.asm.Opcodes;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.EnigmaPlugin;
 import cuchaz.enigma.api.EnigmaPluginContext;
+import cuchaz.enigma.api.Ordering;
 import cuchaz.enigma.api.service.EnigmaService;
 import cuchaz.enigma.api.service.EnigmaServiceFactory;
 import cuchaz.enigma.api.service.EnigmaServiceType;
@@ -32,6 +38,7 @@ import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.classprovider.CombiningClassProvider;
 import cuchaz.enigma.classprovider.JarClassProvider;
+import cuchaz.enigma.utils.OrderingImpl;
 import cuchaz.enigma.utils.Utils;
 
 public class Enigma {
@@ -96,7 +103,6 @@ public class Enigma {
 
 	public static class Builder {
 		private EnigmaProfile profile = EnigmaProfile.EMPTY;
-		private Iterable<EnigmaPlugin> plugins = ServiceLoader.load(EnigmaPlugin.class);
 
 		private Builder() {
 		}
@@ -107,18 +113,12 @@ public class Enigma {
 			return this;
 		}
 
-		public Builder setPlugins(Iterable<EnigmaPlugin> plugins) {
-			Preconditions.checkNotNull(plugins, "plugins cannot be null");
-			this.plugins = plugins;
-			return this;
-		}
-
 		public Enigma build() {
-			PluginContext pluginContext = new PluginContext(profile);
+			PluginContext pluginContext = new PluginContext();
 
-			for (EnigmaPlugin plugin : plugins) {
-				plugin.init(pluginContext);
-			}
+			ServiceLoader.load(EnigmaPlugin.class).stream()
+					.filter(plugin -> !profile.getDisabledPlugins().contains(plugin.type().getName()))
+					.forEach(plugin -> plugin.get().init(pluginContext));
 
 			EnigmaServices services = pluginContext.buildServices();
 			return new Enigma(profile, services);
@@ -126,29 +126,43 @@ public class Enigma {
 	}
 
 	private static class PluginContext implements EnigmaPluginContext {
-		private final EnigmaProfile profile;
+		private final Map<EnigmaServiceType<?>, PendingServices<?>> pendingServices = new HashMap<>();
 
-		private final ImmutableListMultimap.Builder<EnigmaServiceType<?>, EnigmaService> services = ImmutableListMultimap.builder();
-
-		PluginContext(EnigmaProfile profile) {
-			this.profile = profile;
+		@Override
+		public <T extends EnigmaService> void registerService(String id, EnigmaServiceType<T> serviceType, EnigmaServiceFactory<T> factory, Ordering... ordering) {
+			@SuppressWarnings("unchecked")
+			PendingServices<T> pending = (PendingServices<T>) pendingServices.computeIfAbsent(serviceType, k -> new PendingServices<>());
+			pending.factories.put(id, factory);
+			pending.orderings.put(id, Arrays.asList(ordering));
 		}
 
 		@Override
-		public <T extends EnigmaService> void registerService(String id, EnigmaServiceType<T> serviceType, EnigmaServiceFactory<T> factory) {
-			List<EnigmaProfile.Service> serviceProfiles = profile.getServiceProfiles(serviceType);
-
-			for (EnigmaProfile.Service serviceProfile : serviceProfiles) {
-				if (serviceProfile.matches(id)) {
-					T service = factory.create(serviceProfile::getArgument);
-					services.put(serviceType, service);
-					break;
-				}
-			}
+		public void disableService(String id, EnigmaServiceType<?> serviceType) {
+			pendingServices.computeIfAbsent(serviceType, k -> new PendingServices<>()).disabled.add(id);
 		}
 
 		EnigmaServices buildServices() {
+			ImmutableListMultimap.Builder<EnigmaServiceType<?>, EnigmaService> services = ImmutableListMultimap.builder();
+
+			pendingServices.forEach((serviceType, pending) -> {
+				pending.orderings.keySet().removeAll(pending.disabled);
+				List<String> orderedServices = OrderingImpl.sort(serviceType.key, pending.orderings);
+				orderedServices.forEach(serviceId -> {
+					services.put(serviceType, pending.factories.get(serviceId).create());
+				});
+			});
+
 			return new EnigmaServices(services.build());
+		}
+
+		private record PendingServices<T extends EnigmaService>(
+				Map<String, EnigmaServiceFactory<T>> factories,
+				Map<String, List<Ordering>> orderings,
+				Set<String> disabled
+		) {
+			PendingServices() {
+				this(new HashMap<>(), new LinkedHashMap<>(), new HashSet<>());
+			}
 		}
 	}
 
