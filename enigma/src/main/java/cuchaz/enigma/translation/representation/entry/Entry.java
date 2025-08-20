@@ -17,26 +17,12 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.Nullable;
 
+import cuchaz.enigma.api.view.entry.EntryView;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.mapping.IdentifierValidation;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public interface Entry<P extends Entry<?>> extends Translatable {
-	/**
-	 * Returns the default name of this entry.
-	 *
-	 * <p>For methods, fields and inner classes, it's the same as {@link #getSimpleName()}.</p>
-	 * <p>For other classes, it's the same as {@link #getFullName()}.</p>
-	 *
-	 * <br><p>Examples:</p>
-	 * <ul>
-	 *     <li>Outer class: "domain.name.ClassA"</li>
-	 *     <li>Inner class: "ClassB"</li>
-	 *     <li>Method: "methodC"</li>
-	 * </ul>
-	 */
-	String getName();
-
+public interface Entry<P extends Entry<?>> extends Translatable, EntryView {
 	/**
 	 * Returns the simple name of this entry.
 	 *
@@ -53,22 +39,6 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 	String getSimpleName();
 
 	/**
-	 * Returns the full name of this entry.
-	 *
-	 * <p>For methods, fields and inner classes, it's their name prefixed with the full name
-	 * of their parent entry.</p>
-	 * <p>For other classes, it's their name prefixed with their package name.</p>
-	 *
-	 * <br><p>Examples:</p>
-	 * <ul>
-	 *     <li>Outer class: "domain.name.ClassA"</li>
-	 *     <li>Inner class: "domain.name.ClassA$ClassB"</li>
-	 *     <li>Method: "domain.name.ClassA.methodC"</li>
-	 * </ul>
-	 */
-	String getFullName();
-
-	/**
 	 * Returns the contextual name of this entry.
 	 *
 	 * <p>For methods, fields and inner classes, it's their name prefixed with the contextual
@@ -83,8 +53,6 @@ public interface Entry<P extends Entry<?>> extends Translatable {
 	 * </ul>
 	 */
 	String getContextualName();
-
-	String getJavadocs();
 
 	default String getSourceRemapName() {
 		return getName();

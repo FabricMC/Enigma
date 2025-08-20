@@ -45,6 +45,7 @@ import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.api.service.GuiService;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
@@ -141,6 +142,10 @@ public class Gui {
 
 		LanguageUtil.addListener(this::retranslateUi);
 		Themes.addListener((lookAndFeel, boxHighlightPainters) -> SwingUtilities.updateComponentTreeUI(this.getFrame()));
+
+		for (GuiService guiService : enigma.getServices().get(GuiService.TYPE)) {
+			guiService.onStart(controller);
+		}
 
 		this.mainWindow.setVisible(true);
 	}

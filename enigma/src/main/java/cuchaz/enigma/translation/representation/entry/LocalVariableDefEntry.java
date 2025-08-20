@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
+import cuchaz.enigma.api.view.entry.LocalVariableDefEntryView;
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
@@ -15,7 +16,7 @@ import cuchaz.enigma.translation.representation.TypeDescriptor;
  * Created by Thog
  * 19/10/2016
  */
-public class LocalVariableDefEntry extends LocalVariableEntry {
+public class LocalVariableDefEntry extends LocalVariableEntry implements LocalVariableDefEntryView {
 	protected final TypeDescriptor desc;
 
 	public LocalVariableDefEntry(MethodEntry ownerEntry, int index, String name, boolean parameter, TypeDescriptor desc, String javadoc) {
@@ -26,6 +27,11 @@ public class LocalVariableDefEntry extends LocalVariableEntry {
 
 	public TypeDescriptor getDesc() {
 		return desc;
+	}
+
+	@Override
+	public String getDescriptor() {
+		return desc.toString();
 	}
 
 	@Override

@@ -1,13 +1,18 @@
 package cuchaz.enigma.gui.elements;
 
+import java.awt.Component;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.api.service.GuiService;
 import cuchaz.enigma.gui.EditableType;
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.GuiController;
@@ -36,6 +41,7 @@ public class EditorPopupMenu {
 	private final JMenuItem zoomInItem = new JMenuItem();
 	private final JMenuItem zoomOutMenu = new JMenuItem();
 	private final JMenuItem resetZoomItem = new JMenuItem();
+	private final List<CustomMenuItem> customItems = new ArrayList<>();
 
 	private final EditorPanel editor;
 	private final Gui gui;
@@ -102,48 +108,35 @@ public class EditorPopupMenu {
 		this.zoomInItem.addActionListener(event -> editor.offsetEditorZoom(2));
 		this.zoomOutMenu.addActionListener(event -> editor.offsetEditorZoom(-2));
 		this.resetZoomItem.addActionListener(event -> editor.resetEditorZoom());
+
+		for (GuiService guiService : gui.getController().enigma.getServices().get(GuiService.TYPE)) {
+			guiService.addToEditorContextMenu(gui.getController(), new GuiService.MenuRegistrar() {
+				@Override
+				public void addSeparator() {
+					ui.addSeparator();
+				}
+
+				@Override
+				public GuiService.MenuItemBuilder add(Supplier<String> translationKey) {
+					JMenuItem menuItem = new JMenuItem();
+					ui.add(menuItem);
+					CustomMenuItem item = new CustomMenuItem(menuItem, translationKey);
+					customItems.add(item);
+					return item;
+				}
+			});
+		}
 	}
 
 	// TODO have editor redirect key event to menu so that the actions get
 	//  	triggered without having to hardcode them here, because this
 	//		is a hack
 	public boolean handleKeyEvent(KeyEvent event) {
-		if (event.isControlDown()) {
-			switch (event.getKeyCode()) {
-			case KeyEvent.VK_I:
-				this.showInheritanceItem.doClick();
-				return true;
-			case KeyEvent.VK_M:
-				this.showImplementationsItem.doClick();
-				return true;
-			case KeyEvent.VK_N:
-				this.openEntryItem.doClick();
-				return true;
-			case KeyEvent.VK_P:
-				this.openPreviousItem.doClick();
-				return true;
-			case KeyEvent.VK_E:
-				this.openNextItem.doClick();
-				return true;
-			case KeyEvent.VK_C:
-				if (event.isShiftDown()) {
-					this.showCallsSpecificItem.doClick();
-				} else {
-					this.showCallsItem.doClick();
-				}
+		KeyStroke keyStroke = KeyStroke.getKeyStrokeForEvent(event);
 
-				return true;
-			case KeyEvent.VK_O:
-				this.toggleMappingItem.doClick();
-				return true;
-			case KeyEvent.VK_R:
-				this.renameItem.doClick();
-				return true;
-			case KeyEvent.VK_D:
-				this.editJavadocItem.doClick();
-				return true;
-			case KeyEvent.VK_V:
-				this.pasteItem.doClick();
+		for (Component component : ui.getComponents()) {
+			if (component instanceof JMenuItem menuItem && keyStroke.equals(menuItem.getAccelerator())) {
+				menuItem.doClick();
 				return true;
 			}
 		}
@@ -184,6 +177,10 @@ public class EditorPopupMenu {
 		}
 
 		this.toggleMappingItem.setText(I18n.translate("popup_menu." + (isDeobfuscated ? "reset_obfuscated" : "mark_deobfuscated")));
+
+		for (CustomMenuItem customItem : customItems) {
+			customItem.updateUiState();
+		}
 	}
 
 	public void retranslateUi() {
@@ -201,6 +198,10 @@ public class EditorPopupMenu {
 		this.zoomInItem.setText(I18n.translate("popup_menu.zoom.in"));
 		this.zoomOutMenu.setText(I18n.translate("popup_menu.zoom.out"));
 		this.resetZoomItem.setText(I18n.translate("popup_menu.zoom.reset"));
+
+		for (CustomMenuItem customItem : customItems) {
+			customItem.retranslateUi();
+		}
 	}
 
 	public JPopupMenu getUi() {

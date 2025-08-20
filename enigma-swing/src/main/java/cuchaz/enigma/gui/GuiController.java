@@ -31,6 +31,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
@@ -46,6 +47,8 @@ import cuchaz.enigma.analysis.MethodReferenceTreeNode;
 import cuchaz.enigma.analysis.StructureTreeNode;
 import cuchaz.enigma.analysis.StructureTreeOptions;
 import cuchaz.enigma.api.service.ObfuscationTestService;
+import cuchaz.enigma.api.view.GuiView;
+import cuchaz.enigma.api.view.entry.EntryReferenceView;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
@@ -91,7 +94,7 @@ import cuchaz.enigma.utils.Utils;
 import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class GuiController implements ClientPacketHandler {
+public class GuiController implements ClientPacketHandler, GuiView {
 	private final Gui gui;
 	public final Enigma enigma;
 
@@ -113,6 +116,11 @@ public class GuiController implements ClientPacketHandler {
 	public GuiController(Gui gui, Enigma enigma) {
 		this.gui = gui;
 		this.enigma = enigma;
+	}
+
+	@Override
+	public EnigmaProject getProject() {
+		return project;
 	}
 
 	public boolean isDirty() {
@@ -328,6 +336,12 @@ public class GuiController implements ClientPacketHandler {
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	@Nullable
+	public EntryReferenceView getCursorReference() {
+		return gui.getCursorReference();
 	}
 
 	/**
