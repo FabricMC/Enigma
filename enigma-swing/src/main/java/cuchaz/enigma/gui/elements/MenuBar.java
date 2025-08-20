@@ -226,7 +226,6 @@ public class MenuBar {
 		this.githubItem.setText(I18n.translate("menu.help.github"));
 	}
 
-	// TODO (Multi-jar): test that this works
 	private void onOpenJarClicked() {
 		JFileChooser d = this.gui.jarFileChooser;
 		d.setCurrentDirectory(new File(UiConfig.getLastSelectedDir()));
