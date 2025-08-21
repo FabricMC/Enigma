@@ -3,18 +3,18 @@ configurations {
 }
 
 dependencies {
-	implementation 'org.ow2.asm:asm:9.7.1'
-	implementation 'org.ow2.asm:asm-commons:9.7.1'
-	implementation 'org.ow2.asm:asm-tree:9.7.1'
-	implementation 'org.ow2.asm:asm-util:9.7.1'
+	implementation "org.ow2.asm:asm:${asm_version}"
+	implementation "org.ow2.asm:asm-commons:${asm_version}"
+	implementation "org.ow2.asm:asm-tree:${asm_version}"
+	implementation "org.ow2.asm:asm-util:${asm_version}"
 
-	implementation 'org.bitbucket.mstrobel:procyon-compilertools:0.6.0'
-	implementation 'net.fabricmc:cfr:0.2.2'
-	implementation 'org.vineflower:vineflower:1.10.1'
+	implementation "org.bitbucket.mstrobel:procyon-compilertools:${procyon_version}"
+	implementation "net.fabricmc:cfr:${fabric_cfr_version}"
+	implementation "org.vineflower:vineflower:${vineflower_version}"
 
-	proGuard 'com.guardsquare:proguard-base:7.4.0-beta02'
+	proGuard "com.guardsquare:proguard-base:${proguard_version}"
 
-	testImplementation 'com.google.jimfs:jimfs:1.2'
+	testImplementation "com.google.jimfs:jimfs:${jimfs_version}"
 }
 
 // Generate "version.txt" file

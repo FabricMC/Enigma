@@ -17,18 +17,18 @@ subprojects {
 	}
 
 	dependencies {
-		implementation 'com.google.guava:guava:32.1.2-jre'
-		implementation 'com.google.code.gson:gson:2.10.1'
-		implementation 'net.fabricmc:mapping-io:0.7.1'
-		
-		compileOnly 'org.jetbrains:annotations:24.0.1'
+		implementation "com.google.guava:guava:${guava_version}-jre"
+		implementation "com.google.code.gson:gson:${gson_version}"
+		implementation "net.fabricmc:mapping-io:${mappingio_version}"
 
-		testImplementation 'junit:junit:4.13.2'
-		testImplementation 'org.hamcrest:hamcrest:2.2'
+		compileOnly "org.jetbrains:annotations:${jetbrains_annotations_version}"
+
+		testImplementation "junit:junit:${junit_version}"
+		testImplementation "org.hamcrest:hamcrest:${hamcrest_version}"
 	}
 
-	group = 'cuchaz'
-	version = '2.5.2'
+	group = rootProject.group
+	version = rootProject.version
 
 	version = version + (System.getenv("GITHUB_ACTIONS") ? "" : "+local")
 
@@ -46,7 +46,7 @@ subprojects {
 
 	checkstyle {
 		configFile = rootProject.file('checkstyle.xml')
-		toolVersion = '10.12.4'
+		toolVersion = rootProject.checkstyle_version
 	}
 
 	spotless {
