@@ -51,7 +51,10 @@ public class Utils {
 	}
 
 	public static byte[] zipSha1(Path... paths) throws IOException {
-		if (paths.length == 0) throw new IllegalArgumentException("Must provide at least one zip");
+		if (paths.length == 0) {
+			throw new IllegalArgumentException("Must provide at least one zip");
+		}
+
 		MessageDigest digest;
 
 		try {

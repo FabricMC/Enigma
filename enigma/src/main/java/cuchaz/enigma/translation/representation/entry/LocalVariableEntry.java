@@ -21,7 +21,9 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	public LocalVariableEntry(MethodEntry parent, int index, String name, boolean parameter, String javadoc) {
 		super(Objects.requireNonNull(parent, "Variable owner cannot be null"), name, javadoc);
 
-		if (index < 0) throw new IllegalArgumentException("Index must be positive");
+		if (index < 0) {
+			throw new IllegalArgumentException("Index must be positive");
+		}
 
 		this.index = index;
 		this.parameter = parameter;

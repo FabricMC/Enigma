@@ -55,7 +55,10 @@ public class EnigmaProject {
 	private EntryRemapper mapper;
 
 	public EnigmaProject(Enigma enigma, List<Path> jarPaths, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
-		if (jarChecksum.length != 20) throw new IllegalArgumentException();
+		if (jarChecksum.length != 20) {
+			throw new IllegalArgumentException();
+		}
+
 		this.enigma = enigma;
 		this.jarPaths = List.copyOf(jarPaths);
 		this.classProvider = classProvider;
