@@ -13,7 +13,7 @@ subprojects {
 	repositories {
 		mavenLocal()
 		mavenCentral()
-		maven { url 'https://maven.fabricmc.net/' }
+		maven { url = 'https://maven.fabricmc.net/' }
 	}
 
 	dependencies {
@@ -60,9 +60,9 @@ subprojects {
 	publishing {
 		publications {
 			"$project.name"(MavenPublication) {
-				groupId project.group
-				artifactId project.name
-				version project.version
+				groupId = project.group
+				artifactId = project.name
+				version = project.version
 				from components.java
 			}
 		}
