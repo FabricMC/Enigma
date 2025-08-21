@@ -4,13 +4,14 @@ import java.awt.Component;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
-import javax.annotation.Nullable;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
-import com.google.common.collect.HashBiMap;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.classhandle.ClassHandle;
@@ -24,7 +25,7 @@ import cuchaz.enigma.translation.representation.entry.Entry;
 
 public class EditorTabbedPane {
 	private final JTabbedPane openFiles = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
-	private final HashBiMap<ClassEntry, EditorPanel> editors = HashBiMap.create();
+	private final Map<ClassEntry, EditorPanel> editors = new HashMap<>();
 
 	private final EditorTabPopupMenu editorTabPopupMenu;
 	private final Gui gui;
@@ -95,7 +96,7 @@ public class EditorTabbedPane {
 
 	public void closeEditor(EditorPanel ed) {
 		this.openFiles.remove(ed.getUi());
-		this.editors.inverse().remove(ed);
+		this.editors.values().remove(ed);
 		this.gui.showStructure(this.getActiveEditor());
 		ed.destroy();
 	}

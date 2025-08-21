@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.languages.java.ast.AstNode;
 import com.strobel.decompiler.languages.java.ast.Comment;
@@ -60,8 +59,8 @@ public final class AddJavadocsAstTransform implements IAstTransform {
 
 		private <T extends AstNode> Comment[] getComments(T node, Function<T, Entry<?>> retriever) {
 			final EntryMapping mapping = remapper.getDeobfMapping(retriever.apply(node));
-			final String docs = Strings.emptyToNull(mapping.javadoc());
-			return docs == null ? null : Stream.of(docs.split("\\R")).map(st -> new Comment(st, CommentType.Documentation)).toArray(Comment[]::new);
+			final String docs = mapping.javadoc();
+			return docs == null || docs.isEmpty() ? null : Stream.of(docs.split("\\R")).map(st -> new Comment(st, CommentType.Documentation)).toArray(Comment[]::new);
 		}
 
 		private Comment[] getParameterComments(ParameterDeclaration node, Function<ParameterDeclaration, Entry<?>> retriever) {
@@ -71,7 +70,7 @@ public final class AddJavadocsAstTransform implements IAstTransform {
 
 			if (ret != null) {
 				final String paramPrefix = "@param " + (mapping.targetName() != null ? mapping.targetName() : entry.getName()) + " ";
-				final String indent = Strings.repeat(" ", paramPrefix.length());
+				final String indent = " ".repeat(paramPrefix.length());
 				ret[0].setContent(paramPrefix + ret[0].getContent());
 
 				for (int i = 1; i < ret.length; i++) {

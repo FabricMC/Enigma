@@ -3,7 +3,7 @@ package cuchaz.enigma.translation.mapping;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.source.DecompiledClassSource;

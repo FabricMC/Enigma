@@ -1,12 +1,11 @@
 package cuchaz.enigma.gui.util;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 
-import com.google.common.collect.Queues;
-
 public class History<T> {
-	private final Deque<T> previous = Queues.newArrayDeque();
-	private final Deque<T> next = Queues.newArrayDeque();
+	private final Deque<T> previous = new ArrayDeque<>();
+	private final Deque<T> next = new ArrayDeque<>();
 	private T current;
 
 	public History(T initial) {

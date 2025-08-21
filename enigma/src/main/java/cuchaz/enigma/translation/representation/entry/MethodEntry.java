@@ -13,9 +13,7 @@ package cuchaz.enigma.translation.representation.entry;
 
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-
-import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
@@ -31,12 +29,9 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	}
 
 	public MethodEntry(ClassEntry parent, String name, MethodDescriptor descriptor, String javadocs) {
-		super(parent, name, javadocs);
+		super(Objects.requireNonNull(parent, "Parent cannot be null"), name, javadocs);
 
-		Preconditions.checkNotNull(parent, "Parent cannot be null");
-		Preconditions.checkNotNull(descriptor, "Method descriptor cannot be null");
-
-		this.descriptor = descriptor;
+		this.descriptor = Objects.requireNonNull(descriptor, "Method descriptor cannot be null");
 	}
 
 	public static MethodEntry parse(String owner, String name, String desc) {
@@ -57,7 +52,7 @@ public class MethodEntry extends ParentedEntry<ClassEntry> implements Comparable
 	}
 
 	@Override
-	protected TranslateResult<? extends MethodEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
+	protected TranslateResult<? extends MethodEntry> extendedTranslate(Translator translator, @NotNull EntryMapping mapping) {
 		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
 		String docs = mapping.javadoc();
 		return TranslateResult.of(mapping.targetName() == null ? RenamableTokenType.OBFUSCATED : RenamableTokenType.DEOBFUSCATED, new MethodEntry(parent, translatedName, translator.translate(descriptor), docs));

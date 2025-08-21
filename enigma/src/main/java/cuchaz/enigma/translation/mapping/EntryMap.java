@@ -2,7 +2,7 @@ package cuchaz.enigma.translation.mapping;
 
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
 

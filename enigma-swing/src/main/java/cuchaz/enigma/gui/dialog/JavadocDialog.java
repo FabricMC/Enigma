@@ -17,6 +17,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.Objects;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -28,8 +29,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.WindowConstants;
 import javax.swing.text.html.HTML;
-
-import com.google.common.base.Strings;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.gui.GuiController;
@@ -198,7 +197,7 @@ public class JavadocDialog {
 	public static void show(JFrame parent, GuiController controller, EntryReference<Entry<?>, Entry<?>> entry) {
 		// Get the existing text through the mapping as it works for all entries, including constructors.
 		EntryMapping mapping = controller.project.getMapper().getDeobfMapping(entry.entry);
-		String text = Strings.nullToEmpty(mapping.javadoc());
+		String text = Objects.requireNonNullElse(mapping.javadoc(), "");
 
 		// Note: entry.entry is used instead of getNameableEntry() to include constructors,
 		// which can be documented.

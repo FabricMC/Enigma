@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
 
@@ -34,7 +34,7 @@ public class HashTreeNode<T> implements EntryTreeNode<T>, Iterable<HashTreeNode<
 		return children.get(entry);
 	}
 
-	@Nonnull
+	@NotNull
 	HashTreeNode<T> computeChild(Entry<?> entry) {
 		return children.computeIfAbsent(entry, HashTreeNode::new);
 	}

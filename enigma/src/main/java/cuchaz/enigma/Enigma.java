@@ -13,17 +13,19 @@ package cuchaz.enigma;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableListMultimap;
 import org.objectweb.asm.Opcodes;
 
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -108,8 +110,7 @@ public class Enigma {
 		}
 
 		public Builder setProfile(EnigmaProfile profile) {
-			Preconditions.checkNotNull(profile, "profile cannot be null");
-			this.profile = profile;
+			this.profile = Objects.requireNonNull(profile, "profile cannot be null");
 			return this;
 		}
 
@@ -142,17 +143,21 @@ public class Enigma {
 		}
 
 		EnigmaServices buildServices() {
-			ImmutableListMultimap.Builder<EnigmaServiceType<?>, EnigmaService> services = ImmutableListMultimap.builder();
+			Map<EnigmaServiceType<?>, List<EnigmaService>> services = new LinkedHashMap<>();
 
 			pendingServices.forEach((serviceType, pending) -> {
 				pending.orderings.keySet().removeAll(pending.disabled);
 				List<String> orderedServices = OrderingImpl.sort(serviceType.key, pending.orderings);
 				orderedServices.forEach(serviceId -> {
-					services.put(serviceType, pending.factories.get(serviceId).create());
+					services.computeIfAbsent(serviceType, key -> new ArrayList<>())
+									.add(pending.factories.get(serviceId).create());
 				});
 			});
 
-			return new EnigmaServices(services.build());
+			return new EnigmaServices(services.entrySet().stream().collect(Collectors.toUnmodifiableMap(
+					Map.Entry::getKey,
+					entry -> Collections.unmodifiableList(entry.getValue())
+			)));
 		}
 
 		private record PendingServices<T extends EnigmaService>(

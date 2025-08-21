@@ -1,6 +1,7 @@
 package cuchaz.enigma.translation.mapping.serde.enigma;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -12,9 +13,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 
-import javax.annotation.Nullable;
-
-import com.google.common.base.Charsets;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.AccessModifier;
@@ -114,7 +113,7 @@ public enum EnigmaMappingsReader implements MappingsReader {
 	}
 
 	private static void readFile(Path path, EntryTree<EntryMapping> mappings) throws IOException, MappingParseException {
-		List<String> lines = Files.readAllLines(path, Charsets.UTF_8);
+		List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
 		Deque<MappingPair<?, RawEntryMapping>> mappingStack = new ArrayDeque<>();
 
 		for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {

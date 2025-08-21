@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.classprovider.CachingClassProvider;

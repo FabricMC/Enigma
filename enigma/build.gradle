@@ -21,15 +21,22 @@ dependencies {
 
 ext.genOutputDir = file("$buildDir/generated-resources")
 
-task generateVersionFile {
-	ext.outputFile = file("$genOutputDir/version.txt")
-	outputs.file(outputFile)
+task generateResources {
+	ext.versionFile = file("$genOutputDir/version.txt")
+	ext.langsFile = file("$genOutputDir/lang/index.txt")
+	outputs.files(versionFile, langsFile)
 	doLast {
-		outputFile.text = "${project.version}"
+		versionFile.text = "${project.version}"
+		langsFile.text = file("$projectDir/src/main/resources/lang")
+				.listFiles()
+				.collect { it.name }
+				.findAll { it.endsWith(".json") }
+				.collect { it.substring(0, it.length() - 5) }
+				.join("\n")
 	}
 }
 
-sourceSets.main.output.dir genOutputDir, builtBy: generateVersionFile
+sourceSets.main.output.dir genOutputDir, builtBy: generateResources
 
 // Generate obfuscated JARs for tests
 

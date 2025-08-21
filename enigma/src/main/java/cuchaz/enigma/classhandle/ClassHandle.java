@@ -2,7 +2,7 @@ package cuchaz.enigma.classhandle;
 
 import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.source.DecompiledClassSource;

@@ -11,13 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -56,7 +55,7 @@ public class EnigmaProject {
 	private EntryRemapper mapper;
 
 	public EnigmaProject(Enigma enigma, List<Path> jarPaths, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
-		Preconditions.checkArgument(jarChecksum.length == 20);
+		if (jarChecksum.length != 20) throw new IllegalArgumentException();
 		this.enigma = enigma;
 		this.jarPaths = List.copyOf(jarPaths);
 		this.classProvider = classProvider;
@@ -228,7 +227,7 @@ public class EnigmaProject {
 			}
 
 			return null;
-		}).filter(Objects::nonNull).collect(Collectors.toMap(n -> n.name, Functions.identity()));
+		}).filter(Objects::nonNull).collect(Collectors.toMap(n -> n.name, Function.identity()));
 
 		return new JarExport(mapper, compiled);
 	}

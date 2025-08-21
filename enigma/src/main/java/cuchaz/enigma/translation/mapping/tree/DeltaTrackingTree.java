@@ -1,10 +1,11 @@
 package cuchaz.enigma.translation.mapping.tree;
 
+import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
@@ -13,7 +14,7 @@ import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-public class DeltaTrackingTree<T> implements EntryTree<T> {
+public class DeltaTrackingTree<T> extends AbstractCollection<EntryTreeNode<T>> implements EntryTree<T> {
 	private final EntryTree<T> delegate;
 
 	private EntryTree<T> deltaReference;
@@ -92,6 +93,11 @@ public class DeltaTrackingTree<T> implements EntryTree<T> {
 	@Override
 	public Iterator<EntryTreeNode<T>> iterator() {
 		return delegate.iterator();
+	}
+
+	@Override
+	public int size() {
+		return delegate.size();
 	}
 
 	public MappingDelta<T> takeDelta() {

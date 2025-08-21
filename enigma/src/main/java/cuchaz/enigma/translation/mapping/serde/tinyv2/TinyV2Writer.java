@@ -9,8 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-import com.google.common.base.Strings;
-
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMap;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -184,6 +182,6 @@ public final class TinyV2Writer implements MappingsWriter {
 	}
 
 	private String indent(int level) {
-		return Strings.repeat("\t", level);
+		return "\t".repeat(level);
 	}
 }

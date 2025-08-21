@@ -1,14 +1,11 @@
 package cuchaz.enigma.source;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.translation.mapping.EntryResolver;
@@ -19,13 +16,13 @@ public class SourceIndex {
 	private String source;
 	private List<Integer> lineOffsets;
 	private final TreeMap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReference;
-	private final Multimap<EntryReference<Entry<?>, Entry<?>>, Token> referenceToTokens;
+	private final Map<EntryReference<Entry<?>, Entry<?>>, Collection<Token>> referenceToTokens;
 	private final Map<Entry<?>, Token> declarationToToken;
 
 	public SourceIndex() {
 		tokenToReference = new TreeMap<>();
-		referenceToTokens = HashMultimap.create();
-		declarationToToken = Maps.newHashMap();
+		referenceToTokens = new HashMap<>();
+		declarationToToken = new HashMap<>();
 	}
 
 	public SourceIndex(String source) {
@@ -35,7 +32,7 @@ public class SourceIndex {
 
 	public void setSource(String source) {
 		this.source = source;
-		lineOffsets = Lists.newArrayList();
+		lineOffsets = new ArrayList<>();
 		lineOffsets.add(0);
 
 		for (int i = 0; i < this.source.length(); i++) {
@@ -87,8 +84,10 @@ public class SourceIndex {
 		if (token != null) {
 			EntryReference<Entry<?>, Entry<?>> reference = new EntryReference<>(deobfEntry, token.text);
 			tokenToReference.put(token, reference);
-			referenceToTokens.put(reference, token);
-			referenceToTokens.put(EntryReference.declaration(deobfEntry, token.text), token);
+			referenceToTokens.computeIfAbsent(reference, key -> new ArrayList<>())
+					.add(token);
+			referenceToTokens.computeIfAbsent(EntryReference.declaration(deobfEntry, token.text), key -> new ArrayList<>())
+					.add(token);
 			declarationToToken.put(deobfEntry, token);
 		}
 	}
@@ -127,21 +126,23 @@ public class SourceIndex {
 		if (token != null) {
 			EntryReference<Entry<?>, Entry<?>> deobfReference = new EntryReference<>(deobfEntry, token.text, deobfContext);
 			tokenToReference.put(token, deobfReference);
-			referenceToTokens.put(deobfReference, token);
+			referenceToTokens.computeIfAbsent(deobfReference, key -> new ArrayList<>())
+					.add(token);
 		}
 	}
 
 	public void resolveReferences(EntryResolver resolver) {
 		// resolve all the classes in the source references
-		for (Token token : Lists.newArrayList(referenceToTokens.values())) {
+		for (Token token : referenceToTokens.values().stream().flatMap(Collection::stream).toList()) {
 			EntryReference<Entry<?>, Entry<?>> reference = tokenToReference.get(token);
 			EntryReference<Entry<?>, Entry<?>> resolvedReference = resolver.resolveFirstReference(reference, ResolutionStrategy.RESOLVE_CLOSEST);
 
 			// replace the reference
 			tokenToReference.replace(token, resolvedReference);
 
-			Collection<Token> tokens = referenceToTokens.removeAll(reference);
-			referenceToTokens.putAll(resolvedReference, tokens);
+			Collection<Token> tokens = referenceToTokens.remove(reference);
+			referenceToTokens.computeIfAbsent(resolvedReference, key -> new ArrayList<>())
+					.addAll(tokens);
 		}
 	}
 
@@ -152,13 +153,14 @@ public class SourceIndex {
 			remapped.declarationToToken.put(entry.getKey(), result.getRemappedToken(entry.getValue()));
 		}
 
-		for (Map.Entry<EntryReference<Entry<?>, Entry<?>>, Collection<Token>> entry : referenceToTokens.asMap().entrySet()) {
+		for (Map.Entry<EntryReference<Entry<?>, Entry<?>>, Collection<Token>> entry : referenceToTokens.entrySet()) {
 			EntryReference<Entry<?>, Entry<?>> reference = entry.getKey();
 			Collection<Token> oldTokens = entry.getValue();
 
 			Collection<Token> newTokens = oldTokens.stream().map(result::getRemappedToken).toList();
 
-			remapped.referenceToTokens.putAll(reference, newTokens);
+			remapped.referenceToTokens.computeIfAbsent(reference, key -> new ArrayList<>())
+					.addAll(newTokens);
 		}
 
 		for (Map.Entry<Token, EntryReference<Entry<?>, Entry<?>>> entry : tokenToReference.entrySet()) {

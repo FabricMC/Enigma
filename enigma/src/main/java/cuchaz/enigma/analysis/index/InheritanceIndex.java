@@ -21,8 +21,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Sets;
-
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
@@ -86,7 +84,7 @@ public class InheritanceIndex implements JarIndexer {
 	}
 
 	public Set<ClassEntry> getAncestors(ClassEntry classEntry) {
-		Set<ClassEntry> ancestors = Sets.newHashSet();
+		Set<ClassEntry> ancestors = new HashSet<>();
 
 		LinkedList<ClassEntry> ancestorQueue = new LinkedList<>();
 		ancestorQueue.push(classEntry);

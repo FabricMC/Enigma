@@ -11,10 +11,9 @@
 
 package cuchaz.enigma.analysis;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.analysis.index.JarIndex;
@@ -52,7 +51,7 @@ public class ClassImplementationsTreeNode extends ClassTreeNode {
 
 	public void load(JarIndex index) {
 		// get all method implementations
-		List<ClassImplementationsTreeNode> nodes = Lists.newArrayList();
+		List<ClassImplementationsTreeNode> nodes = new ArrayList<>();
 		InheritanceIndex inheritanceIndex = index.getInheritanceIndex();
 
 		Collection<ClassEntry> inheritors = inheritanceIndex.getChildren(this.getClassEntry());

@@ -12,11 +12,10 @@
 package cuchaz.enigma.translation.representation.entry;
 
 import java.util.Arrays;
+import java.util.Objects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
@@ -41,11 +40,9 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 
 	public ClassDefEntry(ClassEntry parent, String className, Signature signature, AccessFlags access, @Nullable ClassEntry superClass, ClassEntry[] interfaces, String javadocs) {
 		super(parent, className, javadocs);
-		Preconditions.checkNotNull(signature, "Class signature cannot be null");
-		Preconditions.checkNotNull(access, "Class access cannot be null");
 
-		this.signature = signature;
-		this.access = access;
+		this.signature = Objects.requireNonNull(signature, "Class signature cannot be null");
+		this.access = Objects.requireNonNull(access, "Class access cannot be null");
 		this.superClass = superClass;
 		this.interfaces = interfaces != null ? interfaces : new ClassEntry[0];
 	}
@@ -79,7 +76,7 @@ public class ClassDefEntry extends ClassEntry implements DefEntry<ClassEntry> {
 	}
 
 	@Override
-	public TranslateResult<ClassDefEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
+	public TranslateResult<ClassDefEntry> extendedTranslate(Translator translator, @NotNull EntryMapping mapping) {
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;
 		AccessFlags translatedAccess = mapping.accessModifier().transform(access);

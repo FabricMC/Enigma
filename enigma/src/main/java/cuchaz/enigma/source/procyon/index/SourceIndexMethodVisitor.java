@@ -11,11 +11,11 @@
 
 package cuchaz.enigma.source.procyon.index;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -55,7 +55,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 	private final MethodDefEntry methodEntry;
 
-	private Multimap<String, Identifier> unmatchedIdentifier = HashMultimap.create();
+	private Map<String, Collection<Identifier>> unmatchedIdentifier = new HashMap<>();
 	private Map<String, Entry<?>> identifierEntryCache = new HashMap<>();
 
 	public SourceIndexMethodVisitor(MethodDefEntry methodEntry) {
@@ -173,7 +173,8 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			// If it's in the argument cache, create a token!
 			index.addDeclaration(TokenFactory.createToken(index, node.getIdentifierToken()), identifierEntryCache.get(node.getIdentifier()));
 		} else {
-			unmatchedIdentifier.put(node.getIdentifier(), node.getIdentifierToken()); // Not matched actually, put it!
+			unmatchedIdentifier.computeIfAbsent(node.getIdentifier(), key -> new ArrayList<>())
+					.add(node.getIdentifierToken()); // Not matched actually, put it!
 		}
 	}
 
@@ -189,7 +190,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			index.addDeclaration(TokenFactory.createToken(index, identifier), entry);
 		}
 
-		unmatchedIdentifier.removeAll(key);
+		unmatchedIdentifier.remove(key);
 	}
 
 	@Override

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
 
@@ -29,6 +29,16 @@ public interface EntryTreeNode<T> {
 		}
 
 		return nodes;
+	}
+
+	default int sizeRecursively() {
+		int size = 1;
+
+		for (EntryTreeNode<T> node : getChildNodes()) {
+			size += node.sizeRecursively();
+		}
+
+		return size;
 	}
 
 	default List<? extends Entry<?>> getChildrenRecursively() {

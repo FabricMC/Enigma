@@ -2,8 +2,7 @@ package cuchaz.enigma.classprovider;
 
 import java.util.Collection;
 
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.tree.ClassNode;
 
 public interface ClassProvider {

@@ -1,11 +1,10 @@
 package cuchaz.enigma.translation.mapping.serde.tiny;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-
-import com.google.common.base.Charsets;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -28,7 +27,7 @@ public enum TinyMappingsReader implements MappingsReader {
 
 	@Override
 	public EntryTree<EntryMapping> read(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
-		return read(path, Files.readAllLines(path, Charsets.UTF_8), progress);
+		return read(path, Files.readAllLines(path, StandardCharsets.UTF_8), progress);
 	}
 
 	private EntryTree<EntryMapping> read(Path path, List<String> lines, ProgressListener progress) throws MappingParseException {

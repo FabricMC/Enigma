@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.CharMatcher;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -76,7 +75,7 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 		}
 
 		private boolean isInvalidName(String name) {
-			return name == null || name.isEmpty() || !CharMatcher.ascii().matchesAllOf(name);
+			return name == null || name.isEmpty() || name.chars().anyMatch(ch -> ch < 0x20);
 		}
 
 		@Override

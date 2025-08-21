@@ -31,13 +31,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.VisitOrder;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
@@ -298,7 +297,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		return result;
 	}
 
-	protected String writeClass(ClassEntry entry, @Nonnull EntryMapping mapping) {
+	protected String writeClass(ClassEntry entry, @NotNull EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder(EnigmaFormat.CLASS + " ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
@@ -306,7 +305,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		return builder.toString();
 	}
 
-	protected String writeMethod(MethodEntry entry, @Nonnull EntryMapping mapping) {
+	protected String writeMethod(MethodEntry entry, @NotNull EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder(EnigmaFormat.METHOD + " ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
@@ -316,7 +315,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		return builder.toString();
 	}
 
-	protected String writeField(FieldEntry entry, @Nonnull EntryMapping mapping) {
+	protected String writeField(FieldEntry entry, @NotNull EntryMapping mapping) {
 		StringBuilder builder = new StringBuilder(EnigmaFormat.FIELD + " ");
 		builder.append(entry.getName()).append(' ');
 		writeMapping(builder, mapping);
@@ -326,7 +325,7 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 		return builder.toString();
 	}
 
-	protected String writeArgument(LocalVariableEntry entry, @Nonnull EntryMapping mapping) {
+	protected String writeArgument(LocalVariableEntry entry, @NotNull EntryMapping mapping) {
 		return EnigmaFormat.PARAMETER + " " + entry.getIndex() + ' ' + mapping.targetName();
 	}
 

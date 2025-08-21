@@ -12,10 +12,9 @@
 package cuchaz.enigma.translation.representation;
 
 import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 import java.util.function.Function;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.TranslateResult;
@@ -29,7 +28,7 @@ public class TypeDescriptor implements Translatable {
 	protected final String desc;
 
 	public TypeDescriptor(String desc) {
-		Preconditions.checkNotNull(desc, "Desc cannot be null");
+		Objects.requireNonNull(desc, "Desc cannot be null");
 
 		// don't deal with generics
 		// this is just for raw jvm types
@@ -260,7 +259,7 @@ public class TypeDescriptor implements Translatable {
 		private static final Map<Character, Primitive> lookup;
 
 		static {
-			lookup = Maps.newTreeMap();
+			lookup = new TreeMap<>();
 
 			for (Primitive val : values()) {
 				lookup.put(val.getCode(), val);

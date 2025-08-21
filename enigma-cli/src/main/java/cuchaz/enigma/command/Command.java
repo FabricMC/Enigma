@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.google.common.io.MoreFiles;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
@@ -57,7 +56,7 @@ public abstract class Command {
 
 	protected static EntryTree<EntryMapping> readMappings(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 		// Legacy
-		if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(path))) {
+		if (path.getFileName().toString().toLowerCase().endsWith(".zip")) {
 			return MappingFormat.ENIGMA_ZIP.read(path, progress, saveParameters, null);
 		}
 

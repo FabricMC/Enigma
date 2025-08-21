@@ -17,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +30,6 @@ import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import com.google.common.collect.Lists;
 import org.jetbrains.annotations.ApiStatus;
 
 import cuchaz.enigma.Enigma;
@@ -414,8 +414,8 @@ public class GuiController implements ClientPacketHandler {
 			return;
 		}
 
-		List<ClassEntry> obfClasses = Lists.newArrayList();
-		List<ClassEntry> deobfClasses = Lists.newArrayList();
+		List<ClassEntry> obfClasses = new ArrayList<>();
+		List<ClassEntry> deobfClasses = new ArrayList<>();
 		this.addSeparatedClasses(obfClasses, deobfClasses);
 		this.gui.setObfClasses(obfClasses);
 		this.gui.setDeobfClasses(deobfClasses);

@@ -1,6 +1,6 @@
 package cuchaz.enigma.translation.mapping;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
 

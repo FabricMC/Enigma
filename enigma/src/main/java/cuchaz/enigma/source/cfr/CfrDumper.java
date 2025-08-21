@@ -25,7 +25,7 @@ import org.benf.cfr.reader.util.output.IllegalIdentifierDump;
 import org.benf.cfr.reader.util.output.MovableDumperContext;
 import org.benf.cfr.reader.util.output.StringStreamDumper;
 import org.benf.cfr.reader.util.output.TypeContext;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.SourceSettings;

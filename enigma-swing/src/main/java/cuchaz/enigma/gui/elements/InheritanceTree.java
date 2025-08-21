@@ -1,7 +1,8 @@
 package cuchaz.enigma.gui.elements;
 
-import javax.annotation.Nullable;
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.gui.Gui;
 import cuchaz.enigma.gui.renderer.InheritanceTreeCellRenderer;
