@@ -19,17 +19,29 @@ dependencies {
 
 // Generate "version.txt" file
 
-ext.genOutputDir = file("$buildDir/generated-resources")
+def genOutputDir = layout.buildDirectory.dir('generated-resources').get().asFile
 
-task generateVersionFile {
-	ext.outputFile = file("$genOutputDir/version.txt")
-	outputs.file(outputFile)
+tasks.register('generateResources') {
+	def langDir = file('src/main/resources/lang')
+	inputs.dir(langDir)
+	inputs.property 'version', project.version
+
+	def versionFile = file("$genOutputDir/version.txt")
+	def langsFile = file("$genOutputDir/lang/index.txt")
+	outputs.files(versionFile, langsFile)
+
 	doLast {
-		outputFile.text = "${project.version}"
+		versionFile.text = inputs.properties.version
+		langsFile.text = langDir
+				.listFiles()
+				.collect { it.name }
+				.findAll { it.endsWith(".json") }
+				.collect { it.substring(0, it.length() - 5) }
+				.join("\n")
 	}
 }
 
-sourceSets.main.output.dir genOutputDir, builtBy: generateVersionFile
+sourceSets.main.output.dir genOutputDir, builtBy: generateResources
 
 // Generate obfuscated JARs for tests
 
@@ -38,7 +50,7 @@ def libraryJarsArg = "<java.home>/jmods"
 // If your test fails for class file version problem with proguard, run gradle with -Dorg.gradle.java.home="<older jdk>" flag
 file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
 	if (theFile.directory) {
-		task("${theFile.name}TestJar", type: Jar) {
+		tasks.register("${theFile.name}TestJar", Jar) {
 			from(sourceSets.test.output) {
 				include "cuchaz/enigma/inputs/$theFile.name/**/*.class"
 				include 'cuchaz/enigma/inputs/Keep.class'
@@ -48,8 +60,8 @@ file('src/test/java/cuchaz/enigma/inputs').listFiles().each { theFile ->
 			destinationDirectory = file('build/test-inputs')
 		}
 
-		task("${theFile.name}TestObf", type: JavaExec,
-				dependsOn: "${theFile.name}TestJar") {
+		tasks.register("${theFile.name}TestObf", JavaExec) {
+			dependsOn "${theFile.name}TestJar"
 			mainClass = 'proguard.ProGuard'
 			classpath configurations.proGuard
 
