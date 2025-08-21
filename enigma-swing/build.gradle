@@ -1,6 +1,6 @@
 plugins {
 	id 'application'
-	id 'com.github.johnrengelman.shadow'
+	id 'com.gradleup.shadow'
 }
 
 def flatLafNatives = [
@@ -31,11 +31,3 @@ application {
 }
 
 jar.manifest.attributes 'Main-Class': application.mainClass.get()
-
-publishing {
-	publications {
-		shadow(MavenPublication) { publication ->
-			publication.from components.java
-		}
-	}
-}
