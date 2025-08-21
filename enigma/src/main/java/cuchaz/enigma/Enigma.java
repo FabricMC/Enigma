@@ -84,7 +84,7 @@ public class Enigma {
 		ClassProvider classProviderWithFrames = index.indexJar(scope, classProvider, progress);
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(scope, classProviderWithFrames, index));
 
-		EnigmaProject project = new EnigmaProject(this, paths, classProvider, index, Utils.zipSha1(paths.toArray(new Path[0])));
+		EnigmaProject project = new EnigmaProject(this, paths, classProvider, scope, index, Utils.zipSha1(paths.toArray(new Path[0])));
 
 		if (callServices) {
 			for (ProjectService projectService : services.get(ProjectService.TYPE)) {
