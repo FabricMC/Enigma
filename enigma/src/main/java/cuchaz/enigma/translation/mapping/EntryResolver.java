@@ -2,13 +2,13 @@ package cuchaz.enigma.translation.mapping;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
-import cuchaz.enigma.utils.ZippingIterator;
 
 public interface EntryResolver {
 	<E extends Entry<?>> Collection<E> resolveEntry(E entry, ResolutionStrategy strategy);
@@ -23,8 +23,11 @@ public interface EntryResolver {
 		if (reference.context != null) {
 			Collection<C> context = resolveEntry(reference.context, strategy);
 			List<EntryReference<E, C>> result = new ArrayList<>(entry.size());
-			new ZippingIterator<>(entry.iterator(), context.iterator(), (e, c) -> new EntryReference<>(e, c, reference))
-					.forEachRemaining(result::add);
+			Iterator<E> entryIterator = entry.iterator();
+			Iterator<C> contextIterator = context.iterator();
+			while (entryIterator.hasNext() && contextIterator.hasNext()) {
+				result.add(new EntryReference<>(entryIterator.next(), contextIterator.next(), reference));
+			}
 			return result;
 		} else {
 			return entry.stream().map(e -> new EntryReference<>(e, null, reference)).toList();

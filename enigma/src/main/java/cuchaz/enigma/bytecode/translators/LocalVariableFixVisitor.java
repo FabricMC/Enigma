@@ -75,7 +75,7 @@ public class LocalVariableFixVisitor extends ClassVisitor {
 		}
 
 		private boolean isInvalidName(String name) {
-			return name == null || name.isEmpty() || name.chars().anyMatch(ch -> ch < 0x20);
+			return name == null || name.isEmpty() || name.chars().anyMatch(ch -> ch < 0x20 || ch > 0x7E);
 		}
 
 		@Override

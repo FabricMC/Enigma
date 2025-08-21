@@ -13,8 +13,8 @@ import org.objectweb.asm.tree.ClassNode;
  * Wraps a ClassProvider to provide caching and synchronization.
  */
 public class CachingClassProvider implements ClassProvider {
-	private static final long expireAfter = 1 * 60 * 1000; // one minute
-	private static final long maxSize = 128;
+	private static final long EXPIRE_AFTER = 1 * 60 * 1000; // one minute
+	private static final long MAX_SIZE = 128;
 	private final ClassProvider classProvider;
 	private long lastPruneTime = 0;
 	private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
@@ -34,9 +34,9 @@ public class CachingClassProvider implements ClassProvider {
 		final long time = System.currentTimeMillis();
 		boolean prune = false;
 
-		if (lastPruneTime + 2 * expireAfter < time) {
+		if (lastPruneTime + 2 * EXPIRE_AFTER < time) {
 			synchronized (cache) {
-				if (lastPruneTime + 2 * expireAfter < time) {
+				if (lastPruneTime + 2 * EXPIRE_AFTER < time) {
 					lastPruneTime = time;
 					prune = true;
 				}
@@ -44,13 +44,17 @@ public class CachingClassProvider implements ClassProvider {
 		}
 
 		if (prune) {
-			cache.values().removeIf(value -> value.addTime + expireAfter < time);
+			cache.values().removeIf(value -> value.addTime + EXPIRE_AFTER < time);
 		}
 
-		if (cache.size() > maxSize) {
-			Iterator<Map.Entry<String, CacheEntry>> iterator = cache.entrySet().iterator();
-			iterator.next();
-			iterator.remove();
+		if (cache.size() > MAX_SIZE) {
+			synchronized (cache) {
+				if (cache.size() > MAX_SIZE) {
+					Iterator<Map.Entry<String, CacheEntry>> iterator = cache.entrySet().iterator();
+					iterator.next();
+					iterator.remove();
+				}
+			}
 		}
 
 		CacheEntry entry = cache.computeIfAbsent(name, key -> new CacheEntry(time, classProvider.get(key)));
