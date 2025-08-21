@@ -1,6 +1,6 @@
 plugins {
 	id 'maven-publish'
-	id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+	id 'com.gradleup.shadow' version '8.3.9' apply false
 	id 'com.diffplug.spotless' version '7.2.1'
 }
 
@@ -89,10 +89,10 @@ allprojects {
 }
 
 // A task to ensure that the version being released has not already been released.
-task checkVersion {
+tasks.register('checkVersion') {
 	doFirst {
 		def xml = new URL("https://maven.fabricmc.net/cuchaz/enigma/maven-metadata.xml").text
-		def metadata = new XmlSlurper().parseText(xml)
+		def metadata = new groovy.xml.XmlSlurper().parseText(xml)
 		def versions = metadata.versioning.versions.version*.text();
 		if (versions.contains(version)) {
 			throw new RuntimeException("${version} has already been released!")

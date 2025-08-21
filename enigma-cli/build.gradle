@@ -1,6 +1,6 @@
 plugins {
 	id 'application'
-	id 'com.github.johnrengelman.shadow'
+	id 'com.gradleup.shadow'
 }
 
 dependencies {
@@ -12,11 +12,3 @@ application {
 }
 
 jar.manifest.attributes 'Main-Class': application.mainClass.get()
-
-publishing {
-	publications {
-		shadow(MavenPublication) { publication ->
-			project.shadow.component publication
-		}
-	}
-}
