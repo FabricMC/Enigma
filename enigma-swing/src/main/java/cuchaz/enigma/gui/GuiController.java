@@ -49,6 +49,7 @@ import cuchaz.enigma.analysis.StructureTreeOptions;
 import cuchaz.enigma.api.DataInvalidationEvent;
 import cuchaz.enigma.api.DataInvalidationListener;
 import cuchaz.enigma.api.service.ObfuscationTestService;
+import cuchaz.enigma.api.service.ProjectService;
 import cuchaz.enigma.api.view.GuiView;
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
 import cuchaz.enigma.classhandle.ClassHandle;
@@ -133,11 +134,15 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 		this.gui.onStartOpenJar();
 
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
-			project = enigma.openJars(jarPaths, new ClasspathClassProvider(), progress);
+			project = enigma.openJars(jarPaths, new ClasspathClassProvider(), progress, false);
 			project.addDataInvalidationListener(this);
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
 			chp = new ClassHandleProvider(project, UiConfig.getDecompiler().service);
 			SwingUtilities.invokeLater(() -> {
+				for (ProjectService projectService : enigma.getServices().get(ProjectService.TYPE)) {
+					projectService.onProjectOpen(project);
+				}
+
 				gui.onFinishOpenJar(getFileNames(jarPaths));
 				refreshClasses();
 			});
@@ -152,6 +157,10 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 	}
 
 	public void closeJar() {
+		for (ProjectService projectService : enigma.getServices().get(ProjectService.TYPE)) {
+			projectService.onProjectClose(project);
+		}
+
 		this.chp.destroy();
 		this.chp = null;
 		this.project = null;
