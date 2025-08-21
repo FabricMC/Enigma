@@ -9,8 +9,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
 import cuchaz.enigma.translation.Translator;
@@ -44,7 +42,7 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		List<String> fieldLines = new ArrayList<>();
 		List<String> methodLines = new ArrayList<>();
 
-		List<? extends Entry<?>> rootEntries = Lists.newArrayList(mappings).stream().map(EntryTreeNode::getEntry).toList();
+		List<? extends Entry<?>> rootEntries = new ArrayList<>(mappings).stream().map(EntryTreeNode::getEntry).toList();
 		progress.init(rootEntries.size(), I18n.translate("progress.mappings.converting"));
 
 		int steps = 0;
@@ -113,8 +111,8 @@ public enum SrgMappingsWriter implements MappingsWriter {
 		return entry.getParent().getFullName() + "/" + entry.getName();
 	}
 
-	private Collection<Entry<?>> sorted(Iterable<? extends Entry<?>> iterable) {
-		ArrayList<Entry<?>> sorted = Lists.newArrayList(iterable);
+	private Collection<Entry<?>> sorted(Collection<? extends Entry<?>> collection) {
+		ArrayList<Entry<?>> sorted = new ArrayList<>(collection);
 		sorted.sort(Comparator.comparing(Entry::getName));
 		return sorted;
 	}

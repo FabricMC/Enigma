@@ -5,8 +5,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 

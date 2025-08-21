@@ -1,6 +1,8 @@
 package cuchaz.enigma.analysis.index;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -8,10 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.ReferenceTargetType;
@@ -48,8 +46,8 @@ public class PackageVisibilityIndex implements JarIndexer {
 	}
 
 	private final ConcurrentMap<ClassEntry, List<ClassEntry>> connections = new ConcurrentHashMap<>();
-	private final List<Set<ClassEntry>> partitions = Lists.newArrayList();
-	private final Map<ClassEntry, Set<ClassEntry>> classPartitions = Maps.newHashMap();
+	private final List<Set<ClassEntry>> partitions = new ArrayList<>();
+	private final Map<ClassEntry, Set<ClassEntry>> classPartitions = new HashMap<>();
 
 	private void addConnection(ClassEntry classA, ClassEntry classB) {
 		if (classA != classB) {
@@ -132,14 +130,14 @@ public class PackageVisibilityIndex implements JarIndexer {
 	}
 
 	private void addPartitions(EntryIndex entryIndex) {
-		Set<ClassEntry> unassignedClasses = Sets.newHashSet(entryIndex.getClasses());
+		Set<ClassEntry> unassignedClasses = new HashSet<>(entryIndex.getClasses());
 
 		while (!unassignedClasses.isEmpty()) {
 			Iterator<ClassEntry> iterator = unassignedClasses.iterator();
 			ClassEntry initialEntry = iterator.next();
 			iterator.remove();
 
-			HashSet<ClassEntry> partition = Sets.newHashSet();
+			HashSet<ClassEntry> partition = new HashSet<>();
 			partition.add(initialEntry);
 			buildPartition(unassignedClasses, partition, initialEntry);
 			partitions.add(partition);

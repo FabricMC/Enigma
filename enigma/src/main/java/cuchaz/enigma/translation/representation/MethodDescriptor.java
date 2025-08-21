@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.google.common.collect.Lists;
-
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
@@ -32,7 +30,7 @@ public class MethodDescriptor implements Translatable {
 
 	public MethodDescriptor(String desc) {
 		try {
-			this.argumentDescs = Lists.newArrayList();
+			this.argumentDescs = new ArrayList<>();
 			int i = 0;
 
 			while (i < desc.length()) {
@@ -86,8 +84,7 @@ public class MethodDescriptor implements Translatable {
 	}
 
 	public Iterable<TypeDescriptor> types() {
-		List<TypeDescriptor> descs = Lists.newArrayList();
-		descs.addAll(this.argumentDescs);
+		List<TypeDescriptor> descs = new ArrayList<>(this.argumentDescs);
 		descs.add(this.returnDesc);
 		return descs;
 	}

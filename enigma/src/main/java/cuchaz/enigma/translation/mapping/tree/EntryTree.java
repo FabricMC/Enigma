@@ -3,7 +3,7 @@ package cuchaz.enigma.translation.mapping.tree;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.TranslateResult;
@@ -13,7 +13,7 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-public interface EntryTree<T> extends EntryMap<T>, Iterable<EntryTreeNode<T>>, Translatable {
+public interface EntryTree<T> extends EntryMap<T>, Collection<EntryTreeNode<T>>, Translatable {
 	Collection<Entry<?>> getChildren(Entry<?> entry);
 
 	Collection<Entry<?>> getSiblings(Entry<?> entry);

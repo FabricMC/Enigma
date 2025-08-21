@@ -3,7 +3,6 @@ package cuchaz.enigma.gui.elements;
 import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 
-import javax.annotation.Nullable;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
@@ -12,6 +11,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.analysis.ClassTreeNode;
 import cuchaz.enigma.analysis.MethodInheritanceTreeNode;

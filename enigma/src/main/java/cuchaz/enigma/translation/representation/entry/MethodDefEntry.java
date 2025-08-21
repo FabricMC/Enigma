@@ -11,9 +11,9 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import javax.annotation.Nonnull;
+import java.util.Objects;
 
-import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
@@ -33,10 +33,8 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 
 	public MethodDefEntry(ClassEntry owner, String name, MethodDescriptor descriptor, Signature signature, AccessFlags access, String docs) {
 		super(owner, name, descriptor, docs);
-		Preconditions.checkNotNull(access, "Method access cannot be null");
-		Preconditions.checkNotNull(signature, "Method signature cannot be null");
-		this.access = access;
-		this.signature = signature;
+		this.access = Objects.requireNonNull(access, "Method access cannot be null");
+		this.signature = Objects.requireNonNull(signature, "Method signature cannot be null");
 	}
 
 	public static MethodDefEntry parse(ClassEntry owner, int access, String name, String desc, String signature) {
@@ -53,7 +51,7 @@ public class MethodDefEntry extends MethodEntry implements DefEntry<ClassEntry> 
 	}
 
 	@Override
-	protected TranslateResult<MethodDefEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
+	protected TranslateResult<MethodDefEntry> extendedTranslate(Translator translator, @NotNull EntryMapping mapping) {
 		MethodDescriptor translatedDesc = translator.translate(descriptor);
 		Signature translatedSignature = translator.translate(signature);
 		String translatedName = mapping.targetName() != null ? mapping.targetName() : name;

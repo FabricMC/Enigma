@@ -1,6 +1,6 @@
 package cuchaz.enigma.source.bytecode;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.classprovider.ClassProvider;
 import cuchaz.enigma.source.Decompiler;

@@ -13,7 +13,6 @@ package cuchaz.enigma.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,12 +27,9 @@ import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.google.common.base.Preconditions;
-import com.google.common.io.CharStreams;
-
 public class Utils {
 	public static String readStreamToString(InputStream in) throws IOException {
-		return CharStreams.toString(new InputStreamReader(in, StandardCharsets.UTF_8));
+		return new String(in.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
 	public static String readResourceToString(String path) throws IOException {
@@ -55,7 +51,10 @@ public class Utils {
 	}
 
 	public static byte[] zipSha1(Path... paths) throws IOException {
-		Preconditions.checkArgument(paths.length >= 1, "Must provide at least one zip");
+		if (paths.length == 0) {
+			throw new IllegalArgumentException("Must provide at least one zip");
+		}
+
 		MessageDigest digest;
 
 		try {

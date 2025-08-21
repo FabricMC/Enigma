@@ -2,7 +2,7 @@ package cuchaz.enigma.network;
 
 import java.util.Objects;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class ServerAddress {
 	public final String address;
@@ -23,7 +23,7 @@ public class ServerAddress {
 			return null;
 		}
 
-		if (address.equals("")) {
+		if (address.isEmpty()) {
 			return null;
 		}
 

@@ -7,8 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-import javax.annotation.Nullable;
-
 import net.fabricmc.mappingio.MappedElementKind;
 import net.fabricmc.mappingio.tree.MappingTree.ClassMapping;
 import net.fabricmc.mappingio.tree.MappingTree.FieldMapping;
@@ -18,6 +16,7 @@ import net.fabricmc.mappingio.tree.MappingTree.MethodVarMapping;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;

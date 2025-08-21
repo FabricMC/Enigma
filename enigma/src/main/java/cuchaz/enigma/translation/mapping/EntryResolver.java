@@ -1,9 +1,10 @@
 package cuchaz.enigma.translation.mapping;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
-
-import com.google.common.collect.Streams;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.translation.representation.entry.Entry;
@@ -21,7 +22,15 @@ public interface EntryResolver {
 
 		if (reference.context != null) {
 			Collection<C> context = resolveEntry(reference.context, strategy);
-			return Streams.zip(entry.stream(), context.stream(), (e, c) -> new EntryReference<>(e, c, reference)).toList();
+			List<EntryReference<E, C>> result = new ArrayList<>(entry.size());
+			Iterator<E> entryIterator = entry.iterator();
+			Iterator<C> contextIterator = context.iterator();
+
+			while (entryIterator.hasNext() && contextIterator.hasNext()) {
+				result.add(new EntryReference<>(entryIterator.next(), contextIterator.next(), reference));
+			}
+
+			return result;
 		} else {
 			return entry.stream().map(e -> new EntryReference<>(e, null, reference)).toList();
 		}

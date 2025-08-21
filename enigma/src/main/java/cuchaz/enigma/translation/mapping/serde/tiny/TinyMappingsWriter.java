@@ -6,12 +6,10 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.MappingTranslator;
@@ -30,7 +28,6 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
 public class TinyMappingsWriter implements MappingsWriter {
 	private static final String VERSION_CONSTANT = "v1";
-	private static final Joiner TAB_JOINER = Joiner.on('\t');
 
 	//Possibly add a gui or a way to select the namespaces when exporting from the gui
 	public static final TinyMappingsWriter INSTANCE = new TinyMappingsWriter("intermediary", "named");
@@ -57,7 +54,7 @@ public class TinyMappingsWriter implements MappingsWriter {
 		try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
 			writeLine(writer, new String[]{VERSION_CONSTANT, nameObf, nameDeobf});
 
-			Lists.newArrayList(mappings).stream().map(EntryTreeNode::getEntry).sorted(Comparator.comparing(Object::toString)).forEach(entry -> writeEntry(writer, mappings, entry));
+			new ArrayList<>(mappings).stream().map(EntryTreeNode::getEntry).sorted(Comparator.comparing(Object::toString)).forEach(entry -> writeEntry(writer, mappings, entry));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -107,7 +104,7 @@ public class TinyMappingsWriter implements MappingsWriter {
 
 	private void writeLine(Writer writer, String[] data) {
 		try {
-			String line = TAB_JOINER.join(data) + "\n";
+			String line = String.join("\t", data) + "\n";
 
 			if (writtenLines.add(line)) {
 				writer.write(line);

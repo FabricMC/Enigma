@@ -14,8 +14,8 @@ package cuchaz.enigma.translation.representation.entry;
 import java.util.List;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
@@ -90,7 +90,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
-	public TranslateResult<? extends ClassEntry> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping) {
+	public TranslateResult<? extends ClassEntry> extendedTranslate(Translator translator, @NotNull EntryMapping mapping) {
 		if (name.charAt(0) == '[') {
 			TranslateResult<TypeDescriptor> translatedName = translator.extendedTranslate(new TypeDescriptor(name));
 			return translatedName.map(desc -> new ClassEntry(parent, desc.toString()));
@@ -166,7 +166,7 @@ public class ClassEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return parent;
 	}
 
-	@Nonnull
+	@NotNull
 	public ClassEntry getOutermostClass() {
 		if (parent == null) {
 			return this;

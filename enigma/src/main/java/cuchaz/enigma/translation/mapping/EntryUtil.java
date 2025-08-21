@@ -1,6 +1,6 @@
 package cuchaz.enigma.translation.mapping;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.validation.ValidationContext;
@@ -16,7 +16,7 @@ public class EntryUtil {
 		return mapping;
 	}
 
-	public static EntryMapping applyChange(@Nonnull EntryMapping self, EntryChange<?> change) {
+	public static EntryMapping applyChange(@NotNull EntryMapping self, EntryChange<?> change) {
 		if (change.getDeobfName().isSet()) {
 			self = self.withName(change.getDeobfName().getNewValue());
 		} else if (change.getDeobfName().isReset()) {

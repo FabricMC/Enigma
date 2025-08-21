@@ -1,5 +1,6 @@
 package cuchaz.enigma.translation.mapping.tree;
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,8 +14,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMap;
@@ -22,7 +23,7 @@ import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.representation.entry.Entry;
 
-public class HashEntryTree<T> implements EntryTree<T> {
+public class HashEntryTree<T> extends AbstractCollection<EntryTreeNode<T>> implements EntryTree<T> {
 	private final Map<Entry<?>, HashTreeNode<T>> root = new HashMap<>();
 
 	public HashEntryTree() {
@@ -177,7 +178,7 @@ public class HashEntryTree<T> implements EntryTree<T> {
 	}
 
 	@Override
-	@Nonnull
+	@NotNull
 	public Iterator<EntryTreeNode<T>> iterator() {
 		Collection<EntryTreeNode<T>> nodes = new ArrayList<>();
 
@@ -186,6 +187,11 @@ public class HashEntryTree<T> implements EntryTree<T> {
 		}
 
 		return nodes.iterator();
+	}
+
+	@Override
+	public int size() {
+		return root.values().stream().mapToInt(EntryTreeNode::sizeRecursively).sum();
 	}
 
 	@Override

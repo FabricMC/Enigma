@@ -1,6 +1,7 @@
 package cuchaz.enigma.gui.config;
 
 import java.awt.Font;
+import java.nio.file.Files;
 
 import cuchaz.enigma.gui.config.legacy.Config;
 
@@ -10,7 +11,7 @@ public final class OldConfigImporter {
 
 	@SuppressWarnings("deprecation")
 	public static void doImport() {
-		if (Config.CONFIG_FILE.exists()) {
+		if (Files.exists(Config.CONFIG_FILE)) {
 			Config config = new Config();
 
 			if (config.editorFont != null) {

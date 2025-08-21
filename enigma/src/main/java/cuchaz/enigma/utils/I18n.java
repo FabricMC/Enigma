@@ -8,15 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.google.common.reflect.ClassPath;
-import com.google.common.reflect.ClassPath.ResourceInfo;
 import com.google.gson.Gson;
 
 public class I18n {
@@ -24,7 +21,7 @@ public class I18n {
 	private static final Gson GSON = new Gson();
 	private static Map<String, String> defaultTranslations = load(DEFAULT_LANGUAGE);
 	private static Map<String, String> translations = defaultTranslations;
-	private static Map<String, String> languageNames = Maps.newHashMap();
+	private static Map<String, String> languageNames = new HashMap<>();
 
 	@SuppressWarnings("unchecked")
 	public static Map<String, String> load(String language) {
@@ -87,19 +84,22 @@ public class I18n {
 	}
 
 	public static ArrayList<String> getAvailableLanguages() {
-		ArrayList<String> list = new ArrayList<String>();
+		ArrayList<String> list = new ArrayList<>();
 
 		try {
-			ImmutableList<ResourceInfo> resources = ClassPath.from(Thread.currentThread().getContextClassLoader()).getResources().asList();
-			Stream<ResourceInfo> dirStream = resources.stream();
-			dirStream.forEach(context -> {
-				String file = context.getResourceName();
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			List<String> availableTranslations;
 
-				if (file.startsWith("lang/") && file.endsWith(".json")) {
-					String fileName = file.substring(5, file.length() - 5);
-					list.add(fileName);
-					loadLanguageName(fileName);
-				}
+			try (InputStream is = cl.getResourceAsStream("lang/index.txt")) {
+				availableTranslations = Arrays.asList(
+						new String(is.readAllBytes(), StandardCharsets.UTF_8)
+								.split("\n")
+				);
+			}
+
+			availableTranslations.forEach(fileName -> {
+				list.add(fileName);
+				loadLanguageName(fileName);
 			});
 		} catch (IOException e) {
 			e.printStackTrace();

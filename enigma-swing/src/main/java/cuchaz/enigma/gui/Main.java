@@ -20,7 +20,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.io.MoreFiles;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -144,7 +143,7 @@ public class Main {
 
 						if (Files.isDirectory(mappingsPath)) {
 							controller.openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsPath);
-						} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(mappingsPath))) {
+						} else if (mappingsPath.getFileName().toString().toLowerCase().endsWith(".zip")) {
 							controller.openMappings(MappingFormat.ENIGMA_ZIP, mappingsPath);
 						} else {
 							controller.openMappings(MappingFormat.ENIGMA_FILE, mappingsPath);

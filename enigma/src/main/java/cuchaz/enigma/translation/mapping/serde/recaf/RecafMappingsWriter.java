@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -33,7 +32,7 @@ public class RecafMappingsWriter implements MappingsWriter {
 		}
 
 		try (BufferedWriter writer = Files.newBufferedWriter(path)) {
-			Lists.newArrayList(mappings).stream().map(EntryTreeNode::getEntry).forEach(entry -> writeEntry(writer, mappings, entry));
+			new ArrayList<>(mappings).stream().map(EntryTreeNode::getEntry).forEach(entry -> writeEntry(writer, mappings, entry));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

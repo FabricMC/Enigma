@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.google.common.jimfs.Jimfs;
 import org.junit.Test;
 
@@ -24,7 +23,7 @@ public class TestRecaf {
 		Set<String> contents;
 
 		try (InputStream in = getClass().getResourceAsStream("/recaf.mappings")) {
-			contents = Sets.newHashSet(new String(in.readAllBytes(), StandardCharsets.UTF_8).split("\\R"));
+			contents = Set.of(new String(in.readAllBytes(), StandardCharsets.UTF_8).split("\\R"));
 		}
 
 		try (FileSystem fs = Jimfs.newFileSystem()) {

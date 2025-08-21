@@ -6,14 +6,13 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.mappingio.tree.VisitOrder;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;

@@ -3,7 +3,7 @@ package cuchaz.enigma.classhandle;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public final class ClassHandleError {
 	public final Type type;

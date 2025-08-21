@@ -11,7 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.io.MoreFiles;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -103,7 +102,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 
 				if (Files.isDirectory(mappingsFile)) {
 					mappingFormat = MappingFormat.ENIGMA_DIRECTORY;
-				} else if ("zip".equalsIgnoreCase(MoreFiles.getFileExtension(mappingsFile))) {
+				} else if (mappingsFile.getFileName().toString().toLowerCase().endsWith(".zip")) {
 					mappingFormat = MappingFormat.ENIGMA_ZIP;
 				} else {
 					mappingFormat = MappingFormat.ENIGMA_FILE;

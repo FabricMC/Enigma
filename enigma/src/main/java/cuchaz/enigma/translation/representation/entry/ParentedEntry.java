@@ -11,10 +11,10 @@
 
 package cuchaz.enigma.translation.representation.entry;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.Objects;
 
-import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
@@ -28,12 +28,10 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	protected final String name;
 	protected final @Nullable String javadocs;
 
-	protected ParentedEntry(P parent, String name, String javadocs) {
+	protected ParentedEntry(P parent, String name, @Nullable String javadocs) {
 		this.parent = parent;
-		this.name = name;
+		this.name = Objects.requireNonNull(name, "Name cannot be null");
 		this.javadocs = javadocs;
-
-		Preconditions.checkNotNull(name, "Name cannot be null");
 	}
 
 	@Override
@@ -42,7 +40,7 @@ public abstract class ParentedEntry<P extends Entry<?>> implements Entry<P> {
 	@Override
 	public abstract ParentedEntry<P> withName(String name);
 
-	protected abstract TranslateResult<? extends ParentedEntry<P>> extendedTranslate(Translator translator, @Nonnull EntryMapping mapping);
+	protected abstract TranslateResult<? extends ParentedEntry<P>> extendedTranslate(Translator translator, @NotNull EntryMapping mapping);
 
 	@Override
 	public String getName() {

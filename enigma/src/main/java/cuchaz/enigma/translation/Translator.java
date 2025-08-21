@@ -11,16 +11,14 @@
 
 package cuchaz.enigma.translation;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import org.jetbrains.annotations.Nullable;
 
 public interface Translator {
 	@Nullable
@@ -61,11 +59,12 @@ public interface Translator {
 		return result;
 	}
 
-	default <K extends Translatable, V extends Translatable> Multimap<K, V> translate(Multimap<K, V> translatable) {
-		Multimap<K, V> result = HashMultimap.create(translatable.size(), 1);
+	default <K extends Translatable, V extends Translatable> Map<K, Collection<V>> translateMulti(Map<K, ? extends Collection<V>> translatable) {
+		Map<K, Collection<V>> result = new HashMap<>(translatable.size());
 
-		for (Map.Entry<K, Collection<V>> entry : translatable.asMap().entrySet()) {
-			result.putAll(translate(entry.getKey()), translate(entry.getValue()));
+		for (Map.Entry<K, ? extends Collection<V>> entry : translatable.entrySet()) {
+			result.computeIfAbsent(entry.getKey(), key -> new ArrayList<>())
+					.addAll(translate(entry.getValue()));
 		}
 
 		return result;

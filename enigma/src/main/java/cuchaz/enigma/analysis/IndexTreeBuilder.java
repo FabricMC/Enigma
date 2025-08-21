@@ -1,9 +1,8 @@
 package cuchaz.enigma.analysis;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.Translator;
@@ -21,7 +20,7 @@ public class IndexTreeBuilder {
 
 	public ClassInheritanceTreeNode buildClassInheritance(Translator translator, ClassEntry obfClassEntry) {
 		// get the root node
-		List<String> ancestry = Lists.newArrayList();
+		List<String> ancestry = new ArrayList<>();
 		ancestry.add(obfClassEntry.getFullName());
 
 		for (ClassEntry classEntry : index.getInheritanceIndex().getAncestors(obfClassEntry)) {
@@ -62,7 +61,7 @@ public class IndexTreeBuilder {
 		EntryResolver resolver = index.getEntryResolver();
 		Collection<MethodEntry> resolvedEntries = resolver.resolveEntry(obfMethodEntry, ResolutionStrategy.RESOLVE_ROOT);
 
-		List<MethodImplementationsTreeNode> nodes = Lists.newArrayList();
+		List<MethodImplementationsTreeNode> nodes = new ArrayList<>();
 
 		for (MethodEntry resolvedEntry : resolvedEntries) {
 			MethodImplementationsTreeNode node = new MethodImplementationsTreeNode(translator, resolvedEntry);

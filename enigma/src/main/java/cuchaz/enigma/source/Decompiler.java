@@ -1,6 +1,6 @@
 package cuchaz.enigma.source;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 

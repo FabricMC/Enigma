@@ -11,9 +11,8 @@
 
 package cuchaz.enigma.analysis;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import cuchaz.enigma.analysis.index.InheritanceIndex;
 import cuchaz.enigma.translation.Translator;
@@ -53,7 +52,7 @@ public class ClassInheritanceTreeNode extends ClassTreeNode {
 
 	public void load(InheritanceIndex ancestries, boolean recurse) {
 		// get all the child nodes
-		List<ClassInheritanceTreeNode> nodes = Lists.newArrayList();
+		List<ClassInheritanceTreeNode> nodes = new ArrayList<>();
 
 		for (ClassEntry inheritor : ancestries.getChildren(this.getClassEntry())) {
 			nodes.add(new ClassInheritanceTreeNode(translator, inheritor.getFullName()));
