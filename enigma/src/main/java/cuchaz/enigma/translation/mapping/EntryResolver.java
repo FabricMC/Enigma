@@ -25,9 +25,11 @@ public interface EntryResolver {
 			List<EntryReference<E, C>> result = new ArrayList<>(entry.size());
 			Iterator<E> entryIterator = entry.iterator();
 			Iterator<C> contextIterator = context.iterator();
+
 			while (entryIterator.hasNext() && contextIterator.hasNext()) {
 				result.add(new EntryReference<>(entryIterator.next(), contextIterator.next(), reference));
 			}
+
 			return result;
 		} else {
 			return entry.stream().map(e -> new EntryReference<>(e, null, reference)).toList();
