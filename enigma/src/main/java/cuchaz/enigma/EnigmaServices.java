@@ -15,6 +15,6 @@ public final class EnigmaServices {
 
 	@SuppressWarnings("unchecked")
 	public <T extends EnigmaService> List<T> get(EnigmaServiceType<T> type) {
-		return (List<T>) services.get(type);
+		return (List<T>) services.getOrDefault(type, List.of());
 	}
 }

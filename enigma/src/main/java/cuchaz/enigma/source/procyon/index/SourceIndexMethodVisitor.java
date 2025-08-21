@@ -14,6 +14,7 @@ package cuchaz.enigma.source.procyon.index;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.strobel.assembler.metadata.FieldReference;
@@ -186,7 +187,7 @@ public class SourceIndexMethodVisitor extends SourceIndexVisitor {
 			return;
 		}
 
-		for (Identifier identifier : unmatchedIdentifier.get(key)) {
+		for (Identifier identifier : unmatchedIdentifier.getOrDefault(key, List.of())) {
 			index.addDeclaration(TokenFactory.createToken(index, identifier), entry);
 		}
 

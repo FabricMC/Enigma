@@ -119,7 +119,7 @@ public class SourceIndex {
 	}
 
 	public Collection<Token> getReferenceTokens(EntryReference<Entry<?>, Entry<?>> deobfReference) {
-		return referenceToTokens.get(deobfReference);
+		return referenceToTokens.getOrDefault(deobfReference, List.of());
 	}
 
 	public void addReference(Token token, Entry<?> deobfEntry, Entry<?> deobfContext) {
