@@ -12,3 +12,5 @@ application {
 }
 
 jar.manifest.attributes 'Main-Class': application.mainClass.get()
+
+test.dependsOn project(':enigma').tasks.named('packageAccessTestObf')
