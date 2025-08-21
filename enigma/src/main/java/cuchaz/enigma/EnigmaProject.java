@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.jar.JarEntry;
@@ -58,12 +59,13 @@ public class EnigmaProject implements ProjectView {
 	private final ClassProvider classProvider;
 	private final JarIndex jarIndex;
 	private final byte[] jarChecksum;
+	private final Set<String> projectClasses;
 
 	private EntryRemapper mapper;
 
 	private final List<DataInvalidationListener> dataInvalidationListeners = new ArrayList<>();
 
-	public EnigmaProject(Enigma enigma, List<Path> jarPaths, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
+	public EnigmaProject(Enigma enigma, List<Path> jarPaths, ClassProvider classProvider, Set<String> projectClasses, JarIndex jarIndex, byte[] jarChecksum) {
 		if (jarChecksum.length != 20) {
 			throw new IllegalArgumentException();
 		}
@@ -73,6 +75,7 @@ public class EnigmaProject implements ProjectView {
 		this.classProvider = classProvider;
 		this.jarIndex = jarIndex;
 		this.jarChecksum = jarChecksum;
+		this.projectClasses = projectClasses;
 
 		this.mapper = EntryRemapper.empty(jarIndex);
 	}
@@ -338,6 +341,17 @@ public class EnigmaProject implements ProjectView {
 	@SuppressWarnings("unchecked")
 	public <T extends EntryView> T deobfuscate(T entry) {
 		return (T) mapper.extendedDeobfuscate((Translatable) entry).getValue();
+	}
+
+	@Override
+	public Collection<String> getProjectClasses() {
+		return projectClasses;
+	}
+
+	@Override
+	@Nullable
+	public ClassNode getBytecode(String className) {
+		return classProvider.get(className);
 	}
 
 	@Override
