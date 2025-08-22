@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
@@ -56,7 +57,7 @@ public abstract class Command {
 
 	protected static EntryTree<EntryMapping> readMappings(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
 		// Legacy
-		if (path.getFileName().toString().toLowerCase().endsWith(".zip")) {
+		if (path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".zip")) {
 			return MappingFormat.ENIGMA_ZIP.read(path, progress, saveParameters, null);
 		}
 

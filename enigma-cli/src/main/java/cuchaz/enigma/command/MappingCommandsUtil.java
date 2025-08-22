@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
@@ -34,7 +35,7 @@ public final class MappingCommandsUtil {
 		MappingFormat format = null;
 
 		try {
-			format = MappingFormat.valueOf(type.toUpperCase());
+			format = MappingFormat.valueOf(type.toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException ignored) {
 			if (type.equals("tinyv2")) {
 				format = MappingFormat.TINY_V2;
@@ -101,7 +102,7 @@ public final class MappingCommandsUtil {
 		MappingFormat format = null;
 
 		try {
-			format = MappingFormat.valueOf(type.toUpperCase());
+			format = MappingFormat.valueOf(type.toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException ignored) {
 			// ignored
 		}

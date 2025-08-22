@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Predicate;
 
 import javax.swing.BorderFactory;
@@ -98,7 +99,7 @@ public class ScaleUtil {
 
 	@SuppressWarnings("null")
 	private static BasicTweaker createTweakerForCurrentLook(float dpiScaling) {
-		String testString = UIManager.getLookAndFeel().getName().toLowerCase();
+		String testString = UIManager.getLookAndFeel().getName().toLowerCase(Locale.ROOT);
 
 		if (testString.contains("windows")) {
 			return new WindowsTweaker(dpiScaling, testString.contains("classic")) {

@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -98,7 +99,7 @@ public class Config {
 	private static class IntSerializer implements JsonSerializer<Integer> {
 		@Override
 		public JsonElement serialize(Integer src, Type typeOfSrc, JsonSerializationContext context) {
-			return new JsonPrimitive("#" + Integer.toHexString(src).toUpperCase());
+			return new JsonPrimitive("#" + Integer.toHexString(src).toUpperCase(Locale.ROOT));
 		}
 	}
 

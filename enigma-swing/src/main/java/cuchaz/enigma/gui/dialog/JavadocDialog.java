@@ -17,6 +17,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.swing.JButton;
@@ -223,7 +224,7 @@ public class JavadocDialog {
 		}
 
 		public String getText() {
-			return "@" + this.name().toLowerCase();
+			return "@" + this.name().toLowerCase(Locale.ROOT);
 		}
 
 		public boolean isInline() {

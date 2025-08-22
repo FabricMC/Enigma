@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -102,7 +103,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 
 				if (Files.isDirectory(mappingsFile)) {
 					mappingFormat = MappingFormat.ENIGMA_DIRECTORY;
-				} else if (mappingsFile.getFileName().toString().toLowerCase().endsWith(".zip")) {
+				} else if (mappingsFile.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".zip")) {
 					mappingFormat = MappingFormat.ENIGMA_ZIP;
 				} else {
 					mappingFormat = MappingFormat.ENIGMA_FILE;
