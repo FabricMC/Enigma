@@ -43,7 +43,7 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public void load(EnigmaProject project, StructureTreeOptions options) {
-		Stream<ParentedEntry<?>> children = project.getJarIndex().getChildrenByClass().get(this.parentEntry).stream();
+		Stream<ParentedEntry<?>> children = project.getJarIndex().getChildrenByClass().getOrDefault(this.parentEntry, List.of()).stream();
 
 		children = switch (options.obfuscationVisibility()) {
 		case ALL -> children;
