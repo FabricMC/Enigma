@@ -1,6 +1,7 @@
 package cuchaz.enigma.translation.representation;
 
 import java.lang.reflect.Modifier;
+import java.util.Locale;
 
 import org.objectweb.asm.Opcodes;
 
@@ -110,7 +111,7 @@ public class AccessFlags {
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder(Access.get(this).toString().toLowerCase());
+		StringBuilder builder = new StringBuilder(Access.get(this).toString().toLowerCase(Locale.ROOT));
 
 		if (isStatic()) {
 			builder.append(" static");

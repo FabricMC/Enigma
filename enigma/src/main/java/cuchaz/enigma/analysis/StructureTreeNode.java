@@ -3,6 +3,7 @@ package cuchaz.enigma.analysis;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -67,9 +68,9 @@ public class StructureTreeNode extends DefaultMutableTreeNode {
 		case DEFAULT -> children;
 		case A_Z -> children.sorted(Comparator.comparing(e -> (e instanceof MethodEntry m && m.isConstructor())
 																// compare the class name when the entry is a constructor
-																? project.getMapper().deobfuscate(e.getParent()).getSimpleName().toLowerCase() : project.getMapper().deobfuscate(e).getSimpleName().toLowerCase()));
+																? project.getMapper().deobfuscate(e.getParent()).getSimpleName().toLowerCase(Locale.ROOT) : project.getMapper().deobfuscate(e).getSimpleName().toLowerCase()));
 		case Z_A -> children.sorted(
-				Comparator.comparing(e -> (e instanceof MethodEntry m && m.isConstructor()) ? project.getMapper().deobfuscate(((ParentedEntry<?>) e).getParent()).getSimpleName().toLowerCase() : project.getMapper().deobfuscate((ParentedEntry<?>) e).getSimpleName().toLowerCase()).reversed());
+				Comparator.comparing(e -> (e instanceof MethodEntry m && m.isConstructor()) ? project.getMapper().deobfuscate(((ParentedEntry<?>) e).getParent()).getSimpleName().toLowerCase() : project.getMapper().deobfuscate((ParentedEntry<?>) e).getSimpleName().toLowerCase(Locale.ROOT)).reversed());
 		};
 
 		for (ParentedEntry<?> child : children.toList()) {
