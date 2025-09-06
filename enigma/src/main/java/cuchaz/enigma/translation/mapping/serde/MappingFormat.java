@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingWriter;
@@ -12,56 +13,39 @@ import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.mappingio.tree.VisitOrder;
 import net.fabricmc.mappingio.tree.VisitableMappingTree;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.MappingDelta;
 import cuchaz.enigma.translation.mapping.MappingOperations;
-import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsReader;
 import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsWriter;
-import cuchaz.enigma.translation.mapping.serde.proguard.ProguardMappingsReader;
-import cuchaz.enigma.translation.mapping.serde.recaf.RecafMappingsReader;
-import cuchaz.enigma.translation.mapping.serde.recaf.RecafMappingsWriter;
-import cuchaz.enigma.translation.mapping.serde.srg.SrgMappingsWriter;
-import cuchaz.enigma.translation.mapping.serde.tiny.TinyMappingsReader;
-import cuchaz.enigma.translation.mapping.serde.tiny.TinyMappingsWriter;
-import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Reader;
-import cuchaz.enigma.translation.mapping.serde.tinyv2.TinyV2Writer;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.utils.I18n;
 
 public enum MappingFormat {
-	ENIGMA_FILE(EnigmaMappingsWriter.FILE, EnigmaMappingsReader.FILE, FileType.MAPPING, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_FILE),
-	ENIGMA_DIRECTORY(EnigmaMappingsWriter.DIRECTORY, EnigmaMappingsReader.DIRECTORY, FileType.DIRECTORY, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_DIR),
-	ENIGMA_ZIP(EnigmaMappingsWriter.ZIP, EnigmaMappingsReader.ZIP, FileType.ZIP, null),
-	TINY_V2(new TinyV2Writer("intermediary", "named"), new TinyV2Reader(), FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE),
-	TINY_FILE(TinyMappingsWriter.INSTANCE, TinyMappingsReader.INSTANCE, FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE),
-	SRG_FILE(SrgMappingsWriter.INSTANCE, null, FileType.SRG, net.fabricmc.mappingio.format.MappingFormat.SRG_FILE),
-	XSRG_FILE(null, null, FileType.XSRG, net.fabricmc.mappingio.format.MappingFormat.XSRG_FILE),
-	JAM_FILE(null, null, FileType.JAM, net.fabricmc.mappingio.format.MappingFormat.JAM_FILE),
-	CSRG_FILE(null, null, FileType.CSRG, net.fabricmc.mappingio.format.MappingFormat.CSRG_FILE),
-	TSRG_FILE(null, null, FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_FILE),
-	TSRG_2_FILE(null, null, FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_2_FILE),
-	PROGUARD(null, ProguardMappingsReader.INSTANCE, FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.PROGUARD_FILE),
-	RECAF(RecafMappingsWriter.INSTANCE, RecafMappingsReader.INSTANCE, FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.RECAF_SIMPLE_FILE),
-	JOBF_FILE(null, null, FileType.JOBF, net.fabricmc.mappingio.format.MappingFormat.JOBF_FILE),
-	INTELLIJ_MIGRATION_MAP_FILE(null, null, FileType.XML, net.fabricmc.mappingio.format.MappingFormat.INTELLIJ_MIGRATION_MAP_FILE);
+	ENIGMA_FILE(FileType.MAPPING, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_FILE),
+	ENIGMA_DIRECTORY(FileType.DIRECTORY, net.fabricmc.mappingio.format.MappingFormat.ENIGMA_DIR),
+	TINY_V2(FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_2_FILE),
+	TINY_FILE(FileType.TINY, net.fabricmc.mappingio.format.MappingFormat.TINY_FILE),
+	SRG_FILE(FileType.SRG, net.fabricmc.mappingio.format.MappingFormat.SRG_FILE),
+	XSRG_FILE(FileType.XSRG, net.fabricmc.mappingio.format.MappingFormat.XSRG_FILE),
+	JAM_FILE(FileType.JAM, net.fabricmc.mappingio.format.MappingFormat.JAM_FILE),
+	CSRG_FILE(FileType.CSRG, net.fabricmc.mappingio.format.MappingFormat.CSRG_FILE),
+	TSRG_FILE(FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_FILE),
+	TSRG_2_FILE(FileType.TSRG, net.fabricmc.mappingio.format.MappingFormat.TSRG_2_FILE),
+	PROGUARD(FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.PROGUARD_FILE),
+	RECAF(FileType.TXT, net.fabricmc.mappingio.format.MappingFormat.RECAF_SIMPLE_FILE),
+	JOBF_FILE(FileType.JOBF, net.fabricmc.mappingio.format.MappingFormat.JOBF_FILE),
+	INTELLIJ_MIGRATION_MAP_FILE(FileType.XML, net.fabricmc.mappingio.format.MappingFormat.INTELLIJ_MIGRATION_MAP_FILE);
 
-	private final MappingsWriter writer;
-	private final MappingsReader reader;
 	private final FileType fileType;
 	private final net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart;
-	private final boolean hasMappingIoWriter;
 	private boolean usedMappingIoWriterLast;
 
-	MappingFormat(MappingsWriter writer, MappingsReader reader, FileType fileType, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart) {
-		this.writer = writer;
-		this.reader = reader;
+	MappingFormat(FileType fileType, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart) {
 		this.fileType = fileType;
-		this.mappingIoCounterpart = mappingIoCounterpart;
-		this.hasMappingIoWriter = mappingIoCounterpart == null ? false : mappingIoCounterpart.hasWriter;
+		this.mappingIoCounterpart = Objects.requireNonNull(mappingIoCounterpart);
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
@@ -69,10 +53,8 @@ public enum MappingFormat {
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
-		if (!hasMappingIoWriter || (!useMappingIo() && writer != null)) {
-			writer.write(mappings, usedMappingIoWriterLast ? MappingDelta.added(mappings) : delta, path, progressListener, saveParameters);
-			usedMappingIoWriterLast = false;
-			return;
+		if (!isWritable()) {
+			throw new UnsupportedOperationException("Mapping format " + this + " does not support writing");
 		}
 
 		try {
@@ -103,10 +85,6 @@ public enum MappingFormat {
 	}
 
 	public EntryTree<EntryMapping> read(Path path, ProgressListener progressListener, MappingSaveParameters saveParameters, JarIndex index) throws IOException, MappingParseException {
-		if (mappingIoCounterpart == null || (!useMappingIo() && reader != null)) {
-			return reader.read(path, progressListener, saveParameters);
-		}
-
 		String loadingMessage;
 
 		if (mappingIoCounterpart.hasSingleFile()) {
@@ -124,56 +102,17 @@ public enum MappingFormat {
 		return this == PROGUARD ? MappingOperations.invert(mappings) : mappings;
 	}
 
-	/**
-	 * @return Enigma's native writer for the format, or {@code null} if none exists.
-	 *
-	 * @deprecated Use {@link #isWritable()} and {@link #write(EntryTree, Path, ProgressListener, MappingSaveParameters)} instead,
-	 * which take the new Mapping-IO equivalents (and eventual replacements) into account.
-	 */
-	@Nullable
-	@Deprecated
-	public MappingsWriter getWriter() {
-		return writer;
-	}
-
-	/**
-	 * @return Enigma's native reader for the format, or {@code null} if none exists.
-	 *
-	 * @deprecated Use {@link #isReadable()} and {@link #read(Path, ProgressListener, MappingSaveParameters, JarIndex)} instead,
-	 * which take the new Mapping-IO equivalents (and eventual replacements) into account.
-	 */
-	@Nullable
-	@Deprecated
-	public MappingsReader getReader() {
-		return reader;
-	}
-
 	@ApiStatus.Internal
 	public FileType getFileType() {
 		return fileType;
 	}
 
-	@Nullable
-	@ApiStatus.Internal
-	public net.fabricmc.mappingio.format.MappingFormat getMappingIoCounterpart() {
-		return mappingIoCounterpart;
-	}
-
-	@ApiStatus.Internal
-	public boolean hasMappingIoWriter() {
-		return hasMappingIoWriter;
-	}
-
 	public boolean isReadable() {
-		return reader != null || mappingIoCounterpart != null;
+		return true;
 	}
 
 	public boolean isWritable() {
-		return writer != null || hasMappingIoWriter;
-	}
-
-	private boolean useMappingIo() {
-		return System.getProperty("enigma.use_mappingio", "true").equals("true");
+		return mappingIoCounterpart.hasWriter;
 	}
 
 	public static List<MappingFormat> getReadableFormats() {
@@ -199,7 +138,6 @@ public enum MappingFormat {
 	@ApiStatus.Internal
 	public record FileType(List<String> extensions) {
 		public static final FileType DIRECTORY = new FileType();
-		public static final FileType ZIP = new FileType(".zip");
 		public static final FileType MAPPING = new FileType(".mapping", ".mappings");
 		public static final FileType TINY = new FileType(".tiny");
 		public static final FileType SRG = new FileType(".srg");

@@ -1,5 +1,0 @@
-CLASS f cuchaz/enigma/Dad
-	CLASS a One
-		CLASS a Two
-			CLASS a
-				FIELD a value I

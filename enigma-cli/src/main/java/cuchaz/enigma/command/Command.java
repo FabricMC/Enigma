@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Locale;
 
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
@@ -16,7 +15,6 @@ import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
@@ -56,11 +54,6 @@ public abstract class Command {
 	}
 
 	protected static EntryTree<EntryMapping> readMappings(Path path, ProgressListener progress, MappingSaveParameters saveParameters) throws IOException, MappingParseException {
-		// Legacy
-		if (path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".zip")) {
-			return MappingFormat.ENIGMA_ZIP.read(path, progress, saveParameters, null);
-		}
-
 		net.fabricmc.mappingio.format.MappingFormat format = MappingReader.detectFormat(path);
 		if (format == null) throw new IllegalArgumentException("Unknown mapping format!");
 

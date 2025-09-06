@@ -21,37 +21,6 @@ public final class MappingHelper {
 		return builder.toString();
 	}
 
-	public static String unescape(String str) {
-		int pos = str.indexOf('\\');
-
-		if (pos < 0) {
-			return str;
-		}
-
-		StringBuilder ret = new StringBuilder(str.length() - 1);
-		int start = 0;
-
-		do {
-			ret.append(str, start, pos);
-			pos++;
-			int type;
-
-			if (pos >= str.length()) {
-				throw new RuntimeException("incomplete escape sequence at the end");
-			} else if ((type = ESCAPED.indexOf(str.charAt(pos))) < 0) {
-				throw new RuntimeException("invalid escape character: \\" + str.charAt(pos));
-			} else {
-				ret.append(TO_ESCAPE.charAt(type));
-			}
-
-			start = pos + 1;
-		} while ((pos = str.indexOf('\\', start)) >= 0);
-
-		ret.append(str, start, str.length());
-
-		return ret.toString();
-	}
-
 	private MappingHelper() {
 	}
 }
