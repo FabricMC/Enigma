@@ -41,13 +41,11 @@ public enum MappingFormat {
 
 	private final FileType fileType;
 	private final net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart;
-	private final boolean hasWriter;
 	private boolean usedMappingIoWriterLast;
 
 	MappingFormat(FileType fileType, net.fabricmc.mappingio.format.MappingFormat mappingIoCounterpart) {
 		this.fileType = fileType;
 		this.mappingIoCounterpart = Objects.requireNonNull(mappingIoCounterpart);
-		this.hasWriter = mappingIoCounterpart.hasWriter;
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
@@ -55,7 +53,7 @@ public enum MappingFormat {
 	}
 
 	public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progressListener, MappingSaveParameters saveParameters) {
-		if (!hasWriter) {
+		if (!isWritable()) {
 			throw new UnsupportedOperationException("Mapping format " + this + " does not support writing");
 		}
 
@@ -114,7 +112,7 @@ public enum MappingFormat {
 	}
 
 	public boolean isWritable() {
-		return hasWriter;
+		return mappingIoCounterpart.hasWriter;
 	}
 
 	public static List<MappingFormat> getReadableFormats() {
