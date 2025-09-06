@@ -104,11 +104,6 @@ public class TestReadWriteCycle {
 	}
 
 	@Test
-	public void testEnigmaZip() throws IOException, MappingParseException {
-		testReadWriteCycle(MappingFormat.ENIGMA_ZIP, true, ".zip");
-	}
-
-	@Test
 	public void testTinyFile() throws IOException, MappingParseException {
 		testReadWriteCycle(MappingFormat.TINY_FILE, false, ".tiny");
 	}

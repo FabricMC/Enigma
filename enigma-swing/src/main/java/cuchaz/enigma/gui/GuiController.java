@@ -30,8 +30,6 @@ import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.jetbrains.annotations.ApiStatus;
-
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
@@ -148,12 +146,6 @@ public class GuiController implements ClientPacketHandler {
 		this.gui.onCloseJar();
 	}
 
-	@ApiStatus.Internal
-	public CompletableFuture<Void> openMappings(MappingFormat format, Path path, boolean useMappingIo) {
-		System.getProperties().setProperty("enigma.use_mappingio", useMappingIo ? "true" : "false");
-		return openMappings(format, path);
-	}
-
 	public CompletableFuture<Void> openMappings(MappingFormat format, Path path) {
 		if (project == null) {
 			return CompletableFuture.completedFuture(null);
@@ -194,12 +186,6 @@ public class GuiController implements ClientPacketHandler {
 
 	public CompletableFuture<Void> saveMappings(Path path) {
 		return saveMappings(path, loadedMappingFormat);
-	}
-
-	@ApiStatus.Internal
-	public CompletableFuture<Void> saveMappings(Path path, MappingFormat format, boolean useMappingIo) {
-		System.getProperties().setProperty("enigma.use_mappingio", useMappingIo ? "true" : "false");
-		return saveMappings(path, format);
 	}
 
 	/**
