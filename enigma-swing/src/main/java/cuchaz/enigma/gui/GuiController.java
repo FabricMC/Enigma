@@ -311,7 +311,7 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 
 		return ProgressDialog.runOffThread(this.gui.getFrame(), progress -> {
 			EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-			jar.decompileStream(progress, chp.getDecompilerService(), EnigmaProject.DecompileErrorStrategy.TRACE_AS_SOURCE).forEach(source -> {
+			jar.decompileStream(project, progress, chp.getDecompilerService(), EnigmaProject.DecompileErrorStrategy.TRACE_AS_SOURCE).forEach(source -> {
 				try {
 					source.writeTo(source.resolvePath(path));
 				} catch (IOException e) {
