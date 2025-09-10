@@ -46,6 +46,8 @@ import cuchaz.enigma.analysis.MethodInheritanceTreeNode;
 import cuchaz.enigma.analysis.MethodReferenceTreeNode;
 import cuchaz.enigma.analysis.StructureTreeNode;
 import cuchaz.enigma.analysis.StructureTreeOptions;
+import cuchaz.enigma.api.DataInvalidationEvent;
+import cuchaz.enigma.api.DataInvalidationListener;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.api.view.GuiView;
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
@@ -94,7 +96,7 @@ import cuchaz.enigma.utils.Utils;
 import cuchaz.enigma.utils.validation.PrintValidatable;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
-public class GuiController implements ClientPacketHandler, GuiView {
+public class GuiController implements ClientPacketHandler, GuiView, DataInvalidationListener {
 	private final Gui gui;
 	public final Enigma enigma;
 
@@ -132,6 +134,7 @@ public class GuiController implements ClientPacketHandler, GuiView {
 
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
 			project = enigma.openJars(jarPaths, new ClasspathClassProvider(), progress);
+			project.addDataInvalidationListener(this);
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
 			chp = new ClassHandleProvider(project, UiConfig.getDecompiler().service);
 			SwingUtilities.invokeLater(() -> {
@@ -177,7 +180,7 @@ public class GuiController implements ClientPacketHandler, GuiView {
 				loadedMappingPath = path;
 
 				refreshClasses();
-				chp.invalidateJavadoc();
+				project.invalidateData(DataInvalidationEvent.InvalidationType.JAVADOC);
 			} catch (MappingParseException e) {
 				JOptionPane.showMessageDialog(gui.getFrame(), e.getMessage());
 			}
@@ -192,7 +195,7 @@ public class GuiController implements ClientPacketHandler, GuiView {
 
 		project.setMappings(mappings);
 		refreshClasses();
-		chp.invalidateJavadoc();
+		project.invalidateData(DataInvalidationEvent.InvalidationType.JAVADOC);
 	}
 
 	public MappingFormat getLoadedMappingFormat() {
@@ -252,7 +255,7 @@ public class GuiController implements ClientPacketHandler, GuiView {
 
 		this.gui.setMappingsFile(null);
 		refreshClasses();
-		chp.invalidateJavadoc();
+		project.invalidateData(DataInvalidationEvent.InvalidationType.JAVADOC);
 	}
 
 	public void reloadAll() {
@@ -573,12 +576,11 @@ public class GuiController implements ClientPacketHandler, GuiView {
 			this.gui.moveClassTree(target, prev.targetName() == null, mapping.targetName() == null);
 		}
 
-		if (!Objects.equals(prev.targetName(), mapping.targetName())) {
-			this.chp.invalidateMapped();
-		}
-
 		if (!Objects.equals(prev.javadoc(), mapping.javadoc())) {
-			this.chp.invalidateJavadoc(target.getTopLevelClass());
+			project.invalidateData(target.getTopLevelClass().getFullName(), DataInvalidationEvent.InvalidationType.JAVADOC);
+			// invalidateJavadoc implies invalidateMapped, so no need to check for that too
+		} else if (!Objects.equals(prev.targetName(), mapping.targetName())) {
+			project.invalidateData(DataInvalidationEvent.InvalidationType.MAPPINGS);
 		}
 
 		gui.showStructure(gui.getActiveEditor());
@@ -676,5 +678,36 @@ public class GuiController implements ClientPacketHandler, GuiView {
 	@Override
 	public void updateUserList(List<String> users) {
 		gui.setUserList(users);
+	}
+
+	@Override
+	public void onDataInvalidated(DataInvalidationEvent event) {
+		Objects.requireNonNull(project, "Invalidating data when no project is open");
+
+		if (event.getClasses() == null) {
+			switch (event.getType()) {
+			case MAPPINGS -> chp.invalidateMapped();
+			case JAVADOC -> chp.invalidateJavadoc();
+			case DECOMPILE -> chp.invalidate();
+			}
+		} else {
+			switch (event.getType()) {
+			case MAPPINGS -> {
+				for (String clazz : event.getClasses()) {
+					chp.invalidateMapped(new ClassEntry(clazz));
+				}
+			}
+			case JAVADOC -> {
+				for (String clazz : event.getClasses()) {
+					chp.invalidateJavadoc(new ClassEntry(clazz));
+				}
+			}
+			case DECOMPILE -> {
+				for (String clazz : event.getClasses()) {
+					chp.invalidate(new ClassEntry(clazz));
+				}
+			}
+			}
+		}
 	}
 }

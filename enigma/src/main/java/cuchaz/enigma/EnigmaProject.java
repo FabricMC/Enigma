@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -17,11 +18,14 @@ import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.api.DataInvalidationEvent;
+import cuchaz.enigma.api.DataInvalidationListener;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.api.view.ProjectView;
@@ -56,6 +60,8 @@ public class EnigmaProject implements ProjectView {
 	private final byte[] jarChecksum;
 
 	private EntryRemapper mapper;
+
+	private final List<DataInvalidationListener> dataInvalidationListeners = new ArrayList<>();
 
 	public EnigmaProject(Enigma enigma, List<Path> jarPaths, ClassProvider classProvider, JarIndex jarIndex, byte[] jarChecksum) {
 		if (jarChecksum.length != 20) {
@@ -332,6 +338,29 @@ public class EnigmaProject implements ProjectView {
 	@SuppressWarnings("unchecked")
 	public <T extends EntryView> T deobfuscate(T entry) {
 		return (T) mapper.extendedDeobfuscate((Translatable) entry).getValue();
+	}
+
+	@Override
+	public void addDataInvalidationListener(DataInvalidationListener listener) {
+		dataInvalidationListeners.add(listener);
+	}
+
+	@Override
+	public void invalidateData(@Nullable Collection<String> classes, DataInvalidationEvent.InvalidationType type) {
+		DataInvalidationEvent event = new DataInvalidationEvent() {
+			@Override
+			@Nullable
+			public Collection<String> getClasses() {
+				return classes;
+			}
+
+			@Override
+			public InvalidationType getType() {
+				return type;
+			}
+		};
+
+		dataInvalidationListeners.forEach(listener -> listener.onDataInvalidated(event));
 	}
 
 	public static final class SourceExport {
