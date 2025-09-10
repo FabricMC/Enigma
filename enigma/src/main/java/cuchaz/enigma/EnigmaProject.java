@@ -27,6 +27,7 @@ import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.index.JarIndex;
 import cuchaz.enigma.api.DataInvalidationEvent;
 import cuchaz.enigma.api.DataInvalidationListener;
+import cuchaz.enigma.api.service.DecompilerInputTransformerService;
 import cuchaz.enigma.api.service.NameProposalService;
 import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.api.view.ProjectView;
@@ -277,13 +278,20 @@ public class EnigmaProject implements ProjectView {
 			}
 		}
 
-		public SourceExport decompile(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
-			List<ClassSource> decompiled = this.decompileStream(progress, decompilerService, errorStrategy).toList();
+		public SourceExport decompile(EnigmaProject project, ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
+			List<ClassSource> decompiled = this.decompileStream(project, progress, decompilerService, errorStrategy).toList();
 			return new SourceExport(decompiled);
 		}
 
-		public Stream<ClassSource> decompileStream(ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
-			Collection<ClassNode> classes = this.compiled.values().stream().filter(classNode -> classNode.name.indexOf('$') == -1).toList();
+		public Stream<ClassSource> decompileStream(EnigmaProject project, ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
+			Collection<ClassNode> classes = this.compiled.values().stream()
+					.filter(classNode -> classNode.name.indexOf('$') == -1)
+					.peek(classNode -> {
+						for (DecompilerInputTransformerService transformer : project.enigma.getServices().get(DecompilerInputTransformerService.TYPE)) {
+							transformer.transform(classNode);
+						}
+					})
+					.toList();
 
 			progress.init(classes.size(), I18n.translate("progress.classes.decompiling"));
 

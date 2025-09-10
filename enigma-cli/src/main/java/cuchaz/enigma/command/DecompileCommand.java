@@ -47,7 +47,7 @@ public class DecompileCommand extends Command {
 		ProgressListener progress = new ConsoleProgressListener();
 
 		EnigmaProject.JarExport jar = project.exportRemappedJar(progress);
-		EnigmaProject.SourceExport source = jar.decompile(progress, decompilerService, DecompileErrorStrategy.TRACE_AS_SOURCE);
+		EnigmaProject.SourceExport source = jar.decompile(project, progress, decompilerService, DecompileErrorStrategy.TRACE_AS_SOURCE);
 
 		source.write(fileJarOut, progress);
 	}
