@@ -163,6 +163,26 @@ public final class ClassHandleProvider {
 		});
 	}
 
+	public void invalidate() {
+		withLock(lock.readLock(), () -> {
+			handles.values().forEach(Entry::invalidate);
+		});
+	}
+
+	public void invalidate(ClassEntry entry) {
+		withLock(lock.readLock(), () -> {
+			Entry e = handles.get(entry);
+
+			if (e != null) {
+				e.invalidate();
+			}
+
+			if (entry.isInnerClass()) {
+				this.invalidate(entry.getOuterClass());
+			}
+		});
+	}
+
 	private void deleteEntry(Entry entry) {
 		withLock(lock.writeLock(), () -> {
 			handles.remove(entry.entry);
