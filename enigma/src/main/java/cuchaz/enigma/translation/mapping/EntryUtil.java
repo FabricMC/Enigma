@@ -1,17 +1,23 @@
 package cuchaz.enigma.translation.mapping;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.validation.ValidationContext;
 
 public class EntryUtil {
-	public static EntryMapping applyChange(ValidationContext vc, EntryRemapper remapper, EntryChange<?> change) {
+	public static EntryMapping applyChange(ValidationContext vc, @Nullable EnigmaProject project, EntryRemapper remapper, EntryChange<?> change) {
 		Entry<?> target = change.getTarget();
 		EntryMapping prev = remapper.getDeobfMapping(target);
 		EntryMapping mapping = EntryUtil.applyChange(prev, change);
 
-		remapper.putMapping(vc, target, mapping);
+		if (remapper.putMapping(vc, target, mapping)) {
+			if (project != null) {
+				project.onEntryChange(prev, change);
+			}
+		}
 
 		return mapping;
 	}

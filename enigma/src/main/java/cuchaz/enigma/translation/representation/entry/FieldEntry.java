@@ -58,6 +58,10 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 		return new FieldEntry(parent, name, desc, null);
 	}
 
+	public FieldEntry withDesc(TypeDescriptor desc) {
+		return new FieldEntry(parent, name, desc, null);
+	}
+
 	@Override
 	public FieldEntry withParent(ClassEntry parent) {
 		return new FieldEntry(parent, this.name, this.desc, null);

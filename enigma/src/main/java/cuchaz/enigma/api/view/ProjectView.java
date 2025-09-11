@@ -13,6 +13,13 @@ import cuchaz.enigma.api.view.entry.EntryView;
 public interface ProjectView {
 	<T extends EntryView> T deobfuscate(T entry);
 
+	/**
+	 * Must call {@link #registerForInverseMappings()} before using this method.
+	 */
+	<T extends EntryView> T obfuscate(T entry);
+
+	void registerForInverseMappings();
+
 	Collection<String> getProjectClasses();
 
 	@Nullable

@@ -583,7 +583,7 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 
 		Entry<?> target = change.getTarget();
 		EntryMapping prev = this.project.getMapper().getDeobfMapping(target);
-		EntryMapping mapping = EntryUtil.applyChange(vc, this.project.getMapper(), change);
+		EntryMapping mapping = EntryUtil.applyChange(vc, this.project, this.project.getMapper(), change);
 
 		boolean renamed = !change.getDeobfName().isUnchanged();
 
