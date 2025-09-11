@@ -39,7 +39,7 @@ public class EntryChangeC2SPacket implements Packet<ServerPacketHandler> {
 		boolean valid = handler.getServer().canModifyEntry(handler.getClient(), this.change.getTarget());
 
 		if (valid) {
-			EntryUtil.applyChange(vc, handler.getServer().getMappings(), this.change);
+			EntryUtil.applyChange(vc, null, handler.getServer().getMappings(), this.change);
 			valid = vc.canProceed();
 		}
 

@@ -38,9 +38,11 @@ import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.DecompilerService;
 import cuchaz.enigma.source.SourceSettings;
+import cuchaz.enigma.translation.ObfuscatingTranslator;
 import cuchaz.enigma.translation.ProposingTranslator;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.Translator;
+import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.MappingsChecker;
@@ -63,6 +65,9 @@ public class EnigmaProject implements ProjectView {
 	private final Set<String> projectClasses;
 
 	private EntryRemapper mapper;
+	private Translator proposingTranslator;
+	@Nullable
+	private ObfuscatingTranslator inverseTranslator;
 
 	private final List<DataInvalidationListener> dataInvalidationListeners = new ArrayList<>();
 
@@ -78,7 +83,7 @@ public class EnigmaProject implements ProjectView {
 		this.jarChecksum = jarChecksum;
 		this.projectClasses = projectClasses;
 
-		this.mapper = EntryRemapper.empty(jarIndex);
+		setMappings(null);
 	}
 
 	public void setMappings(EntryTree<EntryMapping> mappings) {
@@ -86,6 +91,13 @@ public class EnigmaProject implements ProjectView {
 			mapper = EntryRemapper.mapped(jarIndex, mappings);
 		} else {
 			mapper = EntryRemapper.empty(jarIndex);
+		}
+
+		NameProposalService[] nameProposalServices = enigma.getServices().get(NameProposalService.TYPE).toArray(new NameProposalService[0]);
+		proposingTranslator = nameProposalServices.length == 0 ? mapper.getDeobfuscator() : new ProposingTranslator(mapper, nameProposalServices);
+
+		if (inverseTranslator != null) {
+			inverseTranslator.refreshAll(proposingTranslator);
 		}
 	}
 
@@ -120,6 +132,10 @@ public class EnigmaProject implements ProjectView {
 
 		for (Entry<?> entry : dropped) {
 			mappings.trackChange(entry);
+		}
+
+		if (inverseTranslator != null) {
+			inverseTranslator.refreshAll(proposingTranslator);
 		}
 	}
 
@@ -224,21 +240,18 @@ public class EnigmaProject implements ProjectView {
 		Collection<ClassEntry> classEntries = jarIndex.getEntryIndex().getClasses();
 		ClassProvider fixingClassProvider = new ObfuscationFixClassProvider(classProvider, jarIndex);
 
-		NameProposalService[] nameProposalServices = getEnigma().getServices().get(NameProposalService.TYPE).toArray(new NameProposalService[0]);
-		Translator deobfuscator = nameProposalServices.length == 0 ? mapper.getDeobfuscator() : new ProposingTranslator(mapper, nameProposalServices);
-
 		AtomicInteger count = new AtomicInteger();
 		progress.init(classEntries.size(), I18n.translate("progress.classes.deobfuscating"));
 
 		Map<String, ClassNode> compiled = classEntries.parallelStream().map(entry -> {
-			ClassEntry translatedEntry = deobfuscator.translate(entry);
+			ClassEntry translatedEntry = proposingTranslator.translate(entry);
 			progress.step(count.getAndIncrement(), translatedEntry.toString());
 
 			ClassNode node = fixingClassProvider.get(entry.getFullName());
 
 			if (node != null) {
 				ClassNode translatedNode = new ClassNode();
-				node.accept(new TranslationClassVisitor(deobfuscator, Enigma.ASM_VERSION, translatedNode));
+				node.accept(new TranslationClassVisitor(proposingTranslator, Enigma.ASM_VERSION, translatedNode));
 				return translatedNode;
 			}
 
@@ -348,7 +361,37 @@ public class EnigmaProject implements ProjectView {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T extends EntryView> T deobfuscate(T entry) {
-		return (T) mapper.extendedDeobfuscate((Translatable) entry).getValue();
+		return (T) proposingTranslator.extendedTranslate((Translatable) entry).getValue();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T extends EntryView> T obfuscate(T entry) {
+		if (inverseTranslator == null) {
+			throw new IllegalStateException("Must call registerForInverseMappings before calling obfuscate");
+		}
+
+		return (T) inverseTranslator.extendedTranslate((Entry<?>) entry).getValue();
+	}
+
+	@Override
+	public void registerForInverseMappings() {
+		if (inverseTranslator == null) {
+			inverseTranslator = new ObfuscatingTranslator(jarIndex);
+			inverseTranslator.refreshAll(proposingTranslator);
+		}
+	}
+
+	public void onEntryChange(EntryMapping prevMapping, EntryChange<?> change) {
+		if (inverseTranslator == null || change.getDeobfName().isUnchanged()) {
+			return;
+		}
+
+		String newName = change.getDeobfName().isSet() ? change.getDeobfName().getNewValue() : proposingTranslator.extendedTranslate(change.getTarget()).getValue().getName();
+
+		for (Entry<?> equivalentEntry : mapper.getObfResolver().resolveEquivalentEntries(change.getTarget())) {
+			inverseTranslator.refreshName(equivalentEntry, prevMapping.targetName(), newName);
+		}
 	}
 
 	@Override
