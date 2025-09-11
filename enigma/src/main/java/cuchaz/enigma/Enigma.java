@@ -39,6 +39,7 @@ import cuchaz.enigma.api.service.JarIndexerService;
 import cuchaz.enigma.api.service.ProjectService;
 import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.ClassProvider;
+import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.classprovider.CombiningClassProvider;
 import cuchaz.enigma.classprovider.JarClassProvider;
 import cuchaz.enigma.utils.I18n;
@@ -67,24 +68,24 @@ public class Enigma {
 		return new Builder();
 	}
 
-	public EnigmaProject openJar(Path path, ClassProvider libraryClassProvider, ProgressListener progress) throws IOException {
-		return openJars(List.of(path), libraryClassProvider, progress);
+	public EnigmaProject openJar(Path path, List<Path> libraries, ProgressListener progress) throws IOException {
+		return openJars(List.of(path), libraries, progress);
 	}
 
-	public EnigmaProject openJars(List<Path> paths, ClassProvider libraryClassProvider, ProgressListener progress) throws IOException {
-		return openJars(paths, libraryClassProvider, progress, true);
+	public EnigmaProject openJars(List<Path> paths, List<Path> libraries, ProgressListener progress) throws IOException {
+		return openJars(paths, libraries, progress, true);
 	}
 
-	public EnigmaProject openJars(List<Path> paths, ClassProvider libraryClassProvider, ProgressListener progress, boolean callServices) throws IOException {
+	public EnigmaProject openJars(List<Path> paths, List<Path> libraries, ProgressListener progress, boolean callServices) throws IOException {
 		ClassProvider jarClassProvider = getJarClassProvider(paths);
-		ClassProvider classProvider = new CachingClassProvider(new CombiningClassProvider(jarClassProvider, libraryClassProvider));
+		ClassProvider classProvider = new CachingClassProvider(new CombiningClassProvider(jarClassProvider, getJarClassProvider(libraries), new ClasspathClassProvider()));
 		Set<String> scope = Set.copyOf(jarClassProvider.getClassNames());
 
 		JarIndex index = JarIndex.empty();
 		ClassProvider classProviderWithFrames = index.indexJar(scope, classProvider, progress);
 		services.get(JarIndexerService.TYPE).forEach(indexer -> indexer.acceptJar(scope, classProviderWithFrames, index));
 
-		EnigmaProject project = new EnigmaProject(this, paths, classProvider, scope, index, Utils.zipSha1(paths.toArray(new Path[0])));
+		EnigmaProject project = new EnigmaProject(this, paths, libraries, classProvider, scope, index, Utils.zipSha1(paths.toArray(new Path[0])));
 
 		if (callServices) {
 			for (ProjectService projectService : services.get(ProjectService.TYPE)) {

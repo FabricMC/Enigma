@@ -59,6 +59,7 @@ public class EnigmaProject implements ProjectView {
 	private final Enigma enigma;
 
 	private final List<Path> jarPaths;
+	private final List<Path> libraryPaths;
 	private final ClassProvider classProvider;
 	private final JarIndex jarIndex;
 	private final byte[] jarChecksum;
@@ -71,13 +72,14 @@ public class EnigmaProject implements ProjectView {
 
 	private final List<DataInvalidationListener> dataInvalidationListeners = new ArrayList<>();
 
-	public EnigmaProject(Enigma enigma, List<Path> jarPaths, ClassProvider classProvider, Set<String> projectClasses, JarIndex jarIndex, byte[] jarChecksum) {
+	public EnigmaProject(Enigma enigma, List<Path> jarPaths, List<Path> libraryPaths, ClassProvider classProvider, Set<String> projectClasses, JarIndex jarIndex, byte[] jarChecksum) {
 		if (jarChecksum.length != 20) {
 			throw new IllegalArgumentException();
 		}
 
 		this.enigma = enigma;
 		this.jarPaths = List.copyOf(jarPaths);
+		this.libraryPaths = List.copyOf(libraryPaths);
 		this.classProvider = classProvider;
 		this.jarIndex = jarIndex;
 		this.jarChecksum = jarChecksum;
@@ -107,6 +109,10 @@ public class EnigmaProject implements ProjectView {
 
 	public List<Path> getJarPaths() {
 		return jarPaths;
+	}
+
+	public List<Path> getLibraryPaths() {
+		return libraryPaths;
 	}
 
 	public ClassProvider getClassProvider() {

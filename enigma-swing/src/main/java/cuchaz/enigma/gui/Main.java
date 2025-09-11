@@ -40,6 +40,7 @@ public class Main {
 		OptionParser parser = new OptionParser();
 
 		OptionSpec<Path> jar = parser.accepts("jar", "Jar file to open at startup; if there are multiple jars, the order must be the same between all collab session members").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
+		OptionSpec<Path> library = parser.accepts("library", "The libraries for the input jar files").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
 
 		OptionSpec<Path> mappings = parser.accepts("mappings", "Mappings file to open at startup").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
 
@@ -140,7 +141,8 @@ public class Main {
 
 			if (options.has(jar)) {
 				List<Path> jarPaths = options.valuesOf(jar);
-				controller.openJar(jarPaths).whenComplete((v, t) -> {
+				List<Path> libraryPaths = options.valuesOf(library);
+				controller.openJar(jarPaths, libraryPaths).whenComplete((v, t) -> {
 					if (options.has(mappings)) {
 						Path mappingsPath = options.valueOf(mappings);
 

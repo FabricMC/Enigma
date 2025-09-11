@@ -244,7 +244,7 @@ public class MenuBar {
 
 			// checks if the file name corresponds to an existing file
 			if (paths.stream().allMatch(Files::exists)) {
-				this.gui.getController().openJar(paths);
+				this.gui.getController().openJar(paths, gui.getController().project.getLibraryPaths());
 			}
 
 			UiConfig.setLastSelectedDir(d.getCurrentDirectory().getAbsolutePath());

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import net.fabricmc.mappingio.MappingReader;
@@ -14,7 +16,6 @@ import net.fabricmc.mappingio.tree.VisitableMappingTree;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
@@ -35,13 +36,13 @@ public abstract class Command {
 
 	public abstract void run(String... args) throws Exception;
 
-	protected static EnigmaProject openProject(Path fileJarIn, Path fileMappings) throws Exception {
+	protected static EnigmaProject openProject(Path fileJarIn, Path fileMappings, List<Path> libraries) throws Exception {
 		ProgressListener progress = new ConsoleProgressListener();
 
 		Enigma enigma = Enigma.create();
 
 		System.out.println("Reading jar...");
-		EnigmaProject project = enigma.openJar(fileJarIn, new ClasspathClassProvider(), progress);
+		EnigmaProject project = enigma.openJar(fileJarIn, libraries, progress);
 
 		if (fileMappings != null) {
 			System.out.println("Reading mappings...");
@@ -141,6 +142,16 @@ public abstract class Command {
 		}
 
 		return args[i];
+	}
+
+	protected static List<Path> getReadablePaths(String[] args, int startingFrom) {
+		List<Path> paths = new ArrayList<>();
+
+		for (int i = startingFrom; i < args.length; i++) {
+			paths.add(getReadablePath(args[i]));
+		}
+
+		return paths;
 	}
 
 	public static class ConsoleProgressListener implements ProgressListener {

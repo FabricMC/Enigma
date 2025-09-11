@@ -21,7 +21,6 @@ import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.serde.MappingFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
@@ -58,6 +57,8 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 
 		OptionSpec<Path> jarOpt = parser.accepts("jar", "Jar file to open at startup; if there are multiple jars, the order must be the same between the server and all clients").withRequiredArg().required().withValuesConvertedBy(PathConverter.INSTANCE);
 
+		OptionSpec<Path> librariesOpt = parser.accepts("library", "Library file used by the jar").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
+
 		OptionSpec<Path> mappingsOpt = parser.accepts("mappings", "Mappings file to open at startup").withRequiredArg().required().withValuesConvertedBy(PathConverter.INSTANCE);
 
 		OptionSpec<Path> profileOpt = parser.accepts("profile", "Profile json to apply at startup").withRequiredArg().withValuesConvertedBy(PathConverter.INSTANCE);
@@ -91,7 +92,7 @@ public class DedicatedEnigmaServer extends EnigmaServer {
 			EnigmaProfile profile = EnigmaProfile.read(profileFile);
 			Enigma enigma = Enigma.builder().setProfile(profile).build();
 			System.out.println("Indexing Jar...");
-			EnigmaProject project = enigma.openJars(jars, new ClasspathClassProvider(), ProgressListener.none());
+			EnigmaProject project = enigma.openJars(jars, parsedArgs.valuesOf(librariesOpt), ProgressListener.none());
 
 			MappingFormat mappingFormat = MappingFormat.ENIGMA_DIRECTORY;
 			EntryRemapper mappings;
