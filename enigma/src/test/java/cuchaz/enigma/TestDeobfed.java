@@ -18,11 +18,11 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
@@ -37,10 +37,10 @@ public class TestDeobfed {
 		Enigma enigma = Enigma.create();
 
 		Files.createDirectories(DEOBF.getParent());
-		EnigmaProject obfProject = enigma.openJar(OBF, new ClasspathClassProvider(), ProgressListener.none());
+		EnigmaProject obfProject = enigma.openJar(OBF, List.of(), ProgressListener.none());
 		obfProject.exportRemappedJar(ProgressListener.none()).write(DEOBF, ProgressListener.none());
 
-		deobfProject = enigma.openJar(DEOBF, new ClasspathClassProvider(), ProgressListener.none());
+		deobfProject = enigma.openJar(DEOBF, List.of(), ProgressListener.none());
 	}
 
 	@Test

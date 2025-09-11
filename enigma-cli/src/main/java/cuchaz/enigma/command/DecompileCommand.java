@@ -2,6 +2,7 @@ package cuchaz.enigma.command;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 
 import cuchaz.enigma.EnigmaProject;
@@ -17,7 +18,7 @@ public class DecompileCommand extends Command {
 
 	@Override
 	public String getUsage() {
-		return "<decompiler> <in jar> <out folder> [<mappings file>]";
+		return "<decompiler> <in jar> <out folder> [<mappings file>] [<libraries> ...]";
 	}
 
 	@Override
@@ -31,6 +32,7 @@ public class DecompileCommand extends Command {
 		Path fileJarIn = getReadableFile(getArg(args, 1, "in jar", true)).toPath();
 		Path fileJarOut = getWritableFolder(getArg(args, 2, "out folder", true)).toPath();
 		Path fileMappings = getReadablePath(getArg(args, 3, "mappings file", false));
+		List<Path> libraries = getReadablePaths(args, 4);
 
 		DecompilerService decompilerService;
 
@@ -42,7 +44,7 @@ public class DecompileCommand extends Command {
 			return;
 		}
 
-		EnigmaProject project = openProject(fileJarIn, fileMappings);
+		EnigmaProject project = openProject(fileJarIn, fileMappings, libraries);
 
 		ProgressListener progress = new ConsoleProgressListener();
 

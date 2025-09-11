@@ -55,7 +55,6 @@ import cuchaz.enigma.api.view.GuiView;
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
@@ -136,11 +135,11 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 		return project != null && project.getMapper().isDirty();
 	}
 
-	public CompletableFuture<Void> openJar(final List<Path> jarPaths) {
+	public CompletableFuture<Void> openJar(final List<Path> jarPaths, final List<Path> libraries) {
 		this.gui.onStartOpenJar();
 
 		return ProgressDialog.runOffThread(gui.getFrame(), progress -> {
-			project = enigma.openJars(jarPaths, new ClasspathClassProvider(), progress, false);
+			project = enigma.openJars(jarPaths, libraries, progress, false);
 			project.addDataInvalidationListener(this);
 			indexTreeBuilder = new IndexTreeBuilder(project.getJarIndex());
 			chp = new ClassHandleProvider(project, UiConfig.getDecompiler().service);
@@ -275,11 +274,12 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 
 	public void reloadAll() {
 		List<Path> jarPaths = this.project.getJarPaths();
+		List<Path> libraryPaths = this.project.getLibraryPaths();
 		MappingFormat loadedMappingFormat = this.loadedMappingFormat;
 		Path loadedMappingPath = this.loadedMappingPath;
 
 		this.closeJar();
-		CompletableFuture<Void> f = this.openJar(jarPaths);
+		CompletableFuture<Void> f = this.openJar(jarPaths, libraryPaths);
 
 		if (loadedMappingFormat != null && loadedMappingPath != null) {
 			f.whenComplete((v, t) -> this.openMappings(loadedMappingFormat, loadedMappingPath));

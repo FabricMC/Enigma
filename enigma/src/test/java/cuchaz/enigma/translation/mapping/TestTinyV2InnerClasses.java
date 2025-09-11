@@ -13,11 +13,11 @@ package cuchaz.enigma.translation.mapping;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsReader;
 
 public final class TestTinyV2InnerClasses {
@@ -31,7 +31,7 @@ public final class TestTinyV2InnerClasses {
 
 	//	@Test
 	public void testMappings() throws Exception {
-		EnigmaProject project = Enigma.create().openJar(jar, new ClasspathClassProvider(), ProgressListener.none());
+		EnigmaProject project = Enigma.create().openJar(jar, List.of(), ProgressListener.none());
 		project.setMappings(EnigmaMappingsReader.DIRECTORY.read(mappings, ProgressListener.none(), project.getEnigma().getProfile().getMappingSaveParameters()));
 	}
 }
