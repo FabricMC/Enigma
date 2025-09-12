@@ -6,6 +6,10 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.jetbrains.annotations.Nullable;
 
+import cuchaz.enigma.api.view.entry.ClassDefEntryView;
+import cuchaz.enigma.api.view.entry.ClassEntryView;
+import cuchaz.enigma.api.view.entry.EntryView;
+import cuchaz.enigma.api.view.index.EntryIndexView;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
@@ -16,7 +20,7 @@ import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class EntryIndex implements JarIndexer {
+public class EntryIndex implements JarIndexer, EntryIndexView {
 	private final ConcurrentMap<ClassEntry, AccessFlags> classes = new ConcurrentHashMap<>();
 	private final ConcurrentMap<FieldEntry, AccessFlags> fields = new ConcurrentHashMap<>();
 	private final ConcurrentMap<MethodEntry, AccessFlags> methods = new ConcurrentHashMap<>();
@@ -96,6 +100,7 @@ public class EntryIndex implements JarIndexer {
 		return definitions.get(entry);
 	}
 
+	@Override
 	public Collection<ClassEntry> getClasses() {
 		return classes.keySet();
 	}
@@ -106,5 +111,40 @@ public class EntryIndex implements JarIndexer {
 
 	public Collection<FieldEntry> getFields() {
 		return fields.keySet();
+	}
+
+	@Override
+	public boolean hasEntry(EntryView entry) {
+		if (entry instanceof ClassEntry) {
+			return classes.containsKey(entry);
+		} else if (entry instanceof FieldEntry) {
+			return fields.containsKey(entry);
+		} else if (entry instanceof MethodEntry) {
+			return methods.containsKey(entry);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public int getAccess(EntryView entry) {
+		AccessFlags access;
+
+		if (entry instanceof ClassEntry classEntry) {
+			access = getClassAccess(classEntry);
+		} else if (entry instanceof FieldEntry fieldEntry) {
+			access = getFieldAccess(fieldEntry);
+		} else if (entry instanceof MethodEntry methodEntry) {
+			access = getMethodAccess(methodEntry);
+		} else {
+			return 0;
+		}
+
+		return access == null ? 0 : access.getFlags();
+	}
+
+	@Override
+	public ClassDefEntryView getDefinition(ClassEntryView entry) {
+		return getDefinition((ClassEntry) entry);
 	}
 }
