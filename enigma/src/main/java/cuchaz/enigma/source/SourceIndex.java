@@ -141,8 +141,11 @@ public class SourceIndex {
 			tokenToReference.replace(token, resolvedReference);
 
 			Collection<Token> tokens = referenceToTokens.remove(reference);
-			referenceToTokens.computeIfAbsent(resolvedReference, key -> new ArrayList<>())
-					.addAll(tokens);
+
+			if (tokens != null) {
+				referenceToTokens.computeIfAbsent(resolvedReference, key -> new ArrayList<>())
+						.addAll(tokens);
+			}
 		}
 	}
 
