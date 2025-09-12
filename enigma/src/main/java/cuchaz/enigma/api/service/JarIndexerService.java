@@ -8,13 +8,13 @@ import java.util.function.Supplier;
 
 import org.objectweb.asm.ClassVisitor;
 
-import cuchaz.enigma.analysis.index.JarIndex;
+import cuchaz.enigma.api.view.index.JarIndexView;
 import cuchaz.enigma.classprovider.ClassProvider;
 
 public interface JarIndexerService extends EnigmaService {
 	EnigmaServiceType<JarIndexerService> TYPE = EnigmaServiceType.create("jar_indexer");
 
-	void acceptJar(Set<String> scope, ClassProvider classProvider, JarIndex jarIndex);
+	void acceptJar(Set<String> scope, ClassProvider classProvider, JarIndexView jarIndex);
 
 	static JarIndexerService fromVisitor(ClassVisitor visitor) {
 		return (scope, classProvider, jarIndex) -> {

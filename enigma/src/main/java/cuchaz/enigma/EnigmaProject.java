@@ -119,6 +119,7 @@ public class EnigmaProject implements ProjectView {
 		return classProvider;
 	}
 
+	@Override
 	public JarIndex getJarIndex() {
 		return jarIndex;
 	}

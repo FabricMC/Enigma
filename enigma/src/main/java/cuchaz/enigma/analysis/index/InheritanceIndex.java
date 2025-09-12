@@ -21,10 +21,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import cuchaz.enigma.api.view.entry.ClassEntryView;
+import cuchaz.enigma.api.view.index.InheritanceIndexView;
 import cuchaz.enigma.translation.representation.entry.ClassDefEntry;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 
-public class InheritanceIndex implements JarIndexer {
+public class InheritanceIndex implements JarIndexer, InheritanceIndexView {
 	private final EntryIndex entryIndex;
 
 	private final ConcurrentMap<ClassEntry, List<ClassEntry>> classParents = new ConcurrentHashMap<>();
@@ -62,8 +64,18 @@ public class InheritanceIndex implements JarIndexer {
 		return classParents.getOrDefault(classEntry, Collections.emptyList());
 	}
 
+	@Override
+	public Collection<? extends ClassEntryView> getParents(ClassEntryView entry) {
+		return getParents((ClassEntry) entry);
+	}
+
 	public Collection<ClassEntry> getChildren(ClassEntry classEntry) {
 		return classChildren.getOrDefault(classEntry, Collections.emptyList());
+	}
+
+	@Override
+	public Collection<? extends ClassEntryView> getChildren(ClassEntryView entry) {
+		return getChildren((ClassEntry) entry);
 	}
 
 	public Collection<ClassEntry> getDescendants(ClassEntry classEntry) {
