@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import cuchaz.enigma.Enigma;
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.analysis.ReferenceTargetType;
+import cuchaz.enigma.api.view.index.JarIndexView;
 import cuchaz.enigma.classprovider.AddFramesIfNecessaryClassProvider;
 import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.ClassProvider;
@@ -38,7 +39,7 @@ import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.translation.representation.entry.ParentedEntry;
 import cuchaz.enigma.utils.I18n;
 
-public class JarIndex implements JarIndexer {
+public class JarIndex implements JarIndexer, JarIndexView {
 	private final Set<String> indexedClasses = new HashSet<>();
 	private final EntryIndex entryIndex;
 	private final InheritanceIndex inheritanceIndex;
@@ -188,14 +189,17 @@ public class JarIndex implements JarIndexer {
 		indexers.forEach(indexer -> indexer.indexLambda(callerEntry, lambda, targetType));
 	}
 
+	@Override
 	public EntryIndex getEntryIndex() {
 		return entryIndex;
 	}
 
+	@Override
 	public InheritanceIndex getInheritanceIndex() {
 		return this.inheritanceIndex;
 	}
 
+	@Override
 	public ReferenceIndex getReferenceIndex() {
 		return referenceIndex;
 	}

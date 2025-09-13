@@ -44,8 +44,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.Enigma;
-import cuchaz.enigma.EnigmaProfile;
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.api.service.GuiService;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.JavadocDialog;
@@ -124,9 +124,9 @@ public class Gui {
 	public final JFileChooser exportJarFileChooser = new JFileChooser();
 	public SearchDialog searchDialog;
 
-	public Gui(EnigmaProfile profile, Set<EditableType> editableTypes) {
+	public Gui(Enigma enigma, Set<EditableType> editableTypes) {
 		this.editableTypes = editableTypes;
-		this.controller = new GuiController(this, profile);
+		this.controller = new GuiController(this, enigma);
 		this.structurePanel = new StructurePanel(this);
 		this.deobfPanel = new DeobfPanel(this);
 		this.infoPanel = new IdentifierPanel(this);
@@ -142,6 +142,10 @@ public class Gui {
 
 		LanguageUtil.addListener(this::retranslateUi);
 		Themes.addListener((lookAndFeel, boxHighlightPainters) -> SwingUtilities.updateComponentTreeUI(this.getFrame()));
+
+		for (GuiService guiService : enigma.getServices().get(GuiService.TYPE)) {
+			guiService.onStart(controller);
+		}
 
 		this.mainWindow.setVisible(true);
 	}

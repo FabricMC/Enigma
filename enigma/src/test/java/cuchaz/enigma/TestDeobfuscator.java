@@ -13,10 +13,10 @@ package cuchaz.enigma;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.Test;
 
-import cuchaz.enigma.classprovider.ClasspathClassProvider;
 import cuchaz.enigma.source.Decompiler;
 import cuchaz.enigma.source.Decompilers;
 import cuchaz.enigma.source.SourceSettings;
@@ -24,7 +24,7 @@ import cuchaz.enigma.source.SourceSettings;
 public class TestDeobfuscator {
 	private EnigmaProject openProject() throws IOException {
 		Enigma enigma = Enigma.create();
-		return enigma.openJar(Paths.get("build/test-obf/loneClass.jar"), new ClasspathClassProvider(), ProgressListener.none());
+		return enigma.openJar(Paths.get("build/test-obf/loneClass.jar"), List.of(), ProgressListener.none());
 	}
 
 	@Test

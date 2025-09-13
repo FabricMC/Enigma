@@ -18,10 +18,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.swing.SwingUtilities;
+
 import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.classprovider.CachingClassProvider;
+import cuchaz.enigma.classprovider.DecompilerInputTransformingClassProvider;
 import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
 import cuchaz.enigma.events.ClassHandleListener;
 import cuchaz.enigma.events.ClassHandleListener.InvalidationType;
@@ -102,7 +105,13 @@ public final class ClassHandleProvider {
 	}
 
 	private Decompiler createDecompiler() {
-		return ds.create(new CachingClassProvider(new ObfuscationFixClassProvider(project.getClassProvider(), project.getJarIndex())), new SourceSettings(true, true));
+		return ds.create(
+				new DecompilerInputTransformingClassProvider(
+						new CachingClassProvider(new ObfuscationFixClassProvider(project.getClassProvider(), project.getJarIndex())),
+						project.getEnigma().getServices()
+				),
+				new SourceSettings(true, true)
+		);
 	}
 
 	/**
@@ -163,6 +172,26 @@ public final class ClassHandleProvider {
 		});
 	}
 
+	public void invalidate() {
+		withLock(lock.readLock(), () -> {
+			handles.values().forEach(Entry::invalidate);
+		});
+	}
+
+	public void invalidate(ClassEntry entry) {
+		withLock(lock.readLock(), () -> {
+			Entry e = handles.get(entry);
+
+			if (e != null) {
+				e.invalidate();
+			}
+
+			if (entry.isInnerClass()) {
+				this.invalidate(entry.getOuterClass());
+			}
+		});
+	}
+
 	private void deleteEntry(Entry entry) {
 		withLock(lock.writeLock(), () -> {
 			handles.remove(entry.entry);
@@ -210,6 +239,8 @@ public final class ClassHandleProvider {
 		private final AtomicInteger mappedVersion = new AtomicInteger();
 
 		private final ReadWriteLock lock = new ReentrantReadWriteLock();
+		private final Object decompileCompleteMutex = new Object();
+		private final Object mappedCompleteMutex = new Object();
 
 		private Entry(ClassHandleProvider p, ClassEntry entry) {
 			this.p = p;
@@ -267,10 +298,26 @@ public final class ClassHandleProvider {
 				}
 
 				Result<Source, ClassHandleError> uncommentedSource = Result.ok(p.decompiler.getSource(entry.getFullName()));
-				Entry.this.uncommentedSource = uncommentedSource;
-				Entry.this.waitingUncommentedSources.forEach(f -> f.complete(uncommentedSource));
-				Entry.this.waitingUncommentedSources.clear();
-				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onUncommentedSourceChanged(uncommentedSource));
+
+				synchronized (decompileCompleteMutex) {
+					if (decompileVersion.get() != v) {
+						return null;
+					}
+
+					Entry.this.uncommentedSource = uncommentedSource;
+
+					synchronized (Entry.this.waitingUncommentedSources) {
+						Entry.this.waitingUncommentedSources.forEach(f -> f.complete(uncommentedSource));
+						Entry.this.waitingUncommentedSources.clear();
+					}
+
+					SwingUtilities.invokeLater(() -> {
+						if (decompileVersion.get() == v) {
+							withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onUncommentedSourceChanged(uncommentedSource));
+						}
+					});
+				}
+
 				return uncommentedSource;
 			}, p.pool);
 		}
@@ -283,7 +330,13 @@ public final class ClassHandleProvider {
 				}
 
 				Result<Source, ClassHandleError> jdSource = res.map(s -> s.withJavadocs(p.project.getMapper()));
-				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDocsChanged(jdSource));
+
+				SwingUtilities.invokeLater(() -> {
+					if (javadocVersion.get() == v) {
+						withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onDocsChanged(jdSource));
+					}
+				});
+
 				return jdSource;
 			}, p.pool);
 		}
@@ -321,10 +374,24 @@ public final class ClassHandleProvider {
 					return;
 				}
 
-				Entry.this.source = res;
-				Entry.this.waitingSources.forEach(s -> s.complete(source));
-				Entry.this.waitingSources.clear();
-				withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onMappedSourceChanged(source));
+				synchronized (mappedCompleteMutex) {
+					if (mappedVersion.get() != v) {
+						return;
+					}
+
+					Entry.this.source = res;
+
+					synchronized (Entry.this.waitingSources) {
+						Entry.this.waitingSources.forEach(s -> s.complete(source));
+						Entry.this.waitingSources.clear();
+					}
+
+					SwingUtilities.invokeLater(() -> {
+						if (mappedVersion.get() == v) {
+							withLock(lock.readLock(), () -> new ArrayList<>(handles)).forEach(h -> h.onMappedSourceChanged(source));
+						}
+					});
+				}
 			});
 		}
 

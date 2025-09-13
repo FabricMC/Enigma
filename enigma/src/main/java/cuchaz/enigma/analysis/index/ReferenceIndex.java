@@ -8,6 +8,11 @@ import java.util.concurrent.ConcurrentMap;
 
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.analysis.ReferenceTargetType;
+import cuchaz.enigma.api.view.entry.ClassEntryView;
+import cuchaz.enigma.api.view.entry.EntryReferenceView;
+import cuchaz.enigma.api.view.entry.FieldEntryView;
+import cuchaz.enigma.api.view.entry.MethodEntryView;
+import cuchaz.enigma.api.view.index.ReferenceIndexView;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.Lambda;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
@@ -19,7 +24,7 @@ import cuchaz.enigma.translation.representation.entry.FieldEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class ReferenceIndex implements JarIndexer {
+public class ReferenceIndex implements JarIndexer, ReferenceIndexView {
 	private ConcurrentMap<MethodEntry, List<MethodEntry>> methodReferences = new ConcurrentHashMap<>();
 
 	private ConcurrentMap<MethodEntry, List<EntryReference<MethodEntry, MethodDefEntry>>> referencesToMethods = new ConcurrentHashMap<>();
@@ -144,23 +149,53 @@ public class ReferenceIndex implements JarIndexer {
 		return methodReferences.getOrDefault(entry, Collections.emptyList());
 	}
 
+	@Override
+	public Collection<? extends MethodEntryView> getMethodsReferencedBy(MethodEntryView entry) {
+		return getMethodsReferencedBy((MethodEntry) entry);
+	}
+
 	public Collection<EntryReference<FieldEntry, MethodDefEntry>> getReferencesToField(FieldEntry entry) {
 		return referencesToFields.getOrDefault(entry, Collections.emptyList());
+	}
+
+	@Override
+	public Collection<? extends EntryReferenceView> getReferencesToField(FieldEntryView entry) {
+		return getReferencesToField((FieldEntry) entry);
 	}
 
 	public Collection<EntryReference<ClassEntry, MethodDefEntry>> getReferencesToClass(ClassEntry entry) {
 		return referencesToClasses.getOrDefault(entry, Collections.emptyList());
 	}
 
+	@Override
+	public Collection<? extends EntryReferenceView> getReferencesToClass(ClassEntryView entry) {
+		return getReferencesToClass((ClassEntry) entry);
+	}
+
 	public Collection<EntryReference<MethodEntry, MethodDefEntry>> getReferencesToMethod(MethodEntry entry) {
 		return referencesToMethods.getOrDefault(entry, Collections.emptyList());
+	}
+
+	@Override
+	public Collection<? extends EntryReferenceView> getReferencesToMethod(MethodEntryView entry) {
+		return getReferencesToMethod((MethodEntry) entry);
 	}
 
 	public Collection<EntryReference<ClassEntry, FieldDefEntry>> getFieldTypeReferencesToClass(ClassEntry entry) {
 		return fieldTypeReferences.getOrDefault(entry, Collections.emptyList());
 	}
 
+	@Override
+	public Collection<? extends EntryReferenceView> getFieldTypeReferencesToClass(ClassEntryView entry) {
+		return getFieldTypeReferencesToClass((ClassEntry) entry);
+	}
+
 	public Collection<EntryReference<ClassEntry, MethodDefEntry>> getMethodTypeReferencesToClass(ClassEntry entry) {
 		return methodTypeReferences.getOrDefault(entry, Collections.emptyList());
+	}
+
+	@Override
+	public Collection<? extends EntryReferenceView> getMethodTypeReferencesToClass(ClassEntryView entry) {
+		return getMethodTypeReferencesToClass((ClassEntry) entry);
 	}
 }

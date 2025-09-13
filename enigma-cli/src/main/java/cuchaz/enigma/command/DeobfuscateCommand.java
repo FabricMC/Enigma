@@ -1,6 +1,7 @@
 package cuchaz.enigma.command;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.ProgressListener;
@@ -25,8 +26,9 @@ public class DeobfuscateCommand extends Command {
 		Path fileJarIn = getReadablePath(getArg(args, 0, "in jar", true));
 		Path fileJarOut = getWritableFile(getArg(args, 1, "out jar", true)).toPath();
 		Path fileMappings = getReadablePath(getArg(args, 2, "mappings file", false));
+		List<Path> libraries = getReadablePaths(args, 3);
 
-		EnigmaProject project = openProject(fileJarIn, fileMappings);
+		EnigmaProject project = openProject(fileJarIn, fileMappings, libraries);
 
 		ProgressListener progress = new ConsoleProgressListener();
 

@@ -333,15 +333,13 @@ public class EditorPanel {
 	}
 
 	private void handleDecompilerResult(Result<DecompiledClassSource, ClassHandleError> res) {
-		SwingUtilities.invokeLater(() -> {
-			if (res.isOk()) {
-				this.setSource(res.unwrap());
-			} else {
-				this.displayError(res.unwrapErr());
-			}
+		if (res.isOk()) {
+			this.setSource(res.unwrap());
+		} else {
+			this.displayError(res.unwrapErr());
+		}
 
-			this.nextReference = null;
-		});
+		this.nextReference = null;
 	}
 
 	public void displayError(ClassHandleError t) {

@@ -18,10 +18,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 public interface Translator {
 	@Nullable
+	@Contract("null -> null; !null -> !null")
 	<T extends Translatable> TranslateResult<T> extendedTranslate(@Nullable T translatable);
 
 	@Deprecated

@@ -15,13 +15,14 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
+import cuchaz.enigma.api.view.entry.FieldEntryView;
 import cuchaz.enigma.source.RenamableTokenType;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
 import cuchaz.enigma.translation.mapping.EntryMapping;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
 
-public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<FieldEntry> {
+public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<FieldEntry>, FieldEntryView {
 	protected final TypeDescriptor desc;
 
 	public FieldEntry(ClassEntry parent, String name, TypeDescriptor desc) {
@@ -48,7 +49,16 @@ public class FieldEntry extends ParentedEntry<ClassEntry> implements Comparable<
 	}
 
 	@Override
+	public String getDescriptor() {
+		return this.desc.toString();
+	}
+
+	@Override
 	public FieldEntry withName(String name) {
+		return new FieldEntry(parent, name, desc, null);
+	}
+
+	public FieldEntry withDesc(TypeDescriptor desc) {
 		return new FieldEntry(parent, name, desc, null);
 	}
 

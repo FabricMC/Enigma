@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import cuchaz.enigma.api.view.entry.EntryReferenceView;
 import cuchaz.enigma.translation.Translatable;
 import cuchaz.enigma.translation.TranslateResult;
 import cuchaz.enigma.translation.Translator;
@@ -25,7 +26,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements Translatable {
+public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements Translatable, EntryReferenceView {
 	private static final List<String> CONSTRUCTOR_NON_NAMES = Arrays.asList("this", "super", "static");
 	public final E entry;
 	public final C context;
@@ -87,6 +88,11 @@ public class EntryReference<E extends Entry<?>, C extends Entry<?>> implements T
 	 */
 	public boolean isDeclaration() {
 		return this.declaration;
+	}
+
+	@Override
+	public E getEntry() {
+		return entry;
 	}
 
 	public Entry<?> getNameableEntry() {
