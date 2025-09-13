@@ -18,7 +18,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import joptsimple.OptionException;
@@ -148,8 +147,6 @@ public class Main {
 
 						if (Files.isDirectory(mappingsPath)) {
 							controller.openMappings(MappingFormat.ENIGMA_DIRECTORY, mappingsPath);
-						} else if (mappingsPath.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".zip")) {
-							controller.openMappings(MappingFormat.ENIGMA_ZIP, mappingsPath);
 						} else {
 							controller.openMappings(MappingFormat.ENIGMA_FILE, mappingsPath);
 						}

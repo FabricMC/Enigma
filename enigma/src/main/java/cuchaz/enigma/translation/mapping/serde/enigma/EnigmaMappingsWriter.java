@@ -13,17 +13,12 @@ package cuchaz.enigma.translation.mapping.serde.enigma;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -50,7 +45,6 @@ import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingHelper;
 import cuchaz.enigma.translation.mapping.serde.MappingIoConverter;
 import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
-import cuchaz.enigma.translation.mapping.serde.MappingsWriter;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.mapping.tree.EntryTreeNode;
 import cuchaz.enigma.translation.mapping.tree.HashEntryTree;
@@ -61,32 +55,8 @@ import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import cuchaz.enigma.utils.I18n;
 
-public enum EnigmaMappingsWriter implements MappingsWriter {
-	FILE {
-		@Override
-		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
-			Collection<ClassEntry> classes = mappings.getRootNodes().filter(entry -> entry.getEntry() instanceof ClassEntry).map(entry -> (ClassEntry) entry.getEntry()).toList();
-
-			progress.init(classes.size(), I18n.translate("progress.mappings.writing"));
-
-			int steps = 0;
-
-			try (PrintWriter writer = new LfPrintWriter(Files.newBufferedWriter(path))) {
-				for (ClassEntry classEntry : classes) {
-					progress.step(steps++, classEntry.getFullName());
-					writeRoot(writer, mappings, classEntry);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	},
+public enum EnigmaMappingsWriter {
 	DIRECTORY {
-		@Override
-		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters) {
-			write(mappings, delta, path, progress, saveParameters, false);
-		}
-
 		@Override
 		@ApiStatus.Internal
 		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path path, ProgressListener progress, MappingSaveParameters saveParameters, boolean useMio) {
@@ -198,18 +168,6 @@ public enum EnigmaMappingsWriter implements MappingsWriter {
 
 		private Path resolve(Path root, ClassEntry classEntry) {
 			return root.resolve(classEntry.getFullName() + ".mapping");
-		}
-	},
-	ZIP {
-		@Override
-		public void write(EntryTree<EntryMapping> mappings, MappingDelta<EntryMapping> delta, Path zip, ProgressListener progress, MappingSaveParameters saveParameters) {
-			try (FileSystem fs = FileSystems.newFileSystem(new URI("jar:file", null, zip.toUri().getPath(), ""), Collections.singletonMap("create", "true"))) {
-				DIRECTORY.write(mappings, delta, fs.getPath("/"), progress, saveParameters);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (URISyntaxException e) {
-				throw new RuntimeException("Unexpected error creating URI for " + zip, e);
-			}
 		}
 	};
 
