@@ -11,6 +11,8 @@
 
 package cuchaz.enigma.gui;
 
+import cuchaz.enigma.gui.node.ClassSelectorPackageNode;
+
 import java.awt.Component;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -150,14 +152,26 @@ public class ClassSelector extends JTree {
 					}
 
 					if (allowEdit && renameSelectionListener != null) {
-						Object prevData = node.getUserObject();
-						Object objectData = node.getUserObject() instanceof ClassEntry ? new ClassEntry(((ClassEntry) prevData).getPackageName() + "/" + data) : data;
 						gui.validateImmediateAction(vc -> {
-							renameSelectionListener.onSelectionRename(vc, node.getUserObject(), objectData, node);
+							String parentName;
 
-							if (vc.canProceed()) {
-								node.setUserObject(objectData); // Make sure that it's modified
+							if(node instanceof ClassSelectorPackageNode packageNode) {
+								String packageName = packageNode.getPackageName();
+								int lastSlash = packageName.lastIndexOf("/");
+								if(lastSlash != -1) {
+									parentName = packageName.substring(0, lastSlash);
+								} else {
+									parentName = "";
+								}
+							} else if(node instanceof ClassSelectorClassNode classNode) {
+								parentName = classNode.getClassEntry().getPackageName();
 							} else {
+								throw new IllegalStateException("unknown node type " + node.getClass().getSimpleName());
+							}
+
+							renameSelectionListener.onSelectionRename(vc, parentName + "/" + data, node);
+
+							if (!vc.canProceed()) {
 								editor.cancelCellEditing();
 							}
 						});
@@ -305,6 +319,6 @@ public class ClassSelector extends JTree {
 	}
 
 	public interface RenameSelectionListener {
-		void onSelectionRename(ValidationContext vc, Object prevData, Object data, DefaultMutableTreeNode node);
+		void onSelectionRename(ValidationContext vc, String targetName, DefaultMutableTreeNode node);
 	}
 }
