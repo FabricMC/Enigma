@@ -15,7 +15,7 @@ public class EntryUtil {
 
 		if (remapper.putMapping(vc, target, mapping)) {
 			if (project != null) {
-				project.onEntryChange(prev, change);
+				project.onEntryChange(target, prev, change);
 			}
 		}
 

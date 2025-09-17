@@ -389,15 +389,16 @@ public class EnigmaProject implements ProjectView {
 		}
 	}
 
-	public void onEntryChange(EntryMapping prevMapping, EntryChange<?> change) {
+	public void onEntryChange(Entry<?> entry, EntryMapping prevMapping, EntryChange<?> change) {
 		if (inverseTranslator == null || change.getDeobfName().isUnchanged()) {
 			return;
 		}
 
-		String newName = change.getDeobfName().isSet() ? change.getDeobfName().getNewValue() : proposingTranslator.extendedTranslate(change.getTarget()).getValue().getName();
+		String oldName = Objects.requireNonNullElse(prevMapping.targetName(), entry.getName());
+		String newName = change.getDeobfName().isSet() ? change.getDeobfName().getNewValue() : entry.getName();
 
 		for (Entry<?> equivalentEntry : mapper.getObfResolver().resolveEquivalentEntries(change.getTarget())) {
-			inverseTranslator.refreshName(equivalentEntry, prevMapping.targetName(), newName);
+			inverseTranslator.refreshName(equivalentEntry, oldName, newName);
 		}
 	}
 
