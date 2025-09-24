@@ -78,9 +78,11 @@ public class TranslationClassVisitor extends ClassVisitor {
 		ClassDefEntry translatedEntry = translator.translate(classEntry);
 		ClassEntry translatedOuterClass = translatedEntry.getOuterClass();
 
-		if (translatedOuterClass == null) {
-			throw new IllegalStateException("Translated inner class did not have outer class");
-		}
+		// JVMS 4.7.6 (java se 20) states that in case an inner class is a top level class, an anonymous class or
+		// a local (nested) class its outer class must be null
+		// if (translatedOuterClass == null) {
+		// 	throw new IllegalStateException("Translated inner class did not have outer class");
+		// }
 
 		// Anonymous classes do not specify an outer or inner name. As we do not translate from the given parameter, ignore if the input is null
 		String translatedName = translatedEntry.getFullName();
