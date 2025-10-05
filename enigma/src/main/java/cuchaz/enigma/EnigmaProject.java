@@ -306,10 +306,12 @@ public class EnigmaProject implements ProjectView {
 		public Stream<ClassSource> decompileStream(EnigmaProject project, ProgressListener progress, DecompilerService decompilerService, DecompileErrorStrategy errorStrategy) {
 			Collection<ClassNode> classes = this.compiled.values().stream()
 					.filter(classNode -> classNode.name.indexOf('$') == -1)
-					.peek(classNode -> {
+					.map(classNode -> {
 						for (DecompilerInputTransformerService transformer : project.enigma.getServices().get(DecompilerInputTransformerService.TYPE)) {
-							transformer.transform(classNode);
+							classNode = transformer.transform(classNode);
 						}
+
+						return classNode;
 					})
 					.toList();
 

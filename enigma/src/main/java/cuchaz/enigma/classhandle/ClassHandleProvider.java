@@ -23,7 +23,6 @@ import javax.swing.SwingUtilities;
 import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
-import cuchaz.enigma.classprovider.CachingClassProvider;
 import cuchaz.enigma.classprovider.DecompilerInputTransformingClassProvider;
 import cuchaz.enigma.classprovider.ObfuscationFixClassProvider;
 import cuchaz.enigma.events.ClassHandleListener;
@@ -106,9 +105,9 @@ public final class ClassHandleProvider {
 
 	private Decompiler createDecompiler() {
 		return ds.create(
-				new DecompilerInputTransformingClassProvider(
-						new CachingClassProvider(new ObfuscationFixClassProvider(project.getClassProvider(), project.getJarIndex())),
-						project.getEnigma().getServices()
+				new ObfuscationFixClassProvider(
+						new DecompilerInputTransformingClassProvider(project.getClassProvider(), project.getEnigma().getServices()),
+						project.getJarIndex()
 				),
 				new SourceSettings(true, true)
 		);

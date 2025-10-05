@@ -31,13 +31,10 @@ public class DecompilerInputTransformingClassProvider implements ClassProvider {
 			return null;
 		}
 
-		// copy the class, so that the input class isn't modified (which could lead to the class being retransformed if
-		// it's cached)
-		ClassNode classCopy = new ClassNode();
-		classNode.accept(classCopy);
+		for (DecompilerInputTransformerService transformer : services.get(DecompilerInputTransformerService.TYPE)) {
+			classNode = transformer.transform(classNode);
+		}
 
-		services.get(DecompilerInputTransformerService.TYPE).forEach(transformer -> transformer.transform(classCopy));
-
-		return classCopy;
+		return classNode;
 	}
 }
