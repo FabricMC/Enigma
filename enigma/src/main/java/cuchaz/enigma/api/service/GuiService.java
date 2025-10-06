@@ -1,11 +1,11 @@
 package cuchaz.enigma.api.service;
 
-import java.awt.image.BufferedImage;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import javax.swing.KeyStroke;
 
+import cuchaz.enigma.api.EnigmaIcon;
 import cuchaz.enigma.api.view.GuiView;
 import cuchaz.enigma.api.view.entry.EntryView;
 
@@ -38,7 +38,7 @@ public interface GuiService extends EnigmaService {
 	}
 
 	interface GutterMarkerAdder {
-		GutterMarkerBuilder addMarker(BufferedImage icon, GutterMarkerAlignment alignment);
+		GutterMarkerBuilder addMarker(EnigmaIcon icon, GutterMarkerAlignment alignment);
 	}
 
 	interface GutterMarkerBuilder {

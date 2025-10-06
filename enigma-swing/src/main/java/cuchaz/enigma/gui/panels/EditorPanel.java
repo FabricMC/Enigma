@@ -58,6 +58,7 @@ import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
+import cuchaz.enigma.gui.util.EnigmaIconImpl;
 import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.source.DecompiledClassSource;
@@ -563,7 +564,7 @@ public class EditorPanel {
 
 			for (GuiService service : services) {
 				service.addGutterMarkers(this.gui.getController(), declaration.a, (icon, alignment) -> {
-					GutterIcon button = new GutterIcon(icon);
+					GutterIcon button = new GutterIcon((EnigmaIconImpl) icon);
 					this.gutterPanel.addMarker(lineNumber, alignment, button);
 					return button;
 				});
