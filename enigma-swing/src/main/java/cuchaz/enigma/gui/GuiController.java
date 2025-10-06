@@ -54,6 +54,7 @@ import cuchaz.enigma.api.view.GuiView;
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
+import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
@@ -128,6 +129,16 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 	@Override
 	public JFrame getFrame() {
 		return gui.getFrame();
+	}
+
+	@Override
+	public float getScale() {
+		return UiConfig.getActiveScaleFactor();
+	}
+
+	@Override
+	public boolean isDarkTheme() {
+		return LookAndFeel.isDarkLaf();
 	}
 
 	public boolean isDirty() {

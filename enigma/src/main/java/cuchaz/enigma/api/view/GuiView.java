@@ -14,4 +14,8 @@ public interface GuiView {
 	EntryReferenceView getCursorReference();
 
 	JFrame getFrame();
+
+	float getScale();
+
+	boolean isDarkTheme();
 }
