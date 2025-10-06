@@ -1,11 +1,13 @@
 package cuchaz.enigma.api.service;
 
+import java.awt.image.BufferedImage;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import javax.swing.KeyStroke;
 
 import cuchaz.enigma.api.view.GuiView;
+import cuchaz.enigma.api.view.entry.EntryView;
 
 public interface GuiService extends EnigmaService {
 	EnigmaServiceType<GuiService> TYPE = EnigmaServiceType.create("gui");
@@ -14,6 +16,9 @@ public interface GuiService extends EnigmaService {
 	}
 
 	default void addToEditorContextMenu(GuiView gui, MenuRegistrar registrar) {
+	}
+
+	default void addGutterMarkers(GuiView gui, EntryView entry, GutterMarkerAdder gutter) {
 	}
 
 	interface MenuRegistrar {
@@ -30,5 +35,18 @@ public interface GuiService extends EnigmaService {
 		MenuItemBuilder setAccelerator(KeyStroke accelerator);
 		MenuItemBuilder setEnabledWhen(BooleanSupplier condition);
 		MenuItemBuilder setAction(Runnable action);
+	}
+
+	interface GutterMarkerAdder {
+		GutterMarkerBuilder addMarker(BufferedImage icon, GutterMarkerAlignment alignment);
+	}
+
+	interface GutterMarkerBuilder {
+		GutterMarkerBuilder setClickAction(Runnable action);
+		GutterMarkerBuilder setTooltip(String tooltip);
+	}
+
+	enum GutterMarkerAlignment {
+		LEFT, RIGHT
 	}
 }
