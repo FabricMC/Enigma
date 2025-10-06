@@ -194,7 +194,7 @@ public class GutterPanel extends JPanel {
 
 				int lineHeight = parent.getFontMetrics(parent.getFont()).getHeight();
 				return new Dimension(
-						insets.left + insets.right + (maxLeft + maxRight) * lineHeight,
+						GAP + insets.left + insets.right + (maxLeft + maxRight) * lineHeight,
 						HUGE_HEIGHT
 				);
 			}
@@ -224,7 +224,7 @@ public class GutterPanel extends JPanel {
 					}
 
 					int left = switch (constraint.alignment) {
-					case LEFT -> (leftCount.merge(constraint.line, 1, Integer::sum) - 1) * lineHeight + GAP / 2;
+					case LEFT -> GAP + (leftCount.merge(constraint.line, 1, Integer::sum) - 1) * lineHeight + GAP / 2;
 					case RIGHT -> parent.getWidth() - rightCount.merge(constraint.line, 1, Integer::sum) * lineHeight + GAP / 2;
 					};
 					comp.setBounds(left, constraint.line * lineHeight + GAP / 2, lineHeight - GAP, lineHeight - GAP);
