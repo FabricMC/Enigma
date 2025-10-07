@@ -117,15 +117,8 @@ public class EditorPanel {
 		this.gui = gui;
 		this.controller = gui.getController();
 
-		this.editor.setEditable(false);
-		this.editor.setSelectionColor(new Color(31, 46, 90));
-		this.editor.setCaret(new BrowserCaret());
+		customizeEditor(this.editor);
 		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
-		this.editor.setCaretColor(UiConfig.getCaretColor());
-		this.editor.setContentType("text/enigma-sources");
-		this.editor.setBackground(UiConfig.getEditorBackgroundColor());
-		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
-		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
 		// set unit increment to height of one line, the amount scrolled per
 		// mouse wheel rotation is then controlled by OS settings
@@ -264,6 +257,17 @@ public class EditorPanel {
 		};
 
 		this.ui.putClientProperty(EditorPanel.class, this);
+	}
+
+	public static void customizeEditor(JEditorPane editor) {
+		editor.setEditable(false);
+		editor.setSelectionColor(new Color(31, 46, 90));
+		editor.setCaret(new BrowserCaret());
+		editor.setCaretColor(UiConfig.getCaretColor());
+		editor.setContentType("text/enigma-sources");
+		editor.setBackground(UiConfig.getEditorBackgroundColor());
+		DefaultSyntaxKit kit = (DefaultSyntaxKit) editor.getEditorKit();
+		kit.toggleComponent(editor, "de.sciss.syntaxpane.components.TokenMarker");
 	}
 
 	@Nullable

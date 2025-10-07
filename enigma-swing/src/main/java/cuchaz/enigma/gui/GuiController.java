@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -59,6 +60,7 @@ import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.newabstraction.EntryValidation;
+import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
@@ -139,6 +141,13 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 	@Override
 	public boolean isDarkTheme() {
 		return LookAndFeel.isDarkLaf();
+	}
+
+	@Override
+	public JEditorPane createEditorPane() {
+		JEditorPane editor = new JEditorPane();
+		EditorPanel.customizeEditor(editor);
+		return editor;
 	}
 
 	public boolean isDirty() {
@@ -358,6 +367,30 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 	@Nullable
 	public EntryReferenceView getCursorReference() {
 		return gui.getCursorReference();
+	}
+
+	@Override
+	public boolean isCursorOnDeclaration() {
+		EntryReference<Entry<?>, Entry<?>> cursorReference = gui.getCursorReference();
+
+		if (cursorReference == null) {
+			return false;
+		}
+
+		EditorPanel activeEditor = gui.getActiveEditor();
+
+		if (activeEditor == null) {
+			return false;
+		}
+
+		Token declToken = activeEditor.getSource().getIndex().getDeclarationToken(cursorReference.entry);
+
+		if (declToken == null) {
+			return false;
+		}
+
+		int pos = activeEditor.getEditor().getCaret().getDot();
+		return declToken.contains(pos);
 	}
 
 	/**

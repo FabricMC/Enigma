@@ -1,5 +1,6 @@
 package cuchaz.enigma.api.view;
 
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 
 import org.jetbrains.annotations.Nullable;
@@ -13,9 +14,13 @@ public interface GuiView {
 	@Nullable
 	EntryReferenceView getCursorReference();
 
+	boolean isCursorOnDeclaration();
+
 	JFrame getFrame();
 
 	float getScale();
 
 	boolean isDarkTheme();
+
+	JEditorPane createEditorPane();
 }
