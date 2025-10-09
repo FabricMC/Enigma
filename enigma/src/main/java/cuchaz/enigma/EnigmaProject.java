@@ -410,6 +410,11 @@ public class EnigmaProject implements ProjectView {
 	}
 
 	@Override
+	public Collection<String> getProjectAndLibraryClasses() {
+		return classProvider.getClassNames();
+	}
+
+	@Override
 	@Nullable
 	public ClassNode getBytecode(String className) {
 		return classProvider.get(className);

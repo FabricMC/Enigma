@@ -25,6 +25,8 @@ public interface ProjectView {
 
 	Collection<String> getProjectClasses();
 
+	Collection<String> getProjectAndLibraryClasses();
+
 	@Nullable
 	ClassNode getBytecode(String className);
 
