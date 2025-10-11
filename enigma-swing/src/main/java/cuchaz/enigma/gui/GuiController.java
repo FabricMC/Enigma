@@ -371,26 +371,14 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 
 	@Override
 	public boolean isCursorOnDeclaration() {
-		EntryReference<Entry<?>, Entry<?>> cursorReference = gui.getCursorReference();
-
-		if (cursorReference == null) {
-			return false;
-		}
-
 		EditorPanel activeEditor = gui.getActiveEditor();
 
 		if (activeEditor == null) {
 			return false;
 		}
 
-		Token declToken = activeEditor.getSource().getIndex().getDeclarationToken(cursorReference.entry);
-
-		if (declToken == null) {
-			return false;
-		}
-
-		int pos = activeEditor.getEditor().getCaret().getDot();
-		return declToken.contains(pos);
+		int pos = activeEditor.getEditor().getCaretPosition();
+		return activeEditor.getSource().getIndex().getDeclarationToken(pos) != null;
 	}
 
 	/**
