@@ -4,4 +4,5 @@ public interface JarIndexView {
 	EntryIndexView getEntryIndex();
 	InheritanceIndexView getInheritanceIndex();
 	ReferenceIndexView getReferenceIndex();
+	BridgeMethodIndexView getBridgeMethodIndex();
 }
