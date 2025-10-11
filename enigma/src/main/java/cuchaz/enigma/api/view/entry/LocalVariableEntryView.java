@@ -10,7 +10,7 @@ public interface LocalVariableEntryView extends EntryView {
 
 	MethodEntryView getParent();
 
-	static LocalVariableEntryView create(MethodEntryView parent, int index, boolean argument) {
-		return new LocalVariableEntry((MethodEntry) parent, index, null, argument, null);
+	static LocalVariableEntryView create(MethodEntryView parent, int index, String name, boolean argument) {
+		return new LocalVariableEntry((MethodEntry) parent, index, name, argument, null);
 	}
 }
