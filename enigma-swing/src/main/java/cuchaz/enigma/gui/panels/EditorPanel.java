@@ -619,8 +619,21 @@ public class EditorPanel {
 		}
 	}
 
+	@Nullable
 	public EntryReference<Entry<?>, Entry<?>> getCursorReference() {
 		return this.cursorReference;
+	}
+
+	@Nullable
+	public Entry<?> getCursorDeclaration() {
+		int pos = this.editor.getCaretPosition();
+		Token token = getToken(pos);
+
+		if (token == null) {
+			return null;
+		}
+
+		return this.source.getIndex().getDeclaration(token);
 	}
 
 	public void showReference(EntryReference<Entry<?>, Entry<?>> reference) {

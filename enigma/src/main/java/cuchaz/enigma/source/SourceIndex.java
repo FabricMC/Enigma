@@ -84,6 +84,11 @@ public class SourceIndex {
 		return declarationToToken.get(entry);
 	}
 
+	@Nullable
+	public Entry<?> getDeclaration(Token token) {
+		return tokenToDeclaration.get(token);
+	}
+
 	public void addDeclaration(Token token, Entry<?> deobfEntry) {
 		if (token != null) {
 			EntryReference<Entry<?>, Entry<?>> reference = new EntryReference<>(deobfEntry, token.text);
@@ -126,17 +131,6 @@ public class SourceIndex {
 
 	public Collection<Token> getReferenceTokens(EntryReference<Entry<?>, Entry<?>> deobfReference) {
 		return referenceToTokens.getOrDefault(deobfReference, List.of());
-	}
-
-	@Nullable
-	public Token getDeclarationToken(int pos) {
-		Token token = tokenToDeclaration.floorKey(new Token(pos, pos, null));
-
-		if (token != null && token.contains(pos)) {
-			return token;
-		}
-
-		return null;
 	}
 
 	public void addReference(Token token, Entry<?> deobfEntry, Entry<?> deobfContext) {

@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
+import cuchaz.enigma.api.view.entry.EntryView;
 
 public interface GuiView {
 	@Nullable
@@ -14,7 +15,8 @@ public interface GuiView {
 	@Nullable
 	EntryReferenceView getCursorReference();
 
-	boolean isCursorOnDeclaration();
+	@Nullable
+	EntryView getCursorDeclaration();
 
 	JFrame getFrame();
 

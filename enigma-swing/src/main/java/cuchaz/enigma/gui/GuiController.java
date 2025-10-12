@@ -32,6 +32,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import cuchaz.enigma.api.view.entry.EntryView;
+
 import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.Enigma;
@@ -370,15 +372,9 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 	}
 
 	@Override
-	public boolean isCursorOnDeclaration() {
-		EditorPanel activeEditor = gui.getActiveEditor();
-
-		if (activeEditor == null) {
-			return false;
-		}
-
-		int pos = activeEditor.getEditor().getCaretPosition();
-		return activeEditor.getSource().getIndex().getDeclarationToken(pos) != null;
+	@Nullable
+	public EntryView getCursorDeclaration() {
+		return gui.getCursorDeclaration();
 	}
 
 	/**
