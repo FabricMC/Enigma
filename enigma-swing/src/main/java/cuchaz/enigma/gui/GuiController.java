@@ -32,8 +32,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import cuchaz.enigma.api.view.entry.EntryView;
-
 import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.Enigma;
@@ -55,6 +53,7 @@ import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.api.service.ProjectService;
 import cuchaz.enigma.api.view.GuiView;
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
+import cuchaz.enigma.api.view.entry.EntryView;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
 import cuchaz.enigma.gui.config.LookAndFeel;
