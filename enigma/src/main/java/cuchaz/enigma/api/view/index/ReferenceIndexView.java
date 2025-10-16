@@ -2,11 +2,14 @@ package cuchaz.enigma.api.view.index;
 
 import java.util.Collection;
 
+import org.jetbrains.annotations.ApiStatus;
+
 import cuchaz.enigma.api.view.entry.ClassEntryView;
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
 import cuchaz.enigma.api.view.entry.FieldEntryView;
 import cuchaz.enigma.api.view.entry.MethodEntryView;
 
+@ApiStatus.NonExtendable
 public interface ReferenceIndexView {
 	Collection<? extends MethodEntryView> getMethodsReferencedBy(MethodEntryView entry);
 	Collection<? extends EntryReferenceView> getReferencesToClass(ClassEntryView entry);
