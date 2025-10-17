@@ -139,13 +139,17 @@ public class IndexReferenceVisitor extends ClassVisitor {
 		}
 
 		private ReferenceTargetType getReferenceTargetType(int stackDepth) {
+			if (stack == null) { // Unreachable instruction if ASM is to be trusted
+				return ReferenceTargetType.uninitialized();
+			}
+
 			if (stackDepth >= stack.size()) {
 				throw new IllegalStateException("Stack depth " + stackDepth + " is higher than the stack: " + stackValuesToString(stack) + " in method " + callerEntry);
 			}
 
 			Object stackValue = stack.get(stack.size() - 1 - stackDepth);
 
-			if (stackValue.equals(Opcodes.UNINITIALIZED_THIS) || stackValue instanceof Label) {
+			if (stackValue.equals(Opcodes.UNINITIALIZED_THIS) || stackValue.equals(Opcodes.NULL) || stackValue instanceof Label) {
 				return ReferenceTargetType.uninitialized();
 			}
 
