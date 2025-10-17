@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -244,7 +245,7 @@ public class MenuBar {
 
 			// checks if the file name corresponds to an existing file
 			if (paths.stream().allMatch(Files::exists)) {
-				this.gui.getController().openJar(paths, gui.getController().project.getLibraryPaths());
+				this.gui.getController().openJar(paths, new ArrayList<>());
 			}
 
 			UiConfig.setLastSelectedDir(d.getCurrentDirectory().getAbsolutePath());
