@@ -13,7 +13,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.gui.EditableType;
@@ -23,8 +22,6 @@ import cuchaz.enigma.gui.events.ConvertingTextFieldListener;
 import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.GuiUtil;
 import cuchaz.enigma.gui.util.ScaleUtil;
-import cuchaz.enigma.source.RenamableTokenType;
-import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryChange;
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -197,35 +194,17 @@ public class IdentifierPanel {
 
 				@Override
 				public void onStopEditing(ConvertingTextField field, StopEditingCause cause) {
+					EditorPanel e = gui.getActiveEditor();
+
 					if (cause != StopEditingCause.ABORT) {
 						vc.reset();
 						vc.setActiveElement(field);
 						doRename(field.getText());
 
-						if (cause == StopEditingCause.TAB) {
-							EditorPanel editor = gui.getActiveEditor();
-
-							if (editor == null) {
-								return;
-							}
-
-							Token token = editor.getToken(editor.getEditor().getCaretPosition());
-
-							SwingUtilities.invokeLater(() -> {
-								Token next = editor.getSource().getTokenStore().getByType().get(RenamableTokenType.OBFUSCATED).higher(token);
-
-								if (next == null) {
-									editor.getEditor().requestFocusInWindow();
-								} else {
-									editor.navigateToToken(next);
-								}
-							});
-
-							return;
+						if (cause == StopEditingCause.TAB && e != null) {
+							e.navigateToNextObfuscatedToken();
 						}
 					}
-
-					EditorPanel e = gui.getActiveEditor();
 
 					if (e != null) {
 						e.getEditor().requestFocusInWindow();
