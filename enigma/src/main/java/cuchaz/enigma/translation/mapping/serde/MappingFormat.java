@@ -93,10 +93,11 @@ public enum MappingFormat {
 			loadingMessage = I18n.translate("progress.mappings.loading_directory");
 		}
 
-		progressListener.init(1, loadingMessage);
-
 		VisitableMappingTree mappingTree = new MemoryMappingTree();
-		MappingReader.read(path, mappingIoCounterpart, mappingTree);
+		ProgressTrackingMappingVisitor.trackLoadingProgress(mappingTree, path, this, progressListener, (visitor, totalWork) -> {
+			progressListener.init(totalWork, loadingMessage);
+			MappingReader.read(path, mappingIoCounterpart, visitor);
+		});
 		EntryTree<EntryMapping> mappings = MappingIoConverter.fromMappingIo(mappingTree, progressListener, index);
 
 		return this == PROGUARD ? MappingOperations.invert(mappings) : mappings;
