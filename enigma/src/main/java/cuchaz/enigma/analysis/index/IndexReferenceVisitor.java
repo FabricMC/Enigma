@@ -139,7 +139,7 @@ public class IndexReferenceVisitor extends ClassVisitor {
 		}
 
 		private ReferenceTargetType getReferenceTargetType(int stackDepth) {
-			if (stack == null) { // Unreachable instruction if ASM is to be trusted
+			if (stack == null) { // Unreachable instruction
 				return ReferenceTargetType.uninitialized();
 			}
 
