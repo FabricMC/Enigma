@@ -101,6 +101,11 @@ public class I18n {
 			List<String> availableTranslations;
 
 			try (InputStream is = cl.getResourceAsStream("lang/index.txt")) {
+				if (is == null) {
+					// This scenario should only really happen when launching from an IDE that does not run the necessary gradle tasks
+					throw new IOException("Resource 'lang/index.txt' not found");
+				}
+
 				availableTranslations = Arrays.asList(
 						new String(is.readAllBytes(), StandardCharsets.UTF_8)
 								.split("\n")
