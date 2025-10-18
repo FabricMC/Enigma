@@ -38,6 +38,7 @@ final class ProgressTrackingMappingVisitor extends ForwardingMappingVisitor {
 	static void trackLoadingProgress(MappingVisitor next, Path path, MappingFormat format, ProgressListener progressListener, VisitorWithProgressConsumer consumer) throws IOException {
 		if (format != MappingFormat.ENIGMA_DIRECTORY) {
 			consumer.accept(next, 1);
+			return;
 		}
 
 		Set<String> classNames = collectClassNames(path);
