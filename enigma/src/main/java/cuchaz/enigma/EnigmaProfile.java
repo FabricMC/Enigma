@@ -48,6 +48,10 @@ public final class EnigmaProfile {
 	}
 
 	public MappingSaveParameters getMappingSaveParameters() {
-		return mappingSaveParameters;
+		if (mappingSaveParameters == null) {
+			return DEFAULT_MAPPING_SAVE_PARAMETERS;
+		} else {
+			return mappingSaveParameters;
+		}
 	}
 }
