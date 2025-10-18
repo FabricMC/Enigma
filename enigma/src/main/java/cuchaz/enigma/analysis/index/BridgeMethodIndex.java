@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.jetbrains.annotations.Nullable;
 
+import cuchaz.enigma.api.view.entry.MethodEntryView;
+import cuchaz.enigma.api.view.index.BridgeMethodIndexView;
 import cuchaz.enigma.translation.representation.AccessFlags;
 import cuchaz.enigma.translation.representation.MethodDescriptor;
 import cuchaz.enigma.translation.representation.TypeDescriptor;
@@ -17,7 +19,7 @@ import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.MethodDefEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 
-public class BridgeMethodIndex implements JarIndexer {
+public class BridgeMethodIndex implements JarIndexer, BridgeMethodIndexView {
 	private final EntryIndex entryIndex;
 	private final InheritanceIndex inheritanceIndex;
 	private final ReferenceIndex referenceIndex;
@@ -152,6 +154,18 @@ public class BridgeMethodIndex implements JarIndexer {
 
 	public MethodEntry getSpecializedFromBridge(MethodEntry bridge) {
 		return bridgeToSpecialized.get(bridge);
+	}
+
+	@Override
+	@Nullable
+	public MethodEntryView getBridgeFromSpecialized(MethodEntryView specialized) {
+		return getBridgeFromSpecialized((MethodEntry) specialized);
+	}
+
+	@Override
+	@Nullable
+	public MethodEntryView getSpecializedFromBridge(MethodEntryView bridge) {
+		return getSpecializedFromBridge((MethodEntry) bridge);
 	}
 
 	/** Includes "renamed specialized -> bridge" entries. */

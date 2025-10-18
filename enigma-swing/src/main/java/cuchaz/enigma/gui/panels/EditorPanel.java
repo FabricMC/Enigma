@@ -15,6 +15,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,10 +36,12 @@ import javax.swing.text.Highlighter.HighlightPainter;
 
 import de.sciss.syntaxpane.DefaultSyntaxKit;
 import de.sciss.syntaxpane.SyntaxDocument;
+import de.sciss.syntaxpane.actions.ActionUtils;
 import org.jetbrains.annotations.Nullable;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.analysis.EntryReference;
+import cuchaz.enigma.api.service.GuiService;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleError;
 import cuchaz.enigma.events.ClassHandleListener;
@@ -50,14 +53,17 @@ import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.Themes;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.elements.EditorPopupMenu;
+import cuchaz.enigma.gui.elements.GutterIcon;
 import cuchaz.enigma.gui.events.EditorActionListener;
 import cuchaz.enigma.gui.events.ThemeChangeListener;
 import cuchaz.enigma.gui.highlight.BoxHighlightPainter;
 import cuchaz.enigma.gui.highlight.SelectionHighlightPainter;
+import cuchaz.enigma.gui.util.EnigmaIconImpl;
 import cuchaz.enigma.gui.util.GridBagConstraintsBuilder;
 import cuchaz.enigma.gui.util.ScaleUtil;
 import cuchaz.enigma.source.DecompiledClassSource;
 import cuchaz.enigma.source.RenamableTokenType;
+import cuchaz.enigma.source.SourceIndex;
 import cuchaz.enigma.source.Token;
 import cuchaz.enigma.translation.mapping.EntryRemapper;
 import cuchaz.enigma.translation.mapping.EntryResolver;
@@ -65,12 +71,14 @@ import cuchaz.enigma.translation.mapping.ResolutionStrategy;
 import cuchaz.enigma.translation.representation.entry.ClassEntry;
 import cuchaz.enigma.translation.representation.entry.Entry;
 import cuchaz.enigma.utils.I18n;
+import cuchaz.enigma.utils.Pair;
 import cuchaz.enigma.utils.Result;
 
 public class EditorPanel {
 	private final JPanel ui = new JPanel();
 	private final JEditorPane editor = new JEditorPane();
 	private final JScrollPane editorScrollPane = new JScrollPane(this.editor);
+	private final GutterPanel gutterPanel;
 	private final EditorPopupMenu popupMenu;
 
 	// progress UI
@@ -109,19 +117,15 @@ public class EditorPanel {
 		this.gui = gui;
 		this.controller = gui.getController();
 
-		this.editor.setEditable(false);
-		this.editor.setSelectionColor(new Color(31, 46, 90));
-		this.editor.setCaret(new BrowserCaret());
+		customizeEditor(this.editor);
 		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
-		this.editor.setCaretColor(UiConfig.getCaretColor());
-		this.editor.setContentType("text/enigma-sources");
-		this.editor.setBackground(UiConfig.getEditorBackgroundColor());
-		DefaultSyntaxKit kit = (DefaultSyntaxKit) this.editor.getEditorKit();
-		kit.toggleComponent(this.editor, "de.sciss.syntaxpane.components.TokenMarker");
 
 		// set unit increment to height of one line, the amount scrolled per
 		// mouse wheel rotation is then controlled by OS settings
 		this.editorScrollPane.getVerticalScrollBar().setUnitIncrement(this.editor.getFontMetrics(this.editor.getFont()).getHeight());
+
+		this.gutterPanel = new GutterPanel(this.editor, (JComponent) this.editorScrollPane.getRowHeader().getView());
+		this.editorScrollPane.setRowHeaderView(this.gutterPanel);
 
 		// init editor popup menu
 		this.popupMenu = new EditorPopupMenu(this, gui);
@@ -253,6 +257,17 @@ public class EditorPanel {
 		};
 
 		this.ui.putClientProperty(EditorPanel.class, this);
+	}
+
+	public static void customizeEditor(JEditorPane editor) {
+		editor.setEditable(false);
+		editor.setSelectionColor(new Color(31, 46, 90));
+		editor.setCaret(new BrowserCaret());
+		editor.setCaretColor(UiConfig.getCaretColor());
+		editor.setContentType("text/enigma-sources");
+		editor.setBackground(UiConfig.getEditorBackgroundColor());
+		DefaultSyntaxKit kit = (DefaultSyntaxKit) editor.getEditorKit();
+		kit.toggleComponent(editor, "de.sciss.syntaxpane.components.TokenMarker");
 	}
 
 	@Nullable
@@ -512,6 +527,7 @@ public class EditorPanel {
 				this.editor.setCaretPosition(newCaretPos);
 			}
 
+			addGutterMarkers(source.getIndex());
 			setHighlightedTokens(source.getHighlightedTokens());
 			setCursorReference(getReference(getToken(this.editor.getCaretPosition())));
 		} finally {
@@ -522,6 +538,44 @@ public class EditorPanel {
 			this.showReference0(this.nextReference);
 			this.nextReference = null;
 		}
+	}
+
+	private void addGutterMarkers(SourceIndex sourceIndex) {
+		List<GuiService> services = this.gui.getController().enigma.getServices().get(GuiService.TYPE);
+
+		if (services.isEmpty()) {
+			return;
+		}
+
+		this.gutterPanel.clearMarkers();
+
+		List<Pair<Entry<?>, Token>> declarationTokens = new ArrayList<>();
+
+		for (Entry<?> declaration : sourceIndex.declarations()) {
+			declarationTokens.add(new Pair<>(declaration, sourceIndex.getDeclarationToken(declaration)));
+		}
+
+		declarationTokens.sort(Comparator.comparing(pair -> pair.b));
+
+		for (Pair<Entry<?>, Token> declaration : declarationTokens) {
+			int lineNumber;
+
+			try {
+				lineNumber = ActionUtils.getLineNumber(this.editor, declaration.b.start);
+			} catch (BadLocationException e) {
+				continue;
+			}
+
+			for (GuiService service : services) {
+				service.addGutterMarkers(this.gui.getController(), declaration.a, (icon, alignment) -> {
+					GutterIcon button = new GutterIcon((EnigmaIconImpl) icon);
+					this.gutterPanel.addMarker(lineNumber, alignment, button);
+					return button;
+				});
+			}
+		}
+
+		this.editor.revalidate();
 	}
 
 	public void setHighlightedTokens(Map<RenamableTokenType, ? extends Collection<Token>> tokens) {
@@ -565,8 +619,21 @@ public class EditorPanel {
 		}
 	}
 
+	@Nullable
 	public EntryReference<Entry<?>, Entry<?>> getCursorReference() {
 		return this.cursorReference;
+	}
+
+	@Nullable
+	public Entry<?> getCursorDeclaration() {
+		int pos = this.editor.getCaretPosition();
+		Token token = getToken(pos);
+
+		if (token == null) {
+			return null;
+		}
+
+		return this.source.getIndex().getDeclaration(token);
 	}
 
 	public void showReference(EntryReference<Entry<?>, Entry<?>> reference) {

@@ -3,6 +3,7 @@ package cuchaz.enigma.api.view;
 import java.util.Collection;
 import java.util.List;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -11,6 +12,7 @@ import cuchaz.enigma.api.DataInvalidationListener;
 import cuchaz.enigma.api.view.entry.EntryView;
 import cuchaz.enigma.api.view.index.JarIndexView;
 
+@ApiStatus.NonExtendable
 public interface ProjectView {
 	<T extends EntryView> T deobfuscate(T entry);
 
@@ -24,6 +26,8 @@ public interface ProjectView {
 	JarIndexView getJarIndex();
 
 	Collection<String> getProjectClasses();
+
+	Collection<String> getProjectAndLibraryClasses();
 
 	@Nullable
 	ClassNode getBytecode(String className);

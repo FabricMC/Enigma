@@ -22,6 +22,7 @@ public enum LookAndFeel {
 	// the "JVM default" look and feel, get it at the beginning and store it so we can set it later
 	private static final javax.swing.LookAndFeel NONE_LAF = UIManager.getLookAndFeel();
 	private final boolean needsScaling;
+	private static Boolean isDarkLaf = null;
 
 	LookAndFeel(boolean needsScaling) {
 		this.needsScaling = needsScaling;
@@ -52,6 +53,10 @@ public enum LookAndFeel {
 	}
 
 	public static boolean isDarkLaf() {
+		if (isDarkLaf != null) {
+			return isDarkLaf;
+		}
+
 		// a bit of a hack because swing doesn't give any API for that, and we need colors that aren't defined in look and feel
 		JPanel panel = new JPanel();
 		panel.setSize(new Dimension(10, 10));
@@ -64,6 +69,6 @@ public enum LookAndFeel {
 
 		// convert the color we got to grayscale
 		int b = (int) (0.3 * c.getRed() + 0.59 * c.getGreen() + 0.11 * c.getBlue());
-		return b < 85;
+		return isDarkLaf = b < 85;
 	}
 }

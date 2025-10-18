@@ -350,6 +350,12 @@ public class Gui {
 		return activeEditor == null ? null : activeEditor.getCursorReference();
 	}
 
+	@Nullable
+	public Entry<?> getCursorDeclaration() {
+		EditorPanel activeEditor = this.editorTabbedPane.getActiveEditor();
+		return activeEditor == null ? null : activeEditor.getCursorDeclaration();
+	}
+
 	public void startDocChange(EditorPanel editor) {
 		EntryReference<Entry<?>, Entry<?>> cursorReference = editor.getCursorReference();
 

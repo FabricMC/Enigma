@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jetbrains.annotations.Nullable;
+
 import cuchaz.enigma.analysis.EntryReference;
 import cuchaz.enigma.translation.mapping.EntryResolver;
 import cuchaz.enigma.translation.mapping.ResolutionStrategy;
@@ -17,11 +19,13 @@ public class SourceIndex {
 	private List<Integer> lineOffsets;
 	private final TreeMap<Token, EntryReference<Entry<?>, Entry<?>>> tokenToReference;
 	private final Map<EntryReference<Entry<?>, Entry<?>>, Collection<Token>> referenceToTokens;
+	private final TreeMap<Token, Entry<?>> tokenToDeclaration;
 	private final Map<Entry<?>, Token> declarationToToken;
 
 	public SourceIndex() {
 		tokenToReference = new TreeMap<>();
 		referenceToTokens = new HashMap<>();
+		tokenToDeclaration = new TreeMap<>();
 		declarationToToken = new HashMap<>();
 	}
 
@@ -80,6 +84,11 @@ public class SourceIndex {
 		return declarationToToken.get(entry);
 	}
 
+	@Nullable
+	public Entry<?> getDeclaration(Token token) {
+		return tokenToDeclaration.get(token);
+	}
+
 	public void addDeclaration(Token token, Entry<?> deobfEntry) {
 		if (token != null) {
 			EntryReference<Entry<?>, Entry<?>> reference = new EntryReference<>(deobfEntry, token.text);
@@ -88,6 +97,7 @@ public class SourceIndex {
 					.add(token);
 			referenceToTokens.computeIfAbsent(EntryReference.declaration(deobfEntry, token.text), key -> new ArrayList<>())
 					.add(token);
+			tokenToDeclaration.put(token, deobfEntry);
 			declarationToToken.put(deobfEntry, token);
 		}
 	}
@@ -108,6 +118,7 @@ public class SourceIndex {
 		return tokenToReference.keySet();
 	}
 
+	@Nullable
 	public Token getReferenceToken(int pos) {
 		Token token = tokenToReference.floorKey(new Token(pos, pos, null));
 
@@ -153,7 +164,9 @@ public class SourceIndex {
 		SourceIndex remapped = new SourceIndex(result.getSource());
 
 		for (Map.Entry<Entry<?>, Token> entry : declarationToToken.entrySet()) {
-			remapped.declarationToToken.put(entry.getKey(), result.getRemappedToken(entry.getValue()));
+			Token remappedToken = result.getRemappedToken(entry.getValue());
+			remapped.declarationToToken.put(entry.getKey(), remappedToken);
+			remapped.tokenToDeclaration.put(remappedToken, entry.getKey());
 		}
 
 		for (Map.Entry<EntryReference<Entry<?>, Entry<?>>, Collection<Token>> entry : referenceToTokens.entrySet()) {

@@ -204,6 +204,7 @@ public class JarIndex implements JarIndexer, JarIndexView {
 		return referenceIndex;
 	}
 
+	@Override
 	public BridgeMethodIndex getBridgeMethodIndex() {
 		return bridgeMethodIndex;
 	}

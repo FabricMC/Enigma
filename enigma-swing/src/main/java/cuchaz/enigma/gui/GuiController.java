@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -52,12 +53,15 @@ import cuchaz.enigma.api.service.ObfuscationTestService;
 import cuchaz.enigma.api.service.ProjectService;
 import cuchaz.enigma.api.view.GuiView;
 import cuchaz.enigma.api.view.entry.EntryReferenceView;
+import cuchaz.enigma.api.view.entry.EntryView;
 import cuchaz.enigma.classhandle.ClassHandle;
 import cuchaz.enigma.classhandle.ClassHandleProvider;
+import cuchaz.enigma.gui.config.LookAndFeel;
 import cuchaz.enigma.gui.config.NetConfig;
 import cuchaz.enigma.gui.config.UiConfig;
 import cuchaz.enigma.gui.dialog.ProgressDialog;
 import cuchaz.enigma.gui.newabstraction.EntryValidation;
+import cuchaz.enigma.gui.panels.EditorPanel;
 import cuchaz.enigma.gui.stats.StatsGenerator;
 import cuchaz.enigma.gui.stats.StatsMember;
 import cuchaz.enigma.gui.util.History;
@@ -128,6 +132,23 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 	@Override
 	public JFrame getFrame() {
 		return gui.getFrame();
+	}
+
+	@Override
+	public float getScale() {
+		return UiConfig.getActiveScaleFactor();
+	}
+
+	@Override
+	public boolean isDarkTheme() {
+		return LookAndFeel.isDarkLaf();
+	}
+
+	@Override
+	public JEditorPane createEditorPane() {
+		JEditorPane editor = new JEditorPane();
+		EditorPanel.customizeEditor(editor);
+		return editor;
 	}
 
 	public boolean isDirty() {
@@ -347,6 +368,12 @@ public class GuiController implements ClientPacketHandler, GuiView, DataInvalida
 	@Nullable
 	public EntryReferenceView getCursorReference() {
 		return gui.getCursorReference();
+	}
+
+	@Override
+	@Nullable
+	public EntryView getCursorDeclaration() {
+		return gui.getCursorDeclaration();
 	}
 
 	/**

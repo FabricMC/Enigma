@@ -1,7 +1,9 @@
 package cuchaz.enigma.api.view.entry;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
+@ApiStatus.NonExtendable
 public interface EntryView {
 	/**
 	 * Returns the default name of this entry.

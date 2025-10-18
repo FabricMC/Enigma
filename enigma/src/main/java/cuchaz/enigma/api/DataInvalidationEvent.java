@@ -2,8 +2,10 @@ package cuchaz.enigma.api;
 
 import java.util.Collection;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
+@ApiStatus.NonExtendable
 public interface DataInvalidationEvent {
 	/**
 	 * The classes for which the invalidation applies, or {@code null} if the invalidation applies to all classes.
