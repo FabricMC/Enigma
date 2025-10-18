@@ -34,7 +34,7 @@ public class AddFramesIfNecessaryClassProvider implements ClassProvider {
 			return null;
 		}
 
-		if (clazz.version >= Opcodes.V1_7) {
+		if ((clazz.version & 0xffff) >= Opcodes.V1_7) {
 			// already has frames
 			return clazz;
 		}
