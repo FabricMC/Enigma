@@ -13,6 +13,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import cuchaz.enigma.EnigmaProject;
 import cuchaz.enigma.gui.EditableType;
@@ -202,7 +203,8 @@ public class IdentifierPanel {
 						doRename(field.getText());
 
 						if (cause == StopEditingCause.TAB && e != null) {
-							e.navigateToNextObfuscatedToken();
+							// invokeLater as per the method's javadocs
+							SwingUtilities.invokeLater(e::navigateToNextObfuscatedToken);
 						}
 					}
 

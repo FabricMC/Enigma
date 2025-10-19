@@ -125,7 +125,7 @@ public class EditorPanel {
 		customizeEditor(this.editor);
 		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
 
-		// Remove tabulator from focus traversal keys (we give it a different meaning)
+		// Remove the tab key from focus traversal keys (we give it a different meaning)
 		Set<AWTKeyStroke> focusTraversalKeys = new HashSet<>(this.editor.getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS));
 		focusTraversalKeys.removeIf(key -> key.getKeyCode() == KeyEvent.VK_TAB);
 		this.editor.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, focusTraversalKeys);
@@ -681,28 +681,34 @@ public class EditorPanel {
 		}
 	}
 
+	/**
+	 * Navigate to the next obfuscated token that can be renamed.
+	 *
+	 * <p>If the tokens are damaged, then this method should not be called
+	 * synchronously. Instead, the call should be wrapped in a
+	 * {@link SwingUtilities#invokeLater(Runnable)}. Failing to do so
+	 * will induce invalid token highlighting regions.
+	 */
 	public void navigateToNextObfuscatedToken() {
-		SwingUtilities.invokeLater(() -> {
-			int caretPos = this.getEditor().getCaretPosition();
-			Token token = this.getToken(this.getEditor().getCaretPosition());
-			NavigableSet<Token> obfuscatedTokens = this.getSource().getTokenStore().getByType().get(RenamableTokenType.OBFUSCATED);
-			Token next;
+		int caretPos = this.getEditor().getCaretPosition();
+		Token token = this.getToken(this.getEditor().getCaretPosition());
+		NavigableSet<Token> obfuscatedTokens = this.getSource().getTokenStore().getByType().get(RenamableTokenType.OBFUSCATED);
+		Token next;
 
-			if (token == null) {
-				next = obfuscatedTokens.higher(new Token(caretPos, caretPos, null));
-			} else {
-				next = obfuscatedTokens.higher(token);
-			}
+		if (token == null) {
+			next = obfuscatedTokens.higher(new Token(caretPos, caretPos, null));
+		} else {
+			next = obfuscatedTokens.higher(token);
+		}
 
-			if (next == null) {
-				// Wrap to start of document
-				next = obfuscatedTokens.pollFirst();
-			}
+		if (next == null) {
+			// Wrap to start of document
+			next = obfuscatedTokens.pollFirst();
+		}
 
-			if (next != null) {
-				this.navigateToToken(next);
-			}
-		});
+		if (next != null) {
+			this.navigateToToken(next);
+		}
 	}
 
 	public void navigateToToken(Token token) {
