@@ -1,11 +1,13 @@
 package cuchaz.enigma.gui.panels;
 
+import java.awt.AWTKeyStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,8 +18,11 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -120,6 +125,11 @@ public class EditorPanel {
 		customizeEditor(this.editor);
 		this.editor.addCaretListener(event -> onCaretMove(event.getDot(), this.mouseIsPressed));
 
+		// Remove the tab key from focus traversal keys (we give it a different meaning)
+		Set<AWTKeyStroke> focusTraversalKeys = new HashSet<>(this.editor.getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS));
+		focusTraversalKeys.removeIf(key -> key.getKeyCode() == KeyEvent.VK_TAB);
+		this.editor.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, focusTraversalKeys);
+
 		// set unit increment to height of one line, the amount scrolled per
 		// mouse wheel rotation is then controlled by OS settings
 		this.editorScrollPane.getVerticalScrollBar().setUnitIncrement(this.editor.getFontMetrics(this.editor.getFont()).getHeight());
@@ -199,6 +209,9 @@ public class EditorPanel {
 						EditorPanel.this.shouldNavigateOnClick = true; // CTRL
 						break;
 					}
+				} else if (event.getKeyCode() == KeyEvent.VK_TAB) {
+					EditorPanel.this.navigateToNextObfuscatedToken();
+					event.consume();
 				}
 			}
 
@@ -665,6 +678,36 @@ public class EditorPanel {
 			System.err.println(String.format("WARNING: no tokens found for %s in %s", reference, this.classHandle.getRef()));
 		} else {
 			this.gui.showTokens(this, tokens);
+		}
+	}
+
+	/**
+	 * Navigate to the next obfuscated token that can be renamed.
+	 *
+	 * <p>If the tokens are damaged, then this method should not be called
+	 * synchronously. Instead, the call should be wrapped in a
+	 * {@link SwingUtilities#invokeLater(Runnable)}. Failing to do so
+	 * will induce invalid token highlighting regions.
+	 */
+	public void navigateToNextObfuscatedToken() {
+		int caretPos = this.getEditor().getCaretPosition();
+		Token token = this.getToken(this.getEditor().getCaretPosition());
+		NavigableSet<Token> obfuscatedTokens = this.getSource().getTokenStore().getByType().get(RenamableTokenType.OBFUSCATED);
+		Token next;
+
+		if (token == null) {
+			next = obfuscatedTokens.higher(new Token(caretPos, caretPos, null));
+		} else {
+			next = obfuscatedTokens.higher(token);
+		}
+
+		if (next == null) {
+			// Wrap to start of document
+			next = obfuscatedTokens.pollFirst();
+		}
+
+		if (next != null) {
+			this.navigateToToken(next);
 		}
 	}
 
