@@ -4,17 +4,24 @@
 # Eclipse
 .checkstyle
 .classpath
+.eclipse
 .metadata
 .settings
 .project
 *.launch
 
-# Intellij/Idea
+# Intellij Idea
 .factorypath
 .idea
 *.iml
 *.ipr
 *.iws
+
+# VS Code
+.vscode/
+
+# Fleet
+.fleet/
 
 # Build artifacts
 bin/
@@ -33,3 +40,9 @@ $RECYCLE.BIN/
 
 # Mac
 .DS_Store
+
+# Java
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
